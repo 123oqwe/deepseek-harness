@@ -1,0 +1,15 @@
+packages/plugin/plugin-certification/src/index.ts
+packages/plugin/plugin-certification/src/types.ts
+packages/plugin/plugin-certification/src/report.ts
+packages/plugin/plugin-certification/tests/certification.spec.ts
+packages/plugin/plugin-certification/package.json
+packages/plugin/plugin-certification/tsconfig.json
+packages/plugin/plugin-certification/README.md
+apps/cli/src/plugin-verify.ts
+docs/plugins/trust-levels.md
+docs/architecture/2026-08-22-p1-12-plugin-certification.md
+.agent-notes/2026-08-22-p1-12-plugin-certification.md
+artifacts/evidence/P1-12/summary.json
+artifacts/evidence/P1-12/changed-files.txt
+artifacts/evidence/P1-12/test-results.json
+artifacts/evidence/P1-12/remaining-risks.md
