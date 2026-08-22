@@ -1,0 +1,7 @@
+packages/interaction/human-channel/src/index.ts
+packages/interaction/human-channel/src/types.ts
+packages/sdk/protocol/src/server-requests.ts
+packages/interaction/human-channel/tests/server-request.spec.ts
+packages/interaction/human-channel/package.json
+packages/interaction/human-channel/tsconfig.json
+packages/interaction/human-channel/README.md
