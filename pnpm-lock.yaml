@@ -906,6 +906,8 @@ importers:
 
   packages/assurance/evidence: {}
 
+  packages/assurance/verifier: {}
+
   packages/attachment/attachment:
     devDependencies:
       '@deepseek-ai/cordis':
