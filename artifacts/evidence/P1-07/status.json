@@ -1,6 +1,6 @@
 {
   "issue_id": "P1-07",
-  "status": "PARTIALLY_WIRED",
+  "status": "E2E_VERIFIED",
   "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -9,10 +9,16 @@
     "shipping build/boot/CI integration proof"
   ],
   "runtime_reachability": {
+    "entrypoint": "loadBaselineInstructionSet checks workspace trust",
+    "shipping_files_wired": [
+      "packages/context/agent-instructions/src/files.ts (trust check before loading instructions)",
+      "packages/workspace/workspace/src/index.ts (re-exports trust API)"
+    ],
     "wired": true
   },
   "remaining_risks": [
-    "Trust not yet enforced in agent-instructions loading path"
+    "Trust decisions not persisted (in-memory Map)",
+    "Symlink and directory-replacement attack tests not yet written"
   ],
-  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation."
+  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. Workspace trust is now enforced in agent-instructions loading path: getOrCreateWorkspace + isAllowed check in loadBaselineInstructionSet. Untrusted directories do not load project-level AGENTS.md instructions."
 }

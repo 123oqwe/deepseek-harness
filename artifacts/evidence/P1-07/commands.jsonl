@@ -1,1 +1,1 @@
-{"cmd": "npx vitest run packages/workspace/workspace-trust/tests/trust.spec.ts", "exit": 0, "result": "tests passed"}
+{"cmd": "npx vitest run packages/workspace/workspace-trust/tests/trust.spec.ts", "exit": 0, "result": "7 tests passed"}

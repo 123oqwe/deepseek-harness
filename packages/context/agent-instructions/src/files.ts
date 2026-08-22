@@ -408,6 +408,15 @@ export async function loadBaselineInstructionSet(
 ): Promise<RenderedInstructionSet | undefined> {
   const config = resolveConfig(options)
   if (config.maxBytes <= 0 || !Number.isFinite(config.maxBytes)) return undefined
+  // P1-07: Check workspace trust before loading project-level instructions.
+  // Untrusted directories do not load project-level execution content.
+  if (fileSystem === undefined) {
+    const { getOrCreateWorkspace, isAllowed } = await import('@deepseek-ai/dsh-workspace-trust')
+    const workspace = getOrCreateWorkspace(process.cwd())
+    if (!isAllowed(workspace.canonicalPath, 'allowSafeRead')) {
+      return undefined
+    }
+  }
   if (config.maxSourceBytes <= 0 || !Number.isFinite(config.maxSourceBytes)) return undefined
   const discovered = await discoverInstructionFiles(options, fileSystem)
   const loaded: LoadedInstructionFile[] = []
