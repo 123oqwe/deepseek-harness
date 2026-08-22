@@ -1,0 +1,9 @@
+packages/assurance/evidence/src/index.ts
+packages/assurance/evidence/src/types.ts
+packages/assurance/evidence/src/collector.ts
+packages/assurance/evidence/src/store.ts
+packages/assurance/evidence/src/invariant.ts
+packages/assurance/evidence/tests/evidence.spec.ts
+packages/assurance/evidence/package.json
+packages/assurance/evidence/tsconfig.json
+packages/assurance/evidence/README.md
