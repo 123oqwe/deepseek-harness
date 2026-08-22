@@ -1,12 +1,12 @@
 {
-  "git_sha": "f7a77022239ee41b4686fdc9eeba47f33f32a386",
+  "git_sha": "e721b7016273f852ca895f3e6a65673c6ad509b0",
   "upstream_master_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "node_version": "v24.18.0",
   "pnpm_version": "11.7.0",
   "platform": "darwin",
   "schema_hashes": {
     "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
-    "packages/core/session/src/types.ts": "573bcc62754aa736dbbf686b85ca50e0aee17354bb4e48dbf85be921e2e4dd24",
+    "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
     "packages/core/session/src/known-event-types.ts": "23ed63cf702d770839baf1bee86754f69d33c040d05c3fc3654dd0424d7a9fcb",
     "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1",
     "packages/core/agent/src/types.ts": "2353804cf902731cf979f8cb35f0ef830771133bd396a3f0afc368bc72c458bd",
