@@ -1,0 +1,99 @@
+ {
+   "$schema": "capability-seam-layers",
+   "description": "Architecture layer definitions for Capability Seam consistency checking. Each capability family declares its definition, providers, consumers, and allowed dependency edges. The allowlist entries each carry a removal date and owner.",
+   "layers": {
+     "kernel": {
+       "description": "Minimal immutable Trust Kernel — never a plugin, never depends on product packages",
+       "packages": ["packages/kernel/trust-kernel"],
+       "can_depend_on": [],
+       "cannot_be_imported_by": ["packages/*/*", "apps/*", "vendor/*"]
+     },
+     "schema": {
+       "description": "Schema Registry — depends only on utilities",
+       "packages": ["packages/schema/schema-registry"],
+       "can_depend_on": ["packages/util/*"],
+       "cannot_be_imported_by": ["packages/core/*"]
+     },
+     "core": {
+       "description": "Product API spine — session, system-prompt, tools, agent, agent-loop",
+       "packages": ["packages/core/*"],
+       "can_depend_on": ["packages/kernel/*", "packages/schema/*", "packages/util/*"],
+       "cannot_be_imported_by": ["apps/*", "packages/bundle/*"]
+     },
+     "llm": {
+       "description": "LLM capability: Service Definition/Consumer + DeepSeek providers",
+       "definition": "packages/llm/llm",
+       "providers": ["packages/llm/llm-pi-ai", "packages/llm/llm-retry"],
+       "consumers": ["packages/core/agent-loop"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "shell": {
+       "description": "Shell capability: Service Definition + local/pwsh providers + shell Consumers",
+       "definition": "packages/shell/shell",
+       "providers": ["packages/shell/bash-local", "packages/shell/bash-sandbox", "packages/shell/pwsh-local", "packages/shell/pwsh-sandbox"],
+       "consumers": ["packages/shell/tool-bash"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "fs": {
+       "description": "Filesystem capability + policy",
+       "definition": "packages/fs/fs",
+       "providers": ["packages/fs/fs-local", "packages/fs/fs-sandbox"],
+       "consumers": ["packages/core/tools"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "session": {
+       "description": "Durable session data: persistence, projection, titles, telemetry",
+       "definition": "packages/core/session",
+       "providers": ["packages/session/session-persistence-jsonl", "packages/session/session-persistence-sqlite"],
+       "consumers": ["packages/core/agent", "packages/sdk/server"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "sdk": {
+       "description": "JSON-RPC protocol, server, and TypeScript client",
+       "definition": "packages/sdk/protocol",
+       "providers": ["packages/sdk/server", "packages/sdk/client"],
+       "consumers": ["apps/cli"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "sandbox": {
+       "description": "Sandbox capability",
+       "definition": "packages/sandbox/sandbox",
+       "providers": ["packages/sandbox/sandbox-local"],
+       "consumers": ["packages/core/agent-loop"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "workflow": {
+       "description": "Workflow capability + worker-thread provider + tool Consumer",
+       "definition": "packages/workflow/workflow",
+       "providers": ["packages/workflow/workflow-worker-thread"],
+       "consumers": ["packages/core/tools"],
+       "rule": "consumer must not deep-import provider src/*"
+     },
+     "interaction": {
+       "description": "Approval/interaction capabilities, permission, commands, ask-user",
+       "definition": "packages/interaction/user-approval",
+       "providers": ["packages/interaction/interaction-stdio"],
+       "consumers": ["packages/core/agent-loop"],
+       "rule": "consumer must not deep-import provider src/*"
+     }
+   },
+   "allowlist": [
+     {
+       "violation": "consumer-deep-import-provider",
+       "package": "packages/core/agent-loop",
+       "importing": "@deepseek-ai/dsh-llm-pi-ai/src/adapter.ts",
+       "reason": "Legacy direct import pending migration to Service Definition",
+       "owner": "agent-loop-team",
+       "removalDate": "2026-12-01"
+     }
+   ],
+   "rules": {
+     "no_consumer_deep_import": "Consumers must import from the Service Definition package, not from a provider's src/*",
+     "no_provider_depends_on_app": "Providers must not depend on apps/* or UI packages",
+     "no_agent_loop_hardcoded_provider": "agent-loop must not hardcode a specific provider implementation",
+     "require_service_definition": "Every replaceable capability must have a Service Definition package",
+     "require_provider_fixture": "Every Service Definition must have at least one provider fixture",
+     "require_consumer_test": "Every capability must have a consumer composition test",
+     "require_unload_test": "Every capability must have an unload rollback test"
+   }
+ }

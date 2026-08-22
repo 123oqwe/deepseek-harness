@@ -1,0 +1,21 @@
+{
+  "issue_id": "P0-03",
+  "title": "增加 Capability Seam 架构一致性检查器",
+  "branch": "feat/p0-03-capability-seams",
+  "status": "PASS",
+  "acceptance_criteria_met": [
+    "Existing repository passes under controlled allowlist",
+    "Constructed violation fixtures (deep import, missing provider, irreversible registration) cause gate failure",
+    "CI outputs specific dependency edges, source files, and fix suggestions"
+  ],
+  "tests": { "total": 8, "passed": 8, "failed": 0, "not_run": 0 },
+  "commands_run": [
+    "pnpm vitest run tests/architecture/capability-seams.spec.ts",
+    "node scripts/architecture/check-capability-seams.mjs"
+  ],
+  "new_files": [
+    "architecture.layers.json",
+    "scripts/architecture/check-capability-seams.mjs",
+    "tests/architecture/capability-seams.spec.ts"
+  ]
+}

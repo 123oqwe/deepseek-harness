@@ -1,0 +1,17 @@
+{
+  "command": "pnpm vitest run tests/architecture/capability-seams.spec.ts",
+  "exit_code": 0,
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "tests": [
+    { "name": "architecture.layers.json exists and is valid", "status": "PASS" },
+    { "name": "kernel layer does not depend on product packages", "status": "PASS" },
+    { "name": "no consumer deep-imports provider src/*", "status": "PASS" },
+    { "name": "no provider depends on app/UI packages", "status": "PASS" },
+    { "name": "allowlist entries have not expired", "status": "PASS" },
+    { "name": "each capability family declares definition, providers, and consumers", "status": "PASS" },
+    { "name": "allowlist entries have removalDate and owner", "status": "PASS" },
+    { "name": "check command returns array of violations", "status": "PASS" }
+  ]
+}

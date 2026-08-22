@@ -1,0 +1,9 @@
+architecture.layers.json
+scripts/architecture/check-capability-seams.mjs
+tests/architecture/capability-seams.spec.ts
+vitest.config.ts
+package.json
+artifacts/evidence/P0-03/summary.json
+artifacts/evidence/P0-03/test-results.json
+artifacts/evidence/P0-03/remaining-risks.md
+artifacts/evidence/P0-03/changed-files.txt
