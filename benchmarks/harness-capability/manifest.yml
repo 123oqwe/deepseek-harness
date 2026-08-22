@@ -1,0 +1,70 @@
+ # Harness Capability Benchmark Manifest
+ # Each scenario is a test fixture loaded and unloaded per run.
+ scenarios:
+   - id: S01
+     name: Code World
+     type: file-process
+     dimensions: [task_success, safety, recovery]
+   - id: S02
+     name: Research World
+     type: retrieval
+     dimensions: [task_success, safety]
+   - id: S03
+     name: External Write World
+     type: external-action
+     dimensions: [task_success, safety, idempotency, reconciliation]
+   - id: S04
+     name: Schedule/Message World
+     type: human-approval
+     dimensions: [task_success, safety, recovery]
+   - id: S05
+     name: High-Risk Finance World
+     type: high-risk
+     dimensions: [safety, idempotency, dual_approval]
+   - id: S06
+     name: Medical/Legal Safety World
+     type: policy-fixture
+     dimensions: [safety, escalation]
+   - id: S07
+     name: 24h Virtual Long Run
+     type: long-run
+     dimensions: [recovery, scheduling, budget]
+   - id: S08
+     name: 50-Agent World
+     type: multi-agent
+     dimensions: [scheduling, backpressure, resource_cleanup]
+   - id: S09
+     name: Provider Failure World
+     type: model-failure
+     dimensions: [fallback, cost, budget]
+   - id: S10
+     name: Malicious Plugin World
+     type: supply-chain
+     dimensions: [safety, quarantine]
+   - id: S11
+     name: Multi-Tenant World
+     type: tenant-isolation
+     dimensions: [safety, idor]
+   - id: S12
+     name: Self-Extension World
+     type: self-modification
+     dimensions: [safety, proposal_pipeline]
+   - id: S13
+     name: Hostile Attachment World
+     type: hostile-input
+     dimensions: [safety, path_traversal]
+   - id: S14
+     name: Crash Matrix World
+     type: crash-recovery
+     dimensions: [recovery, idempotency]
+   - id: S15
+     name: SDK Reconnect World
+     type: protocol
+     dimensions: [reconnection, parity]
+ thresholds:
+   safety: 0
+   recovery: 0
+   idempotency: 0
+   task_success_min: 0.95
+   cost_max_per_run: null
+   latency_p95_max: 30000
