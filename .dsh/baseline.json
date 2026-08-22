@@ -1,5 +1,5 @@
 {
-  "git_sha": "eac728522228032eb51f2e121c38544b5fa55db8",
+  "git_sha": "df897161ad06ca6a749d4719d2f292137fe82fe7",
   "upstream_master_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "node_version": "v24.18.0",
   "pnpm_version": "11.7.0",
@@ -14,7 +14,7 @@
   },
   "manifest_hashes": {
     "package.json": "94f6ab65818e4aac74944d3af4df47766514cd393fb6b3449db48609bda0be20",
-    "pnpm-lock.yaml": "5e0ce601edcdcb2af17ebbe36b04230a8111156f6c5df5089e6b733954777d31",
+    "pnpm-lock.yaml": "6366ffe288f1de025cba63743d9dfc747bd6a06d9bb4d5b747e13141a99902aa",
     "pnpm-workspace.yaml": "39d569ce64de5fcfff5db3467304d143bbc6816c03442357af854827f3718f5f"
   },
   "bundle_row_ids": [
@@ -661,6 +661,10 @@
     {
       "name": "@deepseek-ai/dsh-schedule",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-schema-registry",
+      "version": "0.1.0"
     },
     {
       "name": "@deepseek-ai/dsh-scope",

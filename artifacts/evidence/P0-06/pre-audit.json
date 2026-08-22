@@ -1,0 +1,30 @@
+{
+  "issue_id": "P0-06",
+  "title": "Establish unified Schema Registry and compatibility rules",
+  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "current_state": "SCAFFOLD_OR_WORSE",
+  "prototype_branch": "feat/p0-06-schema-registry",
+  "prototype_pr": 3,
+  "merge_policy": "reference_only_do_not_merge",
+  "salvageable_from_prototype": [
+    "src/types.ts \u2014 type definitions are independently correct",
+    "src/migrate.ts \u2014 migration engine is independently correct",
+    "src/index.ts \u2014 schema registration and compatibility checking are correct",
+    "tests/compatibility.spec.ts \u2014 test structure is reusable"
+  ],
+  "must_rewrite": [
+    "package.json \u2014 must be private, not published",
+    "tsconfig.host.json \u2014 must add schema-registry as a reference",
+    "packages/boot/app-boot/src/index.ts \u2014 must register built-in schemas at boot"
+  ],
+  "shipping_files_to_wire": [
+    "packages/boot/app-boot/src/index.ts",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/core/session/src/types.ts"
+  ],
+  "main_chain_gaps": [
+    "Schema registry not initialized in real boot path",
+    "No built-in schemas registered at boot time",
+    "No integration proof that registry is on the main path"
+  ]
+}

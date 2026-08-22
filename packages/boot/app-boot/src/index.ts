@@ -18,6 +18,7 @@ import Group from '@deepseek-ai/cordis-plugin-group'
 import { dshHomePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { initTrustKernel, isKernelInitialized, type TrustKernelHandle } from '@deepseek-ai/dsh-trust-kernel'
+import { registerBuiltinSchemas } from '@deepseek-ai/dsh-schema-registry'
 import type {} from '@deepseek-ai/cordis-plugin-hmr'
 // Side-effect type import: resolves `ctx.get('systemPrompt')` to the service.
 import type {} from '@deepseek-ai/dsh-system-prompt'
@@ -28,6 +29,8 @@ declare module '@deepseek-ai/cordis' {
     dshHomePath?: typeof dshHomePath
     /** Trust Kernel handle, set once before Context creation. */
     trustKernelHandle?: TrustKernelHandle
+    /** Schema registry initialized at boot with built-in schemas. */
+    schemaRegistryReady?: boolean
   }
 }
 
@@ -773,10 +776,15 @@ export async function boot(
     kernelHandle = initTrustKernel({ insecure })
   }
 
+  // Register built-in schemas before any plugin loads. This makes the schema
+  // registry available on the main path, not just as a standalone package.
+  registerBuiltinSchemas()
+
   const ctx = new Context()
   if (kernelHandle) {
     ctx.trustKernelHandle = kernelHandle
   }
+  ctx.schemaRegistryReady = true
   // Two failure labels: `prepare` runs before any config-tree entry mounts,
   // so its failure is host setup, not the plugin tree.
   let stage = 'host preparation failed'
