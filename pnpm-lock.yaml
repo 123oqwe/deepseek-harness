@@ -4027,7 +4027,7 @@ importers:
   packages/evaluation/champion-challenger:
     dependencies:
       '@deepseek-ai/dsh-eval':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eval
 
   packages/evaluation/eval:

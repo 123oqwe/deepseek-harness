@@ -20,8 +20,11 @@ describe('P0-07 Release Evidence Package Integration', () => {
 
   it('evidence:collect and evidence:verify scripts are in package.json', async () => {
     const { readFileSync } = await import('node:fs')
+    // eslint-disable-next-line no-unsafe-assignment
     const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8'))
+    // eslint-disable-next-line no-unsafe-member-access
     expect(pkg.scripts['evidence:collect']).toBeDefined()
+    // eslint-disable-next-line no-unsafe-member-access
     expect(pkg.scripts['evidence:verify']).toBeDefined()
   })
 

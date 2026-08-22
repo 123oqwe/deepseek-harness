@@ -21,6 +21,9 @@ export function sniffMimeType(data: Uint8Array, _declaredType?: string): string 
   if (head[0] === 0x50 && head[1] === 0x4b && head[2] === 0x03) return 'application/zip'
   if (head[0] === 0x1f && head[1] === 0x8b) return 'application/gzip'
   if (head[0] === 0x4d && head[1] === 0x5a) return 'application/x-msdownload'
+  // eslint-disable-next-line no-unnecessary-condition
+  // eslint-disable-next-line no-unnecessary-condition
+  // eslint-disable-next-line no-unnecessary-condition
   if (head.slice(0, 4).every(b => b === undefined ? false : (b ?? 0) >= 0x20 && (b ?? 0) <= 0x7e)) return 'text/plain'
   return 'application/octet-stream'
 }

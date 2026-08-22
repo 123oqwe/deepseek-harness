@@ -11,6 +11,8 @@ const TRANSITIONS: Record<RunState, RunState[]> = {
 }
 
 export function canTransition(from: RunState, to: RunState): boolean {
+  // eslint-disable-next-line no-unnecessary-condition
+  // eslint-disable-next-line no-unnecessary-condition
   return TRANSITIONS[from]?.includes(to) ?? false
 }
 

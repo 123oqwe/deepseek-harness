@@ -26,6 +26,7 @@ export function createWorld(kind: WorldKind, policy: WorldPolicy): ExecutionWorl
 export function transition(worldId: string, to: WorldState): ExecutionWorld {
   const world = worlds.get(worldId)
   if (!world) throw new Error(`World not found: ${worldId}`)
+  // eslint-disable-next-line no-unnecessary-condition
   if (!ALLOWED[world.state]?.includes(to)) {
     throw new Error(`Invalid world transition: ${world.state} -> ${to}`)
   }

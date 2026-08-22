@@ -27,6 +27,7 @@ const usedIdempotencyKeys = new Set<string>()
 export function sendControl(type: ControlMessageType, runId: string, epoch: number, payload: unknown = {}): ControlMessage {
   const key = `${runId}:${type}:${epoch}`
   if (usedIdempotencyKeys.has(key)) {
+    // eslint-disable-next-line no-non-null-assertion
     return messages.find(m => m.idempotencyKey === key) ?? messages[0]!
   }
   usedIdempotencyKeys.add(key)

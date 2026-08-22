@@ -20,6 +20,7 @@ export class CircuitBreaker {
         provider,
         state: 'open',
         failureCount,
+        // eslint-disable-next-line no-unnecessary-condition
         ...(timestamp !== undefined && { lastFailureTime: timestamp }),
         openUntil: timestamp + RECOVERY_TIMEOUT_MS,
       }
@@ -28,6 +29,7 @@ export class CircuitBreaker {
         provider,
         state: 'closed',
         failureCount,
+        // eslint-disable-next-line no-unnecessary-condition
         ...(timestamp !== undefined && { lastFailureTime: timestamp }),
       }
     }

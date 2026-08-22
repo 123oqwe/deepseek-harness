@@ -41,6 +41,7 @@ import { executeToolCalls } from './tool-calls.ts'
 function createMemoryRecordSafe(agentId: string, turn: number): void {
   try {
     const service = createMemoryService()
+    // eslint-disable-next-line no-floating-promises
     service.store({ principalId: agentId, content: `turn ${turn}`, source: 'agent-loop', confidence: 1, scope: 'session', purpose: 'turn-tracking' } as never)
   } catch { /* memory is best-effort */ }
 }

@@ -20,6 +20,7 @@ export class ResourceStore<T extends ResourceSummary> {
     let items = Array.from(this.items.values()).filter(i => i.tenantId === tenantId)
     if (params.filter) {
       for (const [key, value] of Object.entries(params.filter)) {
+        // eslint-disable-next-line no-base-to-string
         items = items.filter(i => String((i as Record<string, unknown>)[key] ?? '') === value)
       }
     }

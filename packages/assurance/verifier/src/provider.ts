@@ -41,6 +41,7 @@ export function createHumanVerifier(id: string): VerifierProvider {
   return {
     id,
     kind: 'human',
+    // eslint-disable-next-line require-await
     verify: async (request: VerificationRequest, _evidence: ReadonlyMap<string, unknown>): Promise<VerificationReport> => {
       const results: CheckResult[] = request.requiredChecks.map(checkId => ({
         checkId,

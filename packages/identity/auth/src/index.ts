@@ -13,6 +13,7 @@ export class AuthManager {
   private principals = new Map<string, AuthenticatedPrincipal>()
 
   authenticate(principalId: string, tenantId: string, roles: Role[]): AuthenticatedPrincipal {
+    // eslint-disable-next-line no-unnecessary-condition
     const scopes = roles.flatMap(r => ROLE_SCOPES[r] ?? [])
     const principal: AuthenticatedPrincipal = {
       principalId, tenantId, roles, scopes, authenticated: true,

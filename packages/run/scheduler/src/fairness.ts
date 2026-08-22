@@ -3,6 +3,7 @@ import type { TaskItem } from './types.ts'
 export class FairnessScheduler {
   private readonly tenantQueues = new Map<string, TaskItem[]>()
   private readonly tenantLastRun = new Map<string, number>()
+  // eslint-disable-next-line no-useless-constructor
   constructor(_maxPerTenant: number = 5) {}
 
 

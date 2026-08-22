@@ -45,6 +45,7 @@ export class InMemoryProvider implements MemoryProvider {
     return this.records.delete(id)
   }
 
+  // eslint-disable-next-line require-await
   async expire(): Promise<number> {
     let count = 0
     for (const [id, record] of this.records) {

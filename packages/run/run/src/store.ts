@@ -68,7 +68,7 @@ export class JsonlRunStore implements RunStore {
       const runId = genesis.runId
       let run: Run = {
         id: runId,
-        principalId: String((genesis.payload as { runId?: string })?.runId ?? 'unknown'),
+        principalId: String((genesis.payload as { runId?: string }).runId ?? 'unknown'),
         tenantId: 'default',
         state: 'pending',
         createdAt: genesis.timestamp,

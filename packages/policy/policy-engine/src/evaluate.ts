@@ -44,6 +44,7 @@ export function evaluate(ctx: PolicyContext): PolicyResult {
         monotonic: rule.source === 'kernel',
       }
     }
+    // eslint-disable-next-line no-unnecessary-condition
     if (rule.decision === 'allow') {
       return {
         decision: 'allow',

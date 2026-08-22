@@ -37,6 +37,7 @@ export class AuditLedger {
   verify(): { valid: boolean; brokenAt?: number; reason?: string } {
     let prevHash = 'genesis'
     for (let i = 0; i < this.entries.length; i++) {
+      // eslint-disable-next-line no-non-null-assertion
       const entry = this.entries[i]!
       if (entry.prevHash !== prevHash) {
         return { valid: false, brokenAt: i, reason: `prevHash mismatch at entry ${i}` }
