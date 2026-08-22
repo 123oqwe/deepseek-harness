@@ -7,7 +7,7 @@ export { validateContract, evaluateCriterion } from './schema.ts'
 export { checkInvariants, isSatisfied } from './invariant.ts'
 
 export function freezeContract(
-  input: Omit<VerificationContract, 'digest' | 'status' | 'frozenAt'>,
+  input: Omit<VerificationContract, 'digest' | 'status' | 'frozenAt' | 'frozenBy'>,
   frozenBy: string,
 ): VerificationContract {
   const frozenAt = Date.now()

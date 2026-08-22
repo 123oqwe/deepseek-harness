@@ -2,7 +2,6 @@ import type { ClaimNode, EvidenceEdge, ClaimStatus } from './types.ts'
 
 export function computeStatus(
   claimId: string,
-  nodes: ReadonlyMap<string, ClaimNode>,
   edges: readonly EvidenceEdge[],
   verifiedByGate: ReadonlySet<string>,
 ): ClaimStatus {
@@ -30,7 +29,7 @@ export function propagateStatus(
   const changed = new Set<string>()
 
   for (const [id, node] of nodes) {
-    const newStatus = computeStatus(id, /* nodes, */ edges, verifiedByGate)
+    const newStatus = computeStatus(id, edges, verifiedByGate)
     if (newStatus !== node.status) {
       updated.set(id, { ...node, status: newStatus })
       changed.add(id)

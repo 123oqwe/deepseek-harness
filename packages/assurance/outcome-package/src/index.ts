@@ -5,7 +5,7 @@ export type { OutcomePackage } from './types.ts'
 
 export function buildOutcomePackage(
   runId: string,
-  opts: Omit<OutcomePackage, 'contentDigest' | 'signature'>,
+  opts: Omit<OutcomePackage, 'runId' | 'contentDigest' | 'signature'>,
 ): OutcomePackage {
   const contentDigest = createHash('sha256').update(JSON.stringify({
     runId, finalAnswer: opts.finalAnswer, artifacts: opts.artifacts,
