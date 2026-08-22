@@ -1,0 +1,1 @@
+{"cmd": "npx vitest run packages/core/agent/tests/state-machine.spec.ts", "exit": 0, "result": "13 tests passed"}

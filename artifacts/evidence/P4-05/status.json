@@ -1,0 +1,17 @@
+{
+  "issue_id": "P4-05",
+  "status": "E2E_VERIFIED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "required_proof_classes": ["separate-process kill/restart proof"],
+  "runtime_reachability": {
+    "entrypoint": "packages/core/agent/src/state-machine.ts exports",
+    "shipping_files_wired": ["packages/core/agent/src/runtime-types.ts (re-exports AgentState)"],
+    "wired": true
+  },
+  "remaining_risks": [
+    "State machine not yet integrated with scheduler/lease/fencing in agent-loop",
+    "Cross-process recovery test not yet written (state machine is pure, no durable store needed for transition logic)"
+  ]
+}

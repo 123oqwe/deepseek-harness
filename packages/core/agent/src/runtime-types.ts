@@ -12,6 +12,9 @@ import type { AgentCancelCause, Session, SessionId, UserMessage } from '@deepsee
 export type { AgentCancelCause } from '@deepseek-ai/dsh-session'
 import type { Inbox } from './inbox.ts'
 import type { InboxTarget } from './types.ts'
+// P4-05: Extended agent lifecycle state machine
+export type { AgentState, StateTransition } from './state-machine.ts'
+export { canTransition, assertTransition, createTransition, isTerminal, InvalidAgentTransitionError } from './state-machine.ts'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 declare module '@deepseek-ai/dsh-system-prompt' {
   interface AssembleContext {

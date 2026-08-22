@@ -8,3 +8,10 @@ Progress: resolved 69, reused 69, downloaded 0, added 0
 Progress: resolved 110, reused 110, downloaded 0, added 0
 [WARN] GET https://registry.npmjs.org/playwright error (23). Will retry in 10 seconds. 2 retries left.
 [WARN] GET https://registry.npmjs.org/playwright error (23). Will retry in 1 minute. 1 retries left.
+[ERR_PNPM_BROKEN_METADATA_JSON] The operation was aborted due to timeout
+[WARN] The metadata of playwright is missing the "time" field; skipping the minimumReleaseAge check for this package.
+Progress: resolved 111, reused 110, downloaded 0, added 0
+Progress: resolved 475, reused 367, downloaded 0, added 0
+Progress: resolved 536, reused 398, downloaded 0, added 0
+[WARN] GET https://registry.npmjs.org/playwright-core error (23). Will retry in 10 seconds. 2 retries left.
+[WARN] GET https://registry.npmjs.org/@typescript-eslint%2Ftypes error (23). Will retry in 10 seconds. 2 retries left.
