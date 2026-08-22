@@ -1,0 +1,11 @@
+ packages/schema/schema-registry/package.json
+ packages/schema/schema-registry/tsconfig.json
+ packages/schema/schema-registry/README.md
+ packages/schema/schema-registry/src/index.ts
+ packages/schema/schema-registry/src/types.ts
+ packages/schema/schema-registry/src/migrate.ts
+ packages/schema/schema-registry/tests/compatibility.spec.ts
+ artifacts/evidence/P0-06/summary.json
+ artifacts/evidence/P0-06/changed-files.txt
+ artifacts/evidence/P0-06/test-results.json
+ artifacts/evidence/P0-06/remaining-risks.md

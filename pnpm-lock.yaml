@@ -5763,6 +5763,8 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/schema/schema-registry: {}
+
   packages/sdk/client:
     devDependencies:
       '@deepseek-ai/cordis':

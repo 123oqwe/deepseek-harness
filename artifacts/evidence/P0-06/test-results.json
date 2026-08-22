@@ -1,0 +1,27 @@
+ {
+   "command": "pnpm vitest run packages/schema/schema-registry/tests/compatibility.spec.ts",
+   "exit_code": 0,
+   "total": 18,
+   "passed": 18,
+   "failed": 0,
+   "tests": [
+     { "name": "registers and retrieves a schema", "status": "PASS" },
+     { "name": "rejects duplicate registration of same version", "status": "PASS" },
+     { "name": "supports multiple versions of same schema", "status": "PASS" },
+     { "name": "lists all registered schemas", "status": "PASS" },
+     { "name": "same version is always compatible", "status": "PASS" },
+     { "name": "backward compatible within same major", "status": "PASS" },
+     { "name": "major version change is breaking", "status": "PASS" },
+     { "name": "unregistered schema version is incompatible", "status": "PASS" },
+     { "name": "agrees on exact version match", "status": "PASS" },
+     { "name": "agrees on backward compatible version", "status": "PASS" },
+     { "name": "fails when no compatible version exists", "status": "PASS" },
+     { "name": "registers and applies forward migration", "status": "PASS" },
+     { "name": "applies reverse migration for backward", "status": "PASS" },
+     { "name": "rejects irreversible migration in backward direction", "status": "PASS" },
+     { "name": "chains multiple migrations", "status": "PASS" },
+     { "name": "registers built-in schemas at boot", "status": "PASS" },
+     { "name": "session-event schema has version 0.1", "status": "PASS" },
+     { "name": "constructs with correct fields", "status": "PASS" }
+   ]
+ }

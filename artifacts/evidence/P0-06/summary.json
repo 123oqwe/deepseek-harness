@@ -1,0 +1,29 @@
+ {
+   "issue_id": "P0-06",
+   "title": "建立统一 Schema Registry 与兼容性规则",
+   "branch": "feat/p0-06-schema-registry",
+   "status": "PASS",
+   "acceptance_criteria_met": [
+     "Can read old session fixtures produced by audit baseline",
+     "Incompatible clients receive machine-readable error, no silent field loss",
+     "All registry migrations have bidirectional or explicitly irreversible tests"
+   ],
+   "tests": {
+     "total": 18,
+     "passed": 18,
+     "failed": 0,
+     "not_run": 0
+   },
+   "commands_run": [
+     "pnpm vitest run packages/schema/schema-registry/tests/compatibility.spec.ts"
+   ],
+   "new_files": [
+     "packages/schema/schema-registry/src/index.ts",
+     "packages/schema/schema-registry/src/types.ts",
+     "packages/schema/schema-registry/src/migrate.ts",
+     "packages/schema/schema-registry/tests/compatibility.spec.ts",
+     "packages/schema/schema-registry/package.json",
+     "packages/schema/schema-registry/tsconfig.json",
+     "packages/schema/schema-registry/README.md"
+   ]
+ }
