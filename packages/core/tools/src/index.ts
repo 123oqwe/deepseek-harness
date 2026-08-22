@@ -1360,7 +1360,7 @@ export class ToolRuntime extends Service {
   // and content digest — providing an auditable record of every side effect.
   private generateActionManifest(exec: ToolExecutionInput): { toolName: string; riskLevel: ActionRiskLevel; digest: string } {
     const canonicalParams = canonicalizeParameters(exec.arguments as Record<string, unknown>)
-    const riskLevel = classifyRisk(exec.name, canonicalParams)
+    const riskLevel = classifyRisk(exec.name, exec.arguments as Record<string, unknown>)
     const digest = computeDigest({
       actionId: exec.callId,
       toolName: exec.name,

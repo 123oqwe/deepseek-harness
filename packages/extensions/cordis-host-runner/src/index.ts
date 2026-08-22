@@ -829,10 +829,10 @@ export class DynamicCordisRunnerService extends TypertRemoteService {
     const { plugin, definition, mode } = plan
     // P1-02/P1-08/P1-09: Plugin enforcement before activation (best-effort)
     try {
-      const { verifyProvenance } = await import('@deepseek-ai/dsh-plugin-provenance')
+      const { verifySignature } = await import('@deepseek-ai/dsh-plugin-provenance')
       const { solve } = await import('@deepseek-ai/dsh-plugin-compat')
       const { checkConflicts } = await import('@deepseek-ai/dsh-plugin-ownership')
-      verifyProvenance({ pluginId: plugin.pluginId, signature: '', sbom: '' } as never)
+      verifySignature({ pluginId: plugin.pluginId, signature: '', sbom: '' } as never)
       solve([] as never)
       checkConflicts()
     } catch { /* best-effort in dev; production should fail closed */ }
@@ -1283,8 +1283,8 @@ function cloneAttempt(attempt: DynamicCordisRunAttempt): DynamicCordisRunAttempt
 export default DynamicCordisRunnerService
 
 // P1-02: Re-export plugin provenance (signature, SBOM, attestation)
-export type { PluginProvenance, ProvenanceProof } from '@deepseek-ai/dsh-plugin-provenance'
-export { verifyProvenance, generateSbom } from '@deepseek-ai/dsh-plugin-provenance'
+export type { SignatureResult, SBOMEntry, SBOM } from '@deepseek-ai/dsh-plugin-provenance'
+export { verifySignature, generateSBOM, verifySBOM } from '@deepseek-ai/dsh-plugin-provenance'
 
 // P1-08: Re-export plugin compatibility solver
 export type { PluginCompatDecl, SolveResult } from '@deepseek-ai/dsh-plugin-compat'
@@ -1296,4 +1296,4 @@ export { registerNamespace, checkConflicts as checkOwnershipConflicts } from '@d
 
 // P1-01: Re-export plugin manifest v2 types and validation
 export type { PluginManifestV2, SideEffectClass, DataClassification } from '@deepseek-ai/dsh-plugin-manifest'
-export { validateManifest, checkWildcardPermissions } from '@deepseek-ai/dsh-plugin-manifest'
+export { validateManifest, compareDeclaredVsObserved } from '@deepseek-ai/dsh-plugin-manifest'
