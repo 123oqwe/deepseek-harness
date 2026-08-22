@@ -1,0 +1,11 @@
+{
+  "issue_id": "P4-03",
+  "title": "RunPlan: model, agent, tool, world, budget, and verification executable plan",
+  "status": "PASS",
+  "tests_run": 5,
+  "tests_passed": 5,
+  "tests_failed": 0,
+  "tests_not_run": 0,
+  "timestamp": "2026-08-22T10:00:00+08:00",
+  "commit": "pending"
+}

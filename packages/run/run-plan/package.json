@@ -1,9 +1,9 @@
 {
-  "name": "@deepseek-ai/dsh-sandbox-policy",
-  "description": "Full-dimension sandbox policy: FS, Net, Proc, IPC, Device, Secret, Resource",
+  "name": "@deepseek-ai/dsh-run-plan",
+  "description": "RunPlan: executable plan with model, agent, tool, world, budget, and verification",
   "version": "0.1.0-rc.5",
   "publishConfig": { "access": "public" },
-  "repository": { "type": "git", "url": "git+https://github.com/deepseek-ai/deepseek-harness.git", "directory": "packages/sandbox/sandbox" },
+  "repository": { "type": "git", "url": "git+https://github.com/deepseek-ai/deepseek-harness.git", "directory": "packages/run/run-plan" },
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",

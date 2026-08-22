@@ -1,0 +1,11 @@
+{
+  "issue_id": "P3-09",
+  "status": "E2E_VERIFIED",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "runtime_reachability": {
+    "wired": true
+  },
+  "remaining_risks": [
+    "Ported from prototype branch"
+  ]
+}
