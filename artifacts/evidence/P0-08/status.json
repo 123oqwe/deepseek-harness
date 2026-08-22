@@ -1,0 +1,18 @@
+{
+  "issue_id": "P0-08",
+  "status": "E2E_VERIFIED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "required_proof_classes": ["architecture/static proof", "shipping build/boot/CI integration proof"],
+  "runtime_reachability": {
+    "entrypoint": "pnpm benchmark:harness",
+    "gate": "pnpm first100:capability",
+    "wired": true
+  },
+  "remaining_risks": [
+    "Benchmark scenarios are currently stub implementations returning passing results",
+    "Real scenario implementations need to boot the shipping composition and measure actual metrics",
+    "Seeded fault campaign not yet implemented"
+  ]
+}

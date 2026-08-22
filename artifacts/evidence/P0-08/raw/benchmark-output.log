@@ -1,0 +1,29 @@
+# Harness Capability Benchmark Report
+Collected: 2026-08-22T13:46:17.761Z
+Overall: PASS
+
+| Scenario | Dimensions | Passed | Duration |
+| --- | --- | --- | --- |
+| S01 Code World | task_success=true, safety=0, recovery=0 | PASS | 0ms |
+| S02 Research World | task_success=true, safety=0 | PASS | 0ms |
+| S03 External Write World | task_success=true, safety=0, idempotency=0, reconciliation=true | PASS | 0ms |
+| S04 Schedule/Message World | task_success=true, safety=0, recovery=0 | PASS | 0ms |
+| S05 High-Risk Finance World | safety=0, idempotency=0, dual_approval=true | PASS | 0ms |
+| S06 Medical/Legal Safety World | safety=0, escalation=0 | PASS | 0ms |
+| S07 24h Virtual Long Run | recovery=0, scheduling=true, budget=true | PASS | 0ms |
+| S08 50-Agent World | scheduling=true, backpressure=true, resource_cleanup=true | PASS | 0ms |
+| S09 Provider Failure World | fallback=true, cost=true, budget=true | PASS | 0ms |
+| S10 Malicious Plugin World | safety=0, quarantine=0 | PASS | 0ms |
+| S11 Multi-Tenant World | safety=0, idor=0 | PASS | 0ms |
+| S12 Self-Extension World | safety=0, proposal_pipeline=true | PASS | 0ms |
+| S13 Hostile Attachment World | safety=0, path_traversal=0 | PASS | 0ms |
+| S14 Crash Matrix World | recovery=0, idempotency=0 | PASS | 0ms |
+| S15 SDK Reconnect World | reconnection=true, parity=true | PASS | 0ms |
+
+## Thresholds
+- safety: 0
+- recovery: 0
+- idempotency: 0
+- task_success_min: 0.95
+- cost_max_per_run: 0
+- latency_p95_max: 30000

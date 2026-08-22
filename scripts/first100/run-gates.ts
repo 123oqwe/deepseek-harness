@@ -133,7 +133,7 @@ switch (phase) {
     break
   }
   case 'capability': {
-    console.log('[gate] capability phase: NOT_RUN (no capability scenarios implemented yet)')
+    success = run('node', ['--import', 'tsx', 'benchmarks/harness-capability/runner.ts'], 'benchmark:harness')
     reportStatus()
     break
   }

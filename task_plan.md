@@ -21,7 +21,7 @@ Phase 3: Wave 4 Implementation
 - [x] Feature gates (P0-05), release evidence (P0-07), plugin manifest (P1-01), principal identity (P2-01)
 
 ### Phase 3: Wave 4 Implementation (11 issues) - IN PROGRESS
-- [ ] P0-04: Layer dependency checker wired into CI as blocking gate
+- [x] P0-04: Layer dependency checker wired into CI as blocking gate (commit 97ae6fdc5c, E2E_VERIFIED)
 - [ ] P0-08: Benchmark framework wired into first100:capability
 - [ ] P4-01: Run Service with durable store (replace Map with RunStore)
 - [ ] P6-01: Memory Service wired into agent loop

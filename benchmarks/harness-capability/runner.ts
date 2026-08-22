@@ -93,6 +93,14 @@ export function runScenario(scenario: { id: string; name: string; dimensions: st
   }
 }
 
+// CLI entry point: run all scenarios and print report
+if (process.argv[1] && process.argv[1].endsWith('runner.ts')) {
+  const report = runAll()
+  const { formatReport } = await import('./report.ts')
+  console.log(formatReport(report))
+  if (!report.overallPassed) process.exit(1)
+}
+
 /** Run all benchmark scenarios and produce a report. */
 export function runAll(): BenchmarkReport {
   const manifest = loadManifest()
