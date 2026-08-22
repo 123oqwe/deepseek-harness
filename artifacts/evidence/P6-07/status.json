@@ -1,0 +1,9 @@
+{
+  "issue_id": "P6-07",
+  "status": "PARTIALLY_WIRED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "runtime_reachability": {"wired": true, "entrypoint": "re-exported from shipping package"},
+  "remaining_risks": ["Types re-exported, runtime enforcement pending"]
+}

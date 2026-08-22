@@ -1360,3 +1360,7 @@ export class PersistenceCoordinator<TornMarker = unknown> {
     await this.appendCore(id, fresh)
   }
 }
+
+// P6-07: Re-export session lifecycle (retention, deletion, pagination)
+export type { RetentionPolicy, SessionLifecycleConfig } from '@deepseek-ai/dsh-session-lifecycle'
+export { applyRetentionPolicy, deleteSession, paginateSessions } from '@deepseek-ai/dsh-session-lifecycle'

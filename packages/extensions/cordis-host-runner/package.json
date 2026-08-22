@@ -50,7 +50,10 @@
   "license": "MIT",
   "dependencies": {
     "@deepseek-ai/schemastery": "workspace:^",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@deepseek-ai/dsh-plugin-provenance": "workspace:^",
+    "@deepseek-ai/dsh-plugin-compat": "workspace:^",
+    "@deepseek-ai/dsh-plugin-ownership": "workspace:^"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",

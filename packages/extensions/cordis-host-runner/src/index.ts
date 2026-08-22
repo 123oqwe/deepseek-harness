@@ -1272,3 +1272,15 @@ function cloneAttempt(attempt: DynamicCordisRunAttempt): DynamicCordisRunAttempt
 }
 
 export default DynamicCordisRunnerService
+
+// P1-02: Re-export plugin provenance (signature, SBOM, attestation)
+export type { PluginProvenance, ProvenanceProof } from '@deepseek-ai/dsh-plugin-provenance'
+export { verifyProvenance, generateSbom } from '@deepseek-ai/dsh-plugin-provenance'
+
+// P1-08: Re-export plugin compatibility solver
+export type { PluginCompatDecl, SolveResult } from '@deepseek-ai/dsh-plugin-compat'
+export { solve as solvePluginCompat } from '@deepseek-ai/dsh-plugin-compat'
+
+// P1-09: Re-export plugin ownership and namespace conflict detection
+export type { NamespaceRegistration, OwnershipConflict } from '@deepseek-ai/dsh-plugin-ownership'
+export { registerNamespace, checkConflicts as checkOwnershipConflicts } from '@deepseek-ai/dsh-plugin-ownership'

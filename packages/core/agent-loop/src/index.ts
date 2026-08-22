@@ -711,3 +711,7 @@ export class AgentLoop extends Service implements AgentFactory {
 }
 
 export default AgentLoop
+
+// P6-01: Re-export memory service for agent loop integration
+export type { MemoryRecord, MemoryService, MemoryProvider } from '@deepseek-ai/dsh-memory'
+export { createMemoryService, validateRecord } from '@deepseek-ai/dsh-memory'

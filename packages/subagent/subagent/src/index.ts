@@ -513,3 +513,7 @@ export class SubagentRuntime extends Service {
 }
 
 export default SubagentRuntime
+
+// P2-02: Re-export capability token for subagent delegation
+export type { CapabilityToken, TokenCapabilities } from '@deepseek-ai/dsh-capability-token'
+export { issueToken, attenuateToken, getToken, hasCapability } from '@deepseek-ai/dsh-capability-token'
