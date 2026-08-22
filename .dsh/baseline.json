@@ -1,5 +1,5 @@
 {
-  "git_sha": "06ce2e1e408da3bedb147a37b8f86729ebcc67ea",
+  "git_sha": "69f6ae6d4b0c927beaf95e86113ad1e1d0640288",
   "upstream_master_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "node_version": "v24.18.0",
   "pnpm_version": "11.7.0",
@@ -14,7 +14,7 @@
   },
   "manifest_hashes": {
     "package.json": "04dd36194d0a46bcaa8d90d46e21141994fd8d50c7610b2a7008afd85c533332",
-    "pnpm-lock.yaml": "6366ffe288f1de025cba63743d9dfc747bd6a06d9bb4d5b747e13141a99902aa",
+    "pnpm-lock.yaml": "1fd2f35b20ebc98219d6a54139a935da1ac0bc664cd3d4a591825cf2c5085932",
     "pnpm-workspace.yaml": "39d569ce64de5fcfff5db3467304d143bbc6816c03442357af854827f3718f5f"
   },
   "bundle_row_ids": [
@@ -455,12 +455,20 @@
       "version": "0.1.1-rc.2"
     },
     {
+      "name": "@deepseek-ai/dsh-evidence-format",
+      "version": "0.1.0"
+    },
+    {
       "name": "@deepseek-ai/dsh-experimental-agent-team",
       "version": "0.1.1-rc.2"
     },
     {
       "name": "@deepseek-ai/dsh-experimental-tool-agent-team",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-feature-gates",
+      "version": "0.1.0"
     },
     {
       "name": "@deepseek-ai/dsh-file-reference",
@@ -629,6 +637,14 @@
     {
       "name": "@deepseek-ai/dsh-plan-mode",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-manifest",
+      "version": "0.1.0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-principal",
+      "version": "0.1.0"
     },
     {
       "name": "@deepseek-ai/dsh-pwsh-local",

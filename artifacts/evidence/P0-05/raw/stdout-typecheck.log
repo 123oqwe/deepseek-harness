@@ -1,0 +1,31 @@
+$ npm run build:lib:host && npm run typecheck:contracts-ready
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @deepseek-ai/dsh-root@0.1.1-rc.2 build:lib:host
+> tsc -b tsconfig.host.json && tsdown --env.DSH_BUILD_FACE host
+
+packages/migration/feature-gates/src/index.ts(46,14): error TS18048: 'aMain' is possibly 'undefined'.
+packages/migration/feature-gates/src/index.ts(47,14): error TS18048: 'bMain' is possibly 'undefined'.
+packages/assurance/evidence-format/src/types.ts(65,39): error TS1002: Unterminated string literal.
+packages/assurance/evidence-format/src/types.ts(66,1): error TS1005: ',' expected.
+packages/assurance/evidence-format/src/types.ts(66,6): error TS1002: Unterminated string literal.
+packages/assurance/evidence-format/src/types.ts(67,6): error TS1005: ',' expected.
+packages/assurance/evidence-format/src/types.ts(68,6): error TS1005: ',' expected.
+packages/assurance/evidence-format/src/types.ts(69,4): error TS1005: ',' expected.
+packages/assurance/evidence-format/src/types.ts(71,1): error TS1160: Unterminated template literal.
+packages/plugin/plugin-manifest/src/validate.ts(15,4): error TS6196: 'ManifestTool' is declared but never used.
+packages/plugin/plugin-manifest/src/validate.ts(46,10): error TS2352: Conversion of type 'PluginManifestV2' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'PluginManifestV2'.
+packages/plugin/plugin-manifest/src/validate.ts(49,10): error TS2352: Conversion of type 'PluginManifestV2' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'PluginManifestV2'.
+packages/plugin/plugin-manifest/src/validate.ts(52,10): error TS2352: Conversion of type 'PluginManifestV2' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'PluginManifestV2'.
+packages/plugin/plugin-manifest/src/validate.ts(55,10): error TS2352: Conversion of type 'PluginManifestV2' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'PluginManifestV2'.
+packages/plugin/plugin-manifest/src/validate.ts(58,10): error TS2352: Conversion of type 'PluginManifestV2' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'PluginManifestV2'.
+packages/identity/principal/src/chain.ts(49,10): error TS2375: Type '{ principalId: string; kind: "user" | "service" | "agent" | "anonymous-dev"; delegatedAt: string; reason: string | undefined; }' is not assignable to type 'DelegationEntry' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'reason' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+[ELIFECYCLE] Command failed with exit code 2.

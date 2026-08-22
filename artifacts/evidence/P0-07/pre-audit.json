@@ -1,0 +1,11 @@
+{
+  "issue_id": "P0-07",
+  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "salvageable": [
+    "all prototype files"
+  ],
+  "must_rewrite": [
+    "tsconfig paths",
+    "package.json private flag"
+  ]
+}
