@@ -26,6 +26,11 @@ export { workspaceDomainState, workspaceRecord, workspaceDomainSpec } from './sp
 export type { WorkspaceDomainState, WorkspaceRecord } from './spec.ts'
 export { realpathNormalize } from './paths.ts'
 
+// P1-07: Re-export workspace trust boundary types so consumers can check trust state
+// before loading project-level execution content (plugins, hooks, MCP, skills, config).
+export type { WorkspaceTrustState, WorkspaceIdentity, TrustPolicy } from '@deepseek-ai/dsh-workspace-trust'
+export { WorkspaceTrustError, getOrCreateWorkspace, setTrustState, getTrustPolicy, isAllowed, assertAllowed } from '@deepseek-ai/dsh-workspace-trust'
+
 /** Identifies one workspace record (see `src/types.ts` for the brand rationale). */
 export type WorkspaceId = WorkspaceIdBrand
 

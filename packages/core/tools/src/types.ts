@@ -7,6 +7,11 @@
 import type { CallId } from '@deepseek-ai/dsh-llm/brand'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
 
+// P2-03: Re-export ActionManifest types so every tool with side effects
+// can be described by a canonical manifest before execution.
+export type { ActionManifest, ActionRiskLevel, CanonicalParameters } from '@deepseek-ai/dsh-action-manifest'
+export { canonicalizeParameters, computeDigest, classifyRisk } from '@deepseek-ai/dsh-action-manifest'
+
 /** Payload recorded when one nested Code Mode Tool dispatch starts. */
 export interface CodeDispatchStartEventData {
   rootCallId: CallId

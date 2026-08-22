@@ -1,0 +1,18 @@
+{
+  "issue_id": "P1-07",
+  "status": "PARTIALLY_WIRED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "required_proof_classes": ["security/static proof", "shipping build/boot/CI integration proof"],
+  "runtime_reachability": {
+    "entrypoint": "@deepseek-ai/dsh-workspace re-exports trust API",
+    "shipping_files_wired": ["packages/workspace/workspace/src/index.ts"],
+    "wired": true
+  },
+  "remaining_risks": [
+    "Trust check not yet enforced in agent-instructions loading path",
+    "Trust decisions not yet persisted (currently in-memory Map)",
+    "Symlink and directory-replacement attack tests not yet written"
+  ]
+}

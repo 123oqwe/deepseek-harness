@@ -1,0 +1,2 @@
+{"cmd": "npx vitest run packages/action/action-manifest/tests/manifest.spec.ts", "exit": 0, "result": "tests passed"}
+{"cmd": "oxlint packages/core/tools/src/types.ts", "exit": 0, "result": "lint clean"}

@@ -1,0 +1,2 @@
+{"cmd": "npx vitest run packages/workspace/workspace-trust/tests/trust.spec.ts", "exit": 0, "result": "7 tests passed"}
+{"cmd": "oxlint packages/workspace/workspace/src/index.ts", "exit": 0, "result": "lint clean"}
