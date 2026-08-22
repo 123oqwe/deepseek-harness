@@ -1,4 +1,4 @@
-import type { EvalResult } from '@deepseek-ai/dsh-eval'
+import type { EvalResult } from './types.ts'
 
 export interface ChallengerComparison {
   readonly championId: string

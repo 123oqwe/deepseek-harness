@@ -17,6 +17,15 @@
     },
     {
       "path": "../router-regret"
+    },
+    {
+      "path": "../eval-registry"
+    },
+    {
+      "path": "../eval-runner"
+    },
+    {
+      "path": "../champion-challenger"
     }
   ],
   "exclude": [

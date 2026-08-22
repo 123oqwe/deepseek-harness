@@ -4024,11 +4024,7 @@ importers:
         specifier: workspace:^
         version: link:../../util/timeout
 
-  packages/evaluation/champion-challenger:
-    dependencies:
-      '@deepseek-ai/dsh-eval':
-        specifier: workspace:*
-        version: link:../eval
+  packages/evaluation/champion-challenger: {}
 
   packages/evaluation/eval:
     dependencies:
@@ -4045,17 +4041,9 @@ importers:
         specifier: workspace:^
         version: link:../evolution-proposal
 
-  packages/evaluation/eval-registry:
-    dependencies:
-      '@deepseek-ai/dsh-eval':
-        specifier: workspace:^
-        version: link:../eval
+  packages/evaluation/eval-registry: {}
 
-  packages/evaluation/eval-runner:
-    dependencies:
-      '@deepseek-ai/dsh-eval':
-        specifier: workspace:^
-        version: link:../eval
+  packages/evaluation/eval-runner: {}
 
   packages/evaluation/evolution-proposal:
     dependencies:

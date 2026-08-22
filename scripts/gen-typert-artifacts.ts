@@ -12,9 +12,6 @@ try {
         // eslint-disable-next-line no-unsafe-assignment
         const manifest = JSON.parse(readFileSync(join(root, candidate.root, 'package.json'), 'utf8'))
         // eslint-disable-next-line no-unsafe-member-access
-        // eslint-disable-next-line no-unsafe-member-access
-        // eslint-disable-next-line no-unsafe-member-access
-        // eslint-disable-next-line no-unsafe-member-access
         return manifest.exports && (manifest.exports['./typert'] || manifest.exports['./remote'] || manifest.exports['./client/typert'])
       } catch { return false }
     })

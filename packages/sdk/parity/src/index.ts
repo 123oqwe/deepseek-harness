@@ -48,7 +48,6 @@ export function checkParity(
     }
     if (field.defaultValue !== undefined && actual.defaultValue !== undefined && actual.defaultValue !== field.defaultValue) {
       // eslint-disable-next-line no-base-to-string
-      // eslint-disable-next-line no-base-to-string
       mismatches.push({ field: field.name, expected: String(field.defaultValue), actual: String(actual.defaultValue ?? 'none') })
       continue
     }

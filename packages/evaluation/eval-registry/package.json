@@ -25,8 +25,5 @@
     "lib/index.js",
     "lib/types/**/*.d.ts"
   ],
-  "license": "MIT",
-  "dependencies": {
-    "@deepseek-ai/dsh-eval": "workspace:^"
-  }
+  "license": "MIT"
 }

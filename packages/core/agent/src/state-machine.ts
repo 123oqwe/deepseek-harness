@@ -42,7 +42,6 @@ export class InvalidAgentTransitionError extends Error {
 
 export function canTransition(from: AgentState, to: AgentState): boolean {
   // eslint-disable-next-line no-unnecessary-condition
-  // eslint-disable-next-line no-unnecessary-condition
   return ALLOWED[from]?.includes(to) ?? false
 }
 
