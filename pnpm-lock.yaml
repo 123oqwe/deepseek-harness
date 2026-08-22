@@ -4589,6 +4589,8 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/governance/org-policy: {}
+
   packages/guard/repeat-tool-reminder:
     dependencies:
       '@deepseek-ai/schemastery':
