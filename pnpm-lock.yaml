@@ -3797,6 +3797,8 @@ importers:
         specifier: workspace:^
         version: link:../../util/timeout
 
+  packages/evaluation/replay: {}
+
   packages/examples/acp-demo:
     dependencies:
       '@deepseek-ai/schemastery':
