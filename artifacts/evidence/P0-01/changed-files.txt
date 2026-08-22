@@ -1,0 +1,13 @@
+ docs/audit/baseline-b150a551.md
+ scripts/release/baseline-fingerprint.mjs
+ tests/release/baseline-fingerprint.spec.ts
+ .dsh/baseline.json
+ package.json
+ vitest.config.ts
+ artifacts/evidence/P0-01/summary.json
+ artifacts/evidence/P0-01/changed-files.txt
+ artifacts/evidence/P0-01/test-results.json
+ artifacts/evidence/P0-01/remaining-risks.md
+ task_plan.md
+ findings.md
+ progress.md

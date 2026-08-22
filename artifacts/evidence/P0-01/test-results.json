@@ -1,0 +1,18 @@
+ {
+   "command": "pnpm vitest run tests/release/baseline-fingerprint.spec.ts",
+   "exit_code": 0,
+   "total": 9,
+   "passed": 9,
+   "failed": 0,
+   "tests": [
+     { "name": "baseline.json exists and is valid JSON", "status": "PASS" },
+     { "name": "fingerprint covers all declared schema files", "status": "PASS" },
+     { "name": "fingerprint covers all declared manifest files", "status": "PASS" },
+     { "name": "bundle row IDs match cordis.patch.yml", "status": "PASS" },
+     { "name": "fingerprint is deterministic (no timestamps)", "status": "PASS" },
+     { "name": "baseline:verify passes on clean checkout", "status": "PASS" },
+     { "name": "baseline:verify detects schema drift", "status": "PASS" },
+     { "name": "baseline:verify detects manifest drift", "status": "PASS" },
+     { "name": "baseline:verify detects bundle row ID drift", "status": "PASS" }
+   ]
+ }

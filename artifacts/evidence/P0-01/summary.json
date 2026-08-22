@@ -1,0 +1,32 @@
+ {
+   "issue_id": "P0-01",
+   "title": "锁定可复现审计基线与仓库指纹",
+   "branch": "feat/p0-01-baseline-fingerprint",
+   "status": "PASS",
+   "acceptance_criteria_met": [
+     "Same clean checkout produces same normalized fingerprint",
+     "Tampering any schema, bundle row, or manifest causes verify to fail with minimal diff",
+     "Restoring files makes verify pass again"
+   ],
+   "tests": {
+     "total": 9,
+     "passed": 9,
+     "failed": 0,
+     "not_run": 0
+   },
+   "commands_run": [
+     "pnpm baseline:capture",
+     "pnpm baseline:verify",
+     "pnpm vitest run tests/release/baseline-fingerprint.spec.ts"
+   ],
+   "new_files": [
+     "docs/audit/baseline-b150a551.md",
+     "scripts/release/baseline-fingerprint.mjs",
+     "tests/release/baseline-fingerprint.spec.ts",
+     ".dsh/baseline.json"
+   ],
+   "modified_files": [
+     "package.json (added baseline:capture and baseline:verify scripts)",
+     "vitest.config.ts (added tests/**/*.spec.ts to testIncludes)"
+   ]
+ }
