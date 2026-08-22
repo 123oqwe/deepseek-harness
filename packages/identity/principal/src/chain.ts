@@ -50,7 +50,7 @@ export function extendChain(
     principalId: delegatedPrincipal.id,
     kind: delegatedPrincipal.kind,
     delegatedAt: new Date().toISOString(),
-    reason,
+    ...(reason !== undefined && { reason }),
   }
 
   return {
