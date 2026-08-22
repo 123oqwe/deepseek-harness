@@ -5702,6 +5702,10 @@ importers:
 
   packages/privacy/redaction: {}
 
+  packages/run/trigger-service: {}
+
+  packages/run/turn-checkpoint: {}
+
   packages/runtime-diagnostics/invariants:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -7038,6 +7042,12 @@ importers:
       '@deepseek-ai/dsh-storage':
         specifier: workspace:^
         version: link:../storage
+
+  packages/subagent/adapter-acp: {}
+
+  packages/subagent/adapter-claude-code: {}
+
+  packages/subagent/adapter-codex: {}
 
   packages/subagent/subagent:
     dependencies:
