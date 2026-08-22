@@ -904,6 +904,8 @@ importers:
         specifier: workspace:^
         version: link:../artifact
 
+  packages/assurance/claim-graph: {}
+
   packages/assurance/evidence: {}
 
   packages/assurance/verifier: {}
