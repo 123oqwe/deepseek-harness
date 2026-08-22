@@ -252,6 +252,7 @@
     { "path": "./packages/test-support/loader-smoke" },
     { "path": "./packages/test-support/llm-mock-server" },
     { "path": "./packages/subagent/subagent" },
+    { "path": "./packages/compaction/compaction" },
     { "path": "./packages/subagent/tool-subagent" },
     { "path": "./packages/subagent/tool-subagent-control" },
     { "path": "./packages/subagent/tool-subagent-report" },

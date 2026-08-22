@@ -1,0 +1,4 @@
+packages/compaction/compaction/src/index.ts
+packages/compaction/compaction/src/coverage.ts
+packages/compaction/compaction/src/provenance.ts
+packages/compaction/compaction/tests/fidelity.spec.ts
