@@ -18,7 +18,9 @@ import type { JsonValue } from './json.ts'
 // See packages/run/run/src/types.ts for the authoritative source.
 export type { RunState, RunId, RunEvent, Run } from '@deepseek-ai/dsh-run'
 // P2-01: Canonical Principal/Identity types
-export type { Principal, IdentityContext, TenantId, DelegationChain } from '@deepseek-ai/dsh-principal'
+// Principal/Identity types are defined in the identity layer; import directly
+// from @deepseek-ai/dsh-principal where needed. Do not re-export from here
+// to avoid upward layer dependency (session is layer 3, identity is layer 4).
 
 // The lossless-JSON payload type belongs to this client-safe face too: a wire
 // contract carrying JSON data must not import the root entry, which merges
