@@ -1,0 +1,2 @@
+packages/kernel/trust-kernel/src/index.ts:210:1: error @stylistic(indent): Expected indentation of 6 spaces but found 8.
+packages/kernel/trust-kernel/src/index.ts:109:64: error typescript(no-unnecessary-type-assertion): This assertion is unnecessary since the receiver accepts the original type of the expression.

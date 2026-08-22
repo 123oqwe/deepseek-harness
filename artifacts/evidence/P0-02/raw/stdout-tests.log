@@ -1,0 +1,32 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ❯ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts (19 tests | 1 failed) 125ms
+     × audit chain is durable: survives process restart (new kernel instance) 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is durable: survives process restart (new kernel instance)
+AssertionError: expected '0da02ac6316d9c675d46c77f7dee33cf50c20…' to be 'b4a0c4e6e1ad154d67925a9f643915f754634…' // Object.is equality
+
+Expected: "b4a0c4e6e1ad154d67925a9f643915f75463449cf874726e4e659233273b3014"
+Received: "0da02ac6316d9c675d46c77f7dee33cf50c2013ebb4348cc9cc174433a90fec1"
+
+ ❯ packages/kernel/trust-kernel/tests/boundary.spec.ts:125:31
+    123|
+    124|     // The audit head should continue from the previous chain
+    125|     expect(kernel2.auditHead).toBe(headBeforeCrash)
+       |                               ^
+    126|
+    127|     // New records should chain from the previous head
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  19:57:43
+   Duration  567ms (transform 205ms, setup 222ms, import 28ms, tests 125ms, environment 0ms)

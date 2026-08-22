@@ -1,0 +1,11 @@
+{
+  "commands.jsonl": "933685d3b37bc1b6545fa2db8e7e1d73f9ea4d105c3b656ac8daf83c3049bf66",
+  "changed-files.txt": "221babe6a32b1a4f74f2ee9aa0cccf4f2e5edcc625bbb8cf109eb4dfbee5811b",
+  "pre-audit.json": "f007ab121c12c7ebb4d884ddd38597530a428390e46984c56a358d75c68ffe49",
+  "remaining-risks.md": "446585df0da544922655baf34eaaf8627ade3b7fbb89c787ad3babe5599f03c4",
+  "status.json": "8ee6ae543945be05749defcc967d1e000ba6cc0e0eb2251c8b0515f556462de9",
+  "raw/stdout-typecheck.log": "13cbf81bf328367e475f7f653a8f11a20b89caf59aafc54f81b8b4649a13b383",
+  "raw/stdout-tests-final.log": "63876c9c722ef2a7529e30780398e4d36965890922b0a5e9400f0d365dbb3d2e",
+  "raw/stdout-tests.log": "942a39fa79788b599f4802c8cf823d23642ad6e879fe203e6f4f42b12d086d0f",
+  "raw/stdout-lint.log": "a716aab98464adec55194ee6bb827fdc9d4f6bba8c556e2ceb909b3f96191639"
+}

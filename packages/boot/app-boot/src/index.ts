@@ -17,6 +17,7 @@ import Include, { applyEntryPatches, entryListSchema, type PatchOptions } from '
 import Group from '@deepseek-ai/cordis-plugin-group'
 import { dshHomePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
+import { initTrustKernel, isKernelInitialized, type TrustKernelHandle } from '@deepseek-ai/dsh-trust-kernel'
 import type {} from '@deepseek-ai/cordis-plugin-hmr'
 // Side-effect type import: resolves `ctx.get('systemPrompt')` to the service.
 import type {} from '@deepseek-ai/dsh-system-prompt'
@@ -25,6 +26,8 @@ declare module '@deepseek-ai/cordis' {
   interface Context {
     /** Harness-home path resolver available to Loader `!!js` config expressions. */
     dshHomePath?: typeof dshHomePath
+    /** Trust Kernel handle, set once before Context creation. */
+    trustKernelHandle?: TrustKernelHandle
   }
 }
 
@@ -761,7 +764,19 @@ export async function boot(
   prepare?: (ctx: Context) => Promise<void> | void,
   bareModuleBaseUrl?: string,
 ): Promise<Context> {
+  // Initialize the Trust Kernel before any Cordis Context is created.
+  // In production, the kernel fails closed if sandbox attestation fails.
+  // In development (DSH_INSECURE=1 or NODE_ENV=test), the kernel allows boot with a warning.
+  let kernelHandle: TrustKernelHandle | undefined
+  if (!isKernelInitialized()) {
+    const insecure = process.env['DSH_INSECURE'] === '1' || process.env['NODE_ENV'] === 'test'
+    kernelHandle = initTrustKernel({ insecure })
+  }
+
   const ctx = new Context()
+  if (kernelHandle) {
+    ctx.trustKernelHandle = kernelHandle
+  }
   // Two failure labels: `prepare` runs before any config-tree entry mounts,
   // so its failure is host setup, not the plugin tree.
   let stage = 'host preparation failed'

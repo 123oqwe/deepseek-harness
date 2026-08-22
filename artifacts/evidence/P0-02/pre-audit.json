@@ -1,0 +1,36 @@
+{
+  "issue_id": "P0-02",
+  "title": "Establish Minimal Immutable Trust Kernel boundary",
+  "audit_classification": "SECURITY_STUB_NOT_WIRED",
+  "current_state": "SCAFFOLD_OR_WORSE",
+  "prototype_branch": "feat/p0-02-trust-kernel",
+  "prototype_pr": 2,
+  "merge_policy": "reference_only_do_not_merge",
+  "audited_findings": [
+    "Signature verification accepts any bytes whenever keyId is listed; the signature is not cryptographically checked.",
+    "Sandbox attestation returns success without querying a real sandbox provider.",
+    "Audit records live only in an in-process array and the kernel is not proven to initialize before every Cordis context."
+  ],
+  "salvageable_from_prototype": [
+    "packages/kernel/trust-kernel/src/types.ts \u2014 type definitions are independently correct",
+    "packages/kernel/trust-kernel/src/invariant.ts \u2014 singleton pattern and immutability boundary are correct",
+    "packages/kernel/trust-kernel/tests/boundary.spec.ts \u2014 test structure is reusable but must add real crypto verification tests"
+  ],
+  "must_rewrite": [
+    "src/index.ts verifySignature() \u2014 must use node:crypto verify() with real public keys, not accept any bytes",
+    "src/index.ts verifySandboxAttestation() \u2014 must call a real attestation provider, not return hardcoded success",
+    "src/index.ts appendAudit() \u2014 must use durable storage (file-based hash chain), not in-process array",
+    "src/index.ts \u2014 must be wired into packages/boot/app-boot/src/index.ts before Cordis Context creation"
+  ],
+  "shipping_files_to_wire": [
+    "docs/architecture.md",
+    "packages/boot/app-boot/src/index.ts",
+    "apps/cli/src/profile-boot.ts"
+  ],
+  "main_chain_gaps": [
+    "Trust kernel not initialized in real boot path",
+    "No real cryptographic signature verification",
+    "No durable audit storage",
+    "No real sandbox attestation verification"
+  ]
+}
