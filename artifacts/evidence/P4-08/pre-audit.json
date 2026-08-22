@@ -1,0 +1,57 @@
+{
+  "issue_id": "P4-08",
+  "title": "Workflow Journal 与步骤级 Resume",
+  "audit_date": "2026-08-22T21:40:19.286Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/workflow/workflow-journal/src/index.ts",
+    "packages/workflow/workflow-journal/src/types.ts",
+    "packages/workflow/workflow-journal/src/replay.ts",
+    "packages/workflow/workflow-journal/tests/resume.e2e.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/workflow/workflow/src/runtime-types.ts",
+    "packages/workflow/workflow-worker-thread/src/host.ts",
+    "packages/workflow/workflow-worker-thread/src/protocol.ts",
+    "packages/workflow/workflow-worker-thread/src/session.ts",
+    "packages/workflow/workflow-worker-thread/src/worker.ts"
+  ],
+  "source_files": [
+    "packages/workflow/workflow-journal/src/index.ts",
+    "packages/workflow/workflow-journal/src/types.ts",
+    "packages/workflow/workflow-journal/src/replay.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/workflow/workflow/src/runtime-types.ts",
+    "packages/workflow/workflow-worker-thread/src/host.ts",
+    "packages/workflow/workflow-worker-thread/src/protocol.ts",
+    "packages/workflow/workflow-worker-thread/src/session.ts",
+    "packages/workflow/workflow-worker-thread/src/worker.ts"
+  ],
+  "test_files": [
+    "packages/workflow/workflow-journal/tests/resume.spec.ts",
+    "packages/workflow/workflow/tests/invariant.spec.ts",
+    "packages/workflow/workflow/tests/workflow.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/workflow/workflow-journal/src/index.ts",
+    "packages/workflow/workflow-journal/src/types.ts",
+    "packages/workflow/workflow-journal/src/replay.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/workflow/workflow/src/runtime-types.ts",
+    "packages/workflow/workflow-worker-thread/src/host.ts",
+    "packages/workflow/workflow-worker-thread/src/protocol.ts",
+    "packages/workflow/workflow-worker-thread/src/session.ts",
+    "packages/workflow/workflow-worker-thread/src/worker.ts"
+  ],
+  "classification": "NOT_DURABLE_AND_BAD_RESUME_SEMANTICS",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 9 files, Tests: 9 files, Docs: 0 files"
+}

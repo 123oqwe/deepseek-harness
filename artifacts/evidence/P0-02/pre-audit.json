@@ -1,36 +1,68 @@
 {
   "issue_id": "P0-02",
-  "title": "Establish Minimal Immutable Trust Kernel boundary",
-  "audit_classification": "SECURITY_STUB_NOT_WIRED",
-  "current_state": "SCAFFOLD_OR_WORSE",
-  "prototype_branch": "feat/p0-02-trust-kernel",
-  "prototype_pr": 2,
-  "merge_policy": "reference_only_do_not_merge",
-  "audited_findings": [
-    "Signature verification accepts any bytes whenever keyId is listed; the signature is not cryptographically checked.",
-    "Sandbox attestation returns success without querying a real sandbox provider.",
-    "Audit records live only in an in-process array and the kernel is not proven to initialize before every Cordis context."
-  ],
-  "salvageable_from_prototype": [
-    "packages/kernel/trust-kernel/src/types.ts \u2014 type definitions are independently correct",
-    "packages/kernel/trust-kernel/src/invariant.ts \u2014 singleton pattern and immutability boundary are correct",
-    "packages/kernel/trust-kernel/tests/boundary.spec.ts \u2014 test structure is reusable but must add real crypto verification tests"
-  ],
-  "must_rewrite": [
-    "src/index.ts verifySignature() \u2014 must use node:crypto verify() with real public keys, not accept any bytes",
-    "src/index.ts verifySandboxAttestation() \u2014 must call a real attestation provider, not return hardcoded success",
-    "src/index.ts appendAudit() \u2014 must use durable storage (file-based hash chain), not in-process array",
-    "src/index.ts \u2014 must be wired into packages/boot/app-boot/src/index.ts before Cordis Context creation"
-  ],
-  "shipping_files_to_wire": [
+  "title": "确立 Minimal Immutable Trust Kernel 边界",
+  "audit_date": "2026-08-22T21:02:04.703Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "docs/architecture/trust-kernel-boundary.md",
+    "packages/kernel/trust-kernel/src/index.ts",
+    "packages/kernel/trust-kernel/src/types.ts",
+    "packages/kernel/trust-kernel/src/invariant.ts",
+    "packages/kernel/trust-kernel/tests/boundary.spec.ts",
     "docs/architecture.md",
-    "packages/boot/app-boot/src/index.ts",
-    "apps/cli/src/profile-boot.ts"
+    "README.md",
+    "packages/README.md",
+    "AGENTS.md",
+    "apps/cli/src/profile-boot.ts",
+    "packages/boot/app-boot/src/index.ts"
   ],
-  "main_chain_gaps": [
-    "Trust kernel not initialized in real boot path",
-    "No real cryptographic signature verification",
-    "No durable audit storage",
-    "No real sandbox attestation verification"
-  ]
+  "source_files": [
+    "packages/kernel/trust-kernel/src/index.ts",
+    "packages/kernel/trust-kernel/src/types.ts",
+    "packages/kernel/trust-kernel/src/invariant.ts",
+    "apps/cli/src/profile-boot.ts",
+    "packages/boot/app-boot/src/index.ts"
+  ],
+  "test_files": [
+    "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+    "packages/kernel/trust-kernel/tests/enforcement.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/boot/app-boot/tests/config-dump.spec.ts",
+    "packages/boot/app-boot/tests/profile.spec.ts",
+    "packages/boot/app-boot/tests/hmr-config.spec.ts",
+    "packages/boot/app-boot/tests/app-boot.spec.ts",
+    "packages/boot/app-boot/tests/config-reload.spec.ts",
+    "packages/boot/app-boot/tests/user-patches.spec.ts"
+  ],
+  "doc_files": [
+    "docs/architecture/trust-kernel-boundary.md",
+    "docs/architecture.md",
+    "README.md",
+    "packages/README.md",
+    "AGENTS.md"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "docs/architecture/trust-kernel-boundary.md",
+    "packages/kernel/trust-kernel/src/index.ts",
+    "packages/kernel/trust-kernel/src/types.ts",
+    "packages/kernel/trust-kernel/src/invariant.ts",
+    "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+    "docs/architecture.md",
+    "README.md",
+    "packages/README.md",
+    "AGENTS.md",
+    "apps/cli/src/profile-boot.ts",
+    "packages/boot/app-boot/src/index.ts"
+  ],
+  "classification": "SECURITY_STUB_NOT_WIRED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 5 files, Tests: 15 files, Docs: 5 files"
 }

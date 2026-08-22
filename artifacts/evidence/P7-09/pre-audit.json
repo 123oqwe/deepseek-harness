@@ -1,15 +1,65 @@
 {
   "issue_id": "P7-09",
-  "audit_date": "2026-08-22T20:18:52.870Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/assurance/capability-suite"
+  "title": "General-Purpose Capability Scenario Suite：用领域夹具验证 Harness，而非内置垂直 Agent",
+  "audit_date": "2026-08-22T22:22:25.262Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "tests/capability/README.md",
+    "tests/capability/manifest.yaml",
+    "tests/capability/runner.ts",
+    "tests/capability/worlds/code-world.ts",
+    "tests/capability/worlds/research-world.ts",
+    "tests/capability/worlds/external-write-world.ts",
+    "tests/capability/worlds/high-risk-world.ts",
+    "tests/capability/worlds/long-run-world.ts",
+    "tests/capability/worlds/malicious-plugin-world.ts",
+    "tests/capability/worlds/multi-tenant-world.ts",
+    "tests/capability/worlds/sdk-reconnect-world.ts",
+    "BENCHMARK.md",
+    "package.json",
+    "docs/testing.md",
+    "packages/test-support/README.md",
+    "examples/jsonrpc-agent/README.md"
   ],
-  "source_files": [],
+  "source_files": [
+    "tests/capability/worlds/code-world.ts",
+    "tests/capability/worlds/research-world.ts",
+    "tests/capability/worlds/external-write-world.ts",
+    "tests/capability/worlds/high-risk-world.ts",
+    "tests/capability/worlds/long-run-world.ts",
+    "tests/capability/worlds/malicious-plugin-world.ts",
+    "tests/capability/worlds/multi-tenant-world.ts",
+    "tests/capability/worlds/sdk-reconnect-world.ts"
+  ],
   "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "doc_files": [
+    "tests/capability/manifest.yaml",
+    "BENCHMARK.md",
+    "docs/testing.md",
+    "packages/test-support/README.md",
+    "examples/jsonrpc-agent/README.md"
+  ],
+  "other_files": [
+    "package.json"
+  ],
+  "changed_files": [
+    "tests/capability/manifest.yaml",
+    "tests/capability/worlds/code-world.ts",
+    "tests/capability/worlds/research-world.ts",
+    "tests/capability/worlds/external-write-world.ts",
+    "tests/capability/worlds/high-risk-world.ts",
+    "tests/capability/worlds/long-run-world.ts",
+    "tests/capability/worlds/malicious-plugin-world.ts",
+    "tests/capability/worlds/multi-tenant-world.ts",
+    "tests/capability/worlds/sdk-reconnect-world.ts",
+    "BENCHMARK.md",
+    "package.json",
+    "docs/testing.md",
+    "packages/test-support/README.md",
+    "examples/jsonrpc-agent/README.md"
+  ],
+  "classification": "NON_EXECUTING_CAPABILITY_SUITE",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 8 files, Tests: 0 files, Docs: 5 files"
 }

@@ -1,30 +1,79 @@
 {
   "issue_id": "P7-06",
-  "audit_date": "2026-08-22T19:39:59.755Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/assurance/repair"
+  "title": "Bounded Repair/Replan Loop：验证失败后的有限修复与计划修订",
+  "audit_date": "2026-08-22T22:17:48.843Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/assurance/repair/src/index.ts",
+    "packages/assurance/repair/src/types.ts",
+    "packages/assurance/repair/src/coordinator.ts",
+    "packages/assurance/repair/src/policy.ts",
+    "packages/assurance/repair/tests/repair.e2e.ts",
+    "packages/llm/llm-retry/src/index.ts",
+    "packages/llm/llm-retry/src/types.ts",
+    "packages/guard/repeat-tool-reminder/src/index.ts",
+    "packages/core/agent-loop/src/agent.ts",
+    "packages/workflow/workflow-worker-thread/src/runtime.ts"
   ],
   "source_files": [
-    "packages/assurance/repair/src/coordinator.ts",
     "packages/assurance/repair/src/index.ts",
+    "packages/assurance/repair/src/types.ts",
+    "packages/assurance/repair/src/coordinator.ts",
     "packages/assurance/repair/src/policy.ts",
-    "packages/assurance/repair/src/types.ts"
+    "packages/llm/llm-retry/src/index.ts",
+    "packages/llm/llm-retry/src/types.ts",
+    "packages/guard/repeat-tool-reminder/src/index.ts",
+    "packages/core/agent-loop/src/agent.ts",
+    "packages/workflow/workflow-worker-thread/src/runtime.ts"
   ],
   "test_files": [
-    "packages/assurance/repair/tests/repair.spec.ts"
-  ],
-  "changed_files": [
-    "packages/assurance/repair/package.json",
-    "packages/assurance/repair/src/coordinator.ts",
-    "packages/assurance/repair/src/index.ts",
-    "packages/assurance/repair/src/policy.ts",
-    "packages/assurance/repair/src/types.ts",
     "packages/assurance/repair/tests/repair.spec.ts",
-    "packages/assurance/repair/tsconfig.json"
+    "packages/llm/llm-retry/tests/transport-recovery.spec.ts",
+    "packages/llm/llm-retry/tests/retry.spec.ts",
+    "packages/llm/llm-retry/tests/persistence.spec.ts",
+    "packages/llm/llm-retry/tests/loader-composition.spec.ts",
+    "packages/llm/llm-retry/tests/invariant.spec.ts",
+    "packages/guard/repeat-tool-reminder/tests/repeat-tool-reminder.spec.ts",
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/assurance/repair/src/index.ts",
+    "packages/assurance/repair/src/types.ts",
+    "packages/assurance/repair/src/coordinator.ts",
+    "packages/assurance/repair/src/policy.ts",
+    "packages/llm/llm-retry/src/index.ts",
+    "packages/llm/llm-retry/src/types.ts",
+    "packages/guard/repeat-tool-reminder/src/index.ts",
+    "packages/core/agent-loop/src/agent.ts",
+    "packages/workflow/workflow-worker-thread/src/runtime.ts"
+  ],
+  "classification": "ASSURANCE_SCAFFOLD_CANNOT_PROVE_OUTCOME",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 9 files, Tests: 31 files, Docs: 0 files"
 }

@@ -1,3 +1,2 @@
-# P1-01 Remaining Risks
-
-- Package is a standalone module; integration into shipping profiles depends on later waves.
+- 5 test(s) failing
+- Code ported from prototype branch; needs deeper integration verification

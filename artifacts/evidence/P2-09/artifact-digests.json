@@ -1,7 +1,8 @@
 {
-  "packages/interaction/approval-quorum/package.json": "f2d0d2f63fe7465a21db9cfde44d9b20ce0eedeb947e7e1afd99abb3d5cea8ab",
   "packages/interaction/approval-quorum/src/index.ts": "3899f6607dc8cf232773ad3c3dceb08d6caff46e681e767ad3eb5ac9c370b13a",
   "packages/interaction/approval-quorum/src/types.ts": "5a3674eddca1b48ca1844f466e0072c6dbe5a97daeb722708af26f9d7e9a984c",
   "packages/interaction/approval-quorum/tests/quorum.spec.ts": "8ff3decc5965e566f5cc1b37f93932f4fe4ab3d4e7c38417c2ab61948eba1360",
-  "packages/interaction/approval-quorum/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/interaction/approval-store/src/types.ts": "705f06d5679f65b3fe01fab42c2c284b2f2a698148af234b3421856a87b05dee",
+  "packages/policy/policy-engine/src/types.ts": "912020f568690b5cc59e4a4a71a0c0391457c1085bf54da179f4f15dd7656a1f",
+  "packages/identity/principal/src/types.ts": "a1287c863a1a8a52f14256a8c09af3b59cf6a1f99ef59da8ce1a454766471d77"
 }

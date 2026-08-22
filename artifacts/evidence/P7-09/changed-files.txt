@@ -1,1 +1,14 @@
-
+tests/capability/manifest.yaml
+tests/capability/worlds/code-world.ts
+tests/capability/worlds/research-world.ts
+tests/capability/worlds/external-write-world.ts
+tests/capability/worlds/high-risk-world.ts
+tests/capability/worlds/long-run-world.ts
+tests/capability/worlds/malicious-plugin-world.ts
+tests/capability/worlds/multi-tenant-world.ts
+tests/capability/worlds/sdk-reconnect-world.ts
+BENCHMARK.md
+package.json
+docs/testing.md
+packages/test-support/README.md
+examples/jsonrpc-agent/README.md

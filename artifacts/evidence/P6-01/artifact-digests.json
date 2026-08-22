@@ -1,0 +1,10 @@
+{
+  "packages/memory/memory/src/index.ts": "f715493dabc4a6b9a17bdc3d2f266719ef33285c48e0a9ef9c98e70581bf415a",
+  "packages/memory/memory/src/types.ts": "32e0bdb73053f00a81c48e36496bd7b7b71abf6355c265f1f3882c0d7e025436",
+  "packages/memory/memory/src/invariant.ts": "a87e59608e0d99d38c2ba4fbd066ba46bfa1e85ba4d512eb5c7781be11a721b1",
+  "packages/memory/memory/tests/conformance.spec.ts": "cf6736a507139e5ce954c2a809d349c7366042c5e410d21107b03417160e0669",
+  "packages/context/README.md": "b8d67a7b6492f7e922da0a2dd3088028bf553de9ddbb69d4c413b16ba8cb02dd",
+  "packages/session-query/session-query/src/types.ts": "169268851d14136127066db121c0104b69735b60334ca36b1a4be226c2f895e7",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8",
+  "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1"
+}

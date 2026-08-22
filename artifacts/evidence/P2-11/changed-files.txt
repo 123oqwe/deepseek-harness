@@ -1,1 +1,6 @@
-
+packages/interaction/permission-presets/src/schema.ts
+packages/interaction/permission-presets/tests/profile.spec.ts
+packages/interaction/permission-presets/src/index.ts
+packages/interaction/permission-presets/src/types.ts
+packages/interaction/permission-presets/src/client.ts
+packages/bundle/base/cordis.patch.yml

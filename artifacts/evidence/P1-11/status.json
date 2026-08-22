@@ -1,7 +1,8 @@
 {
   "issue_id": "P1-11",
-  "status": "E2E_VERIFIED",
-  "git_sha": "f7a77022239ee41b4686fdc9eeba47f33f32a386",
+  "title": "把动态 Cordis 自修改改成 Extension Proposal Pipeline",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,21 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "0 passed, 0 failed"
+    "tests": "4/7 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T20:30:32.162Z",
+  "evidence_date": "2026-08-22T21:10:32.174Z",
   "runtime_reachability": {
     "issue_id": "P1-11",
-    "entrypoint": "unknown",
-    "wired": false,
+    "source_files": 10,
+    "test_files": 7,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T20:30:32.162Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:10:32.174Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification.",
-    "No package mapping found for this issue"
+    "3 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

@@ -1,9 +1,9 @@
 {
   "issue_id": "P7-09",
-  "entrypoint": "packages/assurance/capability-suite/src/index.ts",
-  "wired": false,
+  "source_files": 8,
+  "test_files": 0,
   "compilation": "PASS",
   "lint": "PASS",
   "tests": "PASS",
-  "timestamp": "2026-08-22T20:18:52.870Z"
+  "timestamp": "2026-08-22T22:22:25.262Z"
 }

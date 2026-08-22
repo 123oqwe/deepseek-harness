@@ -1,0 +1,7 @@
+packages/plugin/plugin-ownership/src/index.ts
+packages/plugin/plugin-ownership/src/types.ts
+packages/plugin/plugin-ownership/tests/ownership.spec.ts
+packages/core/tools/src/index.ts
+packages/extensions/cordis-host-runner/src/registry.ts
+packages/extensions/cordis-host-runner/src/lifecycle.ts
+packages/host/plugin-inventory/src/index.ts

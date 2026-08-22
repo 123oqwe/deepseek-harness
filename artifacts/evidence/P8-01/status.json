@@ -1,18 +1,33 @@
 {
   "issue_id": "P8-01",
-  "status": "E2E_VERIFIED",
-  "commit_sha": "HEAD",
+  "title": "Protocol Version Negotiation 与 Capability Discovery",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "required_proof_classes": ["live server/client contract proof", "auth/reconnect/DR proof"],
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
+  },
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "10/12 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T22:22:49.265Z",
   "runtime_reachability": {
-    "entrypoint": "@deepseek-ai/dsh-sdk-protocol exports version/capabilities/schema-fingerprint",
-    "shipping_files_wired": ["packages/sdk/protocol/src/index.ts"],
-    "wired": true
+    "issue_id": "P8-01",
+    "source_files": 9,
+    "test_files": 12,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T22:22:49.265Z"
   },
   "remaining_risks": [
-    "Version negotiation not yet integrated into SDK server/client handshake (only types and logic exported)",
-    "Schema fingerprint uses types.ts content hash; not yet verified across builds",
-    "Live server/client contract test not yet written"
+    "2 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

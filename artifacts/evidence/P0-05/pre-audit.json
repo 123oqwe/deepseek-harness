@@ -1,11 +1,56 @@
 {
   "issue_id": "P0-05",
-  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
-  "salvageable": [
-    "all prototype files"
+  "title": "为重大能力引入 Shadow/Enforce Feature Gates",
+  "audit_date": "2026-08-22T21:03:16.416Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/migration/feature-gates/src/index.ts",
+    "packages/migration/feature-gates/src/types.ts",
+    "packages/migration/feature-gates/tests/gates.spec.ts",
+    "packages/settings/settings/src/index.ts",
+    "packages/settings/settings/src/types.ts",
+    "packages/bundle/base/cordis.patch.yml",
+    "apps/cli/src/profile-boot.ts",
+    "apps/cli/src/dump-config.ts"
   ],
-  "must_rewrite": [
-    "tsconfig paths",
-    "package.json private flag"
-  ]
+  "source_files": [
+    "packages/migration/feature-gates/src/index.ts",
+    "packages/migration/feature-gates/src/types.ts",
+    "packages/settings/settings/src/index.ts",
+    "packages/settings/settings/src/types.ts",
+    "apps/cli/src/profile-boot.ts",
+    "apps/cli/src/dump-config.ts"
+  ],
+  "test_files": [
+    "packages/migration/feature-gates/tests/gates.spec.ts",
+    "packages/migration/feature-gates/tests/integration.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts"
+  ],
+  "doc_files": [
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/migration/feature-gates/src/index.ts",
+    "packages/migration/feature-gates/src/types.ts",
+    "packages/migration/feature-gates/tests/gates.spec.ts",
+    "packages/settings/settings/src/index.ts",
+    "packages/settings/settings/src/types.ts",
+    "packages/bundle/base/cordis.patch.yml",
+    "apps/cli/src/profile-boot.ts",
+    "apps/cli/src/dump-config.ts"
+  ],
+  "classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 6 files, Tests: 12 files, Docs: 1 files"
 }

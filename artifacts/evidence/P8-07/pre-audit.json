@@ -1,26 +1,58 @@
 {
   "issue_id": "P8-07",
-  "audit_date": "2026-08-22T19:42:48.853Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/sdk/parity"
+  "title": "Schema-Generated TS/Python SDK Parity 与 Contract Test Matrix",
+  "audit_date": "2026-08-22T22:28:25.874Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/sdk/schema/control-protocol.json",
+    "packages/sdk/codegen/src/index.ts",
+    "packages/sdk/contract-tests/src/cases.ts",
+    "python/sdk/tests/test_control_protocol_contract.py",
+    "packages/sdk/client/tests/control-protocol.contract.spec.ts",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/sdk/client/src/api.ts",
+    "packages/sdk/server/src/server.ts",
+    "python/sdk/README.md",
+    "python/sdk-runtime/README.md",
+    "scripts/build-exe-for-python-sdk.ts",
+    "scripts/build-python-release.py"
   ],
   "source_files": [
-    "packages/sdk/parity/src/index.ts",
-    "packages/sdk/parity/src/types.ts"
+    "packages/sdk/protocol/src/types.ts",
+    "packages/sdk/client/src/api.ts",
+    "packages/sdk/server/src/server.ts",
+    "scripts/build-exe-for-python-sdk.ts"
   ],
   "test_files": [
-    "packages/sdk/parity/tests/parity.spec.ts"
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
+    "packages/sdk/client/tests/dispose.spec.ts",
+    "packages/sdk/client/tests/sdk-client.spec.ts",
+    "packages/sdk/server/tests/plugin-shape.spec.ts",
+    "packages/sdk/server/tests/plugin-apply.spec.ts",
+    "packages/sdk/server/tests/server.spec.ts"
+  ],
+  "doc_files": [
+    "python/sdk/README.md",
+    "python/sdk-runtime/README.md"
+  ],
+  "other_files": [
+    "scripts/build-python-release.py"
   ],
   "changed_files": [
-    "packages/sdk/parity/package.json",
-    "packages/sdk/parity/src/index.ts",
-    "packages/sdk/parity/src/types.ts",
-    "packages/sdk/parity/tests/parity.spec.ts",
-    "packages/sdk/parity/tsconfig.json"
+    "packages/sdk/protocol/src/types.ts",
+    "packages/sdk/client/src/api.ts",
+    "packages/sdk/server/src/server.ts",
+    "python/sdk/README.md",
+    "python/sdk-runtime/README.md",
+    "scripts/build-exe-for-python-sdk.ts",
+    "scripts/build-python-release.py"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "classification": "CONTROL_PLANE_SCAFFOLD_NOT_BACKED_BY_AUTHORITIES",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 4 files, Tests: 10 files, Docs: 2 files"
 }

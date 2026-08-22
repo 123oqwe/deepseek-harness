@@ -1,0 +1,9 @@
+{
+  "packages/run/task-profile/src/index.ts": "2b26100334044cc53d6f52c8ea3a8718243e3643e453375dd3f7a4f5fe189e1e",
+  "packages/run/task-profile/src/types.ts": "cf067b9285bcb161ff54266f2d918879a9ae4addd47e040ff0dd786fd49af795",
+  "packages/run/task-profile/src/validate.ts": "d4763c8b071c53daa8aa11baed264f53ef963408a1d504bafe3d3d38521b56a6",
+  "packages/run/task-profile/tests/profile.spec.ts": "ab871a31cf484540d1124fb5c96c941c4bcb21f8762d25ae1d4b21682c8742b9",
+  "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",
+  "packages/core/agent/src/types.ts": "2353804cf902731cf979f8cb35f0ef830771133bd396a3f0afc368bc72c458bd",
+  "packages/run/run/src/types.ts": "8434df179f15ec6b8b24a14b99b418ece5e5f25d5020b74744beae8460e24981"
+}

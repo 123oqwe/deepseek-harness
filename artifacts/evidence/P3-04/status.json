@@ -1,7 +1,8 @@
 {
   "issue_id": "P3-04",
-  "status": "E2E_VERIFIED",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "title": "统一 Network Egress Proxy 与目的地策略",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,20 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "1 passed, 0 failed"
+    "tests": "16/19 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T19:24:42.538Z",
+  "evidence_date": "2026-08-22T21:29:28.082Z",
   "runtime_reachability": {
     "issue_id": "P3-04",
-    "entrypoint": "packages/execution/egress-proxy/src/index.ts",
-    "wired": true,
+    "source_files": 7,
+    "test_files": 19,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T19:24:42.538Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:29:28.082Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification."
+    "3 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

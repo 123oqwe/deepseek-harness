@@ -1,0 +1,9 @@
+packages/execution/execution-world/src/index.ts
+packages/execution/execution-world/src/types.ts
+packages/execution/execution-world/src/lifecycle.ts
+packages/execution/execution-world/tests/world.spec.ts
+packages/sandbox/sandbox/src/index.ts
+packages/sandbox/sandbox/src/escalation.ts
+packages/sandbox/sandbox/src/roots.ts
+packages/core/tools/src/types.ts
+packages/core/agent-loop/src/runtime-context.ts

@@ -1,28 +1,48 @@
 {
   "issue_id": "P3-11",
-  "audit_date": "2026-08-22T19:26:07.962Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/execution/world-snapshot"
+  "title": "ExecutionWorld Snapshot / Restore / Rollback",
+  "audit_date": "2026-08-22T21:35:22.362Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/execution/world-snapshot/src/index.ts",
+    "packages/execution/world-snapshot/src/types.ts",
+    "packages/execution/world-snapshot/src/store.ts",
+    "packages/execution/world-snapshot/tests/restore.e2e.ts",
+    "packages/compaction/compaction/src/checkpoint.ts",
+    "packages/execution/execution-world/src/lifecycle.ts",
+    "packages/workspace/workspace/src/entity.ts"
   ],
   "source_files": [
     "packages/execution/world-snapshot/src/index.ts",
+    "packages/execution/world-snapshot/src/types.ts",
     "packages/execution/world-snapshot/src/store.ts",
-    "packages/execution/world-snapshot/src/types.ts"
+    "packages/compaction/compaction/src/checkpoint.ts",
+    "packages/execution/execution-world/src/lifecycle.ts",
+    "packages/workspace/workspace/src/entity.ts"
   ],
   "test_files": [
-    "packages/execution/world-snapshot/tests/restore.spec.ts"
-  ],
-  "changed_files": [
-    "packages/execution/world-snapshot/package.json",
-    "packages/execution/world-snapshot/src/index.ts",
-    "packages/execution/world-snapshot/src/store.ts",
-    "packages/execution/world-snapshot/src/types.ts",
     "packages/execution/world-snapshot/tests/restore.spec.ts",
-    "packages/execution/world-snapshot/tsconfig.json"
+    "packages/compaction/compaction/tests/fidelity.spec.ts",
+    "packages/compaction/compaction/tests/compaction.spec.ts",
+    "packages/compaction/compaction/tests/tool-pairing.spec.ts",
+    "packages/compaction/compaction/tests/invariant.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/execution/world-snapshot/src/index.ts",
+    "packages/execution/world-snapshot/src/types.ts",
+    "packages/execution/world-snapshot/src/store.ts",
+    "packages/compaction/compaction/src/checkpoint.ts",
+    "packages/execution/execution-world/src/lifecycle.ts",
+    "packages/workspace/workspace/src/entity.ts"
+  ],
+  "classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 9 files, Docs: 0 files"
 }

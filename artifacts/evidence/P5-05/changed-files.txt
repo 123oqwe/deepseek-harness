@@ -1,1 +1,6 @@
-
+packages/subagent/subagent/src/request.ts
+packages/subagent/subagent/tests/request-contract.spec.ts
+packages/subagent/subagent/src/descriptor.ts
+packages/subagent/subagent/src/descriptor-seed.ts
+packages/subagent/subagent/src/depth.ts
+packages/subagent/subagent/src/client.ts

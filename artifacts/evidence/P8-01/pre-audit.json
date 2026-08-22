@@ -1,0 +1,62 @@
+{
+  "issue_id": "P8-01",
+  "title": "Protocol Version Negotiation 与 Capability Discovery",
+  "audit_date": "2026-08-22T22:22:49.265Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/sdk/protocol/src/version.ts",
+    "packages/sdk/protocol/src/capabilities.ts",
+    "packages/sdk/protocol/src/schema-fingerprint.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "docs/subsystems/control-protocol.md",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/sdk/protocol/src/transport.ts",
+    "packages/sdk/protocol/src/index.ts",
+    "packages/sdk/server/src/server.ts",
+    "packages/sdk/client/src/client.ts",
+    "packages/api/gateway/src/index.ts"
+  ],
+  "source_files": [
+    "packages/sdk/protocol/src/version.ts",
+    "packages/sdk/protocol/src/capabilities.ts",
+    "packages/sdk/protocol/src/schema-fingerprint.ts",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/sdk/protocol/src/transport.ts",
+    "packages/sdk/protocol/src/index.ts",
+    "packages/sdk/server/src/server.ts",
+    "packages/sdk/client/src/client.ts",
+    "packages/api/gateway/src/index.ts"
+  ],
+  "test_files": [
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
+    "packages/sdk/server/tests/plugin-shape.spec.ts",
+    "packages/sdk/server/tests/plugin-apply.spec.ts",
+    "packages/sdk/server/tests/server.spec.ts",
+    "packages/sdk/client/tests/dispose.spec.ts",
+    "packages/sdk/client/tests/sdk-client.spec.ts",
+    "packages/api/gateway/tests/gateway.host.spec.ts",
+    "packages/api/gateway/tests/gateway.client.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/sdk/protocol/src/version.ts",
+    "packages/sdk/protocol/src/capabilities.ts",
+    "packages/sdk/protocol/src/schema-fingerprint.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/sdk/protocol/src/transport.ts",
+    "packages/sdk/protocol/src/index.ts",
+    "packages/sdk/server/src/server.ts",
+    "packages/sdk/client/src/client.ts",
+    "packages/api/gateway/src/index.ts"
+  ],
+  "classification": "CONTROL_PLANE_SCAFFOLD_NOT_BACKED_BY_AUTHORITIES",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 9 files, Tests: 12 files, Docs: 0 files"
+}

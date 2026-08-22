@@ -1,0 +1,24 @@
+{
+  "total": 17,
+  "passed": 12,
+  "failed": 5,
+  "test_files": [
+    "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+    "packages/plugin/plugin-manifest/tests/integration.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/host/plugin-inventory/tests/inventory.spec.ts",
+    "packages/host/plugin-inventory/tests/invariant.spec.ts",
+    "packages/boot/app-boot/tests/config-dump.spec.ts",
+    "packages/boot/app-boot/tests/profile.spec.ts",
+    "packages/boot/app-boot/tests/hmr-config.spec.ts",
+    "packages/boot/app-boot/tests/app-boot.spec.ts",
+    "packages/boot/app-boot/tests/config-reload.spec.ts",
+    "packages/boot/app-boot/tests/user-patches.spec.ts"
+  ]
+}

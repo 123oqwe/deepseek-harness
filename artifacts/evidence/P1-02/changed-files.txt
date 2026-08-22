@@ -1,0 +1,7 @@
+packages/plugin/plugin-provenance/src/index.ts
+packages/plugin/plugin-provenance/src/signature.ts
+packages/plugin/plugin-provenance/src/sbom.ts
+packages/plugin/plugin-provenance/tests/provenance.spec.ts
+apps/cli/src/plugin.ts
+packages/host/plugin-inventory/src/types.ts
+packages/kernel/trust-kernel/src/types.ts

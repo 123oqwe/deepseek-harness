@@ -1,0 +1,9 @@
+{
+  "packages/core/agent/src/state-machine.ts": "734b23f86f9726678941a7aac20fa6159488e6a6f0c6a706e2cff77602e5a219",
+  "packages/core/agent/tests/state-machine.spec.ts": "115e746708ae516902b2a87e9223e87d592acf4a7bbc2574029a4e85662e3558",
+  "packages/core/agent/src/types.ts": "2353804cf902731cf979f8cb35f0ef830771133bd396a3f0afc368bc72c458bd",
+  "packages/core/agent/src/runtime-types.ts": "da3fcd6d1ed3351461d246660e7ab8f5d2ee3db5dd4bc177865c52ba2dcd3835",
+  "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",
+  "packages/core/agent/src/inbox.ts": "561fabd8375728e93b94fe6f8361adfbe51fca32080bb1714c0540c75949ddd1",
+  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff"
+}

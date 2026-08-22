@@ -1,9 +1,9 @@
 {
   "issue_id": "P3-05",
-  "entrypoint": "packages/execution/process-isolation/src/index.ts",
-  "wired": false,
+  "source_files": 6,
+  "test_files": 6,
   "compilation": "PASS",
   "lint": "PASS",
   "tests": "PASS",
-  "timestamp": "2026-08-22T19:47:35.738Z"
+  "timestamp": "2026-08-22T21:32:14.934Z"
 }

@@ -1,1 +1,9 @@
-{}
+{
+  "packages/compaction/compaction/src/coverage.ts": "71d1ba2fb504b9bf87c258e58710e82aa25daff8d1065448eb0e9c59c3888b63",
+  "packages/compaction/compaction/src/provenance.ts": "cda83ebf34bd1a80803dd9ea7d1495ab45b7fec4343cba65a3027943c3302ae5",
+  "packages/compaction/compaction/src/index.ts": "f4f54334343fff9636d7ed9338bf4780672b7a6613bce7e06132a263f51a7227",
+  "packages/compaction/compaction/src/checkpoint.ts": "0f3fd9feb3e20049769b4642229c24d1b57179ed37311f4b416bd19dd28c4deb",
+  "packages/compaction/compaction/src/tool-pairing.ts": "22ce3b3dd11ed398dd5e8e8520f9016ba37a60cfceb52f52d3ceadfc0542959d",
+  "packages/compaction/compaction/src/types.ts": "72a52bbac6cb2143d3efd09880dea175dc4c91b26a2be6580b57c23b9c2cf254",
+  "packages/core/session/src/surface.ts": "85570bb2dfa0aaf1c9dbe9af525a4f53e8ffd9be78222bed588f7f88f1777bb8"
+}

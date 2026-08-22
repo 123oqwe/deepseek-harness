@@ -1,0 +1,11 @@
+{
+  "packages/policy/capability-token/src/index.ts": "115387e7540c43b8e0f91edf4ab19eb0971184dce7ef37e951ddf942b0455fc6",
+  "packages/policy/capability-token/src/types.ts": "ed87bd0e0a0bc11b113d47f53ea96a35f892cc161de178dbac52f949715e1ec6",
+  "packages/policy/capability-token/src/attenuate.ts": "d3c37c76f1060b695ad0ec0d4e22452a05e5e5e982751b94cb91732989550e9c",
+  "packages/policy/capability-token/tests/token.spec.ts": "56c472cf7fa2e363ab5d053933b513f857306a5387cc2b525831375e561a8d71",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8",
+  "packages/core/tools/src/index.ts": "4ba094527a1217dc8e6ca13ebc9c8dfeb5e42267db96549260437cf06354ed7d",
+  "packages/subagent/subagent/src/child-agent.ts": "ea7b6f6fc209175d9a83154ef9f60ccb34ab3a87e966d34c908c5b7215612877",
+  "packages/subagent/subagent/src/descriptor.ts": "ab5886a1dc3bdc97fdb0372f5d7b64ff90c2205079621d5af11c1960babfceb1",
+  "packages/kernel/trust-kernel/src/types.ts": "f1c92efa94084ab09c8ef8ba8aa694c3093385e711f8e5a5bdd638262a0dfc54"
+}

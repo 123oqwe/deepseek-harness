@@ -1,1 +1,12 @@
-{}
+{
+  "packages/observability/causal-trace/src/index.ts": "8491e821c20e7aa887f8c37ccdd3c62f18fe6ad7efdd0ad3b66e2a720edf49f0",
+  "packages/observability/causal-trace/src/types.ts": "2a1467093eb5470d149ac86ee74282492703f6ba42a9e14f02030b3a2507e35b",
+  "packages/observability/telemetry-outbox/src/index.ts": "0a18ce0734a9cc882c37b721e91da640f60ab3e604656885fb7cafa02a0fd945",
+  "packages/observability/telemetry-outbox/src/store.ts": "dcf59b105a3eed98d1a00d955018cb32f03f74e184bd6429583558cac70c5176",
+  "packages/observability/otel-exporter/src/index.ts": "89ccb30b2cd9430166000e916d5f73028c49dba5d81f8d18b5eab62b0223c713",
+  "packages/session/session-telemetry/src/coordinator.ts": "815ea69deccdd4a3a480db6c123fa13a629f93a5435f937502f7f7a50874bff7",
+  "packages/session/session-telemetry/src/index.ts": "89146f1d23171a7adbb60d335f59d679339f617b3798f03aa7234a59b7d7a201",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8",
+  "packages/interaction/user-approval/src/types.ts": "c17fb4ec799adbfb450c02cfe8633286f65ec2208f897eff43c17a9997743602"
+}

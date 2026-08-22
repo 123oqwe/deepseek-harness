@@ -1,3 +1,11 @@
-{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T19:12:05.560Z"}
-{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T19:12:05.560Z"}
-{"command":"npx vitest run packages/attachment/attachment-security/tests/malicious.spec.ts --reporter=verbose","label":"test:packages/attachment/attachment-security/tests/malicious.spec.ts","exit_code":0,"timestamp":"2026-08-22T19:12:05.560Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/attachment/attachment-security/tests/malicious.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/workspace.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/attachment/attachment/tests/admission.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/attachment/attachment/tests/index.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/escalation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/vocabulary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/policy.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/roots.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:38.525Z"}

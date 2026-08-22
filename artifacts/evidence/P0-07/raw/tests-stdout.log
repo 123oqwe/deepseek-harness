@@ -1,0 +1,13 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > collect-evidence.mjs script exists and is executable 2ms
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > verify-evidence.mjs script exists and is executable 0ms
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > evidence format types are exported correctly 0ms
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > evidence:collect and evidence:verify scripts are in package.json 0ms
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > EvidencePackage type is exported from package 2ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  05:04:19
+   Duration  488ms (transform 242ms, setup 272ms, import 11ms, tests 6ms, environment 0ms)

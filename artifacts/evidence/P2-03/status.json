@@ -1,23 +1,33 @@
 {
   "issue_id": "P2-03",
-  "status": "E2E_VERIFIED",
-  "commit_sha": "HEAD",
+  "title": "一等公民 ActionManifest",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "required_proof_classes": [
-    "security/static proof",
-    "shipping build/boot/CI integration proof"
-  ],
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
+  },
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "26/44 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T21:15:14.165Z",
   "runtime_reachability": {
-    "entrypoint": "tools execute() calls generateActionManifest()",
-    "shipping_files_wired": [
-      "packages/core/tools/src/index.ts (generateActionManifest in execute)"
-    ],
-    "wired": true
+    "issue_id": "P2-03",
+    "source_files": 8,
+    "test_files": 44,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:15:14.165Z"
   },
   "remaining_risks": [
-    "Manifest not yet logged to Run event ledger (currently void)",
-    "Fuzz test for canonicalizer not yet written"
-  ],
-  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. ActionManifest is now generated in the tool execute() method before dispatch: canonicalizeParameters, classifyRisk, and computeDigest are called for every tool call."
+    "18 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
+  ]
 }

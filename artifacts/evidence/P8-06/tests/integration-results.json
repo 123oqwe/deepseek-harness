@@ -1,6 +1,19 @@
 {
-  "total": 0,
-  "passed": 0,
+  "total": 12,
+  "passed": 12,
   "failed": 0,
-  "test_files": []
+  "test_files": [
+    "packages/identity/auth/tests/auth.spec.ts",
+    "packages/api/remotes/tests/agent-lookup.spec.ts",
+    "packages/api/gateway/tests/gateway.host.spec.ts",
+    "packages/api/gateway/tests/gateway.client.spec.ts",
+    "packages/host/webserver/tests/webserver.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts"
+  ]
 }

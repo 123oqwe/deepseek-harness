@@ -1,15 +1,55 @@
 {
   "issue_id": "P8-05",
-  "audit_date": "2026-08-22T20:23:59.380Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/api/streaming"
+  "title": "Resumable Event Streaming：Cursor、ACK、Replay、Dedupe 与 Backpressure",
+  "audit_date": "2026-08-22T22:27:19.034Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/sdk/protocol/src/event-stream.ts",
+    "packages/api/event-stream/src/index.ts",
+    "packages/api/event-stream/src/store.ts",
+    "packages/api/event-stream/tests/reconnect.e2e.ts",
+    "packages/sdk/protocol/src/transport.ts",
+    "packages/sdk/server/src/server.ts",
+    "packages/sdk/client/src/client.ts",
+    "packages/api/remotes/src/remote-events.ts",
+    "packages/session/session-persistence/src/coordinator.ts"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/sdk/protocol/src/event-stream.ts",
+    "packages/sdk/protocol/src/transport.ts",
+    "packages/sdk/server/src/server.ts",
+    "packages/sdk/client/src/client.ts",
+    "packages/api/remotes/src/remote-events.ts",
+    "packages/session/session-persistence/src/coordinator.ts"
+  ],
+  "test_files": [
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
+    "packages/sdk/server/tests/plugin-shape.spec.ts",
+    "packages/sdk/server/tests/plugin-apply.spec.ts",
+    "packages/sdk/server/tests/server.spec.ts",
+    "packages/sdk/client/tests/dispose.spec.ts",
+    "packages/sdk/client/tests/sdk-client.spec.ts",
+    "packages/api/remotes/tests/agent-lookup.spec.ts",
+    "packages/session/session-persistence/tests/persistence.spec.ts",
+    "packages/session/session-persistence/tests/write-behind.spec.ts",
+    "packages/session/session-persistence/tests/preparations.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/sdk/protocol/src/event-stream.ts",
+    "packages/sdk/protocol/src/transport.ts",
+    "packages/sdk/server/src/server.ts",
+    "packages/sdk/client/src/client.ts",
+    "packages/api/remotes/src/remote-events.ts",
+    "packages/session/session-persistence/src/coordinator.ts"
+  ],
+  "classification": "CONTROL_PLANE_SCAFFOLD_NOT_BACKED_BY_AUTHORITIES",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 14 files, Docs: 0 files"
 }

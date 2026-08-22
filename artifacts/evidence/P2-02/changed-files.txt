@@ -1,0 +1,9 @@
+packages/policy/capability-token/src/index.ts
+packages/policy/capability-token/src/types.ts
+packages/policy/capability-token/src/attenuate.ts
+packages/policy/capability-token/tests/token.spec.ts
+packages/core/agent-loop/src/runtime-context.ts
+packages/core/tools/src/index.ts
+packages/subagent/subagent/src/child-agent.ts
+packages/subagent/subagent/src/descriptor.ts
+packages/kernel/trust-kernel/src/types.ts

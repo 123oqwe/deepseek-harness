@@ -1,0 +1,9 @@
+{
+  "packages/collaboration/taskboard/src/index.ts": "94b83d9cf2a71b92008c6578e52cff344c78b9a935de65088e7595eacc9d7e83",
+  "packages/collaboration/taskboard/src/types.ts": "841229d0b9af0f601cfbc48a7ea799a83aaa65884711e92f25be0c3a41ed157b",
+  "packages/collaboration/taskboard/src/store.ts": "33431138f720d42068eb7432b22334e774a056842b212d8a5232a53a6d3c6047",
+  "packages/core/agent/src/consumed-work.ts": "b894bdba6cbeda47e3667af60422bad77a386627aec3fe9e4383dd0ec3dc416f",
+  "packages/core/agent/src/inbox.ts": "561fabd8375728e93b94fe6f8361adfbe51fca32080bb1714c0540c75949ddd1",
+  "packages/subagent/subagent/src/list-children.ts": "a96ca9525c5ecfbc63cbad8b93cfbc113d433e2d258bfd1b0e83a5a31d76414f",
+  "packages/run/run/src/types.ts": "8434df179f15ec6b8b24a14b99b418ece5e5f25d5020b74744beae8460e24981"
+}

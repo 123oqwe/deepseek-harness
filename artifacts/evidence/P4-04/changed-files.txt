@@ -1,1 +1,6 @@
-
+packages/run/run-plan/src/freeze.ts
+packages/run/run-plan/src/amend.ts
+packages/run/run-plan/tests/amendment.spec.ts
+packages/run/run-plan/src/types.ts
+packages/run/run/src/events.ts
+packages/kernel/trust-kernel/src/index.ts

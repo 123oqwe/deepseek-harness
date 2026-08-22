@@ -1,1 +1,8 @@
-{}
+{
+  "packages/subagent/subagent/src/request.ts": "521c93e6445139066b9a6b29c8aa138a5c0481bdfc586d246438fb433ef16c29",
+  "packages/subagent/subagent/tests/request-contract.spec.ts": "eb7c25d889bb83435be3768075e10b791f99096def54fc493ad68828814b3b11",
+  "packages/subagent/subagent/src/descriptor.ts": "ab5886a1dc3bdc97fdb0372f5d7b64ff90c2205079621d5af11c1960babfceb1",
+  "packages/subagent/subagent/src/descriptor-seed.ts": "243316985601320d7faf259f98dfe9507d7e9d7dc1a774212209b7dea1bc8f11",
+  "packages/subagent/subagent/src/depth.ts": "52fe8c33e3becc3c5925ce4c63cfa097dc67158207e50db4622c7b9c15bc9b6f",
+  "packages/subagent/subagent/src/client.ts": "e8689a189d2991374e4a7f50e2e02702303bd37002ea1e91a20cae7fab52d230"
+}

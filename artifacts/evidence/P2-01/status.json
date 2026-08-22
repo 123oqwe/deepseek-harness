@@ -1,24 +1,33 @@
 {
   "issue_id": "P2-01",
-  "status": "E2E_VERIFIED",
-  "commit_sha": "HEAD",
+  "title": "统一 Principal / Tenant / Run / Actor 身份上下文",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "required_proof_classes": ["security/static proof", "shipping build/boot/CI integration proof"],
-  "runtime_reachability": {
-    "entrypoint": "@deepseek-ai/dsh-principal exports",
-    "shipping_files_wired": ["packages/core/session/src/types.ts (re-exports Principal types)"],
-    "wired": true
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
   },
-  "features_verified": [
-    "Delegation chain: root -> current actor with full traceability",
-    "Tenant boundary enforcement: cross-tenant delegation rejected",
-    "Forged agent ID detection: agent must appear in chain",
-    "Token replay detection: used tokens throw on reuse",
-    "anonymous-dev is restricted, not equivalent to admin"
-  ],
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "29/44 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T21:11:05.135Z",
+  "runtime_reachability": {
+    "issue_id": "P2-01",
+    "source_files": 8,
+    "test_files": 44,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:11:05.135Z"
+  },
   "remaining_risks": [
-    "Identity context not yet injected into agent loop boot path",
-    "Principal not yet enforced on all tool/subagent execution paths"
+    "15 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

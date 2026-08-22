@@ -1,24 +1,53 @@
 {
   "issue_id": "P3-02",
-  "audit_date": "2026-08-22T19:06:22.470Z",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
-  "packages": [
-    "packages/sandbox/sandbox-policy"
+  "title": "扩展 Sandbox Policy 为全维度安全词汇",
+  "audit_date": "2026-08-22T21:26:15.852Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/sandbox/sandbox/src/policy.ts",
+    "packages/sandbox/sandbox/src/network.ts",
+    "packages/sandbox/sandbox/src/process.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/src/index.ts",
+    "packages/sandbox/sandbox/src/roots.ts",
+    "packages/sandbox/sandbox/src/escalation.ts",
+    "packages/sandbox/sandbox-local/src/profiles.ts",
+    "packages/interaction/permission-presets/src/types.ts"
   ],
   "source_files": [
-    "packages/sandbox/sandbox-policy/src/index.d.ts",
-    "packages/sandbox/sandbox-policy/src/index.ts",
-    "packages/sandbox/sandbox-policy/src/invariant.ts",
-    "packages/sandbox/sandbox-policy/src/session-mode.d.ts",
-    "packages/sandbox/sandbox-policy/src/session-mode.ts"
+    "packages/sandbox/sandbox/src/policy.ts",
+    "packages/sandbox/sandbox/src/index.ts",
+    "packages/sandbox/sandbox/src/roots.ts",
+    "packages/sandbox/sandbox/src/escalation.ts",
+    "packages/sandbox/sandbox-local/src/profiles.ts",
+    "packages/interaction/permission-presets/src/types.ts"
   ],
   "test_files": [
-    "packages/sandbox/sandbox-policy/tests/invariant.spec.ts",
-    "packages/sandbox/sandbox-policy/tests/policy.spec.ts"
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts",
+    "packages/sandbox/sandbox-local/tests/local.spec.ts",
+    "packages/sandbox/sandbox-local/tests/acl-grants.spec.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.spec.ts",
+    "packages/interaction/permission-presets/tests/profile.spec.ts",
+    "packages/interaction/permission-presets/tests/permission-presets.spec.ts",
+    "packages/interaction/permission-presets/tests/projection.spec.ts",
+    "packages/interaction/permission-presets/tests/invariant.spec.ts"
   ],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/sandbox/sandbox/src/policy.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/src/index.ts",
+    "packages/sandbox/sandbox/src/roots.ts",
+    "packages/sandbox/sandbox/src/escalation.ts",
+    "packages/sandbox/sandbox-local/src/profiles.ts",
+    "packages/interaction/permission-presets/src/types.ts"
+  ],
+  "classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 11 files, Docs: 0 files"
 }

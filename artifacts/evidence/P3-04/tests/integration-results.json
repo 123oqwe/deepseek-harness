@@ -1,8 +1,26 @@
 {
-  "total": 1,
-  "passed": 1,
-  "failed": 0,
+  "total": 19,
+  "passed": 16,
+  "failed": 3,
   "test_files": [
-    "packages/execution/egress-proxy/tests/ssrf.spec.ts"
+    "packages/execution/egress-proxy/tests/ssrf.spec.ts",
+    "packages/sandbox/sandbox-local/tests/local.spec.ts",
+    "packages/sandbox/sandbox-local/tests/acl-grants.spec.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.spec.ts",
+    "packages/core/tools/tests/schema.spec.ts",
+    "packages/core/tools/tests/scoped.spec.ts",
+    "packages/core/tools/tests/code-mode.spec.ts",
+    "packages/core/tools/tests/execution-signal-types.spec.ts",
+    "packages/core/tools/tests/tools.spec.ts",
+    "packages/core/tools/tests/execution-mode.spec.ts",
+    "packages/core/tools/tests/py-types.spec.ts",
+    "packages/core/tools/tests/invariant.spec.ts",
+    "packages/core/tools/tests/properties.spec.ts",
+    "packages/core/tools/tests/json-schema.spec.ts",
+    "packages/core/tools/tests/ts-types.spec.ts",
+    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
+    "packages/plugin/plugin-host/tests/isolation.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts"
   ]
 }

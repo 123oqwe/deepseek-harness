@@ -1,9 +1,9 @@
 {
   "issue_id": "P4-14",
-  "entrypoint": "packages/workflow/partial-turn-resume/src/index.ts",
-  "wired": false,
+  "source_files": 7,
+  "test_files": 36,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T19:55:57.688Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T21:49:24.941Z"
 }

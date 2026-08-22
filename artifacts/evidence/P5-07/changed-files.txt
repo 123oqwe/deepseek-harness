@@ -1,1 +1,5 @@
-
+packages/subagent/subagent-codex/src/index.ts
+packages/subagent/subagent-codex/src/run.ts
+packages/subagent/subagent-codex/src/wire.ts
+packages/subagent/subagent/src/request.ts
+packages/subagent/subagent/src/result.ts

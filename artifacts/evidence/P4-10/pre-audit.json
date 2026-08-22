@@ -1,15 +1,62 @@
 {
   "issue_id": "P4-10",
-  "audit_date": "2026-08-22T19:53:18.612Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/workflow/scheduler"
+  "title": "Workflow 预算、Scheduler、Backpressure、公平性与资源锁",
+  "audit_date": "2026-08-22T21:42:55.384Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/run/scheduler/src/index.ts",
+    "packages/run/scheduler/src/queue.ts",
+    "packages/run/scheduler/src/locks.ts",
+    "packages/run/scheduler/src/fairness.ts",
+    "packages/run/scheduler/tests/scheduler.e2e.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/workflow/workflow-worker-thread/src/runtime.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/guard/timeout-policy/README.md"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/run/scheduler/src/index.ts",
+    "packages/run/scheduler/src/queue.ts",
+    "packages/run/scheduler/src/locks.ts",
+    "packages/run/scheduler/src/fairness.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/workflow/workflow-worker-thread/src/runtime.ts",
+    "packages/core/agent/src/dispatch.ts"
+  ],
+  "test_files": [
+    "packages/run/scheduler/tests/scheduler.spec.ts",
+    "packages/workflow/workflow/tests/invariant.spec.ts",
+    "packages/workflow/workflow/tests/workflow.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/session.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts"
+  ],
+  "doc_files": [
+    "packages/guard/timeout-policy/README.md"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/run/scheduler/src/index.ts",
+    "packages/run/scheduler/src/queue.ts",
+    "packages/run/scheduler/src/locks.ts",
+    "packages/run/scheduler/src/fairness.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/workflow/workflow-worker-thread/src/runtime.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/guard/timeout-policy/README.md"
+  ],
+  "classification": "DURABILITY_SCAFFOLD_NOT_CRASH_SAFE",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 7 files, Tests: 16 files, Docs: 1 files"
 }

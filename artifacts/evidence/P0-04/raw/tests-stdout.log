@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| tests/architecture/layer-deps.spec.ts > P0-04 Layer dependency rules > layering doc exists 2ms
+ ✓ |thread-safe| tests/architecture/layer-deps.spec.ts > P0-04 Layer dependency rules > check returns violations array 338ms
+ ✓ |thread-safe| tests/architecture/layer-deps.spec.ts > P0-04 Layer dependency rules > checker detects upward dependencies and reports them 134ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:03:14
+   Duration  902ms (transform 198ms, setup 223ms, import 13ms, tests 475ms, environment 0ms)

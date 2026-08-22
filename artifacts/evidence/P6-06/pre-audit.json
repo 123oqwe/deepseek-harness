@@ -1,15 +1,59 @@
 {
   "issue_id": "P6-06",
-  "audit_date": "2026-08-22T20:09:25.899Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/memory/compaction"
+  "title": "Compaction 保真度、来源证明与 Tool Pairing 强化",
+  "audit_date": "2026-08-22T22:06:03.102Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/compaction/compaction/src/coverage.ts",
+    "packages/compaction/compaction/src/provenance.ts",
+    "packages/compaction/compaction/tests/fidelity.e2e.ts",
+    "packages/compaction/compaction/src/index.ts",
+    "packages/compaction/compaction/src/checkpoint.ts",
+    "packages/compaction/compaction/src/tool-pairing.ts",
+    "packages/compaction/compaction/src/types.ts",
+    "packages/core/session/src/surface.ts"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/compaction/compaction/src/coverage.ts",
+    "packages/compaction/compaction/src/provenance.ts",
+    "packages/compaction/compaction/src/index.ts",
+    "packages/compaction/compaction/src/checkpoint.ts",
+    "packages/compaction/compaction/src/tool-pairing.ts",
+    "packages/compaction/compaction/src/types.ts",
+    "packages/core/session/src/surface.ts"
+  ],
+  "test_files": [
+    "packages/compaction/compaction/tests/fidelity.spec.ts",
+    "packages/compaction/compaction/tests/compaction.spec.ts",
+    "packages/compaction/compaction/tests/tool-pairing.spec.ts",
+    "packages/compaction/compaction/tests/invariant.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/compaction/compaction/src/coverage.ts",
+    "packages/compaction/compaction/src/provenance.ts",
+    "packages/compaction/compaction/src/index.ts",
+    "packages/compaction/compaction/src/checkpoint.ts",
+    "packages/compaction/compaction/src/tool-pairing.ts",
+    "packages/compaction/compaction/src/types.ts",
+    "packages/core/session/src/surface.ts"
+  ],
+  "classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 7 files, Tests: 17 files, Docs: 0 files"
 }

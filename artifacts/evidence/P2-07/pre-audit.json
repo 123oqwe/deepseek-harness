@@ -1,26 +1,50 @@
 {
   "issue_id": "P2-07",
-  "audit_date": "2026-08-22T19:05:14.568Z",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
-  "packages": [
-    "packages/interaction/approval-store"
+  "title": "持久化、可跨 Turn/进程的 Approval Queue",
+  "audit_date": "2026-08-22T21:22:21.394Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/interaction/approval-store/src/index.ts",
+    "packages/interaction/approval-store/src/types.ts",
+    "packages/interaction/approval-store/src/sqlite.ts",
+    "packages/interaction/approval-store/tests/recovery.e2e.ts",
+    "packages/interaction/user-approval/src/index.ts",
+    "packages/interaction/user-approval/src/types.ts",
+    "packages/session/session-persistence/src/coordinator.ts",
+    "packages/sdk/protocol/src/types.ts"
   ],
   "source_files": [
     "packages/interaction/approval-store/src/index.ts",
-    "packages/interaction/approval-store/src/types.ts"
+    "packages/interaction/approval-store/src/types.ts",
+    "packages/interaction/user-approval/src/index.ts",
+    "packages/interaction/user-approval/src/types.ts",
+    "packages/session/session-persistence/src/coordinator.ts",
+    "packages/sdk/protocol/src/types.ts"
   ],
   "test_files": [
-    "packages/interaction/approval-store/tests/recovery.spec.ts"
+    "packages/interaction/approval-store/tests/recovery.spec.ts",
+    "packages/interaction/user-approval/tests/argument-binding.spec.ts",
+    "packages/session/session-persistence/tests/persistence.spec.ts",
+    "packages/session/session-persistence/tests/write-behind.spec.ts",
+    "packages/session/session-persistence/tests/preparations.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts"
   ],
+  "doc_files": [],
+  "other_files": [],
   "changed_files": [
-    "packages/interaction/approval-store/package.json",
     "packages/interaction/approval-store/src/index.ts",
     "packages/interaction/approval-store/src/types.ts",
-    "packages/interaction/approval-store/tests/recovery.spec.ts",
-    "packages/interaction/approval-store/tsconfig.json"
+    "packages/interaction/user-approval/src/index.ts",
+    "packages/interaction/user-approval/src/types.ts",
+    "packages/session/session-persistence/src/coordinator.ts",
+    "packages/sdk/protocol/src/types.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 10 files, Docs: 0 files"
 }

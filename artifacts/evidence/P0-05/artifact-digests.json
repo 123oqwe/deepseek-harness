@@ -1,8 +1,10 @@
 {
-  "commands.jsonl": "b0834b2ce3f85338e1ce04ff2eabae18a2d8eb949025f379dc2d04dd160fcba3",
-  "changed-files.txt": "40ab3f6ebda35ac6335e0130e6b3ef8aabaa262206ad29d9d9e6e6adeae9705c",
-  "pre-audit.json": "2d0380ccd8fe3b4be29b5ba9a87a7a2e581ebb063237dfdda8bc980d5790bd65",
-  "remaining-risks.md": "dc28a8f10702eb23c023973cf601f51943fc0bde94c481b5652fd0e81cfac4e3",
-  "status.json": "bc109d07aa8adef0c21a88ad42ff36348d2e0f03e1f4304c627230139bb0937e",
-  "raw/stdout-typecheck.log": "46c6600ae91416427a9e7d18f8a1fe27eec71fa5d77acf8533d69746ff32f5e7"
+  "packages/migration/feature-gates/src/index.ts": "cd07c2eea38ab0f31535888fecf44dd0bde260c7aa84de98960d14bf9f2f788a",
+  "packages/migration/feature-gates/src/types.ts": "eb33aef94e16d3c6457949bbededefdfe0f505d4a196ceae5b723fa772778198",
+  "packages/migration/feature-gates/tests/gates.spec.ts": "270ad08a0ff408562e723ffacba09c0f636ca283a57e35db23c4e8cecbf17ff3",
+  "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596",
+  "packages/settings/settings/src/types.ts": "10a298083af84feb72c1bff0d91078a30541044b4b8322889d74a1119fc4da0d",
+  "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1",
+  "apps/cli/src/profile-boot.ts": "4a89a793d0a793e7573d7b275d9682459fa2e211edc6814d23b90c75588fa663",
+  "apps/cli/src/dump-config.ts": "6fabe5c36c4e7d2fe82efa89d8dcc712070cc348c23b86fcda50d22690b1cf8a"
 }

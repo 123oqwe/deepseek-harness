@@ -1,6 +1,7 @@
-packages/plugin/plugin-migrations/package.json
 packages/plugin/plugin-migrations/src/index.ts
-packages/plugin/plugin-migrations/src/transaction.ts
 packages/plugin/plugin-migrations/src/types.ts
-packages/plugin/plugin-migrations/tests/rollback.spec.ts
-packages/plugin/plugin-migrations/tsconfig.json
+packages/plugin/plugin-migrations/src/transaction.ts
+apps/cli/src/plugin.ts
+packages/storage/storage/src/backend.ts
+packages/storage/storage/src/registry.ts
+packages/settings/settings/src/index.ts

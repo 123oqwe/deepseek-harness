@@ -1,0 +1,76 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > has 4 predefined profiles 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > observe-only has no writable paths 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > production-controlled uses container execution 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > no profile disables kernel hard deny 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > profiles have increasing privilege levels 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > validates valid profile 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > rejects profile with kernel hard deny disabled 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > rejects profile with L0 plugin trust 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > production requires L4 plugins 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > all profiles can serialize 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  05:23:20
+   Duration  445ms (transform 215ms, setup 241ms, import 12ms, tests 4ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > effectivePermissionPreset > folds to the last event, or undefined without one 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > advertises the preset table in declaration order and resolves bundles 12ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > current() derives from the effective knobs: composition defaults hit workspace-write, a switch hits its preset 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > a knob state matching no table entry derives custom — a state, not an error 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > composition defaults outside the table still derive custom when an explicit new-session default is configured 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > the fold breaks bundle ties; a stale fold no longer matching falls back to table order 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() writes through: one preset event plus both knob events 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() to the current preset is a no-op when the knobs already match (clicks are not switches) 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > re-asserting a preset from a drifted (custom) state re-records the choice and repairs the knob 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects composition over a non-confining executor at load 8ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > optionOf() presents shipped labels/descriptions, falls back to the raw key, and fixes custom 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects a table entry named custom (reserved for the derived state) 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > requires an explicit default when composition defaults match no preset 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > reads a schema-less approval stand-in as the ask default 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins the current setting into each new session without changing earlier sessions 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves a seeded legacy session instead of applying the latest user default 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves composition defaults when an empty stored session resumes 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins sessions that already exist when the service remounts 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > fills only missing legacy facts and preserves an unmatched seeded combination 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > materializes ask when a legacy seed and approval stand-in omit the policy 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > rejects a stored default outside the configured preset table 3ms
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  05:23:22
+   Duration  809ms (transform 419ms, setup 205ms, import 348ms, tests 80ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > serves the pinned new-session default select 18ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > folds the knob events and notifies the change feed per knob append 6ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > appends custom as a current-only option when the knobs match no preset 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > has no permissions key without the service, and drops it on unload (HMR safety) 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > switches through permission.set and logs the lifecycle pair 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > reports the current preset and the table on bare invocation 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > rejects an unknown preset without touching the log 4ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  05:23:24
+   Duration  892ms (transform 523ms, setup 208ms, import 454ms, tests 47ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > accepts configured preset events and ignores other session data 7ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects a durable preset that the active table cannot resolve 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects an unknown preset already present on late registration 10ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:23:26
+   Duration  553ms (transform 298ms, setup 211ms, import 142ms, tests 21ms, environment 0ms)

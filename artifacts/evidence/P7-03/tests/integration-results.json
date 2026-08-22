@@ -1,8 +1,33 @@
 {
-  "total": 1,
-  "passed": 1,
-  "failed": 0,
+  "total": 26,
+  "passed": 22,
+  "failed": 4,
   "test_files": [
-    "packages/assurance/verifier/tests/verifier-isolation.spec.ts"
+    "packages/assurance/verifier/tests/verifier-isolation.spec.ts",
+    "packages/subagent/subagent/tests/continuation.spec.ts",
+    "packages/subagent/subagent/tests/run-settlement.spec.ts",
+    "packages/subagent/subagent/tests/request-contract.spec.ts",
+    "packages/subagent/subagent/tests/service.spec.ts",
+    "packages/subagent/subagent/tests/list-children.spec.ts",
+    "packages/subagent/subagent/tests/continuation-inheritance.spec.ts",
+    "packages/subagent/subagent/tests/timing-projection.spec.ts",
+    "packages/subagent/subagent/tests/out-of-process.spec.ts",
+    "packages/subagent/subagent/tests/invariant.spec.ts",
+    "packages/subagent/subagent/tests/result-contract.spec.ts",
+    "packages/subagent/subagent/tests/activation-setup-registry.spec.ts",
+    "packages/subagent/subagent/tests/assistant-output.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/workflow/workflow/tests/invariant.spec.ts",
+    "packages/workflow/workflow/tests/workflow.spec.ts"
   ]
 }

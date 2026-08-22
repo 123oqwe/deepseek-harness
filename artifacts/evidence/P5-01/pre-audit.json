@@ -1,28 +1,75 @@
 {
   "issue_id": "P5-01",
-  "audit_date": "2026-08-22T19:27:27.728Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/router/strategy-router"
+  "title": "Strategy Router：Direct / ReAct / Plan / Workflow / Multi-Agent",
+  "audit_date": "2026-08-22T21:50:39.144Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/router/strategy-router/src/index.ts",
+    "packages/router/strategy-router/src/types.ts",
+    "packages/router/strategy-router/src/rules.ts",
+    "packages/router/strategy-router/tests/router.spec.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/core/agent/src/model-selection.ts",
+    "packages/core/agent-loop/src/agent.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/run/task-profile/src/types.ts"
   ],
   "source_files": [
     "packages/router/strategy-router/src/index.ts",
+    "packages/router/strategy-router/src/types.ts",
     "packages/router/strategy-router/src/rules.ts",
-    "packages/router/strategy-router/src/types.ts"
+    "packages/core/agent/src/dispatch.ts",
+    "packages/core/agent/src/model-selection.ts",
+    "packages/core/agent-loop/src/agent.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/run/task-profile/src/types.ts"
   ],
   "test_files": [
-    "packages/router/strategy-router/tests/router.spec.ts"
-  ],
-  "changed_files": [
-    "packages/router/strategy-router/package.json",
-    "packages/router/strategy-router/src/index.ts",
-    "packages/router/strategy-router/src/rules.ts",
-    "packages/router/strategy-router/src/types.ts",
     "packages/router/strategy-router/tests/router.spec.ts",
-    "packages/router/strategy-router/tsconfig.json"
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts",
+    "packages/workflow/workflow/tests/invariant.spec.ts",
+    "packages/workflow/workflow/tests/workflow.spec.ts",
+    "packages/run/task-profile/tests/profile.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/router/strategy-router/src/index.ts",
+    "packages/router/strategy-router/src/types.ts",
+    "packages/router/strategy-router/src/rules.ts",
+    "packages/router/strategy-router/tests/router.spec.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/core/agent/src/model-selection.ts",
+    "packages/core/agent-loop/src/agent.ts",
+    "packages/workflow/workflow/src/types.ts",
+    "packages/run/task-profile/src/types.ts"
+  ],
+  "classification": "ROUTER_PROVIDER_SCAFFOLD_NOT_ON_MAIN_PATH",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 8 files, Tests: 29 files, Docs: 0 files"
 }

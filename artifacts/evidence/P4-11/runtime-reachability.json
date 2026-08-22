@@ -1,9 +1,9 @@
 {
   "issue_id": "P4-11",
-  "entrypoint": "packages/reliability/retry/src/index.ts",
-  "wired": true,
+  "source_files": 9,
+  "test_files": 36,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T19:19:32.109Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T21:44:24.973Z"
 }

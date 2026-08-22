@@ -1,0 +1,7 @@
+packages/core/agent/src/state-machine.ts
+packages/core/agent/tests/state-machine.spec.ts
+packages/core/agent/src/types.ts
+packages/core/agent/src/runtime-types.ts
+packages/core/agent/src/dispatch.ts
+packages/core/agent/src/inbox.ts
+packages/core/agent-loop/src/agent.ts

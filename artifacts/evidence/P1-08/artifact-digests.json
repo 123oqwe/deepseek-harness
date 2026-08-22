@@ -1,0 +1,8 @@
+{
+  "packages/plugin/plugin-compat/src/index.ts": "ec2f34e40db4228cc7fa832c48b41d2bb53b10feecdcace92b5c1dc84d91bc85",
+  "packages/plugin/plugin-compat/src/solver.ts": "3705e830d624bf09c1cafa848a94e7431ecef4fe3d2b772b6bc60759341c55ab",
+  "packages/plugin/plugin-compat/tests/solver.spec.ts": "b4b22b22ef3afc5d623ce6eed52947b4f134f52714b716436a623213dde53a50",
+  "packages/boot/app-boot/src/profile.ts": "c528b0aacd4c7acad9ac557e0a9ac97f1c7a0aed1239b36ac85f93135688861a",
+  "packages/host/plugin-inventory/src/types.ts": "5b7550afdbf96cafc23dc8a5efe2d28ff1b7adc615e98ad5fa96f1a419c695a6",
+  "packages/schema/schema-registry/src/index.ts": "686adcf8c5bc7ed105301c8e3264780c7d4209791001084e1ffc50f9702b2539"
+}

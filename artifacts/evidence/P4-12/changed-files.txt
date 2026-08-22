@@ -1,0 +1,7 @@
+packages/action/action-ledger/src/index.ts
+packages/action/action-ledger/src/types.ts
+packages/action/action-ledger/src/store.ts
+packages/core/agent-loop/src/tool-calls.ts
+packages/core/tools/src/types.ts
+packages/session/session-persistence/src/write-behind.ts
+packages/action/action-manifest/src/types.ts

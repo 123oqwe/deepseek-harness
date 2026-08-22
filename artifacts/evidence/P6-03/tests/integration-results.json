@@ -1,0 +1,12 @@
+{
+  "total": 5,
+  "passed": 4,
+  "failed": 1,
+  "test_files": [
+    "packages/memory/memory-policy/tests/lifecycle.spec.ts",
+    "packages/memory/memory/tests/record.spec.ts",
+    "packages/memory/memory/tests/conformance.spec.ts",
+    "packages/interaction/human-channel/tests/server-request.spec.ts",
+    "packages/interaction/human-channel/tests/emergency-stop.spec.ts"
+  ]
+}

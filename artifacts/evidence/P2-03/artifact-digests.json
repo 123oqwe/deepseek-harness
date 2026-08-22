@@ -1,0 +1,11 @@
+{
+  "packages/action/action-manifest/src/index.ts": "0fcf151bbdff24b33bbaf36c106b179f97492e4291faca665e283f9292f0b308",
+  "packages/action/action-manifest/src/types.ts": "e486d784e2a28704d0d6c39710f978b0a620c8fd692a5a677469effe6abfc80e",
+  "packages/action/action-manifest/src/canonicalize.ts": "9b73c1bd445c4be89a54f3fec14f159e5afb1dfbb79a410e73c3e758ba0c5dde",
+  "packages/action/action-manifest/tests/manifest.spec.ts": "ce7a1369eec5b796fee3efb4e17c1c0e9750354d124e443c4e3404932662b048",
+  "packages/core/tools/src/types.ts": "b2d15f4815419160269703863237bbe65f49b84afc6947fe59edec977b9cefba",
+  "packages/core/tools/src/index.ts": "4ba094527a1217dc8e6ca13ebc9c8dfeb5e42267db96549260437cf06354ed7d",
+  "packages/core/tools/src/code-mode.ts": "7ad2155ca582a1c0c6e92e727de0927909b5a0ef71435e400c756e7e576d8e13",
+  "packages/core/agent-loop/src/tool-calls.ts": "4244af95a61fe509f2849b204c13af4bb61b522c475688b20f01093a8236a754",
+  "packages/core/session/src/known-event-types.ts": "23ed63cf702d770839baf1bee86754f69d33c040d05c3fc3654dd0424d7a9fcb"
+}

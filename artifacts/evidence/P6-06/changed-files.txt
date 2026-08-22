@@ -1,1 +1,7 @@
-
+packages/compaction/compaction/src/coverage.ts
+packages/compaction/compaction/src/provenance.ts
+packages/compaction/compaction/src/index.ts
+packages/compaction/compaction/src/checkpoint.ts
+packages/compaction/compaction/src/tool-pairing.ts
+packages/compaction/compaction/src/types.ts
+packages/core/session/src/surface.ts

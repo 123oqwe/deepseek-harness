@@ -1,6 +1,30 @@
 {
-  "total": 0,
-  "passed": 0,
-  "failed": 0,
-  "test_files": []
+  "total": 23,
+  "passed": 7,
+  "failed": 16,
+  "test_files": [
+    "packages/context/retrieval-planner/tests/planner.spec.ts",
+    "packages/context/agent-instructions/tests/agent-instructions.spec.ts",
+    "packages/session-query/session-query/tests/tracing.spec.ts",
+    "packages/session-query/session-query/tests/search-helpers.spec.ts",
+    "packages/session-query/session-query/tests/session-query.spec.ts",
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts"
+  ]
 }

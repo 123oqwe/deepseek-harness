@@ -1,6 +1,17 @@
 {
-  "total": 0,
-  "passed": 0,
-  "failed": 0,
-  "test_files": []
+  "total": 10,
+  "passed": 9,
+  "failed": 1,
+  "test_files": [
+    "packages/plugin/plugin-certification/tests/certification.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/host/plugin-inventory/tests/inventory.spec.ts",
+    "packages/host/plugin-inventory/tests/invariant.spec.ts"
+  ]
 }

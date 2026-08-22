@@ -1,1 +1,12 @@
-{}
+{
+  "packages/evaluation/replay/src/index.ts": "c2cd8fc6c8b7f9a454b83aae7bc4fcb6b2a941a579c232a2cb1a139b8e782040",
+  "packages/evaluation/replay/src/types.ts": "89c2a6c5bbf9be9a6285232af0fac6b3394ecc149c53c796100e2ec7ff198e65",
+  "packages/evaluation/replay/src/recorded-world.ts": "25c7a4adbb6468052d942e53fd04a95ec2a5349422d48c82177696554078cde2",
+  "packages/evaluation/replay/src/normalizer.ts": "2fddb5c2c4b577693434f03533b8b5e62a839501b3fc6f03642d910c9f10250d",
+  "packages/evaluation/replay/src/diff.ts": "737f1e72d349cc2ff68487892273e9334afa12f0428fb1be7ad4c7e9df64b742",
+  "packages/core/session/src/repair.ts": "eca9e728dbb2ae8cd51d1e163385e6a20b0399dfa82dfa6230f2eeefdfdd8fd8",
+  "packages/core/session/src/surface.ts": "85570bb2dfa0aaf1c9dbe9af525a4f53e8ffd9be78222bed588f7f88f1777bb8",
+  "packages/session/session-persistence/src/coordinator.ts": "5a56334f9796e257874b964c5b678413f6b4be5b664eed48b705e2882e0bc25d",
+  "packages/llm/llm/src/assembler.ts": "a9311058a5ca5d973fe8e36022dcc01f1222041cb0fb73e571f081f6659e7b0f",
+  "packages/test-support/llm-replay/src/index.ts": "d6acfea49e73d513dd85de038aac5f1fc5152b247f3fa9977f99b34702016b68"
+}

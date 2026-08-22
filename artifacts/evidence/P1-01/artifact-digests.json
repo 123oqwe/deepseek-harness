@@ -1,7 +1,11 @@
 {
-  "commands.jsonl": "b0834b2ce3f85338e1ce04ff2eabae18a2d8eb949025f379dc2d04dd160fcba3",
-  "changed-files.txt": "40ab3f6ebda35ac6335e0130e6b3ef8aabaa262206ad29d9d9e6e6adeae9705c",
-  "pre-audit.json": "97fff568a16f61ad4f289b11a231112141129e2ca525df9bbaa2f3d69bffc617",
-  "remaining-risks.md": "b566c70d07476be850ceb2cdcb98838438a5d72b35dc21e48f8af4da2883010a",
-  "status.json": "aad569a1b74187af7ef86ae5eb1c6dce7c268065e3a922182c471f85d42b24b6"
+  "packages/plugin/plugin-manifest/src/index.ts": "7f4e4874d4ccde9856580ff8a5735797bdd196e7a26003513555c5b7d33a39c8",
+  "packages/plugin/plugin-manifest/src/types.ts": "fd7b07e0f83e9f7590d7a2ec6c6efe7e57c7febb95fb4351b4be6660b97a0814",
+  "packages/plugin/plugin-manifest/src/validate.ts": "9f93387d18fa6fe9b252bbcabde199cf51d7d2bfe19f80d30b3a0902fbd0c5fb",
+  "packages/plugin/plugin-manifest/tests/manifest.spec.ts": "2f2ac69c43451e4eb4eefc9aa20f1a05b3e36d33e89c32ce0f5a40bb0a798df8",
+  "apps/cli/src/plugin.ts": "263ca9cd68d6caa0fe637c0de4350503154565ef57b19331fedee388c9dc68e3",
+  "apps/cli/src/profile-boot.ts": "4a89a793d0a793e7573d7b275d9682459fa2e211edc6814d23b90c75588fa663",
+  "packages/host/plugin-inventory/src/index.ts": "ad04775a9ee5eb830a1d8dc0c31122c62faaf76cf06c113fdbf3eb3116a5095c",
+  "packages/host/plugin-inventory/src/types.ts": "5b7550afdbf96cafc23dc8a5efe2d28ff1b7adc615e98ad5fa96f1a419c695a6",
+  "packages/boot/app-boot/src/profile.ts": "c528b0aacd4c7acad9ac557e0a9ac97f1c7a0aed1239b36ac85f93135688861a"
 }

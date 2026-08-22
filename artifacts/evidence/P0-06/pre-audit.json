@@ -1,30 +1,69 @@
 {
   "issue_id": "P0-06",
-  "title": "Establish unified Schema Registry and compatibility rules",
-  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
-  "current_state": "SCAFFOLD_OR_WORSE",
-  "prototype_branch": "feat/p0-06-schema-registry",
-  "prototype_pr": 3,
-  "merge_policy": "reference_only_do_not_merge",
-  "salvageable_from_prototype": [
-    "src/types.ts \u2014 type definitions are independently correct",
-    "src/migrate.ts \u2014 migration engine is independently correct",
-    "src/index.ts \u2014 schema registration and compatibility checking are correct",
-    "tests/compatibility.spec.ts \u2014 test structure is reusable"
-  ],
-  "must_rewrite": [
-    "package.json \u2014 must be private, not published",
-    "tsconfig.host.json \u2014 must add schema-registry as a reference",
-    "packages/boot/app-boot/src/index.ts \u2014 must register built-in schemas at boot"
-  ],
-  "shipping_files_to_wire": [
-    "packages/boot/app-boot/src/index.ts",
+  "title": "建立统一 Schema Registry 与兼容性规则",
+  "audit_date": "2026-08-22T21:03:38.223Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/schema/schema-registry/src/index.ts",
+    "packages/schema/schema-registry/src/types.ts",
+    "packages/schema/schema-registry/src/migrate.ts",
+    "packages/schema/schema-registry/tests/compatibility.spec.ts",
+    "packages/core/session/src/known-event-types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/core/session/src/repair.ts",
     "packages/sdk/protocol/src/types.ts",
-    "packages/core/session/src/types.ts"
+    "packages/settings/settings/src/types.ts"
   ],
-  "main_chain_gaps": [
-    "Schema registry not initialized in real boot path",
-    "No built-in schemas registered at boot time",
-    "No integration proof that registry is on the main path"
-  ]
+  "source_files": [
+    "packages/schema/schema-registry/src/index.ts",
+    "packages/schema/schema-registry/src/types.ts",
+    "packages/schema/schema-registry/src/migrate.ts",
+    "packages/core/session/src/known-event-types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/core/session/src/repair.ts",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/settings/settings/src/types.ts"
+  ],
+  "test_files": [
+    "packages/schema/schema-registry/tests/compatibility.spec.ts",
+    "packages/schema/schema-registry/tests/integration.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/schema/schema-registry/src/index.ts",
+    "packages/schema/schema-registry/src/types.ts",
+    "packages/schema/schema-registry/src/migrate.ts",
+    "packages/schema/schema-registry/tests/compatibility.spec.ts",
+    "packages/core/session/src/known-event-types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/core/session/src/repair.ts",
+    "packages/sdk/protocol/src/types.ts",
+    "packages/settings/settings/src/types.ts"
+  ],
+  "classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 8 files, Tests: 23 files, Docs: 0 files"
 }

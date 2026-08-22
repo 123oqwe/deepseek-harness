@@ -1,1 +1,6 @@
-{}
+{
+  "packages/subagent/subagent-acp/src/index.ts": "d291da17bac1e3a09517a81efb3d6481c174a0f03057d215e043e4c4cdbea45d",
+  "packages/subagent/subagent-acp/src/run.ts": "88dbcf58d49211d47ce1cebb9ef78fc15652cdf203a0ade02412ee2757a82b55",
+  "packages/subagent/subagent/src/continuation.ts": "fbcbd65ada6dc1e7262e512269e4b7728fcc093f1eecab97fd77179478b3ca94",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878"
+}

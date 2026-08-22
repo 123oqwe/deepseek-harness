@@ -1,0 +1,8 @@
+{
+  "packages/memory/memory-policy/src/index.ts": "897fa4b92a74035a84ae4377f28524564ba72c5e6997441f8db9a8e7e7e2c232",
+  "packages/memory/memory-policy/src/proposal.ts": "f664fdf941836fafefdb58c875e92cd235f802e141fba2221f329eb053d848c0",
+  "packages/memory/memory-policy/src/conflict.ts": "693269be968745616169a5a9b91c41e87b43845851545e5d686cfb60f1bc0d7f",
+  "packages/memory/memory/src/index.ts": "f715493dabc4a6b9a17bdc3d2f266719ef33285c48e0a9ef9c98e70581bf415a",
+  "packages/memory/memory/src/record.ts": "47116a104b2286ec62c8cefa169422f52ba11597d9b2c59927938c08645f940c",
+  "packages/interaction/human-channel/src/types.ts": "5da4896b0a883be94f9930be2d1c2732f52b1c1a6dbc4828bc58a0993bf2c612"
+}

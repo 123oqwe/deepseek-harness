@@ -1,6 +1,23 @@
 {
-  "total": 0,
-  "passed": 0,
-  "failed": 0,
-  "test_files": []
+  "total": 16,
+  "passed": 12,
+  "failed": 4,
+  "test_files": [
+    "packages/artifact/artifact/tests/lineage.spec.ts",
+    "packages/attachment/attachment/tests/admission.spec.ts",
+    "packages/attachment/attachment/tests/index.spec.ts",
+    "packages/storage/storage/tests/registry.spec.ts",
+    "packages/subagent/subagent/tests/continuation.spec.ts",
+    "packages/subagent/subagent/tests/run-settlement.spec.ts",
+    "packages/subagent/subagent/tests/request-contract.spec.ts",
+    "packages/subagent/subagent/tests/service.spec.ts",
+    "packages/subagent/subagent/tests/list-children.spec.ts",
+    "packages/subagent/subagent/tests/continuation-inheritance.spec.ts",
+    "packages/subagent/subagent/tests/timing-projection.spec.ts",
+    "packages/subagent/subagent/tests/out-of-process.spec.ts",
+    "packages/subagent/subagent/tests/invariant.spec.ts",
+    "packages/subagent/subagent/tests/result-contract.spec.ts",
+    "packages/subagent/subagent/tests/activation-setup-registry.spec.ts",
+    "packages/subagent/subagent/tests/assistant-output.spec.ts"
+  ]
 }

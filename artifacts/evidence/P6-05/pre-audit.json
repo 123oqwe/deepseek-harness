@@ -1,15 +1,64 @@
 {
   "issue_id": "P6-05",
-  "audit_date": "2026-08-22T20:08:05.600Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/memory/context-topology"
+  "title": "Per-Agent Context Topology 与稳定 Context Telemetry Contract",
+  "audit_date": "2026-08-22T22:04:58.390Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/context/context-topology/src/index.ts",
+    "packages/context/context-topology/src/types.ts",
+    "packages/context/context-telemetry/src/index.ts",
+    "packages/context/context-telemetry/tests/isolation.spec.ts",
+    "packages/core/agent-loop/src/runtime-context.ts",
+    "packages/context/agent-instructions/src/state.ts",
+    "packages/context/agent-instructions/src/render.ts",
+    "packages/host/apiproxy/README.md"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/context/context-topology/src/index.ts",
+    "packages/context/context-topology/src/types.ts",
+    "packages/context/context-telemetry/src/index.ts",
+    "packages/core/agent-loop/src/runtime-context.ts",
+    "packages/context/agent-instructions/src/state.ts",
+    "packages/context/agent-instructions/src/render.ts"
+  ],
+  "test_files": [
+    "packages/context/context-telemetry/tests/isolation.spec.ts",
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts",
+    "packages/context/agent-instructions/tests/agent-instructions.spec.ts"
+  ],
+  "doc_files": [
+    "packages/host/apiproxy/README.md"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/context/context-topology/src/index.ts",
+    "packages/context/context-topology/src/types.ts",
+    "packages/context/context-telemetry/src/index.ts",
+    "packages/context/context-telemetry/tests/isolation.spec.ts",
+    "packages/core/agent-loop/src/runtime-context.ts",
+    "packages/context/agent-instructions/src/state.ts",
+    "packages/context/agent-instructions/src/render.ts",
+    "packages/host/apiproxy/README.md"
+  ],
+  "classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 20 files, Docs: 1 files"
 }

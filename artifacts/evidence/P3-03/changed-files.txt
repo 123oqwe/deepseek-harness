@@ -1,9 +1,8 @@
-packages/execution/execution-world/package.json
 packages/execution/execution-world/src/errors.ts
-packages/execution/execution-world/src/index.ts
-packages/execution/execution-world/src/lifecycle.ts
 packages/execution/execution-world/src/outcome.ts
-packages/execution/execution-world/src/types.ts
 packages/execution/execution-world/tests/denial.spec.ts
-packages/execution/execution-world/tests/world.spec.ts
-packages/execution/execution-world/tsconfig.json
+packages/sandbox/sandbox-local/src/index.ts
+packages/sandbox/sandbox/src/index.ts
+packages/core/tools/src/types.ts
+packages/core/agent-loop/src/tool-calls.ts
+packages/llm/llm/src/error.ts

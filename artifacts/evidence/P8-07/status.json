@@ -1,7 +1,8 @@
 {
   "issue_id": "P8-07",
-  "status": "E2E_VERIFIED",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "title": "Schema-Generated TS/Python SDK Parity 与 Contract Test Matrix",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,20 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "1 passed, 0 failed"
+    "tests": "8/10 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T19:42:48.853Z",
+  "evidence_date": "2026-08-22T22:28:25.874Z",
   "runtime_reachability": {
     "issue_id": "P8-07",
-    "entrypoint": "packages/sdk/parity/src/index.ts",
-    "wired": true,
+    "source_files": 4,
+    "test_files": 10,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T19:42:48.853Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T22:28:25.874Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification."
+    "2 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

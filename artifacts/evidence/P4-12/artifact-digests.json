@@ -1,0 +1,9 @@
+{
+  "packages/action/action-ledger/src/index.ts": "06b3c40a86256f6accafc10223c8013bacf540bbd1d3adae21d4e62131ac569a",
+  "packages/action/action-ledger/src/types.ts": "4b208d4aa3b748c768a0b5b57befd6af08cae813d463847b5d08f6ac9219c1be",
+  "packages/action/action-ledger/src/store.ts": "02e5c26cc75a99de2c6fcbb87936590d8d8bded5543f847fb6a23a3f6b658e8e",
+  "packages/core/agent-loop/src/tool-calls.ts": "4244af95a61fe509f2849b204c13af4bb61b522c475688b20f01093a8236a754",
+  "packages/core/tools/src/types.ts": "b2d15f4815419160269703863237bbe65f49b84afc6947fe59edec977b9cefba",
+  "packages/session/session-persistence/src/write-behind.ts": "e01110edfc0e15821f0cfe55d57ecfa38a3f9b83bee636a3794152c46353d8b6",
+  "packages/action/action-manifest/src/types.ts": "e486d784e2a28704d0d6c39710f978b0a620c8fd692a5a677469effe6abfc80e"
+}

@@ -1,0 +1,47 @@
+{
+  "issue_id": "P1-03",
+  "title": "可复现插件锁文件与依赖解析",
+  "audit_date": "2026-08-22T21:05:15.143Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    ".dsh/plugins.lock.json",
+    "packages/plugin/plugin-lock/src/index.ts",
+    "packages/plugin/plugin-lock/src/types.ts",
+    "packages/plugin/plugin-lock/tests/lock.spec.ts",
+    "apps/cli/src/plugin.ts",
+    "apps/cli/src/profile-boot.ts",
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "source_files": [
+    "packages/plugin/plugin-lock/src/index.ts",
+    "packages/plugin/plugin-lock/src/types.ts",
+    "apps/cli/src/plugin.ts",
+    "apps/cli/src/profile-boot.ts"
+  ],
+  "test_files": [
+    "packages/plugin/plugin-lock/tests/lock.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts"
+  ],
+  "doc_files": [
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/plugin/plugin-lock/src/index.ts",
+    "packages/plugin/plugin-lock/src/types.ts",
+    "packages/plugin/plugin-lock/tests/lock.spec.ts",
+    "apps/cli/src/plugin.ts",
+    "apps/cli/src/profile-boot.ts",
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 4 files, Tests: 8 files, Docs: 1 files"
+}

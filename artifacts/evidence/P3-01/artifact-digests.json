@@ -1,0 +1,11 @@
+{
+  "packages/execution/execution-world/src/index.ts": "90165d7f537349160789726a6c3f06ad7cdc2c42a6f19542d1bd93c42f0103a5",
+  "packages/execution/execution-world/src/types.ts": "82c77e50d056795e99f9804970a7ddbfea0fb13d9918fd427539c61165674161",
+  "packages/execution/execution-world/src/lifecycle.ts": "97f851dc9c17ca9dd08750cb3eb858780ea0a681d38e320f4981579b71b70010",
+  "packages/execution/execution-world/tests/world.spec.ts": "11ae14e341763a332bc13e9f42b47b75938936089461c46e9b7834589f592ac6",
+  "packages/sandbox/sandbox/src/index.ts": "33fae7068e518fa06f4a700d09ed54cf29329b90ae2328007ff6a3784aa07ce5",
+  "packages/sandbox/sandbox/src/escalation.ts": "64c57a474667d3ae991377bc122a18449b059fd84721d7e30ff24f8ba4fd510e",
+  "packages/sandbox/sandbox/src/roots.ts": "8a18e1474012415def8197a4ee493394a91cc739a6ec94eb83c6b4d980b7a23b",
+  "packages/core/tools/src/types.ts": "b2d15f4815419160269703863237bbe65f49b84afc6947fe59edec977b9cefba",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8"
+}

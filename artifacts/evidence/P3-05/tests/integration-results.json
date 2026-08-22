@@ -1,6 +1,13 @@
 {
-  "total": 0,
-  "passed": 0,
+  "total": 6,
+  "passed": 6,
   "failed": 0,
-  "test_files": []
+  "test_files": [
+    "packages/execution/local-isolation/tests/process-isolation.spec.ts",
+    "packages/sandbox/sandbox-local/tests/local.spec.ts",
+    "packages/sandbox/sandbox-local/tests/acl-grants.spec.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts"
+  ]
 }

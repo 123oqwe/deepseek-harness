@@ -1,1 +1,10 @@
-{}
+{
+  "packages/context/context-topology/src/index.ts": "a72566cc2b6bd70ec0f551054a9d8671de317d625f9bc314ddc70c35d0b4f75a",
+  "packages/context/context-topology/src/types.ts": "453f6fba5ddc5aadf66c9ec0e51b0ab9aa2e130969b2cb8d13a7bae8f92f5da2",
+  "packages/context/context-telemetry/src/index.ts": "d440c905653c0896872b0cc4c73ebcf0e546cdcd9cc85f8b4c94017a953b2c92",
+  "packages/context/context-telemetry/tests/isolation.spec.ts": "35a28e48d991823352a0b5c78e2daea26855f2ff850259d8c4ebaa116225536e",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8",
+  "packages/context/agent-instructions/src/state.ts": "498d29bdad965b8ce32dd5e3e5514f43c43760d67fe1b7fc33ca794c1372b7fa",
+  "packages/context/agent-instructions/src/render.ts": "893db69a5eb1765625c2ff04e0818a126fa86f58279207098a26350ccd51d61d",
+  "packages/host/apiproxy/README.md": "05d9b6dda6abe33e212281fc0e55a1def203c4f7d8afed88a22558d9cc1bc685"
+}

@@ -1,9 +1,11 @@
 {
-  "commands.jsonl": "3f51e6354dd46512743165ec2e650618280405dc0cc7d3d5c9b6b58042e3e77f",
-  "changed-files.txt": "b74f21b0316dace17da47bbb2c1b7369f0741edf3732225e3a6bbc06fcc462e6",
-  "pre-audit.json": "b0200b40d7890252d215baf1ba823d9ce4f0ab3ccae32618dd8547777d018203",
-  "remaining-risks.md": "77bf0ee43cb215f2439e9a6a54d5533b60520cb16271f0dfe4a3e7f5c0f57583",
-  "status.json": "024e1e759577885152d8387ee37598f7f33a6c957f40dae5048de0828bc0d160",
-  "raw/stdout-typecheck.log": "b02b8999b56581471c1dd495e22062a62860cb3570063525f184389c1089b796",
-  "raw/stdout-tests.log": "b0fc137a7356b78af43d90527b78e285e2b8e3f547b2ab5d38a6f56547adeecc"
+  "packages/schema/schema-registry/src/index.ts": "686adcf8c5bc7ed105301c8e3264780c7d4209791001084e1ffc50f9702b2539",
+  "packages/schema/schema-registry/src/types.ts": "f69f3053fbb0603d1349ce211e3e5d24e9422d551783058144ef8f3d66786a70",
+  "packages/schema/schema-registry/src/migrate.ts": "6d8d99386cb1eddea9f45423de93c3bedb1edc443e8a472553d1a3917f09f741",
+  "packages/schema/schema-registry/tests/compatibility.spec.ts": "36403624f9887c8991f5aa31552e580b812808a958952e17839c0c7801138760",
+  "packages/core/session/src/known-event-types.ts": "23ed63cf702d770839baf1bee86754f69d33c040d05c3fc3654dd0424d7a9fcb",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/core/session/src/repair.ts": "eca9e728dbb2ae8cd51d1e163385e6a20b0399dfa82dfa6230f2eeefdfdd8fd8",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/settings/settings/src/types.ts": "10a298083af84feb72c1bff0d91078a30541044b4b8322889d74a1119fc4da0d"
 }

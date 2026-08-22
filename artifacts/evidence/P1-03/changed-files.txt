@@ -1,0 +1,6 @@
+packages/plugin/plugin-lock/src/index.ts
+packages/plugin/plugin-lock/src/types.ts
+packages/plugin/plugin-lock/tests/lock.spec.ts
+apps/cli/src/plugin.ts
+apps/cli/src/profile-boot.ts
+packages/bundle/base/cordis.patch.yml

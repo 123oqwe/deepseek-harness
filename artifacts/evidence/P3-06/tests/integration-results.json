@@ -1,8 +1,25 @@
 {
-  "total": 1,
-  "passed": 1,
+  "total": 18,
+  "passed": 18,
   "failed": 0,
   "test_files": [
-    "packages/credentials/secrets-broker/tests/secret-leak.spec.ts"
+    "packages/credentials/secrets-broker/tests/secret-leak.spec.ts",
+    "packages/credentials/credentials/tests/invariant.spec.ts",
+    "packages/credentials/credentials/tests/credentials.spec.ts",
+    "packages/llm/llm/tests/content.spec.ts",
+    "packages/llm/llm/tests/service.spec.ts",
+    "packages/llm/llm/tests/api-key.spec.ts",
+    "packages/llm/llm/tests/adapter-failure.spec.ts",
+    "packages/llm/llm/tests/assembler.spec.ts",
+    "packages/llm/llm/tests/topology.spec.ts",
+    "packages/llm/llm/tests/message.spec.ts",
+    "packages/llm/llm/tests/call-config.spec.ts",
+    "packages/llm/llm/tests/invariant.spec.ts",
+    "packages/llm/llm/tests/retry-policy.spec.ts",
+    "packages/llm/llm/tests/properties.spec.ts",
+    "packages/llm/llm/tests/attribution.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts"
   ]
 }

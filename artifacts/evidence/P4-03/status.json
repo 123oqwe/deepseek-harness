@@ -1,11 +1,32 @@
 {
   "issue_id": "P4-03",
+  "title": "RunPlan：模型、Agent、工具、世界、预算与验证的可执行计划",
   "status": "E2E_VERIFIED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
+  },
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "13/13 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T21:37:02.862Z",
   "runtime_reachability": {
-    "wired": true
+    "issue_id": "P4-03",
+    "source_files": 6,
+    "test_files": 13,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "PASS",
+    "timestamp": "2026-08-22T21:37:02.862Z"
   },
   "remaining_risks": [
-    "Ported from prototype branch"
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

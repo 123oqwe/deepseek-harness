@@ -1,0 +1,9 @@
+packages/action/action-manifest/src/index.ts
+packages/action/action-manifest/src/types.ts
+packages/action/action-manifest/src/canonicalize.ts
+packages/action/action-manifest/tests/manifest.spec.ts
+packages/core/tools/src/types.ts
+packages/core/tools/src/index.ts
+packages/core/tools/src/code-mode.ts
+packages/core/agent-loop/src/tool-calls.ts
+packages/core/session/src/known-event-types.ts

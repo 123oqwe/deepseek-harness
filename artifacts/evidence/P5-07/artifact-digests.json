@@ -1,1 +1,7 @@
-{}
+{
+  "packages/subagent/subagent-codex/src/index.ts": "fcdc45041057676b76e40a0ae96b2f1746bf55b5bb80b0e3f436d1ede5bf5c6f",
+  "packages/subagent/subagent-codex/src/run.ts": "390a1a15ec553c851b5593960ff6175f52460cf203e5fe46509fd61792d5a97e",
+  "packages/subagent/subagent-codex/src/wire.ts": "83df81e12ee0a52cacf8d4005cf2f83a687c4a6646f9e3a762d06abc2794a4d6",
+  "packages/subagent/subagent/src/request.ts": "521c93e6445139066b9a6b29c8aa138a5c0481bdfc586d246438fb433ef16c29",
+  "packages/subagent/subagent/src/result.ts": "1def8d478f2ca9f14ca3a940f9fffdc09cfd783ea75fe4a4b155cbed59fa32c9"
+}

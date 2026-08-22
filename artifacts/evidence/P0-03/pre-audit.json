@@ -1,15 +1,62 @@
 {
   "issue_id": "P0-03",
-  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
-  "salvageable": [
+  "title": "增加 Capability Seam 架构一致性检查器",
+  "audit_date": "2026-08-22T21:02:32.856Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "architecture.layers.json",
     "scripts/architecture/check-capability-seams.mjs",
-    "architecture.layers.json"
-  ],
-  "must_rewrite": [
-    "tests need proper type declarations"
-  ],
-  "shipping_files_to_wire": [
+    "tests/architecture/capability-seams.spec.ts",
+    "AGENTS.md",
+    "packages/README.md",
     "package.json",
-    "scripts/architecture/"
-  ]
+    "packages/core/agent-loop/src/index.ts",
+    "packages/core/agent-loop/src/agent.ts"
+  ],
+  "source_files": [
+    "packages/core/agent-loop/src/index.ts",
+    "packages/core/agent-loop/src/agent.ts"
+  ],
+  "test_files": [
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts"
+  ],
+  "doc_files": [
+    "AGENTS.md",
+    "packages/README.md"
+  ],
+  "other_files": [
+    "architecture.layers.json",
+    "scripts/architecture/check-capability-seams.mjs",
+    "package.json"
+  ],
+  "changed_files": [
+    "architecture.layers.json",
+    "scripts/architecture/check-capability-seams.mjs",
+    "AGENTS.md",
+    "packages/README.md",
+    "package.json",
+    "packages/core/agent-loop/src/index.ts",
+    "packages/core/agent-loop/src/agent.ts"
+  ],
+  "classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 2 files, Tests: 18 files, Docs: 2 files"
 }

@@ -1,26 +1,55 @@
 {
   "issue_id": "P3-12",
-  "audit_date": "2026-08-22T19:12:05.560Z",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
-  "packages": [
-    "packages/attachment/attachment-security"
+  "title": "Workspace 路径、附件准入与恶意输入边界强化",
+  "audit_date": "2026-08-22T21:35:38.525Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/attachment/attachment-security/src/index.ts",
+    "packages/attachment/attachment-security/src/scanner.ts",
+    "packages/attachment/attachment-security/tests/malicious.e2e.ts",
+    "packages/workspace/workspace/tests/path-race.e2e.ts",
+    "packages/workspace/workspace/src/paths.ts",
+    "packages/workspace/workspace/src/entity.ts",
+    "packages/attachment/attachment/src/admission.ts",
+    "packages/attachment/attachment/src/error.ts",
+    "packages/attachment/attachment/src/types.ts",
+    "packages/sandbox/sandbox/src/roots.ts"
   ],
   "source_files": [
     "packages/attachment/attachment-security/src/index.ts",
-    "packages/attachment/attachment-security/src/scanner.ts"
+    "packages/attachment/attachment-security/src/scanner.ts",
+    "packages/workspace/workspace/src/paths.ts",
+    "packages/workspace/workspace/src/entity.ts",
+    "packages/attachment/attachment/src/admission.ts",
+    "packages/attachment/attachment/src/error.ts",
+    "packages/attachment/attachment/src/types.ts",
+    "packages/sandbox/sandbox/src/roots.ts"
   ],
   "test_files": [
-    "packages/attachment/attachment-security/tests/malicious.spec.ts"
+    "packages/attachment/attachment-security/tests/malicious.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts",
+    "packages/attachment/attachment/tests/admission.spec.ts",
+    "packages/attachment/attachment/tests/index.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts"
   ],
+  "doc_files": [],
+  "other_files": [],
   "changed_files": [
-    "packages/attachment/attachment-security/package.json",
     "packages/attachment/attachment-security/src/index.ts",
     "packages/attachment/attachment-security/src/scanner.ts",
-    "packages/attachment/attachment-security/tests/malicious.spec.ts",
-    "packages/attachment/attachment-security/tsconfig.json"
+    "packages/workspace/workspace/src/paths.ts",
+    "packages/workspace/workspace/src/entity.ts",
+    "packages/attachment/attachment/src/admission.ts",
+    "packages/attachment/attachment/src/error.ts",
+    "packages/attachment/attachment/src/types.ts",
+    "packages/sandbox/sandbox/src/roots.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 8 files, Tests: 9 files, Docs: 0 files"
 }

@@ -1,1 +1,12 @@
-{}
+{
+  "packages/context/context-graph/src/index.ts": "3a60d37c814b04857aea0b75b945b7b2e3ec03163c8f3f320818daaa35dd4bde",
+  "packages/context/context-graph/src/types.ts": "cc01b62b146adbbde555ca5bb6b9e754136093de0ebab4df1636999e2602c86f",
+  "packages/context/retrieval-planner/src/index.ts": "a8567a82ac23d4edf263ad0731dec3947095edc4d318a01f840ca5377c2515f2",
+  "packages/context/retrieval-planner/src/budget.ts": "2488a6d9994c3fbf4097ceb298e6a094a9d7f60525411682f1e4df3bc4b5e1b3",
+  "packages/context/retrieval-planner/tests/planner.spec.ts": "4014ed71d18255f4e995184f9e709377190d8b4e13a959a5f9e851cee5ffda69",
+  "packages/context/agent-instructions/src/index.ts": "481e6a6b4b975af24b20231e320c489948ff9d13355f23bcc2959a49f682db5e",
+  "packages/context/agent-instructions/src/render.ts": "893db69a5eb1765625c2ff04e0818a126fa86f58279207098a26350ccd51d61d",
+  "packages/session-query/session-query/src/index.ts": "6f1a58aed3d063602883c556f7172730bd03438af4c31cdb675c1c4f1bb23218",
+  "packages/session-query/session-query/src/tracing.ts": "6ea1d2da36158ba83aba0398169c51a47033d946796d4ffa50774200829bcbb2",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8"
+}

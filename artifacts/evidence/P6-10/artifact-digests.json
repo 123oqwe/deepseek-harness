@@ -1,1 +1,7 @@
-{}
+{
+  "packages/settings/settings/src/redact.ts": "786f9971d506da44461d96bf45c497fdfc03115edebd2873a04ccc637e98b78c",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/attachment/attachment/src/types.ts": "7c45a652727db7802a76bc791af136e2a18d12640f9c11b6e5ee309a9171ef16",
+  "packages/workspace/workspace/src/types.ts": "d1f7a3e9fb827170cd09b1b45f5dbe6d28a6a2196c4c8ae0ca7ebfcf9a26c61f",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878"
+}

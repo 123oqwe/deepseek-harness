@@ -1,0 +1,11 @@
+{
+  "packages/run/run/src/index.ts": "51d186873425fb4db44c472ccee16131ac4c99f38de8315338efe44dabfa4ca4",
+  "packages/run/run/src/types.ts": "8434df179f15ec6b8b24a14b99b418ece5e5f25d5020b74744beae8460e24981",
+  "packages/run/run/src/events.ts": "5cafe7388f874b975bd92292602f240dfe0cc352019c2e6c30338bf097346144",
+  "packages/run/run/src/state-machine.ts": "03d4d44a5aa6fdfa2d14ba0ece5516bcc87daa491fb61ad26333360de75c6272",
+  "packages/run/run/tests/state-machine.spec.ts": "d58461df9046daf509e439bc8016b62949e4a5982c1c588ccd06d8c76e62ed92",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/core/agent/src/types.ts": "2353804cf902731cf979f8cb35f0ef830771133bd396a3f0afc368bc72c458bd",
+  "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5",
+  "packages/session/session-persistence/src/coordinator.ts": "5a56334f9796e257874b964c5b678413f6b4be5b664eed48b705e2882e0bc25d"
+}

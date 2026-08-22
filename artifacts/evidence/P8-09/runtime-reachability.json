@@ -1,9 +1,9 @@
 {
   "issue_id": "P8-09",
-  "entrypoint": "packages/governance/org-policy/src/index.ts",
-  "wired": false,
+  "source_files": 5,
+  "test_files": 30,
   "compilation": "PASS",
   "lint": "PASS",
   "tests": "PASS",
-  "timestamp": "2026-08-22T20:27:34.503Z"
+  "timestamp": "2026-08-22T22:30:57.051Z"
 }

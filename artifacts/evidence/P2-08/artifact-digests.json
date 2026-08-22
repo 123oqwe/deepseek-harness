@@ -1,1 +1,9 @@
-{}
+{
+  "packages/policy/grant-store/src/index.ts": "9adf83e6f8693394347892f762b59c51601cfab232af8a11aa06a0e903dbd51a",
+  "packages/policy/grant-store/src/types.ts": "3ae2d63e39dd321e0d87f4137929e6b2367428605fe9950bce6deb46b59f38e1",
+  "packages/policy/grant-store/src/match.ts": "e893794c90100be9c65425b268215e0db46540110b422b863f4148a6bab52097",
+  "packages/policy/grant-store/tests/grants.spec.ts": "3adccb0346dddde99dd31f8c83af5a4a792a88a25fb0b246160b12c79cb5c7b8",
+  "packages/interaction/user-approval/src/types.ts": "c17fb4ec799adbfb450c02cfe8633286f65ec2208f897eff43c17a9997743602",
+  "packages/interaction/permission-presets/src/types.ts": "4766dd2d2d052f55f0f8993c7b15ed86ce32f93dc76a0d606035db4dc1464301",
+  "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596"
+}

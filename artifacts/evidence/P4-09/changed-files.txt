@@ -1,6 +1,7 @@
-packages/workflow/workflow-registry/package.json
 packages/workflow/workflow-registry/src/index.ts
 packages/workflow/workflow-registry/src/types.ts
 packages/workflow/workflow-registry/src/version.ts
-packages/workflow/workflow-registry/tests/nested.spec.ts
-packages/workflow/workflow-registry/tsconfig.json
+packages/workflow/workflow/src/types.ts
+packages/workflow/workflow-worker-thread/src/meta.ts
+packages/workflow/workflow-worker-thread/src/runtime.ts
+packages/workflow/workflow-worker-thread/src/session.ts

@@ -1,8 +1,16 @@
 {
-  "total": 1,
-  "passed": 1,
+  "total": 9,
+  "passed": 9,
   "failed": 0,
   "test_files": [
-    "packages/attachment/attachment-security/tests/malicious.spec.ts"
+    "packages/attachment/attachment-security/tests/malicious.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts",
+    "packages/attachment/attachment/tests/admission.spec.ts",
+    "packages/attachment/attachment/tests/index.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts"
   ]
 }

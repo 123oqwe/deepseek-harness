@@ -1,9 +1,9 @@
 {
   "issue_id": "P4-13",
-  "entrypoint": "packages/workflow/reconciliation/src/index.ts",
-  "wired": false,
+  "source_files": 7,
+  "test_files": 16,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T19:54:40.257Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T21:47:51.325Z"
 }

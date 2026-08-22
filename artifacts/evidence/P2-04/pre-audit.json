@@ -1,0 +1,58 @@
+{
+  "issue_id": "P2-04",
+  "title": "通用副作用与风险分类体系",
+  "audit_date": "2026-08-22T21:17:43.140Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/policy/risk-taxonomy/src/index.ts",
+    "packages/policy/risk-taxonomy/src/types.ts",
+    "packages/policy/risk-taxonomy/src/classify.ts",
+    "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+    "packages/interaction/permission-presets/src/types.ts",
+    "packages/core/tools/src/types.ts",
+    "packages/action/action-manifest/src/types.ts"
+  ],
+  "source_files": [
+    "packages/policy/risk-taxonomy/src/index.ts",
+    "packages/policy/risk-taxonomy/src/types.ts",
+    "packages/policy/risk-taxonomy/src/classify.ts",
+    "packages/interaction/permission-presets/src/types.ts",
+    "packages/core/tools/src/types.ts",
+    "packages/action/action-manifest/src/types.ts"
+  ],
+  "test_files": [
+    "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+    "packages/interaction/permission-presets/tests/profile.spec.ts",
+    "packages/interaction/permission-presets/tests/permission-presets.spec.ts",
+    "packages/interaction/permission-presets/tests/projection.spec.ts",
+    "packages/interaction/permission-presets/tests/invariant.spec.ts",
+    "packages/core/tools/tests/schema.spec.ts",
+    "packages/core/tools/tests/scoped.spec.ts",
+    "packages/core/tools/tests/code-mode.spec.ts",
+    "packages/core/tools/tests/execution-signal-types.spec.ts",
+    "packages/core/tools/tests/tools.spec.ts",
+    "packages/core/tools/tests/execution-mode.spec.ts",
+    "packages/core/tools/tests/py-types.spec.ts",
+    "packages/core/tools/tests/invariant.spec.ts",
+    "packages/core/tools/tests/properties.spec.ts",
+    "packages/core/tools/tests/json-schema.spec.ts",
+    "packages/core/tools/tests/ts-types.spec.ts",
+    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
+    "packages/action/action-manifest/tests/manifest.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/policy/risk-taxonomy/src/index.ts",
+    "packages/policy/risk-taxonomy/src/types.ts",
+    "packages/policy/risk-taxonomy/src/classify.ts",
+    "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+    "packages/interaction/permission-presets/src/types.ts",
+    "packages/core/tools/src/types.ts",
+    "packages/action/action-manifest/src/types.ts"
+  ],
+  "classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 6 files, Tests: 18 files, Docs: 0 files"
+}

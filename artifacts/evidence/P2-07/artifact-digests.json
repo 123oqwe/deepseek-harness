@@ -1,7 +1,8 @@
 {
-  "packages/interaction/approval-store/package.json": "d5452b2fbf2ba0b9eed03f14f495fef525c21f1b0a7f27b82c1612384159a9a6",
   "packages/interaction/approval-store/src/index.ts": "35847bf0d8be6910817ad04afe4a9bc97c4f573bfe96be961584ef3ac13291b2",
   "packages/interaction/approval-store/src/types.ts": "705f06d5679f65b3fe01fab42c2c284b2f2a698148af234b3421856a87b05dee",
-  "packages/interaction/approval-store/tests/recovery.spec.ts": "c9ce5f5408d21a52b17c0cdd9ce9f712999a511290e80b2fc6797023e04c9583",
-  "packages/interaction/approval-store/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/interaction/user-approval/src/index.ts": "b90b5af8a85fb4326950f74aa96285921175e2f287860ec8bdaa7f3563d91b7c",
+  "packages/interaction/user-approval/src/types.ts": "c17fb4ec799adbfb450c02cfe8633286f65ec2208f897eff43c17a9997743602",
+  "packages/session/session-persistence/src/coordinator.ts": "5a56334f9796e257874b964c5b678413f6b4be5b664eed48b705e2882e0bc25d",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878"
 }

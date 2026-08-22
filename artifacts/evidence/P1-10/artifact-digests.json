@@ -1,8 +1,9 @@
 {
-  "packages/plugin/plugin-migrations/package.json": "315a6c48c5f8d4bb7b970f3b897e33ec7b02d9485d58ca6b3bb91aa9a1814d8e",
   "packages/plugin/plugin-migrations/src/index.ts": "af65bd6a33e1b1ef2111a8e10cd28bc526764fd89a682be5dbd03c37463be7c5",
-  "packages/plugin/plugin-migrations/src/transaction.ts": "9f3f68983e3f0f04db45ddbc1db57ec713f8a2e590f9bcd29ca29be4a60b5270",
   "packages/plugin/plugin-migrations/src/types.ts": "598d337985ce34ed2cb7030f0516341a223d9cb5c875b25d48afa7c3540c2185",
-  "packages/plugin/plugin-migrations/tests/rollback.spec.ts": "b35fc1dea52a421494139f34a504f813115347cebabb8c5b8709b96bcf95c985",
-  "packages/plugin/plugin-migrations/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/plugin/plugin-migrations/src/transaction.ts": "9f3f68983e3f0f04db45ddbc1db57ec713f8a2e590f9bcd29ca29be4a60b5270",
+  "apps/cli/src/plugin.ts": "263ca9cd68d6caa0fe637c0de4350503154565ef57b19331fedee388c9dc68e3",
+  "packages/storage/storage/src/backend.ts": "e59bf8e1315dafa8cf633475e4bb0d70c4d6509840c1ae634f9541074d44d8a9",
+  "packages/storage/storage/src/registry.ts": "c8f5005c8a8b3376743b0bac3f5ec8861df9a68da916b6064ce73246852e7fae",
+  "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596"
 }

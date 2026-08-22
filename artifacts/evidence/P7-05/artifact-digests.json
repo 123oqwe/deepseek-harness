@@ -1,8 +1,12 @@
 {
-  "packages/assurance/acceptance-gate/package.json": "2ee603dbedd94be25c7446e5f978f89cedb155df40856f5d568408d731481815",
-  "packages/assurance/acceptance-gate/src/evaluate.ts": "c269b38cd8cd594b3776624f0624e10d42772158596b7a64b0ceb7cff3326132",
   "packages/assurance/acceptance-gate/src/index.ts": "a6c69575e448511b25d8136e36f2790404b4a75d563c0298139010d0a20354a1",
   "packages/assurance/acceptance-gate/src/types.ts": "50f98f0dc20c4b69c88700e6b18ecc504f7a9d472e301b3251c69acc1cf68b79",
-  "packages/assurance/acceptance-gate/tests/gate.spec.ts": "5285badc0e02eb5031cb78221e5b419a8a3d3282cc345260e8a5bd7171c66202",
-  "packages/assurance/acceptance-gate/tsconfig.json": "dbbf49d534432e8543d0095910e83fd54df95b3787b9b3686ef07203deccffed"
+  "packages/assurance/acceptance-gate/src/evaluate.ts": "c269b38cd8cd594b3776624f0624e10d42772158596b7a64b0ceb7cff3326132",
+  "packages/assurance/outcome-package/src/index.ts": "2d3dd7b044064a605f7f4dcf7768ae2020817f602506e07cccc51678df223420",
+  "packages/assurance/outcome-package/src/types.ts": "d4dd540279fcc717c7564ea08e2f9ad57186d656d588b1b79da541144e438b62",
+  "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5",
+  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff",
+  "packages/core/session/src/known-event-types.ts": "23ed63cf702d770839baf1bee86754f69d33c040d05c3fc3654dd0424d7a9fcb",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/attachment/attachment/src/types.ts": "7c45a652727db7802a76bc791af136e2a18d12640f9c11b6e5ee309a9171ef16"
 }

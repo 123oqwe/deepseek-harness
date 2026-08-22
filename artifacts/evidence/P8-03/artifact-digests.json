@@ -1,1 +1,10 @@
-{}
+{
+  "packages/api/remotes/src/run-control.ts": "d3227df5bdbc259e4fc6caf678f9a3e867a9cc1cbcc2fd7b12b110a1e410f497",
+  "packages/sdk/protocol/src/commands.ts": "dfa140178ed2845f3402a3926cf91bbb7c755bdd0a03e2448a0e9d08d8ffe59e",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/sdk/server/src/server.ts": "6707cf3cd51d42f03beab41a48b5335144c3510447a7458f0d9b5f094627c685",
+  "packages/sdk/client/src/api.ts": "ab401945283d89c8728a8bff5ee74d45f1b819e4750d489f46b61c13a844f296",
+  "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",
+  "packages/core/agent/src/inbox.ts": "561fabd8375728e93b94fe6f8361adfbe51fca32080bb1714c0540c75949ddd1",
+  "packages/subagent/subagent/src/lifecycle.ts": "7c58f69e0cbf65670e5d30f85b9577ed3d5d383fe56c1e493da7256d8c8ef132"
+}

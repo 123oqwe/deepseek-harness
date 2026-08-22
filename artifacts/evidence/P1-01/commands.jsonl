@@ -1,1 +1,19 @@
-{"cmd": "npx vitest run packages/plugin/plugin-manifest/tests/", "exit": 0, "result": "15 tests passed"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/plugin/plugin-manifest/tests/manifest.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/plugin/plugin-manifest/tests/integration.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/memory-mcp-configs.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/telemetry-switch.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/args.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/process-shutdown.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/lazy-search-startup.compat.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/windows-shell.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run apps/cli/tests/source-launch.compat.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/config-dump.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/hmr-config.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/app-boot.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/config-reload.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:04:21.959Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/user-patches.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:04:21.959Z"}

@@ -1,6 +1,6 @@
-packages/execution/world-snapshot/package.json
 packages/execution/world-snapshot/src/index.ts
-packages/execution/world-snapshot/src/store.ts
 packages/execution/world-snapshot/src/types.ts
-packages/execution/world-snapshot/tests/restore.spec.ts
-packages/execution/world-snapshot/tsconfig.json
+packages/execution/world-snapshot/src/store.ts
+packages/compaction/compaction/src/checkpoint.ts
+packages/execution/execution-world/src/lifecycle.ts
+packages/workspace/workspace/src/entity.ts

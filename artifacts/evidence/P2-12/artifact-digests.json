@@ -1,0 +1,9 @@
+{
+  "packages/interaction/human-channel/src/index.ts": "51ec594c2b6a795fea4f594ddb6ba350c1a5b5f37f0d2fe2fd5918eb5642e308",
+  "packages/interaction/human-channel/src/types.ts": "5da4896b0a883be94f9930be2d1c2732f52b1c1a6dbc4828bc58a0993bf2c612",
+  "apps/cli/src/process-shutdown.ts": "30743d5ac88154b25fd2d14ac22f7ff1b8d94e915547383de1ca7e49d1bbfc66",
+  "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",
+  "packages/core/agent/src/inbox.ts": "561fabd8375728e93b94fe6f8361adfbe51fca32080bb1714c0540c75949ddd1",
+  "packages/sdk/protocol/src/transport.ts": "7aed4460d1bccc9bc525d2c54f2220ba5360ae529cb86711eb043ad7471c45ac",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878"
+}

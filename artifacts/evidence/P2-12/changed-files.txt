@@ -1,0 +1,7 @@
+packages/interaction/human-channel/src/index.ts
+packages/interaction/human-channel/src/types.ts
+apps/cli/src/process-shutdown.ts
+packages/core/agent/src/dispatch.ts
+packages/core/agent/src/inbox.ts
+packages/sdk/protocol/src/transport.ts
+packages/sdk/protocol/src/types.ts

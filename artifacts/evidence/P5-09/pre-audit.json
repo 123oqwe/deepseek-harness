@@ -1,15 +1,53 @@
 {
   "issue_id": "P5-09",
-  "audit_date": "2026-08-22T20:04:10.290Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/router/acp-provider"
+  "title": "ACP Provider：远程可继续会话、Trace 枚举与安全身份",
+  "audit_date": "2026-08-22T21:57:14.386Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/subagent/subagent-acp/src/session.ts",
+    "packages/subagent/subagent-acp/src/events.ts",
+    "packages/subagent/subagent-acp/tests/continuation.e2e.ts",
+    "packages/subagent/subagent-acp/src/index.ts",
+    "packages/subagent/subagent-acp/src/run.ts",
+    "packages/subagent/subagent/src/continuation.ts",
+    "packages/sdk/protocol/src/types.ts"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/subagent/subagent-acp/src/index.ts",
+    "packages/subagent/subagent-acp/src/run.ts",
+    "packages/subagent/subagent/src/continuation.ts",
+    "packages/sdk/protocol/src/types.ts"
+  ],
+  "test_files": [
+    "packages/subagent/subagent-acp/tests/subagent-acp.spec.ts",
+    "packages/subagent/subagent/tests/continuation.spec.ts",
+    "packages/subagent/subagent/tests/run-settlement.spec.ts",
+    "packages/subagent/subagent/tests/request-contract.spec.ts",
+    "packages/subagent/subagent/tests/service.spec.ts",
+    "packages/subagent/subagent/tests/list-children.spec.ts",
+    "packages/subagent/subagent/tests/continuation-inheritance.spec.ts",
+    "packages/subagent/subagent/tests/timing-projection.spec.ts",
+    "packages/subagent/subagent/tests/out-of-process.spec.ts",
+    "packages/subagent/subagent/tests/invariant.spec.ts",
+    "packages/subagent/subagent/tests/result-contract.spec.ts",
+    "packages/subagent/subagent/tests/activation-setup-registry.spec.ts",
+    "packages/subagent/subagent/tests/assistant-output.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/subagent/subagent-acp/src/index.ts",
+    "packages/subagent/subagent-acp/src/run.ts",
+    "packages/subagent/subagent/src/continuation.ts",
+    "packages/sdk/protocol/src/types.ts"
+  ],
+  "classification": "IDENTICAL_PROVIDER_STUB",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 4 files, Tests: 18 files, Docs: 0 files"
 }

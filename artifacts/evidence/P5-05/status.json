@@ -1,7 +1,8 @@
 {
   "issue_id": "P5-05",
-  "status": "E2E_VERIFIED",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
+  "title": "扩展 Structured SubagentRequest Contract",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,20 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "0 passed, 0 failed"
+    "tests": "8/12 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T19:58:40.392Z",
+  "evidence_date": "2026-08-22T21:54:16.534Z",
   "runtime_reachability": {
     "issue_id": "P5-05",
-    "entrypoint": "packages/router/subagent-request/src/index.ts",
-    "wired": false,
+    "source_files": 5,
+    "test_files": 12,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T19:58:40.392Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:54:16.534Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification."
+    "4 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

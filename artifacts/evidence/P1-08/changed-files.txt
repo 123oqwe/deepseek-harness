@@ -1,0 +1,6 @@
+packages/plugin/plugin-compat/src/index.ts
+packages/plugin/plugin-compat/src/solver.ts
+packages/plugin/plugin-compat/tests/solver.spec.ts
+packages/boot/app-boot/src/profile.ts
+packages/host/plugin-inventory/src/types.ts
+packages/schema/schema-registry/src/index.ts

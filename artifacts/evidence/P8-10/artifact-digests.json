@@ -1,1 +1,9 @@
-{}
+{
+  "packages/boot/app-boot/src/profile.ts": "c528b0aacd4c7acad9ac557e0a9ac97f1c7a0aed1239b36ac85f93135688861a",
+  "packages/boot/app-boot/src/index.ts": "cccc9295ffef57d7623a10d168777c312547eed4426782e1f273adaf86cf3c90",
+  "apps/cli/src/profile-boot.ts": "4a89a793d0a793e7573d7b275d9682459fa2e211edc6814d23b90c75588fa663",
+  "apps/cli/src/dump-config.ts": "6fabe5c36c4e7d2fe82efa89d8dcc712070cc348c23b86fcda50d22690b1cf8a",
+  "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596",
+  "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1",
+  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15"
+}

@@ -1,26 +1,41 @@
 {
   "issue_id": "P2-09",
-  "audit_date": "2026-08-22T19:23:26.687Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/interaction/approval-quorum"
-  ],
-  "source_files": [
-    "packages/interaction/approval-quorum/src/index.ts",
-    "packages/interaction/approval-quorum/src/types.ts"
-  ],
-  "test_files": [
-    "packages/interaction/approval-quorum/tests/quorum.spec.ts"
-  ],
-  "changed_files": [
-    "packages/interaction/approval-quorum/package.json",
+  "title": "多人审批与职责分离",
+  "audit_date": "2026-08-22T21:22:56.166Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
     "packages/interaction/approval-quorum/src/index.ts",
     "packages/interaction/approval-quorum/src/types.ts",
     "packages/interaction/approval-quorum/tests/quorum.spec.ts",
-    "packages/interaction/approval-quorum/tsconfig.json"
+    "packages/interaction/approval-store/src/types.ts",
+    "packages/policy/policy-engine/src/types.ts",
+    "packages/identity/principal/src/types.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "source_files": [
+    "packages/interaction/approval-quorum/src/index.ts",
+    "packages/interaction/approval-quorum/src/types.ts",
+    "packages/interaction/approval-store/src/types.ts",
+    "packages/policy/policy-engine/src/types.ts",
+    "packages/identity/principal/src/types.ts"
+  ],
+  "test_files": [
+    "packages/interaction/approval-quorum/tests/quorum.spec.ts",
+    "packages/interaction/approval-store/tests/recovery.spec.ts",
+    "packages/policy/policy-engine/tests/policy.spec.ts",
+    "packages/identity/principal/tests/identity.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/interaction/approval-quorum/src/index.ts",
+    "packages/interaction/approval-quorum/src/types.ts",
+    "packages/interaction/approval-quorum/tests/quorum.spec.ts",
+    "packages/interaction/approval-store/src/types.ts",
+    "packages/policy/policy-engine/src/types.ts",
+    "packages/identity/principal/src/types.ts"
+  ],
+  "classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 5 files, Tests: 4 files, Docs: 0 files"
 }

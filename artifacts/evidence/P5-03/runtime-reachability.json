@@ -1,9 +1,9 @@
 {
   "issue_id": "P5-03",
-  "entrypoint": "packages/router/prompt-compiler/src/index.ts",
-  "wired": false,
+  "source_files": 8,
+  "test_files": 26,
   "compilation": "PASS",
   "lint": "PASS",
   "tests": "PASS",
-  "timestamp": "2026-08-22T19:57:19.237Z"
+  "timestamp": "2026-08-22T21:52:16.049Z"
 }

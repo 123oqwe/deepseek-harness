@@ -1,4 +1,12 @@
-packages/evaluation/eval/package.json
 packages/evaluation/eval/src/index.ts
 packages/evaluation/eval/src/types.ts
-packages/evaluation/eval/tsconfig.json
+packages/evaluation/eval-registry/src/index.ts
+packages/evaluation/eval-runner/src/index.ts
+packages/evaluation/champion-challenger/src/index.ts
+packages/evaluation/evolution-proposal/src/index.ts
+package.json
+docs/testing.md
+packages/feedback/README.md
+packages/session/session-telemetry/src/index.ts
+packages/extensions/tool-cordis/src/index.ts
+packages/extensions/cordis-host-runner/src/registry.ts

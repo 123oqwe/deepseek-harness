@@ -1,0 +1,58 @@
+{
+  "issue_id": "P5-10",
+  "title": "Continuation、Steer、Human Input 与 Cancellation Convergence 修复",
+  "audit_date": "2026-08-22T21:58:13.607Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/subagent/subagent/src/control.ts",
+    "packages/subagent/subagent/tests/control-race.e2e.ts",
+    "packages/subagent/subagent/src/continuation.ts",
+    "packages/subagent/subagent/src/lifecycle.ts",
+    "packages/subagent/subagent/src/child-agent.ts",
+    "packages/subagent/subagent/src/client.ts",
+    "packages/core/agent/src/inbox.ts"
+  ],
+  "source_files": [
+    "packages/subagent/subagent/src/control.ts",
+    "packages/subagent/subagent/src/continuation.ts",
+    "packages/subagent/subagent/src/lifecycle.ts",
+    "packages/subagent/subagent/src/child-agent.ts",
+    "packages/subagent/subagent/src/client.ts",
+    "packages/core/agent/src/inbox.ts"
+  ],
+  "test_files": [
+    "packages/subagent/subagent/tests/continuation.spec.ts",
+    "packages/subagent/subagent/tests/run-settlement.spec.ts",
+    "packages/subagent/subagent/tests/request-contract.spec.ts",
+    "packages/subagent/subagent/tests/service.spec.ts",
+    "packages/subagent/subagent/tests/list-children.spec.ts",
+    "packages/subagent/subagent/tests/continuation-inheritance.spec.ts",
+    "packages/subagent/subagent/tests/timing-projection.spec.ts",
+    "packages/subagent/subagent/tests/out-of-process.spec.ts",
+    "packages/subagent/subagent/tests/invariant.spec.ts",
+    "packages/subagent/subagent/tests/result-contract.spec.ts",
+    "packages/subagent/subagent/tests/activation-setup-registry.spec.ts",
+    "packages/subagent/subagent/tests/assistant-output.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/subagent/subagent/src/control.ts",
+    "packages/subagent/subagent/src/continuation.ts",
+    "packages/subagent/subagent/src/lifecycle.ts",
+    "packages/subagent/subagent/src/child-agent.ts",
+    "packages/subagent/subagent/src/client.ts",
+    "packages/core/agent/src/inbox.ts"
+  ],
+  "classification": "ROUTER_PROVIDER_SCAFFOLD_NOT_ON_MAIN_PATH",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 6 files, Tests: 19 files, Docs: 0 files"
+}

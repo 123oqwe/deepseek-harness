@@ -1,6 +1,9 @@
-packages/router/model-router/package.json
 packages/router/model-router/src/index.ts
-packages/router/model-router/src/score.ts
 packages/router/model-router/src/types.ts
+packages/router/model-router/src/score.ts
 packages/router/model-router/tests/router.spec.ts
-packages/router/model-router/tsconfig.json
+packages/core/agent/src/model-selection.ts
+packages/core/agent/src/types.ts
+packages/llm/llm/src/index.ts
+packages/llm/llm/src/call-config.ts
+packages/run/run-plan/src/types.ts

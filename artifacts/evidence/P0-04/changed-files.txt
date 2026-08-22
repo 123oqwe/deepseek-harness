@@ -1,0 +1,6 @@
+scripts/architecture/check-layer-deps.mjs
+tests/architecture/layer-deps.spec.ts
+docs/architecture/layering.md
+package.json
+pnpm-workspace.yaml
+packages/README.md

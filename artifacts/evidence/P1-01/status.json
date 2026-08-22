@@ -1,24 +1,33 @@
 {
   "issue_id": "P1-01",
-  "status": "E2E_VERIFIED",
-  "commit_sha": "HEAD",
+  "title": "Plugin Manifest v2：声明能力、权限与副作用",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "required_proof_classes": ["security/static proof", "shipping build/boot/CI integration proof"],
-  "runtime_reachability": {
-    "entrypoint": "@deepseek-ai/dsh-plugin-manifest exports",
-    "shipping_files_wired": ["packages/extensions/cordis-host-runner/src/index.ts"],
-    "wired": true
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
   },
-  "features_verified": [
-    "Manifest v2: services, tools, skills, MCP, events, filesystem, network, process, secrets, UI, data stores, migrations",
-    "Each tool declares sideEffect class, authAudience, dataClassification",
-    "MCP servers declare transport, auth, networkDestinations, sideEffect",
-    "Wildcard permission rejection (*, /*, **)",
-    "Legacy v1 bundle compat reading marked as legacy-untrusted",
-    "Declared vs observed comparison for blocking violations"
-  ],
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "12/17 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T21:04:21.959Z",
+  "runtime_reachability": {
+    "issue_id": "P1-01",
+    "source_files": 8,
+    "test_files": 17,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:04:21.959Z"
+  },
   "remaining_risks": [
-    "Manifest validation not yet enforced at plugin load time in shipping boot path"
+    "5 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

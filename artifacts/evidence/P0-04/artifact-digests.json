@@ -1,0 +1,8 @@
+{
+  "scripts/architecture/check-layer-deps.mjs": "fd4ffcb2aac6a7c490554a652fd8c2215c1c6867e5af42b0cfd41c4574eca9c0",
+  "tests/architecture/layer-deps.spec.ts": "3f627367b40ba1881cca2b8d250c0adf10295147d7e06fb9bbae289a2130938e",
+  "docs/architecture/layering.md": "d86ae9f75951e0a112e9caca8c001df8d32fa2d4584584a7a733154e92fec2d9",
+  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
+  "pnpm-workspace.yaml": "39d569ce64de5fcfff5db3467304d143bbc6816c03442357af854827f3718f5f",
+  "packages/README.md": "5c7910cc70dba348b81ca549454d1a61a2b19e9a158e32be3a3843812a3dd76d"
+}

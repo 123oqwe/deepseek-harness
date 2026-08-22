@@ -1,33 +1,33 @@
 {
   "issue_id": "P0-02",
-  "title": "Establish Minimal Immutable Trust Kernel boundary",
-  "status": "E2E_VERIFIED",
-  "git_sha": "a2fbc86b735209ff90b430d784b4c659fc3cb514",
+  "title": "确立 Minimal Immutable Trust Kernel 边界",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
     "node": "v24.18.0",
     "pnpm": "11.7.0",
-    "platform": "Darwin"
+    "platform": "darwin"
   },
   "test_digests": {
-    "boundary_spec": "19 tests passed",
-    "baseline_spec": "11 tests passed (no regression)"
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "11/15 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22",
-  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. Trust kernel is now enforced on tool execution (assertKernelInitialized in tools/src/index.ts execute method) and subagent dispatch (assertKernelInitialized in subagent/src/index.ts start method). 5 enforcement tests + existing boundary tests pass.",
+  "evidence_date": "2026-08-22T21:02:04.703Z",
   "runtime_reachability": {
-    "entrypoint": "initTrustKernel at boot, assertKernelInitialized at tool execute and subagent start",
-    "shipping_files_wired": [
-      "packages/boot/app-boot/src/index.ts (initTrustKernel)",
-      "packages/core/tools/src/index.ts (assertKernelInitialized in execute)",
-      "packages/subagent/subagent/src/index.ts (assertKernelInitialized in start)"
-    ],
-    "wired": true
+    "issue_id": "P0-02",
+    "source_files": 5,
+    "test_files": 15,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:02:04.703Z"
   },
   "remaining_risks": [
-    "Kernel enforcement on workflow and SDK paths not yet added",
-    "Authorization bypass matrix test not yet written"
+    "4 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

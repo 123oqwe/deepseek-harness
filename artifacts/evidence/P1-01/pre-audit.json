@@ -1,11 +1,64 @@
 {
   "issue_id": "P1-01",
-  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
-  "salvageable": [
-    "all prototype files"
+  "title": "Plugin Manifest v2：声明能力、权限与副作用",
+  "audit_date": "2026-08-22T21:04:21.959Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/plugin/plugin-manifest/src/index.ts",
+    "packages/plugin/plugin-manifest/src/types.ts",
+    "packages/plugin/plugin-manifest/src/validate.ts",
+    "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+    "docs/plugins/manifest-v2.md",
+    "apps/cli/src/plugin.ts",
+    "apps/cli/src/profile-boot.ts",
+    "packages/host/plugin-inventory/src/index.ts",
+    "packages/host/plugin-inventory/src/types.ts",
+    "packages/boot/app-boot/src/profile.ts"
   ],
-  "must_rewrite": [
-    "tsconfig paths",
-    "package.json private flag"
-  ]
+  "source_files": [
+    "packages/plugin/plugin-manifest/src/index.ts",
+    "packages/plugin/plugin-manifest/src/types.ts",
+    "packages/plugin/plugin-manifest/src/validate.ts",
+    "apps/cli/src/plugin.ts",
+    "apps/cli/src/profile-boot.ts",
+    "packages/host/plugin-inventory/src/index.ts",
+    "packages/host/plugin-inventory/src/types.ts",
+    "packages/boot/app-boot/src/profile.ts"
+  ],
+  "test_files": [
+    "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+    "packages/plugin/plugin-manifest/tests/integration.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/host/plugin-inventory/tests/inventory.spec.ts",
+    "packages/host/plugin-inventory/tests/invariant.spec.ts",
+    "packages/boot/app-boot/tests/config-dump.spec.ts",
+    "packages/boot/app-boot/tests/profile.spec.ts",
+    "packages/boot/app-boot/tests/hmr-config.spec.ts",
+    "packages/boot/app-boot/tests/app-boot.spec.ts",
+    "packages/boot/app-boot/tests/config-reload.spec.ts",
+    "packages/boot/app-boot/tests/user-patches.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/plugin/plugin-manifest/src/index.ts",
+    "packages/plugin/plugin-manifest/src/types.ts",
+    "packages/plugin/plugin-manifest/src/validate.ts",
+    "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+    "apps/cli/src/plugin.ts",
+    "apps/cli/src/profile-boot.ts",
+    "packages/host/plugin-inventory/src/index.ts",
+    "packages/host/plugin-inventory/src/types.ts",
+    "packages/boot/app-boot/src/profile.ts"
+  ],
+  "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 8 files, Tests: 17 files, Docs: 0 files"
 }

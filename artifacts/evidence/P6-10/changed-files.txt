@@ -1,1 +1,5 @@
-
+packages/settings/settings/src/redact.ts
+packages/core/session/src/types.ts
+packages/attachment/attachment/src/types.ts
+packages/workspace/workspace/src/types.ts
+packages/sdk/protocol/src/types.ts

@@ -1,32 +1,50 @@
 {
   "issue_id": "P1-05",
-  "audit_date": "2026-08-22T19:21:54.104Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/plugin/plugin-scanner"
+  "title": "插件静态/动态安全扫描器",
+  "audit_date": "2026-08-22T21:05:46.005Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/plugin/plugin-scanner/src/index.ts",
+    "packages/plugin/plugin-scanner/src/static.ts",
+    "packages/plugin/plugin-scanner/src/dynamic.ts",
+    "packages/plugin/plugin-scanner/src/rules.ts",
+    "packages/plugin/plugin-scanner/tests/scanner.spec.ts",
+    "apps/cli/src/plugin.ts",
+    "packages/host/plugin-inventory/src/index.ts"
   ],
   "source_files": [
-    "packages/plugin/plugin-scanner/src/dynamic.ts",
     "packages/plugin/plugin-scanner/src/index.ts",
-    "packages/plugin/plugin-scanner/src/rules.ts",
     "packages/plugin/plugin-scanner/src/static.ts",
-    "packages/plugin/plugin-scanner/src/types.ts"
+    "packages/plugin/plugin-scanner/src/dynamic.ts",
+    "packages/plugin/plugin-scanner/src/rules.ts",
+    "apps/cli/src/plugin.ts",
+    "packages/host/plugin-inventory/src/index.ts"
   ],
   "test_files": [
-    "packages/plugin/plugin-scanner/tests/scanner.spec.ts"
-  ],
-  "changed_files": [
-    "packages/plugin/plugin-scanner/package.json",
-    "packages/plugin/plugin-scanner/src/dynamic.ts",
-    "packages/plugin/plugin-scanner/src/index.ts",
-    "packages/plugin/plugin-scanner/src/rules.ts",
-    "packages/plugin/plugin-scanner/src/static.ts",
-    "packages/plugin/plugin-scanner/src/types.ts",
     "packages/plugin/plugin-scanner/tests/scanner.spec.ts",
-    "packages/plugin/plugin-scanner/tsconfig.json"
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/host/plugin-inventory/tests/inventory.spec.ts",
+    "packages/host/plugin-inventory/tests/invariant.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/plugin/plugin-scanner/src/index.ts",
+    "packages/plugin/plugin-scanner/src/static.ts",
+    "packages/plugin/plugin-scanner/src/dynamic.ts",
+    "packages/plugin/plugin-scanner/src/rules.ts",
+    "packages/plugin/plugin-scanner/tests/scanner.spec.ts",
+    "apps/cli/src/plugin.ts",
+    "packages/host/plugin-inventory/src/index.ts"
+  ],
+  "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 10 files, Docs: 0 files"
 }

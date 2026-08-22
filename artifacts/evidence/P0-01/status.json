@@ -1,29 +1,34 @@
 {
   "issue_id": "P0-01",
-  "title": "Lock reproducible audit baseline and repository fingerprint",
-  "status": "E2E_VERIFIED",
-  "git_sha": "a07f64103c34b3b57f06df4eb56eb7e4681c8176",
+  "title": "锁定可复现审计基线与仓库指纹",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
     "node": "v24.18.0",
     "pnpm": "11.7.0",
-    "platform": "Darwin"
+    "platform": "darwin"
   },
   "test_digests": {
-    "baseline_spec": "11 tests passed"
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "0/0 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22",
-  "correction_note": "Status corrected from E2E_VERIFIED to WIRED, then promoted back to E2E_VERIFIED after running baseline capture+verify with raw output evidence.",
+  "evidence_date": "2026-08-22T21:00:54.360Z",
   "runtime_reachability": {
-    "entrypoint": "pnpm baseline:verify",
-    "gate": "pnpm first100:preflight",
-    "wired": true,
-    "raw_evidence": "artifacts/evidence/P0-01/raw/baseline-verify.log"
+    "issue_id": "P0-01",
+    "source_files": 0,
+    "test_files": 0,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "PASS",
+    "timestamp": "2026-08-22T21:00:54.360Z"
   },
   "remaining_risks": [
-    "first100:preflight hangs on pnpm install due to playwright registry timeout (network issue, not code issue)",
-    "Cross-platform (Linux) baseline verification not yet performed"
+    "No source files found at manifest-declared paths",
+    "No test files found for this issue",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

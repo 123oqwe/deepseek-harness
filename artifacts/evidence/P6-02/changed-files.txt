@@ -1,0 +1,6 @@
+packages/memory/memory/src/record.ts
+packages/memory/memory/src/provenance.ts
+packages/memory/memory/tests/record.spec.ts
+packages/memory/memory/src/types.ts
+packages/core/session/src/types.ts
+packages/identity/principal/src/types.ts

@@ -1,9 +1,9 @@
 {
   "issue_id": "P5-05",
-  "entrypoint": "packages/router/subagent-request/src/index.ts",
-  "wired": false,
+  "source_files": 5,
+  "test_files": 12,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T19:58:40.392Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T21:54:16.534Z"
 }

@@ -1,9 +1,11 @@
 {
-  "packages/assurance/repair/package.json": "705efe9024a0b849afa429b61d61fb9574bcd92f372f9b709474b26d7c79e118",
-  "packages/assurance/repair/src/coordinator.ts": "c0bd844249ee4c7702c08d76e0a6ef98abbab292f7dff9051535586afc8c28ed",
   "packages/assurance/repair/src/index.ts": "6f448c0ebaac6c8f47990d7241ca34bbf3e27a31aa0e8975112d32832643cdbe",
-  "packages/assurance/repair/src/policy.ts": "d036b5dabee2fa3bda47aa7f09e68436a5ef5fca88856d0cb66dc48c6984172d",
   "packages/assurance/repair/src/types.ts": "f3e4e4aece2b643f01f826dd58adbaeaeb89c60e0b1db8b1fac103484aff4fa3",
-  "packages/assurance/repair/tests/repair.spec.ts": "2d71c73b8f7257571756e551d1543fd69db0f370c3191717baa43a439942881a",
-  "packages/assurance/repair/tsconfig.json": "f25011a2551b2ec1691f6a855e52f58b02518ed6bdd3ed9a3416c29881142cb0"
+  "packages/assurance/repair/src/coordinator.ts": "c0bd844249ee4c7702c08d76e0a6ef98abbab292f7dff9051535586afc8c28ed",
+  "packages/assurance/repair/src/policy.ts": "d036b5dabee2fa3bda47aa7f09e68436a5ef5fca88856d0cb66dc48c6984172d",
+  "packages/llm/llm-retry/src/index.ts": "73a3f4cee1e3c4a315f41f38d12ea1676661f0475dd6f367901b22b6e23dfd72",
+  "packages/llm/llm-retry/src/types.ts": "9c377ed575053427da1f0cef97c056aee0f6c4a80d413dea0f70086bbd05fb0b",
+  "packages/guard/repeat-tool-reminder/src/index.ts": "5cd612ff3b24eef3febb1b8b4ac6b76b0f431de3def509a9a7021ec2d51d9363",
+  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff",
+  "packages/workflow/workflow-worker-thread/src/runtime.ts": "3ecbd893fc8b776ab6e93a7e5edd99c8ce5d3da255bb9b378242b80131138c78"
 }

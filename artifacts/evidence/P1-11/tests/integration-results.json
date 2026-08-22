@@ -1,6 +1,14 @@
 {
-  "total": 0,
-  "passed": 0,
-  "failed": 0,
-  "test_files": []
+  "total": 7,
+  "passed": 4,
+  "failed": 3,
+  "test_files": [
+    "packages/extensions/extension-proposal/tests/pipeline.spec.ts",
+    "packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/sandbox.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/composition.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/versioning.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/runner.spec.ts"
+  ]
 }

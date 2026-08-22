@@ -1,0 +1,8 @@
+{
+  "packages/subagent/subagent/src/control.ts": "a5de873b334ca44f2cf9e6367e2ba93c735ee33dc6be235e70b44bbb46356e24",
+  "packages/subagent/subagent/src/continuation.ts": "fbcbd65ada6dc1e7262e512269e4b7728fcc093f1eecab97fd77179478b3ca94",
+  "packages/subagent/subagent/src/lifecycle.ts": "7c58f69e0cbf65670e5d30f85b9577ed3d5d383fe56c1e493da7256d8c8ef132",
+  "packages/subagent/subagent/src/child-agent.ts": "ea7b6f6fc209175d9a83154ef9f60ccb34ab3a87e966d34c908c5b7215612877",
+  "packages/subagent/subagent/src/client.ts": "e8689a189d2991374e4a7f50e2e02702303bd37002ea1e91a20cae7fab52d230",
+  "packages/core/agent/src/inbox.ts": "561fabd8375728e93b94fe6f8361adfbe51fca32080bb1714c0540c75949ddd1"
+}

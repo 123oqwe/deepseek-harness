@@ -1,0 +1,68 @@
+{
+  "issue_id": "P6-01",
+  "title": "原生 Memory Service Definition（Provider-Neutral）",
+  "audit_date": "2026-08-22T22:02:07.129Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/memory/memory/src/index.ts",
+    "packages/memory/memory/src/types.ts",
+    "packages/memory/memory/src/invariant.ts",
+    "packages/memory/memory/tests/conformance.spec.ts",
+    "docs/subsystems/memory.md",
+    "packages/context/README.md",
+    "packages/session-query/session-query/src/types.ts",
+    "packages/core/agent-loop/src/runtime-context.ts",
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "source_files": [
+    "packages/memory/memory/src/index.ts",
+    "packages/memory/memory/src/types.ts",
+    "packages/memory/memory/src/invariant.ts",
+    "packages/session-query/session-query/src/types.ts",
+    "packages/core/agent-loop/src/runtime-context.ts"
+  ],
+  "test_files": [
+    "packages/memory/memory/tests/conformance.spec.ts",
+    "packages/memory/memory/tests/record.spec.ts",
+    "packages/session-query/session-query/tests/tracing.spec.ts",
+    "packages/session-query/session-query/tests/search-helpers.spec.ts",
+    "packages/session-query/session-query/tests/session-query.spec.ts",
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts"
+  ],
+  "doc_files": [
+    "packages/context/README.md",
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/memory/memory/src/index.ts",
+    "packages/memory/memory/src/types.ts",
+    "packages/memory/memory/src/invariant.ts",
+    "packages/memory/memory/tests/conformance.spec.ts",
+    "packages/context/README.md",
+    "packages/session-query/session-query/src/types.ts",
+    "packages/core/agent-loop/src/runtime-context.ts",
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 5 files, Tests: 23 files, Docs: 2 files"
+}

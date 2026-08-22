@@ -1,0 +1,9 @@
+{
+  "packages/policy/policy-language/src/index.ts": "6b9a7c2040a2a4c2c9c23b43036902d81eb27b517696196fdd82d840ff5a5c8d",
+  "packages/policy/policy-language/src/parser.ts": "68dc2d93e772fbf31b37500c9384af5730bb58664239d614afaa5dba3ad3cb33",
+  "packages/policy/policy-language/src/compiler.ts": "b6c08faf925d9de5626826378420bf97e0b0683f437defd02583976258440d73",
+  "packages/policy/policy-language/tests/golden.spec.ts": "f75578209e7ff8833e2db9e98d0f519d1c7caa968bed0cfa2e03abc010b741b8",
+  "packages/interaction/permission-presets/src/index.ts": "4b49f43415d25e2efaf64819b3bfb8103af85f5ffdfc14bd449da922fa1bbdc1",
+  "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596",
+  "packages/policy/policy-engine/src/index.ts": "e93ab35bf7db48c39215679d9699f5d02a895cee78f3c518c1e22d82998f1b80"
+}

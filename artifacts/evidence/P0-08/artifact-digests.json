@@ -1,0 +1,8 @@
+{
+  "benchmarks/harness-capability/manifest.yml": "5331c0206cd83e43a59868e495ffabbdd10cb3def192f14dcb12f416cc693282",
+  "benchmarks/harness-capability/runner.ts": "61098276fd61aaad3cbc46b4b347e49fa1ef11c3509abc89ee582220e535ac98",
+  "benchmarks/harness-capability/report.ts": "edc8ca6f615c3df049d0bc4752db199c792bbef3df081608233333247ac06dcf",
+  "BENCHMARK.md": "1ddc769109451fa146123e84a0b2c459bea130463618a2aa7267349768502f5a",
+  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
+  "packages/test-support/README.md": "3f8d394bdfa08a12ee5f1dc287ffc328b5d545027ce1534aa9b9600636c2d93a"
+}

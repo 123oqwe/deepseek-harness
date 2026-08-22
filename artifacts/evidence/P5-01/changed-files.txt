@@ -1,6 +1,9 @@
-packages/router/strategy-router/package.json
 packages/router/strategy-router/src/index.ts
-packages/router/strategy-router/src/rules.ts
 packages/router/strategy-router/src/types.ts
+packages/router/strategy-router/src/rules.ts
 packages/router/strategy-router/tests/router.spec.ts
-packages/router/strategy-router/tsconfig.json
+packages/core/agent/src/dispatch.ts
+packages/core/agent/src/model-selection.ts
+packages/core/agent-loop/src/agent.ts
+packages/workflow/workflow/src/types.ts
+packages/run/task-profile/src/types.ts

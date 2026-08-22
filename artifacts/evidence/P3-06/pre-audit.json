@@ -1,28 +1,63 @@
 {
   "issue_id": "P3-06",
-  "audit_date": "2026-08-22T19:08:39.261Z",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
-  "packages": [
-    "packages/credentials/secrets-broker"
+  "title": "Secrets Broker：短期、最小范围、不可回显凭证",
+  "audit_date": "2026-08-22T21:32:51.601Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/credentials/secrets-broker/src/index.ts",
+    "packages/credentials/secrets-broker/src/types.ts",
+    "packages/credentials/secrets-broker/src/lease.ts",
+    "packages/credentials/secrets-broker/tests/secret-leak.e2e.ts",
+    "packages/credentials/credentials/src/index.ts",
+    "packages/credentials/credentials/src/types.ts",
+    "packages/credentials/credentials/src/invariant.ts",
+    "packages/llm/llm/src/api-key.ts",
+    "packages/settings/settings/src/redact.ts"
   ],
   "source_files": [
     "packages/credentials/secrets-broker/src/index.ts",
+    "packages/credentials/secrets-broker/src/types.ts",
     "packages/credentials/secrets-broker/src/lease.ts",
-    "packages/credentials/secrets-broker/src/types.ts"
+    "packages/credentials/credentials/src/index.ts",
+    "packages/credentials/credentials/src/types.ts",
+    "packages/credentials/credentials/src/invariant.ts",
+    "packages/llm/llm/src/api-key.ts",
+    "packages/settings/settings/src/redact.ts"
   ],
   "test_files": [
-    "packages/credentials/secrets-broker/tests/secret-leak.spec.ts"
-  ],
-  "changed_files": [
-    "packages/credentials/secrets-broker/package.json",
-    "packages/credentials/secrets-broker/src/index.ts",
-    "packages/credentials/secrets-broker/src/lease.ts",
-    "packages/credentials/secrets-broker/src/types.ts",
     "packages/credentials/secrets-broker/tests/secret-leak.spec.ts",
-    "packages/credentials/secrets-broker/tsconfig.json"
+    "packages/credentials/credentials/tests/invariant.spec.ts",
+    "packages/credentials/credentials/tests/credentials.spec.ts",
+    "packages/llm/llm/tests/content.spec.ts",
+    "packages/llm/llm/tests/service.spec.ts",
+    "packages/llm/llm/tests/api-key.spec.ts",
+    "packages/llm/llm/tests/adapter-failure.spec.ts",
+    "packages/llm/llm/tests/assembler.spec.ts",
+    "packages/llm/llm/tests/topology.spec.ts",
+    "packages/llm/llm/tests/message.spec.ts",
+    "packages/llm/llm/tests/call-config.spec.ts",
+    "packages/llm/llm/tests/invariant.spec.ts",
+    "packages/llm/llm/tests/retry-policy.spec.ts",
+    "packages/llm/llm/tests/properties.spec.ts",
+    "packages/llm/llm/tests/attribution.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/credentials/secrets-broker/src/index.ts",
+    "packages/credentials/secrets-broker/src/types.ts",
+    "packages/credentials/secrets-broker/src/lease.ts",
+    "packages/credentials/credentials/src/index.ts",
+    "packages/credentials/credentials/src/types.ts",
+    "packages/credentials/credentials/src/invariant.ts",
+    "packages/llm/llm/src/api-key.ts",
+    "packages/settings/settings/src/redact.ts"
+  ],
+  "classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 8 files, Tests: 18 files, Docs: 0 files"
 }

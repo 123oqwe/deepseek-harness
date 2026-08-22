@@ -1,0 +1,9 @@
+{
+  "packages/plugin/plugin-provenance/src/index.ts": "d531763c926c0a58c302e0c330115bbc7734309027be2ad1a52aff8639566908",
+  "packages/plugin/plugin-provenance/src/signature.ts": "290bee11b16c2ed386452e7c2e2c0b94198de6e3477c610d7f87b4f1136c4eec",
+  "packages/plugin/plugin-provenance/src/sbom.ts": "38e752182743a155037c3f0273baca81955539798d71de34fbfee8db66eba7b6",
+  "packages/plugin/plugin-provenance/tests/provenance.spec.ts": "a95009701e14bebb79dfb1cb76422c1f771d6e0d159368386825bc37ba42fb15",
+  "apps/cli/src/plugin.ts": "263ca9cd68d6caa0fe637c0de4350503154565ef57b19331fedee388c9dc68e3",
+  "packages/host/plugin-inventory/src/types.ts": "5b7550afdbf96cafc23dc8a5efe2d28ff1b7adc615e98ad5fa96f1a419c695a6",
+  "packages/kernel/trust-kernel/src/types.ts": "f1c92efa94084ab09c8ef8ba8aa694c3093385e711f8e5a5bdd638262a0dfc54"
+}

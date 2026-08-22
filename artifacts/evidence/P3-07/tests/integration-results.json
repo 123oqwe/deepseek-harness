@@ -1,6 +1,14 @@
 {
-  "total": 0,
-  "passed": 0,
+  "total": 7,
+  "passed": 7,
   "failed": 0,
-  "test_files": []
+  "test_files": [
+    "packages/sandbox/sandbox-local/tests/local.spec.ts",
+    "packages/sandbox/sandbox-local/tests/acl-grants.spec.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts"
+  ]
 }

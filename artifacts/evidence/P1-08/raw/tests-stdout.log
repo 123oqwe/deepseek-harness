@@ -1,0 +1,264 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/plugin/plugin-compat/tests/solver.spec.ts > P1-08 Plugin Compatibility Solver > solves a compatible set 2ms
+ ✓ |thread-safe| packages/plugin/plugin-compat/tests/solver.spec.ts > P1-08 Plugin Compatibility Solver > detects runtime API mismatch 0ms
+ ✓ |thread-safe| packages/plugin/plugin-compat/tests/solver.spec.ts > P1-08 Plugin Compatibility Solver > detects missing required capability 0ms
+ ✓ |thread-safe| packages/plugin/plugin-compat/tests/solver.spec.ts > P1-08 Plugin Compatibility Solver > detects provider constraint conflict 0ms
+ ✓ |thread-safe| packages/plugin/plugin-compat/tests/solver.spec.ts > P1-08 Plugin Compatibility Solver > detects schema range conflict 0ms
+ ✓ |thread-safe| packages/plugin/plugin-compat/tests/solver.spec.ts > P1-08 Plugin Compatibility Solver > provides minimal unsat core 0ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  05:08:12
+   Duration  452ms (transform 224ms, setup 249ms, import 14ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > composes overlay layers in order, prints !!js verbatim, and labels each section with its source and patches 7ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > groups contiguous rows with the same origin and patches under one separator 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > composes all layers as one flattened patch list, exactly like boot() 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > reports a patch whose target row is absent through warn with its layer label and keeps composing 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > defaults its warn sink to one stderr line per skipped patch 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > fails loud on a missing, unparsable, or non-array base config 2ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  05:08:13
+   Duration  586ms (transform 313ms, setup 246ms, import 133ms, tests 15ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveProfileDir > joins the home and rejects traversal-shaped names 3ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > initProfile > creates manifest, user patch layer, and pnpm workspace once, never overwriting 3ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > manifest round-trip > writes and reads back, and fails loud on a broken manifest 3ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveBundleDir > prefers the installation anchor, falls back to the profile, and fails loud 3ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveBundleDir > resolves a package whose exports map omits ./package.json 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > resolves each dsh.profile.bundles entry to its patch layer in order, plus the user layer 7ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > auto-initializes only shipped templates and fails loud otherwise 8ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > normalizes only the exact installation-owned headless bundle tuple 5ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > fails loud when a listed bundle declares no dsh.bundle 4ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > composeEntries > applies layers over an empty root and reports skipped patches 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > links the app and bundle dependency surface flat under profiles/node_modules 4ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > throws when a fallback entry is a real directory 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > replaces a wrong symlink 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > tolerates losing the concurrent-heal race to an identical link and rejects a different one 1ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  05:08:15
+   Duration  661ms (transform 338ms, setup 274ms, import 146ms, tests 47ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes module changes when its watch base is a filesystem alias 287ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > collapses filesystem aliases before registering an exact watch 11ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes add, change, and unlink outside its module roots 152ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes creation when the config parent did not exist at registration 18ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > serializes refreshes and waits for them during disposal 259ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > normalizes refresh failures and broadcasts them without escaping the watcher 279ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  05:08:17
+   Duration  1.48s (transform 237ms, setup 212ms, import 76ms, tests 1.01s, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > resolves relative to the given cwd outside replay mode 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > swaps a cordis.yml/.yaml basename for cordis.snapshot.yml in replay mode 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > leaves a non-cordis basename alone in replay mode and defaults cwd to the process cwd 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > loads variables from .env in the given dir 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > stays silent when no .env exists (ambient environment wins) 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > warns (labelled, single line) when .env exists but cannot be loaded 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > defaults dir to the process cwd and warn to a stderr write 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > layers user under project under the inherited environment 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a harness switch, before applying anything 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets the executable search path, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a module preload, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a skill root, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a network proxy, before applying anything 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a lowercase network proxy, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a browser command, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reports each file value with its absolute path 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > resolves the harness home from the inherited environment, never from a file 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > warns and continues when a layer exists but cannot be read 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reports to stderr when the caller supplies no reporter 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > passes over an absent layer without reporting it 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > carries only the inherited environment when neither file exists 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reads a harness home that is also the invocation directory exactly once 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > writes one labelled line with the stack and exits 1 on an Error rejection 5ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > stringifies a non-Error rejection and an Error without a stack falls back to its message 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > returns an uninstaller that removes the handler (and defaults to the real process) 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > does not report an activation rejection shared by entries in the boot audit 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > awaits the release hook before exiting so the terminal owner can restore it 53ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > still exits when the release hook rejects 52ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > exits without waiting when a release hook never settles 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > reports only the first rejection and keeps handling later ones during the release 53ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesLoaded > passes when every enabled entry has a fiber 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesLoaded > throws naming every enabled fiber-less entry 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > passes active entries and ignores disabled entries 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > reports the plugin name and original activation stack instead of fiber state 3 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > formats stackless and non-Error activation failures 4ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > reports unresolved services for pending entries 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > retains the numeric diagnostic for a settled unexpected state 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadOverlayPatches > loads expressions and rejects missing, malformed, non-array, and non-mapping overlays 5ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > boots a leaf config through the real Loader and settles the tree 29ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > can resolve bare plugins from the harness when the config project shadows their package name 5ms
+   → Schema 'session-event' version v0.1 already registered
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > runs host preparation before the Loader tree mounts 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > disposes partial host setup and labels non-Error preparation failures 4ms
+   → expected Error: Schema 'session-event' version v0.… to match object { …(2) }
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > exposes dshHomePath to Loader config expressions 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > returns instead of asserting over a tree a surface disposed mid-startup 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > rejects (never exits 0 half-empty) when a config names a plugin that cannot be imported 3ms
+   → expected [Function] to throw error including 'dsh-test-bin: plugin tree failed to l…' but got 'Schema \'session-event\' version v0.1…'
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > labels a deferred config failure with its row and leaves the source file unchanged 1ms
+   → expected [Function] to throw error including 'failed to apply loader entry invalid-…' but got 'Schema \'session-event\' version v0.1…'
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > appends the deepest cause with its original stack to the load failure 1ms
+   → expected [Function] to throw error matching /…/failing\.mjs\): pinned activation failure\nError: pinned activation failure\n {4}at failing-fixture$ but got 'Schema \'session-event\' version v0.1…'
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > falls back to the deepest cause message when its stack was erased 2ms
+   → expected [Function] to throw error including 'dsh-test-bin: host preparation failed…' but got 'Schema \'session-event\' version v0.1…'
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > reports a pending real Loader fiber and the service unresolved in its own context 5ms
+   → expected [Function] to throw error including 'dsh-test-bin: 1 entry did not activat…' but got 'Schema \'session-event\' version v0.1…'
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > distinguishes the source path from the current workdir between identity and persona 4ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > is a no-op returning undefined when no systemPrompt service is mounted 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > disposes the section it added, so a systemPrompt reload leaves no residue 2ms
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 42 passed (52)
+   Start at  05:08:19
+   Duration  931ms (transform 346ms, setup 253ms, import 173ms, tests 275ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > include refresh with an invalid file > rejects while keeping the last good tree, then applies the next valid edit 30ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > imports a changed name before replacing the running plugin 6ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > retains the running plugin when the replacement cannot be imported 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > restores the previous plugin after replacement application fails 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > restores the previous config when an in-place restart fails 2ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > does not persist a failed direct fiber update 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > rolls back earlier updates and additions when a later entry fails 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > stops and restores descendants when an ancestor group is disabled and re-enabled 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > restores a programmatic entry move when its update fails 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > include refresh with overlay patches > re-applies entry patches and inserted entries on every re-read (parity with initial load) 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > include patches layered over one base > lets a later patch configure or disable a row an earlier patch inserted 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > shipped builtins > lets a booted composition share one isolate realm across a group of rows 1ms
+   → Schema 'session-event' version v0.1 already registered
+
+ Test Files  1 failed (1)
+      Tests  11 failed | 1 passed (12)
+   Start at  05:08:21
+   Duration  675ms (transform 312ms, setup 241ms, import 143ms, tests 49ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > returns undefined when no user patch file exists 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > parses a patch list and preserves !!js expressions as loader expression nodes 5ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud on an unreadable file (a present user patch layer is never skipped) 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud on unparsable YAML and on a !!js tag with no expression body 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud when the file is not a top-level array or an entry is not an object 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader config interpolation > keeps Include's config literal — a nested row's !!js belongs to that row's fiber 21ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader config interpolation > waits for row injections before resolving !!js and resolves again after provider replacement 20ms
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader entry disabled interpolation > evaluates a !!js disabled expression against the loader context 6ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader entry disabled interpolation > keeps the raw expression in the options so write-back preserves the !!js form 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader entry disabled interpolation > re-evaluates when update() replaces the expression, mounting and unmounting 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > boot with user patches > applies id-targeted overrides, inserts, and interpolates !!js from the environment 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > boot with user patches > mounts no patch layer for an absent or empty user layer 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > boot with user patches > watches add, failure, recovery, and removal through transactional HMR 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > boot with user patches > fails loud when the exact watcher lacks HMR or a root Include 2ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > boot with user patches > returns a no-op disposer when the tree is disposed while the watcher opens 1ms
+   → Schema 'session-event' version v0.1 already registered
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > boot with user patches > propagates registration failures other than mid-teardown 2ms
+   → Schema 'session-event' version v0.1 already registered
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 7 passed (16)
+   Start at  05:08:23
+   Duration  694ms (transform 331ms, setup 238ms, import 183ms, tests 69ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 25ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 7ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  05:08:25
+   Duration  534ms (transform 287ms, setup 208ms, import 116ms, tests 33ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 7ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  05:08:27
+   Duration  437ms (transform 205ms, setup 233ms, import 8ms, tests 8ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema registration > registers and retrieves a schema 2ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema registration > rejects duplicate registration of same version 1ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema registration > supports multiple versions of same schema 1ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema registration > lists all registered schemas 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > compatibility checking > same version is always compatible 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > compatibility checking > backward compatible within same major 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > compatibility checking > major version change is breaking 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > compatibility checking > unregistered schema version is incompatible 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema negotiation > agrees on exact version match 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema negotiation > agrees on backward compatible version 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > schema negotiation > fails when no compatible version exists 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > migrations > registers and applies forward migration 1ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > migrations > applies reverse migration for backward 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > migrations > rejects irreversible migration in backward direction 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > migrations > chains multiple migrations 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > builtin schemas > registers built-in schemas at boot 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > builtin schemas > session-event schema has version 0.1 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/compatibility.spec.ts > P0-06 Schema Registry > SchemaCompatibilityError > constructs with correct fields 0ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  05:08:28
+   Duration  455ms (transform 221ms, setup 228ms, import 32ms, tests 8ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/schema/schema-registry/tests/integration.spec.ts > P0-06 Schema Registry Integration > builtin schemas are registered at boot 2ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/integration.spec.ts > P0-06 Schema Registry Integration > can register and retrieve a custom schema 0ms
+ ✓ |thread-safe| packages/schema/schema-registry/tests/integration.spec.ts > P0-06 Schema Registry Integration > checkCompatibility detects version compatibility 0ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:08:29
+   Duration  425ms (transform 200ms, setup 220ms, import 16ms, tests 3ms, environment 0ms)

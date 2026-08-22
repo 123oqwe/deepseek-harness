@@ -1,9 +1,9 @@
 {
   "issue_id": "P5-08",
-  "entrypoint": "packages/router/claude-adapter/src/index.ts",
-  "wired": false,
+  "source_files": 5,
+  "test_files": 14,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T20:02:45.052Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T21:56:29.259Z"
 }

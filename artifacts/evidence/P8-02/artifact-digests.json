@@ -1,12 +1,16 @@
 {
+  "packages/api/remotes/src/run.ts": "92828608883f1815064aac955b763e514179ed1c93c0f971e5380e5f460877b6",
   "packages/api/remotes/src/action.ts": "0be479b7dc784f6c4e4857450083d2adcb55fa1c1240bee0d550efa49b891a1a",
   "packages/api/remotes/src/approval.ts": "3883f5b1713cf4b18997bb03b317b9482a20a8f509282ac468ff63260437663d",
   "packages/api/remotes/src/artifact.ts": "17af0c2274f25407e5fac4b60b0250b6d6a7f98e5919f3585d506d093e9f50d4",
-  "packages/api/remotes/src/resource-store.ts": "ae203156719136f4c4de195c0e85e9839cfd8ec5f78cef2fdb2c931d134ddf4e",
-  "packages/api/remotes/src/run-control.ts": "d3227df5bdbc259e4fc6caf678f9a3e867a9cc1cbcc2fd7b12b110a1e410f497",
-  "packages/api/remotes/src/run.ts": "92828608883f1815064aac955b763e514179ed1c93c0f971e5380e5f460877b6",
   "packages/api/remotes/src/verification.ts": "9e437d547bad5fdb81a35b9df369783c1759848ea36a324f127deaea2e7461bb",
   "packages/api/remotes/src/world.ts": "5ed38878f3c4dea6390d03467baa69e3aae659e442f6a84093b22927b0fd235f",
-  "packages/api/remotes/tsconfig.host.json": "2d3df13360082503c98695de065d50fae8ad2e97de419a2827fb879f4817c811",
-  "packages/api/remotes/tsconfig.json": "a21110c861d0050117b5e5d100cff79559e0799a0be08f136b6416a6dde006e5"
+  "packages/sdk/protocol/src/resources.ts": "8e5f8f3855205ed7689452d9a6f3e92edd4c65d91daa109438fed7e8c5240e91",
+  "packages/sdk/protocol/tests/resources.contract.spec.ts": "20a2f3faa0f456ec86136e5b69c3c4b0d844b39434b23bed46ae36d3482b843c",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/sdk/server/src/server.ts": "6707cf3cd51d42f03beab41a48b5335144c3510447a7458f0d9b5f094627c685",
+  "packages/sdk/client/src/api.ts": "ab401945283d89c8728a8bff5ee74d45f1b819e4750d489f46b61c13a844f296",
+  "packages/api/remotes/src/index.ts": "4847e948ae884eb4a48694f320a5c6138aecaf4b06d3a0f3cab231809493b1b8",
+  "packages/api/remotes/src/types.ts": "498fb930819dbb1a14bd786d28de69f567a1723ff30de2ab0d01c296768515d9",
+  "packages/host/apiproxy/src/api-proxy.ts": "6620a96f9d677b48ab2ad57fb64cecfaa7c3fa882af0b7c4818afed2e8176333"
 }

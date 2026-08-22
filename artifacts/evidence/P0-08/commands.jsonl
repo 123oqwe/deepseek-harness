@@ -1,2 +1,2 @@
-{"cmd": "pnpm benchmark:harness", "exit": 0, "result": "15 scenarios all PASS"}
-{"cmd": "npx vitest run tests/benchmark/capability.spec.ts", "exit": 0, "result": "7 tests passed"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:04:20.988Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:04:20.988Z"}

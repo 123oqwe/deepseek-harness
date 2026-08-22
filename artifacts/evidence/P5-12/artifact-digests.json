@@ -1,1 +1,10 @@
-{}
+{
+  "packages/workspace/worktree-provider/src/index.ts": "a8ce4cbcc6173ea70956e34aed826951a6049fc132683a7c133327659970b2e0",
+  "packages/workspace/worktree-provider/src/merge.ts": "2cd1e1fec5b0cf1717592a3c60e587de0c2747d8581f677250e689cb675c5591",
+  "packages/collaboration/coordination-guard/src/index.ts": "aaa6256fec0ed1384f396a0387e88a66cbc4e687a29ac355e7f8c87dc4abfc1e",
+  "packages/evaluation/router-regret/src/index.ts": "dee4b7fd4a23e8ed6dedf4dfd9de63d89e87729ad1e061d8b21730afa4894514",
+  "packages/workflow/workflow-worker-thread/src/runtime.ts": "3ecbd893fc8b776ab6e93a7e5edd99c8ce5d3da255bb9b378242b80131138c78",
+  "packages/subagent/subagent/src/depth.ts": "52fe8c33e3becc3c5925ce4c63cfa097dc67158207e50db4622c7b9c15bc9b6f",
+  "packages/workspace/workspace/src/entity.ts": "38a7fbd44baf9bdd2b76b15a97f1cf4d36b4d55972efdae2be9f77694f2be7f4",
+  "packages/router/strategy-router/src/index.ts": "6760bcce2faaed284375bb327b50312456c5ea47be83df1e7cf2ad32fba65dcc"
+}

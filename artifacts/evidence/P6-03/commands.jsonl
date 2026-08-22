@@ -1,0 +1,7 @@
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:03:29.801Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:03:29.801Z"}
+{"command":"npx vitest run packages/memory/memory-policy/tests/lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:03:29.801Z"}
+{"command":"npx vitest run packages/memory/memory/tests/record.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:03:29.801Z"}
+{"command":"npx vitest run packages/memory/memory/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:03:29.801Z"}
+{"command":"npx vitest run packages/interaction/human-channel/tests/server-request.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:03:29.801Z"}
+{"command":"npx vitest run packages/interaction/human-channel/tests/emergency-stop.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:03:29.801Z"}

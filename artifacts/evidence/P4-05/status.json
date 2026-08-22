@@ -1,17 +1,33 @@
 {
   "issue_id": "P4-05",
-  "status": "E2E_VERIFIED",
-  "commit_sha": "HEAD",
+  "title": "扩展 Agent Lifecycle 状态机",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "required_proof_classes": ["separate-process kill/restart proof"],
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
+  },
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "10/25 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T21:37:36.871Z",
   "runtime_reachability": {
-    "entrypoint": "packages/core/agent/src/state-machine.ts exports",
-    "shipping_files_wired": ["packages/core/agent/src/runtime-types.ts (re-exports AgentState)"],
-    "wired": true
+    "issue_id": "P4-05",
+    "source_files": 6,
+    "test_files": 25,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:37:36.871Z"
   },
   "remaining_risks": [
-    "State machine not yet integrated with scheduler/lease/fencing in agent-loop",
-    "Cross-process recovery test not yet written (state machine is pure, no durable store needed for transition logic)"
+    "15 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

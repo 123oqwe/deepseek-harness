@@ -1,1 +1,16 @@
-{}
+{
+  "tests/capability/manifest.yaml": "493481b217d33703ce5dba407a4741eadd8191b5e25f2786897e95bee0e30410",
+  "tests/capability/worlds/code-world.ts": "139452ac0776275eb217e1c00e06ec5547575c096d3666eadf95ffdad62468d8",
+  "tests/capability/worlds/research-world.ts": "f6e1fe60ef82d17d9c31bfbc40f6b76737d68a41e2c5ec4118e3369a42e27524",
+  "tests/capability/worlds/external-write-world.ts": "27dbcf6367b5d2302f6ed3171815383c662f3774be69358ec9e982b568aafa45",
+  "tests/capability/worlds/high-risk-world.ts": "16a39fdada2479a5766230187c7258ed2b1eb85eed780116e20e43ea70872299",
+  "tests/capability/worlds/long-run-world.ts": "ee340710c98d65d96a2d84ece6d2707d52a6e6913696af191bbc2277e060bb92",
+  "tests/capability/worlds/malicious-plugin-world.ts": "7ab4fd63bb2a33d237b077b9133a04b496fecd904c6a2f31e32bc40a0ea2976c",
+  "tests/capability/worlds/multi-tenant-world.ts": "32a813388c4bd404e42164322232c4048f1edb095c3abefe7a96cdaf24f60370",
+  "tests/capability/worlds/sdk-reconnect-world.ts": "8395c85e899752412311dad52d8a97fa0481fcfaa7b516ff8af19d94019d5c13",
+  "BENCHMARK.md": "1ddc769109451fa146123e84a0b2c459bea130463618a2aa7267349768502f5a",
+  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
+  "docs/testing.md": "f47370270ceee93392660f8982c8e293883c1dd2cb625e580814a67474660036",
+  "packages/test-support/README.md": "3f8d394bdfa08a12ee5f1dc287ffc328b5d545027ce1534aa9b9600636c2d93a",
+  "examples/jsonrpc-agent/README.md": "92ecff34b81f4c4d558d529c233edf232afd12815a2743633947ca442b8dc610"
+}

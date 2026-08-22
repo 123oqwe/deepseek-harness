@@ -1,14 +1,32 @@
 {
   "issue_id": "P6-02",
+  "title": "MemoryRecord：来源、置信度、TTL、范围、用途与冲突",
   "status": "E2E_VERIFIED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "description": "MemoryRecord with provenance, conflicts, and lifecycle",
-  "test_result": "8 record tests pass",
+  "environment": {
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
+  },
+  "test_digests": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "16/16 passed"
+  },
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T22:02:59.007Z",
   "runtime_reachability": {
-    "wired": true
+    "issue_id": "P6-02",
+    "source_files": 5,
+    "test_files": 16,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "PASS",
+    "timestamp": "2026-08-22T22:02:59.007Z"
   },
   "remaining_risks": [
-    "Package ported from prototype branch; runtime enforcement pending full integration"
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

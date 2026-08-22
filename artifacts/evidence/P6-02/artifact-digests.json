@@ -1,0 +1,8 @@
+{
+  "packages/memory/memory/src/record.ts": "47116a104b2286ec62c8cefa169422f52ba11597d9b2c59927938c08645f940c",
+  "packages/memory/memory/src/provenance.ts": "b43f99a1578c90e88172601b012144ef077550e792d3ee716ed4903e033ffb2a",
+  "packages/memory/memory/tests/record.spec.ts": "82ccdf6c68c5e0f63cc2e238e4878752a304d7b470bd7b4049fa48caa28851b7",
+  "packages/memory/memory/src/types.ts": "32e0bdb73053f00a81c48e36496bd7b7b71abf6355c265f1f3882c0d7e025436",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/identity/principal/src/types.ts": "a1287c863a1a8a52f14256a8c09af3b59cf6a1f99ef59da8ce1a454766471d77"
+}

@@ -1,41 +1,218 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > accepts the durable read-only mode 7ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > accepts the durable workspace-write mode 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > accepts the durable danger-full-access mode 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > ignores unrelated event streams 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > rejects and attributes an unknown durable sandbox mode 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > rejects an unknown mode already present on late registration 10ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/policy.spec.ts > P3-02 Sandbox Policy > default deny policy rejects everything 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/policy.spec.ts > P3-02 Sandbox Policy > checks fs read access 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/policy.spec.ts > P3-02 Sandbox Policy > checks fs write access 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/policy.spec.ts > P3-02 Sandbox Policy > checks network access 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/policy.spec.ts > P3-02 Sandbox Policy > rejects shell commands when allowShell is false 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/policy.spec.ts > P3-02 Sandbox Policy > checks secret access 0ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  03:07:29
-   Duration  624ms (transform 356ms, setup 255ms, import 160ms, tests 25ms, environment 0ms)
+   Start at  05:26:17
+   Duration  419ms (transform 192ms, setup 214ms, import 11ms, tests 3ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > defaults to read-only under the process cwd 12ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > carries a configured mode and resolves the workspace root absolute 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > resolves the deployment policy for an agentless call 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > resolves each session mode and cwd together without changing the fallback 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > resolves a symlink-sensitive session cwd with POSIX component semantics 4ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > lets an approved mode outrank the session mode while retaining its root 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > uses the configured root when a session has no cwd 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > rejects a mode outside the closed vocabulary at load 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > disposes the service and context contribution from a child fiber (HMR safety) 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > renders the exact read-only policy without a capability inventory 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > renders the exact workspace-write policy without a capability inventory 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > renders the exact danger-full-access policy without a capability inventory 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > keeps the complete rendered prompt byte-stable across TMPDIR changes 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > reflects the latest durable switch on the next assembly and stays byte-stable otherwise 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > reconstructs resumed policy from the session log and omits diagnostics without an agent 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > the sandbox/mode session kit > SANDBOX_MODES lists every mode for advertisement and validation 0ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > the sandbox/mode session kit > effectiveSandboxMode folds to the last switch, or undefined without one 0ms
- ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > the sandbox/mode session kit > setSandboxMode appends exactly one sandbox/mode event per switch 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > the strictly-wider ladder > read-only escalates to either wider mode; workspace-write only to full access 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > the strictly-wider ladder > the target enum is the closed set every session could escalate TO (read-only is the floor) 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > validateEscalationArgs > accepts neither field, or both with a non-empty justification 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > validateEscalationArgs > rejects one field without the other, and a blank justification 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > the model-facing markers > the denial marker names the mode 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > the model-facing markers > the hint marker names the family subject 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > approveEscalation > grants: returns the requested mode, asking through the approver with the audit reason 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > approveEscalation > a non-widening request fails closed with its own text and never asks 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > approveEscalation > a missing approval service and an agent-less call each fail closed with distinct text 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > approveEscalation > maps each non-grant outcome to its distinct verbatim text (subject in the rejection) 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/escalation.spec.ts > approveEscalation > an outcome outside the closed union trips the exhaustiveness guard (defensive) 0ms
 
  Test Files  1 passed (1)
-      Tests  18 passed (18)
-   Start at  03:07:30
-   Duration  690ms (transform 382ms, setup 220ms, import 237ms, tests 48ms, environment 0ms)
+      Tests  11 passed (11)
+   Start at  05:26:18
+   Duration  509ms (transform 268ms, setup 211ms, import 111ms, tests 7ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/vocabulary.spec.ts > SandboxUnavailableError > carries the structured { name, code } identity consumers key on 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/vocabulary.spec.ts > SandboxUnavailableError > names the refused mode and the operator escape hatches in its message 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/vocabulary.spec.ts > SandboxUnavailableError > carries the runner detail when the failure is discovered at execution time 0ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:26:20
+   Duration  514ms (transform 266ms, setup 220ms, import 102ms, tests 3ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/roots.spec.ts > canonicalPath > resolves symlinks (an existing path realpaths) 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/roots.spec.ts > canonicalPath > returns the spelling as-is when the path cannot be resolved (conservative — matches nothing until it exists) 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/roots.spec.ts > writableRoots > read-only grants nothing 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox/tests/roots.spec.ts > writableRoots > workspace-write grants the workspace root plus the platform temp areas, canonical and deduplicated 1ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  05:26:22
+   Duration  539ms (transform 288ms, setup 236ms, import 112ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > bwrap read-only: whole tree read-only with fresh /dev and private PID-scoped /proc, no writable mounts 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > bwrap workspace-write: adds an ephemeral /tmp and rebinds the workspace root 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > landlock read-only: readable tree plus a writable /dev/null, nothing else 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > landlock workspace-write: adds the host /tmp and the workspace root 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt read-only: allow-default with every file write denied except the /dev/null literal 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write dedups a workspace root that already IS the temp dir 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 8ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > an EMPTY runnerCommand means unconfigured: the platform chain still gates the wrap 5ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 9ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects runner failure signatures when no custom runner consumes them 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "  " 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\ncontinued" 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\rcontinued" 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux probes bwrap first: a passing probe wraps with the bwrap dialect at full enforcement 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux falls back to the launcher when the bwrap probe fails, speaking the landlock dialect 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > darwin selects its sole candidate WITHOUT probing: nothing to arbitrate 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a platform with no chain fails closed without a single probe: the command never runs 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > caches the verdict for the provider lifetime: one chain walk across wraps 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > the unavailable verdict is cached too, and the error is structured 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 2957ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue chain entry throws via the probe walk's exhaustiveness guard (closed union) 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue cached runner tag throws via the exhaustiveness guard (closed union) 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 12ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > walks the real platform chain when nothing is injected (usable here or fail closed there) 8ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 720ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 708ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 701ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 1947ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 543ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 624ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > selects the rung when the injected probe passes, speaking the ACL dialect 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 130ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > falls back to the runner source through tsx when the built entry is absent 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads an empty runner invocation as unusable (the probe's empty-argv guard) 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > prefers the built lib/runner.js entry when the resolved file exists 2ms
+
+ Test Files  1 passed (1)
+      Tests  38 passed (38)
+   Start at  05:26:23
+   Duration  9.17s (transform 449ms, setup 240ms, import 317ms, tests 8.41s, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 13ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > a fresh provider gives a resumed session a new temp path and SID, so crash residue cannot collide 5ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace grant failure disposes its SID, aggregates cleanup failure, and never creates a temp directory 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > rejects a workspace containing the ambient temp root before any ACL mutation 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > agentless calls pass a temp root and no capabilities; the runner owns the private child lifecycle 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > provider teardown reports grant and directory cleanup failures without aborting teardown 5ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  05:26:34
+   Duration  759ms (transform 439ms, setup 229ms, import 307ms, tests 40ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes Linux with strict level 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes macOS with basic level 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > validates complete Linux config 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > rejects Linux without seccomp 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > rejects macOS without clipboard restriction 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > fail-closed when level is not none 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > attestation includes kernel version 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > reports unsupported features 0ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  05:26:35
+   Duration  420ms (transform 195ms, setup 219ms, import 11ms, tests 4ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > has 4 predefined profiles 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > observe-only has no writable paths 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > production-controlled uses container execution 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > no profile disables kernel hard deny 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > profiles have increasing privilege levels 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > validates valid profile 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > rejects profile with kernel hard deny disabled 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > rejects profile with L0 plugin trust 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > production requires L4 plugins 0ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > all profiles can serialize 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  05:26:37
+   Duration  440ms (transform 211ms, setup 238ms, import 13ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > effectivePermissionPreset > folds to the last event, or undefined without one 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > advertises the preset table in declaration order and resolves bundles 13ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > current() derives from the effective knobs: composition defaults hit workspace-write, a switch hits its preset 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > a knob state matching no table entry derives custom — a state, not an error 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > composition defaults outside the table still derive custom when an explicit new-session default is configured 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > the fold breaks bundle ties; a stale fold no longer matching falls back to table order 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() writes through: one preset event plus both knob events 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() to the current preset is a no-op when the knobs already match (clicks are not switches) 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > re-asserting a preset from a drifted (custom) state re-records the choice and repairs the knob 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects composition over a non-confining executor at load 8ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > optionOf() presents shipped labels/descriptions, falls back to the raw key, and fixes custom 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects a table entry named custom (reserved for the derived state) 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > requires an explicit default when composition defaults match no preset 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > reads a schema-less approval stand-in as the ask default 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins the current setting into each new session without changing earlier sessions 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves a seeded legacy session instead of applying the latest user default 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves composition defaults when an empty stored session resumes 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins sessions that already exist when the service remounts 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > fills only missing legacy facts and preserves an unmatched seeded combination 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > materializes ask when a legacy seed and approval stand-in omit the policy 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > rejects a stored default outside the configured preset table 3ms
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  05:26:38
+   Duration  857ms (transform 454ms, setup 222ms, import 377ms, tests 82ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > serves the pinned new-session default select 18ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > folds the knob events and notifies the change feed per knob append 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > appends custom as a current-only option when the knobs match no preset 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > has no permissions key without the service, and drops it on unload (HMR safety) 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > switches through permission.set and logs the lifecycle pair 6ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > reports the current preset and the table on bare invocation 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > rejects an unknown preset without touching the log 4ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  05:26:40
+   Duration  919ms (transform 559ms, setup 235ms, import 453ms, tests 47ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > accepts configured preset events and ignores other session data 7ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects a durable preset that the active table cannot resolve 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects an unknown preset already present on late registration 11ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:26:42
+   Duration  581ms (transform 315ms, setup 235ms, import 138ms, tests 21ms, environment 0ms)

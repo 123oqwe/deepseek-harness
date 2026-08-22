@@ -1,0 +1,57 @@
+{
+  "issue_id": "P2-06",
+  "title": "审批绑定完整规范化参数、资源与前置状态",
+  "audit_date": "2026-08-22T21:21:39.430Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/interaction/user-approval/src/canonical.ts",
+    "packages/interaction/user-approval/src/preconditions.ts",
+    "packages/interaction/user-approval/tests/argument-binding.spec.ts",
+    "packages/interaction/user-approval/src/types.ts",
+    "packages/interaction/user-approval/src/index.ts",
+    "packages/interaction/user-approval/tests/approval.spec.ts",
+    "packages/core/agent-loop/src/tool-calls.ts"
+  ],
+  "source_files": [
+    "packages/interaction/user-approval/src/canonical.ts",
+    "packages/interaction/user-approval/src/preconditions.ts",
+    "packages/interaction/user-approval/src/types.ts",
+    "packages/interaction/user-approval/src/index.ts",
+    "packages/core/agent-loop/src/tool-calls.ts"
+  ],
+  "test_files": [
+    "packages/interaction/user-approval/tests/argument-binding.spec.ts",
+    "packages/core/agent-loop/tests/config-session-id.spec.ts",
+    "packages/core/agent-loop/tests/request-error.spec.ts",
+    "packages/core/agent-loop/tests/contract-regressions.spec.ts",
+    "packages/core/agent-loop/tests/agent-initiator.spec.ts",
+    "packages/core/agent-loop/tests/coverage-edges.spec.ts",
+    "packages/core/agent-loop/tests/settings.spec.ts",
+    "packages/core/agent-loop/tests/resume.spec.ts",
+    "packages/core/agent-loop/tests/loop.spec.ts",
+    "packages/core/agent-loop/tests/scope-lifecycle.spec.ts",
+    "packages/core/agent-loop/tests/runtime-context.spec.ts",
+    "packages/core/agent-loop/tests/request-reconstruction.spec.ts",
+    "packages/core/agent-loop/tests/tool-calls.spec.ts",
+    "packages/core/agent-loop/tests/interception.spec.ts",
+    "packages/core/agent-loop/tests/agent.spec.ts",
+    "packages/core/agent-loop/tests/cancel.spec.ts",
+    "packages/core/agent-loop/tests/tool-order.spec.ts",
+    "packages/core/agent-loop/tests/invariant.spec.ts",
+    "packages/core/agent-loop/tests/properties.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/interaction/user-approval/src/canonical.ts",
+    "packages/interaction/user-approval/src/preconditions.ts",
+    "packages/interaction/user-approval/tests/argument-binding.spec.ts",
+    "packages/interaction/user-approval/src/types.ts",
+    "packages/interaction/user-approval/src/index.ts",
+    "packages/core/agent-loop/src/tool-calls.ts"
+  ],
+  "classification": "REGRESSION_DELETES_EXISTING_SERVICE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 5 files, Tests: 19 files, Docs: 0 files"
+}

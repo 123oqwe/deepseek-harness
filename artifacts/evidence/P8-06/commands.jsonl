@@ -1,2 +1,14 @@
-{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T20:25:16.070Z"}
-{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T20:25:16.070Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/identity/auth/tests/auth.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/api/remotes/tests/agent-lookup.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/api/gateway/tests/gateway.host.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/api/gateway/tests/gateway.client.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/host/webserver/tests/webserver.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/resources.contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/transport.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/event-stream.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/run-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/workspace.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:28:01.812Z"}

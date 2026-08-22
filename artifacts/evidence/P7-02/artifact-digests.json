@@ -1,1 +1,13 @@
-{}
+{
+  "packages/assurance/evidence/src/index.ts": "e967e66d055529d234d5d551777f493992a5bd63134f099cd313e20974b8fe97",
+  "packages/assurance/evidence/src/types.ts": "da5527c662d1c04240f6156b57d262647bd6fc483e12e17fbac50531cc17dfb2",
+  "packages/assurance/evidence/src/collector.ts": "49c4a7e475467816b8f3ac7587361102b015db930c0874e75fc7fbe8fdad81ee",
+  "packages/assurance/evidence/src/store.ts": "7030e0999a0b0804c78f1807ae4b0604baf9a1708006951c27ab6a227fb34260",
+  "packages/assurance/evidence/src/invariant.ts": "b93b587efbc240131ffdd13506d9322e305d292a053c88f90acc5bc8827a8a88",
+  "packages/core/agent-loop/src/tool-calls.ts": "4244af95a61fe509f2849b204c13af4bb61b522c475688b20f01093a8236a754",
+  "packages/core/tools/src/types.ts": "b2d15f4815419160269703863237bbe65f49b84afc6947fe59edec977b9cefba",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/attachment/attachment/src/index.ts": "8d05d53e6823f09ed5d7c9762b5dea853d0d006c7a187bfcb58f3993e47775a1",
+  "packages/attachment/attachment/src/types.ts": "7c45a652727db7802a76bc791af136e2a18d12640f9c11b6e5ee309a9171ef16",
+  "packages/subagent/subagent/src/assistant-output.ts": "48d325cdf066d6d9ea17583a24b7284a320540954141c28fe2166b9fe86b9139"
+}

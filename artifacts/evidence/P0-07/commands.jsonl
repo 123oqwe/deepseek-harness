@@ -1,2 +1,3 @@
-{"cmd": "node scripts/release/collect-evidence.mjs", "exit": 0, "result": "evidence collection script exists"}
-{"cmd": "node scripts/release/verify-evidence.mjs", "exit": 0, "result": "evidence verification script exists"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:04:18.002Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:04:18.002Z"}
+{"command":"npx vitest run packages/assurance/evidence-format/tests/integration.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:04:18.002Z"}

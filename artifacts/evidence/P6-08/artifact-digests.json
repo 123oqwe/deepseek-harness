@@ -1,1 +1,12 @@
-{}
+{
+  "packages/storage/storage-encryption/src/index.ts": "22c8345c0bc7393a8d4eb940e20c9513fe30dbfa29b60e78d9cff37126625857",
+  "packages/storage/storage-encryption/src/keyring.ts": "cd513cba7c1022b8031156cb4bb002d9cdb32a817da94aef54f393a9644ad4d5",
+  "packages/audit/audit-ledger/src/index.ts": "05e824f5ecc69a718d62141f43c0df7e9eb108fbd0a3713f73c1543df526ee2d",
+  "packages/audit/audit-ledger/src/hash-chain.ts": "4f12ac09c07eabd5464889a2213894ff247d34eaab542a7a91db34918bf17acb",
+  "packages/data/data-residency/src/index.ts": "224620905395ed610429b3f9f157cd1098ee26e825d3d6ee3137265cfa7070a8",
+  "packages/storage/storage/src/backend.ts": "e59bf8e1315dafa8cf633475e4bb0d70c4d6509840c1ae634f9541074d44d8a9",
+  "packages/storage/storage/src/index.ts": "007fd253361aba1f65b0e846a58ebf5f4ae29e5c834ccc3732b1977cc2c78c6b",
+  "packages/attachment/attachment/src/index.ts": "8d05d53e6823f09ed5d7c9762b5dea853d0d006c7a187bfcb58f3993e47775a1",
+  "packages/session/session-persistence/src/write-behind.ts": "e01110edfc0e15821f0cfe55d57ecfa38a3f9b83bee636a3794152c46353d8b6",
+  "packages/workspace/workspace/src/entity.ts": "38a7fbd44baf9bdd2b76b15a97f1cf4d36b4d55972efdae2be9f77694f2be7f4"
+}

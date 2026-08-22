@@ -1,15 +1,40 @@
 {
   "issue_id": "P3-08",
-  "audit_date": "2026-08-22T19:50:20.671Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/execution/container-world"
+  "title": "Container ExecutionWorld Provider",
+  "audit_date": "2026-08-22T21:34:25.343Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/execution/execution-world-container/src/index.ts",
+    "packages/execution/execution-world-container/src/runtime.ts",
+    "packages/execution/execution-world-container/src/images.ts",
+    "packages/execution/execution-world-container/tests/provider.e2e.ts",
+    "packages/execution/execution-world/src/index.ts",
+    "packages/bundle/base/cordis.patch.yml"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/execution/execution-world-container/src/index.ts",
+    "packages/execution/execution-world-container/src/runtime.ts",
+    "packages/execution/execution-world-container/src/images.ts",
+    "packages/execution/execution-world/src/index.ts"
+  ],
+  "test_files": [
+    "packages/execution/execution-world-container/tests/provider.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts"
+  ],
+  "doc_files": [
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/execution/execution-world-container/src/index.ts",
+    "packages/execution/execution-world-container/src/runtime.ts",
+    "packages/execution/execution-world-container/src/images.ts",
+    "packages/execution/execution-world/src/index.ts",
+    "packages/bundle/base/cordis.patch.yml"
+  ],
+  "classification": "SIMULATED_CONTAINER_PROVIDER",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 4 files, Tests: 3 files, Docs: 1 files"
 }

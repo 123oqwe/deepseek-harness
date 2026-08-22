@@ -1,1 +1,8 @@
-{}
+{
+  "packages/sdk/protocol/src/event-stream.ts": "d3275bb6632ac679e58413edaa9fe864c28ba3be759b46a33d87ffb029feb837",
+  "packages/sdk/protocol/src/transport.ts": "7aed4460d1bccc9bc525d2c54f2220ba5360ae529cb86711eb043ad7471c45ac",
+  "packages/sdk/server/src/server.ts": "6707cf3cd51d42f03beab41a48b5335144c3510447a7458f0d9b5f094627c685",
+  "packages/sdk/client/src/client.ts": "68dc8b9f0939fdc449a27cda21911b3ee2420300aec73c01be3b840dd02e5999",
+  "packages/api/remotes/src/remote-events.ts": "bf3ebbc2a5c7d87aa124e4eb1bc643e960e25fb001323112e213cbb148a05b5b",
+  "packages/session/session-persistence/src/coordinator.ts": "5a56334f9796e257874b964c5b678413f6b4be5b664eed48b705e2882e0bc25d"
+}

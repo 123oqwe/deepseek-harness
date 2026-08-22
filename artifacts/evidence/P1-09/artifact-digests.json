@@ -1,0 +1,9 @@
+{
+  "packages/plugin/plugin-ownership/src/index.ts": "b4fe3b844f882efb6be7d9fd462b06cd9dfd7cd5ae2b027216f5eda404ce88c2",
+  "packages/plugin/plugin-ownership/src/types.ts": "c6f4cfcf58678c5519f556271e01dec8d5673fbdbc420c5017b4ac80af709f31",
+  "packages/plugin/plugin-ownership/tests/ownership.spec.ts": "fdddf7af6cd1e0b3b3c8804cfff5f97009fd5fc88b2849aaac76be5487ae7cc3",
+  "packages/core/tools/src/index.ts": "4ba094527a1217dc8e6ca13ebc9c8dfeb5e42267db96549260437cf06354ed7d",
+  "packages/extensions/cordis-host-runner/src/registry.ts": "8d37d583a0e0f94581416ccb9c82b5bd37873c603c0a2c010fafa5366008587e",
+  "packages/extensions/cordis-host-runner/src/lifecycle.ts": "cbe2d9beb583151fe590e2b8ebcdf1656cedc083cfde60532251f11c4f4a673f",
+  "packages/host/plugin-inventory/src/index.ts": "ad04775a9ee5eb830a1d8dc0c31122c62faaf76cf06c113fdbf3eb3116a5095c"
+}

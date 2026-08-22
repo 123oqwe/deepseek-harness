@@ -1,32 +1,77 @@
 {
   "issue_id": "P7-03",
-  "audit_date": "2026-08-22T19:35:44.199Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/assurance/verifier"
+  "title": "Independent Verifier：与执行者隔离的验证 Provider Seam",
+  "audit_date": "2026-08-22T22:14:14.976Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/assurance/verifier/src/index.ts",
+    "packages/assurance/verifier/src/types.ts",
+    "packages/assurance/verifier/src/provider.ts",
+    "packages/assurance/verifier/src/coordinator.ts",
+    "packages/assurance/verifier/src/invariant.ts",
+    "packages/assurance/verifier/tests/verifier-isolation.e2e.ts",
+    "packages/subagent/subagent/src/index.ts",
+    "packages/subagent/subagent/src/types.ts",
+    "packages/sandbox/sandbox/src/index.ts",
+    "packages/core/agent/src/runtime-types.ts",
+    "packages/workflow/workflow/src/types.ts"
   ],
   "source_files": [
-    "packages/assurance/verifier/src/coordinator.ts",
     "packages/assurance/verifier/src/index.ts",
-    "packages/assurance/verifier/src/invariant.ts",
+    "packages/assurance/verifier/src/types.ts",
     "packages/assurance/verifier/src/provider.ts",
-    "packages/assurance/verifier/src/types.ts"
+    "packages/assurance/verifier/src/coordinator.ts",
+    "packages/assurance/verifier/src/invariant.ts",
+    "packages/subagent/subagent/src/index.ts",
+    "packages/subagent/subagent/src/types.ts",
+    "packages/sandbox/sandbox/src/index.ts",
+    "packages/core/agent/src/runtime-types.ts",
+    "packages/workflow/workflow/src/types.ts"
   ],
   "test_files": [
-    "packages/assurance/verifier/tests/verifier-isolation.spec.ts"
-  ],
-  "changed_files": [
-    "packages/assurance/verifier/package.json",
-    "packages/assurance/verifier/src/coordinator.ts",
-    "packages/assurance/verifier/src/index.ts",
-    "packages/assurance/verifier/src/invariant.ts",
-    "packages/assurance/verifier/src/provider.ts",
-    "packages/assurance/verifier/src/types.ts",
     "packages/assurance/verifier/tests/verifier-isolation.spec.ts",
-    "packages/assurance/verifier/tsconfig.json"
+    "packages/subagent/subagent/tests/continuation.spec.ts",
+    "packages/subagent/subagent/tests/run-settlement.spec.ts",
+    "packages/subagent/subagent/tests/request-contract.spec.ts",
+    "packages/subagent/subagent/tests/service.spec.ts",
+    "packages/subagent/subagent/tests/list-children.spec.ts",
+    "packages/subagent/subagent/tests/continuation-inheritance.spec.ts",
+    "packages/subagent/subagent/tests/timing-projection.spec.ts",
+    "packages/subagent/subagent/tests/out-of-process.spec.ts",
+    "packages/subagent/subagent/tests/invariant.spec.ts",
+    "packages/subagent/subagent/tests/result-contract.spec.ts",
+    "packages/subagent/subagent/tests/activation-setup-registry.spec.ts",
+    "packages/subagent/subagent/tests/assistant-output.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/workflow/workflow/tests/invariant.spec.ts",
+    "packages/workflow/workflow/tests/workflow.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/assurance/verifier/src/index.ts",
+    "packages/assurance/verifier/src/types.ts",
+    "packages/assurance/verifier/src/provider.ts",
+    "packages/assurance/verifier/src/coordinator.ts",
+    "packages/assurance/verifier/src/invariant.ts",
+    "packages/subagent/subagent/src/index.ts",
+    "packages/subagent/subagent/src/types.ts",
+    "packages/sandbox/sandbox/src/index.ts",
+    "packages/core/agent/src/runtime-types.ts",
+    "packages/workflow/workflow/src/types.ts"
+  ],
+  "classification": "PSEUDO_INDEPENDENT_VERIFIER",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 10 files, Tests: 26 files, Docs: 0 files"
 }

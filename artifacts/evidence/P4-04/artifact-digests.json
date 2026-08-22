@@ -1,1 +1,8 @@
-{}
+{
+  "packages/run/run-plan/src/freeze.ts": "b596607acff07d6925dfc271e256a2d5db8f72287f7cbaadb582a7674469cd92",
+  "packages/run/run-plan/src/amend.ts": "90dccf2c21e73d87ccb27f6ea469c05df986887594804ab4da6ed6c031ba8dd1",
+  "packages/run/run-plan/tests/amendment.spec.ts": "226be75f5c850afb23bba6f578e93d3f12a7f2022ae35898a53e61562cced6d8",
+  "packages/run/run-plan/src/types.ts": "0bcb08e7efc366da05d0ee23af4c12ec272eef8dd791cb4c4032f0bfb4c410db",
+  "packages/run/run/src/events.ts": "5cafe7388f874b975bd92292602f240dfe0cc352019c2e6c30338bf097346144",
+  "packages/kernel/trust-kernel/src/index.ts": "6d5d8b9f598786e7f1e55a63fe57bef9d149025474e84444dc58bd79e2dec208"
+}

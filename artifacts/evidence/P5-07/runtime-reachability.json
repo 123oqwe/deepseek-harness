@@ -1,9 +1,9 @@
 {
   "issue_id": "P5-07",
-  "entrypoint": "packages/router/codex-adapter/src/index.ts",
-  "wired": false,
+  "source_files": 5,
+  "test_files": 14,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T20:01:27.865Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T21:55:40.214Z"
 }

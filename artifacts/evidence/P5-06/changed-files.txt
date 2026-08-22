@@ -1,1 +1,6 @@
-
+packages/subagent/subagent/src/result.ts
+packages/subagent/subagent/tests/result-contract.spec.ts
+packages/subagent/subagent/src/assistant-output.ts
+packages/subagent/subagent/src/types.ts
+packages/subagent/subagent/src/lifecycle.ts
+packages/workflow/workflow/src/types.ts

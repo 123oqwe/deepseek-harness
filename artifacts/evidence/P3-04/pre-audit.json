@@ -1,30 +1,61 @@
 {
   "issue_id": "P3-04",
-  "audit_date": "2026-08-22T19:24:42.538Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/execution/egress-proxy"
+  "title": "统一 Network Egress Proxy 与目的地策略",
+  "audit_date": "2026-08-22T21:29:28.082Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/execution/egress-proxy/src/index.ts",
+    "packages/execution/egress-proxy/src/policy.ts",
+    "packages/execution/egress-proxy/src/dns.ts",
+    "packages/execution/egress-proxy/tests/ssrf.e2e.ts",
+    "packages/sandbox/sandbox-local/src/index.ts",
+    "packages/core/tools/src/index.ts",
+    "packages/plugin/plugin-host/src/supervisor.ts",
+    "packages/execution/execution-world/src/types.ts"
   ],
   "source_files": [
-    "packages/execution/egress-proxy/src/dns.ts",
     "packages/execution/egress-proxy/src/index.ts",
     "packages/execution/egress-proxy/src/policy.ts",
-    "packages/execution/egress-proxy/src/types.ts"
+    "packages/execution/egress-proxy/src/dns.ts",
+    "packages/sandbox/sandbox-local/src/index.ts",
+    "packages/core/tools/src/index.ts",
+    "packages/plugin/plugin-host/src/supervisor.ts",
+    "packages/execution/execution-world/src/types.ts"
   ],
   "test_files": [
-    "packages/execution/egress-proxy/tests/ssrf.spec.ts"
+    "packages/execution/egress-proxy/tests/ssrf.spec.ts",
+    "packages/sandbox/sandbox-local/tests/local.spec.ts",
+    "packages/sandbox/sandbox-local/tests/acl-grants.spec.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.spec.ts",
+    "packages/core/tools/tests/schema.spec.ts",
+    "packages/core/tools/tests/scoped.spec.ts",
+    "packages/core/tools/tests/code-mode.spec.ts",
+    "packages/core/tools/tests/execution-signal-types.spec.ts",
+    "packages/core/tools/tests/tools.spec.ts",
+    "packages/core/tools/tests/execution-mode.spec.ts",
+    "packages/core/tools/tests/py-types.spec.ts",
+    "packages/core/tools/tests/invariant.spec.ts",
+    "packages/core/tools/tests/properties.spec.ts",
+    "packages/core/tools/tests/json-schema.spec.ts",
+    "packages/core/tools/tests/ts-types.spec.ts",
+    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
+    "packages/plugin/plugin-host/tests/isolation.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts"
   ],
+  "doc_files": [],
+  "other_files": [],
   "changed_files": [
-    "packages/execution/egress-proxy/package.json",
-    "packages/execution/egress-proxy/src/dns.ts",
     "packages/execution/egress-proxy/src/index.ts",
     "packages/execution/egress-proxy/src/policy.ts",
-    "packages/execution/egress-proxy/src/types.ts",
-    "packages/execution/egress-proxy/tests/ssrf.spec.ts",
-    "packages/execution/egress-proxy/tsconfig.json"
+    "packages/execution/egress-proxy/src/dns.ts",
+    "packages/sandbox/sandbox-local/src/index.ts",
+    "packages/core/tools/src/index.ts",
+    "packages/plugin/plugin-host/src/supervisor.ts",
+    "packages/execution/execution-world/src/types.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 7 files, Tests: 19 files, Docs: 0 files"
 }

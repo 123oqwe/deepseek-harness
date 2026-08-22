@@ -1,1 +1,10 @@
-
+packages/evaluation/replay/src/index.ts
+packages/evaluation/replay/src/types.ts
+packages/evaluation/replay/src/recorded-world.ts
+packages/evaluation/replay/src/normalizer.ts
+packages/evaluation/replay/src/diff.ts
+packages/core/session/src/repair.ts
+packages/core/session/src/surface.ts
+packages/session/session-persistence/src/coordinator.ts
+packages/llm/llm/src/assembler.ts
+packages/test-support/llm-replay/src/index.ts

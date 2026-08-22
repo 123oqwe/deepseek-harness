@@ -1,5 +1,8 @@
-packages/attachment/attachment-security/package.json
 packages/attachment/attachment-security/src/index.ts
 packages/attachment/attachment-security/src/scanner.ts
-packages/attachment/attachment-security/tests/malicious.spec.ts
-packages/attachment/attachment-security/tsconfig.json
+packages/workspace/workspace/src/paths.ts
+packages/workspace/workspace/src/entity.ts
+packages/attachment/attachment/src/admission.ts
+packages/attachment/attachment/src/error.ts
+packages/attachment/attachment/src/types.ts
+packages/sandbox/sandbox/src/roots.ts

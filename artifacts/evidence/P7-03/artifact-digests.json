@@ -1,10 +1,12 @@
 {
-  "packages/assurance/verifier/package.json": "7b026fe6741f6222ddafa192552b13ce26bac8fc443f6b3411669793214a7133",
-  "packages/assurance/verifier/src/coordinator.ts": "3c78c8718c7757a0d0475ece00f8b1959dbfedb28b7054f61ea070be262fe71c",
   "packages/assurance/verifier/src/index.ts": "90dd3298a1adee3a5c6b0790480bf2eac60a9eda6b1ae2beac656dfa9941ca34",
-  "packages/assurance/verifier/src/invariant.ts": "1e950309a63810a58f8f08d59581a35c31456823197223f05f9ea601376bcf0c",
-  "packages/assurance/verifier/src/provider.ts": "a66980dfa86c3861d18f5287439d7315077e8a6e9e9715ee90bcf7e57f82b9ad",
   "packages/assurance/verifier/src/types.ts": "34f68f783b0b8ab9cb71effd473a279688cb1f4ac47953a4baecb62a22b65d0d",
-  "packages/assurance/verifier/tests/verifier-isolation.spec.ts": "9be53e74e2bffa4bd11dcddc04f8218c7ad8f8d0eb8f90931f2db5e8f0821a0b",
-  "packages/assurance/verifier/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/assurance/verifier/src/provider.ts": "a66980dfa86c3861d18f5287439d7315077e8a6e9e9715ee90bcf7e57f82b9ad",
+  "packages/assurance/verifier/src/coordinator.ts": "3c78c8718c7757a0d0475ece00f8b1959dbfedb28b7054f61ea070be262fe71c",
+  "packages/assurance/verifier/src/invariant.ts": "1e950309a63810a58f8f08d59581a35c31456823197223f05f9ea601376bcf0c",
+  "packages/subagent/subagent/src/index.ts": "4c039aab0e00f5ddcf9849c58edd12d2b2c7b80d4c2c2254dae15dc6cef5c348",
+  "packages/subagent/subagent/src/types.ts": "c21829a95caf7fe95e817d6a13d92cf3b58038cee3f7c2a426d8cc67e8b91b59",
+  "packages/sandbox/sandbox/src/index.ts": "33fae7068e518fa06f4a700d09ed54cf29329b90ae2328007ff6a3784aa07ce5",
+  "packages/core/agent/src/runtime-types.ts": "da3fcd6d1ed3351461d246660e7ab8f5d2ee3db5dd4bc177865c52ba2dcd3835",
+  "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5"
 }

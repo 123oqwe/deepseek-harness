@@ -1,6 +1,14 @@
 {
-  "packages/evaluation/eval/package.json": "67da0c6d1f79fd8f2a23bb94d38e0f14fb1a3a35818936ae5c868bb36cae5188",
   "packages/evaluation/eval/src/index.ts": "53cb4651b00f6df0e333d65348d730982acfa09ff17dfc393167aee1181de599",
   "packages/evaluation/eval/src/types.ts": "7bdac370e70ffcb9df2a1540e16be50910b7b4fe29fb0e082f1f4132c5291282",
-  "packages/evaluation/eval/tsconfig.json": "f548b58aab261e36cc4e8ca6771a9e73320790600a0035b6722a99d0da902019"
+  "packages/evaluation/eval-registry/src/index.ts": "65e26b1ac67b3fe6d78c300cec000183196e381c7c56677244dee843ca7b1b62",
+  "packages/evaluation/eval-runner/src/index.ts": "c09ac191555d3290d5d442f110ab43c1baef198fad86bc48b3699c11d622a8ea",
+  "packages/evaluation/champion-challenger/src/index.ts": "0c8ecdb9e2d58e1870cded6ca50793590639e00e18914fadb03478bf66daf169",
+  "packages/evaluation/evolution-proposal/src/index.ts": "c50acd442bcc48d349d2a8ba802cca22c88a787496042132d1a9d08fd0fdd350",
+  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
+  "docs/testing.md": "f47370270ceee93392660f8982c8e293883c1dd2cb625e580814a67474660036",
+  "packages/feedback/README.md": "f27e8fa3bb1531ced1714d40e0e01feb23bab869199cc3d4bd982f63edf7c1af",
+  "packages/session/session-telemetry/src/index.ts": "89146f1d23171a7adbb60d335f59d679339f617b3798f03aa7234a59b7d7a201",
+  "packages/extensions/tool-cordis/src/index.ts": "7d2d2950ac752e7f9dde5d5096d0a4bd392e408ae445c8cf1226e173500ffc42",
+  "packages/extensions/cordis-host-runner/src/registry.ts": "8d37d583a0e0f94581416ccb9c82b5bd37873c603c0a2c010fafa5366008587e"
 }

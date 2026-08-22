@@ -1,1 +1,7 @@
-{}
+{
+  "apps/web/src/main.ts": "93f3a8ebe05b129e20767f163ee39f0c986e6996823d35aa21f4824c69820646",
+  "packages/client/runtime/src/index.ts": "e2187c89775817fcfe5dabaf7b53edecb775aead1ed404c9464269f4f1b6e7ac",
+  "packages/client/modules/src/index.ts": "1a4a7b128acc7b3b1e450cf6f0992791f587c08a86e431956e3c213b76c8b0e9",
+  "packages/api/remotes/src/client/index.ts": "c6a3e69fe4ee92075eed8eef6574a30fc9f4762bf71f5e8de87271f3e344185d",
+  "packages/host/apiproxy/src/api-proxy.ts": "6620a96f9d677b48ab2ad57fb64cecfaa7c3fa882af0b7c4818afed2e8176333"
+}

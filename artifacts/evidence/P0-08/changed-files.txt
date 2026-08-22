@@ -1,0 +1,7 @@
+benchmarks/harness-capability/manifest.yml
+benchmarks/harness-capability/runner.ts
+benchmarks/harness-capability/report.ts
+benchmarks/harness-capability/scenarios/
+BENCHMARK.md
+package.json
+packages/test-support/README.md

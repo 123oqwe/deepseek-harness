@@ -1,8 +1,15 @@
 {
-  "total": 1,
-  "passed": 1,
+  "total": 8,
+  "passed": 8,
   "failed": 0,
   "test_files": [
-    "packages/execution/execution-world-remote/tests/reconnect.spec.ts"
+    "packages/execution/execution-world-remote/tests/reconnect.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts"
   ]
 }

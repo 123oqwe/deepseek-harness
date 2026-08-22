@@ -1,8 +1,19 @@
 {
-  "total": 1,
-  "passed": 1,
-  "failed": 0,
+  "total": 12,
+  "passed": 11,
+  "failed": 1,
   "test_files": [
-    "packages/plugin/plugin-migrations/tests/rollback.spec.ts"
+    "packages/plugin/plugin-migrations/tests/rollback.spec.ts",
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/storage/storage/tests/registry.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts"
   ]
 }

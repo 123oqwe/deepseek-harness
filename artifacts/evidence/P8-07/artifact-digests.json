@@ -1,7 +1,9 @@
 {
-  "packages/sdk/parity/package.json": "85d835472075441e24acf1edda8b69c5c222044e96b8bf7470b086659cd4c2f8",
-  "packages/sdk/parity/src/index.ts": "98f1d89ffa4508cf4c64fe1468e166356bd4a363ffbecb0f9a8a57dbb307a2c4",
-  "packages/sdk/parity/src/types.ts": "484bb474f90dc8df1cda733a232cba834203068cb069916a12792792dd921290",
-  "packages/sdk/parity/tests/parity.spec.ts": "408b1cfc46abc1b693df324f1e3e3ab251db740edd7dba54f9384fef7868bc72",
-  "packages/sdk/parity/tsconfig.json": "f25011a2551b2ec1691f6a855e52f58b02518ed6bdd3ed9a3416c29881142cb0"
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/sdk/client/src/api.ts": "ab401945283d89c8728a8bff5ee74d45f1b819e4750d489f46b61c13a844f296",
+  "packages/sdk/server/src/server.ts": "6707cf3cd51d42f03beab41a48b5335144c3510447a7458f0d9b5f094627c685",
+  "python/sdk/README.md": "2e52f7785dc45dc438a8847ddd94a36e4941d730049dfdfbf100c304be75f3da",
+  "python/sdk-runtime/README.md": "d46d025cc217ddaf85321bd3c4492687394e05bd8084763fa4b191b6ca1e01f9",
+  "scripts/build-exe-for-python-sdk.ts": "d9784a3df29f932a46f981e5d5980e8d7c6d34c31078a8405bd558e935bcf5b8",
+  "scripts/build-python-release.py": "388844aa1d8bd15203804952a3ae3c66fbcea8e3aea0bb02c6ecb64ff1b0758a"
 }

@@ -1,0 +1,9 @@
+{
+  "packages/run/message-bus/src/index.ts": "0ba54f98970c4f11d597c0587425ad7f73cd8565406f664b692ebbe6cc403c4e",
+  "packages/run/message-bus/src/inbox.ts": "8868c5d4679368728e33aefd5bd27ea92498626295f9a25256205170269aa666",
+  "packages/run/message-bus/src/outbox.ts": "c19e15ec582bc92bcaa88488e04fb5559d7ee50cf8ce546c619785052d590ae6",
+  "packages/core/agent/src/inbox.ts": "561fabd8375728e93b94fe6f8361adfbe51fca32080bb1714c0540c75949ddd1",
+  "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",
+  "packages/session/session-persistence/src/write-behind.ts": "e01110edfc0e15821f0cfe55d57ecfa38a3f9b83bee636a3794152c46353d8b6",
+  "packages/session/session-persistence/src/coordinator.ts": "5a56334f9796e257874b964c5b678413f6b4be5b664eed48b705e2882e0bc25d"
+}

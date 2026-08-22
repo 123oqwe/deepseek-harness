@@ -1,15 +1,46 @@
 {
   "issue_id": "P3-07",
-  "audit_date": "2026-08-22T19:48:58.747Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/sandbox/sandbox-hardening"
+  "title": "本地 Sandbox 跨平台 Fail-Closed 强化",
+  "audit_date": "2026-08-22T21:34:01.507Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/sandbox/sandbox-local/src/capabilities.ts",
+    "packages/sandbox/sandbox-local/src/attestation.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.e2e.ts",
+    "packages/sandbox/sandbox-local/src/index.ts",
+    "packages/sandbox/sandbox-local/src/profiles.ts",
+    "packages/sandbox/sandbox-local/src/invariant.ts",
+    "packages/sandbox/sandbox/src/invariant.ts"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/sandbox/sandbox-local/src/capabilities.ts",
+    "packages/sandbox/sandbox-local/src/attestation.ts",
+    "packages/sandbox/sandbox-local/src/index.ts",
+    "packages/sandbox/sandbox-local/src/profiles.ts",
+    "packages/sandbox/sandbox-local/src/invariant.ts",
+    "packages/sandbox/sandbox/src/invariant.ts"
+  ],
+  "test_files": [
+    "packages/sandbox/sandbox-local/tests/local.spec.ts",
+    "packages/sandbox/sandbox-local/tests/acl-grants.spec.ts",
+    "packages/sandbox/sandbox-local/tests/conformance.spec.ts",
+    "packages/sandbox/sandbox/tests/escalation.spec.ts",
+    "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
+    "packages/sandbox/sandbox/tests/policy.spec.ts",
+    "packages/sandbox/sandbox/tests/roots.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/sandbox/sandbox-local/src/capabilities.ts",
+    "packages/sandbox/sandbox-local/src/attestation.ts",
+    "packages/sandbox/sandbox-local/src/index.ts",
+    "packages/sandbox/sandbox-local/src/profiles.ts",
+    "packages/sandbox/sandbox-local/src/invariant.ts",
+    "packages/sandbox/sandbox/src/invariant.ts"
+  ],
+  "classification": "FAKE_ATTESTATION_AND_WEAK_FAIL_CLOSED",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 6 files, Tests: 7 files, Docs: 0 files"
 }

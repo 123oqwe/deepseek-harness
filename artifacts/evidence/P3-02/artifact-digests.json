@@ -1,1 +1,9 @@
-{}
+{
+  "packages/sandbox/sandbox/src/policy.ts": "3590fa9215f0b07298cf03a79d44909c8f3c5971340450c1090769a2e877c075",
+  "packages/sandbox/sandbox/tests/policy.spec.ts": "be958fd9dd96f926b33a80b9fcf77c3c8e71cb2cf699a8611b10ea3c05fbfb76",
+  "packages/sandbox/sandbox/src/index.ts": "33fae7068e518fa06f4a700d09ed54cf29329b90ae2328007ff6a3784aa07ce5",
+  "packages/sandbox/sandbox/src/roots.ts": "8a18e1474012415def8197a4ee493394a91cc739a6ec94eb83c6b4d980b7a23b",
+  "packages/sandbox/sandbox/src/escalation.ts": "64c57a474667d3ae991377bc122a18449b059fd84721d7e30ff24f8ba4fd510e",
+  "packages/sandbox/sandbox-local/src/profiles.ts": "20eddafc9d043f48e4500a6d984ed9782e12d0bfe56f24c169ce0727d525a282",
+  "packages/interaction/permission-presets/src/types.ts": "4766dd2d2d052f55f0f8993c7b15ed86ce32f93dc76a0d606035db4dc1464301"
+}

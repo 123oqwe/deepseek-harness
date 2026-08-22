@@ -1,28 +1,54 @@
 {
   "issue_id": "P1-10",
-  "audit_date": "2026-08-22T19:04:04.508Z",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
-  "packages": [
-    "packages/plugin/plugin-migrations"
+  "title": "插件数据迁移、升级事务与回滚",
+  "audit_date": "2026-08-22T21:10:10.788Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/plugin/plugin-migrations/src/index.ts",
+    "packages/plugin/plugin-migrations/src/types.ts",
+    "packages/plugin/plugin-migrations/src/transaction.ts",
+    "packages/plugin/plugin-migrations/tests/rollback.e2e.ts",
+    "apps/cli/src/plugin.ts",
+    "packages/storage/storage/src/backend.ts",
+    "packages/storage/storage/src/registry.ts",
+    "packages/settings/settings/src/index.ts"
   ],
   "source_files": [
     "packages/plugin/plugin-migrations/src/index.ts",
+    "packages/plugin/plugin-migrations/src/types.ts",
     "packages/plugin/plugin-migrations/src/transaction.ts",
-    "packages/plugin/plugin-migrations/src/types.ts"
+    "apps/cli/src/plugin.ts",
+    "packages/storage/storage/src/backend.ts",
+    "packages/storage/storage/src/registry.ts",
+    "packages/settings/settings/src/index.ts"
   ],
   "test_files": [
-    "packages/plugin/plugin-migrations/tests/rollback.spec.ts"
-  ],
-  "changed_files": [
-    "packages/plugin/plugin-migrations/package.json",
-    "packages/plugin/plugin-migrations/src/index.ts",
-    "packages/plugin/plugin-migrations/src/transaction.ts",
-    "packages/plugin/plugin-migrations/src/types.ts",
     "packages/plugin/plugin-migrations/tests/rollback.spec.ts",
-    "packages/plugin/plugin-migrations/tsconfig.json"
+    "apps/cli/tests/memory-mcp-configs.spec.ts",
+    "apps/cli/tests/telemetry-switch.spec.ts",
+    "apps/cli/tests/args.spec.ts",
+    "apps/cli/tests/process-shutdown.spec.ts",
+    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
+    "apps/cli/tests/windows-shell.spec.ts",
+    "apps/cli/tests/source-launch.compat.spec.ts",
+    "packages/storage/storage/tests/registry.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/plugin/plugin-migrations/src/index.ts",
+    "packages/plugin/plugin-migrations/src/types.ts",
+    "packages/plugin/plugin-migrations/src/transaction.ts",
+    "apps/cli/src/plugin.ts",
+    "packages/storage/storage/src/backend.ts",
+    "packages/storage/storage/src/registry.ts",
+    "packages/settings/settings/src/index.ts"
+  ],
+  "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 7 files, Tests: 12 files, Docs: 0 files"
 }

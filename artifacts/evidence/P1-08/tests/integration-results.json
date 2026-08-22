@@ -1,0 +1,18 @@
+{
+  "total": 11,
+  "passed": 8,
+  "failed": 3,
+  "test_files": [
+    "packages/plugin/plugin-compat/tests/solver.spec.ts",
+    "packages/boot/app-boot/tests/config-dump.spec.ts",
+    "packages/boot/app-boot/tests/profile.spec.ts",
+    "packages/boot/app-boot/tests/hmr-config.spec.ts",
+    "packages/boot/app-boot/tests/app-boot.spec.ts",
+    "packages/boot/app-boot/tests/config-reload.spec.ts",
+    "packages/boot/app-boot/tests/user-patches.spec.ts",
+    "packages/host/plugin-inventory/tests/inventory.spec.ts",
+    "packages/host/plugin-inventory/tests/invariant.spec.ts",
+    "packages/schema/schema-registry/tests/compatibility.spec.ts",
+    "packages/schema/schema-registry/tests/integration.spec.ts"
+  ]
+}

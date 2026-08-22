@@ -1,9 +1,9 @@
 {
   "issue_id": "P7-04",
-  "entrypoint": "packages/assurance/claim-graph/src/index.ts",
-  "wired": true,
+  "source_files": 8,
+  "test_files": 22,
   "compilation": "PASS",
   "lint": "PASS",
   "tests": "PASS",
-  "timestamp": "2026-08-22T19:37:10.505Z"
+  "timestamp": "2026-08-22T22:15:25.948Z"
 }

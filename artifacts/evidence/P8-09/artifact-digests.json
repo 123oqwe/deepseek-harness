@@ -1,1 +1,7 @@
-{}
+{
+  "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596",
+  "packages/interaction/permission-presets/src/index.ts": "4b49f43415d25e2efaf64819b3bfb8103af85f5ffdfc14bd449da922fa1bbdc1",
+  "packages/workspace/workspace/src/index.ts": "74439d3ac38f736697de520aa66fc461c4eb526b3fbfc7dc7d22a7a17c1f5017",
+  "packages/storage/storage/src/index.ts": "007fd253361aba1f65b0e846a58ebf5f4ae29e5c834ccc3732b1977cc2c78c6b",
+  "packages/host/apiproxy/src/session-export.ts": "12d6b35c268d847e3da24c8c0b452f71b8572706d030acd3ae4fa67ecc35de05"
+}

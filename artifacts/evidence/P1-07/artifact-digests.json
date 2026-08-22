@@ -1,0 +1,11 @@
+{
+  "packages/workspace/workspace-trust/src/index.ts": "821f45df1c1ad28d6c84fb214fa8bee4464ede50f9e5f1086a391085c9a58652",
+  "packages/workspace/workspace-trust/src/types.ts": "84d7c36a0d0230fb5197d52ddf51dbae0ff69fc03e037c9e5380ec26d9672455",
+  "packages/workspace/workspace-trust/tests/trust.spec.ts": "6e96307a96859658f274215e060bb35cd7f06020cb96b5600fc30b43a5d421b3",
+  "packages/workspace/workspace/src/entity.ts": "38a7fbd44baf9bdd2b76b15a97f1cf4d36b4d55972efdae2be9f77694f2be7f4",
+  "packages/workspace/workspace/src/index.ts": "74439d3ac38f736697de520aa66fc461c4eb526b3fbfc7dc7d22a7a17c1f5017",
+  "packages/workspace/workspace/src/paths.ts": "683b647c8f781601ac41a1f82d1b8f3c881d86c3b5e399e3751284575a6b313d",
+  "packages/context/agent-instructions/src/index.ts": "481e6a6b4b975af24b20231e320c489948ff9d13355f23bcc2959a49f682db5e",
+  "packages/context/agent-instructions/src/files.ts": "80b1f5a959bc4eddc5052ee3936f0281f5adb0666ce8e749ff7b2d3a13ac3d9e",
+  "apps/cli/src/profile-boot.ts": "4a89a793d0a793e7573d7b275d9682459fa2e211edc6814d23b90c75588fa663"
+}

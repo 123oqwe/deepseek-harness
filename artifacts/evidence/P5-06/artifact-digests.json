@@ -1,1 +1,8 @@
-{}
+{
+  "packages/subagent/subagent/src/result.ts": "1def8d478f2ca9f14ca3a940f9fffdc09cfd783ea75fe4a4b155cbed59fa32c9",
+  "packages/subagent/subagent/tests/result-contract.spec.ts": "17e61b5e0ba0965f89c743e7b262941cc33ae2505458a16c2d0a27ddb048e6d5",
+  "packages/subagent/subagent/src/assistant-output.ts": "48d325cdf066d6d9ea17583a24b7284a320540954141c28fe2166b9fe86b9139",
+  "packages/subagent/subagent/src/types.ts": "c21829a95caf7fe95e817d6a13d92cf3b58038cee3f7c2a426d8cc67e8b91b59",
+  "packages/subagent/subagent/src/lifecycle.ts": "7c58f69e0cbf65670e5d30f85b9577ed3d5d383fe56c1e493da7256d8c8ef132",
+  "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5"
+}

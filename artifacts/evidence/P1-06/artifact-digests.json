@@ -1,8 +1,10 @@
 {
-  "packages/plugin/plugin-host/package.json": "0eac8213e73c5428e49eab798ee1448657901bb1cec68e7e68d208c6b238faea",
+  "packages/plugin/plugin-host-protocol/src/types.ts": "22d754153bdab1ca4b89be5891a96508fd087fd4b7d4cb5cc68510ff62ec4ae7",
   "packages/plugin/plugin-host/src/index.ts": "9044db3f56969c5b4236ed915a98c339431095b8502a1763cff95bcde83f91e4",
-  "packages/plugin/plugin-host/src/rpc.ts": "30d2cd3c6b5accba535174ddc6a29fa4d5dd2aca1025821fcf92a4dd49f56d0a",
   "packages/plugin/plugin-host/src/supervisor.ts": "333d48dafc2b8b9267aa434fdcee9da9010420d251752d9ff9157c398dfe9807",
-  "packages/plugin/plugin-host/tests/isolation.spec.ts": "d1a188e7c028bdf1e279fc897eed6064ab1d15be516923c4b757aab6895476bb",
-  "packages/plugin/plugin-host/tsconfig.json": "bab003e4e0f7959d87ca97e640315fb091dda227760732db0e44304ce03703fb"
+  "packages/plugin/plugin-host/src/rpc.ts": "30d2cd3c6b5accba535174ddc6a29fa4d5dd2aca1025821fcf92a4dd49f56d0a",
+  "packages/boot/app-boot/src/index.ts": "cccc9295ffef57d7623a10d168777c312547eed4426782e1f273adaf86cf3c90",
+  "packages/boot/app-boot/src/profile.ts": "c528b0aacd4c7acad9ac557e0a9ac97f1c7a0aed1239b36ac85f93135688861a",
+  "packages/host/plugin-inventory/src/index.ts": "ad04775a9ee5eb830a1d8dc0c31122c62faaf76cf06c113fdbf3eb3116a5095c",
+  "packages/core/tools/src/index.ts": "4ba094527a1217dc8e6ca13ebc9c8dfeb5e42267db96549260437cf06354ed7d"
 }

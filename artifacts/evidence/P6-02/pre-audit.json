@@ -1,0 +1,53 @@
+{
+  "issue_id": "P6-02",
+  "title": "MemoryRecord：来源、置信度、TTL、范围、用途与冲突",
+  "audit_date": "2026-08-22T22:02:59.007Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/memory/memory/src/record.ts",
+    "packages/memory/memory/src/provenance.ts",
+    "packages/memory/memory/tests/record.spec.ts",
+    "packages/memory/memory/src/types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/identity/principal/src/types.ts"
+  ],
+  "source_files": [
+    "packages/memory/memory/src/record.ts",
+    "packages/memory/memory/src/provenance.ts",
+    "packages/memory/memory/src/types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/identity/principal/src/types.ts"
+  ],
+  "test_files": [
+    "packages/memory/memory/tests/record.spec.ts",
+    "packages/memory/memory/tests/conformance.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts",
+    "packages/identity/principal/tests/identity.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/memory/memory/src/record.ts",
+    "packages/memory/memory/src/provenance.ts",
+    "packages/memory/memory/tests/record.spec.ts",
+    "packages/memory/memory/src/types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/identity/principal/src/types.ts"
+  ],
+  "classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 5 files, Tests: 16 files, Docs: 0 files"
+}

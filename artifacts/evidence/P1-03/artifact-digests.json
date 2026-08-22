@@ -1,0 +1,8 @@
+{
+  "packages/plugin/plugin-lock/src/index.ts": "ce2e379d060d8cb2f02f78b591dacba61b907ce072470a6e0dea27e07eb7ee88",
+  "packages/plugin/plugin-lock/src/types.ts": "0c185b001055585ff481a55b0409118d2739f7ca3e2ea403858736c3d72735ca",
+  "packages/plugin/plugin-lock/tests/lock.spec.ts": "a9215de387ca4f09431d64dfc1d6c2e547d8364377067fa99f34017d0b8f9c7d",
+  "apps/cli/src/plugin.ts": "263ca9cd68d6caa0fe637c0de4350503154565ef57b19331fedee388c9dc68e3",
+  "apps/cli/src/profile-boot.ts": "4a89a793d0a793e7573d7b275d9682459fa2e211edc6814d23b90c75588fa663",
+  "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1"
+}

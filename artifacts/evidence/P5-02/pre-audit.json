@@ -1,28 +1,68 @@
 {
   "issue_id": "P5-02",
-  "audit_date": "2026-08-22T19:28:49.218Z",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
-  "packages": [
-    "packages/router/model-router"
+  "title": "Model Router：成功率、成本、延迟、隐私和工具能力联合选择",
+  "audit_date": "2026-08-22T21:51:39.020Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/router/model-router/src/index.ts",
+    "packages/router/model-router/src/types.ts",
+    "packages/router/model-router/src/score.ts",
+    "packages/router/model-router/tests/router.spec.ts",
+    "packages/core/agent/src/model-selection.ts",
+    "packages/core/agent/src/types.ts",
+    "packages/llm/llm/src/index.ts",
+    "packages/llm/llm/src/call-config.ts",
+    "packages/run/run-plan/src/types.ts"
   ],
   "source_files": [
     "packages/router/model-router/src/index.ts",
+    "packages/router/model-router/src/types.ts",
     "packages/router/model-router/src/score.ts",
-    "packages/router/model-router/src/types.ts"
+    "packages/core/agent/src/model-selection.ts",
+    "packages/core/agent/src/types.ts",
+    "packages/llm/llm/src/index.ts",
+    "packages/llm/llm/src/call-config.ts",
+    "packages/run/run-plan/src/types.ts"
   ],
   "test_files": [
-    "packages/router/model-router/tests/router.spec.ts"
-  ],
-  "changed_files": [
-    "packages/router/model-router/package.json",
-    "packages/router/model-router/src/index.ts",
-    "packages/router/model-router/src/score.ts",
-    "packages/router/model-router/src/types.ts",
     "packages/router/model-router/tests/router.spec.ts",
-    "packages/router/model-router/tsconfig.json"
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/llm/llm/tests/content.spec.ts",
+    "packages/llm/llm/tests/service.spec.ts",
+    "packages/llm/llm/tests/api-key.spec.ts",
+    "packages/llm/llm/tests/adapter-failure.spec.ts",
+    "packages/llm/llm/tests/assembler.spec.ts",
+    "packages/llm/llm/tests/topology.spec.ts",
+    "packages/llm/llm/tests/message.spec.ts",
+    "packages/llm/llm/tests/call-config.spec.ts",
+    "packages/llm/llm/tests/invariant.spec.ts",
+    "packages/llm/llm/tests/retry-policy.spec.ts",
+    "packages/llm/llm/tests/properties.spec.ts",
+    "packages/llm/llm/tests/attribution.spec.ts",
+    "packages/run/run-plan/tests/compile.spec.ts",
+    "packages/run/run-plan/tests/amendment.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/router/model-router/src/index.ts",
+    "packages/router/model-router/src/types.ts",
+    "packages/router/model-router/src/score.ts",
+    "packages/router/model-router/tests/router.spec.ts",
+    "packages/core/agent/src/model-selection.ts",
+    "packages/core/agent/src/types.ts",
+    "packages/llm/llm/src/index.ts",
+    "packages/llm/llm/src/call-config.ts",
+    "packages/run/run-plan/src/types.ts"
+  ],
+  "classification": "ROUTER_PROVIDER_SCAFFOLD_NOT_ON_MAIN_PATH",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 8 files, Tests: 22 files, Docs: 0 files"
 }

@@ -1,0 +1,361 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > TaskQueue > enqueues and dequeues by priority 2ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > TaskQueue > removes by id 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > ResourceLockManager > acquires exclusive lock 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > ResourceLockManager > blocks second exclusive lock 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > ResourceLockManager > allows shared locks 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > ResourceLockManager > blocks exclusive when shared held 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > ResourceLockManager > releases all locks for a task 1ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > FairnessScheduler > schedules across tenants fairly 1ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > FairnessScheduler > aging boosts old tenant priority 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > submits and schedules a task 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > respects max concurrency 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > acquires required locks 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > blocks on locked resource 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > releases locks on completion 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > signals backpressure when queue full 0ms
+ ✓ |thread-safe| packages/run/scheduler/tests/scheduler.spec.ts > P4-10 Scheduler > Scheduler > cancels task and releases locks 0ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  05:42:57
+   Duration  459ms (transform 223ms, setup 242ms, import 23ms, tests 6ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > accepts a complete workflow and child lifecycle 6ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects invalid run identity and enclosure 4ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects malformed and unpaired child lifecycles 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects inconsistent terminal results 7ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  05:42:58
+   Duration  584ms (transform 321ms, setup 225ms, import 155ms, tests 19ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > WorkflowRunId brands a string (identity at runtime) 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > WorkflowError carries code + fatal (default true) and reads as a HarnessError 0ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > isFatalWorkflowError: true only for a fatal WorkflowError 0ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > registers as ctx.workflowEngine and unregisters when its fiber is disposed (HMR safety) 16ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > emitWorkflowEvent dispatches to every listener with the payload tuple 3ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains an asynchronously rejected listener without starving peers 3ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains a throwing listener PER LISTENER: later listeners still run, nothing propagates 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > containment is total: a listener throwing a value whose coercion throws neither propagates nor starves later listeners 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > has the expected exports (default = the abstract service class) 0ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  05:43:00
+   Duration  589ms (transform 303ms, setup 246ms, import 103ms, tests 30ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts > runs the default config through the source worker 397ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  05:43:01
+   Duration  1.33s (transform 579ms, setup 219ms, import 531ms, tests 398ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > copies realm objects/arrays/scalars into host plain data 3ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > accepts undefined ONLY at the root (a valueless script return) 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > invokes getters ordinarily — the getter RESULT is what crosses (trust premise) 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > a getter that THROWS surfaces as a MaterializeError carrying the rendered failure 4ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > a "__proto__" key becomes an OWN data property of the copy, never a prototype mutation 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > rejects functions, symbols (keys and values), and bigints with path-qualified messages 3ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > rejects non-finite numbers and undefined values inside containers 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > rejects exotic prototypes (Date, Map, class instances) but accepts null-prototype data 2ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > rejects cycles and accepts the same object reused as a sibling (a DAG) 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > rejects sparse arrays and non-index array properties; an array getter element materializes its value 2ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > skips non-enumerable own properties (matching JSON.stringify exactly) 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > materializeFromRealm > works on plain host values too (the boundary is realm-agnostic) 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > renderThrown > prefers the stack, for host and realm errors alike 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > renderThrown > falls back from stack to message to String() 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/realm.spec.ts > renderThrown > is total: a value whose accessors/toString throw renders as a fixed label 0ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  05:43:04
+   Duration  537ms (transform 268ms, setup 303ms, import 18ms, tests 20ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > accepts a minimal meta and returns a normalized copy (no aliasing of the input) 3ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > accepts the full shape and rebuilds phases entry by entry 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > rejects non-object values loud 1ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > rejects unknown fields by name (accepted-then-ignored is banned) 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > rejects missing or mistyped name/description/whenToUse 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > rejects malformed phases, entry by entry 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/meta.spec.ts > validateMeta > names EVERY violation in one throw, not just the first 0ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  05:43:05
+   Duration  539ms (transform 275ms, setup 234ms, import 96ms, tests 6ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > runs a script end-to-end: agent() text results, phases, log, args, return value, events 407ms
+   → expected 'error' to be 'completed' // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > agent({schema, model}) forwards outputSchema and agentOptions to the provider across the thread 377ms
+   → expected null to deeply equal { first: 'x.ts', count: 2 }
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > agent({provider}) forwards provider-only agentOptions across the thread 402ms
+   → expected null to be 'stub reply' // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > a start-request provider override selects every child without changing the engine default 458ms
+   → expected null to be 'selected reply' // Object.is equality
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > rejects invalid start-request provider routes before publishing a run 4ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > rejects invalid per-run total-agent caps before publishing a run 5ms
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > enforces a per-run total-agent cap below the engine ceiling 403ms
+   → expected 'WorkflowError: agent() could not star…' to contain 'total agent cap (1)'
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > a fatal hook error inside the worker kills the script and reports the error 422ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > rejects an unregistered configured provider before publishing a run 2ms
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > waits for async provider start before announcing a result that settled early 10009ms
+   → expected +0 to be 1 // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > observes an early result rejection but sends ChildStarted before ChildFailed after start fulfills 10007ms
+   → expected +0 to be 1 // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > classifies provider start rejection as AGENT_START, drops an early result, and emits no false lifecycle pair 10006ms
+   → expected +0 to be 1 // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > aborts a pending provider start once without publishing workflow lifecycle 10007ms
+   → expected +0 to be 1 // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > a child result REJECTION crosses back as a fatal AGENT_RESULT error (a broken provider is not a failed child) 428ms
+   → expected { name: 'WorkflowError', …(3) } to match object { name: 'WorkflowError', …(2) }
+(1 matching property omitted from actual)
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > maps a non-JSON ready-child result to fatal AGENT_RESULT instead of wedging the bridge 374ms
+   → expected { code: 'AGENT_START', …(1) } to match object { code: 'AGENT_RESULT' }
+(1 matching property omitted from actual)
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > contains a non-JSON result even if the injected subagent service violates its normalization contract 402ms
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > a child whose dispose() throws synchronously cannot wedge the script (the host acks anyway) 391ms
+   → expected 'error' to be 'completed' // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > a child dispose() rejecting an UNRENDERABLE value still acks — the containment warn is total 381ms
+   → expected 'error' to be 'completed' // Object.is equality
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > the worker spawns with a scrubbed environment: an escaped script finds no ambient credentials 377ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > workerSpawnEnv injects the host temp path on win32 and leaves the POSIX peer empty 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > workerSpawnEnv forwards TSX_TSCONFIG_PATH when the snapshot harness pins it 0ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > script execution over a real worker thread > the unbuilt worker forwards exactly TSX_TSCONFIG_PATH through the scrub: the paths-map pin survives, secrets do not 366ms
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > lifecycle: parse errors, cancellation, termination, disposal > start() throws synchronously for invalid meta data or an unparseable body (host-side pre-checks) 4ms
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > lifecycle: parse errors, cancellation, termination, disposal > cancel() aborts in-flight children (signal AND cancel RPC) and settles the run cancelled 10008ms
+   → expected +0 to be 1 // Object.is equality
+ ✓ |thread-safe| packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts > dsh-workflow-worker-thread > lifecycle: parse errors, cancellation, termination, disposal > an already-aborted request signal cancels before the body ever runs (the go handshake holds it) 404ms
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/integration.spec.ts > dsh-workflow-worker-thread over the real in-process stack > runs a two-stage workflow: a plain child, then a schema child through the structured runtime 397ms
+   → expected 'error' to be 'completed' // Object.is equality
+ × |thread-safe| packages/workflow/workflow-worker-thread/tests/integration.spec.ts > dsh-workflow-worker-thread over the real in-process stack > a child that fails against its schema (nudges exhausted) reaches the script as null 436ms
+   → expected 'error' to be 'completed' // Object.is equality
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  05:44:07
+   Duration  2.08s (transform 811ms, setup 263ms, import 770ms, tests 835ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > runs a script end to end: ready/go handshake, phases, log, agents, result 5ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > agent({schema}) forwards the schema on the start request and returns the structured value 2ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > agent({provider}) forwards a provider without inventing a model 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a schema child completing WITHOUT a structured value resolves null with a failed outcome 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a child settling non-completed resolves null (scripts filter), never throwing into the script 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a start refusal (child-start-error) is a fatal AGENT_START that kills the script through a combinator 6ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a child-failed message (infrastructure rejection) is fatal AGENT_RESULT with the paired failed outcome 55ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > cancel before go: the body never runs at all and the result is cancelled (a second cancel is a no-op) 54ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a script with no return value resolves value: null 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > cancel mid-run: hooks throw at entry and the run reports cancelled 54ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > cancellation between a queued waiter and its slot: the waiter rejects without a child-start 52ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a stray (never-awaited) agent is reaped after settlement: cancel + dispose RPCs flow, no unhandled rejection 76ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > an unparseable body settles an error result instead of dying without one (host pre-parse skew guard) 2ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a synchronous spin in the initial slice dies by the in-worker vm timeout 52ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a non-JSON return value fails loud as RESULT_UNSERIALIZABLE 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > tolerates replies for unknown callIds (a teardown race): nothing crashes, the run completes 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > caps and malformed hook arguments reject loud (the runtime runs unchanged inside the session) 13ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > combinator semantics: thunk/stage throws null the item; a forged fatal-shaped object stays null; real fatals propagate 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > trips the total-agent cap with a message naming the config knob 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > queued agents proceed through the concurrency semaphore in FIFO order 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > labels default from the prompt first line, truncated; explicit label/phase options win 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > non-text output blocks are filtered out of the text result 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a cancel landing DURING the start round-trip disposes the fresh child and dies cancelled 53ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a start refusal arriving after a cancel reads as the cancellation, not a broken seam 55ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > runWorkerSession over an in-process MessageChannel > a child result rejection while cancelled pairs a cancelled agent-end, and the run reports cancelled 103ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > the worker bootstrap > requireParentPort narrows a real port and throws on the main thread 1ms
+ ✓ |process-bound| packages/workflow/workflow-worker-thread/tests/session.spec.ts > the worker bootstrap > the entry module itself throws when loaded on the main thread (no parentPort) 4ms
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  05:44:10
+   Duration  1.31s (transform 433ms, setup 229ms, import 292ms, tests 599ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 14ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 6ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 2ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  05:44:13
+   Duration  731ms (transform 392ms, setup 257ms, import 210ms, tests 49ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 1ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> waiting_tool 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> completed 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects completed -> running 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects failed -> running 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows orphaned -> starting (recovery) 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > assertTransition throws on invalid 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isTerminal identifies completed and failed 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isActive excludes terminal and orphaned 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isWaiting identifies waiting states 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows paused -> running (resume) 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows cancelling -> completed or failed 0ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  05:44:15
+   Duration  456ms (transform 208ms, setup 234ms, import 11ms, tests 4ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 13ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  05:44:16
+   Duration  524ms (transform 278ms, setup 216ms, import 112ms, tests 14ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 7ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > normalizes splice coordinates, rejects duplicate identities, and reports missing removals 1ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > clears both pending lists as durable cancellations 1ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 13ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contains asynchronous creation rejection and every disposal-listener failure 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 1ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 1ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > injects the fused subject even when the payload carries a conflicting agent field 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > explicit cancellation contract > exposes the closed typed cancellation cause at the Agent seam 0ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 3ms
+
+ Test Files  1 passed (1)
+      Tests  19 passed (19)
+   Start at  05:44:18
+   Duration  741ms (transform 384ms, setup 243ms, import 245ms, tests 67ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 6ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 1ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 2ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:44:20
+   Duration  440ms (transform 211ms, setup 228ms, import 21ms, tests 11ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 8ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports the latest turn that entered a model step 1ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and was then stopped before any step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a turn stopped, failed, or rejected without taking any input 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn whose claimed input a pre-step rejection discarded 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a claim its own turn emptied 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > credits a claim with no open turn to no turn at all 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports work cancelled out of the inbox after the last accounting turn 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > keeps a replacement pending rather than counting it as dropped 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > lets a later accounting turn absorb an earlier drop 0ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  05:44:21
+   Duration  603ms (transform 338ms, setup 221ms, import 184ms, tests 13ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 34ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 10ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 7ms
+
+ Test Files  1 passed (1)
+      Tests  41 passed (41)
+   Start at  05:44:23
+   Duration  976ms (transform 335ms, setup 217ms, import 386ms, tests 185ms, environment 0ms)

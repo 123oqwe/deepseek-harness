@@ -1,1 +1,7 @@
-{}
+{
+  "packages/subagent/subagent-claude-code/src/index.ts": "e907f2665bc1031ffb37dcb56ab4d43dee22b7043707cf10a9eaf6a32bc92943",
+  "packages/subagent/subagent-claude-code/src/process.ts": "d079d03b817deeb334ae4c568fd9973384b99ee7cad52786b68b61a08f60c223",
+  "packages/subagent/subagent-claude-code/src/run.ts": "55ac03c173fcca9c10af3d007195570cce0399c707728f50011e75e6d02959ad",
+  "packages/subagent/subagent/src/request.ts": "521c93e6445139066b9a6b29c8aa138a5c0481bdfc586d246438fb433ef16c29",
+  "packages/subagent/subagent/src/result.ts": "1def8d478f2ca9f14ca3a940f9fffdc09cfd783ea75fe4a4b155cbed59fa32c9"
+}

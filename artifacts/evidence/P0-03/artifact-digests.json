@@ -1,0 +1,9 @@
+{
+  "architecture.layers.json": "f2004536eb05d83593ea0ac52cb716c54e36f2bba40c7af72e5c962fd0892954",
+  "scripts/architecture/check-capability-seams.mjs": "f186fc646de7727714de6d73fb9242a7d6c0abad9b6aebdfa7633e9c070c46e4",
+  "AGENTS.md": "ad0a802faf7b884b2465fce4cfac4fecc8602f3afb34b206e83628ad1a6e4907",
+  "packages/README.md": "5c7910cc70dba348b81ca549454d1a61a2b19e9a158e32be3a3843812a3dd76d",
+  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
+  "packages/core/agent-loop/src/index.ts": "428e585a8efb665a4cd0825058317ad0a8b276540f8f11d4c790a1601cc2ef59",
+  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff"
+}

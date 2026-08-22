@@ -1,8 +1,11 @@
 {
-  "packages/router/strategy-router/package.json": "b8c52201c3753990115eda503ee9ef1987996fc9150dc055c18f47c82f2af915",
   "packages/router/strategy-router/src/index.ts": "6760bcce2faaed284375bb327b50312456c5ea47be83df1e7cf2ad32fba65dcc",
-  "packages/router/strategy-router/src/rules.ts": "473e0b983b3f47716fb349ff2d6fabfb913d74ac56d3d5e8b53f543222267834",
   "packages/router/strategy-router/src/types.ts": "0a82aca481bf29770384faa571f20a688664fbbc096e0bfd6c58c63e30319ed0",
+  "packages/router/strategy-router/src/rules.ts": "473e0b983b3f47716fb349ff2d6fabfb913d74ac56d3d5e8b53f543222267834",
   "packages/router/strategy-router/tests/router.spec.ts": "4155441ea0a8fb802287244d43c6d3aaaeb8f3efcf301b0a7c7e188805f89c8d",
-  "packages/router/strategy-router/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",
+  "packages/core/agent/src/model-selection.ts": "633f4e84d0ff0a1a24facf1a946ce742a8439dae0245a5194d31ee559cdbae53",
+  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff",
+  "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5",
+  "packages/run/task-profile/src/types.ts": "cf067b9285bcb161ff54266f2d918879a9ae4addd47e040ff0dd786fd49af795"
 }

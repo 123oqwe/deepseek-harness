@@ -1,7 +1,8 @@
 {
   "issue_id": "P1-05",
-  "status": "E2E_VERIFIED",
-  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "title": "插件静态/动态安全扫描器",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,20 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "1 passed, 0 failed"
+    "tests": "9/10 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T19:21:54.104Z",
+  "evidence_date": "2026-08-22T21:05:46.005Z",
   "runtime_reachability": {
     "issue_id": "P1-05",
-    "entrypoint": "packages/plugin/plugin-scanner/src/index.ts",
-    "wired": true,
+    "source_files": 6,
+    "test_files": 10,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T19:21:54.104Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:05:46.005Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification."
+    "1 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

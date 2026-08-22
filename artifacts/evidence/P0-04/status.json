@@ -1,33 +1,33 @@
 {
   "issue_id": "P0-04",
-  "status": "E2E_VERIFIED",
-  "commit_sha": "HEAD",
+  "title": "建立分层依赖与禁止环规则",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
-    "platform": "darwin",
-    "node": "v22.0.0",
-    "pnpm": "10.0.0"
+    "node": "v24.18.0",
+    "pnpm": "11.7.0",
+    "platform": "darwin"
   },
   "test_digests": {
-    "layer-deps.spec.ts": "3 tests passed"
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "tests": "1/1 passed"
   },
-  "evidence_signer": "principal-agent-cto",
-  "required_proof_classes": [
-    "architecture/static proof",
-    "shipping build/boot/CI integration proof"
-  ],
-  "verification_commands": [
-    "node scripts/architecture/check-layer-deps.mjs",
-    "npx vitest run tests/architecture/layer-deps.spec.ts"
-  ],
+  "evidence_signer": "codex-agent",
+  "evidence_date": "2026-08-22T21:03:13.160Z",
   "runtime_reachability": {
-    "entrypoint": "pnpm architecture:layers",
-    "gate": "pnpm first100:architecture",
-    "wired": true
+    "issue_id": "P0-04",
+    "source_files": 0,
+    "test_files": 1,
+    "compilation": "PASS",
+    "lint": "PASS",
+    "tests": "PASS",
+    "timestamp": "2026-08-22T21:03:13.160Z"
   },
   "remaining_risks": [
-    "81 known upstream violations are exempted; new violations will fail CI",
-    "Layer assignments may need adjustment as upstream evolves"
+    "No source files found at manifest-declared paths",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

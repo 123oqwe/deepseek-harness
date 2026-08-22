@@ -1,9 +1,11 @@
 {
-  "packages/assurance/verification-contract/package.json": "82f96e58aa818264eb6159df602c2b5fd29ff40dcfbe415eeecb7053031137f5",
   "packages/assurance/verification-contract/src/index.ts": "7c6757e7cdd17b40f18a0d7ee4b69684476060011b918527eb48aea46eb92373",
-  "packages/assurance/verification-contract/src/invariant.ts": "7c2552c46cb45c88a319beca8a7d8458286cb3f3eee1f6b756bf5db32b469b01",
-  "packages/assurance/verification-contract/src/schema.ts": "1a5b6d0e306b89591a703a44df3c5b827825a41f190503818c6bf3ce921898c8",
   "packages/assurance/verification-contract/src/types.ts": "77a1ba1a7e09c5afbb631c6a698a7bd21a34a2f9e78c83e02799f4fc3e629000",
+  "packages/assurance/verification-contract/src/schema.ts": "1a5b6d0e306b89591a703a44df3c5b827825a41f190503818c6bf3ce921898c8",
+  "packages/assurance/verification-contract/src/invariant.ts": "7c2552c46cb45c88a319beca8a7d8458286cb3f3eee1f6b756bf5db32b469b01",
   "packages/assurance/verification-contract/tests/verification-contract.spec.ts": "cd477307a20a82a19f87ef9d2a46016f01acd0d485f3ac02c4cf2a9b76ecc5e0",
-  "packages/assurance/verification-contract/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/core/tools/src/types.ts": "b2d15f4815419160269703863237bbe65f49b84afc6947fe59edec977b9cefba",
+  "packages/attachment/attachment/src/types.ts": "7c45a652727db7802a76bc791af136e2a18d12640f9c11b6e5ee309a9171ef16"
 }

@@ -1,5 +1,7 @@
-packages/sdk/parity/package.json
-packages/sdk/parity/src/index.ts
-packages/sdk/parity/src/types.ts
-packages/sdk/parity/tests/parity.spec.ts
-packages/sdk/parity/tsconfig.json
+packages/sdk/protocol/src/types.ts
+packages/sdk/client/src/api.ts
+packages/sdk/server/src/server.ts
+python/sdk/README.md
+python/sdk-runtime/README.md
+scripts/build-exe-for-python-sdk.ts
+scripts/build-python-release.py

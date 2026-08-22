@@ -1,6 +1,32 @@
 {
-  "total": 0,
-  "passed": 0,
+  "total": 25,
+  "passed": 25,
   "failed": 0,
-  "test_files": []
+  "test_files": [
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts",
+    "packages/attachment/attachment/tests/admission.spec.ts",
+    "packages/attachment/attachment/tests/index.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts"
+  ]
 }

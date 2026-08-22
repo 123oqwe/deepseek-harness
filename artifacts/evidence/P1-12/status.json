@@ -1,7 +1,8 @@
 {
   "issue_id": "P1-12",
-  "status": "E2E_VERIFIED",
-  "git_sha": "f7a77022239ee41b4686fdc9eeba47f33f32a386",
+  "title": "官方 Plugin Verifier 与市场信任等级",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,21 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "0 passed, 0 failed"
+    "tests": "9/10 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T20:33:17.049Z",
+  "evidence_date": "2026-08-22T21:10:47.419Z",
   "runtime_reachability": {
     "issue_id": "P1-12",
-    "entrypoint": "unknown",
-    "wired": false,
+    "source_files": 4,
+    "test_files": 10,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T20:33:17.049Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:10:47.419Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification.",
-    "No package mapping found for this issue"
+    "1 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

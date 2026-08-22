@@ -1,2 +1,2 @@
-- Code ported from prototype branch; needs deeper integration verification.
-- No package mapping found for this issue
+- 1 test(s) failing
+- Code ported from prototype branch; needs deeper integration verification

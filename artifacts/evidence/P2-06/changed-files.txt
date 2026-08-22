@@ -1,0 +1,6 @@
+packages/interaction/user-approval/src/canonical.ts
+packages/interaction/user-approval/src/preconditions.ts
+packages/interaction/user-approval/tests/argument-binding.spec.ts
+packages/interaction/user-approval/src/types.ts
+packages/interaction/user-approval/src/index.ts
+packages/core/agent-loop/src/tool-calls.ts

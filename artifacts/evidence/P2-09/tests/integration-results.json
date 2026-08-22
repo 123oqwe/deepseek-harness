@@ -1,8 +1,11 @@
 {
-  "total": 1,
-  "passed": 1,
-  "failed": 0,
+  "total": 4,
+  "passed": 3,
+  "failed": 1,
   "test_files": [
-    "packages/interaction/approval-quorum/tests/quorum.spec.ts"
+    "packages/interaction/approval-quorum/tests/quorum.spec.ts",
+    "packages/interaction/approval-store/tests/recovery.spec.ts",
+    "packages/policy/policy-engine/tests/policy.spec.ts",
+    "packages/identity/principal/tests/identity.spec.ts"
   ]
 }

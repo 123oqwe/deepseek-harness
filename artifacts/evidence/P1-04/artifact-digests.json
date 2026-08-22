@@ -1,8 +1,7 @@
 {
-  "packages/plugin/plugin-installer/package.json": "26bd7f0e9eec50865d2ee5e87f71ae1fa5b562c046b05acaebbff9cf0b75abf0",
   "packages/plugin/plugin-installer/src/index.ts": "1634823a372f9b12eb11430ac382fb7f19c1c3e6e9e339090178764f5f4cece1",
   "packages/plugin/plugin-installer/src/quarantine.ts": "de297fa2c1e21bba5ed096accd7ae2c2d586781e80ebdd0a4deaba0b749ef306",
   "packages/plugin/plugin-installer/src/transaction.ts": "fee963ffe7e8cbff6885f13bfd4bc25ee8cb7ad04e813eaedf040516b02d61e0",
-  "packages/plugin/plugin-installer/tests/quarantine.spec.ts": "75d06999038c8abe9e30dafc24126611c11a603a01ce5781e56e8dec2e2fc4f4",
-  "packages/plugin/plugin-installer/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "apps/cli/src/plugin.ts": "263ca9cd68d6caa0fe637c0de4350503154565ef57b19331fedee388c9dc68e3",
+  "apps/cli/src/process-shutdown.ts": "30743d5ac88154b25fd2d14ac22f7ff1b8d94e915547383de1ca7e49d1bbfc66"
 }

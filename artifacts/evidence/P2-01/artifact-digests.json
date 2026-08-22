@@ -1,7 +1,11 @@
 {
-  "commands.jsonl": "b0834b2ce3f85338e1ce04ff2eabae18a2d8eb949025f379dc2d04dd160fcba3",
-  "changed-files.txt": "40ab3f6ebda35ac6335e0130e6b3ef8aabaa262206ad29d9d9e6e6adeae9705c",
-  "pre-audit.json": "a5500210b97fc9db0e4703ce62300ef733c2c48853e96f8c2bfeea4f5004467c",
-  "remaining-risks.md": "808726f852c9ab3b8eb8515bbc92950020dd160c62f7618bfadd78779c1ce6e9",
-  "status.json": "80c08b3bf41bf6e1009ffb434d0b2dcec9a23c11905068b5e5a4466bc37d5f4b"
+  "packages/identity/principal/src/index.ts": "9bebf2a30ce4dc30b6631ede135b58874e11c2c8143065cd94a7e204b6b51c91",
+  "packages/identity/principal/src/types.ts": "a1287c863a1a8a52f14256a8c09af3b59cf6a1f99ef59da8ce1a454766471d77",
+  "packages/identity/principal/src/chain.ts": "5d77965e8cf54a6ccce0d1f850da24a82dedee7b114546511924cb3e8a25296f",
+  "packages/identity/principal/tests/identity.spec.ts": "7a143290409073bc4e44ab0cd4f4fadd3afe2af330f171e446b2280fe8f0d2d1",
+  "packages/core/agent/src/types.ts": "2353804cf902731cf979f8cb35f0ef830771133bd396a3f0afc368bc72c458bd",
+  "packages/core/agent/src/runtime-types.ts": "da3fcd6d1ed3351461d246660e7ab8f5d2ee3db5dd4bc177865c52ba2dcd3835",
+  "packages/core/session/src/types.ts": "a1519284a002d095511f324ffd927effa8f236c81d3862a32de8dcee598380dd",
+  "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878"
 }

@@ -1,0 +1,9 @@
+packages/workspace/workspace-trust/src/index.ts
+packages/workspace/workspace-trust/src/types.ts
+packages/workspace/workspace-trust/tests/trust.spec.ts
+packages/workspace/workspace/src/entity.ts
+packages/workspace/workspace/src/index.ts
+packages/workspace/workspace/src/paths.ts
+packages/context/agent-instructions/src/index.ts
+packages/context/agent-instructions/src/files.ts
+apps/cli/src/profile-boot.ts

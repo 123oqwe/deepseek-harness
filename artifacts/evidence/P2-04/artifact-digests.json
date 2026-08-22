@@ -1,0 +1,9 @@
+{
+  "packages/policy/risk-taxonomy/src/index.ts": "9a3574fc884faebf1bce084ede5eb5db5bef410a1600df1cff1d3c633e0385d8",
+  "packages/policy/risk-taxonomy/src/types.ts": "1cb165673b3215b6e408495b77dcd65a70b59baee57106a215b7e7e91ce151bd",
+  "packages/policy/risk-taxonomy/src/classify.ts": "1fe2c219ef03c071fd0f74be15efc90e00ecb2326ad96ec9fa5be7f9a5d1ae37",
+  "packages/policy/risk-taxonomy/tests/classify.spec.ts": "2d48405e0852e077a7f25412b274c32e1e6b94f3ab2b5375ad3035bfef86186e",
+  "packages/interaction/permission-presets/src/types.ts": "4766dd2d2d052f55f0f8993c7b15ed86ce32f93dc76a0d606035db4dc1464301",
+  "packages/core/tools/src/types.ts": "b2d15f4815419160269703863237bbe65f49b84afc6947fe59edec977b9cefba",
+  "packages/action/action-manifest/src/types.ts": "e486d784e2a28704d0d6c39710f978b0a620c8fd692a5a677469effe6abfc80e"
+}

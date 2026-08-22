@@ -1,6 +1,16 @@
 {
-  "total": 0,
-  "passed": 0,
+  "total": 9,
+  "passed": 9,
   "failed": 0,
-  "test_files": []
+  "test_files": [
+    "packages/audit/audit-ledger/tests/tamper.spec.ts",
+    "packages/storage/storage/tests/registry.spec.ts",
+    "packages/attachment/attachment/tests/admission.spec.ts",
+    "packages/attachment/attachment/tests/index.spec.ts",
+    "packages/session/session-persistence/tests/persistence.spec.ts",
+    "packages/session/session-persistence/tests/write-behind.spec.ts",
+    "packages/session/session-persistence/tests/preparations.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts"
+  ]
 }

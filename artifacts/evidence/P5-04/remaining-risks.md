@@ -1,1 +1,2 @@
-- Code ported from prototype branch; needs deeper integration verification.
+- 18 test(s) failing
+- Code ported from prototype branch; needs deeper integration verification

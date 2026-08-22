@@ -1,2 +1,11 @@
-{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T20:10:44.575Z"}
-{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T20:10:44.575Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/audit/audit-ledger/tests/tamper.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/storage/storage/tests/registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/attachment/attachment/tests/admission.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/attachment/attachment/tests/index.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/session/session-persistence/tests/persistence.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/session/session-persistence/tests/write-behind.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/session/session-persistence/tests/preparations.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/workspace.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:07:13.114Z"}

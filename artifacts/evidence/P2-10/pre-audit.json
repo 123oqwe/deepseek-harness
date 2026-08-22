@@ -1,0 +1,50 @@
+{
+  "issue_id": "P2-10",
+  "title": "Policy-as-Code、Explain 与 Dry Run",
+  "audit_date": "2026-08-22T21:23:03.363Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/policy/policy-language/src/index.ts",
+    "packages/policy/policy-language/src/parser.ts",
+    "packages/policy/policy-language/src/compiler.ts",
+    "packages/policy/policy-language/tests/golden.spec.ts",
+    "docs/policy/language.md",
+    "packages/interaction/permission-presets/src/index.ts",
+    "packages/settings/settings/src/index.ts",
+    "packages/policy/policy-engine/src/index.ts"
+  ],
+  "source_files": [
+    "packages/policy/policy-language/src/index.ts",
+    "packages/policy/policy-language/src/parser.ts",
+    "packages/policy/policy-language/src/compiler.ts",
+    "packages/interaction/permission-presets/src/index.ts",
+    "packages/settings/settings/src/index.ts",
+    "packages/policy/policy-engine/src/index.ts"
+  ],
+  "test_files": [
+    "packages/policy/policy-language/tests/golden.spec.ts",
+    "packages/interaction/permission-presets/tests/profile.spec.ts",
+    "packages/interaction/permission-presets/tests/permission-presets.spec.ts",
+    "packages/interaction/permission-presets/tests/projection.spec.ts",
+    "packages/interaction/permission-presets/tests/invariant.spec.ts",
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts",
+    "packages/policy/policy-engine/tests/policy.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/policy/policy-language/src/index.ts",
+    "packages/policy/policy-language/src/parser.ts",
+    "packages/policy/policy-language/src/compiler.ts",
+    "packages/policy/policy-language/tests/golden.spec.ts",
+    "packages/interaction/permission-presets/src/index.ts",
+    "packages/settings/settings/src/index.ts",
+    "packages/policy/policy-engine/src/index.ts"
+  ],
+  "classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 6 files, Tests: 9 files, Docs: 0 files"
+}

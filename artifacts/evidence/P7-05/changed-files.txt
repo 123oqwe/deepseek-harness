@@ -1,6 +1,10 @@
-packages/assurance/acceptance-gate/package.json
-packages/assurance/acceptance-gate/src/evaluate.ts
 packages/assurance/acceptance-gate/src/index.ts
 packages/assurance/acceptance-gate/src/types.ts
-packages/assurance/acceptance-gate/tests/gate.spec.ts
-packages/assurance/acceptance-gate/tsconfig.json
+packages/assurance/acceptance-gate/src/evaluate.ts
+packages/assurance/outcome-package/src/index.ts
+packages/assurance/outcome-package/src/types.ts
+packages/workflow/workflow/src/types.ts
+packages/core/agent-loop/src/agent.ts
+packages/core/session/src/known-event-types.ts
+packages/sdk/protocol/src/types.ts
+packages/attachment/attachment/src/types.ts

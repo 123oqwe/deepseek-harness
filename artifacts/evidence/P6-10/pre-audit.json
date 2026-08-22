@@ -1,15 +1,65 @@
 {
   "issue_id": "P6-10",
-  "audit_date": "2026-08-22T20:13:25.419Z",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
-  "packages": [
-    "packages/memory/privacy"
+  "title": "Privacy Classification、Redaction、Fork/Snapshot Lineage 与导出/擦除",
+  "audit_date": "2026-08-22T22:08:15.829Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/privacy/data-classification/src/index.ts",
+    "packages/privacy/data-classification/src/types.ts",
+    "packages/privacy/redaction/src/index.ts",
+    "packages/privacy/data-lineage/src/index.ts",
+    "packages/privacy/data-lineage/tests/privacy.e2e.ts",
+    "packages/settings/settings/src/redact.ts",
+    "packages/core/session/src/types.ts",
+    "packages/attachment/attachment/src/types.ts",
+    "packages/workspace/workspace/src/types.ts",
+    "packages/sdk/protocol/src/types.ts"
   ],
-  "source_files": [],
-  "test_files": [],
-  "changed_files": [],
-  "classification": "PORTED_FROM_PROTOTYPE",
-  "salvageable": false,
+  "source_files": [
+    "packages/settings/settings/src/redact.ts",
+    "packages/core/session/src/types.ts",
+    "packages/attachment/attachment/src/types.ts",
+    "packages/workspace/workspace/src/types.ts",
+    "packages/sdk/protocol/src/types.ts"
+  ],
+  "test_files": [
+    "packages/settings/settings/tests/settings.spec.ts",
+    "packages/settings/settings/tests/redact.spec.ts",
+    "packages/settings/settings/tests/invariant.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts",
+    "packages/attachment/attachment/tests/admission.spec.ts",
+    "packages/attachment/attachment/tests/index.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/settings/settings/src/redact.ts",
+    "packages/core/session/src/types.ts",
+    "packages/attachment/attachment/src/types.ts",
+    "packages/workspace/workspace/src/types.ts",
+    "packages/sdk/protocol/src/types.ts"
+  ],
+  "classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 5 files, Tests: 25 files, Docs: 0 files"
 }

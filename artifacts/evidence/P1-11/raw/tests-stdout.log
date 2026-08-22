@@ -1,0 +1,193 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > submits a proposal 2ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > passes static scan 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > rejects on scan failure 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > passes isolation test 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > signs proposal 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > deploys canary and approves 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > publishes after approval 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > rollbacks published proposal 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > prevents self-approval 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > allows external approval 0ms
+ ✓ |thread-safe| packages/extensions/extension-proposal/tests/pipeline.spec.ts > P1-11 Extension Proposal Pipeline > rejects out-of-order stages 1ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  05:10:33
+   Duration  441ms (transform 213ms, setup 240ms, import 15ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > makes an effect visible to a reentrant owner restart and awaits setup plus cleanup 4ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > rolls back collected cleanup and its owner-list entry when setup throws synchronously 5ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > makes a reentrant owner restart await asynchronous rollback after synchronous setup failure 1ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > keeps ordinary teardown synchronous and the public disposer single-shot 1ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > rejects cleanup-time registration while a restart is unloading 1ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > keeps effect registration legal while child fibers are PENDING and LOADING 7ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > resolves dependencies that internal/plugin adds before child activation 2ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > rolls back parent and runtime ownership when internal/plugin publication throws 1ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > contains teardown notification failures so ownership cleanup and peers complete 3ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > makes a LOADING parent join child cleanup started before its unload snapshot 2ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > lets parent disposal during internal/plugin await the unpublished child to quiescence 2ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  05:10:35
+   Duration  448ms (transform 207ms, setup 225ms, import 14ms, tests 31ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: 42 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{}} 1ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{},"output":{"schema":{"type":"json"}}} 0ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{},"output":{"schema":{"type":"json"}},"execute":true} 0ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{},"output":{"schema":{"type":"json"},"presentationMeta":true}} 0ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > bounds the preview of an invalid dynamic renderer return 1ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > isolates sandbox globals: no process/Buffer, and globalThis writes do not leak to the host 15ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call require('fs') with a redirect to the cordis alternative 10ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call setTimeout(() => {}, 5) with a redirect to the cordis alternative 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call fetch('https://example.com') with a redirect to the cordis alternative 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > lets a host half schedule through the cordis timer service (inject: ['timer']) 59ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > provides btoa/atob and the tagged console variants inside the sandbox 4ms
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > makes instanceof inside the sandbox see BOTH realms (patched vm constructors, host untouched) 8ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > honors the configured vmTimeoutMs for the synchronous portion 56ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "throw new Error('boom in sandbox')" with a teaching message 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "throw 'plain-string-throw'" with a teaching message 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "return 42" with a teaching message 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "const plugin = (ctx) => {}" with a teaching message 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "return { name: 'broken', apply(ctx) { throw new Error('apply exploded') } }" with a teaching message 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > passes a null throw through untouched (no SyntaxError misclassification) 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > answers TypeScript syntax in the plain-JS sandbox with the fix, at define time 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > surfaces the offending line + caret and the bracket-balance hint on a syntax error 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > syntaxErrorContext falls back to String(error) when the stack has no vm prelude 0ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > handles a runtime-thrown SyntaxError (no source-line prelude) with the generic hint 3ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 23 passed (24)
+   Start at  05:10:36
+   Duration  1.11s (transform 625ms, setup 216ms, import 504ms, tests 201ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > provider first: the consumer activates immediately and its tool reaches the provided service 23ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > consumer first: runs but stays parked on the missing service, then activates when the provider runs 8ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > stopping the provider sends the consumer back to pending and unwinds its registrations 6ms
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > running the provider again re-runs the consumer through a fresh guard (tool back) 7ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > a duplicate provide fails loud and leaves the second package not running 10ms
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > a primitive (or null) provided value passes through the façade unwrapped, on both read paths 5ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > stopping the consumer leaves the provider and its service intact 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > the host half's listeners have stopped by the time stop returns 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > unregisters a self-made tool on stop, and registers it again on the next run 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > names the replace recipe when a run collides with a live registration 6ms
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 6 passed (10)
+   Start at  05:10:38
+   Duration  1.03s (transform 625ms, setup 236ms, import 486ms, tests 80ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > keeps currentPackageId when an update fails and clears nextPackageId after rollback 28ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > cancels and retracts a Host activation owned by the pending approval 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > does not stop an existing Host run when an attaching page fails to load Client code 5ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:10:40
+   Duration  994ms (transform 655ms, setup 226ms, import 535ms, tests 41ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.root with a teaching error 33ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.parent with a teaching error 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.scope with a teaching error 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.fiber with a teaching error 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.reflect with a teaching error 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.registry with a teaching error 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.events with a teaching error 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.extend() with a teaching error 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.isolate() with a teaching error 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.intercept() with a teaching error 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.plugin() with a teaching error 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.set() with a teaching error 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.mixin() with a teaching error 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > the classic ctx.root.tools.register bypass registers nothing and fails loud 4ms
+stdout | packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > reads a symbol property as undefined and answers the `in` operator without throwing
+[cordis:probe-1] probe true true true false
+
+stdout | packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows optional undeclared services through ctx.get
+[cordis:probe-1] optional service is available
+
+stdout | packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows a service the host half DID declare in inject
+[cordis:probe-1] has systemPrompt: object
+
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > rejects assignment to the façade rather than silently dropping it 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies a service whose method returns a Context (the .ctx escape), registering nothing 4ms
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > guards an async injected-service method: a host-realm Promise resolves through the guard 10ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > reads a symbol property as undefined and answers the `in` operator without throwing 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > denies an undeclared live service (property access), naming the inject fix 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows optional undeclared services through ctx.get 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows a service the host half DID declare in inject 4ms
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > a cross-package consumer must declare the provider — the undeclared path is refused, not left as a zombie tool 13ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox tools façade — get is a read-only schema view > ctx.tools.get returns a schema, not the live ToolDefinition with execute 4ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox tools façade — get is a read-only schema view > ctx.tools.get returns undefined for an unknown tool 4ms
+   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 20 passed (24)
+   Start at  05:10:43
+   Duration  1.38s (transform 858ms, setup 252ms, import 744ms, tests 164ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > lists the whole registry for a global surface, each row carrying its owning session 15ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > tells a global surface which definitions even have a browser half to load 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > records a definition without running it, and mints ids that are never reused 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":" ","purpose":"p","host":"return () => {}"} 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":"n","purpose":"","host":"return () => {}"} 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":"n","purpose":"p"} 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > keeps unparseable code out of the registry, teaching the TypeScript removal 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > hides another session's definition, so only its own card can address it 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > starts a host-only package immediately, with no request and no approval 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > returns awaiting approval, then records the page activation asynchronously 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > returns awaiting approval, then records a refusal without starting 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > records an asynchronous Client failure and unwinds the Host half it started 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > replaces a prior run and records failure when the repeated run cannot load Client code 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > binds a running host half instead of evaluating it twice 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > shares one activation when two pages start the same Package concurrently 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > hands the browser half's source only to the owning session, and only while it runs 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > accepts and ignores an answer to a request nobody is waiting for 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > refuses an answer after stop cancels the request and allows a fresh direct run 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > cancels a pending request after its provisional activation is stopped 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > keeps a published request answerable after the creating Tool call ends 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > reports the sandbox failure and starts nothing when the host half throws 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > stops both halves while keeping the definition runnable 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > announces the stop of a host-only package too, so a global surface drops its row 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > refuses to stop a definition that is not running 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > stops a running definition on undefine and forgets it 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > answers a missing definition with the memory-only explanation 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > unwinds every host half when the runner itself is disposed 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > keeps the last report per package and shows it to a snapshot reader 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > drops a report for a definition the reporting session does not own 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > clears the report when a fresh dispatch starts and when one stops 4ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  05:10:45
+   Duration  1.05s (transform 632ms, setup 234ms, import 498ms, tests 119ms, environment 0ms)

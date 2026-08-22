@@ -1,6 +1,8 @@
-packages/plugin/plugin-host/package.json
+packages/plugin/plugin-host-protocol/src/types.ts
 packages/plugin/plugin-host/src/index.ts
-packages/plugin/plugin-host/src/rpc.ts
 packages/plugin/plugin-host/src/supervisor.ts
-packages/plugin/plugin-host/tests/isolation.spec.ts
-packages/plugin/plugin-host/tsconfig.json
+packages/plugin/plugin-host/src/rpc.ts
+packages/boot/app-boot/src/index.ts
+packages/boot/app-boot/src/profile.ts
+packages/host/plugin-inventory/src/index.ts
+packages/core/tools/src/index.ts

@@ -1,6 +1,24 @@
 {
-  "total": 0,
-  "passed": 0,
+  "total": 17,
+  "passed": 17,
   "failed": 0,
-  "test_files": []
+  "test_files": [
+    "packages/compaction/compaction/tests/fidelity.spec.ts",
+    "packages/compaction/compaction/tests/compaction.spec.ts",
+    "packages/compaction/compaction/tests/tool-pairing.spec.ts",
+    "packages/compaction/compaction/tests/invariant.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts"
+  ]
 }

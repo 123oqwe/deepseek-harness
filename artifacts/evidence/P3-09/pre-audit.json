@@ -1,28 +1,48 @@
 {
   "issue_id": "P3-09",
-  "audit_date": "2026-08-22T19:09:47.801Z",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
-  "packages": [
-    "packages/execution/execution-world-remote"
+  "title": "MicroVM / Remote ExecutionWorld 与 Attestation",
+  "audit_date": "2026-08-22T21:34:32.647Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/execution/execution-world-remote/src/index.ts",
+    "packages/execution/execution-world-remote/src/client.ts",
+    "packages/execution/execution-world-remote/src/attestation.ts",
+    "packages/execution/execution-world-remote/tests/reconnect.e2e.ts",
+    "packages/execution/execution-world/src/types.ts",
+    "packages/e2b/README.md",
+    "packages/sdk/protocol/src/types.ts"
   ],
   "source_files": [
-    "packages/execution/execution-world-remote/src/attestation.ts",
+    "packages/execution/execution-world-remote/src/index.ts",
     "packages/execution/execution-world-remote/src/client.ts",
-    "packages/execution/execution-world-remote/src/index.ts"
+    "packages/execution/execution-world-remote/src/attestation.ts",
+    "packages/execution/execution-world/src/types.ts",
+    "packages/sdk/protocol/src/types.ts"
   ],
   "test_files": [
-    "packages/execution/execution-world-remote/tests/reconnect.spec.ts"
-  ],
-  "changed_files": [
-    "packages/execution/execution-world-remote/package.json",
-    "packages/execution/execution-world-remote/src/attestation.ts",
-    "packages/execution/execution-world-remote/src/client.ts",
-    "packages/execution/execution-world-remote/src/index.ts",
     "packages/execution/execution-world-remote/tests/reconnect.spec.ts",
-    "packages/execution/execution-world-remote/tsconfig.json"
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts",
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+    "packages/sdk/protocol/tests/resources.contract.spec.ts",
+    "packages/sdk/protocol/tests/transport.spec.ts",
+    "packages/sdk/protocol/tests/event-stream.spec.ts",
+    "packages/sdk/protocol/tests/run-lifecycle.spec.ts"
   ],
-  "classification": "PORTED_FROM_PROTOTYPE",
+  "doc_files": [
+    "packages/e2b/README.md"
+  ],
+  "other_files": [],
+  "changed_files": [
+    "packages/execution/execution-world-remote/src/index.ts",
+    "packages/execution/execution-world-remote/src/client.ts",
+    "packages/execution/execution-world-remote/src/attestation.ts",
+    "packages/execution/execution-world/src/types.ts",
+    "packages/e2b/README.md",
+    "packages/sdk/protocol/src/types.ts"
+  ],
+  "classification": "SIMULATED_REMOTE_PROVIDER",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Code ported from prototype branch to integration branch"
+  "notes": "Source: 5 files, Tests: 8 files, Docs: 1 files"
 }

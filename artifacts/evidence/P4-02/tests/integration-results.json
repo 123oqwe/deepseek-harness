@@ -1,0 +1,17 @@
+{
+  "total": 10,
+  "passed": 10,
+  "failed": 0,
+  "test_files": [
+    "packages/run/task-profile/tests/profile.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/run/run/tests/state-machine.spec.ts",
+    "packages/run/run/tests/recovery.spec.ts"
+  ]
+}

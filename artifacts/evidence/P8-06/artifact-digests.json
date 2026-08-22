@@ -1,1 +1,10 @@
-{}
+{
+  "packages/identity/auth/src/index.ts": "01582c06e6e113c790d534a08368ad1cf1b5ca81ac13f6f6d64f979ae8dbc144",
+  "packages/identity/auth/src/types.ts": "d45c34ba747e279f9349ad0628f0cd76bff3ac8dc7ed8ddff8680c1bd6242aeb",
+  "packages/identity/README.md": "e9f68210796ce7a6585ae66885e5b3b9201f051a18f6d1c9bddb8d5c016523a4",
+  "packages/api/remotes/src/agent-lookup.ts": "d91b49df46d1c332464e724ee22ad9adbc384a7b5082c3be1f78d99d09e7eecd",
+  "packages/api/gateway/src/index.ts": "6dc87f1c18161e71cbff2a839699fafca2d98007223fb7abd582cd38973d610f",
+  "packages/host/webserver/src/index.ts": "4c91d71099665c503dd09004225a5ee3f34adf57985e68b63febbf29662f8b01",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/workspace/workspace/src/entity.ts": "38a7fbd44baf9bdd2b76b15a97f1cf4d36b4d55972efdae2be9f77694f2be7f4"
+}

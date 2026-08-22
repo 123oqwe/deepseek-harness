@@ -1,8 +1,29 @@
 {
-  "total": 1,
-  "passed": 1,
+  "total": 22,
+  "passed": 22,
   "failed": 0,
   "test_files": [
-    "packages/router/model-router/tests/router.spec.ts"
+    "packages/router/model-router/tests/router.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/llm/llm/tests/content.spec.ts",
+    "packages/llm/llm/tests/service.spec.ts",
+    "packages/llm/llm/tests/api-key.spec.ts",
+    "packages/llm/llm/tests/adapter-failure.spec.ts",
+    "packages/llm/llm/tests/assembler.spec.ts",
+    "packages/llm/llm/tests/topology.spec.ts",
+    "packages/llm/llm/tests/message.spec.ts",
+    "packages/llm/llm/tests/call-config.spec.ts",
+    "packages/llm/llm/tests/invariant.spec.ts",
+    "packages/llm/llm/tests/retry-policy.spec.ts",
+    "packages/llm/llm/tests/properties.spec.ts",
+    "packages/llm/llm/tests/attribution.spec.ts",
+    "packages/run/run-plan/tests/compile.spec.ts",
+    "packages/run/run-plan/tests/amendment.spec.ts"
   ]
 }

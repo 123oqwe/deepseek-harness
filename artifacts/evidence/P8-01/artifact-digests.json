@@ -1,0 +1,12 @@
+{
+  "packages/sdk/protocol/src/version.ts": "c1e1f803ba933d8c6be462a254a3e73815fc6fde428efb68f5e921f54083b25f",
+  "packages/sdk/protocol/src/capabilities.ts": "2577a564c74c12a5fe21b13a9f9c1e6c9e2a6b9d0977fb20ea274884497fafb1",
+  "packages/sdk/protocol/src/schema-fingerprint.ts": "2181a5185e29ecd17bbf705140776a8852ebc3c344049e01c845f6f897e1f0c0",
+  "packages/sdk/protocol/tests/version-negotiation.spec.ts": "14695504e9ef91e36377e1f34d2a533e8244f664542f915362fcec3628de4548",
+  "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
+  "packages/sdk/protocol/src/transport.ts": "7aed4460d1bccc9bc525d2c54f2220ba5360ae529cb86711eb043ad7471c45ac",
+  "packages/sdk/protocol/src/index.ts": "f70473981a3aebcc17857b0811c6f1fff7ab46e2717e05bbed5682a53e769337",
+  "packages/sdk/server/src/server.ts": "6707cf3cd51d42f03beab41a48b5335144c3510447a7458f0d9b5f094627c685",
+  "packages/sdk/client/src/client.ts": "68dc8b9f0939fdc449a27cda21911b3ee2420300aec73c01be3b840dd02e5999",
+  "packages/api/gateway/src/index.ts": "6dc87f1c18161e71cbff2a839699fafca2d98007223fb7abd582cd38973d610f"
+}

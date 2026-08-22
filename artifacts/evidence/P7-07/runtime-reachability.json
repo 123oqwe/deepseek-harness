@@ -1,9 +1,9 @@
 {
   "issue_id": "P7-07",
-  "entrypoint": "packages/assurance/causal-trace/src/index.ts",
-  "wired": false,
+  "source_files": 10,
+  "test_files": 35,
   "compilation": "PASS",
   "lint": "PASS",
-  "tests": "PASS",
-  "timestamp": "2026-08-22T20:16:10.750Z"
+  "tests": "FAIL",
+  "timestamp": "2026-08-22T22:20:08.637Z"
 }

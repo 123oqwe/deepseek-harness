@@ -1,3 +1,20 @@
-{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T19:08:39.261Z"}
-{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T19:08:39.261Z"}
-{"command":"npx vitest run packages/credentials/secrets-broker/tests/secret-leak.spec.ts --reporter=verbose","label":"test:packages/credentials/secrets-broker/tests/secret-leak.spec.ts","exit_code":0,"timestamp":"2026-08-22T19:08:39.261Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/credentials/secrets-broker/tests/secret-leak.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/credentials/credentials/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/credentials/credentials/tests/credentials.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/content.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/service.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/api-key.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/adapter-failure.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/assembler.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/topology.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/message.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/call-config.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/retry-policy.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/properties.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/llm/llm/tests/attribution.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}
+{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:32:51.601Z"}

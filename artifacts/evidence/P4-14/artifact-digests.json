@@ -1,1 +1,11 @@
-{}
+{
+  "packages/run/turn-checkpoint/src/index.ts": "3664d1264851235c7abf181b8f2dd655b2ae23aacf0d857e409694e89830a067",
+  "packages/run/turn-checkpoint/src/types.ts": "a0616557bd1fb26e67d288fe8a88b99b4e4279518dbd34cb02fd18cb334ca634",
+  "packages/run/trigger-service/src/index.ts": "1332db09669df235622621c96df1bcc0be188224d827b4ca9207f7d8d83e6a30",
+  "packages/core/session/src/repair.ts": "eca9e728dbb2ae8cd51d1e163385e6a20b0399dfa82dfa6230f2eeefdfdd8fd8",
+  "packages/core/session/src/preparation.ts": "51bcd61f505928fc1d98cc59ecfd5e0a34b3a5cbd3ecb7937caef0da87b7baa5",
+  "packages/session/session-persistence/src/preparations.ts": "7de012859f329a91293bda917908a0a5603b93a29d04492554ee4c07508ece83",
+  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff",
+  "packages/schedule/README.md": "ee8abf1fde614dcbda0372f2a1f5d1b1ce02de4e62968d0d64d91eff12b3bc8f",
+  "packages/goal/README.md": "0f2f77743e4b80c8615889e3cef516e51ad66b108f1963baa71e8ae42e6d4a70"
+}

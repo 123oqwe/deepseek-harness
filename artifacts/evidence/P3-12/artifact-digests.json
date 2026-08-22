@@ -1,7 +1,10 @@
 {
-  "packages/attachment/attachment-security/package.json": "db8d15d6842c2990407401f94966520cb128eb7f693f8bab6f6b23a4097c4d87",
   "packages/attachment/attachment-security/src/index.ts": "e664f91c3642de04b328925b6ad133924b2d3d11567603ad4a197c653fbe8c60",
   "packages/attachment/attachment-security/src/scanner.ts": "8a641835832dbdecc0d99b97ad657bc6a1b8141ba40c7439e776d8ab769044a3",
-  "packages/attachment/attachment-security/tests/malicious.spec.ts": "16c6ca8fb7709bb113945c4d1b47186018582ed39b5421137f54aaf44af21cff",
-  "packages/attachment/attachment-security/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+  "packages/workspace/workspace/src/paths.ts": "683b647c8f781601ac41a1f82d1b8f3c881d86c3b5e399e3751284575a6b313d",
+  "packages/workspace/workspace/src/entity.ts": "38a7fbd44baf9bdd2b76b15a97f1cf4d36b4d55972efdae2be9f77694f2be7f4",
+  "packages/attachment/attachment/src/admission.ts": "e752c9c18c6d593b244e4759f30306f4c6334ffae6843d6944900d3454cd82a6",
+  "packages/attachment/attachment/src/error.ts": "0821aef98fae07b309ad641002b209927e7def43c8ad47a9af2d896cb8e5a97e",
+  "packages/attachment/attachment/src/types.ts": "7c45a652727db7802a76bc791af136e2a18d12640f9c11b6e5ee309a9171ef16",
+  "packages/sandbox/sandbox/src/roots.ts": "8a18e1474012415def8197a4ee493394a91cc739a6ec94eb83c6b4d980b7a23b"
 }

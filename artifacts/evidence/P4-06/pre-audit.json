@@ -1,0 +1,53 @@
+{
+  "issue_id": "P4-06",
+  "title": "Durable Inbox / Outbox 与 Exactly-Once Effect Handoff",
+  "audit_date": "2026-08-22T21:38:29.929Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/run/message-bus/src/index.ts",
+    "packages/run/message-bus/src/inbox.ts",
+    "packages/run/message-bus/src/outbox.ts",
+    "packages/run/message-bus/tests/crash.e2e.ts",
+    "packages/core/agent/src/inbox.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/session/session-persistence/src/write-behind.ts",
+    "packages/session/session-persistence/src/coordinator.ts"
+  ],
+  "source_files": [
+    "packages/run/message-bus/src/index.ts",
+    "packages/run/message-bus/src/inbox.ts",
+    "packages/run/message-bus/src/outbox.ts",
+    "packages/core/agent/src/inbox.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/session/session-persistence/src/write-behind.ts",
+    "packages/session/session-persistence/src/coordinator.ts"
+  ],
+  "test_files": [
+    "packages/run/message-bus/tests/crash.spec.ts",
+    "packages/core/agent/tests/agent-initiator.spec.ts",
+    "packages/core/agent/tests/state-machine.spec.ts",
+    "packages/core/agent/tests/model-selection.spec.ts",
+    "packages/core/agent/tests/agent.spec.ts",
+    "packages/core/agent/tests/invariant.spec.ts",
+    "packages/core/agent/tests/consumed-work.spec.ts",
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
+    "packages/session/session-persistence/tests/persistence.spec.ts",
+    "packages/session/session-persistence/tests/write-behind.spec.ts",
+    "packages/session/session-persistence/tests/preparations.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/run/message-bus/src/index.ts",
+    "packages/run/message-bus/src/inbox.ts",
+    "packages/run/message-bus/src/outbox.ts",
+    "packages/core/agent/src/inbox.ts",
+    "packages/core/agent/src/dispatch.ts",
+    "packages/session/session-persistence/src/write-behind.ts",
+    "packages/session/session-persistence/src/coordinator.ts"
+  ],
+  "classification": "NOT_DURABLE_AND_FALSE_CRASH_TEST",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 7 files, Tests: 11 files, Docs: 0 files"
+}

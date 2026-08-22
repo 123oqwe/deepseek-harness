@@ -1,1 +1,5 @@
-
+packages/subagent/subagent-claude-code/src/index.ts
+packages/subagent/subagent-claude-code/src/process.ts
+packages/subagent/subagent-claude-code/src/run.ts
+packages/subagent/subagent/src/request.ts
+packages/subagent/subagent/src/result.ts

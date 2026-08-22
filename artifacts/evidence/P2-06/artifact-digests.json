@@ -1,0 +1,8 @@
+{
+  "packages/interaction/user-approval/src/canonical.ts": "9c22aa25f2a0b02bef2bd3f0a6b773e8bee47a9cb770d89e53a6c65e256dcb4f",
+  "packages/interaction/user-approval/src/preconditions.ts": "a8d98414883e5b1b8fc79f4e3cf83715cc92cd5511f049abc2f1a9152fd80ec9",
+  "packages/interaction/user-approval/tests/argument-binding.spec.ts": "6d4090ba845cbad3c802666a990b5d43c33851be61a2a58fbc6004cc9f780f24",
+  "packages/interaction/user-approval/src/types.ts": "c17fb4ec799adbfb450c02cfe8633286f65ec2208f897eff43c17a9997743602",
+  "packages/interaction/user-approval/src/index.ts": "b90b5af8a85fb4326950f74aa96285921175e2f287860ec8bdaa7f3563d91b7c",
+  "packages/core/agent-loop/src/tool-calls.ts": "4244af95a61fe509f2849b204c13af4bb61b522c475688b20f01093a8236a754"
+}

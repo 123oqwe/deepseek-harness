@@ -1,11 +1,42 @@
 {
   "issue_id": "P0-07",
-  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
-  "salvageable": [
-    "all prototype files"
+  "title": "建立 Release Evidence Package 与不可伪造完成门",
+  "audit_date": "2026-08-22T21:04:18.002Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "scripts/release/collect-evidence.mjs",
+    "scripts/release/verify-evidence.mjs",
+    "packages/assurance/evidence-format/src/types.ts",
+    "tests/release/evidence-package.spec.ts",
+    "package.json",
+    "docs/testing.md",
+    "AGENTS.md"
   ],
-  "must_rewrite": [
-    "tsconfig paths",
-    "package.json private flag"
-  ]
+  "source_files": [
+    "packages/assurance/evidence-format/src/types.ts"
+  ],
+  "test_files": [
+    "packages/assurance/evidence-format/tests/integration.spec.ts"
+  ],
+  "doc_files": [
+    "docs/testing.md",
+    "AGENTS.md"
+  ],
+  "other_files": [
+    "scripts/release/collect-evidence.mjs",
+    "scripts/release/verify-evidence.mjs",
+    "package.json"
+  ],
+  "changed_files": [
+    "scripts/release/collect-evidence.mjs",
+    "scripts/release/verify-evidence.mjs",
+    "packages/assurance/evidence-format/src/types.ts",
+    "package.json",
+    "docs/testing.md",
+    "AGENTS.md"
+  ],
+  "classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 1 files, Tests: 1 files, Docs: 2 files"
 }

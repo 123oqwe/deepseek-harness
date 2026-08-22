@@ -1,6 +1,31 @@
 {
-  "total": 0,
-  "passed": 0,
-  "failed": 0,
-  "test_files": []
+  "total": 24,
+  "passed": 18,
+  "failed": 6,
+  "test_files": [
+    "packages/workspace/worktree-provider/tests/worktree.spec.ts",
+    "packages/collaboration/coordination-guard/tests/coordination.spec.ts",
+    "packages/evaluation/router-regret/tests/regret.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+    "packages/workflow/workflow-worker-thread/tests/session.spec.ts",
+    "packages/subagent/subagent/tests/continuation.spec.ts",
+    "packages/subagent/subagent/tests/run-settlement.spec.ts",
+    "packages/subagent/subagent/tests/request-contract.spec.ts",
+    "packages/subagent/subagent/tests/service.spec.ts",
+    "packages/subagent/subagent/tests/list-children.spec.ts",
+    "packages/subagent/subagent/tests/continuation-inheritance.spec.ts",
+    "packages/subagent/subagent/tests/timing-projection.spec.ts",
+    "packages/subagent/subagent/tests/out-of-process.spec.ts",
+    "packages/subagent/subagent/tests/invariant.spec.ts",
+    "packages/subagent/subagent/tests/result-contract.spec.ts",
+    "packages/subagent/subagent/tests/activation-setup-registry.spec.ts",
+    "packages/subagent/subagent/tests/assistant-output.spec.ts",
+    "packages/workspace/workspace/tests/workspace.spec.ts",
+    "packages/workspace/workspace/tests/invariant.spec.ts",
+    "packages/router/strategy-router/tests/router.spec.ts"
+  ]
 }

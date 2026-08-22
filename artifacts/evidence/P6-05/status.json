@@ -1,7 +1,8 @@
 {
   "issue_id": "P6-05",
-  "status": "E2E_VERIFIED",
-  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
+  "title": "Per-Agent Context Topology 与稳定 Context Telemetry Contract",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,20 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "0 passed, 0 failed"
+    "tests": "4/20 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T20:08:05.600Z",
+  "evidence_date": "2026-08-22T22:04:58.390Z",
   "runtime_reachability": {
     "issue_id": "P6-05",
-    "entrypoint": "packages/memory/context-topology/src/index.ts",
-    "wired": false,
+    "source_files": 6,
+    "test_files": 20,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T20:08:05.600Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T22:04:58.390Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification."
+    "16 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

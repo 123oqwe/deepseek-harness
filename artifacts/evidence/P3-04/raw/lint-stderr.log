@@ -8,19 +8,7 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -30,31 +18,13 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -164,11 +134,7 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -190,19 +156,11 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -230,6 +188,68 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
@@ -248,121 +268,67 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -374,29 +340,52 @@ npm warn Unknown env config "manage-package-manager-versions". This will stop wo
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:shebang`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:report`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
-  - dsh-typert-generator (56%)
-  - tsdown:deps (40%)
+  - tsdown:deps (63%)
+  - dsh-typert-generator (35%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - tsdown:deps (49%)
+  - dsh-typert-generator (48%)
 See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
@@ -407,7 +396,11 @@ See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -415,60 +408,31 @@ See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
-  - dsh-typert-generator (52%)
-  - tsdown:deps (44%)
-See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
-  - tsdown:deps (55%)
+  - tsdown:deps (54%)
   - dsh-typert-generator (42%)
 See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
@@ -481,18 +445,38 @@ See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
-  - tsdown:deps (66%)
-  - dsh-typert-generator (34%)
+  - dsh-typert-generator (51%)
+  - tsdown:deps (45%)
 See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -502,18 +486,49 @@ See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
-  - tsdown:deps (50%)
   - dsh-typert-generator (50%)
+  - tsdown:deps (50%)
 See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
+  - tsdown:deps (63%)
+  - dsh-typert-generator (37%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
   - tsdown:deps (75%)
@@ -522,28 +537,7 @@ See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugins. Here is a breakdown:
-  - dsh-typert-generator (50%)
-  - tsdown:deps (50%)
-See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
-
-[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
@@ -562,5 +556,17 @@ See https://rolldown.rs/options/checks#plugintimings for more details.
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 [33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `dsh-typert-generator`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+[33m[PLUGIN_TIMINGS] [0mYour build spent significant time in plugin `tsdown:deps`. See https://rolldown.rs/options/checks#plugintimings for more details.
 
 npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.

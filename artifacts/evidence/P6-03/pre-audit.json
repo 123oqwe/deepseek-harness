@@ -1,0 +1,44 @@
+{
+  "issue_id": "P6-03",
+  "title": "Memory Proposal、验证、合并、遗忘与导出",
+  "audit_date": "2026-08-22T22:03:29.801Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/memory/memory-policy/src/index.ts",
+    "packages/memory/memory-policy/src/proposal.ts",
+    "packages/memory/memory-policy/src/conflict.ts",
+    "packages/memory/memory-policy/tests/lifecycle.e2e.ts",
+    "packages/memory/memory/src/index.ts",
+    "packages/memory/memory/src/record.ts",
+    "packages/interaction/human-channel/src/types.ts"
+  ],
+  "source_files": [
+    "packages/memory/memory-policy/src/index.ts",
+    "packages/memory/memory-policy/src/proposal.ts",
+    "packages/memory/memory-policy/src/conflict.ts",
+    "packages/memory/memory/src/index.ts",
+    "packages/memory/memory/src/record.ts",
+    "packages/interaction/human-channel/src/types.ts"
+  ],
+  "test_files": [
+    "packages/memory/memory-policy/tests/lifecycle.spec.ts",
+    "packages/memory/memory/tests/record.spec.ts",
+    "packages/memory/memory/tests/conformance.spec.ts",
+    "packages/interaction/human-channel/tests/server-request.spec.ts",
+    "packages/interaction/human-channel/tests/emergency-stop.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/memory/memory-policy/src/index.ts",
+    "packages/memory/memory-policy/src/proposal.ts",
+    "packages/memory/memory-policy/src/conflict.ts",
+    "packages/memory/memory/src/index.ts",
+    "packages/memory/memory/src/record.ts",
+    "packages/interaction/human-channel/src/types.ts"
+  ],
+  "classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 6 files, Tests: 5 files, Docs: 0 files"
+}

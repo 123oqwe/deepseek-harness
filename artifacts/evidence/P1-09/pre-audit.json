@@ -1,0 +1,60 @@
+{
+  "issue_id": "P1-09",
+  "title": "Service/Tool/Event 命名空间与所有权冲突检测",
+  "audit_date": "2026-08-22T21:08:31.209Z",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "manifest_files": [
+    "packages/plugin/plugin-ownership/src/index.ts",
+    "packages/plugin/plugin-ownership/src/types.ts",
+    "packages/plugin/plugin-ownership/tests/ownership.spec.ts",
+    "packages/core/tools/src/index.ts",
+    "packages/extensions/cordis-host-runner/src/registry.ts",
+    "packages/extensions/cordis-host-runner/src/lifecycle.ts",
+    "packages/host/plugin-inventory/src/index.ts"
+  ],
+  "source_files": [
+    "packages/plugin/plugin-ownership/src/index.ts",
+    "packages/plugin/plugin-ownership/src/types.ts",
+    "packages/core/tools/src/index.ts",
+    "packages/extensions/cordis-host-runner/src/registry.ts",
+    "packages/extensions/cordis-host-runner/src/lifecycle.ts",
+    "packages/host/plugin-inventory/src/index.ts"
+  ],
+  "test_files": [
+    "packages/plugin/plugin-ownership/tests/ownership.spec.ts",
+    "packages/core/tools/tests/schema.spec.ts",
+    "packages/core/tools/tests/scoped.spec.ts",
+    "packages/core/tools/tests/code-mode.spec.ts",
+    "packages/core/tools/tests/execution-signal-types.spec.ts",
+    "packages/core/tools/tests/tools.spec.ts",
+    "packages/core/tools/tests/execution-mode.spec.ts",
+    "packages/core/tools/tests/py-types.spec.ts",
+    "packages/core/tools/tests/invariant.spec.ts",
+    "packages/core/tools/tests/properties.spec.ts",
+    "packages/core/tools/tests/json-schema.spec.ts",
+    "packages/core/tools/tests/ts-types.spec.ts",
+    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/sandbox.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/composition.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/versioning.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts",
+    "packages/extensions/cordis-host-runner/tests/runner.spec.ts",
+    "packages/host/plugin-inventory/tests/inventory.spec.ts",
+    "packages/host/plugin-inventory/tests/invariant.spec.ts"
+  ],
+  "doc_files": [],
+  "other_files": [],
+  "changed_files": [
+    "packages/plugin/plugin-ownership/src/index.ts",
+    "packages/plugin/plugin-ownership/src/types.ts",
+    "packages/plugin/plugin-ownership/tests/ownership.spec.ts",
+    "packages/core/tools/src/index.ts",
+    "packages/extensions/cordis-host-runner/src/registry.ts",
+    "packages/extensions/cordis-host-runner/src/lifecycle.ts",
+    "packages/host/plugin-inventory/src/index.ts"
+  ],
+  "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Source: 6 files, Tests: 20 files, Docs: 0 files"
+}

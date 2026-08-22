@@ -1,1 +1,8 @@
-{}
+{
+  "packages/sandbox/sandbox-local/src/capabilities.ts": "696d226967ef2d075a003d016881cf5e86c2d7b9192487de9b83339e20650c36",
+  "packages/sandbox/sandbox-local/src/attestation.ts": "c5b022f2ce50db56e3f45e9d18d4192af450b81fbea8867e502ae6a87786f360",
+  "packages/sandbox/sandbox-local/src/index.ts": "f219da15db3d4c422d27a65cec636ce30d8a73a550a3da3033107774cd7a798b",
+  "packages/sandbox/sandbox-local/src/profiles.ts": "20eddafc9d043f48e4500a6d984ed9782e12d0bfe56f24c169ce0727d525a282",
+  "packages/sandbox/sandbox-local/src/invariant.ts": "f6d5ae46d0ff56b692117a4ded776f495e790bfaacb83b3deea23de7fdf2293b",
+  "packages/sandbox/sandbox/src/invariant.ts": "960fb780b5f9b8b50e564367de2c4111990c9fbb3a24243ed4fc1f4faf66ae18"
+}

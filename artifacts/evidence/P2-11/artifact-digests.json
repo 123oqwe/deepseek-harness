@@ -1,1 +1,8 @@
-{}
+{
+  "packages/interaction/permission-presets/src/schema.ts": "93a37b3590202406e0b17e0dc08e90085f4f6f0d3aa9286df82c207755ee5e09",
+  "packages/interaction/permission-presets/tests/profile.spec.ts": "801dc74c2fb2095bb22e5e60b26e098832ae81e9a3d67f5c4a0a5cc991c78ad4",
+  "packages/interaction/permission-presets/src/index.ts": "4b49f43415d25e2efaf64819b3bfb8103af85f5ffdfc14bd449da922fa1bbdc1",
+  "packages/interaction/permission-presets/src/types.ts": "4766dd2d2d052f55f0f8993c7b15ed86ce32f93dc76a0d606035db4dc1464301",
+  "packages/interaction/permission-presets/src/client.ts": "3e1843665d2feccfb29dbff70cbf2c24f9ed6ae2ed8eb0b3edba3a1f8ebfbb3c",
+  "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1"
+}

@@ -1,7 +1,8 @@
 {
   "issue_id": "P1-10",
-  "status": "E2E_VERIFIED",
-  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "title": "插件数据迁移、升级事务与回滚",
+  "status": "PARTIALLY_WIRED",
+  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -12,20 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "1 passed, 0 failed"
+    "tests": "11/12 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T19:04:04.508Z",
+  "evidence_date": "2026-08-22T21:10:10.788Z",
   "runtime_reachability": {
     "issue_id": "P1-10",
-    "entrypoint": "packages/plugin/plugin-migrations/src/index.ts",
-    "wired": true,
+    "source_files": 7,
+    "test_files": 12,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "PASS",
-    "timestamp": "2026-08-22T19:04:04.508Z"
+    "tests": "FAIL",
+    "timestamp": "2026-08-22T21:10:10.788Z"
   },
   "remaining_risks": [
-    "Code ported from prototype branch; needs deeper integration verification."
+    "1 test(s) failing",
+    "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

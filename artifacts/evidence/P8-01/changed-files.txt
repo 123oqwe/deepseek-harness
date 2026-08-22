@@ -1,0 +1,10 @@
+packages/sdk/protocol/src/version.ts
+packages/sdk/protocol/src/capabilities.ts
+packages/sdk/protocol/src/schema-fingerprint.ts
+packages/sdk/protocol/tests/version-negotiation.spec.ts
+packages/sdk/protocol/src/types.ts
+packages/sdk/protocol/src/transport.ts
+packages/sdk/protocol/src/index.ts
+packages/sdk/server/src/server.ts
+packages/sdk/client/src/client.ts
+packages/api/gateway/src/index.ts

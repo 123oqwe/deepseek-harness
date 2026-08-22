@@ -1,0 +1,27 @@
+{
+  "total": 20,
+  "passed": 20,
+  "failed": 0,
+  "test_files": [
+    "packages/session/session-lifecycle/tests/lifecycle.spec.ts",
+    "packages/session/session-persistence/tests/persistence.spec.ts",
+    "packages/session/session-persistence/tests/write-behind.spec.ts",
+    "packages/session/session-persistence/tests/preparations.spec.ts",
+    "packages/session-query/session-query/tests/tracing.spec.ts",
+    "packages/session-query/session-query/tests/search-helpers.spec.ts",
+    "packages/session-query/session-query/tests/session-query.spec.ts",
+    "packages/core/session/tests/scoped.spec.ts",
+    "packages/core/session/tests/request-header.spec.ts",
+    "packages/core/session/tests/derived-cache.spec.ts",
+    "packages/core/session/tests/repair.spec.ts",
+    "packages/core/session/tests/chunk-rows.spec.ts",
+    "packages/core/session/tests/json.spec.ts",
+    "packages/core/session/tests/gen-persistence-catalog.spec.ts",
+    "packages/core/session/tests/invariant.spec.ts",
+    "packages/core/session/tests/typert.spec.ts",
+    "packages/core/session/tests/properties.spec.ts",
+    "packages/core/session/tests/surface.spec.ts",
+    "packages/core/session/tests/session.spec.ts",
+    "packages/core/session/tests/fork.spec.ts"
+  ]
+}

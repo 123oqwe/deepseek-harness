@@ -1,0 +1,842 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > appends through an exact business-id Context without replaying unrelated Contexts 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > keeps one Match collection while a long Context appends without replay 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > merges an older page and replays its affected Context once 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > collects an update before its start and replays it once prepend supplies the start 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > rejects a Definition whose declared start follows an update in log order 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > replays a window-gap reader when prepend supplies a nearer predecessor 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > keeps the predecessor index ordered across prepend and append 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > replays a window-gap reader when an empty prepend closes the unknown prefix 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > replays direct dependents when an append revises their predecessor Context 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > replays a transitive dependency closure in start order 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > replays Location-derived State and rebuilds only owned Nodes when a step closes 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > lets one Context publish Step and Turn data in phase order 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > updates existing turn Locations when their Step membership changes 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > publishes a changed timeline even when no business Definition claims the boundary 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > clears the prior Step at a new Turn and honors explicit session ownership 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > assigns turn boundaries to the Turn even when a Step remains open 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > carries explicit coordinates across coordinate-free events in a partial window and live tail 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > treats loaded end boundaries as closed when their starts precede the window 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > restarts State creation from undefined when Location changes replay a Context 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > invokes the fallback when only a State-only Definition claims an event 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > invokes the fallback when only another target claims an event 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > suppresses the fallback when the same target claims an event 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > rejects withdrawing a previously materialized Node during an incremental update 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > fails loud when a Definition returns undefined State 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-assembler.client.spec.ts > ConversationNodeAssembler > rejects a duplicate start before mutating the existing Context 0ms
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  06:28:59
+   Duration  546ms (transform 272ms, setup 249ms, import 75ms, tests 26ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/wire-events.client.spec.ts > wire event bridge > republishes a forwarded host event verbatim, and routes no other host frame there 14ms
+ ✓ |thread-safe| packages/client/runtime/tests/wire-events.client.spec.ts > wire event bridge > carries each forwarded event name with its own argument list, unfiltered 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/wire-events.client.spec.ts > wire event bridge > broadcasts connection/reset on every established generation (reconnect invalidation) 4ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  06:29:01
+   Duration  1.09s (transform 703ms, setup 273ms, import 601ms, tests 22ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > open > keeps a bare Session blank until an authoritative lifecycle signal arrives 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > open > installs the tail page: cold → loading → open with window and nodes in place 10ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > open > is idempotent: concurrent opens share one history call, reopening when open is a no-op 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > open > lands an error result in openState=error with the RpcError kept 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > open > folds a transport throw into openState=error / internal 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > open > stitches live frames arriving while history is pending, dropping the page overlap 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > live event path > drops replayed frames at or below the window tail 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > live event path > keeps the authoritative host blank bit across unrelated log events 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > live event path > activates a fresh conversation for a command-input View Node without opening a model turn 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > live event path > publishes animation-frame Definitions once per frame and lets an immediate event supersede the pending frame 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > live event path > publishes a timeline-only boundary even when no Definition claims the event 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > live event path > repairs a seq gap by repulling the tail page instead of appending a hole 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > paging > prepends an older page and keeps seq continuity 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > paging > installs a page without interpreting business replacement metadata 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > paging > drops a discontinuous older page fail-soft (window unchanged, hasMore cleared) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > paging > ignores loadOlder while one is in flight (single request) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > routes an addressed child through non-activating history, continuation prompt, and interrupt only 19ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > lands an interrupt business failure in promptError with op=stop 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > keeps one-shot history readable without exposing prompt or cancel transport 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > sends content through session.prompt; composerPhase steps blank → engaging synchronously at send entry 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > business failure lands in promptError with op=send; the phase stays engaging (retry, no hero bounce) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > lands cancel failures in promptError with op=stop 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > prompt and cancel errors > reads session-authorized attachment bytes and keeps the opaque id on the wire 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > rename > settles the title projection cell from the unary response (higher-seq-wins vs the push frame) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > rename > returns the business error untouched and folds a transport throw to internal 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > pending interactions > adds approval/question on requested and removes them on resolved 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > pending interactions > mints waits whose respond() backfills the requested rpcId into the client-response envelope 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > pending interactions > settles the wait on the authoritative resolved frame: respond() then throws synchronously 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > prompt transport throw folds to internal promptError 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > cancel business error also lands op=stop promptError 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > loadOlder guards: not-open/no-hasMore no-op, err result kept window, empty page updates hasMore, throw fail-soft 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > subscribe delivers snapshot-change notifications and unsubscribes 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > subscribed baseline past the window tail triggers the second stitch pull in doOpen 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > a failed second stitch pull keeps the first window and still opens 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > approval frame with callId/reason keeps the optional fields; duplicate resolved is a no-op 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > ignores unknown mux frame types and repeated running flips (documented defaults) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > drops live events while cold/error (no window upkeep) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > repairGap failure logs and clears stitching; concurrent gaps coalesce into one repair 51ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > doOpen transport throw of a stale generation is swallowed (generation guard in catch) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > drops a stale doOpen whose history resolved successfully after resync superseded it 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > drops a stale stitch pull (second doOpen fetch) superseded mid-flight by resync 55ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > drops a gap repair superseded by a full resync while its pull was in flight 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > successful cancel leaves no promptError 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > dispose is a reserved no-op on resident instances 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > remaining branches > carries history-entry and mux-frame views into the business-neutral Event input 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > resync > rebuilds the window and clears pending; cold instances no-op 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > resync > re-mints a replayed requested frame as a fresh wait with the same key (old reference superseded) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > resync > drops a stale in-flight open superseded by resync (generation guard) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > reference stability (the memo contract) > keeps unchanged node references across an append and swaps the snapshot object 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/session.client.spec.ts > reference stability (the memo contract) > keeps unrelated Session arrays and settled Chat Nodes stable across Event updates 1ms
+
+ Test Files  1 passed (1)
+      Tests  50 passed (50)
+   Start at  06:29:03
+   Duration  1.16s (transform 600ms, setup 261ms, import 510ms, tests 169ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > collapses N markDirty calls into one flush, rebuilding before notifying 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > skips rebuild with zero listeners and ensureFresh rebuilds lazily exactly once 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > notifyNow runs listeners synchronously (controlled-input contract) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > notifyNow with zero listeners stays lazy like markDirty 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > a scheduled flush after notifyNow already flushed is a no-op 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > collapses frame-dirty changes into one cumulative frame publication 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > lets a structural microtask publication supersede a pending frame 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > falls back to microtask batching when animation frames are unavailable 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/notifier.client.spec.ts > Notifier > unsubscribed listeners stop receiving notifications 0ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  06:29:06
+   Duration  685ms (transform 309ms, setup 356ms, import 18ms, tests 8ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/time-zone.client.spec.ts > browser time zone > returns the runtime-resolved zone 19ms
+ ✓ |thread-safe| packages/client/runtime/tests/time-zone.client.spec.ts > browser time zone > fails loud when the runtime exposes no zone 0 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/time-zone.client.spec.ts > browser time zone > fails loud when the runtime exposes no zone 1 0ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  06:29:08
+   Duration  501ms (transform 241ms, setup 272ms, import 13ms, tests 23ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > reads undefined until a value lands (capability absence) 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > applies frames last-wins by seq: replayed and stale frames drop 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > a stale baseline can neither overwrite nor clear a newer frame; a fresh one reseeds and clears 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > truncate drops rows past the durable baseline and keeps the rest 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > notifies the key face on change (batched) and not on dropped applications 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > faces are identity-stable per key (the React binding cache premise) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > ProjectionValueStore semantics > publishes one reference-stable whole-value snapshot until a row changes 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > Session tail-page seeding > seeds the store from a history response carrying a projections block 7ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > Session tail-page seeding > a resync serving a stale block keeps the newer pushed value (seq rule end to end) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > Session tail-page seeding > treats a blockless response as no reset: pushed values survive 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > manager frame routing > lands session/projection frames before instantiation and the Session adopts the same store 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > manager frame routing > projects the title key into list rows and truncates phantom rows on the subscribed baseline 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > manager frame routing > projects every retained value into list rows with stable snapshot identity 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/projection-store.client.spec.ts > manager frame routing > drops the projection store with the removed session 1ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  06:29:09
+   Duration  1.12s (transform 610ms, setup 272ms, import 510ms, tests 16ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/node-half.client.spec.ts > node half > apply is a no-op host placeholder 3ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  06:29:12
+   Duration  524ms (transform 252ms, setup 282ms, import 18ms, tests 4ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/invariant.client.spec.ts > runtime slots/changed invariant > passes foreign events and a legitimate mutation-then-emission sequence 9ms
+ ✓ |thread-safe| packages/client/runtime/tests/invariant.client.spec.ts > runtime slots/changed invariant > fails loud on a missing key and on an emission with no applied mutation 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/invariant.client.spec.ts > runtime slots/changed invariant > stays quiet when no slots service is mounted (nothing to audit against) 1ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  06:29:13
+   Duration  600ms (transform 317ms, setup 318ms, import 59ms, tests 14ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > instances > lazily builds one resident instance per id and syncs the running bit from the list 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > instances > replays buffered approval frames on instantiation and drops ordinary frames for uninstantiated sessions 8ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > instances > retains every live answerable request and compacts resolutions before instantiation 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > instances > drops buffered answerable requests on session removal 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > single-flights refreshList and preserves the Host baseline order 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > replays incremental frames over hydration and never batch-reorders established ids 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > advances list activity only for direct user messages 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > keeps the error in the list snapshot on failure 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > phase steps pending → ready on the first successful pull and never returns 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > merges create into the list immediately without waiting for a refresh 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > retains title projections before list arrival, keeps last-wins by seq, and clears them on removal 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > seeds cold titles from the list rows' projections block under higher-seq-wins 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > list lifecycle > drops a projection row beyond the subscription baseline before accepting its durable replay 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > search > returns bounded Host results and forwards the caller signal 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > search > preserves business errors and folds transport failures 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > host frame routing > adds/removes/flips sessions from host frames and keeps removed instances resident 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > keeps a catalog-discovered child address across ordinary selection and status frames 20ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > refetches debounced membership only while the parent catalog is open 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > marks a loaded parent row expandable only for a direct subagent publication 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > preserves a live expandability hint across only the older in-flight catalog response 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > replays status frames over an older in-flight catalog response 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > marks a detached catalog child inactive without requiring a selected address 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > coalesces overlapping catalog reads without scheduling a trailing pull 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > runs one trailing catalog refresh for a membership change coalesced into an in-flight pull 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > keeps removal invalidation across a stale success and failed trailing pull 53ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > subagent catalogs > invalidates catalog availability when the owning parent is removed 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > refreshList folds a transport throw into the error state 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > refreshList pushes running bits down to already-instantiated sessions 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > create passes cwd and a preallocated id, folds transport throws, and deduplicates the echo 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > publishes a real Ungrouped summary from workspace-attach-failed 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > reconciles a fork child published before workspace attachment fails 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > reconciles a preallocated id after an ordinary transport failure 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > subscribe notifies on list changes and stops after unsubscribe 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > routes stream/error and unknown frames to the documented drops, and dispatches to instantiated sessions 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > keeps list-entry identity for unchanged rows across an unrelated list change 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > remaining branches > carries parentSessionId from host/session-added into the lineage row 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > connected generation > refreshes the list and resyncs only opened instances 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > connected generation > reloads the durable parent address for a restored child selection 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > tracks approval requests through replay and resolution without instantiation 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > classifies ordinary questions and renderable plan reviews, then clears by question rpcId 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > keeps an unrenderable missing detail plan intent on the ordinary question flow 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > keeps an unrenderable multi-select plan intent on the ordinary question flow 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > keeps an unrenderable more than two options plan intent on the ordinary question flow 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > keeps an unrenderable missing approve option plan intent on the ordinary question flow 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > the first question outranks sibling approvals and resolving it reveals the remaining wait 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > drops stale status at generation death before replay re-adds live interactions 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > pending-interaction list status > generation death drops buffered answerable frames (a dead generation cannot be answered) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > arms on a running→idle flip of a non-selected session and clears on select 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > never arms for the session being watched and re-arms after a switch-away re-run 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > a re-run disarms the reminder while running and re-arms on its completion 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > session-removed drops the reminder and a re-add starts clean 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > a list refresh carrying the running→idle transition arms the reminder 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > never arms for sessions already idle at first observation 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > arms a completion that happened during an in-flight first pull (baseline running, replayed idle) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > completed reminder > arms when a session ran and completed entirely between in-flight mutations (baseline idle) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > background-job mirror > mirrors the whole set last-wins, keyed per session, with no Session instance needed 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > background-job mirror > stores an emptied set as an absent key so absence and [] read alike 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > background-job mirror > clears the mirror on re-subscribe, because a task-free generation sends no baseline 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > background-job mirror > drops the rows when the session is removed, whichever stream lands first 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/manager.client.spec.ts > background-job mirror > notifies list subscribers so an open header re-renders without a poll 1ms
+
+ Test Files  1 passed (1)
+      Tests  60 passed (60)
+   Start at  06:29:15
+   Duration  1.18s (transform 673ms, setup 271ms, import 587ms, tests 115ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextProvenance > names a plugin producer by its logged plugin id 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextProvenance > names workspace instructions by the files they reconciled, deduplicated in first-seen order 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextProvenance > marks a cross-session snapshot as recall and names the sessions it read 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextProvenance > identifies a producer this UI version does not know by its own durable kind 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextProvenance > falls back to the source kind when the expected name field is unusable 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextProvenance > degrades to an unnamed injection for a source that carries no readable kind 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextForm > reads the form a producer declared 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > contextForm > degrades to the opaque presentation for anything this version does not present 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/context-provenance.client.spec.ts > sessionRecallLabels > collects distinct labels of a session-reference source and nothing else 0ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  06:29:17
+   Duration  509ms (transform 266ms, setup 295ms, import 19ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > replays changed frames over hydration and adopts the durable order on refresh 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > single-flights refreshes and exposes result and transport failures independently of readiness 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > creates by path, prepends a new row, and folds failures 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > reorders optimistically while newer Host frames outrank unary echoes and failures roll back 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > rolls overlapping rejected reorders back to the last Host-confirmed order 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > replays removal over an in-flight baseline and ignores duplicate or late updates 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceManager > removes from the unary delete echo while a refresh is in flight 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > feeds readiness and recent-Workspace targeting without changing Host order 5ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > connectWorkspace reuses the workspace-member blank session and creates otherwise 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > a rejected first prompt keeps the blank session eligible for connectWorkspace reuse 22ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > returns created Workspaces and preserves Host business errors 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > passes native directory selection and cancellation through without local state 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > passes listings and creation through the browse wire, wrapping business failures 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > opens a filesystem path through the host without local state 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > deletes a Workspace or preserves it when the Host rejects deletion 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > moves a Workspace through the durable order RPC and surfaces Host rejection 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > targets New Session at explicit, current-session, then recent Workspaces and clears with none 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > archives a session, projects the set from the response, list, and frame, and clears only the current one 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > WorkspaceRuntime > clears a current archived by a remote frame and shields the set from a stale in-flight baseline 5ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > startInitialSelection > connects the recent Workspace blank session once baselines are ready and opens it 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > startInitialSelection > stays idle when a session is already current or no recent Workspace exists 8ms
+ ✓ |thread-safe| packages/client/runtime/tests/workspaces-service.client.spec.ts > startInitialSelection > a failed connect returns to waiting and retries on the next list change 12ms
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  06:29:19
+   Duration  1.03s (transform 584ms, setup 241ms, import 499ms, tests 86ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > projects stable ids, flat previews, and complete text 11ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > marks mixed-content messages non-editable while retaining their preview 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > caps previews at 200 code points and preserves the full editable text 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > replaces content, order, and membership from each authoritative frame 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > keeps the queue array reference stable across unrelated snapshot swaps 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > retains steering placement and complete content in the same authoritative snapshot 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > hands off exactly one current occurrence when live steering becomes durable 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue snapshot intake > hands off live steering when the agent claims it as a user message 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue operation transport > addresses the session.updateQueue RPC without optimistic local mutation 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue reconnect semantics > session/subscribed clears stale state before the fresh snapshot lands 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue reconnect semantics > resync does not clear a baseline that raced ahead of the host connection signal 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > queue reconnect semantics > running-status changes never guess at queue retirement 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > manager buffering of queue snapshots > replays only the latest snapshot for an uninstantiated session 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/queue-store.client.spec.ts > manager buffering of queue snapshots > subscribed drops the prior-generation snapshot while preserving answerable frames 0ms
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  06:29:21
+   Duration  1.06s (transform 628ms, setup 251ms, import 562ms, tests 24ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > builds empty blocks per block-start type, unknown type falls to other 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > accumulates text deltas, starting from empty when prev is missing or another kind 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > accumulates reasoning deltas on the reasoning lane 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > continues from a materialized history prefix 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > folds tool-call deltas: first id pins callId, late name overrides, argsRaw concatenates 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > replaces the accumulated block wholesale on block-end 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > returns false (no notification) for usage/finish/unknown variants and keeps blocks 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > compacts sparse indexes into a dense render-order array 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/partial.client.spec.ts > PartialAccumulator > keeps the snapshot reference stable without changes and swaps it once per mutation 1ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  06:29:23
+   Duration  488ms (transform 236ms, setup 258ms, import 23ms, tests 6ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > rejects duplicate Event Definitions and disposes an ordinary registration once 13ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > rejects a duplicate fallback and clears it through its idempotent disposer 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > rejects rendering Definitions that omit either target or builder 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > rejects a State-only Definition as the unmatched-event fallback 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > rejects duplicate view targets and disposes a view registration once 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > removes Event, fallback, and view contributions with their caller fiber 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/conversation-registry.client.spec.ts > Conversation registries > coalesces registry changes into one rebuild of every resident Session 6ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  06:29:25
+   Duration  976ms (transform 572ms, setup 257ms, import 478ms, tests 32ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/scope.client.spec.ts > createScope > tags the ctx (scopeOf) and leaves the root untagged 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/scope.client.spec.ts > createScope > scoped dispatch reaches same-session and untagged listeners, never a foreign session 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/scope.client.spec.ts > createScope > bail answers the first same-scope listener and skips filtered foreign ones 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/scope.client.spec.ts > createScope > a subject-less root dispatch is unfiltered (every listener hears it) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/scope.client.spec.ts > createScope > fiber disposal removes scope-owned listeners 2ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  06:29:27
+   Duration  490ms (transform 244ms, setup 263ms, import 18ms, tests 13ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/subagent-lineage.client.spec.ts > indexSubagentDescendants > counts every nested descendant and its exact running state 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/subagent-lineage.client.spec.ts > indexSubagentDescendants > stops at ordinary forks and fails soft on cycles and missing parents 0ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  06:29:29
+   Duration  918ms (transform 541ms, setup 292ms, import 409ms, tests 4ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > applies update through a draft and preserves untouched branch references 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > notifies synchronously per update by default 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > coalesces a frame of updates into one notification in raf mode 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > falls back to microtask batching in raf mode without requestAnimationFrame 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > unsubscribes raf-mode listeners 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > replaces state wholesale via set and freezes it outside production 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > freezes update produce output outside production (immer dev freeze) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > rehydrates primitive state whole, not spread into index keys 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > createSnapshotStore > persists to localStorage under the given name and rehydrates 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > defineStore > create() yields a live instance: fresh init state, selector-visible action writes 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > defineStore > bakes draft-stripped actions that write through update (draft mutation, not replacement) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > defineStore > creates independent instances per create() call (the handle is a spec, not a singleton) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > defineStore > suffixes the persist key with the scope key: per-session persistence plus clearPersisted cleanup 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > defineStore > clearPersisted is a no-op without a persist declaration or without storage 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > defineStore > swallows storage failures in clearPersisted (same non-fatal contract as persistence) 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/store.client.spec.ts > shallowEqual > matches one-level-equal objects and rejects deeper drift 0ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  06:29:31
+   Duration  511ms (transform 256ms, setup 275ms, import 30ms, tests 10ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > list store projection > projects durable titles separately from cwd/id display fallbacks and parent links 7ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > list store projection > reprojects a blank session whose composition switched and nothing else moved 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > list store projection > reflects live increments (host stream via manager) into the store 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > search > delegates transient content search without changing the list snapshot 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > scope tree > mints lazily on first resolution, tags the ctx, and keeps binding identity stable 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > scope tree > tears down an off-stage removed session but defers the staged one until the stage moves 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > scope tree > keeps the scope when the session merely stops running (frozen ≠ removed) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > scope tree > cancels a deferred teardown when the id reappears in the list 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > current selection (migrated from ui-layout, arbitrated into the list snapshot) > open() writes list.current; unknown ids fail loud 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > current selection (migrated from ui-layout, arbitrated into the list snapshot) > clear() blanks list.current and the persisted selection 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > current selection (migrated from ui-layout, arbitrated into the list snapshot) > masks (not destroys) the selection while its session is off the list 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > current selection (migrated from ui-layout, arbitrated into the list snapshot) > persists the selection under dsh.sessions.current and rehydrates it into a fresh service 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > resolves an identity-stable {sessionId, session} cell through the current projection 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > currentProvideInfo follows selection: absent projection ↔ definite bundle, notified on each move 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > a provider roster change under a stable current id republishes the bundle 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > an unsubscribed currentProvideInfo listener stops receiving notifications 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > binding() is pure resolution: no staging, no deferred sweep 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > staging (current write) opens the session event window; resolution and re-staging do not re-pull 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > cell (render-layer session kit) > startup restore: a persisted selection validated by the first projection opens its window unprompted 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > slot-store scope prune hook > notifies ctx.slots.pruneStoreScope when a scope dies (both teardown paths) 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > slot-store scope prune hook > tolerates a slots-less boot (object-layer benches carry no slot service) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > catalog-addressed navigation > uses catalog labels for a listed addressed route 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > catalog-addressed navigation > projects a directly opened descendant route without retaining ancestor scopes or addresses 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > create > passes a preallocated id and preserves it on ordinary failure 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > create > resolves with the session already listed and binding-resolvable (no flush wait) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > create > lists the published id after Workspace attachment fails (publication precedes attachment) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > increments the durable title "Roadmap" after the child is published 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > increments the durable title "Roadmap (1)" after the child is published 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > increments the durable title "计划（1）" after the child is published 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > increments the durable title "计划 （9）" after the child is published 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > floors a fractional anchor to the real event seq the wire accepts 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > does not rename without the title policy or a durable source title 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > fork > rejects when child rename fails while keeping the published child addressable 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > scope lifecycle rides the list mirror (entity parity: no client-side pre-birth) > a session-added frame births the row (blank) and makes the scope resolvable; removal prunes it 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > blank mirror > flips blank=false from the running:true status frame (cross-client conversion) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > blank mirror > flips blank=false on prompt ACCEPTANCE, not on the attempt 18ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > blank mirror > keeps a rejected first prompt blank: hidden and still reusable 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > blank mirror > takes session-added blank=true as the hidden birth and list blank as reconnect authority 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > blank mirror > never re-blanks: a stale blank=true summary cannot hide an engaged session 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > coverage tails (branch duals) > displayTitleOf falls back to the id for empty and separator-only cwd 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > coverage tails (branch duals) > binding for an unknown session returns undefined and leaves the staged scope intact 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > coverage tails (branch duals) > a masked current gap holds the stage (no teardown, no re-open) until the stage moves 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/sessions-service.client.spec.ts > coverage tails (branch duals) > sweep hits both deferral edges: staged-id skip and an already-vacated scope record 2ms
+
+ Test Files  1 passed (1)
+      Tests  43 passed (43)
+   Start at  06:29:32
+   Duration  1.10s (transform 601ms, setup 280ms, import 489ms, tests 99ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/conversation.client.spec.ts > toAssistantBlock > classifies the four block shapes 2ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  06:29:35
+   Duration  466ms (transform 225ms, setup 250ms, import 15ms, tests 3ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/path.client.spec.ts > abbreviateHomePath > collapses a POSIX home and its descendants 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/path.client.spec.ts > abbreviateHomePath > keeps prefix-adjacent names and non-home paths 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/path.client.spec.ts > abbreviateHomePath > does not abbreviate when home is missing, empty, or the filesystem root 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/path.client.spec.ts > abbreviateHomePath > leaves Windows drive and UNC paths verbatim 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/path.client.spec.ts > resolveWorkspacePath > joins a relative path under cwd and passes absolute paths through 0ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  06:29:36
+   Duration  549ms (transform 281ms, setup 313ms, import 21ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/tool-call-tree.client.spec.ts > ToolCallTree > rejects a self-parenting dispatch edge 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/tool-call-tree.client.spec.ts > ToolCallTree > rejects a settling edge that would close a multi-call cycle 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/tool-call-tree.client.spec.ts > ToolCallTree > accepts an acyclic graph with a shared descendant 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/tool-call-tree.client.spec.ts > ToolCallTree > rejects an edge beyond the recursive depth safety limit 1ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  06:29:38
+   Duration  604ms (transform 322ms, setup 352ms, import 21ms, tests 6ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/client-apply.client.spec.ts > runtime client apply > mounts slots, Sessions, and Workspaces and fans host frames into both managers 20ms
+ ✓ |thread-safe| packages/client/runtime/tests/client-apply.client.spec.ts > runtime client apply > selects the recent Workspace once when the first baselines have no current session 8ms
+ ✓ |thread-safe| packages/client/runtime/tests/client-apply.client.spec.ts > runtime client apply > wires registry changes into resident Sessions during the runtime apply pass 5ms
+ ✓ |thread-safe| packages/client/runtime/tests/client-apply.client.spec.ts > runtime client apply > stops the stream loop when the plugin fiber unloads 4ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  06:29:41
+   Duration  1.89s (transform 1.27s, setup 701ms, import 884ms, tests 39ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/lineage.client.spec.ts > flattenLineage > keeps established root and sibling order while expanding children DFS with depth 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/lineage.client.spec.ts > flattenLineage > degrades an orphan (absent parent) to root level without dropping it 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/lineage.client.spec.ts > flattenLineage > fails soft on a two-node cycle: all entries emitted, warn fired, no hang 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/lineage.client.spec.ts > flattenLineage > handles a self-referencing entry as a cycle member 0ms
+ ✓ |thread-safe| packages/client/runtime/tests/lineage.client.spec.ts > flattenLineage > projects the completion-reminder set into rows (absent = false) 0ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  06:29:44
+   Duration  554ms (transform 263ms, setup 296ms, import 17ms, tests 5ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > built-in 'root' > is declared at construction: spec readable, occupancy open, no plugin needed 17ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > built-in 'root' > rejects a second declaration of root, attributing the built-in row 11ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > load-time validation > throws on contributing into an undeclared slot 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > load-time validation > throws on a duplicate declaration, naming the slot and the prior declarant 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > load-time validation > throws when one store handle is bound to two scopes 5ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > load-time validation > commits nothing when the core rejects the entry (children stay undeclared) 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > activates immediately and ignores ordinary entry mutations 5ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > waits for declaration, cleans up on collapse, and reruns after redeclaration 5ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > observes a same-tick collapse and redeclaration through the declaration epoch 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > plugin disposal removes an active injection and prevents a waiting one from resurrecting 6ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > rolls back earlier yielded registrations when generator setup fails 4ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > contains and wraps a delayed setup failure so later slot listeners still run 27ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > skips a stopped controller retained by the current declaration snapshot 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > keeps a nested redeclaration activation when the outer collapse resumes 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > cancels a waiting injection when its contributor is already unloading 55ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > supports dynamic plugin replacement without retaining the old rendered entry 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > declaration injection > releases service-layer store state when the declaration collapses 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > renderer install seam > throws on renderSlot before install (boot-order guidance) 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > renderer install seam > throws on double install 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > renderer install seam > throws on any non-root key (single ctx-level entry) 1ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > renderer install seam > throws on renderSlot('root') before any root registration 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > renderer install seam > renders through the installed renderer and returns its product 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > renderer install seam > fails before rendering when the Workspace object layer is absent 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > host face > serves entriesOf/specOf/isLive off the ledger and flips isLive on disposal 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > host face > exposes the session list and the atomic current provide projection 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > host face > exposes the independent Workspace list source 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > store instance axis > resolves one instance per (handle x root scope) shared across entries 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > store instance axis > resolves per-session instances keyed by session id, created with the scope key 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > store instance axis > mints a fresh handle per register for the factory (exclusive) form 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > store instance axis > drops instances with the last holding entry and refuses stale resolution 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > store instance axis > pruneStoreScope clears persisted state per dead session, including never-materialized ones 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > entry-unload cascade > kills declared children, their contributions, and the ledger rows with the entry 3ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > entry-unload cascade > cascades through cordis fiber disposal (plugin unload = full cleanup) 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > entry-unload cascade > disposer is idempotent (stale second call is a no-op) 2ms
+ ✓ |thread-safe| packages/client/runtime/tests/slots-service.client.spec.ts > event bridge > re-emits entry writes and child declarations as 'slots/changed' 2ms
+
+ Test Files  1 passed (1)
+      Tests  35 passed (35)
+   Start at  06:29:46
+   Duration  803ms (transform 330ms, setup 301ms, import 86ms, tests 199ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > HTML bootstrap facade > precedes blocking preloads and the boot graph, then becomes the live registration target 5ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > HTML bootstrap facade > rejects a page that did not preload the modules bundle 1ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > HTML bootstrap facade > rejects a bootstrap bundle with a runtime external 1ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > HTML bootstrap facade > rejects a bootstrap bundle without the complete module face 1ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > HTML bootstrap facade > rejects a bootstrap bundle without the complete module face 1ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > HTML bootstrap facade > rejects a bootstrap bundle without the complete module face 1ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > client bundle activation > allows sibling dsh roles 7ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > client bundle activation > groups missing bundles under one source-build instruction with a package/path list 4ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > client bundle activation > does not report other bundle read failures as missing builds 3ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > client bundle activation > serves the source map beside a registered client bundle 6ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > shared module declarations > accepts external requests and carries them onto the graph row 3ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > shared module declarations > omits external when the package declares no requests 3ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > shared module declarations > rejects a non-array external 3ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > places every requested package row before its consumers along a chain 0ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > places a shared package row before both arms of a diamond 0ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > resolves a /client request onto the requested package row 0ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > leaves a request no row answers to the static assembly channel 0ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > rejects a cycle and names the packages on it 0ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > rejects a row requesting its own package name 0ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > composes the served graph in module-graph order 4ms
+ ✓ |thread-safe| packages/client/modules/tests/node-half.client.spec.ts > module graph order > fails activation loud when scanned packages form a module cycle 5ms
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  06:29:48
+   Duration  662ms (transform 286ms, setup 269ms, import 111ms, tests 48ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > Cordis plugin face > rejects activation before the HTML facade creates the module system 10ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > drains registrations queued by parser-blocking preload scripts into the same live facade 4ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > prefetch loads and registers but does not run the factory 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > import materializes once and memoizes the exports 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > import without prefetch loads, registers, and materializes in one call 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > registers declared dynamic requests before materializing their consumer 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > concurrent callers share one in-flight arrival and materialize once 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > lazy CJS arrival > prefetch after registration is a no-op without invalidate 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > require resolution > a factory requiring a registered-but-unmaterialized module materializes it recursively 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > require resolution > require prefers the platform seed word over the module table 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > require resolution > require answers an already-materialized module from the cache 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > require resolution > a require that misses the module table is loud 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > require resolution > a require cycle is fatal 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > bootstrap module > caches the materialized modules exports under the package id and /client alias 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > bootstrap module > publishes the same closed-over system when the modules Cordis plugin activates 1ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > bootstrap module > rejects a second queued registration for the bootstrap id 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > duplicate factory registration is loud 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > a bundle that never registers its id is loud 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > an unknown import specifier is loud 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > an unknown prefetch id is loud 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > a duplicate graph entry is loud at construction 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > a module arrival cycle is loud even if a malformed host graph reaches the browser 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > failure modes > double boot is loud 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > boot manifest wire > normalizes absent shared-module fields and carries the declared ones 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > boot manifest wire > rejects a non-array external 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > HMR reset > invalidate drops the factory and record so the module reloads and re-registers 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > style claiming > claims untagged style tags for the materializing plugin and inventories owned css ids 9ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > style claiming > materialization without a document skips the style inventory 0ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > default transport seam > loads through an external classic script and removes the settled node 3ms
+ ✓ |thread-safe| packages/client/modules/tests/loader.client.spec.ts > default transport seam > a script load failure is loud and removes the node 1ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  06:29:49
+   Duration  1.35s (transform 297ms, setup 323ms, import 29ms, tests 38ms, environment 773ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > maps an inspected session without a cwd to session-not-found 19ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > resumes through a concurrently attached ordinary Session without optional defaults 7ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > rejects a subagent Session published after durable inspection 5ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > reclassifies failed resumes after a live or attached subagent wins publication 8ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > uses the shared cold-resume policy for the Agent Host Context 58ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > applies the subagent ownership fence to the Agent Host Context 56ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  06:29:52
+   Duration  888ms (transform 422ms, setup 243ms, import 294ms, tests 154ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > RpcId > brands a raw string at zero runtime cost 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > transportError > folds Error and non-Error throws into the internal error branch 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcErrorSchema > accepts every code branch with its required details 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcErrorSchema > rejects a known code with missing details 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcResultSchema > accepts both result branches and rejects hybrids 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > wire full-form schemas > parses the four quadrants and the union discriminates on type 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > wire full-form schemas > rejects a quadrant missing its members but accepts a valueless success result 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcReceiptSchema > accepts both receipt branches with the closed reason set 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > sessions domain schemas > validates ids, summaries, and the event passthrough envelope 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > sessions domain schemas > validates the per-method request/value pairs 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > subagent domain schemas > carries optional request-local browser-zone provenance on prompts 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > host domain schemas > validates describe request/value 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > host domain schemas > validates the browse listing/creation payloads 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > validates ids, the view row, and list request/value 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > archiveSession request/value carry the id and the full updated set 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > insertSessionBefore accepts an anchored and an anchorless move 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > create requires a path 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > rename requires a non-blank title (both refine arms) 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > validates workspace deletion payload and receipt 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > insertBefore accepts an anchored or anchorless Workspace move and returns the complete order 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > skills domain schemas > validates the list request/value pair 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > goals domain schemas > requires at least one replacement field for goal.edit 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > accepts every mux frame branch 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > rejects an empty question batch (ask() guarantees at least one, so an empty frame is host breakage) 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > carries a question presentation intent through, and rejects an unknown one 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > accepts every queue placement and rejects unknown placements 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > rejects a queue snapshot with malformed items 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > accepts every host frame branch 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > respond payload schemas > validates approval and question answer payloads 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > agent-preset schemas > accepts a roster row and rejects an unknown trust 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > agent-preset schemas > accepts an empty roster 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > agent-preset schemas > answers the open-document union by its discriminant 0ms
+
+ Test Files  1 passed (1)
+      Tests  32 passed (32)
+   Start at  06:29:54
+   Duration  724ms (transform 338ms, setup 265ms, import 221ms, tests 36ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > returns a selected path or explicit cancellation from the native capability 21ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > propagates abort into the native capability as a cancelled RPC error 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > folds a non-abort native-chooser failure into an internal error 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > refuses the native RPC under a browse composition 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > serves listings and creation through the browse capability, defaulting to home 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > maps typed picker failures onto the wire error codes and folds unknown throws to internal 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > reports an aborted listing as cancelled, like the other signal-following RPCs 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > refuses the browse RPCs under a native composition 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.openPath > describes whether this deployment can reach a user-visible native desktop 9ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.openPath > opens through the injected native boundary 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.openPath > propagates abort into the native boundary as a cancelled RPC error 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > serializes concurrent creates of one path into a single registration 10ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > adopts only existing directories 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > adopts different paths that derive the same Workspace title 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.insertBefore > commits the complete order, streams one order frame, and maps unknown ids 10ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > session creation and Workspace membership > attaches a preallocated idempotent session while cwd-only sessions stay ungrouped 11ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > session creation and Workspace membership > retains a published session when attachment fails and repairs it on retry 10ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > projects subagent origin in attached summaries and creation increments 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > streams committed Workspace and Session increments after empty baselines 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > does not publish a Workspace whose registry-order commit fails 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > deletes the registration, keeps its session and folder, and streams one removal 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > archives a session into the global set, keeps its accounting, and streams the set once 8ms
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  06:29:55
+   Duration  1.88s (transform 1.24s, setup 236ms, import 1.31s, tests 149ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > cuts at the anchored completed turn and records lineage and cwd 21ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > attaches a subagent fork to its nearest workspace-owning ancestor 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > forks a persisted subagent without resuming its Agent 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > uses the last completed turn only for omitted and past-end anchors 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > cuts through an aborted turn: stopped is closed, not open 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > rejects an in-log anchor whose turn is still open 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > installs the latest logged model selection before the child can run 6ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  06:29:58
+   Duration  1.83s (transform 1.24s, setup 272ms, import 1.27s, tests 54ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > reports an actionable error when no settings provider is mounted 14ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > describes layered redacted namespaces with their secret slots 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > opens the provider-resolved document without accepting a browser path 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > refuses to open settings when the provider has no local document 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > does not prepare or open a settings document after cancellation 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves every registered namespace, including one this repository never named 9ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves product preference namespaces without invalidating the model catalog 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves the agent-preset namespace, so a browser preset picker can persist its choice 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > keeps serving a provider namespace whose directory entry is gone 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > forwards a provider settings change for model-catalog consumers 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > broadcasts a permission change without invalidating the model catalog 9ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > forwards an Agent-default settings change for model-catalog consumers 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > maps a stale expectedRevision to settings-conflict carrying both revisions 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > updates the user layer, answers with the new redacted view, and broadcasts the frame 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > replace resets the user layer wholesale 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > rejects an invalid namespace name as settings-rejected 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > rejects a schema-invalid patch as settings-rejected 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > answers an unregistered namespace as the seam does, and a malformed one alike 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > maps a read-only provider refusal onto the same rejection 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > reports an actionable error when no credential provider is mounted 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > describes value-free views and flips state through set/unset with frames 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > maps a shadowed write onto credential-rejected for set and unset alike 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > merges the configurable directory with live routes and appends undeclared ones 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > serves the host-scoped catalog with per-provider failures contained 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > forwards llm/adapters-updated at every topology commit point 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > carries a draft to its namespace and returns candidates without storing anything 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > carries the route being edited so an adapter can answer from its own registry 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > omits a credential and protocol the draft does not name 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > reports a failed interrogation as the form's next move, naming no credential 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > reports a namespace no adapter family serves 4ms
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  06:30:01
+   Duration  1.94s (transform 1.26s, setup 275ms, import 1.29s, tests 159ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > accepts through the composed title service: normalized user-source event, echoed seq 22ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > maps only an empty-normalizing title to title-invalid, with a presentable message 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > maps a non-validation rename failure (stale session object) to internal, not title-invalid 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > answers internal when the composition mounts no session-title service 3ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  06:30:04
+   Duration  1.75s (transform 1.21s, setup 259ms, import 1.25s, tests 38ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session export compression config > defaults to level 6 and rejects values outside the integer 0-9 range 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > cold blank probe config > accepts a per-Session byte bound including zero and rejects invalid bounds 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > streams a ZIP with the root artifact verbatim under its original filename 52ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > preflights root preparation through HEAD without streaming a body 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > returns a bodyless preparation error from HEAD 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > uses the resolved compression level for ZIP entries 318ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes descendant artifacts under subagents/<id>/ when requested 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > flushes each live root and descendant immediately before reading its artifact 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > reads a cold artifact without asking the live-session store to flush 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 404 for a missing root session 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 501 when the persistence backend has no per-session raw artifacts 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 400 when the sessionId query parameter is absent 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 400 for an includeDescendants value other than true or false 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 500 when the deployment mounts no persistence or session-query service 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > fails the whole export when a descendant has no stored artifact 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > keeps an astral character whole when its surrogate pair straddles a push boundary 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > splits a long artifact on a plain code-unit boundary without backoff 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > waits for response pull capacity before reading the next archive entry 69ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > exports an empty artifact as an empty zip entry 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > exports a shared lineage node once (seen-set dedup) 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 500 without leaking the backend error when the root artifact read fails 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers the private-error-safe 500 when the live root flush fails 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > forwards one request signal through root, lineage, and descendant reads 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > preserves request cancellation instead of translating it to HTTP 500 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > aborts descendant work and terminates ZIP production when its reader cancels 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > aborts attachment reads when its reader cancels 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > uses a stable Error reason when its reader cancels without one 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > normalizes a non-Error descendant failure before erroring the stream 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes media objects referenced by the root log under media/<id>.<ext> 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > collects media referenced from nested tool results 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > scans the wrapped, inserted, and chunk carriers plus non-object content items 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > deduplicates one media object referenced by several included logs 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes descendant media only when descendants are requested 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > fails the whole export when a referenced image cannot be read 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 500 when the deployment mounts no attachments service 2ms
+
+ Test Files  1 passed (1)
+      Tests  35 passed (35)
+   Start at  06:30:07
+   Duration  2.32s (transform 1.29s, setup 249ms, import 1.36s, tests 522ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > attaches the three standard card views, omits view without a presenter, soft-falls on throw 23ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > serves history entries with call/result views, backscan pairing, and soft-falls 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > counts only append-origin messages toward maxMessages and keeps each compaction summary with its replacement 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > paginates a message with many provenance sources without variadic argument expansion 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > drops a disposed session from the live open-call table (result after dispose gets no view) 5ms
+ ✓ |thread-safe| pack
