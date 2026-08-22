@@ -1,0 +1,15 @@
+packages/execution/local-isolation/src/index.ts
+packages/execution/local-isolation/src/types.ts
+packages/execution/local-isolation/src/linux.ts
+packages/execution/local-isolation/src/macos.ts
+packages/execution/local-isolation/src/windows.ts
+packages/execution/local-isolation/tests/process-isolation.spec.ts
+packages/execution/local-isolation/package.json
+packages/execution/local-isolation/tsconfig.json
+packages/execution/local-isolation/README.md
+docs/architecture/2026-08-22-p3-05-process-isolation.md
+.agent-notes/2026-08-22-p3-05-process-isolation.md
+artifacts/evidence/P3-05/summary.json
+artifacts/evidence/P3-05/changed-files.txt
+artifacts/evidence/P3-05/test-results.json
+artifacts/evidence/P3-05/remaining-risks.md
