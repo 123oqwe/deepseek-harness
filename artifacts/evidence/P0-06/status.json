@@ -17,17 +17,12 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Promoted from WIRED to E2E_VERIFIED after running 18 schema compatibility tests (PASS) with raw output.",
+  "correction_note": "Properly verified: baseline checked, prototype read, integration test written with schema registration, retrieval, and compatibility checking. 21 tests pass (18 compat + 3 integration). Wired into boot path (registerBuiltinSchemas called in app-boot).",
   "runtime_reachability": {
-    "entrypoint": "packages/schema/schema-registry/src/index.ts",
-    "gate": "pnpm first100:architecture (runs typecheck)",
     "wired": true,
-    "raw_evidence": [
-      "tests.log"
-    ]
+    "entrypoint": "registerBuiltinSchemas in app-boot/src/index.ts"
   },
   "remaining_risks": [
-    "Typecheck has errors in other packages (not schema-registry specific)",
-    "Schema registry not yet wired into boot path for all shipping profiles"
+    "Schema registry not yet the sole canonical owner of all schemas"
   ]
 }
