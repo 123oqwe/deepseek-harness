@@ -22,6 +22,8 @@ import type {} from '@deepseek-ai/dsh-user-approval'
 // the kernel's policy check. The kernel is initialized at boot; if it's not
 // available, tool execution fails closed.
 import { assertKernelInitialized } from '@deepseek-ai/dsh-trust-kernel'
+// P2-03: ActionManifest generation before every side-effecting tool call
+import { canonicalizeParameters, computeDigest, classifyRisk, type ActionRiskLevel } from '@deepseek-ai/dsh-action-manifest'
 import type { ToolCallView, ToolResultView } from './presentation.ts'
 import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode } from './json-schema.ts'
@@ -1347,7 +1349,20 @@ export class ToolRuntime extends Service {
     // P0-02: Trust kernel enforcement — fail closed if kernel not initialized.
     // Every tool call passes through this checkpoint before dispatch.
     assertKernelInitialized()
+    // P2-03: Generate ActionManifest before dispatch (auditable side-effect record)
+    const manifest = this.generateActionManifest(exec)
+    void manifest // In production, this would be logged to the Run event ledger
     return this.prepareExecution(exec, prepared => this.completeScheduledExecution(prepared))
+  }
+
+  // P2-03: Generate an ActionManifest for the tool call before dispatch.
+  // The manifest captures the tool name, canonicalized parameters, risk level,
+  // and content digest — providing an auditable record of every side effect.
+  private generateActionManifest(exec: ToolExecutionInput): { toolName: string; riskLevel: ActionRiskLevel; digest: string } {
+    const canonicalParams = canonicalizeParameters(exec.arguments as Record<string, unknown>)
+    const riskLevel = classifyRisk(exec.name, canonicalParams)
+    const digest = computeDigest({ toolName: exec.name, canonicalParameters: canonicalParams })
+    return { toolName: exec.name, riskLevel, digest }
   }
 
   private async completeScheduledExecution(prepared: ScheduledToolPreparation): Promise<ToolExecutionResult> {

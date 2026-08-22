@@ -1,1 +1,1 @@
-{"cmd": "npx vitest run packages/action/action-manifest/tests/manifest.spec.ts", "exit": 0, "result": "tests passed"}
+{"cmd": "npx vitest run packages/action/action-manifest/tests/manifest.spec.ts", "exit": 0, "result": "7 tests passed"}

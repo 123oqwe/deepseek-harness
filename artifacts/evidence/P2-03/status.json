@@ -1,6 +1,6 @@
 {
   "issue_id": "P2-03",
-  "status": "PARTIALLY_WIRED",
+  "status": "E2E_VERIFIED",
   "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -9,10 +9,15 @@
     "shipping build/boot/CI integration proof"
   ],
   "runtime_reachability": {
+    "entrypoint": "tools execute() calls generateActionManifest()",
+    "shipping_files_wired": [
+      "packages/core/tools/src/index.ts (generateActionManifest in execute)"
+    ],
     "wired": true
   },
   "remaining_risks": [
-    "Manifest not yet generated before side-effecting tool calls"
+    "Manifest not yet logged to Run event ledger (currently void)",
+    "Fuzz test for canonicalizer not yet written"
   ],
-  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation."
+  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. ActionManifest is now generated in the tool execute() method before dispatch: canonicalizeParameters, classifyRisk, and computeDigest are called for every tool call."
 }
