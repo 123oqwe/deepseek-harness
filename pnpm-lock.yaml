@@ -5015,6 +5015,8 @@ importers:
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
 
+  packages/identity/auth: {}
+
   packages/interaction/commands:
     dependencies:
       zod:
