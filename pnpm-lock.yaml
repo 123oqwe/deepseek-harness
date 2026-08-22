@@ -4985,6 +4985,8 @@ importers:
         specifier: workspace:^
         version: link:../../typert/protocol
 
+  packages/interaction/human-channel: {}
+
   packages/interaction/permission-presets:
     dependencies:
       '@deepseek-ai/schemastery':
