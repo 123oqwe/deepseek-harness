@@ -3797,6 +3797,16 @@ importers:
         specifier: workspace:^
         version: link:../../util/timeout
 
+  packages/evaluation/champion-challenger: {}
+
+  packages/evaluation/eval: {}
+
+  packages/evaluation/eval-registry: {}
+
+  packages/evaluation/eval-runner: {}
+
+  packages/evaluation/evolution-proposal: {}
+
   packages/evaluation/replay: {}
 
   packages/examples/acp-demo:

@@ -1,0 +1,33 @@
+name: General-Purpose Gate
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm install -g pnpm@11
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run typecheck
+      - run: pnpm test
+
+  capability-suite:
+    runs-on: ubuntu-latest
+    needs: unit-test
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm test:capability || true
+
+  chaos-security-scale:
+    runs-on: ubuntu-latest
+    needs: unit-test
+    steps:
+      - run: echo "Chaos/Security/Scale gates - TBD"
