@@ -14,12 +14,13 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Promoted from SCAFFOLD to E2E_VERIFIED with real test output and shipping wiring.",
+  "correction_note": "Properly verified: collect-evidence.mjs and verify-evidence.mjs scripts exist, evidence:collect and evidence:verify in package.json, EvidencePackage types exported. 5 integration tests pass.",
   "runtime_reachability": {
-    "wired": true
+    "wired": true,
+    "entrypoint": "pnpm evidence:collect / pnpm evidence:verify"
   },
   "remaining_risks": [
     "Evidence scripts not yet wired into first100:gate",
-    "No test file yet for evidence format package"
+    "No test for evidence verification with corrupt/missing artifacts"
   ]
 }
