@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 export class EvalRunner {
   async run(
     candidateId: string,
-    config: EvalConfig,
+    _config: EvalConfig,
     metricsFn: () => Promise<EvalMetrics>,
   ): Promise<EvalResult> {
     const metrics = await metricsFn()
