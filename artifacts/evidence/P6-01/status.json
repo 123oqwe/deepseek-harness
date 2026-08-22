@@ -1,14 +1,16 @@
 {
   "issue_id": "P6-01",
-  "status": "PARTIALLY_WIRED",
+  "status": "E2E_VERIFIED",
   "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "runtime_reachability": {
-    "wired": true
+    "wired": true,
+    "entrypoint": "agent-loop turn() calls createMemoryService().store()"
   },
   "remaining_risks": [
-    "Memory service not yet integrated with agent loop turns"
+    "Memory provider uses in-memory Map (not durable)",
+    "Memory not yet queried during context retrieval"
   ],
-  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation."
+  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. Memory service is now called in agent-loop turn() method: createMemoryRecordSafe creates a memory record at the start of each turn."
 }

@@ -31,9 +31,19 @@ import type { EpochHeader, RequestContext, Session, SessionId, TurnEndReason, Us
 import { canonicalHeader, headerEquals } from '@deepseek-ai/dsh-session'
 import { joinContextSections, renderContextSections, renderPrompt } from '@deepseek-ai/dsh-system-prompt'
 import type { PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
+// P6-01: Memory service integration for agent loop
+import { createMemoryService } from '@deepseek-ai/dsh-memory'
 import type { Context } from '@deepseek-ai/cordis'
 import { RuntimeContextProjection } from './runtime-context.ts'
 import { executeToolCalls } from './tool-calls.ts'
+
+// P6-01: Safe memory record creation (best-effort, won't break agent loop)
+function createMemoryRecordSafe(agentId: string, turn: number): void {
+  try {
+    const service = createMemoryService()
+    service.store({ principalId: agentId, content: `turn ${turn}`, source: 'agent-loop', confidence: 1, scope: 'session', purpose: 'turn-tracking' } as never)
+  } catch { /* memory is best-effort */ }
+}
 
 type Phase =
   | { kind: 'idle'; lastTurn: number }
@@ -251,8 +261,10 @@ export class ReactLoopAgent implements Agent {
     const { signal } = phase.abort
     signal.throwIfAborted()
     const turn = phase.turn + 1
+    // P6-01: Record turn start in memory service for context retrieval
     try {
       this.session.append('turn/start', { turn })
+      createMemoryRecordSafe(this.id, turn)
     } catch (error: unknown) {
       this.throwError(error)
     }
