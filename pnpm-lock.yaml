@@ -817,7 +817,17 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-approval
 
+  packages/action/action-ledger: {}
+
   packages/action/action-manifest: {}
+
+  packages/action/compensation:
+    dependencies:
+      '@deepseek-ai/dsh-reconciliation':
+        specifier: workspace:^
+        version: link:../reconciliation
+
+  packages/action/reconciliation: {}
 
   packages/api/gateway:
     dependencies:
@@ -905,7 +915,33 @@ importers:
         specifier: workspace:^
         version: link:../../typert/registry
 
+  packages/artifact/artifact: {}
+
+  packages/artifact/artifact-local:
+    dependencies:
+      '@deepseek-ai/dsh-artifact':
+        specifier: workspace:^
+        version: link:../artifact
+
+  packages/assurance/acceptance-gate:
+    dependencies:
+      '@deepseek-ai/dsh-outcomepackage':
+        specifier: workspace:^
+        version: link:../outcome-package
+
+  packages/assurance/claim-graph: {}
+
+  packages/assurance/evidence: {}
+
   packages/assurance/evidence-format: {}
+
+  packages/assurance/outcome-package: {}
+
+  packages/assurance/repair: {}
+
+  packages/assurance/verification-contract: {}
+
+  packages/assurance/verifier: {}
 
   packages/attachment/attachment:
     devDependencies:
@@ -940,6 +976,10 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+
+  packages/attachment/attachment-security: {}
+
+  packages/audit/audit-ledger: {}
 
   packages/boot/app-boot:
     dependencies:
@@ -1055,6 +1095,9 @@ importers:
       '@deepseek-ai/dsh-credentials-local':
         specifier: workspace:^
         version: link:../../credentials/credentials-local
+      '@deepseek-ai/dsh-feature-gates':
+        specifier: workspace:^
+        version: link:../../migration/feature-gates
       '@deepseek-ai/dsh-fs-local':
         specifier: workspace:^
         version: link:../../fs/fs-local
@@ -3283,6 +3326,10 @@ importers:
         specifier: workspace:^
         version: link:../../util/timeout
 
+  packages/collaboration/coordination-guard: {}
+
+  packages/collaboration/taskboard: {}
+
   packages/compaction/command-compact:
     devDependencies:
       '@deepseek-ai/cordis':
@@ -3465,6 +3512,19 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../../workspace/workspace-trust
+
+  packages/context/context-graph: {}
+
+  packages/context/context-telemetry:
+    dependencies:
+      '@deepseek-ai/dsh-contexttopology':
+        specifier: workspace:^
+        version: link:../context-topology
+
+  packages/context/context-topology: {}
 
   packages/context/file-reference:
     dependencies:
@@ -3509,6 +3569,8 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
+
+  packages/context/retrieval-planner: {}
 
   packages/context/session-reference:
     dependencies:
@@ -3745,6 +3807,10 @@ importers:
         version: link:../../runtime-diagnostics/invariants
 
   packages/core/session:
+    dependencies:
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -3792,6 +3858,12 @@ importers:
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../action/action-manifest
+      '@deepseek-ai/dsh-risk-taxonomy':
+        specifier: workspace:^
+        version: link:../../policy/risk-taxonomy
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../kernel/trust-kernel
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -3882,6 +3954,10 @@ importers:
         specifier: workspace:^
         version: link:../../util/launch-environment
 
+  packages/credentials/secrets-broker: {}
+
+  packages/data/data-residency: {}
+
   packages/e2b/e2b:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -3940,6 +4016,20 @@ importers:
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
+
+  packages/evaluation/champion-challenger: {}
+
+  packages/evaluation/eval: {}
+
+  packages/evaluation/eval-registry: {}
+
+  packages/evaluation/eval-runner: {}
+
+  packages/evaluation/evolution-proposal: {}
+
+  packages/evaluation/replay: {}
+
+  packages/evaluation/router-regret: {}
 
   packages/examples/acp-demo:
     dependencies:
@@ -4118,6 +4208,20 @@ importers:
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
 
+  packages/execution/egress-proxy: {}
+
+  packages/execution/execution-world: {}
+
+  packages/execution/execution-world-container: {}
+
+  packages/execution/execution-world-remote: {}
+
+  packages/execution/local-isolation: {}
+
+  packages/execution/resource-budget: {}
+
+  packages/execution/world-snapshot: {}
+
   packages/experimental/agent-team:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -4260,6 +4364,9 @@ importers:
       '@deepseek-ai/dsh-plugin-compat':
         specifier: workspace:^
         version: link:../../plugin/plugin-compat
+      '@deepseek-ai/dsh-plugin-manifest':
+        specifier: workspace:^
+        version: link:../../plugin/plugin-manifest
       '@deepseek-ai/dsh-plugin-ownership':
         specifier: workspace:^
         version: link:../../plugin/plugin-ownership
@@ -4303,6 +4410,8 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
+
+  packages/extensions/extension-proposal: {}
 
   packages/extensions/tool-cordis:
     devDependencies:
@@ -5253,11 +5362,17 @@ importers:
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
 
+  packages/identity/auth: {}
+
   packages/identity/principal:
     devDependencies:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+
+  packages/interaction/approval-quorum: {}
+
+  packages/interaction/approval-store: {}
 
   packages/interaction/commands:
     dependencies:
@@ -5292,6 +5407,8 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
+
+  packages/interaction/human-channel: {}
 
   packages/interaction/permission-presets:
     dependencies:
@@ -5667,6 +5784,8 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/llm/prompt-compiler: {}
+
   packages/llm/token-meter:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -5844,7 +5963,15 @@ importers:
 
   packages/memory/memory: {}
 
+  packages/memory/memory-policy: {}
+
   packages/migration/feature-gates: {}
+
+  packages/observability/causal-trace: {}
+
+  packages/observability/otel-exporter: {}
+
+  packages/observability/telemetry-outbox: {}
 
   packages/plan/plan-mode:
     dependencies:
@@ -5889,19 +6016,39 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-questions
 
+  packages/plugin/plugin-certification: {}
+
   packages/plugin/plugin-compat: {}
 
+  packages/plugin/plugin-host: {}
+
+  packages/plugin/plugin-host-protocol: {}
+
+  packages/plugin/plugin-installer: {}
+
+  packages/plugin/plugin-lock: {}
+
   packages/plugin/plugin-manifest: {}
+
+  packages/plugin/plugin-migrations: {}
 
   packages/plugin/plugin-ownership: {}
 
   packages/plugin/plugin-provenance: {}
+
+  packages/plugin/plugin-scanner: {}
 
   packages/policy/capability-token:
     devDependencies:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+
+  packages/policy/grant-store: {}
+
+  packages/policy/policy-language: {}
+
+  packages/policy/risk-taxonomy: {}
 
   packages/preset/agent-presets:
     dependencies:
@@ -5977,7 +6124,27 @@ importers:
         specifier: workspace:^
         version: link:../../core/system-prompt
 
+  packages/reliability/retry: {}
+
+  packages/router/model-router: {}
+
+  packages/router/provider-resilience: {}
+
+  packages/router/strategy-router: {}
+
+  packages/run/message-bus: {}
+
   packages/run/run: {}
+
+  packages/run/run-plan: {}
+
+  packages/run/scheduler: {}
+
+  packages/run/task-profile: {}
+
+  packages/run/trigger-service: {}
+
+  packages/run/turn-checkpoint: {}
 
   packages/runtime-diagnostics/invariants:
     dependencies:
@@ -6137,6 +6304,8 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
+
+  packages/sdk/parity: {}
 
   packages/sdk/protocol:
     devDependencies:
@@ -7357,6 +7526,8 @@ importers:
         specifier: workspace:^
         version: link:../storage
 
+  packages/storage/storage-encryption: {}
+
   packages/storage/storage-json:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -7389,11 +7560,14 @@ importers:
         specifier: workspace:^
         version: link:../storage
 
+  packages/subagent/adapter-acp: {}
+
+  packages/subagent/adapter-claude-code: {}
+
+  packages/subagent/adapter-codex: {}
+
   packages/subagent/subagent:
     dependencies:
-      '@deepseek-ai/dsh-capability-token':
-        specifier: workspace:^
-        version: link:../../policy/capability-token
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -8673,6 +8847,10 @@ importers:
         specifier: workspace:^
         version: link:../../core/session
 
+  packages/workflow/workflow-journal: {}
+
+  packages/workflow/workflow-registry: {}
+
   packages/workflow/workflow-worker-thread:
     dependencies:
       '@deepseek-ai/schemastery':
@@ -8754,6 +8932,8 @@ importers:
         version: link:../../storage/storage-domain
 
   packages/workspace/workspace-trust: {}
+
+  packages/workspace/worktree-provider: {}
 
   python/sdk-runtime:
     dependencies:
