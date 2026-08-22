@@ -8,12 +8,12 @@ export interface ArtifactRecord {
   readonly createdAt: number
   readonly tags: readonly string[]
   readonly version: number
-  readonly parentArtifactId?: string
+  readonly parentArtifactId?: string | undefined
 }
 
 export interface ArtifactLineageNode {
   readonly artifactId: string
-  readonly parentId?: string
+  readonly parentId?: string | undefined
   readonly children: readonly string[]
 }
 

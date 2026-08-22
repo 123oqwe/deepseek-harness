@@ -1,1 +1,1 @@
-export { ArtifactStore } from '../artifact/src/index.ts'
+export { ArtifactStore } from '@deepseek-ai/dsh-artifact'

@@ -886,6 +886,14 @@ importers:
         specifier: workspace:^
         version: link:../../typert/registry
 
+  packages/artifact/artifact: {}
+
+  packages/artifact/artifact-local:
+    dependencies:
+      '@deepseek-ai/dsh-artifact':
+        specifier: workspace:^
+        version: link:../artifact
+
   packages/attachment/attachment:
     devDependencies:
       '@deepseek-ai/cordis':
@@ -5624,7 +5632,11 @@ importers:
         specifier: workspace:^
         version: link:../../core/system-prompt
 
-  packages/run/run-plan: {}
+  packages/privacy/data-classification: {}
+
+  packages/privacy/data-lineage: {}
+
+  packages/privacy/redaction: {}
 
   packages/runtime-diagnostics/invariants:
     dependencies:
