@@ -1,0 +1,3 @@
+{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T19:08:39.261Z"}
+{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T19:08:39.261Z"}
+{"command":"npx vitest run packages/credentials/secrets-broker/tests/secret-leak.spec.ts --reporter=verbose","label":"test:packages/credentials/secrets-broker/tests/secret-leak.spec.ts","exit_code":0,"timestamp":"2026-08-22T19:08:39.261Z"}

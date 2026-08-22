@@ -1,0 +1,8 @@
+{
+  "packages/plugin/plugin-migrations/package.json": "315a6c48c5f8d4bb7b970f3b897e33ec7b02d9485d58ca6b3bb91aa9a1814d8e",
+  "packages/plugin/plugin-migrations/src/index.ts": "af65bd6a33e1b1ef2111a8e10cd28bc526764fd89a682be5dbd03c37463be7c5",
+  "packages/plugin/plugin-migrations/src/transaction.ts": "9f3f68983e3f0f04db45ddbc1db57ec713f8a2e590f9bcd29ca29be4a60b5270",
+  "packages/plugin/plugin-migrations/src/types.ts": "598d337985ce34ed2cb7030f0516341a223d9cb5c875b25d48afa7c3540c2185",
+  "packages/plugin/plugin-migrations/tests/rollback.spec.ts": "b35fc1dea52a421494139f34a504f813115347cebabb8c5b8709b96bcf95c985",
+  "packages/plugin/plugin-migrations/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

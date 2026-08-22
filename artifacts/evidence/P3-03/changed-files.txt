@@ -1,0 +1,9 @@
+packages/execution/execution-world/package.json
+packages/execution/execution-world/src/errors.ts
+packages/execution/execution-world/src/index.ts
+packages/execution/execution-world/src/lifecycle.ts
+packages/execution/execution-world/src/outcome.ts
+packages/execution/execution-world/src/types.ts
+packages/execution/execution-world/tests/denial.spec.ts
+packages/execution/execution-world/tests/world.spec.ts
+packages/execution/execution-world/tsconfig.json

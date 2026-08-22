@@ -1,0 +1,16 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > creates quarantine entry with scripts blocked 2ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects on failed signature 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects on path traversal 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > verifies with all checks passing 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > installs verified entry 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects install of non-verified 1ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > transaction commit requires all verified 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > transaction abort rolls back 0ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  03:02:43
+   Duration  438ms (transform 207ms, setup 228ms, import 21ms, tests 5ms, environment 0ms)

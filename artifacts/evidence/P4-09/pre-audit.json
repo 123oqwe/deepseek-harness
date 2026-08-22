@@ -1,0 +1,28 @@
+{
+  "issue_id": "P4-09",
+  "audit_date": "2026-08-22T19:13:13.700Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/workflow/workflow-registry"
+  ],
+  "source_files": [
+    "packages/workflow/workflow-registry/src/index.ts",
+    "packages/workflow/workflow-registry/src/types.ts",
+    "packages/workflow/workflow-registry/src/version.ts"
+  ],
+  "test_files": [
+    "packages/workflow/workflow-registry/tests/nested.spec.ts"
+  ],
+  "changed_files": [
+    "packages/workflow/workflow-registry/package.json",
+    "packages/workflow/workflow-registry/src/index.ts",
+    "packages/workflow/workflow-registry/src/types.ts",
+    "packages/workflow/workflow-registry/src/version.ts",
+    "packages/workflow/workflow-registry/tests/nested.spec.ts",
+    "packages/workflow/workflow-registry/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

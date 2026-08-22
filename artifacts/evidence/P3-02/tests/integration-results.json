@@ -1,0 +1,9 @@
+{
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "test_files": [
+    "packages/sandbox/sandbox-policy/tests/invariant.spec.ts",
+    "packages/sandbox/sandbox-policy/tests/policy.spec.ts"
+  ]
+}

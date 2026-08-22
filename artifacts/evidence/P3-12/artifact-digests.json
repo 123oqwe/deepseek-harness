@@ -1,0 +1,7 @@
+{
+  "packages/attachment/attachment-security/package.json": "db8d15d6842c2990407401f94966520cb128eb7f693f8bab6f6b23a4097c4d87",
+  "packages/attachment/attachment-security/src/index.ts": "e664f91c3642de04b328925b6ad133924b2d3d11567603ad4a197c653fbe8c60",
+  "packages/attachment/attachment-security/src/scanner.ts": "8a641835832dbdecc0d99b97ad657bc6a1b8141ba40c7439e776d8ab769044a3",
+  "packages/attachment/attachment-security/tests/malicious.spec.ts": "16c6ca8fb7709bb113945c4d1b47186018582ed39b5421137f54aaf44af21cff",
+  "packages/attachment/attachment-security/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

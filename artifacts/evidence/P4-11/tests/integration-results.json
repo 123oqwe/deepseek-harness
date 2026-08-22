@@ -1,0 +1,8 @@
+{
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "test_files": [
+    "packages/reliability/retry/tests/retry.spec.ts"
+  ]
+}

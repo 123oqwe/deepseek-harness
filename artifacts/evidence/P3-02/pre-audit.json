@@ -1,0 +1,24 @@
+{
+  "issue_id": "P3-02",
+  "audit_date": "2026-08-22T19:06:22.470Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/sandbox/sandbox-policy"
+  ],
+  "source_files": [
+    "packages/sandbox/sandbox-policy/src/index.d.ts",
+    "packages/sandbox/sandbox-policy/src/index.ts",
+    "packages/sandbox/sandbox-policy/src/invariant.ts",
+    "packages/sandbox/sandbox-policy/src/session-mode.d.ts",
+    "packages/sandbox/sandbox-policy/src/session-mode.ts"
+  ],
+  "test_files": [
+    "packages/sandbox/sandbox-policy/tests/invariant.spec.ts",
+    "packages/sandbox/sandbox-policy/tests/policy.spec.ts"
+  ],
+  "changed_files": [],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

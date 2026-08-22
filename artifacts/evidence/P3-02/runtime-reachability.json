@@ -1,0 +1,9 @@
+{
+  "issue_id": "P3-02",
+  "entrypoint": "packages/sandbox/sandbox-policy/src/index.ts",
+  "wired": true,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T19:06:22.470Z"
+}

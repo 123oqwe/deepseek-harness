@@ -1,0 +1,29 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies 429 as rate-limited and retryable 2ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies 403 as policy-denied and not retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies 400 as invalid-input and not retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies 404 as permanent and not retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies 500 as server-error and retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies ECONNRESET as network-error and retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies ambiguous as not retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > classifyError > classifies timeout as retryable 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > isSideEffectRetryable > rejects side effect without idempotency key 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > isSideEffectRetryable > allows side effect with idempotency key for retryable errors 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > isSideEffectRetryable > rejects even with idempotency key for non-retryable errors 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > RetryBudget > allows retry within budget 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > RetryBudget > exhausts per-action budget 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > RetryBudget > exhausts total budget across actions 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > RetryBudget > multiple plugins cannot exceed total budget 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > RetryBudget > computes exponential backoff 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > CircuitBreaker > starts closed 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > CircuitBreaker > opens after threshold failures 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > CircuitBreaker > transitions to half-open after timeout 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > CircuitBreaker > closes after enough half-open successes 0ms
+ ✓ |thread-safe| packages/reliability/retry/tests/retry.spec.ts > P4-11 Retry Classifier > CircuitBreaker > reopens on half-open failure 0ms
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  03:20:51
+   Duration  519ms (transform 267ms, setup 298ms, import 21ms, tests 5ms, environment 0ms)

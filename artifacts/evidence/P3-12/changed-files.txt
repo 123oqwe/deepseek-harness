@@ -1,0 +1,5 @@
+packages/attachment/attachment-security/package.json
+packages/attachment/attachment-security/src/index.ts
+packages/attachment/attachment-security/src/scanner.ts
+packages/attachment/attachment-security/tests/malicious.spec.ts
+packages/attachment/attachment-security/tsconfig.json

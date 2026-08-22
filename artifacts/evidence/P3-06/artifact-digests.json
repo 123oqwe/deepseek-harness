@@ -1,0 +1,8 @@
+{
+  "packages/credentials/secrets-broker/package.json": "a08adffb734240cb3b4a7133e29ace88e2161a13d711cafd94d6e7899e35a14d",
+  "packages/credentials/secrets-broker/src/index.ts": "d77872d17f36d39bddd3439cdbb9022113feef315da7178f4342e169dda02ff7",
+  "packages/credentials/secrets-broker/src/lease.ts": "a83b3e8ba7e767213b18e4b5eb382406d93f7c89f90ef16e73d8f62e65724a75",
+  "packages/credentials/secrets-broker/src/types.ts": "21dfc0eb1963ac0e09e08007b3fb360001a2cebe4604566834877dc664994164",
+  "packages/credentials/secrets-broker/tests/secret-leak.spec.ts": "c217267c1fef0fb98fd00f6ab10489445c65a1d334735aeebbbdc78b09bcdfcb",
+  "packages/credentials/secrets-broker/tsconfig.json": "8f67ff8ed25b70bca577f58d4d5d3fe5784d935b5631fbcfac95ff6505b7b62e"
+}

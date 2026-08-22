@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > accepts the durable read-only mode 7ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > accepts the durable workspace-write mode 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > accepts the durable danger-full-access mode 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > ignores unrelated event streams 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > rejects and attributes an unknown durable sandbox mode 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/invariant.spec.ts > sandbox-policy invariants > rejects an unknown mode already present on late registration 10ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  03:07:29
+   Duration  624ms (transform 356ms, setup 255ms, import 160ms, tests 25ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > defaults to read-only under the process cwd 12ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > carries a configured mode and resolves the workspace root absolute 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > resolves the deployment policy for an agentless call 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > resolves each session mode and cwd together without changing the fallback 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > resolves a symlink-sensitive session cwd with POSIX component semantics 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > lets an approved mode outrank the session mode while retaining its root 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > uses the configured root when a session has no cwd 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > rejects a mode outside the closed vocabulary at load 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > SandboxPolicyService > disposes the service and context contribution from a child fiber (HMR safety) 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > renders the exact read-only policy without a capability inventory 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > renders the exact workspace-write policy without a capability inventory 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > renders the exact danger-full-access policy without a capability inventory 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > keeps the complete rendered prompt byte-stable across TMPDIR changes 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > reflects the latest durable switch on the next assembly and stays byte-stable otherwise 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > sandbox:policy request context > reconstructs resumed policy from the session log and omits diagnostics without an agent 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > the sandbox/mode session kit > SANDBOX_MODES lists every mode for advertisement and validation 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > the sandbox/mode session kit > effectiveSandboxMode folds to the last switch, or undefined without one 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-policy/tests/policy.spec.ts > the sandbox/mode session kit > setSandboxMode appends exactly one sandbox/mode event per switch 1ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  03:07:30
+   Duration  690ms (transform 382ms, setup 220ms, import 237ms, tests 48ms, environment 0ms)

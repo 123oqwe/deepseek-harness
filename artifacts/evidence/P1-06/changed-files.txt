@@ -1,0 +1,6 @@
+packages/plugin/plugin-host/package.json
+packages/plugin/plugin-host/src/index.ts
+packages/plugin/plugin-host/src/rpc.ts
+packages/plugin/plugin-host/src/supervisor.ts
+packages/plugin/plugin-host/tests/isolation.spec.ts
+packages/plugin/plugin-host/tsconfig.json

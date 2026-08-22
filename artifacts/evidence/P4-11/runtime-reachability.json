@@ -1,0 +1,9 @@
+{
+  "issue_id": "P4-11",
+  "entrypoint": "packages/reliability/retry/src/index.ts",
+  "wired": true,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T19:19:32.109Z"
+}

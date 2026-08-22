@@ -1,0 +1,28 @@
+{
+  "issue_id": "P3-09",
+  "audit_date": "2026-08-22T19:09:47.801Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/execution/execution-world-remote"
+  ],
+  "source_files": [
+    "packages/execution/execution-world-remote/src/attestation.ts",
+    "packages/execution/execution-world-remote/src/client.ts",
+    "packages/execution/execution-world-remote/src/index.ts"
+  ],
+  "test_files": [
+    "packages/execution/execution-world-remote/tests/reconnect.spec.ts"
+  ],
+  "changed_files": [
+    "packages/execution/execution-world-remote/package.json",
+    "packages/execution/execution-world-remote/src/attestation.ts",
+    "packages/execution/execution-world-remote/src/client.ts",
+    "packages/execution/execution-world-remote/src/index.ts",
+    "packages/execution/execution-world-remote/tests/reconnect.spec.ts",
+    "packages/execution/execution-world-remote/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

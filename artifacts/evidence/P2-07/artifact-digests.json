@@ -1,0 +1,7 @@
+{
+  "packages/interaction/approval-store/package.json": "d5452b2fbf2ba0b9eed03f14f495fef525c21f1b0a7f27b82c1612384159a9a6",
+  "packages/interaction/approval-store/src/index.ts": "35847bf0d8be6910817ad04afe4a9bc97c4f573bfe96be961584ef3ac13291b2",
+  "packages/interaction/approval-store/src/types.ts": "705f06d5679f65b3fe01fab42c2c284b2f2a698148af234b3421856a87b05dee",
+  "packages/interaction/approval-store/tests/recovery.spec.ts": "c9ce5f5408d21a52b17c0cdd9ce9f712999a511290e80b2fc6797023e04c9583",
+  "packages/interaction/approval-store/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

@@ -1,0 +1,13 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/credentials/secrets-broker/tests/secret-leak.spec.ts > P3-06 Secrets Broker > issues a short-lived lease 2ms
+ ✓ |thread-safe| packages/credentials/secrets-broker/tests/secret-leak.spec.ts > P3-06 Secrets Broker > revokes a lease 0ms
+ ✓ |thread-safe| packages/credentials/secrets-broker/tests/secret-leak.spec.ts > P3-06 Secrets Broker > expires after TTL 0ms
+ ✓ |thread-safe| packages/credentials/secrets-broker/tests/secret-leak.spec.ts > P3-06 Secrets Broker > getActiveLeases returns only non-expired 1ms
+ ✓ |thread-safe| packages/credentials/secrets-broker/tests/secret-leak.spec.ts > P3-06 Secrets Broker > revokeAllForWorld revokes all leases for a world 0ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  03:09:46
+   Duration  429ms (transform 198ms, setup 219ms, import 19ms, tests 5ms, environment 0ms)

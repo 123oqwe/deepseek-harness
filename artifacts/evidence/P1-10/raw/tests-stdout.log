@@ -1,0 +1,14 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/plugin/plugin-migrations/tests/rollback.spec.ts > P1-10 Plugin Migrations > begins migration in frozen state 6ms
+ ✓ |thread-safe| packages/plugin/plugin-migrations/tests/rollback.spec.ts > P1-10 Plugin Migrations > full migration lifecycle 0ms
+ ✓ |thread-safe| packages/plugin/plugin-migrations/tests/rollback.spec.ts > P1-10 Plugin Migrations > fails on health check failure 0ms
+ ✓ |thread-safe| packages/plugin/plugin-migrations/tests/rollback.spec.ts > P1-10 Plugin Migrations > rollback restores previous state 0ms
+ ✓ |thread-safe| packages/plugin/plugin-migrations/tests/rollback.spec.ts > P1-10 Plugin Migrations > canRollback checks all steps 0ms
+ ✓ |thread-safe| packages/plugin/plugin-migrations/tests/rollback.spec.ts > P1-10 Plugin Migrations > rejects invalid state transitions 1ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  03:05:13
+   Duration  438ms (transform 212ms, setup 235ms, import 11ms, tests 9ms, environment 0ms)

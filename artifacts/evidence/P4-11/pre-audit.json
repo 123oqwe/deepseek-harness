@@ -1,0 +1,32 @@
+{
+  "issue_id": "P4-11",
+  "audit_date": "2026-08-22T19:19:32.109Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/reliability/retry"
+  ],
+  "source_files": [
+    "packages/reliability/retry/src/budget.ts",
+    "packages/reliability/retry/src/circuit.ts",
+    "packages/reliability/retry/src/classify.ts",
+    "packages/reliability/retry/src/index.ts",
+    "packages/reliability/retry/src/types.ts"
+  ],
+  "test_files": [
+    "packages/reliability/retry/tests/retry.spec.ts"
+  ],
+  "changed_files": [
+    "packages/reliability/retry/package.json",
+    "packages/reliability/retry/src/budget.ts",
+    "packages/reliability/retry/src/circuit.ts",
+    "packages/reliability/retry/src/classify.ts",
+    "packages/reliability/retry/src/index.ts",
+    "packages/reliability/retry/src/types.ts",
+    "packages/reliability/retry/tests/retry.spec.ts",
+    "packages/reliability/retry/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

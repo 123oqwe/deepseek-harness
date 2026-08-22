@@ -1,0 +1,15 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > detects path traversal 2ms
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > sniffs PNG MIME type 0ms
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > sniffs ZIP MIME type 0ms
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > detects compression bomb 0ms
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > scanAttachment detects MIME mismatch 0ms
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > scanAttachment detects executable 0ms
+ ✓ |thread-safe| packages/attachment/attachment-security/tests/malicious.spec.ts > P3-12 Attachment Security > scanAttachment passes for safe PNG 0ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  03:13:12
+   Duration  433ms (transform 211ms, setup 235ms, import 12ms, tests 4ms, environment 0ms)

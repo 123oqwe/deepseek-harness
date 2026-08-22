@@ -1,0 +1,28 @@
+{
+  "issue_id": "P1-06",
+  "audit_date": "2026-08-22T19:02:56.959Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/plugin/plugin-host"
+  ],
+  "source_files": [
+    "packages/plugin/plugin-host/src/index.ts",
+    "packages/plugin/plugin-host/src/rpc.ts",
+    "packages/plugin/plugin-host/src/supervisor.ts"
+  ],
+  "test_files": [
+    "packages/plugin/plugin-host/tests/isolation.spec.ts"
+  ],
+  "changed_files": [
+    "packages/plugin/plugin-host/package.json",
+    "packages/plugin/plugin-host/src/index.ts",
+    "packages/plugin/plugin-host/src/rpc.ts",
+    "packages/plugin/plugin-host/src/supervisor.ts",
+    "packages/plugin/plugin-host/tests/isolation.spec.ts",
+    "packages/plugin/plugin-host/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

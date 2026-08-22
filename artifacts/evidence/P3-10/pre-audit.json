@@ -1,0 +1,28 @@
+{
+  "issue_id": "P3-10",
+  "audit_date": "2026-08-22T19:10:56.579Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/execution/resource-budget"
+  ],
+  "source_files": [
+    "packages/execution/resource-budget/src/accounting.ts",
+    "packages/execution/resource-budget/src/index.ts",
+    "packages/execution/resource-budget/src/types.ts"
+  ],
+  "test_files": [
+    "packages/execution/resource-budget/tests/budget.spec.ts"
+  ],
+  "changed_files": [
+    "packages/execution/resource-budget/package.json",
+    "packages/execution/resource-budget/src/accounting.ts",
+    "packages/execution/resource-budget/src/index.ts",
+    "packages/execution/resource-budget/src/types.ts",
+    "packages/execution/resource-budget/tests/budget.spec.ts",
+    "packages/execution/resource-budget/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

@@ -1,0 +1,20 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > registers a workflow definition 2ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects duplicate registration with same digest 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > binds a run to a registered definition 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects binding to unknown definition 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects binding with digest mismatch 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > allows nested workflow call within recursion limit 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects nested call exceeding recursion depth 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects circular workflow reference 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects child budget exceeding parent budget 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > cancels all nested workflows for a parent 1ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects excessive recursion depth in definition 0ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > resolves version compatible definition 0ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  03:14:19
+   Duration  437ms (transform 203ms, setup 217ms, import 31ms, tests 7ms, environment 0ms)

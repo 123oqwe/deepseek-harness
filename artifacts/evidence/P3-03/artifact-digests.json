@@ -1,0 +1,11 @@
+{
+  "packages/execution/execution-world/package.json": "6f1e9e605459984b7121e625047ee9d13e1e2303b744c40c58f2cca30debe09f",
+  "packages/execution/execution-world/src/errors.ts": "415f27068be4c46e6f9eeaed5707b163c679ab60152ae59b8b31b34a867561d5",
+  "packages/execution/execution-world/src/index.ts": "90165d7f537349160789726a6c3f06ad7cdc2c42a6f19542d1bd93c42f0103a5",
+  "packages/execution/execution-world/src/lifecycle.ts": "97f851dc9c17ca9dd08750cb3eb858780ea0a681d38e320f4981579b71b70010",
+  "packages/execution/execution-world/src/outcome.ts": "3c66eb660ab35d8c3a5b25cc54d3211da43b4b1a0f4d9e93ed0b62943787971f",
+  "packages/execution/execution-world/src/types.ts": "82c77e50d056795e99f9804970a7ddbfea0fb13d9918fd427539c61165674161",
+  "packages/execution/execution-world/tests/denial.spec.ts": "8f801cafe1a6d25921ef18d52cc018b4577f5886af561411151807cc59b25ede",
+  "packages/execution/execution-world/tests/world.spec.ts": "11ae14e341763a332bc13e9f42b47b75938936089461c46e9b7834589f592ac6",
+  "packages/execution/execution-world/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

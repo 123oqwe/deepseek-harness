@@ -1,0 +1,26 @@
+{
+  "issue_id": "P2-07",
+  "audit_date": "2026-08-22T19:05:14.568Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/interaction/approval-store"
+  ],
+  "source_files": [
+    "packages/interaction/approval-store/src/index.ts",
+    "packages/interaction/approval-store/src/types.ts"
+  ],
+  "test_files": [
+    "packages/interaction/approval-store/tests/recovery.spec.ts"
+  ],
+  "changed_files": [
+    "packages/interaction/approval-store/package.json",
+    "packages/interaction/approval-store/src/index.ts",
+    "packages/interaction/approval-store/src/types.ts",
+    "packages/interaction/approval-store/tests/recovery.spec.ts",
+    "packages/interaction/approval-store/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

@@ -1,0 +1,5 @@
+packages/interaction/approval-store/package.json
+packages/interaction/approval-store/src/index.ts
+packages/interaction/approval-store/src/types.ts
+packages/interaction/approval-store/tests/recovery.spec.ts
+packages/interaction/approval-store/tsconfig.json

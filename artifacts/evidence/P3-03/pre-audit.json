@@ -1,0 +1,34 @@
+{
+  "issue_id": "P3-03",
+  "audit_date": "2026-08-22T19:16:02.262Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/execution/execution-world"
+  ],
+  "source_files": [
+    "packages/execution/execution-world/src/errors.ts",
+    "packages/execution/execution-world/src/index.ts",
+    "packages/execution/execution-world/src/lifecycle.ts",
+    "packages/execution/execution-world/src/outcome.ts",
+    "packages/execution/execution-world/src/types.ts"
+  ],
+  "test_files": [
+    "packages/execution/execution-world/tests/denial.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts"
+  ],
+  "changed_files": [
+    "packages/execution/execution-world/package.json",
+    "packages/execution/execution-world/src/errors.ts",
+    "packages/execution/execution-world/src/index.ts",
+    "packages/execution/execution-world/src/lifecycle.ts",
+    "packages/execution/execution-world/src/outcome.ts",
+    "packages/execution/execution-world/src/types.ts",
+    "packages/execution/execution-world/tests/denial.spec.ts",
+    "packages/execution/execution-world/tests/world.spec.ts",
+    "packages/execution/execution-world/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

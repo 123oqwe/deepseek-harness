@@ -1,0 +1,8 @@
+{
+  "packages/workflow/workflow-registry/package.json": "196a9dc2c3a43f24ce6de7941ca22ac32651567e6eeb19df1b64ead259fdec0e",
+  "packages/workflow/workflow-registry/src/index.ts": "465726f0ff5fac43797cce393a5fed1f4dd41eed9236451090edf6d93bb22c4c",
+  "packages/workflow/workflow-registry/src/types.ts": "4911ba585a420447fa0963238c5c5b9d79b27fe71a961b1cf701401116277e0c",
+  "packages/workflow/workflow-registry/src/version.ts": "62a0c9b7f47a3852cba4331920141c22fa8b13c8c3c9aa329b6468c77e77a1be",
+  "packages/workflow/workflow-registry/tests/nested.spec.ts": "d9783f2fe3445ee40add4f59b8a5ba311fae9e649ee8cc4cf7256cdd52b9d106",
+  "packages/workflow/workflow-registry/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

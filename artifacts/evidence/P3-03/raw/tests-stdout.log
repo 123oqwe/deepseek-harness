@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > isSuccess identifies success 2ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > isDenied identifies policy denial 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > isRetryable identifies timeout and sandbox unavailable 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > isTerminal identifies terminal states 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > formatOutcome produces readable string 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > packageOutcome separates control from raw output 0ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  03:17:10
+   Duration  709ms (transform 317ms, setup 353ms, import 18ms, tests 4ms, environment 0ms)
+
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 3ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > rejects invalid transition 1ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroys a world 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroyed world cannot transition 0ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  03:17:12
+   Duration  465ms (transform 231ms, setup 259ms, import 22ms, tests 5ms, environment 0ms)

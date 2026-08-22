@@ -1,0 +1,26 @@
+{
+  "issue_id": "P3-12",
+  "audit_date": "2026-08-22T19:12:05.560Z",
+  "git_sha": "a17a305ee438c6bbfac4a66512f8c2bb3e8cbea0",
+  "packages": [
+    "packages/attachment/attachment-security"
+  ],
+  "source_files": [
+    "packages/attachment/attachment-security/src/index.ts",
+    "packages/attachment/attachment-security/src/scanner.ts"
+  ],
+  "test_files": [
+    "packages/attachment/attachment-security/tests/malicious.spec.ts"
+  ],
+  "changed_files": [
+    "packages/attachment/attachment-security/package.json",
+    "packages/attachment/attachment-security/src/index.ts",
+    "packages/attachment/attachment-security/src/scanner.ts",
+    "packages/attachment/attachment-security/tests/malicious.spec.ts",
+    "packages/attachment/attachment-security/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

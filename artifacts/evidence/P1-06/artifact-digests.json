@@ -1,0 +1,8 @@
+{
+  "packages/plugin/plugin-host/package.json": "0eac8213e73c5428e49eab798ee1448657901bb1cec68e7e68d208c6b238faea",
+  "packages/plugin/plugin-host/src/index.ts": "9044db3f56969c5b4236ed915a98c339431095b8502a1763cff95bcde83f91e4",
+  "packages/plugin/plugin-host/src/rpc.ts": "30d2cd3c6b5accba535174ddc6a29fa4d5dd2aca1025821fcf92a4dd49f56d0a",
+  "packages/plugin/plugin-host/src/supervisor.ts": "333d48dafc2b8b9267aa434fdcee9da9010420d251752d9ff9157c398dfe9807",
+  "packages/plugin/plugin-host/tests/isolation.spec.ts": "d1a188e7c028bdf1e279fc897eed6064ab1d15be516923c4b757aab6895476bb",
+  "packages/plugin/plugin-host/tsconfig.json": "bab003e4e0f7959d87ca97e640315fb091dda227760732db0e44304ce03703fb"
+}
