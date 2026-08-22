@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { Task, TaskState, MailboxMessage, BlackboardEntry } from './types.ts'
+import type { Task, MailboxMessage, BlackboardEntry } from './types.ts'
 
 const tasks = new Map<string, Task>()
 const mailboxes = new Map<string, MailboxMessage[]>()
@@ -49,7 +49,8 @@ export function readMessages(recipient: string): MailboxMessage[] {
   const box = mailboxes.get(recipient) ?? []
   const unread = box.filter(m => !m.readAt)
   for (const msg of unread) {
-    msg.readAt = new Date().toISOString()
+    // Can't assign to readonly property; update the mailbox in-place
+    Object.assign(msg, { readAt: new Date().toISOString() })
   }
   return box
 }
