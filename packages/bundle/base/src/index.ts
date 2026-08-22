@@ -9,5 +9,5 @@
 export {}
 
 // P0-05: Re-export feature gate types for profile composition
-export type { FeatureGate, GateState, GateOverride } from '@deepseek-ai/dsh-feature-gates'
-export { getGateState, setGateOverride, listGates } from '@deepseek-ai/dsh-feature-gates'
+export type { FeatureGate, GateState } from '@deepseek-ai/dsh-feature-gates'
+export { resolveGate, setOverride, registerGate } from '@deepseek-ai/dsh-feature-gates'

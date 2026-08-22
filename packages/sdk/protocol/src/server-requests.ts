@@ -1,4 +1,4 @@
-import type { ServerRequest, ServerResponse } from '../../interaction/human-channel/src/types.ts'
+import type { ServerRequest, ServerResponse } from '@deepseek-ai/dsh-human-channel'
 
 export interface ServerRequestEnvelope {
   readonly requestId: string

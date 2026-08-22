@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { prepare, markSent, markConfirmed, markAmbiguous, compensate, getEntry, getByState, isConfirmed, clearLedger } from '../src/index.ts'
+import { prepare, markSent, markConfirmed, markAmbiguous, compensate, getByState, isConfirmed, clearLedger } from '../src/index.ts'
 
 describe('P4-12 Idempotency Ledger', () => {
   beforeEach(() => clearLedger())

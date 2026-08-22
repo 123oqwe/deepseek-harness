@@ -6311,6 +6311,10 @@ importers:
   packages/sdk/parity: {}
 
   packages/sdk/protocol:
+    dependencies:
+      '@deepseek-ai/dsh-human-channel':
+        specifier: workspace:^
+        version: link:../../interaction/human-channel
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -8836,6 +8840,10 @@ importers:
         version: link:../workflow-worker-thread
 
   packages/workflow/workflow:
+    dependencies:
+      '@deepseek-ai/dsh-run':
+        specifier: workspace:^
+        version: link:../../run/run
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^

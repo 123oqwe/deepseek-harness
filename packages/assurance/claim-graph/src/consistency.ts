@@ -30,7 +30,7 @@ export function propagateStatus(
   const changed = new Set<string>()
 
   for (const [id, node] of nodes) {
-    const newStatus = computeStatus(id, nodes, edges, verifiedByGate)
+    const newStatus = computeStatus(id, /* nodes, */ edges, verifiedByGate)
     if (newStatus !== node.status) {
       updated.set(id, { ...node, status: newStatus })
       changed.add(id)

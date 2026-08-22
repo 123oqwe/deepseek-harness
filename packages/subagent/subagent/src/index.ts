@@ -435,7 +435,7 @@ export class SubagentRuntime extends Service {
     // P0-02: Trust kernel enforcement — subagent dispatch fails closed if kernel not initialized.
     assertKernelInitialized()
     // P2-02: Issue capability token for subagent delegation (best-effort)
-    try { issueToken({ principalId: 'subagent', tenantId: '', capabilities: ['delegate'], constraints: { maxDepth: 1, expiresAt: new Date(Date.now() + 3600000).toISOString() } }) } catch { /* best-effort */ }
+    try { issueToken({ principalId: 'subagent', tenantId: '', capabilities: ['delegate'], constraints: { maxDelegationDepth: 1 }, expiresAt: new Date(Date.now() + 3600000).toISOString(), issuedBy: 'subagent-runtime' }) } catch { /* best-effort */ }
     const provider = this.expectProvider(name)
     this.assertCapabilities(provider, request)
     assertSubagentMaxDepth(request.maxDepth)
