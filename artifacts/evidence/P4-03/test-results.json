@@ -1,0 +1,15 @@
+{
+  "test_command": "npx vitest run packages/run/run-plan/tests/compile.spec.ts",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "status": "PASS",
+  "tests": [
+    { "name": "compiles a valid plan", "status": "PASS" },
+    { "name": "rejects agent with unknown world", "status": "PASS" },
+    { "name": "rejects insufficient budget", "status": "PASS" },
+    { "name": "verifyPlan passes for valid plan", "status": "PASS" },
+    { "name": "same input produces same digest", "status": "PASS" }
+  ]
+}

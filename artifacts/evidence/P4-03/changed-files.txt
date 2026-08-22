@@ -1,0 +1,13 @@
+packages/run/run-plan/src/index.ts
+packages/run/run-plan/src/types.ts
+packages/run/run-plan/src/compile.ts
+packages/run/run-plan/tests/compile.spec.ts
+packages/run/run-plan/package.json
+packages/run/run-plan/tsconfig.json
+packages/run/run-plan/README.md
+docs/architecture/2026-08-22-p4-03-run-plan.md
+.agent-notes/2026-08-22-p4-03-run-plan.md
+artifacts/evidence/P4-03/summary.json
+artifacts/evidence/P4-03/changed-files.txt
+artifacts/evidence/P4-03/test-results.json
+artifacts/evidence/P4-03/remaining-risks.md
