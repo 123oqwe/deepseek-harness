@@ -1,0 +1,14 @@
+{
+  "issue_id": "P1-03",
+  "status": "E2E_VERIFIED",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "description": "Plugin lock file with integrity hash and drift detection",
+  "test_result": "5 lock tests pass",
+  "runtime_reachability": {
+    "wired": true
+  },
+  "remaining_risks": [
+    "Package ported from prototype branch; runtime enforcement pending full integration"
+  ]
+}

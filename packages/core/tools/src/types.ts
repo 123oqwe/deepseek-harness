@@ -11,6 +11,9 @@ import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
 // can be described by a canonical manifest before execution.
 export type { ActionManifest, ActionRiskLevel, CanonicalParameters } from '@deepseek-ai/dsh-action-manifest'
 export { canonicalizeParameters, computeDigest, classifyRisk } from '@deepseek-ai/dsh-action-manifest'
+// P2-04: Re-export risk taxonomy for universal side-effect classification
+export type { RiskLevel, RiskClassification, SideEffectClass } from '@deepseek-ai/dsh-risk-taxonomy'
+export { classifyRisk as classifyTaxonomyRisk, getApprovalRequirement, getIdempotencyRequirement } from '@deepseek-ai/dsh-risk-taxonomy'
 
 /** Payload recorded when one nested Code Mode Tool dispatch starts. */
 export interface CodeDispatchStartEventData {

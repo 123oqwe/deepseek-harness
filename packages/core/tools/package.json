@@ -54,7 +54,8 @@
   "dependencies": {
     "@deepseek-ai/dsh-action-manifest": "workspace:^",
     "@deepseek-ai/schemastery": "workspace:^",
-    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^",
+    "@deepseek-ai/dsh-risk-taxonomy": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-agent": "workspace:^",
