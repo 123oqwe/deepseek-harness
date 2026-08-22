@@ -806,6 +806,8 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-approval
 
+  packages/action/action-manifest: {}
+
   packages/api/gateway:
     dependencies:
       '@deepseek-ai/dsh-typert-protocol':
