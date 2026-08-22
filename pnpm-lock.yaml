@@ -6027,6 +6027,8 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/session/session-lifecycle: {}
+
   packages/session/session-persistence:
     devDependencies:
       '@deepseek-ai/cordis':
