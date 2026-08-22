@@ -1284,3 +1284,7 @@ export { solve as solvePluginCompat } from '@deepseek-ai/dsh-plugin-compat'
 // P1-09: Re-export plugin ownership and namespace conflict detection
 export type { NamespaceRegistration, OwnershipConflict } from '@deepseek-ai/dsh-plugin-ownership'
 export { registerNamespace, checkConflicts as checkOwnershipConflicts } from '@deepseek-ai/dsh-plugin-ownership'
+
+// P1-01: Re-export plugin manifest v2 types and validation
+export type { PluginManifestV2, SideEffectClass, DataClassification } from '@deepseek-ai/dsh-plugin-manifest'
+export { validateManifest, checkWildcardPermissions } from '@deepseek-ai/dsh-plugin-manifest'
