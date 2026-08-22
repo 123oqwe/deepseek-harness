@@ -1,0 +1,11 @@
+packages/interaction/permission-presets/src/schema.ts
+packages/interaction/permission-presets/tests/profile.spec.ts
+packages/interaction/permission-presets/package.json
+packages/interaction/permission-presets/tsconfig.json
+packages/interaction/permission-presets/README.md
+docs/architecture/2026-08-22-p2-11-policy-profile.md
+.agent-notes/2026-08-22-p2-11-policy-profile.md
+artifacts/evidence/P2-11/summary.json
+artifacts/evidence/P2-11/changed-files.txt
+artifacts/evidence/P2-11/test-results.json
+artifacts/evidence/P2-11/remaining-risks.md
