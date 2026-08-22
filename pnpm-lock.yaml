@@ -8228,6 +8228,8 @@ importers:
         specifier: workspace:^
         version: link:../../core/session
 
+  packages/workflow/workflow-journal: {}
+
   packages/workflow/workflow-worker-thread:
     dependencies:
       '@deepseek-ai/schemastery':
