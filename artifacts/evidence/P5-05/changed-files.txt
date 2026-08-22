@@ -1,0 +1,11 @@
+packages/subagent/subagent/src/request.ts
+packages/subagent/subagent/tests/request-contract.spec.ts
+packages/subagent/subagent/package.json
+packages/subagent/subagent/tsconfig.json
+packages/subagent/subagent/README.md
+docs/architecture/2026-08-22-p5-05-subagent-request.md
+.agent-notes/2026-08-22-p5-05-subagent-request.md
+artifacts/evidence/P5-05/summary.json
+artifacts/evidence/P5-05/changed-files.txt
+artifacts/evidence/P5-05/test-results.json
+artifacts/evidence/P5-05/remaining-risks.md
