@@ -1,0 +1,61 @@
+scenarios:
+  - id: code-world
+    lane: deterministic
+    description: Code changes with diff and test verification
+    acceptance: diff matches, tests pass, no uncommitted changes
+  - id: research-world
+    lane: deterministic
+    description: Evidence research with citation tracking
+    acceptance: all claims trace to evidence, no unverified facts
+  - id: external-write-world
+    lane: deterministic
+    description: External side effects with idempotency
+    acceptance: no duplicate side effects, reconciliation passes
+  - id: high-risk-world
+    lane: deterministic
+    description: High-risk financial simulation
+    acceptance: approval required, compensation available, audit complete
+  - id: long-run-world
+    lane: deterministic
+    description: 24h virtual long task
+    acceptance: checkpoint every step, resume after crash
+  - id: multi-agent-world
+    lane: deterministic
+    description: 50-agent coordination
+    acceptance: no deadlock, budget enforced, results merged
+  - id: malicious-plugin-world
+    lane: deterministic
+    description: Plugin attack resilience
+    acceptance: sandbox blocks escalation, policy deny monotonic
+  - id: multi-tenant-world
+    lane: deterministic
+    description: Tenant isolation
+    acceptance: cross-tenant access denied, data lineage tracked
+  - id: sdk-reconnect-world
+    lane: deterministic
+    description: SDK reconnection
+    acceptance: cursor resume, no duplicate events, no data loss
+  - id: provider-failover-world
+    lane: deterministic
+    description: Model/provider failover
+    acceptance: fallback succeeds, cost tracked, no silent degradation
+  - id: self-extension-world
+    lane: deterministic
+    description: Self-extension governance
+    acceptance: evolution proposal required, no direct production modification
+  - id: malicious-attachment-world
+    lane: deterministic
+    description: Attachment security
+    acceptance: attachment scanned, sandbox enforced, no path traversal
+  - id: crash-recovery-world
+    lane: deterministic
+    description: Crash recovery
+    acceptance: state recoverable, no lost user input, no repeated side effects
+  - id: schedule-world
+    lane: deterministic
+    description: Durable schedule/goal trigger
+    acceptance: catch-up policy, DST handling, no duplicate triggers
+  - id: human-approval-world
+    lane: deterministic
+    description: Human approval workflow
+    acceptance: approval required for high-risk, timeout fails closed
