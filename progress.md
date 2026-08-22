@@ -14,3 +14,20 @@
 - Created task_plan.md and findings.md
 
 ### Next: Fix typecheck (Phase 1)
+
+### 01:00 - Phase 1: Typecheck fixes (commit abb982dd)
+- Fixed 29 of 38 typecheck errors
+- Created tsconfig.json for 3 missing packages
+- Added 5 missing project references to tsconfig.host.json
+- Fixed policy-engine monotonic deny logic bug
+- Fixed human-channel StopOrder missing persistent field
+- Fixed sandbox policy test type conflicts
+- Fixed schema-registry, run-plan, plugin-manifest missing exports
+- Fixed memory test type conversions
+- Cleaned stale build artifacts from src/ directories
+- Restored accidentally deleted css-modules.d.ts source files
+- Added trustKernelHandle/schemaRegistryReady to SERVICE_WALK_EXEMPTIONS
+- Remaining 9 errors: pre-existing TypertClientRemote/TS2878 (need typert .d.ts generation)
+- Committed as abb982ddd8
+
+### Next: Push to fork, trigger CI, then work on remaining 9 errors and build
