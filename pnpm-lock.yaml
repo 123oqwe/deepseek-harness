@@ -3371,6 +3371,14 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/context/context-telemetry:
+    dependencies:
+      '@deepseek-ai/dsh-contexttopology':
+        specifier: workspace:^
+        version: link:../context-topology
+
+  packages/context/context-topology: {}
+
   packages/context/session-reference:
     dependencies:
       '@deepseek-ai/schemastery':

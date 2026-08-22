@@ -1,0 +1,7 @@
+{
+  "issue_id": "P6-05",
+  "title": "Per-Agent Context Topology & Telemetry Contract",
+  "status": "PASS",
+  "tests": { "passed": 7, "failed": 0, "total": 7 },
+  "packages": ["@deepseek-ai/dsh-contexttopology", "@deepseek-ai/dsh-contexttelemetry"]
+}
