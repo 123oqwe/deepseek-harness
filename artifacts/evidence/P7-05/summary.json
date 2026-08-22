@@ -1,0 +1,1 @@
+{"issue_id":"P7-05","title":"AcceptanceGate & OutcomePackage","status":"PASS","tests":{"passed":10,"failed":0,"total":10},"packages":["@deepseek-ai/dsh-acceptancegate","@deepseek-ai/dsh-outcomepackage"]}

@@ -904,9 +904,17 @@ importers:
         specifier: workspace:^
         version: link:../artifact
 
+  packages/assurance/acceptance-gate:
+    dependencies:
+      '@deepseek-ai/dsh-outcomepackage':
+        specifier: workspace:^
+        version: link:../outcome-package
+
   packages/assurance/claim-graph: {}
 
   packages/assurance/evidence: {}
+
+  packages/assurance/outcome-package: {}
 
   packages/assurance/verifier: {}
 
