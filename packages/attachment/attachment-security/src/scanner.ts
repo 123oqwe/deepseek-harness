@@ -65,7 +65,7 @@ export function scanAttachment(data: Uint8Array, _declaredType?: string, nesting
     safe: threats.length === 0,
     threats,
     mimeType,
-    _declaredType,
+    ...(_declaredType !== undefined && { _declaredType }),
     size,
     nestingDepth,
   }

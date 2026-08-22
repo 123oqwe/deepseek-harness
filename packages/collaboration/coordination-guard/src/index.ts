@@ -6,7 +6,6 @@ export interface AgentLock {
 
 export class CoordinationGuard {
   private locks = new Map<string, AgentLock>()
-  private readonly maxConcurrentPerTenant = new Map<string, number>()
 
   acquireLock(resource: string, agentId: string, now: number): { acquired: boolean; reason: string } {
     const existing = this.locks.get(resource)

@@ -37,7 +37,7 @@ export class AuditLedger {
   verify(): { valid: boolean; brokenAt?: number; reason?: string } {
     let prevHash = 'genesis'
     for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i]
+      const entry = this.entries[i]!
       if (entry.prevHash !== prevHash) {
         return { valid: false, brokenAt: i, reason: `prevHash mismatch at entry ${i}` }
       }
