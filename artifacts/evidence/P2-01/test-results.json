@@ -1,0 +1,1 @@
+{ "command": "pnpm vitest run packages/identity/principal/tests/identity.spec.ts", "exit_code": 0, "total": 15, "passed": 15, "failed": 0 }

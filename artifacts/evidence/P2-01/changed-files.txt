@@ -1,0 +1,11 @@
+packages/identity/principal/package.json
+packages/identity/principal/tsconfig.json
+packages/identity/principal/README.md
+packages/identity/principal/src/index.ts
+packages/identity/principal/src/types.ts
+packages/identity/principal/src/chain.ts
+packages/identity/principal/tests/identity.spec.ts
+artifacts/evidence/P2-01/summary.json
+artifacts/evidence/P2-01/test-results.json
+artifacts/evidence/P2-01/remaining-risks.md
+artifacts/evidence/P2-01/changed-files.txt

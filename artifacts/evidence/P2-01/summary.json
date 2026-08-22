@@ -1,0 +1,17 @@
+{
+  "issue_id": "P2-01",
+  "title": "统一 Principal / Tenant / Run / Actor 身份上下文",
+  "branch": "feat/p2-01-principal-identity",
+  "status": "PASS",
+  "tests": { "total": 15, "passed": 15, "failed": 0, "not_run": 0 },
+  "commands_run": ["pnpm vitest run packages/identity/principal/tests/identity.spec.ts"],
+  "new_files": [
+    "packages/identity/principal/src/index.ts",
+    "packages/identity/principal/src/types.ts",
+    "packages/identity/principal/src/chain.ts",
+    "packages/identity/principal/tests/identity.spec.ts",
+    "packages/identity/principal/package.json",
+    "packages/identity/principal/tsconfig.json",
+    "packages/identity/principal/README.md"
+  ]
+}
