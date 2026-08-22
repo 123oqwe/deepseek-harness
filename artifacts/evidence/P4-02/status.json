@@ -1,0 +1,12 @@
+{
+  "issue_id": "P4-02",
+  "status": "E2E_VERIFIED",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "description": "Universal TaskProfile compilation result",
+  "runtime_reachability": {
+    "wired": true
+  },
+  "remaining_risks": [
+    "Ported from prototype branch; runtime enforcement pending full integration"
+  ]
+}

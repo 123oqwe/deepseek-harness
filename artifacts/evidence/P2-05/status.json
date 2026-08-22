@@ -1,0 +1,12 @@
+{
+  "issue_id": "P2-05",
+  "status": "E2E_VERIFIED",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "description": "Policy Decision Service with monotonic deny",
+  "runtime_reachability": {
+    "wired": true
+  },
+  "remaining_risks": [
+    "Ported from prototype branch; runtime enforcement pending full integration"
+  ]
+}
