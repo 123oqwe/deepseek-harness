@@ -1,7 +1,7 @@
 {
   "issue_id": "P0-07",
   "title": "Release Evidence Package format",
-  "status": "E2E_VERIFIED",
+  "status": "SCAFFOLD",
   "git_sha": "7fd4b4b3a3624ea1aa611cf6621978c0c2bc6d0c",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -13,5 +13,6 @@
     "spec": "evidence-format package"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22"
+  "evidence_date": "2026-08-22",
+  "correction_note": "Status corrected from E2E_VERIFIED to SCAFFOLD to match honest status-registry.json assessment. Previous E2E_VERIFIED was inflated without sufficient runtime evidence."
 }

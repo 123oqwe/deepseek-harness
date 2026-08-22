@@ -1,7 +1,7 @@
 {
   "issue_id": "P0-06",
   "title": "Establish unified Schema Registry and compatibility rules",
-  "status": "E2E_VERIFIED",
+  "status": "WIRED",
   "git_sha": "5f7c45e0d06e252f2901f1e43701aa8a6f61ac16",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -16,5 +16,6 @@
     "baseline_spec": "11 tests passed (no regression)"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22"
+  "evidence_date": "2026-08-22",
+  "correction_note": "Status corrected from E2E_VERIFIED to WIRED to match honest status-registry.json assessment. Previous E2E_VERIFIED was inflated without sufficient runtime evidence."
 }
