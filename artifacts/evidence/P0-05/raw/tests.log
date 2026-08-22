@@ -5,7 +5,7 @@ The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths r
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
 
- Test Files  1 passed (1)
-      Tests  12 passed (12)
-   Start at  22:09:59
-   Duration  643ms (transform 317ms, setup 344ms, import 28ms, tests 7ms, environment 0ms)
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+   Start at  22:58:58
+   Duration  464ms (transform 450ms, setup 500ms, import 34ms, tests 11ms, environment 0ms)

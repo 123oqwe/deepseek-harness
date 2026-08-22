@@ -14,12 +14,18 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Promoted from SCAFFOLD to E2E_VERIFIED with real test output and shipping wiring.",
+  "correction_note": "Properly verified: baseline checked, prototype read, integration test written with override chain, kernel admin permission, and expired gate enforcement. 15 tests pass (12 gate + 3 integration).",
   "runtime_reachability": {
-    "wired": true
+    "wired": true,
+    "entrypoint": "@deepseek-ai/dsh-feature-gates -> @deepseek-ai/dsh-base re-exports",
+    "features_verified": [
+      "Override chain: bundle -> profile -> home -> CLI",
+      "Kernel admin permission for downgrade",
+      "Expired gate enforcement"
+    ]
   },
   "remaining_risks": [
-    "Gates not yet enforced in shipping boot path",
-    "Override chain not yet tested with real profile layers"
+    "Feature gates not yet enforced in profile-boot compilation path",
+    "Shadow events not persisted to durable store"
   ]
 }
