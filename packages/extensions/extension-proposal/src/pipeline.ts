@@ -10,7 +10,7 @@ export class ExtensionProposalPipeline {
     { name: 'canary', status: 'pending' },
     { name: 'approve', status: 'pending' },
     { name: 'publish', status: 'pending' },
-  ]
+  ] */
 
   submit(proposal: Omit<ExtensionProposal, 'status'>): ExtensionProposal {
     const full: ExtensionProposal = { ...proposal, status: 'drafted' }

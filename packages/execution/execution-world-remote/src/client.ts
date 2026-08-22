@@ -41,7 +41,8 @@ export function snapshot(remoteId: string): RemoteWorld {
 export function terminate(remoteId: string): RemoteWorld {
   const world = worlds.get(remoteId)
   if (!world) throw new Error(`Remote world not found: ${remoteId}`)
-  const terminated = { ...world, state: 'terminated' }
+  const { attestation, ...rest } = world
+  const terminated: RemoteWorld = { ...rest, state: 'terminated', ...(attestation !== undefined && { attestation }) }
   worlds.set(remoteId, terminated)
   return terminated
 }

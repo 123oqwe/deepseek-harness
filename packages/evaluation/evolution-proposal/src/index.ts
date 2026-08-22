@@ -49,7 +49,7 @@ export class EvolutionProposalManager {
     const updated: EvolutionProposal = { ...proposal, status: next }
     if (next === 'published') {
       const hash = createHash('sha256').update(`${proposal.id}:${Date.now()}`).digest('hex')
-      updated.signedAt = new Date().toISOString()
+      Object.assign(updated, { signedAt: new Date().toISOString() })
       updated.signedBy = `sig-${hash.slice(0, 16)}`
     }
     this.proposals.set(proposalId, updated)
