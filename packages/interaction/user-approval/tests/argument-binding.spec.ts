@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { canonicalizeApproval, verifyDigest, isExpired, redactSensitive, checkPreconditions } from '../src/index.ts'
+import { canonicalizeApproval, verifyDigest, isExpired, redactSensitive } from '../src/canonical.ts'
+import { checkPreconditions } from '../src/preconditions.ts'
 
 const baseReq = {
   actionManifestDigest: 'abc123',

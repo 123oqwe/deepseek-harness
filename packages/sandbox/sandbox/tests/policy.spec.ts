@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { DEFAULT_DENY_POLICY, checkFsAccess, checkNetworkAccess, checkProcessAccess, checkSecretAccess, type SandboxPolicy } from '../src/index.ts'
+import { DEFAULT_DENY_POLICY, checkFsAccess, checkNetworkAccess, checkProcessAccess, checkSecretAccess, type SandboxPolicy } from '../src/policy.ts'
 
 const permissivePolicy: SandboxPolicy = {
   fs: { allowedReadPaths: ['/workspace'], allowedWritePaths: ['/workspace/out'], denySymlinks: true },

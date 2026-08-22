@@ -8,11 +8,10 @@ export function addRule(rule: PolicyRule): void {
   if (rule.source === 'kernel' && rule.decision === 'deny') {
     deniedCapabilities.add(rule.capability)
   }
-  if (rule.decision === 'deny' && deniedCapabilities.has(rule.capability) && rule.source !== 'kernel') {
-    // Plugins cannot override a kernel deny
-    if (rule.decision === 'allow') {
-      throw new MonotonicDenyViolation(rule.id)
-    }
+  // Plugins cannot override a kernel deny: once a capability is denied at kernel
+  // level, no subsequent rule from a non-kernel source may allow it.
+  if (rule.decision === 'allow' && deniedCapabilities.has(rule.capability) && rule.source !== 'kernel') {
+    throw new MonotonicDenyViolation(rule.id)
   }
   rules.push(rule)
   rules.sort((a, b) => b.priority - a.priority)

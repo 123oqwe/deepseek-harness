@@ -160,3 +160,12 @@ export function compareDeclaredVsObserved(
 
   return violations
 }
+
+/** Check that no wildcard permissions are present in the manifest. */
+export function checkWildcardPermissions(perms: { pattern: string }[]): void {
+  for (const p of perms) {
+    if (p.pattern === '*' || p.pattern === '/*') {
+      throw new Error(`Wildcard permission pattern '${p.pattern}' is not allowed`)
+    }
+  }
+}

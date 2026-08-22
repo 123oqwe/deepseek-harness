@@ -10,7 +10,9 @@
     "src/index.ts",
     "src/invariant.ts",
     "src/remote-events.ts",
-    "src/types.ts"
+    "src/types.ts",
+    "src/resource-store.ts",
+    "src/run-control.ts"
   ],
   "references": [
     {
@@ -51,6 +53,9 @@
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../sdk/protocol"
     }
   ]
 }

@@ -39,3 +39,15 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+packages/*/*/src/*.js
+packages/*/*/src/*.js.map
+packages/*/*/src/*.d.ts
+packages/*/*/src/*.d.ts.map
+vendor/*/src/*.js
+vendor/*/src/*.js.map
+vendor/*/src/*.d.ts
+vendor/*/src/*.d.ts.map
+native/*/packages/*/src/*.js
+native/*/packages/*/src/*.js.map
+native/*/packages/*/src/*.d.ts
+native/*/packages/*/src/*.d.ts.map

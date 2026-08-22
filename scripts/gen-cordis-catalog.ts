@@ -161,6 +161,8 @@ export const SERVICE_WALK_EXEMPTIONS: Record<string, string> = {
   slots: 'client-side interface-typed browser service — packages/client/runtime/README.md owns the API',
   theme: 'client-side interface-typed browser service — packages/client/ui-theme/README.md owns the API',
   workspaces: 'client-side interface-typed browser service — packages/client/runtime/README.md owns the API',
+  trustKernelHandle: 'boot-provided trust kernel handle (TrustKernelHandle | undefined) — packages/kernel/trust-kernel/README.md owns the security contract',
+  schemaRegistryReady: 'boot-provided schema registry readiness promise (Promise<SchemaRegistry> | undefined) — packages/schema/schema-registry/README.md owns the schema contract',
 }
 
 /**

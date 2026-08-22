@@ -150,7 +150,7 @@ describe('P4-10 Scheduler', () => {
       s.submit({ ...task('t1', 'a'), requiredLocks: ['r1'] })
       s.schedule(0)
       const result = s.cancel('t1')
-      expect(result.completed).toBe(true)
+      expect(result.cancelled).toBe(true)
     })
   })
 })

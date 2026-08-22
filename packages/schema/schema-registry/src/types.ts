@@ -20,6 +20,7 @@ export type CompatibilityRule =
 export interface SchemaVersion {
   readonly major: number
   readonly minor: number
+  readonly patch?: number
 }
 
 /** A registered schema definition. */
@@ -32,6 +33,8 @@ export interface SchemaDefinition {
   readonly compatibility: CompatibilityRule
   /** Human-readable description. */
   readonly description: string
+  readonly fields?: Record<string, unknown>
+  readonly compatibleWith?: string[]
 }
 
 /** Result of a schema compatibility check. */

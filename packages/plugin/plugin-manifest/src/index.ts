@@ -29,3 +29,4 @@ export {
   validateLegacyBundle,
   compareDeclaredVsObserved,
 } from './validate.ts'
+export { checkWildcardPermissions } from './validate.ts'

@@ -2894,10 +2894,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ApprovalPolicy = \'ask\' | \'never\';',
   },
   {
-    name: 'ApprovalRequest',
-    declaration: 'export interface ApprovalRequest {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: CallId;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n}',
-  },
-  {
     name: 'ApprovalService',
     declaration: 'export class ApprovalService extends Service {\n    static Config: z<Config>;\n    constructor(ctx: Context, public config: Config);\n    setPolicy(agent: Agent, policy: ApprovalPolicy): void;\n    async request(req: ApprovalRequest): Promise<ApprovalOutcome>;\n    overrideOf(session: Session): ApprovalPolicy | undefined;\n}',
   },
@@ -3094,24 +3090,12 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface CompactionAgentContext {\n    session: Session;\n    options: {\n        provider?: string;\n        model?: string;\n    };\n}',
   },
   {
-    name: 'CompactionId',
-    declaration: 'export type CompactionId = Branded<\'CompactionId\'>;',
-  },
-  {
-    name: 'CompactionResult',
-    declaration: 'export interface CompactionResult {\n    compactionId: CompactionId;\n    sourceCommandId?: CommandId;\n    startSeq: number;\n    summarySeq: number;\n    endSeq: number;\n    summary: ContentBlock[];\n    shadowedRange: {\n        start: number;\n        end: number;\n    };\n    shadowedSeqs: number[];\n    shadowedTokenCount: number;\n}',
-  },
-  {
     name: 'CompactionTrigger',
     declaration: 'export type CompactionTrigger = \'pressure\' | \'context-overflow\';',
   },
   {
     name: 'ConfinedArgv',
     declaration: 'export interface ConfinedArgv {\n    argv: string[];\n    enforcement: SandboxEnforcement;\n    denialSignatures: readonly string[];\n    runnerFailureRules: readonly RunnerFailureRule[];\n}',
-  },
-  {
-    name: 'ConfinedSandboxMode',
-    declaration: 'export type ConfinedSandboxMode = Exclude<SandboxMode, \'danger-full-access\'>;',
   },
   {
     name: 'ContentBlockMap',
@@ -3220,10 +3204,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CredentialRecordInfo',
     declaration: 'export interface CredentialRecordInfo {\n    configured: boolean;\n    kind?: CredentialRecord[\'kind\'];\n    writable: boolean;\n}',
-  },
-  {
-    name: 'CredentialRef',
-    declaration: 'export type CredentialRef = Branded<\'CredentialRef\'>;',
   },
   {
     name: 'DiffCallView',
@@ -3468,14 +3448,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ImageVariantId',
     declaration: 'export type ImageVariantId = Branded<\'ImageVariantId\'>;',
-  },
-  {
-    name: 'Inbox',
-    declaration: 'export class Inbox {\n    constructor(private readonly session: Session, private readonly notifications: InboxNotifications);\n    get nextTurn(): readonly UserMessage[];\n    get nextStep(): readonly UserMessage[];\n    get hasPending(): boolean;\n    clear(): void;\n    claim(target: InboxTarget, turn: number): UserMessage[];\n    append(target: InboxTarget, message: UserMessage): void;\n    prepend(target: InboxTarget, message: UserMessage): void;\n    replace(messageId: MessageId, newMessage: UserMessage): boolean;\n    remove(messageId: MessageId): boolean;\n    splice(target: InboxTarget, start: number, deleteCount: number, inserted: UserMessage[]): UserMessage[];\n}',
-  },
-  {
-    name: 'InboxNotifications',
-    declaration: 'export interface InboxNotifications {\n    inserted(message: UserMessage): void;\n    discarded(message: UserMessage): void;\n    claimed(message: UserMessage, turn: number): void;\n}',
   },
   {
     name: 'InboxTarget',
@@ -4010,10 +3982,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type SandboxMode = \'read-only\' | \'workspace-write\' | \'danger-full-access\';',
   },
   {
-    name: 'SandboxPolicy',
-    declaration: 'export interface SandboxPolicy extends SandboxExecutionPolicy {\n    mode: ConfinedSandboxMode;\n}',
-  },
-  {
     name: 'SandboxPolicyRequest',
     declaration: 'export interface SandboxPolicyRequest {\n    session?: Session;\n    mode?: SandboxMode;\n}',
   },
@@ -4068,10 +4036,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SendTeamMessageResult',
     declaration: 'export interface SendTeamMessageResult {\n    readonly messageId: TeamMessageId;\n    readonly status: \'accepted\' | \'queued\';\n}',
-  },
-  {
-    name: 'ServerResponse',
-    declaration: 'export interface ServerResponse {\n    type: \'server-response\';\n    rpcId: RpcId;\n    result: RpcResult<unknown>;\n}',
   },
   {
     name: 'SessionAvailability',
@@ -4494,10 +4458,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SubagentReportOptions {\n    readonly delivery: SubagentReportDelivery;\n    readonly signal: AbortSignal;\n}',
   },
   {
-    name: 'SubagentResult',
-    declaration: 'export interface SubagentResult {\n    readonly output: ContentBlock[];\n    readonly structured?: unknown;\n    readonly diagnostic?: string;\n    readonly stopReason: SubagentStopReason;\n}',
-  },
-  {
     name: 'SubagentRun',
     declaration: 'export interface SubagentRun {\n    readonly id: SessionId;\n    readonly localAgent: Agent | undefined;\n    readonly result: Promise<SubagentResult>;\n    dispose(): Promise<void>;\n}',
   },
@@ -4520,14 +4480,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SubagentStartRequest',
     declaration: 'export interface SubagentStartRequest {\n    readonly label?: string;\n    readonly prompt: ContentBlock[];\n    readonly parent: Agent;\n    readonly signal: AbortSignal;\n    readonly agentOptions?: AgentOptions;\n    readonly outputSchema?: ObjectJsonSchema;\n    readonly maxDepth?: number;\n    readonly toolFilter?: ToolRestriction;\n    readonly persona?: string;\n}',
-  },
-  {
-    name: 'SubagentStopReason',
-    declaration: 'export type SubagentStopReason = SubagentStopReasonMap[keyof SubagentStopReasonMap];',
-  },
-  {
-    name: 'SubagentStopReasonMap',
-    declaration: 'export interface SubagentStopReasonMap {\n    completed: \'completed\';\n    aborted: \'aborted\';\n    error: \'error\';\n    \'max-tokens\': \'max-tokens\';\n    refusal: \'refusal\';\n}',
   },
   {
     name: 'SubprocessCollect',

@@ -30,3 +30,12 @@ export { getSupportedVersions, isSupported, negotiate, compareVersions, formatVe
 export type { ServerCapability, CapabilityDiscoveryResult } from './capabilities.ts'
 export { discoverCapabilities, hasCapability, getCapability } from './capabilities.ts'
 export { computeSchemaFingerprint, verifySchemaFingerprint } from './schema-fingerprint.ts'
+
+// P8-02: Remote resources types
+export type { ResourceType, WatchEvent } from './resources.ts'
+export type { ResourceSummary, ResourceDetail, PaginationParams, PaginatedResult, ConcurrencyToken } from './resources.ts'
+
+// P8-03: Remote lifecycle control types
+export type { RunCommand } from './commands.ts'
+export type { CommandRequest, CommandResponse, CommandStateTransition } from './commands.ts'
+export { validateTransition, isIdempotent } from './commands.ts'

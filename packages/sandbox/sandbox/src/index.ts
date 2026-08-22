@@ -176,3 +176,5 @@ export abstract class SandboxProvider extends Service {
 }
 
 export default SandboxProvider
+export { DEFAULT_DENY_POLICY, checkFsAccess, checkNetworkAccess, checkProcessAccess, checkSecretAccess } from './policy.ts'
+export type { FileSystemPolicy, NetworkPolicy, ProcessPolicy, IpcPolicy, DevicePolicy, SecretPolicy, ResourcePolicy, SandboxPolicy as FullSandboxPolicy } from './policy.ts'

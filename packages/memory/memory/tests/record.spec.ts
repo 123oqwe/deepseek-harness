@@ -17,7 +17,7 @@ describe('P6-02 MemoryRecord with provenance', () => {
   })
 
   it('isExpired checks validUntil', () => {
-    const record = { validUntil: new Date(Date.now() - 1000).toISOString(), ttl: undefined } as MemoryRecordFull
+    const record = { validUntil: new Date(Date.now() - 1000).toISOString(), ttl: undefined } as unknown as MemoryRecordFull
     expect(isExpired(record)).toBe(true)
   })
 
@@ -26,19 +26,19 @@ describe('P6-02 MemoryRecord with provenance', () => {
       createdAt: new Date(Date.now() - 2000).toISOString(),
       ttl: 1,
       validUntil: undefined,
-    } as MemoryRecordFull
+    } as unknown as MemoryRecordFull
     expect(isExpired(record)).toBe(true)
   })
 
   it('isAccessible checks scope and tenant', () => {
-    const record = { tenantId: 't1', principalId: 'u1', scope: 'session' } as MemoryRecordFull
+    const record = { tenantId: 't1', principalId: 'u1', scope: 'session' } as unknown as MemoryRecordFull
     expect(isAccessible(record, 'u1', 't1')).toBe(true)
     expect(isAccessible(record, 'u2', 't1')).toBe(false)
     expect(isAccessible(record, 'u1', 't2')).toBe(false)
   })
 
   it('global scope is accessible to all', () => {
-    const record = { tenantId: 't1', principalId: 'u1', scope: 'global' } as MemoryRecordFull
+    const record = { tenantId: 't1', principalId: 'u1', scope: 'global' } as unknown as MemoryRecordFull
     expect(isAccessible(record, 'u2', 't2')).toBe(true)
   })
 

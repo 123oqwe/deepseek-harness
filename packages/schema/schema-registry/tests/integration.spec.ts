@@ -15,6 +15,8 @@ describe('P0-06 Schema Registry Integration', () => {
       schemaId: 'test-schema',
       version: { major: 1, minor: 0, patch: 0 },
       fields: {},
+      compatibility: 'backward',
+      description: 'test schema',
       compatibleWith: [],
     }
     registerSchema(def)

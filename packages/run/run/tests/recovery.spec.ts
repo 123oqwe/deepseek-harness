@@ -82,8 +82,8 @@ describe('P4-01 Run Service Cross-Process Recovery', () => {
     expect(allRuns.length).toBe(2)
 
     // Both runs should be recoverable
-    const r1 = getRun(run1Id)
-    const r2 = getRun(run2Id)
+    const r1 = getRun(run1Id!)
+    const r2 = getRun(run2Id!)
     expect(r1!.state).toBe('completed')
     expect(r2!.state).toBe('running')
   })

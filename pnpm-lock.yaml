@@ -4053,7 +4053,17 @@ importers:
         specifier: workspace:^
         version: link:../eval
 
-  packages/evaluation/evolution-proposal: {}
+  packages/evaluation/evolution-proposal:
+    dependencies:
+      '@deepseek-ai/dsh-championchallenger':
+        specifier: workspace:^
+        version: link:../champion-challenger
+      '@deepseek-ai/dsh-evalregistry':
+        specifier: workspace:^
+        version: link:../eval-registry
+      '@deepseek-ai/dsh-evalrunner':
+        specifier: workspace:^
+        version: link:../eval-runner
 
   packages/evaluation/replay: {}
 
