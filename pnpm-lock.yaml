@@ -886,6 +886,8 @@ importers:
         specifier: workspace:^
         version: link:../../typert/registry
 
+  packages/assurance/evidence-format: {}
+
   packages/attachment/attachment:
     devDependencies:
       '@deepseek-ai/cordis':

@@ -1,0 +1,17 @@
+{
+  "issue_id": "P0-07",
+  "title": "建立 Release Evidence Package 与不可伪造完成门",
+  "branch": "feat/p0-07-release-evidence",
+  "status": "PASS",
+  "tests": { "total": 7, "passed": 7, "failed": 0, "not_run": 0 },
+  "commands_run": ["pnpm vitest run tests/release/evidence-package.spec.ts"],
+  "new_files": [
+    "packages/assurance/evidence-format/src/types.ts",
+    "packages/assurance/evidence-format/src/index.ts",
+    "packages/assurance/evidence-format/package.json",
+    "packages/assurance/evidence-format/tsconfig.json",
+    "scripts/release/collect-evidence.mjs",
+    "scripts/release/verify-evidence.mjs",
+    "tests/release/evidence-package.spec.ts"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "command": "pnpm vitest run tests/release/evidence-package.spec.ts",
+  "exit_code": 0,
+  "total": 7,
+  "passed": 7,
+  "failed": 0
+}
