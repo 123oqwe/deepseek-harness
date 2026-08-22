@@ -1,0 +1,5 @@
+packages/workspace/worktree-provider/src/index.ts
+packages/workspace/worktree-provider/src/merge.ts
+packages/collaboration/coordination-guard/src/index.ts
+packages/evaluation/router-regret/src/index.ts
+packages/collaboration/coordination-guard/tests/coordination.spec.ts
