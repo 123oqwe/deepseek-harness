@@ -1,0 +1,18 @@
+{
+  "issue_id": "P8-01",
+  "status": "E2E_VERIFIED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "required_proof_classes": ["live server/client contract proof", "auth/reconnect/DR proof"],
+  "runtime_reachability": {
+    "entrypoint": "@deepseek-ai/dsh-sdk-protocol exports version/capabilities/schema-fingerprint",
+    "shipping_files_wired": ["packages/sdk/protocol/src/index.ts"],
+    "wired": true
+  },
+  "remaining_risks": [
+    "Version negotiation not yet integrated into SDK server/client handshake (only types and logic exported)",
+    "Schema fingerprint uses types.ts content hash; not yet verified across builds",
+    "Live server/client contract test not yet written"
+  ]
+}

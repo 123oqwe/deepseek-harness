@@ -15,3 +15,5 @@ Progress: resolved 475, reused 367, downloaded 0, added 0
 Progress: resolved 536, reused 398, downloaded 0, added 0
 [WARN] GET https://registry.npmjs.org/playwright-core error (23). Will retry in 10 seconds. 2 retries left.
 [WARN] GET https://registry.npmjs.org/@typescript-eslint%2Ftypes error (23). Will retry in 10 seconds. 2 retries left.
+[WARN] GET https://registry.npmjs.org/playwright-core error (23). Will retry in 1 minute. 1 retries left.
+[WARN] GET https://registry.npmjs.org/@typescript-eslint%2Ftypes error (23). Will retry in 1 minute. 1 retries left.

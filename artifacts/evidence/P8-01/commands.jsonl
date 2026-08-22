@@ -1,0 +1,1 @@
+{"cmd": "npx vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts", "exit": 0, "result": "10 tests passed"}

@@ -23,3 +23,10 @@ export type {
   SubagentFinishedNotification,
   SubagentStartedNotification,
 } from './types.ts'
+
+// P8-01: Protocol version negotiation and capability discovery
+export type { ProtocolVersion, VersionNegotiationResult } from './version.ts'
+export { getSupportedVersions, isSupported, negotiate, compareVersions, formatVersion } from './version.ts'
+export type { ServerCapability, CapabilityDiscoveryResult } from './capabilities.ts'
+export { discoverCapabilities, hasCapability, getCapability } from './capabilities.ts'
+export { computeSchemaFingerprint, verifySchemaFingerprint } from './schema-fingerprint.ts'
