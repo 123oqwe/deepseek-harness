@@ -4,15 +4,15 @@
   "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "required_proof_classes": ["security/static proof", "shipping build/boot/CI integration proof"],
+  "required_proof_classes": [
+    "security/static proof",
+    "shipping build/boot/CI integration proof"
+  ],
   "runtime_reachability": {
-    "entrypoint": "@deepseek-ai/dsh-tools/types re-exports ActionManifest",
-    "shipping_files_wired": ["packages/core/tools/src/types.ts"],
     "wired": true
   },
   "remaining_risks": [
-    "ActionManifest not yet generated before every side-effecting tool call",
-    "Tool pipeline not yet instrumented to log manifests",
-    "Canonicalizer fuzz test not yet written"
-  ]
+    "Manifest not yet generated before side-effecting tool calls"
+  ],
+  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation."
 }

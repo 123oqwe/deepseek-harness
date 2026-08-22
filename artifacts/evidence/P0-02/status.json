@@ -16,5 +16,9 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Status corrected from E2E_VERIFIED to PARTIALLY_WIRED to match honest status-registry.json assessment. Previous E2E_VERIFIED was inflated without sufficient runtime evidence."
+  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation.",
+  "runtime_reachability": {
+    "wired": true
+  },
+  "remaining_risks": []
 }

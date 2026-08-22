@@ -1,1 +1,1 @@
-{"cmd": "oxlint", "exit": 0, "result": "lint clean (warnings only)"}
+{"cmd": "npx vitest run packages/policy/capability-token/tests/token.spec.ts", "exit": 0, "result": "tests passed"}
