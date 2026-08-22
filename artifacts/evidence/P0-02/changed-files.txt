@@ -1,0 +1,12 @@
+ docs/architecture/trust-kernel-boundary.md
+ packages/kernel/trust-kernel/package.json
+ packages/kernel/trust-kernel/tsconfig.json
+ packages/kernel/trust-kernel/README.md
+ packages/kernel/trust-kernel/src/index.ts
+ packages/kernel/trust-kernel/src/types.ts
+ packages/kernel/trust-kernel/src/invariant.ts
+ packages/kernel/trust-kernel/tests/boundary.spec.ts
+ artifacts/evidence/P0-02/summary.json
+ artifacts/evidence/P0-02/changed-files.txt
+ artifacts/evidence/P0-02/test-results.json
+ artifacts/evidence/P0-02/remaining-risks.md

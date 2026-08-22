@@ -1,0 +1,30 @@
+ {
+   "issue_id": "P0-02",
+   "title": "确立 Minimal Immutable Trust Kernel 边界",
+   "branch": "feat/p0-02-trust-kernel",
+   "status": "PASS",
+   "acceptance_criteria_met": [
+     "Any plugin unload, service override, or dynamic mount cannot replace kernel policy/audit/signature verifier",
+     "Kernel API has no model-visible text, no business domain logic, no concrete provider implementation",
+     "Uninitialized kernel in production profile fails closed; dev profile can enable insecure mode with permanent warning"
+   ],
+   "tests": {
+     "total": 15,
+     "passed": 15,
+     "failed": 0,
+     "not_run": 0
+   },
+   "commands_run": [
+     "pnpm vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts"
+   ],
+   "new_files": [
+     "docs/architecture/trust-kernel-boundary.md",
+     "packages/kernel/trust-kernel/src/index.ts",
+     "packages/kernel/trust-kernel/src/types.ts",
+     "packages/kernel/trust-kernel/src/invariant.ts",
+     "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+     "packages/kernel/trust-kernel/package.json",
+     "packages/kernel/trust-kernel/tsconfig.json",
+     "packages/kernel/trust-kernel/README.md"
+   ]
+ }

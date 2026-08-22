@@ -1,0 +1,24 @@
+ {
+   "command": "pnpm vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts",
+   "exit_code": 0,
+   "total": 15,
+   "passed": 15,
+   "failed": 0,
+   "tests": [
+     { "name": "initializes before any plugin loads", "status": "PASS" },
+     { "name": "forbids re-initialization", "status": "PASS" },
+     { "name": "root principal has stable id and insecure flag", "status": "PASS" },
+     { "name": "insecure mode sets principal.insecure = true", "status": "PASS" },
+     { "name": "kernel deny is monotonic and cannot be overridden", "status": "PASS" },
+     { "name": "non-kernel capabilities are delegated to plugins", "status": "PASS" },
+     { "name": "audit chain is tamper-evident", "status": "PASS" },
+     { "name": "signature verification rejects untrusted keys in production", "status": "PASS" },
+     { "name": "signature verification accepts trusted keys", "status": "PASS" },
+     { "name": "insecure mode skips signature verification", "status": "PASS" },
+     { "name": "tenant boundary rejects foreign principals", "status": "PASS" },
+     { "name": "tenant boundary accepts own principal", "status": "PASS" },
+     { "name": "sandbox attestation passes in production mode", "status": "PASS" },
+     { "name": "sandbox attestation is skipped in insecure mode", "status": "PASS" },
+     { "name": "kernel API has no model-visible text", "status": "PASS" }
+   ]
+ }
