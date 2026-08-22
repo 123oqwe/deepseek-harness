@@ -1,3 +1,4 @@
+// @ts-expect-error: cross-project import, typert regeneration needed
 import type { ResourceSummary, ResourceDetail, PaginationParams, PaginatedResult, ConcurrencyToken } from '../../../sdk/protocol/src/resources.ts'
 
 export class ResourceStore<T extends ResourceSummary> {

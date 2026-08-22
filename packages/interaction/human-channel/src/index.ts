@@ -83,7 +83,7 @@ const stopOrders: StopOrder[] = []
 let globallyStopped = false
 const interactions: Interaction[] = []
 
-export function issueEmergencyStop(reason: string, issuer: string = 'system'): StopOrder {
+export function issueEmergencyStop(reason: string, issuer: string = 'system', _scope?: string, _runId?: string): StopOrder {
   const order: StopOrder = {
     id: `stop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     reason,
