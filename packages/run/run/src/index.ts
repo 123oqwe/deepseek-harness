@@ -1,3 +1,5 @@
 export type { RunId, RunState, RunEvent, Run } from './types.ts'
 export { createEvent, genesisEvent, asRunId, GENESIS } from './events.ts'
-export { createRun, transition, getRun, appendEvent, clearRuns, InvalidTransitionError } from './state-machine.ts'
+export { createRun, transition, getRun, appendEvent, clearRuns, listRuns, setRunStore, InvalidTransitionError } from './state-machine.ts'
+export type { RunStore } from './store.ts'
+export { JsonlRunStore, InMemoryRunStore } from './store.ts'

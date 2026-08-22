@@ -13,6 +13,11 @@ import type {
 } from '@deepseek-ai/dsh-llm'
 import type { JsonValue } from './json.ts'
 
+// Canonical RunState schema: re-exported from the Run Service package so that
+// AcceptanceGate, SDK, and all consumers reference exactly one definition.
+// See packages/run/run/src/types.ts for the authoritative source.
+export type { RunState, RunId, RunEvent, Run } from '@deepseek-ai/dsh-run'
+
 // The lossless-JSON payload type belongs to this client-safe face too: a wire
 // contract carrying JSON data must not import the root entry, which merges
 // `ctx.sessions` (a Host-only SessionStore) into every consumer's program.

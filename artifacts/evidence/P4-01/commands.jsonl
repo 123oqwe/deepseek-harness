@@ -1,0 +1,2 @@
+{"cmd": "npx vitest run packages/run/run/tests/state-machine.spec.ts", "exit": 0, "result": "7 tests passed (state machine transitions)"}
+{"cmd": "npx vitest run packages/run/run/tests/recovery.spec.ts", "exit": 0, "result": "2 tests passed (cross-process recovery via JSONL ledger)"}

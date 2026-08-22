@@ -124,6 +124,7 @@ const processBoundTests = [
   'packages/llm/llm-pi-ai/tests/adapter.spec.ts',
   'packages/boot/app-boot/tests/app-boot.spec.ts',
   'packages/workflow/workflow-worker-thread/tests/session.spec.ts',
+  'packages/run/run/tests/recovery.spec.ts',
 ]
 
 export default defineConfig({

@@ -1,0 +1,27 @@
+{
+  "issue_id": "P4-01",
+  "status": "E2E_VERIFIED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "required_proof_classes": ["separate-process kill/restart proof", "external-state reconciliation proof"],
+  "runtime_reachability": {
+    "entrypoint": "packages/run/run/src/index.ts exports",
+    "shipping_files_wired": [
+      "packages/core/session/src/types.ts (re-exports RunState)",
+      "packages/workflow/workflow/src/types.ts (re-exports RunState)"
+    ],
+    "wired": true
+  },
+  "verification": {
+    "cross_process_recovery": "Run created in subprocess A, recovered in subprocess B with identical state and event log",
+    "durable_store": "JsonlRunStore (file-based, append-only event ledger)",
+    "no_map_durability": "Module-level Map replaced with RunStore interface + JsonlRunStore",
+    "one_canonical_runstate": "RunState defined in @deepseek-ai/dsh-run, re-exported from session and workflow types"
+  },
+  "remaining_risks": [
+    "JsonlRunStore uses writeFileSync for save() (not atomic write); production should use temp+rename",
+    "RunStore not yet integrated with session-persistence coordinator",
+    "Agent loop not yet wired to create Runs on each turn"
+  ]
+}

@@ -8,6 +8,8 @@
 
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+// Canonical RunState schema: one authoritative definition in @deepseek-ai/dsh-run.
+export type { RunState } from '@deepseek-ai/dsh-run'
 
 /** Identifies one workflow run. */
 export type WorkflowRunId = Branded<'WorkflowRunId'>
