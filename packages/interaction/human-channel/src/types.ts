@@ -1,20 +1,24 @@
-export type EmergencyAction = 'pause-new-actions' | 'cancel-run' | 'kill-execution-world' | 'ask-question' | 'resume'
+export type ServerRequestType = 'approval' | 'clarification' | 'human-takeover' | 'quorum'
 
-export interface EmergencyStopOrder {
+export interface ServerRequest {
   readonly id: string
-  readonly action: EmergencyAction
-  readonly runId?: string
-  readonly reason: string
-  readonly issuedBy: string
-  readonly issuedAt: string
-  readonly persistent: boolean
-}
-
-export interface HumanInteractionRequest {
-  readonly id: string
+  readonly type: ServerRequestType
   readonly runId: string
-  readonly type: 'question' | 'confirmation' | 'choice' | 'input'
+  readonly actionManifestDigest: string
   readonly prompt: string
-  readonly options?: string[]
-  readonly timeout?: number
+  readonly options: readonly string[]
+  readonly deadline: number
+  readonly requiredRoles?: readonly string[]
+  readonly minApprovals?: number
 }
+
+export interface ServerResponse {
+  readonly requestId: string
+  readonly responder: string
+  readonly role: string
+  readonly decision: 'approve' | 'deny' | 'defer'
+  readonly answer?: string
+  readonly timestamp: number
+}
+
+export type RequestStatus = 'pending' | 'answered' | 'expired' | 'cancelled'
