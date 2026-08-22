@@ -5624,6 +5624,8 @@ importers:
         specifier: workspace:^
         version: link:../../core/system-prompt
 
+  packages/run/run-plan: {}
+
   packages/runtime-diagnostics/invariants:
     dependencies:
       '@deepseek-ai/schemastery':

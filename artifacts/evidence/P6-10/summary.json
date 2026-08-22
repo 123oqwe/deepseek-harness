@@ -1,0 +1,11 @@
+{
+  "issue_id": "P6-10",
+  "title": "Privacy Classification, Redaction, Fork/Snapshot Lineage and export/erase",
+  "status": "PASS",
+  "tests": { "passed": 10, "failed": 0, "total": 10 },
+  "packages": [
+    "@deepseek-ai/dsh-data-classification",
+    "@deepseek-ai/dsh-redaction",
+    "@deepseek-ai/dsh-data-lineage"
+  ]
+}

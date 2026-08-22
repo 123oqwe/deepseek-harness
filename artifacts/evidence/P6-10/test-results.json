@@ -1,0 +1,17 @@
+{
+  "tool": "vitest",
+  "test_file": "packages/privacy/data-classification/tests/privacy.spec.ts",
+  "results": [
+    { "name": "classifies public text", "status": "PASS" },
+    { "name": "classifies PII text", "status": "PASS" },
+    { "name": "classifies secret text", "status": "PASS" },
+    { "name": "shouldRedact checks threshold", "status": "PASS" },
+    { "name": "redacts SSN", "status": "PASS" },
+    { "name": "redacts email", "status": "PASS" },
+    { "name": "redacts secret", "status": "PASS" },
+    { "name": "lineage tracks data origin", "status": "PASS" },
+    { "name": "lineage blocks cross-tenant export", "status": "PASS" },
+    { "name": "lineage supports erase", "status": "PASS" }
+  ],
+  "summary": { "passed": 10, "failed": 0, "total": 10 }
+}
