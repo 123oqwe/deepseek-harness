@@ -1,4 +1,4 @@
-import type { EvalConfig, EvalResult, EvalMetrics } from '../../eval/src/types.ts'
+import type { EvalConfig, EvalResult, EvalMetrics } from '@deepseek-ai/dsh-eval'
 import { randomUUID } from 'node:crypto'
 
 export class EvalRunner {

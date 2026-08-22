@@ -4020,13 +4020,38 @@ importers:
         specifier: workspace:^
         version: link:../../util/timeout
 
-  packages/evaluation/champion-challenger: {}
+  packages/evaluation/champion-challenger:
+    dependencies:
+      '@deepseek-ai/dsh-eval':
+        specifier: workspace:^
+        version: link:../eval
 
-  packages/evaluation/eval: {}
+  packages/evaluation/eval:
+    dependencies:
+      '@deepseek-ai/dsh-championchallenger':
+        specifier: workspace:^
+        version: link:../champion-challenger
+      '@deepseek-ai/dsh-evalregistry':
+        specifier: workspace:^
+        version: link:../eval-registry
+      '@deepseek-ai/dsh-evalrunner':
+        specifier: workspace:^
+        version: link:../eval-runner
+      '@deepseek-ai/dsh-evolutionproposal':
+        specifier: workspace:^
+        version: link:../evolution-proposal
 
-  packages/evaluation/eval-registry: {}
+  packages/evaluation/eval-registry:
+    dependencies:
+      '@deepseek-ai/dsh-eval':
+        specifier: workspace:^
+        version: link:../eval
 
-  packages/evaluation/eval-runner: {}
+  packages/evaluation/eval-runner:
+    dependencies:
+      '@deepseek-ai/dsh-eval':
+        specifier: workspace:^
+        version: link:../eval
 
   packages/evaluation/evolution-proposal: {}
 

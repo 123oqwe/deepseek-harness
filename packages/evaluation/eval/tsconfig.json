@@ -7,15 +7,5 @@
   "include": [
     "src"
   ],
-  "references": [
-    {
-      "path": "../eval-registry"
-    },
-    {
-      "path": "../eval-runner"
-    },
-    {
-      "path": "../champion-challenger"
-    }
-  ]
+  "references": []
 }

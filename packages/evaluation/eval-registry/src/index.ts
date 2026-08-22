@@ -1,4 +1,4 @@
-import type { EvalResult } from '../../eval/src/types.ts'
+import type { EvalResult } from '@deepseek-ai/dsh-eval'
 import { createHash } from 'node:crypto'
 
 export class EvalRegistry {
