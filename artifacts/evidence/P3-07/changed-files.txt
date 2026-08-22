@@ -1,0 +1,13 @@
+packages/sandbox/sandbox-local/src/index.ts
+packages/sandbox/sandbox-local/src/capabilities.ts
+packages/sandbox/sandbox-local/src/attestation.ts
+packages/sandbox/sandbox-local/tests/conformance.spec.ts
+packages/sandbox/sandbox-local/package.json
+packages/sandbox/sandbox-local/tsconfig.json
+packages/sandbox/sandbox-local/README.md
+docs/architecture/2026-08-22-p3-07-sandbox-hardening.md
+.agent-notes/2026-08-22-p3-07-sandbox-hardening.md
+artifacts/evidence/P3-07/summary.json
+artifacts/evidence/P3-07/changed-files.txt
+artifacts/evidence/P3-07/test-results.json
+artifacts/evidence/P3-07/remaining-risks.md
