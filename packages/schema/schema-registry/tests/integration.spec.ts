@@ -3,7 +3,7 @@ import { registerSchema, getSchema, listSchemas, checkCompatibility, registerBui
 
 describe('P0-06 Schema Registry Integration', () => {
   beforeEach(() => { clearSchemas(); registerBuiltinSchemas() })
-  afterEach(() => clearSchemas())
+  afterEach(() =>{  clearSchemas(); })
 
   it('builtin schemas are registered at boot', () => {
     const schemas = listSchemas()

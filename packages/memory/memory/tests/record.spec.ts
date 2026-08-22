@@ -3,7 +3,7 @@ import { createRecord, isExpired, isAccessible, type MemoryRecordFull } from '..
 import { addRelation, getRelations, getSupersessionChain, getDisputes, clearRelations } from '../src/provenance.ts'
 
 describe('P6-02 MemoryRecord with provenance', () => {
-  beforeEach(() => clearRelations())
+  beforeEach(() =>{  clearRelations(); })
 
   it('creates a record with all fields', () => {
     const record = createRecord({

@@ -17,7 +17,7 @@ function deepSort(obj: unknown): unknown {
   if (obj === null || typeof obj !== 'object') return obj
   if (Array.isArray(obj)) return obj.map(deepSort)
   const sorted: Record<string, unknown> = {}
-  for (const key of Object.keys(obj as Record<string, unknown>).sort()) {
+  for (const key of Object.keys(obj).sort()) {
     sorted[key] = deepSort((obj as Record<string, unknown>)[key])
   }
   return sorted

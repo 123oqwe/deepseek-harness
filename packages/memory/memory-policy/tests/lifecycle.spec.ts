@@ -44,10 +44,10 @@ describe('P6-03 Memory Policy', () => {
   })
 
   it('exportProposals filters by tenant and sensitivity', () => {
-    const accepted = createProposal(baseProposal) as MemoryProposal
-    const wrongTenant = createProposal({ ...baseProposal, tenantId: 'other' }) as MemoryProposal
-    const restricted = createProposal({ ...baseProposal, sensitivity: 'restricted' }) as MemoryProposal
-    const pending = createProposal(baseProposal) as MemoryProposal
+    const accepted = createProposal(baseProposal)
+    const wrongTenant = createProposal({ ...baseProposal, tenantId: 'other' })
+    const restricted = createProposal({ ...baseProposal, sensitivity: 'restricted' })
+    const pending = createProposal(baseProposal)
     // Manually set states since createProposal always sets to pending
     Object.assign(accepted, { state: 'accepted' })
     Object.assign(wrongTenant, { state: 'accepted' })

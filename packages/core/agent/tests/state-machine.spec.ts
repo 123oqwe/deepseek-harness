@@ -27,7 +27,7 @@ describe('P4-05 Agent Lifecycle State Machine', () => {
   })
 
   it('assertTransition throws on invalid', () => {
-    expect(() => assertTransition('completed', 'running')).toThrow(InvalidAgentTransitionError)
+    expect(() =>{  assertTransition('completed', 'running'); }).toThrow(InvalidAgentTransitionError)
   })
 
   it('createTransition creates valid transition', () => {

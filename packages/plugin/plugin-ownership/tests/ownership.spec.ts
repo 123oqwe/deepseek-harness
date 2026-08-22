@@ -11,8 +11,8 @@ import {
 } from '../src/index.ts'
 
 describe('P1-09 Plugin Namespace Ownership', () => {
-  beforeEach(() => clearRegistrations())
-  afterEach(() => clearRegistrations())
+  beforeEach(() =>{  clearRegistrations(); })
+  afterEach(() =>{  clearRegistrations(); })
 
   it('registers a namespace', () => {
     registerNamespace({ namespace: 'my-plugin', pluginId: 'plugin-a', isOfficial: false, capabilities: ['tool:read'] })
@@ -40,12 +40,12 @@ describe('P1-09 Plugin Namespace Ownership', () => {
 
   it('assertNoConflicts passes with no conflicts', () => {
     registerNamespace({ namespace: 'safe', pluginId: 'plugin-a', isOfficial: false, capabilities: [] })
-    expect(() => assertNoConflicts()).not.toThrow()
+    expect(() =>{  assertNoConflicts(); }).not.toThrow()
   })
 
   it('assertNoConflicts throws with conflicts', () => {
     registerNamespace({ namespace: 'dsh', pluginId: 'third-party', isOfficial: false, capabilities: [] })
-    expect(() => assertNoConflicts()).toThrow(NamespaceConflictError)
+    expect(() =>{  assertNoConflicts(); }).toThrow(NamespaceConflictError)
   })
 
   it('isOfficialNamespace checks official set', () => {

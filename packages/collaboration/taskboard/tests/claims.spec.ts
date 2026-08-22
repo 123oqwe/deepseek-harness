@@ -7,8 +7,8 @@ import {
 } from '../src/index.ts'
 
 describe('P5-11 Taskboard/Mailbox/Blackboard', () => {
-  beforeEach(() => clearAll())
-  afterEach(() => clearAll())
+  beforeEach(() =>{  clearAll(); })
+  afterEach(() =>{  clearAll(); })
 
   describe('Taskboard', () => {
     it('creates a task', () => {

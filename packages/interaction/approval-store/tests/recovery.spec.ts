@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { request, approve, deny, consume, revoke, getByRun, isWaiting, getPending, clearStore } from '../src/index.ts'
 
 describe('P2-07 Persistent Approval Store', () => {
-  beforeEach(() => clearStore())
-  afterEach(() => clearStore())
+  beforeEach(() =>{  clearStore(); })
+  afterEach(() =>{  clearStore(); })
 
   it('requests approval and marks run as waiting', () => {
     const rec = request('run-1', 'digest-1', '1.0', 'user-1')

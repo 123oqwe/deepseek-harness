@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { resetKernelForTesting, initTrustKernel, assertKernelInitialized, isKernelInitialized } from '../src/index.ts'
 
 describe('P0-02 Trust Kernel Enforcement', () => {
-  beforeEach(() => resetKernelForTesting())
-  afterEach(() => resetKernelForTesting())
+  beforeEach(() =>{  resetKernelForTesting(); })
+  afterEach(() =>{  resetKernelForTesting(); })
 
   it('assertKernelInitialized throws when kernel not initialized', () => {
-    expect(() => assertKernelInitialized()).toThrow()
+    expect(() =>{  assertKernelInitialized(); }).toThrow()
   })
 
   it('assertKernelInitialized passes after initTrustKernel', () => {
     initTrustKernel({ insecure: true })
-    expect(() => assertKernelInitialized()).not.toThrow()
+    expect(() =>{  assertKernelInitialized(); }).not.toThrow()
   })
 
   it('kernel can only be initialized once', () => {
@@ -31,6 +31,6 @@ describe('P0-02 Trust Kernel Enforcement', () => {
     expect(isKernelInitialized()).toBe(true)
     // The assertKernelInitialized call is the enforcement point
     // used by tools/src/index.ts and subagent/src/index.ts
-    expect(() => assertKernelInitialized()).not.toThrow()
+    expect(() =>{  assertKernelInitialized(); }).not.toThrow()
   })
 })

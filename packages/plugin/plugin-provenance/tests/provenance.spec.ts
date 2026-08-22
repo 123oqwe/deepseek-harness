@@ -10,7 +10,7 @@ import {
 } from '../src/index.ts'
 
 describe('P1-02 Plugin Provenance', () => {
-  beforeEach(() => clearTrustedRoots())
+  beforeEach(() =>{  clearTrustedRoots(); })
 
   describe('signature verification', () => {
     it('computes digest of plugin content', () => {
@@ -29,7 +29,7 @@ describe('P1-02 Plugin Provenance', () => {
       const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
       registerTrustedRoot('root-1', publicKey.export({ type: 'spki', format: 'pem' }) as string, 'official')
       const data = new TextEncoder().encode('plugin-content')
-      const signature = cryptoSign('sha256', data, privateKey.export({ type: 'pkcs8', format: 'pem' }) as string)
+      const signature = cryptoSign('sha256', data, privateKey.export({ type: 'pkcs8', format: 'pem' }))
       const result = verifySignature(data, new Uint8Array(signature), 'root-1')
       expect(result.valid).toBe(true)
       expect(result.signer).toBe('official')

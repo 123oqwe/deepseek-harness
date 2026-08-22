@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { getOrCreateWorkspace, setTrustState, getTrustPolicy, assertAllowed, isAllowed, clearTrust, WorkspaceTrustError } from '../src/index.ts'
 
 describe('P1-07 Workspace Trust Boundary', () => {
-  beforeEach(() => clearTrust())
-  afterEach(() => clearTrust())
+  beforeEach(() =>{  clearTrust(); })
+  afterEach(() =>{  clearTrust(); })
 
   it('defaults to untrusted', () => {
     const ws = getOrCreateWorkspace('/tmp')
@@ -25,12 +25,12 @@ describe('P1-07 Workspace Trust Boundary', () => {
   })
 
   it('untrusted rejects project plugins', () => {
-    expect(() => assertAllowed('/tmp', 'allowProjectPlugins')).toThrow(WorkspaceTrustError)
+    expect(() =>{  assertAllowed('/tmp', 'allowProjectPlugins'); }).toThrow(WorkspaceTrustError)
   })
 
   it('trusted-execute allows project plugins', () => {
     setTrustState('/tmp', 'trusted-execute')
-    expect(() => assertAllowed('/tmp', 'allowProjectPlugins')).not.toThrow()
+    expect(() =>{  assertAllowed('/tmp', 'allowProjectPlugins'); }).not.toThrow()
   })
 
   it('isAllowed returns boolean without throwing', () => {

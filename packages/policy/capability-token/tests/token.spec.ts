@@ -4,8 +4,8 @@ import { issueToken, attenuateToken, getToken, isExpired, hasCapability, clearTo
 const futureDate = new Date(Date.now() + 86400000).toISOString()
 
 describe('P2-02 Capability Token', () => {
-  beforeEach(() => clearTokens())
-  afterEach(() => clearTokens())
+  beforeEach(() =>{  clearTokens(); })
+  afterEach(() =>{  clearTokens(); })
 
   it('issues a token with capabilities', () => {
     const token = issueToken({

@@ -24,7 +24,7 @@ describe('P4-02 TaskProfile', () => {
   })
 
   it('rejects non-positive budget', () => {
-    const errors = validateProfile({ ...valid, budget: { tokens: 0, cost: 0, time: 0 } } as never)
+    const errors = validateProfile({ ...valid, budget: { tokens: 0, cost: 0, time: 0 } })
     expect(errors).toContain('budget.tokens must be positive')
   })
 

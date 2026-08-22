@@ -3,7 +3,7 @@ import { createMemoryService, validateRecord } from '../src/index.ts'
 
 describe('P6-01 Memory Service', () => {
   it('validates required fields', () => {
-    const errors = validateRecord({} as unknown as Record<string, unknown>)
+    const errors = validateRecord({})
     expect(errors.length).toBeGreaterThan(0)
     expect(errors).toContain('principalId is required')
     expect(errors).toContain('content is required')

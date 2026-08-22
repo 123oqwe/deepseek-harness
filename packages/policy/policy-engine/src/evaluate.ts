@@ -21,7 +21,7 @@ export function evaluate(ctx: PolicyContext): PolicyResult {
   // Check kernel-level deny first (monotonic)
   if (deniedCapabilities.has(ctx.capability)) {
     return {
-      decision: 'deny' as PolicyDecision,
+      decision: 'deny',
       reason: `kernel-level monotonic deny for ${ctx.capability}`,
       source: 'kernel',
       ruleId: 'kernel-deny',

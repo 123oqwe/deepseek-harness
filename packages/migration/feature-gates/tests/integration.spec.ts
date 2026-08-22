@@ -8,7 +8,7 @@ import type { FeatureGate } from '../src/types.ts'
 
 describe('P0-05 Feature Gates Integration', () => {
   beforeEach(() => { clearAll(); registerBuiltinGates() })
-  afterEach(() => clearAll())
+  afterEach(() =>{  clearAll(); })
 
   it('override chain works: bundle -> profile -> home -> CLI (last wins)', () => {
     const gate: FeatureGate = {
@@ -32,7 +32,7 @@ describe('P0-05 Feature Gates Integration', () => {
     setOverride('test-gate', '__cli__', 'enforce')
     expect(resolveGate('test-gate', 'default').state).toBe('enforce')
     revokeKernelAdmin()
-    expect(() => setOverride('test-gate', '__cli__', 'shadow')).toThrow()
+    expect(() =>{  setOverride('test-gate', '__cli__', 'shadow'); }).toThrow()
     grantKernelAdmin()
     setOverride('test-gate', '__cli__', 'shadow')
     expect(resolveGate('test-gate', 'default').state).toBe('shadow')
@@ -45,6 +45,6 @@ describe('P0-05 Feature Gates Integration', () => {
       defaultByProfile: { 'default': 'enforce' },
     }
     registerGate(expiredGate)
-    expect(() => assertNoExpiredGates()).toThrow()
+    expect(() =>{  assertNoExpiredGates(); }).toThrow()
   })
 })
