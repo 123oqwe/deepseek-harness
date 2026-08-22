@@ -35,7 +35,7 @@ export class TelemetryOutbox {
   flush(): OutboxEntry[] {
     const pending = this.entries.filter(e => !e.delivered)
     for (const entry of pending) {
-      entry.delivered = true
+      Object.assign(entry, { delivered: true })
       this.deliveredCount++
     }
     return pending

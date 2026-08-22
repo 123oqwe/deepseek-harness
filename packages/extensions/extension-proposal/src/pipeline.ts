@@ -2,7 +2,7 @@ import type { ExtensionProposal, PipelineStage } from './types.ts'
 
 export class ExtensionProposalPipeline {
   private readonly proposals = new Map<string, ExtensionProposal>()
-  private readonly stages: PipelineStage[] = [
+  /* private readonly _stages: PipelineStage[] = [
     { name: 'draft', status: 'pending' },
     { name: 'static-scan', status: 'pending' },
     { name: 'isolation-test', status: 'pending' },

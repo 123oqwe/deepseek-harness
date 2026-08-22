@@ -34,7 +34,8 @@ export function evaluateEgress(
     return { allowed: false, reason: `Host ${hostname} not in allowlist` }
   }
 
-  return { allowed: true, reason: 'allowed', resolvedIp: resolution.addresses[0] }
+  const ip = resolution.addresses[0]
+  return { allowed: true, reason: 'allowed', ...(ip !== undefined && { resolvedIp: ip }) }
 }
 
 function matchHost(hostname: string, pattern: string): boolean {

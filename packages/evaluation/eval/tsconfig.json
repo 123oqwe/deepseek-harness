@@ -7,5 +7,24 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../evolution-proposal"
+    },
+    {
+      "path": "../eval-registry"
+    },
+    {
+      "path": "../eval-runner"
+    },
+    {
+      "path": "../champion-challenger"
+    },
+    {
+      "path": "../replay"
+    },
+    {
+      "path": "../router-regret"
+    }
+  ]
 }

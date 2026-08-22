@@ -13,7 +13,7 @@ export interface RemoteWorld {
 const worlds = new Map<string, RemoteWorld>()
 
 export function createRemote(attestation?: Attestation): RemoteWorld {
-  const world: RemoteWorld = { id: randomUUID(), state: 'creating', attestation }
+  const world: RemoteWorld = { id: randomUUID(), state: 'creating', ...(attestation !== undefined && { attestation }) }
   worlds.set(world.id, world)
   return { ...world, state: 'running' }
 }
