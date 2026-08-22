@@ -8305,6 +8305,8 @@ importers:
         specifier: workspace:^
         version: link:../../storage/storage-domain
 
+  packages/workspace/workspace-trust: {}
+
   python/sdk-runtime:
     dependencies:
       '@deepseek-ai/cordis':
