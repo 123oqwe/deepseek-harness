@@ -1,0 +1,19 @@
+ {
+   "name": "@deepseek-ai/dsh-plugin-manifest",
+   "description": "Plugin Manifest v2: declare capabilities, permissions, and side effects",
+   "version": "0.1.0-rc.5",
+   "publishConfig": { "access": "public" },
+   "repository": { "type": "git", "url": "git+https://github.com/deepseek-ai/deepseek-harness.git", "directory": "packages/plugin/plugin-manifest" },
+   "type": "module",
+   "main": "lib/index.js",
+   "types": "lib/types/index.d.ts",
+   "exports": {
+     ".": { "types": "./lib/types/index.d.ts", "default": "./lib/index.js" },
+     "./types": { "types": "./lib/types/types.d.ts", "default": "./lib/types.js" },
+     "./validate": { "types": "./lib/types/validate.d.ts", "default": "./lib/validate.js" },
+     "./src/*": "./src/*",
+     "./package.json": "./package.json"
+   },
+   "files": ["lib/index.js", "lib/types.js", "lib/validate.js", "lib/types/**/*.d.ts"],
+   "license": "MIT"
+ }

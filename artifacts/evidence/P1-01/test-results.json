@@ -1,0 +1,1 @@
+{ "command": "pnpm vitest run packages/plugin/plugin-manifest/tests/manifest.spec.ts", "exit_code": 0, "total": 15, "passed": 15, "failed": 0 }

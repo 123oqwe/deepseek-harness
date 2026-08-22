@@ -1,0 +1,18 @@
+{
+  "issue_id": "P1-01",
+  "title": "Plugin Manifest v2",
+  "branch": "feat/p1-01-plugin-manifest",
+  "status": "PASS",
+  "tests": { "total": 15, "passed": 15, "failed": 0, "not_run": 0 },
+  "commands_run": ["pnpm vitest run packages/plugin/plugin-manifest/tests/manifest.spec.ts"],
+  "new_files": [
+    "packages/plugin/plugin-manifest/src/index.ts",
+    "packages/plugin/plugin-manifest/src/types.ts",
+    "packages/plugin/plugin-manifest/src/validate.ts",
+    "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+    "packages/plugin/plugin-manifest/package.json",
+    "packages/plugin/plugin-manifest/tsconfig.json",
+    "packages/plugin/plugin-manifest/README.md",
+    "docs/plugins/manifest-v2.md"
+  ]
+}

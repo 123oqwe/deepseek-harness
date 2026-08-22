@@ -1,0 +1,12 @@
+packages/plugin/plugin-manifest/package.json
+packages/plugin/plugin-manifest/tsconfig.json
+packages/plugin/plugin-manifest/README.md
+packages/plugin/plugin-manifest/src/index.ts
+packages/plugin/plugin-manifest/src/types.ts
+packages/plugin/plugin-manifest/src/validate.ts
+packages/plugin/plugin-manifest/tests/manifest.spec.ts
+docs/plugins/manifest-v2.md
+artifacts/evidence/P1-01/summary.json
+artifacts/evidence/P1-01/test-results.json
+artifacts/evidence/P1-01/remaining-risks.md
+artifacts/evidence/P1-01/changed-files.txt
