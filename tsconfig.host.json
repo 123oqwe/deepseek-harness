@@ -209,6 +209,7 @@
     { "path": "./native/landlock-run/packages/entry" },
     { "path": "./packages/sandbox/sandbox" },
     { "path": "./packages/sandbox/sandbox-local" },
+    { "path": "./packages/execution/execution-world-container" },
     { "path": "./packages/sandbox/sandbox-policy" },
     { "path": "./packages/sandbox/sandbox-windows-acl" },
     { "path": "./packages/shell/bash-sandbox" },
