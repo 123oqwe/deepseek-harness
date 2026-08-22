@@ -1,4 +1,4 @@
-import type { PolicyRule, PolicyContext, PolicyResult, PolicyDecision } from './types.ts'
+import type { PolicyRule, PolicyContext, PolicyResult } from './types.ts'
 import { MonotonicDenyViolation } from './types.ts'
 
 const rules: PolicyRule[] = []

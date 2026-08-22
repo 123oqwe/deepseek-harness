@@ -10,8 +10,8 @@ const policy = {
 }
 
 describe('P3-01 ExecutionWorld', () => {
-  beforeEach(() =>{  clearWorlds(); })
-  afterEach(() =>{  clearWorlds(); })
+  beforeEach(() =>{  clearWorlds() })
+  afterEach(() =>{  clearWorlds() })
 
   it('creates a world', () => {
     const world = createWorld('local', policy)

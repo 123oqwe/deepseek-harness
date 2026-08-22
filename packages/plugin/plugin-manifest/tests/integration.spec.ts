@@ -26,7 +26,7 @@ describe('P1-01 Plugin Manifest v2 Integration', () => {
   })
 
   it('rejects wildcard permissions', () => {
-    expect(() =>{  checkWildcardPermissions([{ pattern: '/*' }] as never); }).toThrow()
+    expect(() =>{  checkWildcardPermissions([{ pattern: '/*' }] as never) }).toThrow()
   })
 
   it('manifest types are reachable from shipping package', () => {

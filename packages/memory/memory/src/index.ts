@@ -23,21 +23,25 @@ export class InMemoryProvider implements MemoryProvider {
       createdAt: new Date().toISOString(),
     }
     this.records.set(String(full.id), full)
+    await Promise.resolve()
     return full
   }
 
   async retrieve(id: string): Promise<MemoryRecord | undefined> {
     const record = this.records.get(id)
     if (!record || isExpired(record)) return undefined
+    await Promise.resolve()
     return record
   }
 
   async query(query: MemoryQuery): Promise<MemoryRecord[]> {
     const results = Array.from(this.records.values()).filter(r => matchesQuery(r, query))
+    await Promise.resolve()
     return query.limit ? results.slice(0, query.limit) : results
   }
 
   async delete(id: string): Promise<boolean> {
+    await Promise.resolve()
     return this.records.delete(id)
   }
 

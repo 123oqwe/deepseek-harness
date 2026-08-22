@@ -8,6 +8,7 @@ export function createDeterministicVerifier(
     id,
     kind: 'deterministic',
     verify: async (request: VerificationRequest, evidence: ReadonlyMap<string, unknown>): Promise<VerificationReport> => {
+      await Promise.resolve()
       const results: CheckResult[] = request.requiredChecks.map(checkId => ({
         checkId,
         status: checkFn(checkId, evidence),
@@ -28,6 +29,7 @@ export function createModelVerifier(
     id,
     kind: 'model',
     verify: async (request: VerificationRequest, evidence: ReadonlyMap<string, unknown>): Promise<VerificationReport> => {
+      await Promise.resolve()
       const results = await modelFn(request, evidence)
       const summary = results.every(r => r.status === 'pass') ? 'pass' : 'fail'
       return { request, verifierId: id, results, summary: summary as VerificationReport['summary'] }

@@ -47,8 +47,8 @@ const anonDev: AnonymousDevPrincipal = {
 }
 
 describe('P2-01 Principal/Tenant identity', () => {
-  beforeEach(() =>{  clearTokens(); })
-  afterEach(() =>{  clearTokens(); })
+  beforeEach(() =>{  clearTokens() })
+  afterEach(() =>{  clearTokens() })
 
   describe('delegation chain', () => {
     it('creates a chain from a root principal', () => {
@@ -94,7 +94,7 @@ describe('P2-01 Principal/Tenant identity', () => {
 
     it('throws on forged agent ID', () => {
       const chain = createChain(rootUser)
-      expect(() =>{  assertAgentInChain(chain, 'forged-agent'); }).toThrow(ForgedAgentIdError)
+      expect(() =>{  assertAgentInChain(chain, 'forged-agent') }).toThrow(ForgedAgentIdError)
     })
   })
 
@@ -107,7 +107,7 @@ describe('P2-01 Principal/Tenant identity', () => {
 
     it('throws on replayed token', () => {
       useToken('token-1')
-      expect(() =>{  useToken('token-1'); }).toThrow(ReplayedTokenError)
+      expect(() =>{  useToken('token-1') }).toThrow(ReplayedTokenError)
     })
   })
 
@@ -125,11 +125,11 @@ describe('P2-01 Principal/Tenant identity', () => {
     })
 
     it('assertTenant throws on cross-tenant', () => {
-      expect(() =>{  assertTenant(rootUser, tenantB); }).toThrow(TenantBoundaryError)
+      expect(() =>{  assertTenant(rootUser, tenantB) }).toThrow(TenantBoundaryError)
     })
 
     it('assertTenant passes for same tenant', () => {
-      expect(() =>{  assertTenant(rootUser, tenantA); }).not.toThrow()
+      expect(() =>{  assertTenant(rootUser, tenantA) }).not.toThrow()
     })
   })
 

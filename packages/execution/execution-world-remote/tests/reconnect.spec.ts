@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { createAttestation, verifyAttestation, createRemote, heartbeat, snapshot, terminate, getRemote, clearRemotes } from '../src/index.ts'
 
 describe('P3-09 Remote ExecutionWorld', () => {
-  beforeEach(() =>{  clearRemotes(); })
-  afterEach(() =>{  clearRemotes(); })
+  beforeEach(() =>{  clearRemotes() })
+  afterEach(() =>{  clearRemotes() })
 
   it('creates attestation', () => {
     const att = createAttestation({

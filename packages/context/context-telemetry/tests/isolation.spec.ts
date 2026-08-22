@@ -4,7 +4,7 @@ import type { ContextSource } from '../../context-topology/src/types.ts'
 import { buildTelemetry, isTelemetrySafe } from '../src/index.ts'
 
 describe('P6-05 Context Topology & Telemetry', () => {
-  beforeEach(() =>{  clearTopologies(); })
+  beforeEach(() =>{  clearTopologies() })
 
   it('assembles shared and private zones correctly', () => {
     const sources: ContextSource[] = [

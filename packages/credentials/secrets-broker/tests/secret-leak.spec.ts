@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { issueLease, revokeLease, getLease, isExpired, getActiveLeases, revokeAllForWorld, clearLeases } from '../src/index.ts'
 
 describe('P3-06 Secrets Broker', () => {
-  beforeEach(() =>{  clearLeases(); })
-  afterEach(() =>{  clearLeases(); })
+  beforeEach(() =>{  clearLeases() })
+  afterEach(() =>{  clearLeases() })
 
   it('issues a short-lived lease', () => {
     const lease = issueLease({

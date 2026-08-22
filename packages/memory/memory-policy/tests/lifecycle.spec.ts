@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createProposal, decideProposal, canAutoMerge, shouldForget, exportProposals, type MemoryProposal } from '../src/index.ts'
+import { createProposal, decideProposal, canAutoMerge, shouldForget, exportProposals } from '../src/index.ts'
 
 const baseProposal = {
   content: 'test memory',

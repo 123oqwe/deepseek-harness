@@ -27,8 +27,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@deepseek-ai/dsh-evalrunner": "workspace:^",
-    "@deepseek-ai/dsh-evalregistry": "workspace:^",
-    "@deepseek-ai/dsh-championchallenger": "workspace:^"
+    "@deepseek-ai/dsh-evalrunner": "workspace:*",
+    "@deepseek-ai/dsh-evalregistry": "workspace:*",
+    "@deepseek-ai/dsh-championchallenger": "workspace:*"
   }
 }

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { addRule, evaluate, clearRules } from '../src/index.ts'
 
 describe('P2-05 Policy Decision Service with Monotonic Deny', () => {
-  beforeEach(() =>{  clearRules(); })
-  afterEach(() =>{  clearRules(); })
+  beforeEach(() =>{  clearRules() })
+  afterEach(() =>{  clearRules() })
 
   it('kernel deny is monotonic and cannot be overridden', () => {
     addRule({ id: 'k1', capability: 'kernel:replace', decision: 'deny', priority: 100, source: 'kernel', reason: 'kernel deny' })

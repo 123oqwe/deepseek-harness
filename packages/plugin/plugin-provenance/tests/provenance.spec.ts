@@ -10,7 +10,7 @@ import {
 } from '../src/index.ts'
 
 describe('P1-02 Plugin Provenance', () => {
-  beforeEach(() =>{  clearTrustedRoots(); })
+  beforeEach(() =>{  clearTrustedRoots() })
 
   describe('signature verification', () => {
     it('computes digest of plugin content', () => {

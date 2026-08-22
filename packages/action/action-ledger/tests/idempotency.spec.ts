@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { prepare, markSent, markConfirmed, markAmbiguous, compensate, getByState, isConfirmed, clearLedger } from '../src/index.ts'
 
 describe('P4-12 Idempotency Ledger', () => {
-  beforeEach(() =>{  clearLedger(); })
-  afterEach(() =>{  clearLedger(); })
+  beforeEach(() =>{  clearLedger() })
+  afterEach(() =>{  clearLedger() })
 
   it('prepares an entry', () => {
     const entry = prepare({ idempotencyKey: 'key-1', actionManifestDigest: 'digest', providerId: 'api', externalTarget: 'https://api.example.com' })

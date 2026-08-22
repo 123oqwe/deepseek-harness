@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { createRun, transition, getRun, appendEvent, clearRuns, InvalidTransitionError } from '../src/index.ts'
 
 describe('P4-01 Run Service State Machine', () => {
-  beforeEach(() =>{  clearRuns(); })
-  afterEach(() =>{  clearRuns(); })
+  beforeEach(() =>{  clearRuns() })
+  afterEach(() =>{  clearRuns() })
 
   it('creates a run in pending state', () => {
     const run = createRun('user-1', 'tenant-a')

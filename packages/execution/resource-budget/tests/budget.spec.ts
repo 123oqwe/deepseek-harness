@@ -7,8 +7,8 @@ const spec: BudgetSpec = {
 }
 
 describe('P3-10 Resource Budget', () => {
-  beforeEach(() =>{  clearBudgets(); })
-  afterEach(() =>{  clearBudgets(); })
+  beforeEach(() =>{  clearBudgets() })
+  afterEach(() =>{  clearBudgets() })
 
   it('sets and checks budget', () => {
     setBudget('run', 'run-1', spec)

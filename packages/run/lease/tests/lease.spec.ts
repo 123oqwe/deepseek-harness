@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { acquireLease, heartbeat, revokeLease, releaseLease, getLease, getActiveLeaseForRun, isExpired, getFencingToken, clearLeases } from '../src/index.ts'
 
 describe('P4-07 Worker Lease, Heartbeat, and Fencing Token', () => {
-  beforeEach(() =>{  clearLeases(); })
-  afterEach(() =>{  clearLeases(); })
+  beforeEach(() =>{  clearLeases() })
+  afterEach(() =>{  clearLeases() })
 
   it('acquires a lease', () => {
     const lease = acquireLease('run-1', 'worker-1')
