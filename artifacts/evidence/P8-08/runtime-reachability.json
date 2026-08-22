@@ -1,0 +1,9 @@
+{
+  "issue_id": "P8-08",
+  "entrypoint": "packages/api/control-plane/src/index.ts",
+  "wired": false,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T20:26:27.915Z"
+}

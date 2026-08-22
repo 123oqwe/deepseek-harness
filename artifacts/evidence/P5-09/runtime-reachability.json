@@ -1,0 +1,9 @@
+{
+  "issue_id": "P5-09",
+  "entrypoint": "packages/router/acp-provider/src/index.ts",
+  "wired": false,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T20:04:10.290Z"
+}

@@ -1,0 +1,15 @@
+{
+  "issue_id": "P3-05",
+  "audit_date": "2026-08-22T19:47:35.738Z",
+  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
+  "packages": [
+    "packages/execution/process-isolation"
+  ],
+  "source_files": [],
+  "test_files": [],
+  "changed_files": [],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": false,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

@@ -1,0 +1,2 @@
+{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T19:55:57.688Z"}
+{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T19:55:57.688Z"}

@@ -1,0 +1,23 @@
+{
+  "issue_id": "P7-10",
+  "audit_date": "2026-08-22T20:20:09.366Z",
+  "git_sha": "4cb6f21a80b073106d30f4bf9ae51a9b9d392b87",
+  "packages": [
+    "packages/evaluation/eval"
+  ],
+  "source_files": [
+    "packages/evaluation/eval/src/index.ts",
+    "packages/evaluation/eval/src/types.ts"
+  ],
+  "test_files": [],
+  "changed_files": [
+    "packages/evaluation/eval/package.json",
+    "packages/evaluation/eval/src/index.ts",
+    "packages/evaluation/eval/src/types.ts",
+    "packages/evaluation/eval/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

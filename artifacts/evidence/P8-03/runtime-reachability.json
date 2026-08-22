@@ -1,0 +1,9 @@
+{
+  "issue_id": "P8-03",
+  "entrypoint": "packages/api/lifecycle/src/index.ts",
+  "wired": false,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T20:21:27.027Z"
+}
