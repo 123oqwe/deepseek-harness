@@ -1,4 +1,4 @@
-import type { TraceSpan, TraceLink } from '../../causal-trace/src/types.ts'
+import type { TraceSpan, TraceLink } from '@deepseek-ai/dsh-causaltrace'
 
 export interface OTelExportResult {
   readonly exported: number

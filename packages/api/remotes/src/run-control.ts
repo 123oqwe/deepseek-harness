@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import type { CommandRequest, CommandResponse } from '../../../sdk/protocol/src/commands.ts'
-import { validateTransition, isIdempotent } from '../../../sdk/protocol/src/commands.ts'
+import type { CommandRequest, CommandResponse } from '@deepseek-ai/dsh-sdk-protocol'
+import { validateTransition, isIdempotent } from '@deepseek-ai/dsh-sdk-protocol'
 
 interface RunState {
   readonly runId: string

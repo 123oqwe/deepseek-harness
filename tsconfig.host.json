@@ -391,6 +391,7 @@
     { "path": "./packages/run/turn-checkpoint" },
     { "path": "./packages/run/trigger-service" },
     { "path": "./packages/sdk/parity" },
+    { "path": "./packages/data/data-residency" },
     { "path": "./packages/session-query/session-log-export" },
     { "path": "./packages/storage/storage-encryption" },
   ]

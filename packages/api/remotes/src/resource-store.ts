@@ -1,4 +1,4 @@
-import type { ResourceSummary, ResourceDetail, PaginationParams, PaginatedResult, ConcurrencyToken } from '../../../sdk/protocol/src/resources.ts'
+import type { ResourceSummary, ResourceDetail, PaginationParams, PaginatedResult, ConcurrencyToken } from '@deepseek-ai/dsh-sdk-protocol'
 
 export class ResourceStore<T extends ResourceSummary> {
   private items = new Map<string, T & { data?: unknown }>()

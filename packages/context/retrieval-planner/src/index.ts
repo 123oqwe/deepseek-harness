@@ -1,4 +1,4 @@
-import type { ContextNode } from '../../context-graph/src/types.ts'
+import type { ContextNode } from '@deepseek-ai/dsh-context-graph'
 import { consume, type TokenBudget } from './budget.ts'
 
 export { createBudget, consume } from './budget.ts'

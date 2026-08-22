@@ -1,4 +1,4 @@
-import type { HostRequest, HostResponse } from '../../plugin-host-protocol/src/types.ts'
+import type { HostRequest, HostResponse } from '@deepseek-ai/dsh-plugin-host-protocol'
 
 const pendingRequests = new Map<string,
   { resolve: (r: HostResponse) => void; reject: (e: Error) => void; timeout: ReturnType<typeof setTimeout> }>()

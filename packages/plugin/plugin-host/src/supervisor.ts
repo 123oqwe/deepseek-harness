@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import type { PluginHostConfig } from '../../plugin-host-protocol/src/types.ts'
+import type { PluginHostConfig } from '@deepseek-ai/dsh-plugin-host-protocol'
 
 interface HostedPlugin {
   readonly processId: string

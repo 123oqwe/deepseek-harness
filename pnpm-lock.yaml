@@ -3570,7 +3570,11 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
-  packages/context/retrieval-planner: {}
+  packages/context/retrieval-planner:
+    dependencies:
+      '@deepseek-ai/dsh-context-graph':
+        specifier: workspace:*
+        version: link:../context-graph
 
   packages/context/session-reference:
     dependencies:
@@ -6007,7 +6011,11 @@ importers:
 
   packages/observability/causal-trace: {}
 
-  packages/observability/otel-exporter: {}
+  packages/observability/otel-exporter:
+    dependencies:
+      '@deepseek-ai/dsh-causaltrace':
+        specifier: workspace:*
+        version: link:../causal-trace
 
   packages/observability/telemetry-outbox: {}
 
@@ -6058,7 +6066,11 @@ importers:
 
   packages/plugin/plugin-compat: {}
 
-  packages/plugin/plugin-host: {}
+  packages/plugin/plugin-host:
+    dependencies:
+      '@deepseek-ai/dsh-plugin-host-protocol':
+        specifier: workspace:*
+        version: link:../plugin-host-protocol
 
   packages/plugin/plugin-host-protocol: {}
 
