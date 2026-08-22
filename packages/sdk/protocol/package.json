@@ -22,7 +22,12 @@
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./resources": {
+      "types": "./lib/types/resources.d.ts",
+      "default": "./lib/resources.js"
+    },
+    "./src/*": "./src/*"
   },
   "files": [
     "lib/index.js",
