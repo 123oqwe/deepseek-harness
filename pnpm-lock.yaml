@@ -5573,6 +5573,8 @@ importers:
 
   packages/observability/telemetry-outbox: {}
 
+  packages/operator/control-plane: {}
+
   packages/plan/plan-mode:
     dependencies:
       zod:
