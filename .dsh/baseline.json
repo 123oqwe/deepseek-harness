@@ -1,19 +1,19 @@
 {
-  "git_sha": "69f6ae6d4b0c927beaf95e86113ad1e1d0640288",
+  "git_sha": "e4d19cb548ac5b2c5e271710a912dd08a852f83f",
   "upstream_master_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "node_version": "v24.18.0",
   "pnpm_version": "11.7.0",
   "platform": "darwin",
   "schema_hashes": {
     "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
-    "packages/core/session/src/types.ts": "f809a8774e05aa73da3a092bc5f3e31af6556c3ffdffc866be6c3335c0a97117",
+    "packages/core/session/src/types.ts": "9d3ba4bdde35285626b9233d95a16e4bcdea590b12b51c83c34609e9ceb03b03",
     "packages/core/session/src/known-event-types.ts": "23ed63cf702d770839baf1bee86754f69d33c040d05c3fc3654dd0424d7a9fcb",
     "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1",
     "packages/core/agent/src/types.ts": "2353804cf902731cf979f8cb35f0ef830771133bd396a3f0afc368bc72c458bd",
     "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8"
   },
   "manifest_hashes": {
-    "package.json": "04dd36194d0a46bcaa8d90d46e21141994fd8d50c7610b2a7008afd85c533332",
+    "package.json": "6acfac9a292359ff0619eade9cce5d8297fc2d4975c20dcdc04667a0d86b1c09",
     "pnpm-lock.yaml": "1fd2f35b20ebc98219d6a54139a935da1ac0bc664cd3d4a591825cf2c5085932",
     "pnpm-workspace.yaml": "39d569ce64de5fcfff5db3467304d143bbc6816c03442357af854827f3718f5f"
   },
@@ -143,6 +143,10 @@
       "version": "0.1.1-rc.2"
     },
     {
+      "name": "@deepseek-ai/dsh-action-manifest",
+      "version": "0.1.0-rc.5"
+    },
+    {
       "name": "@deepseek-ai/dsh-agent",
       "version": "0.1.1-rc.2"
     },
@@ -221,6 +225,10 @@
     {
       "name": "@deepseek-ai/dsh-brand",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-capability-token",
+      "version": "0.1.0-rc.5"
     },
     {
       "name": "@deepseek-ai/dsh-client-connection",
@@ -615,6 +623,10 @@
       "version": "0.1.1-rc.2"
     },
     {
+      "name": "@deepseek-ai/dsh-memory",
+      "version": "0.1.0-rc.5"
+    },
+    {
       "name": "@deepseek-ai/dsh-message-feedback",
       "version": "0.1.1-rc.2"
     },
@@ -639,8 +651,20 @@
       "version": "0.1.1-rc.2"
     },
     {
+      "name": "@deepseek-ai/dsh-plugin-compat",
+      "version": "0.1.0-rc.5"
+    },
+    {
       "name": "@deepseek-ai/dsh-plugin-manifest",
       "version": "0.1.0"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-ownership",
+      "version": "0.1.0-rc.5"
+    },
+    {
+      "name": "@deepseek-ai/dsh-plugin-provenance",
+      "version": "0.1.0-rc.5"
     },
     {
       "name": "@deepseek-ai/dsh-principal",
@@ -657,6 +681,10 @@
     {
       "name": "@deepseek-ai/dsh-repeat-tool-reminder",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-run",
+      "version": "0.1.0-rc.5"
     },
     {
       "name": "@deepseek-ai/dsh-sandbox",
@@ -709,6 +737,10 @@
     {
       "name": "@deepseek-ai/dsh-session-checkpoint-policy",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-session-lifecycle",
+      "version": "0.1.0-rc.5"
     },
     {
       "name": "@deepseek-ai/dsh-session-log-export",
@@ -1061,6 +1093,10 @@
     {
       "name": "@deepseek-ai/dsh-workspace",
       "version": "0.1.1-rc.2"
+    },
+    {
+      "name": "@deepseek-ai/dsh-workspace-trust",
+      "version": "0.1.0-rc.5"
     },
     {
       "name": "@deepseek-ai/schemastery",

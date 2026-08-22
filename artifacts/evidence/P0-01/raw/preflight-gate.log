@@ -1,0 +1,10 @@
+native/landlock-run/packages/linux-arm64 | [WARN] Unsupported platform: wanted: {"cpu":["arm64"],"os":["linux"],"libc":["any"]} (current: {"os":"darwin","cpu":"arm64","libc":"unknown"})
+native/landlock-run/packages/linux-x64   | [WARN] Unsupported platform: wanted: {"cpu":["x64"],"os":["linux"],"libc":["any"]} (current: {"os":"darwin","cpu":"arm64","libc":"unknown"})
+Scope: all 261 workspace projects
+[WARN] There are cyclic workspace dependencies: /Users/guanjieqiao/dsh-first100-integration/packages/api/gateway, /Users/guanjieqiao/dsh-first100-integration/packages/client/connection, /Users/guanjieqiao/dsh-first100-integration/packages/host/apiproxy, /Users/guanjieqiao/dsh-first100-integration/packages/api/remotes; /Users/guanjieqiao/dsh-first100-integration/packages/client/ui-renderer, /Users/guanjieqiao/dsh-first100-integration/packages/test-support/client-runtime; /Users/guanjieqiao/dsh-first100-integration/packages/sandbox/sandbox-local, /Users/guanjieqiao/dsh-first100-integration/packages/sandbox/sandbox-windows-acl; /Users/guanjieqiao/dsh-first100-integration/packages/subagent/subagent-spawn-in-process, /Users/guanjieqiao/dsh-first100-integration/packages/subagent/tool-subagent; /Users/guanjieqiao/dsh-first100-integration/vendor/cordis, /Users/guanjieqiao/dsh-first100-integration/vendor/include
+✓ Lockfile passes supply-chain policies (verified 27m ago)
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 69, reused 69, downloaded 0, added 0
+Progress: resolved 110, reused 110, downloaded 0, added 0
+[WARN] GET https://registry.npmjs.org/playwright error (23). Will retry in 10 seconds. 2 retries left.
+[WARN] GET https://registry.npmjs.org/playwright error (23). Will retry in 1 minute. 1 retries left.

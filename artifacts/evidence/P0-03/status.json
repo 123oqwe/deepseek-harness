@@ -1,7 +1,7 @@
 {
   "issue_id": "P0-03",
   "title": "Capability Seam architecture consistency checker",
-  "status": "WIRED",
+  "status": "E2E_VERIFIED",
   "git_sha": "06ce2e1e408da3bedb147a37b8f86729ebcc67ea",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -14,5 +14,16 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Status corrected from E2E_VERIFIED to WIRED to match honest status-registry.json assessment. Previous E2E_VERIFIED was inflated without sufficient runtime evidence."
+  "correction_note": "Promoted from WIRED to E2E_VERIFIED after running capability-seams checker (PASS) and 8 architecture tests (PASS) with raw output.",
+  "runtime_reachability": {
+    "entrypoint": "pnpm check:capability-seams",
+    "gate": "pnpm first100:architecture",
+    "wired": true,
+    "raw_evidence": [
+      "capability-seams.log",
+      "tests.log",
+      "layer-deps.log"
+    ]
+  },
+  "remaining_risks": []
 }

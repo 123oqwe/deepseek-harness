@@ -1,0 +1,10 @@
+layer-deps: FAIL — 3 unexempted upward dependencies (of 85 total):
+  @deepseek-ai/dsh-agent-loop (layer 3) imports @deepseek-ai/dsh-memory (layer 4): upward dependency
+    file: packages/core/agent-loop/src/index.ts
+    import: @deepseek-ai/dsh-memory
+  @deepseek-ai/dsh-agent-loop (layer 3) imports @deepseek-ai/dsh-memory (layer 4): upward dependency
+    file: packages/core/agent-loop/src/index.ts
+    import: @deepseek-ai/dsh-memory
+  @deepseek-ai/dsh-session (layer 3) imports @deepseek-ai/dsh-run (layer 5): upward dependency
+    file: packages/core/session/src/types.ts
+    import: @deepseek-ai/dsh-run

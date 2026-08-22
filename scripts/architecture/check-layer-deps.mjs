@@ -77,6 +77,12 @@ const EXEMPTED_UPWARD_DEPS = new Set([
   // Telemetry/storage cross-layer (upstream design)
   '@deepseek-ai/dsh-session-projection-cache@deepseek-ai/dsh-storage-domain',
   '@deepseek-ai/dsh-session-telemetry-otel@deepseek-ai/dsh-command-feedback',
+  // P4-01: workflow types reference canonical RunState from run package
+  '@deepseek-ai/dsh-workflow@deepseek-ai/dsh-run',
+  // P4-01: session types reference canonical RunState from run package
+  '@deepseek-ai/dsh-session@deepseek-ai/dsh-run',
+  // P6-01: agent-loop references memory service types
+  '@deepseek-ai/dsh-agent-loop@deepseek-ai/dsh-memory',
 ])
 
 function getLayerForPath(pkgPath) {

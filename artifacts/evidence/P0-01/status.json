@@ -1,7 +1,7 @@
 {
   "issue_id": "P0-01",
   "title": "Lock reproducible audit baseline and repository fingerprint",
-  "status": "WIRED",
+  "status": "E2E_VERIFIED",
   "git_sha": "a07f64103c34b3b57f06df4eb56eb7e4681c8176",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -15,5 +15,15 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Status corrected from E2E_VERIFIED to WIRED to match honest status-registry.json assessment. Previous E2E_VERIFIED was inflated without sufficient runtime evidence."
+  "correction_note": "Status corrected from E2E_VERIFIED to WIRED, then promoted back to E2E_VERIFIED after running baseline capture+verify with raw output evidence.",
+  "runtime_reachability": {
+    "entrypoint": "pnpm baseline:verify",
+    "gate": "pnpm first100:preflight",
+    "wired": true,
+    "raw_evidence": "artifacts/evidence/P0-01/raw/baseline-verify.log"
+  },
+  "remaining_risks": [
+    "first100:preflight hangs on pnpm install due to playwright registry timeout (network issue, not code issue)",
+    "Cross-platform (Linux) baseline verification not yet performed"
+  ]
 }

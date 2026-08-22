@@ -1,0 +1,7 @@
+baseline: captured fingerprint to .dsh/baseline.json
+  git_sha: e4d19cb548ac5b2c5e271710a912dd08a852f83f
+  upstream_master_sha: b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+  schema_files: 6
+  manifest_files: 3
+  bundle_row_ids: 78
+  workspace_packages: 251
