@@ -1,0 +1,7 @@
+packages/router/model-router/src/index.ts
+packages/router/model-router/src/types.ts
+packages/router/model-router/src/score.ts
+packages/router/model-router/tests/router.spec.ts
+packages/router/model-router/package.json
+packages/router/model-router/tsconfig.json
+packages/router/model-router/README.md
