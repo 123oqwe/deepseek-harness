@@ -1,0 +1,1 @@
+{ "issue_id": "P1-05", "title": "Plugin Static/Dynamic Security Scanner", "status": "PASS", "tests_run": 18, "tests_passed": 18, "tests_failed": 0, "tests_not_run": 0, "timestamp": "2026-08-22T11:30:00+08:00", "commit": "pending" }
