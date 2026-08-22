@@ -3,11 +3,8 @@ import type { TaskItem } from './types.ts'
 export class FairnessScheduler {
   private readonly tenantQueues = new Map<string, TaskItem[]>()
   private readonly tenantLastRun = new Map<string, number>()
-  private readonly maxPerTenant: number
+  constructor(_maxPerTenant: number = 5) {}
 
-  constructor(maxPerTenant: number = 5) {
-    this.maxPerTenant = maxPerTenant
-  }
 
   enqueue(task: TaskItem): void {
     const queue = this.tenantQueues.get(task.tenantId) ?? []
