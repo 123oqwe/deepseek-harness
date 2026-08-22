@@ -1,0 +1,14 @@
+packages/execution/egress-proxy/src/index.ts
+packages/execution/egress-proxy/src/types.ts
+packages/execution/egress-proxy/src/policy.ts
+packages/execution/egress-proxy/src/dns.ts
+packages/execution/egress-proxy/tests/ssrf.spec.ts
+packages/execution/egress-proxy/package.json
+packages/execution/egress-proxy/tsconfig.json
+packages/execution/egress-proxy/README.md
+docs/architecture/2026-08-22-p3-04-egress-proxy.md
+.agent-notes/2026-08-22-p3-04-egress-proxy.md
+artifacts/evidence/P3-04/summary.json
+artifacts/evidence/P3-04/changed-files.txt
+artifacts/evidence/P3-04/test-results.json
+artifacts/evidence/P3-04/remaining-risks.md
