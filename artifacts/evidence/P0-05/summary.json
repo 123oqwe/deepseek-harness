@@ -1,0 +1,16 @@
+{
+  "issue_id": "P0-05",
+  "title": "为重大能力引入 Shadow/Enforce Feature Gates",
+  "branch": "feat/p0-05-feature-gates",
+  "status": "PASS",
+  "tests": { "total": 12, "passed": 12, "failed": 0, "not_run": 0 },
+  "commands_run": ["pnpm vitest run packages/migration/feature-gates/tests/gates.spec.ts"],
+  "new_files": [
+    "packages/migration/feature-gates/src/index.ts",
+    "packages/migration/feature-gates/src/types.ts",
+    "packages/migration/feature-gates/tests/gates.spec.ts",
+    "packages/migration/feature-gates/package.json",
+    "packages/migration/feature-gates/tsconfig.json",
+    "packages/migration/feature-gates/README.md"
+  ]
+}

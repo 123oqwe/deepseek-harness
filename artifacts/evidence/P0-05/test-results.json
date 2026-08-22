@@ -1,0 +1,21 @@
+{
+  "command": "pnpm vitest run packages/migration/feature-gates/tests/gates.spec.ts",
+  "exit_code": 0,
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "tests": [
+    { "name": "registers and resolves a gate", "status": "PASS" },
+    { "name": "resolves to default when profile not found", "status": "PASS" },
+    { "name": "applies home and CLI overrides in order", "status": "PASS" },
+    { "name": "prevents enforce -> off downgrade without kernel admin", "status": "PASS" },
+    { "name": "prevents enforce -> shadow downgrade without kernel admin", "status": "PASS" },
+    { "name": "allows enforce -> off downgrade with kernel admin", "status": "PASS" },
+    { "name": "records shadow comparison events with redaction", "status": "PASS" },
+    { "name": "shadow event detects differences", "status": "PASS" },
+    { "name": "same request gives same user-visible result in legacy vs shadow", "status": "PASS" },
+    { "name": "expired gate fails release gate", "status": "PASS" },
+    { "name": "non-expired gate passes release gate", "status": "PASS" },
+    { "name": "registers built-in gates", "status": "PASS" }
+  ]
+}
