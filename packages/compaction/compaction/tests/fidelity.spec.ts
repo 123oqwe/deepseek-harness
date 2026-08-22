@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { compact, ProvenanceTracker } from '../src/index.ts'
+import { compact } from '../src/coverage.ts'
+import { ProvenanceTracker } from '../src/provenance.ts'
 
 describe('P6-06 Compaction Fidelity', () => {
   it('compacts within budget', () => {

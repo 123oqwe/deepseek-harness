@@ -61,3 +61,74 @@ export class HumanInteractionChannel {
       .map(e => e.request)
   }
 }
+
+
+// P2-12: Global Emergency Stop and Human Interaction Channel
+
+interface StopOrder {
+  readonly id: string
+  readonly reason: string
+  readonly issuedAt: string
+  readonly issuer: string
+}
+
+interface Interaction {
+  readonly id: string
+  readonly type: string
+  readonly data: unknown
+  readonly createdAt: string
+}
+
+const stopOrders: StopOrder[] = []
+let globallyStopped = false
+const interactions: Interaction[] = []
+
+export function issueEmergencyStop(reason: string, issuer: string = 'system'): StopOrder {
+  const order: StopOrder = {
+    id: `stop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    reason,
+    issuedAt: new Date().toISOString(),
+    issuer,
+  }
+  stopOrders.push(order)
+  globallyStopped = true
+  return order
+}
+
+export function isGloballyStopped(): boolean {
+  return globallyStopped
+}
+
+export function resume(): { resumed: boolean; reason: string } {
+  if (!globallyStopped) return { resumed: false, reason: 'not stopped' }
+  globallyStopped = false
+  return { resumed: true, reason: 'resumed' }
+}
+
+export function getStopOrders(): readonly StopOrder[] {
+  return stopOrders
+}
+
+export function clearStopOrders(): void {
+  stopOrders.length = 0
+  globallyStopped = false
+}
+
+export function createInteraction(type: string, data: unknown): Interaction {
+  const interaction: Interaction = {
+    id: `int-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    type,
+    data,
+    createdAt: new Date().toISOString(),
+  }
+  interactions.push(interaction)
+  return interaction
+}
+
+export function getInteractions(): readonly Interaction[] {
+  return interactions
+}
+
+export function clearInteractions(): void {
+  interactions.length = 0
+}

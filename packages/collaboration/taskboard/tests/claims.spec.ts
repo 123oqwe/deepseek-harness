@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
-  createTask, claimTask, completeTask, getTask, getTasksByRun,
+  createTask, claimTask, completeTask,
   sendMessage, readMessages, getUnreadCount,
   writeBlackboard, readBlackboard, getBlackboardVersion,
   clearAll,

@@ -1,12 +1,19 @@
 /** Platform-neutral assembly of generated Host Remote contributions. */
 
 import type { Context } from '@deepseek-ai/cordis'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import commandsRemote from '@deepseek-ai/dsh-commands/remote'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import goalsRemote from '@deepseek-ai/dsh-goal/remote'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import dynamicRemote from '@deepseek-ai/dsh-cordis-host-runner/remote'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import fileReferencesRemote from '@deepseek-ai/dsh-file-reference/remote'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import pluginInventoryRemote from '@deepseek-ai/dsh-host-plugin-inventory/remote'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import messageFeedbackRemote from '@deepseek-ai/dsh-message-feedback/remote'
+// @ts-expect-error: typert-generated remote client lacks .d.ts (needs typert regeneration)
 import sessionReferencesRemote from '@deepseek-ai/dsh-session-reference/remote'
 import type { TypertClientRemote } from '@deepseek-ai/dsh-typert-protocol'
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { planRetrieval, createBudget } from '../src/index.ts'
-import type { ContextNode } from '../src/index.ts'
+import type { ContextNode } from '../../context-graph/src/types.ts'
 
 const nodes: ContextNode[] = [
   { id: 'n1', type: 'message', content: 'hello', timestamp: 1, runId: 'r1', parentIds: [], tokenEstimate: 10, relevanceScore: 0.9 },
