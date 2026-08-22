@@ -3942,6 +3942,8 @@ importers:
 
   packages/execution/execution-world: {}
 
+  packages/execution/world-snapshot: {}
+
   packages/extensions/cordis-client-runner:
     devDependencies:
       '@deepseek-ai/cordis':

@@ -1,0 +1,5 @@
+{
+  "tool": "vitest",
+  "test_file": "packages/execution/world-snapshot/tests/restore.spec.ts",
+  "summary": { "passed": 11, "failed": 0, "total": 11 }
+}

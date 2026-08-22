@@ -1,0 +1,7 @@
+{
+  "issue_id": "P3-11",
+  "title": "ExecutionWorld Snapshot / Restore / Rollback",
+  "status": "PASS",
+  "tests": { "passed": 11, "failed": 0, "total": 11 },
+  "packages": ["@deepseek-ai/dsh-world-snapshot"]
+}
