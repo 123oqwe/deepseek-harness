@@ -1,0 +1,10 @@
+packages/artifact/artifact/src/index.ts
+packages/artifact/artifact/src/types.ts
+packages/artifact/artifact/src/lineage.ts
+packages/artifact/artifact/tests/lineage.spec.ts
+packages/artifact/artifact/package.json
+packages/artifact/artifact/tsconfig.json
+packages/artifact/artifact/README.md
+packages/artifact/artifact-local/src/index.ts
+packages/artifact/artifact-local/package.json
+packages/artifact/artifact-local/tsconfig.json

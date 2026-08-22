@@ -1,0 +1,1 @@
+{"test_command":"npx vitest run packages/artifact/artifact/tests/lineage.spec.ts","total":8,"passed":8,"failed":0,"skipped":0,"status":"PASS"}
