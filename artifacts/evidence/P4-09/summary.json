@@ -1,0 +1,1 @@
+{ "issue_id": "P4-09", "title": "Detached, Saved, Versioned & Nested Workflow", "status": "PASS", "tests_run": 12, "tests_passed": 12, "tests_failed": 0, "tests_not_run": 0, "timestamp": "2026-08-22T11:10:00+08:00", "commit": "pending" }

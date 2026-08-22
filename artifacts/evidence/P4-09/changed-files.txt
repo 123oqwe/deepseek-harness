@@ -1,0 +1,13 @@
+packages/workflow/workflow-registry/src/index.ts
+packages/workflow/workflow-registry/src/types.ts
+packages/workflow/workflow-registry/src/version.ts
+packages/workflow/workflow-registry/tests/nested.spec.ts
+packages/workflow/workflow-registry/package.json
+packages/workflow/workflow-registry/tsconfig.json
+packages/workflow/workflow-registry/README.md
+docs/architecture/2026-08-22-p4-09-nested-workflow.md
+.agent-notes/2026-08-22-p4-09-nested-workflow.md
+artifacts/evidence/P4-09/summary.json
+artifacts/evidence/P4-09/changed-files.txt
+artifacts/evidence/P4-09/test-results.json
+artifacts/evidence/P4-09/remaining-risks.md

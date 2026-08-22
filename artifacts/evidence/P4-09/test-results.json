@@ -1,0 +1,1 @@
+{ "test_command": "npx vitest run packages/workflow/workflow-registry/tests/nested.spec.ts", "total": 12, "passed": 12, "failed": 0, "skipped": 0, "status": "PASS" }
