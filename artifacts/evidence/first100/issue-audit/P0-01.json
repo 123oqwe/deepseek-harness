@@ -1,0 +1,17 @@
+{
+  "issue_id": "P0-01",
+  "title": "\u9501\u5b9a\u53ef\u590d\u73b0\u5ba1\u8ba1\u57fa\u7ebf\u4e0e\u4ed3\u5e93\u6307\u7eb9",
+  "audit_classification": "WRONG_BASELINE",
+  "assigned_status": "WIRED",
+  "status_reason": "Code is wired into shipping boot path or architecture gate, but full E2E/recovery/security evidence has not passed per v3.1 requirements.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

@@ -1,0 +1,17 @@
+{
+  "issue_id": "P7-05",
+  "title": "AcceptanceGate \u4e0e OutcomePackage\uff1a\u53ea\u6709\u88ab\u8bc1\u660e\u7684\u7ed3\u679c\u624d\u80fd\u5b8c\u6210 Run",
+  "audit_classification": "ASSURANCE_SCAFFOLD_CANNOT_PROVE_OUTCOME",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

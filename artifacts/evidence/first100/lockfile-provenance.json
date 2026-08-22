@@ -1,0 +1,19 @@
+{
+  "base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "base_lockfile_digest": "6f20c268e76df1294c16f016ab10a7fa1271608b4db0f4fafe8f7c21ec90013e",
+  "final_lockfile_digest": "1fd2f35b20ebc98219d6a54139a935da1ac0bc664cd3d4a591825cf2c5085932",
+  "package_manifest_changes": [
+    "Added packages/kernel/trust-kernel (P0-02)",
+    "Added packages/schema/schema-registry (P0-06)",
+    "Added packages/migration/feature-gates (P0-05)",
+    "Added packages/assurance/evidence-format (P0-07)",
+    "Added packages/plugin/plugin-manifest (P1-01)",
+    "Added packages/identity/principal (P2-01)"
+  ],
+  "dependency_changes": "No new external dependencies added; all new packages are workspace-internal.",
+  "generator_command": "pnpm install",
+  "pnpm_version": "11.7.0",
+  "node_version": "v24.18.0",
+  "old_pr_lockfiles_rejected": "No prototype lockfiles were imported; all dependency changes were generated from the current integration package manifests.",
+  "unexpected_transitive_changes": "None observed; lockfile changes only reflect new workspace packages."
+}

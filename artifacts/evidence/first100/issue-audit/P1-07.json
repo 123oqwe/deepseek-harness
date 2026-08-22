@@ -1,0 +1,17 @@
+{
+  "issue_id": "P1-07",
+  "title": "\u9879\u76ee Trust Boundary\uff1a\u672a\u4fe1\u4efb\u76ee\u5f55\u4e0d\u52a0\u8f7d\u9879\u76ee\u7ea7\u6267\u884c\u5185\u5bb9",
+  "audit_classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

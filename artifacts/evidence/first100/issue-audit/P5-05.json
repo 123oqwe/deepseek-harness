@@ -1,0 +1,17 @@
+{
+  "issue_id": "P5-05",
+  "title": "\u6269\u5c55 Structured SubagentRequest Contract",
+  "audit_classification": "ROUTER_PROVIDER_SCAFFOLD_NOT_ON_MAIN_PATH",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

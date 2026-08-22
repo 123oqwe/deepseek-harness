@@ -1,0 +1,17 @@
+{
+  "issue_id": "P2-10",
+  "title": "Policy-as-Code\u3001Explain \u4e0e Dry Run",
+  "audit_classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

@@ -1,0 +1,17 @@
+{
+  "issue_id": "P4-12",
+  "title": "\u5916\u90e8\u526f\u4f5c\u7528 Idempotency Ledger",
+  "audit_classification": "VOLATILE_LEDGER_AND_AMBIGUOUS_OVERWRITE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

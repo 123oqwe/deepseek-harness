@@ -1,0 +1,17 @@
+{
+  "issue_id": "P0-06",
+  "title": "\u5efa\u7acb\u7edf\u4e00 Schema Registry \u4e0e\u517c\u5bb9\u6027\u89c4\u5219",
+  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "assigned_status": "WIRED",
+  "status_reason": "Code is wired into shipping boot path or architecture gate, but full E2E/recovery/security evidence has not passed per v3.1 requirements.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

@@ -1,0 +1,21 @@
+{
+  "issue_id": "P2-01",
+  "title": "\u7edf\u4e00 Principal / Tenant / Run / Actor \u8eab\u4efd\u4e0a\u4e0b\u6587",
+  "audit_classification": "AUTHORIZATION_BUG_AND_VOLATILE_IDENTITY",
+  "assigned_status": "SCAFFOLD",
+  "status_reason": "Executable code and tests exist, but the capability is isolated and not reachable from a shipping entrypoint profile.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [
+    "Package must be composed into shipping cordis.yml profiles"
+  ],
+  "missing_profile_wiring": [
+    "No shipping profile loads this package"
+  ],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

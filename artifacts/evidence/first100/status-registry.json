@@ -1,0 +1,2355 @@
+{
+  "total_issues": 100,
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "integration_branch_head": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+  "issues": [
+    {
+      "id": "P0-01",
+      "status": "WIRED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-01-baseline-fingerprint"
+      ],
+      "prototype_prs": [
+        1
+      ],
+      "main_execution_paths": [
+        "scripts/release/baseline-fingerprint.mjs",
+        "package.json scripts"
+      ],
+      "real_entrypoints": [
+        "pnpm baseline:capture",
+        "pnpm baseline:verify",
+        "pnpm first100:preflight"
+      ],
+      "shipping_profiles": [
+        "all profiles (baseline is checked at preflight)"
+      ],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [
+        "first100:preflight runs baseline:verify"
+      ],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [
+        "artifacts/evidence/P0-01/"
+      ],
+      "remaining_risks": [
+        "Cross-platform (Linux) verification not yet performed"
+      ],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-02",
+      "status": "PARTIALLY_WIRED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-02-trust-kernel"
+      ],
+      "prototype_prs": [
+        2
+      ],
+      "main_execution_paths": [
+        "packages/boot/app-boot/src/index.ts (initTrustKernel before new Context)"
+      ],
+      "real_entrypoints": [
+        "boot() function in app-boot"
+      ],
+      "shipping_profiles": [
+        "web, headless, CLI (via boot() function)"
+      ],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [
+        "Trust kernel is initialized at boot but NOT all execution paths call the kernel for policy enforcement",
+        "No authorization bypass matrix test exists",
+        "Sandbox attestation checks OS-level indicators but does not verify ExecutionWorld provider attestation",
+        "No separate-process crash recovery test for audit chain"
+      ],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-03",
+      "status": "WIRED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-03-capability-seams"
+      ],
+      "prototype_prs": [
+        4
+      ],
+      "main_execution_paths": [
+        "scripts/architecture/check-capability-seams.mjs"
+      ],
+      "real_entrypoints": [
+        "pnpm check:capability-seams",
+        "pnpm first100:architecture"
+      ],
+      "shipping_profiles": [
+        "all profiles (architecture gate runs at preflight)"
+      ],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [
+        "first100:architecture runs capability-seams checker"
+      ],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [
+        "artifacts/evidence/P0-03/"
+      ],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-04-layer-deps"
+      ],
+      "prototype_prs": [
+        9
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-05",
+      "status": "SCAFFOLD",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-05-feature-gates"
+      ],
+      "prototype_prs": [
+        5
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-06",
+      "status": "WIRED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-06-schema-registry"
+      ],
+      "prototype_prs": [
+        3
+      ],
+      "main_execution_paths": [
+        "packages/boot/app-boot/src/index.ts (registerBuiltinSchemas before new Context)"
+      ],
+      "real_entrypoints": [
+        "boot() function in app-boot"
+      ],
+      "shipping_profiles": [
+        "web, headless, CLI (via boot() function)"
+      ],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [
+        "first100:architecture runs typecheck"
+      ],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [
+        "artifacts/evidence/P0-06/"
+      ],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-07",
+      "status": "SCAFFOLD",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-07-release-evidence"
+      ],
+      "prototype_prs": [
+        6
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P0-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p0-08-benchmark"
+      ],
+      "prototype_prs": [
+        10
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-01",
+      "status": "SCAFFOLD",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-01-plugin-manifest"
+      ],
+      "prototype_prs": [
+        7
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-02-plugin-provenance"
+      ],
+      "prototype_prs": [
+        11
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-03-plugin-lock"
+      ],
+      "prototype_prs": [
+        20
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-04-plugin-installer"
+      ],
+      "prototype_prs": [
+        38
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-05-plugin-scanner"
+      ],
+      "prototype_prs": [
+        51
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-06-plugin-host"
+      ],
+      "prototype_prs": [
+        39
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-07-workspace-trust"
+      ],
+      "prototype_prs": [
+        12
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-08-plugin-compat"
+      ],
+      "prototype_prs": [
+        13
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-09-plugin-ownership"
+      ],
+      "prototype_prs": [
+        14
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-10-plugin-migrations"
+      ],
+      "prototype_prs": [
+        40
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-11",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-11-extension-proposal"
+      ],
+      "prototype_prs": [
+        62
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P1-12",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p1-12-plugin-certification"
+      ],
+      "prototype_prs": [
+        63
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-01",
+      "status": "SCAFFOLD",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-01-principal-identity"
+      ],
+      "prototype_prs": [
+        8
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-02-capability-token"
+      ],
+      "prototype_prs": [
+        15
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-03-action-manifest"
+      ],
+      "prototype_prs": [
+        16
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-04-risk-taxonomy"
+      ],
+      "prototype_prs": [
+        21
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-05-policy-engine"
+      ],
+      "prototype_prs": [
+        26
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-06-approval-binding"
+      ],
+      "prototype_prs": [
+        29
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-07-approval-store"
+      ],
+      "prototype_prs": [
+        41
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-08-grant-store"
+      ],
+      "prototype_prs": [
+        52
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-09-approval-quorum"
+      ],
+      "prototype_prs": [
+        53
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-10-policy-language"
+      ],
+      "prototype_prs": [
+        30
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-11",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-11-policy-profile"
+      ],
+      "prototype_prs": [
+        54
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P2-12",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p2-12-emergency-stop"
+      ],
+      "prototype_prs": [
+        31
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-01",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-01-execution-world"
+      ],
+      "prototype_prs": [
+        32
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-02-sandbox-policy"
+      ],
+      "prototype_prs": [
+        42
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-03-outcome-errors"
+      ],
+      "prototype_prs": [
+        43
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-04-egress-proxy"
+      ],
+      "prototype_prs": [
+        55
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-05-process-isolation"
+      ],
+      "prototype_prs": [
+        56
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-06-secrets-broker"
+      ],
+      "prototype_prs": [
+        44
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-07-sandbox-hardening"
+      ],
+      "prototype_prs": [
+        64
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-08-container-world"
+      ],
+      "prototype_prs": [
+        65
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-09-remote-world"
+      ],
+      "prototype_prs": [
+        45
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-10-resource-budget"
+      ],
+      "prototype_prs": [
+        46
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-11",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-11-world-snapshot"
+      ],
+      "prototype_prs": [
+        78
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P3-12",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p3-12-attachment-security"
+      ],
+      "prototype_prs": [
+        47
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-01",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-01-run-service"
+      ],
+      "prototype_prs": [
+        17
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-02-task-profile"
+      ],
+      "prototype_prs": [
+        27
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-03-run-plan"
+      ],
+      "prototype_prs": [
+        48
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-04-run-plan-freeze"
+      ],
+      "prototype_prs": [
+        57
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-05-agent-lifecycle"
+      ],
+      "prototype_prs": [
+        22
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-06-message-bus"
+      ],
+      "prototype_prs": [
+        23
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-07-worker-lease"
+      ],
+      "prototype_prs": [
+        28
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-08-workflow-journal"
+      ],
+      "prototype_prs": [
+        33
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-09-nested-workflow"
+      ],
+      "prototype_prs": [
+        49
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-10-scheduler"
+      ],
+      "prototype_prs": [
+        58
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-11",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-11-retry-classifier"
+      ],
+      "prototype_prs": [
+        50
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-12",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-12-idempotency-ledger"
+      ],
+      "prototype_prs": [
+        34
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-13",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p4-13-reconciliation"
+      ],
+      "prototype_prs": [
+        79
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P4-14",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-01",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-01-strategy-router"
+      ],
+      "prototype_prs": [
+        59
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-02-model-router"
+      ],
+      "prototype_prs": [
+        66
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-03-prompt-compiler"
+      ],
+      "prototype_prs": [
+        73
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-04-provider-resilience"
+      ],
+      "prototype_prs": [
+        74
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-05-subagent-request"
+      ],
+      "prototype_prs": [
+        60
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-06-subagent-result"
+      ],
+      "prototype_prs": [
+        75
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-10-control-convergence"
+      ],
+      "prototype_prs": [
+        35
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-11",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-11-taskboard"
+      ],
+      "prototype_prs": [
+        36
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P5-12",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p5-12-multi-agent-coordination"
+      ],
+      "prototype_prs": [
+        70
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-01",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-01-memory-service"
+      ],
+      "prototype_prs": [
+        18
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-02-memory-record"
+      ],
+      "prototype_prs": [
+        24
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-03-memory-policy"
+      ],
+      "prototype_prs": [
+        37
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-04-context-graph"
+      ],
+      "prototype_prs": [
+        72
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-05-context-topology"
+      ],
+      "prototype_prs": [
+        80
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-06-compaction"
+      ],
+      "prototype_prs": [
+        76
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-07-session-lifecycle"
+      ],
+      "prototype_prs": [
+        19
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-08-encryption-audit"
+      ],
+      "prototype_prs": [
+        61
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-09-artifact-store"
+      ],
+      "prototype_prs": [
+        67
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P6-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p6-10-privacy"
+      ],
+      "prototype_prs": [
+        77
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-01",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-01-verification-contract"
+      ],
+      "prototype_prs": [
+        68
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-02-evidence-collector"
+      ],
+      "prototype_prs": [
+        71
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-03-verifier"
+      ],
+      "prototype_prs": [
+        81
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-04-claim-graph"
+      ],
+      "prototype_prs": [
+        82
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-05-acceptance-gate"
+      ],
+      "prototype_prs": [
+        83
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-06-repair"
+      ],
+      "prototype_prs": [
+        84
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-07-causal-trace"
+      ],
+      "prototype_prs": [
+        85
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-08-replay"
+      ],
+      "prototype_prs": [
+        86
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-09-capability-suite"
+      ],
+      "prototype_prs": [
+        87
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P7-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p7-10-eval"
+      ],
+      "prototype_prs": [
+        88
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-01",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-01-protocol-version"
+      ],
+      "prototype_prs": [
+        25
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-02",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-02-remote-resources"
+      ],
+      "prototype_prs": [
+        89
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-03",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-03-lifecycle"
+      ],
+      "prototype_prs": [
+        90
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-04",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-04-server-requests"
+      ],
+      "prototype_prs": [
+        69
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-05",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-05-streaming"
+      ],
+      "prototype_prs": [
+        91
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-06",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-06-auth"
+      ],
+      "prototype_prs": [
+        92
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-07",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-07-sdk-parity"
+      ],
+      "prototype_prs": [
+        93
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-08",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-09",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    },
+    {
+      "id": "P8-10",
+      "status": "NOT_STARTED",
+      "current_sha": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+      "prototype_branches": [
+        "feat/p8-08-control-plane"
+      ],
+      "prototype_prs": [
+        94
+      ],
+      "main_execution_paths": [],
+      "real_entrypoints": [],
+      "shipping_profiles": [],
+      "external_world_verification": [],
+      "crash_recovery_strategy": "",
+      "blocking_ci_gates": [],
+      "canonical_contracts_consumed": [],
+      "canonical_contracts_produced": [],
+      "upstream_overlap_decision": "SELECTIVE_PORT",
+      "evidence_refs": [],
+      "remaining_risks": [],
+      "blocker_reason": null
+    }
+  ]
+}

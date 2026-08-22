@@ -1,0 +1,17 @@
+{
+  "issue_id": "P3-05",
+  "title": "Process\u3001Syscall\u3001IPC \u4e0e Device \u9694\u79bb",
+  "audit_classification": "HARD_CODED_OS_CAPABILITY_PROBE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

@@ -1,0 +1,17 @@
+{
+  "issue_id": "P1-06",
+  "title": "\u4e0d\u53ef\u4fe1\u63d2\u4ef6 Out-of-Process Host",
+  "audit_classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

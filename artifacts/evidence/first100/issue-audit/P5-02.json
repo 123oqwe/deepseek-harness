@@ -1,0 +1,17 @@
+{
+  "issue_id": "P5-02",
+  "title": "Model Router\uff1a\u6210\u529f\u7387\u3001\u6210\u672c\u3001\u5ef6\u8fdf\u3001\u9690\u79c1\u548c\u5de5\u5177\u80fd\u529b\u8054\u5408\u9009\u62e9",
+  "audit_classification": "ROUTER_PROVIDER_SCAFFOLD_NOT_ON_MAIN_PATH",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

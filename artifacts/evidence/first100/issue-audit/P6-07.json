@@ -1,0 +1,17 @@
+{
+  "issue_id": "P6-07",
+  "title": "Session \u751f\u547d\u5468\u671f\uff1a\u5206\u9875\u3001\u8fc7\u6ee4\u3001\u5220\u9664\u3001\u4fdd\u7559\u4e0e Partial Data Repair",
+  "audit_classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

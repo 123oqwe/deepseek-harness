@@ -1,0 +1,21 @@
+{
+  "issue_id": "P0-05",
+  "title": "\u4e3a\u91cd\u5927\u80fd\u529b\u5f15\u5165 Shadow/Enforce Feature Gates",
+  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "assigned_status": "SCAFFOLD",
+  "status_reason": "Executable code and tests exist, but the capability is isolated and not reachable from a shipping entrypoint profile.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [
+    "Package must be composed into shipping cordis.yml profiles"
+  ],
+  "missing_profile_wiring": [
+    "No shipping profile loads this package"
+  ],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

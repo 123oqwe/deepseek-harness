@@ -1,0 +1,17 @@
+{
+  "issue_id": "P7-09",
+  "title": "General-Purpose Capability Scenario Suite\uff1a\u7528\u9886\u57df\u5939\u5177\u9a8c\u8bc1 Harness\uff0c\u800c\u975e\u5185\u7f6e\u5782\u76f4 Agent",
+  "audit_classification": "NON_EXECUTING_CAPABILITY_SUITE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

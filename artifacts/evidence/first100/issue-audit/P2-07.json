@@ -1,0 +1,17 @@
+{
+  "issue_id": "P2-07",
+  "title": "\u6301\u4e45\u5316\u3001\u53ef\u8de8 Turn/\u8fdb\u7a0b\u7684 Approval Queue",
+  "audit_classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

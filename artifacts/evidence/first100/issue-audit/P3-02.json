@@ -1,0 +1,17 @@
+{
+  "issue_id": "P3-02",
+  "title": "\u6269\u5c55 Sandbox Policy \u4e3a\u5168\u7ef4\u5ea6\u5b89\u5168\u8bcd\u6c47",
+  "audit_classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

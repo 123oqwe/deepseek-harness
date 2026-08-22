@@ -1,0 +1,17 @@
+{
+  "issue_id": "P8-04",
+  "title": "\u53cc\u5411 Server\u2192Client Requests\uff1a\u6301\u4e45\u5ba1\u6279\u3001\u6f84\u6e05\u3001\u4eba\u5de5\u63a5\u7ba1\u4e0e Quorum",
+  "audit_classification": "CONTROL_PLANE_SCAFFOLD_NOT_BACKED_BY_AUTHORITIES",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

@@ -1,0 +1,17 @@
+{
+  "issue_id": "P5-08",
+  "title": "Claude Code Adapter\uff1a\u7ed3\u6784\u5316\u6d41\u3001\u4f1a\u8bdd\u6062\u590d\u3001\u5de5\u5177\u4e0e Artifact \u6620\u5c04",
+  "audit_classification": "IDENTICAL_PROVIDER_STUB",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

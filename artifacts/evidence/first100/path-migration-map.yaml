@@ -1,0 +1,17 @@
+# Path Migration Map
+# From stale fork SHA: 47f943859bef60e4160492346772ded9b24f765a
+# To upstream SHA: b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+
+stale_sha: 47f943859bef60e4160492346772ded9b24f765a
+upstream_sha: b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+total_stale_files: 7412
+total_upstream_files: 7903
+removed_files: 56
+added_files: 547
+total_migrations: 651
+
+# Summary: The integration branch is directly based on upstream/master.
+# No path migration needed for the integration branch itself.
+# The stale fork SHA (47f943859bef) had fewer files than upstream.
+# All first-100 prototype branches were based on the stale SHA and need
+# path verification against the upstream before porting.

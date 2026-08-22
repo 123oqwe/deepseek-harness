@@ -1,0 +1,17 @@
+{
+  "issue_id": "P2-08",
+  "title": "\u53ef\u590d\u7528 Grant\u3001\u8303\u56f4\u89c4\u5219\u3001\u8fc7\u671f\u4e0e\u64a4\u9500",
+  "audit_classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

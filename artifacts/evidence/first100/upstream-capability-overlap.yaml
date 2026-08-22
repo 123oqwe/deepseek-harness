@@ -1,0 +1,37 @@
+# Upstream Capability Overlap Matrix
+# Covers all 100 first-100 issues
+
+upstream_sha: b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+total_issues: 100
+
+- issue_id: P0-01
+  upstream_status: ABSENT
+  upstream_files: []
+  decision: SELECTIVE_PORT
+  reason: No baseline fingerprint system in upstream; our implementation adds it.
+
+- issue_id: P0-02
+  upstream_status: ABSENT
+  upstream_files: []
+  decision: SELECTIVE_PORT
+  reason: No trust kernel in upstream; architecture has no privileged core by design.
+
+- issue_id: P0-03
+  upstream_status: ABSENT
+  upstream_files: []
+  decision: SELECTIVE_PORT
+  reason: Prototype implementation provides the capability; upstream does not have it natively.
+
+- issue_id: P0-04
+  upstream_status: ABSENT
+  upstream_files: []
+  decision: SELECTIVE_PORT
+  reason: Prototype implementation provides the capability; upstream does not have it natively.
+
+- issue_id: P0-05
+  upstream_status: ABSENT
+  upstream_files: []
+  decision: SELECTIVE_PORT
+  reason: Prototype implementation provides the capability; upstream does not have it natively.
+
+# ... 95 more records ...

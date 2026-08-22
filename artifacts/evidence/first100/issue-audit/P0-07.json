@@ -1,0 +1,21 @@
+{
+  "issue_id": "P0-07",
+  "title": "\u5efa\u7acb Release Evidence Package \u4e0e\u4e0d\u53ef\u4f2a\u9020\u5b8c\u6210\u95e8",
+  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "assigned_status": "SCAFFOLD",
+  "status_reason": "Executable code and tests exist, but the capability is isolated and not reachable from a shipping entrypoint profile.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [
+    "Package must be composed into shipping cordis.yml profiles"
+  ],
+  "missing_profile_wiring": [
+    "No shipping profile loads this package"
+  ],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

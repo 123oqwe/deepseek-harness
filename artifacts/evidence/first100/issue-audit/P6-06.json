@@ -1,0 +1,17 @@
+{
+  "issue_id": "P6-06",
+  "title": "Compaction \u4fdd\u771f\u5ea6\u3001\u6765\u6e90\u8bc1\u660e\u4e0e Tool Pairing \u5f3a\u5316",
+  "audit_classification": "DATA_PLANE_SCAFFOLD_NOT_DURABLE_OR_WIRED",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

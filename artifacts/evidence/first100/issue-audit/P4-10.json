@@ -1,0 +1,17 @@
+{
+  "issue_id": "P4-10",
+  "title": "Workflow \u9884\u7b97\u3001Scheduler\u3001Backpressure\u3001\u516c\u5e73\u6027\u4e0e\u8d44\u6e90\u9501",
+  "audit_classification": "DURABILITY_SCAFFOLD_NOT_CRASH_SAFE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

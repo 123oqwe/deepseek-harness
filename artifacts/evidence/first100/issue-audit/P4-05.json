@@ -1,0 +1,17 @@
+{
+  "issue_id": "P4-05",
+  "title": "\u6269\u5c55 Agent Lifecycle \u72b6\u6001\u673a",
+  "audit_classification": "DURABILITY_SCAFFOLD_NOT_CRASH_SAFE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

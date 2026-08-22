@@ -1,0 +1,15 @@
+{
+  "integration_branch_head_equals_baseline_sha": false,
+  "integration_branch_head": "7d403630d7d2ac787d131fda9eaa84e9f469a700",
+  "recorded_baseline_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "note": "Integration branch HEAD has 5 commits on top of upstream/master. The baseline was captured at HEAD, not at upstream SHA. This is expected: the baseline fingerprint captures the current state of the integration branch.",
+  "requested_upstream_sha_exists": true,
+  "path_migration_map_exists": true,
+  "upstream_overlap_matrix_covers_all_100": true,
+  "old_baseline_evidence_invalidated": true,
+  "old_lockfile_not_imported": true,
+  "baseline_capture_and_verify_pass": true,
+  "no_manifest_sha_missing_state": true,
+  "wave_0_exit": "PASS",
+  "blocking_conditions": []
+}

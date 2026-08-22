@@ -1,0 +1,17 @@
+{
+  "issue_id": "P3-03",
+  "title": "\u7ed3\u6784\u5316 Out-of-Band Denial \u4e0e\u6267\u884c\u9519\u8bef",
+  "audit_classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

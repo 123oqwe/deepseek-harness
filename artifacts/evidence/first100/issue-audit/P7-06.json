@@ -1,0 +1,17 @@
+{
+  "issue_id": "P7-06",
+  "title": "Bounded Repair/Replan Loop\uff1a\u9a8c\u8bc1\u5931\u8d25\u540e\u7684\u6709\u9650\u4fee\u590d\u4e0e\u8ba1\u5212\u4fee\u8ba2",
+  "audit_classification": "ASSURANCE_SCAFFOLD_CANNOT_PROVE_OUTCOME",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

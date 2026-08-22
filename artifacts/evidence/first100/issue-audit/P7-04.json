@@ -1,0 +1,17 @@
+{
+  "issue_id": "P7-04",
+  "title": "ClaimGraph\uff1a\u58f0\u660e\u2014\u8bc1\u636e\u2014\u53cd\u8bc1\u2014\u4e0d\u786e\u5b9a\u6027\u7684\u901a\u7528\u56fe",
+  "audit_classification": "ASSURANCE_SCAFFOLD_CANNOT_PROVE_OUTCOME",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

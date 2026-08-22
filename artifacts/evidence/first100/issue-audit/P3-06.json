@@ -1,0 +1,17 @@
+{
+  "issue_id": "P3-06",
+  "title": "Secrets Broker\uff1a\u77ed\u671f\u3001\u6700\u5c0f\u8303\u56f4\u3001\u4e0d\u53ef\u56de\u663e\u51ed\u8bc1",
+  "audit_classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

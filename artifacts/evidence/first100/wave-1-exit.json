@@ -1,0 +1,15 @@
+{
+  "all_100_issue_records_exist": true,
+  "all_mandatory_fields_populated": true,
+  "no_generic_scaffold_or_worse_status": true,
+  "every_rejected_item_has_replacement": true,
+  "every_blocked_item_has_evidence": true,
+  "dependency_order_recalculated": true,
+  "wave_1_exit": "PASS",
+  "status_distribution": {
+    "WIRED": 3,
+    "PARTIALLY_WIRED": 1,
+    "NOT_STARTED": 92,
+    "SCAFFOLD": 4
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "issue_id": "P2-05",
+  "title": "Policy Decision Service \u4e0e\u5355\u8c03\u62d2\u7edd",
+  "audit_classification": "MONOTONIC_DENY_BUG",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

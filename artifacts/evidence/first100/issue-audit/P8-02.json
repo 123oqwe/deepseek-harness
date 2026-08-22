@@ -1,0 +1,17 @@
+{
+  "issue_id": "P8-02",
+  "title": "\u4e00\u7b49\u516c\u6c11 Remote Resources\uff1aRun\u3001Agent\u3001Action\u3001Approval\u3001Artifact\u3001Verification\u3001World",
+  "audit_classification": "VOLATILE_GENERIC_RESOURCE_STORE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

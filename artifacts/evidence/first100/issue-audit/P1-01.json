@@ -1,0 +1,21 @@
+{
+  "issue_id": "P1-01",
+  "title": "Plugin Manifest v2\uff1a\u58f0\u660e\u80fd\u529b\u3001\u6743\u9650\u4e0e\u526f\u4f5c\u7528",
+  "audit_classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
+  "assigned_status": "SCAFFOLD",
+  "status_reason": "Executable code and tests exist, but the capability is isolated and not reachable from a shipping entrypoint profile.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [
+    "Package must be composed into shipping cordis.yml profiles"
+  ],
+  "missing_profile_wiring": [
+    "No shipping profile loads this package"
+  ],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

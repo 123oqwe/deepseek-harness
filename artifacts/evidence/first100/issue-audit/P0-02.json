@@ -1,0 +1,22 @@
+{
+  "issue_id": "P0-02",
+  "title": "\u786e\u7acb Minimal Immutable Trust Kernel \u8fb9\u754c",
+  "audit_classification": "SECURITY_STUB_NOT_WIRED",
+  "assigned_status": "PARTIALLY_WIRED",
+  "status_reason": "At least one real runtime path uses the capability, but other required paths bypass it.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [
+    "All execution paths must call the trust kernel for policy enforcement"
+  ],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [
+    "Authorization bypass matrix test",
+    "Separate-process crash recovery"
+  ],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}

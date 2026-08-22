@@ -1,0 +1,17 @@
+{
+  "issue_id": "P2-06",
+  "title": "\u5ba1\u6279\u7ed1\u5b9a\u5b8c\u6574\u89c4\u8303\u5316\u53c2\u6570\u3001\u8d44\u6e90\u4e0e\u524d\u7f6e\u72b6\u6001",
+  "audit_classification": "REGRESSION_DELETES_EXISTING_SERVICE",
+  "assigned_status": "NOT_STARTED",
+  "status_reason": "No meaningful implementation or audit has begun on the current upstream base.",
+  "prototype_code_to_keep": [],
+  "prototype_code_to_rewrite": [],
+  "prototype_code_to_delete": [],
+  "upstream_code_to_keep": [],
+  "missing_runtime_wiring": [],
+  "missing_profile_wiring": [],
+  "missing_recovery": [],
+  "missing_security": [],
+  "missing_external_verification": [],
+  "missing_ci_gate": []
+}
