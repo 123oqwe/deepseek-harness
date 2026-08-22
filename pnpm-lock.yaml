@@ -916,6 +916,8 @@ importers:
 
   packages/assurance/outcome-package: {}
 
+  packages/assurance/repair: {}
+
   packages/assurance/verifier: {}
 
   packages/attachment/attachment:
