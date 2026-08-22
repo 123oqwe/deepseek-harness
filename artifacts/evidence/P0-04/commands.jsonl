@@ -1,0 +1,3 @@
+{"cmd": "node scripts/architecture/check-layer-deps.mjs", "exit": 0, "result": "PASS - 81 violations detected, all exempted (known upstream)"}
+{"cmd": "npx vitest run tests/architecture/layer-deps.spec.ts", "exit": 0, "result": "3 tests passed"}
+{"cmd": "node_modules/.bin/tsx scripts/run-oxlint.ts --config .oxlintrc.staged.json scripts/architecture/check-layer-deps.mjs scripts/first100/run-gates.ts", "exit": 0, "result": "lint clean"}

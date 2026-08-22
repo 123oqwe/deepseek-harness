@@ -1,0 +1,33 @@
+{
+  "issue_id": "P0-04",
+  "status": "E2E_VERIFIED",
+  "commit_sha": "HEAD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "environment": {
+    "platform": "darwin",
+    "node": "v22.0.0",
+    "pnpm": "10.0.0"
+  },
+  "test_digests": {
+    "layer-deps.spec.ts": "3 tests passed"
+  },
+  "evidence_signer": "principal-agent-cto",
+  "required_proof_classes": [
+    "architecture/static proof",
+    "shipping build/boot/CI integration proof"
+  ],
+  "verification_commands": [
+    "node scripts/architecture/check-layer-deps.mjs",
+    "npx vitest run tests/architecture/layer-deps.spec.ts"
+  ],
+  "runtime_reachability": {
+    "entrypoint": "pnpm architecture:layers",
+    "gate": "pnpm first100:architecture",
+    "wired": true
+  },
+  "remaining_risks": [
+    "81 known upstream violations are exempted; new violations will fail CI",
+    "Layer assignments may need adjustment as upstream evolves"
+  ]
+}
