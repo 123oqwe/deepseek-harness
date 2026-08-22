@@ -35,7 +35,7 @@ const agentP: AgentPrincipal = {
   kind: 'agent',
   id: 'agent-1',
   tenantId: tenantA,
-  runId: 'run-1',
+  runId: 'run-1' as unknown as import('../src/types.ts').RunId,
   delegatedBy: 'user-1',
   delegationDepth: 1,
 }
@@ -153,8 +153,8 @@ describe('P2-01 Principal/Tenant identity', () => {
       expect(extended.rootTenantId).toBe(tenantA)
       expect(extended.currentPrincipalId).toBe('agent-1')
       expect(extended.entries).toHaveLength(2)
-      expect(extended.entries[0]!.principalId).toBe('user-1')
-      expect(extended.entries[1]!.principalId).toBe('agent-1')
+      expect(extended.entries[0]?.principalId).toBe('user-1')
+      expect(extended.entries[1]?.principalId).toBe('agent-1')
     })
   })
 })

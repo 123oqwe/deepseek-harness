@@ -70,10 +70,12 @@ interface StopOrder {
   readonly reason: string
   readonly issuedAt: string
   readonly issuer: string
+  readonly persistent: boolean
 }
 
 interface Interaction {
   readonly id: string
+  readonly runId: string
   readonly type: string
   readonly data: unknown
   readonly createdAt: string
@@ -92,7 +94,7 @@ export function issueEmergencyStop(reason: string, issuer: string = 'system', _s
   }
   stopOrders.push(order)
   globallyStopped = true
-  return order
+  return { ...order, persistent: true }
 }
 
 export function isGloballyStopped(): boolean {
@@ -114,9 +116,10 @@ export function clearStopOrders(): void {
   globallyStopped = false
 }
 
-export function createInteraction(type: string, data: unknown): Interaction {
+export function createInteraction(runId: string, type: string, data: unknown): Interaction {
   const interaction: Interaction = {
     id: `int-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    runId,
     type,
     data,
     createdAt: new Date().toISOString(),
@@ -125,7 +128,8 @@ export function createInteraction(type: string, data: unknown): Interaction {
   return interaction
 }
 
-export function getInteractions(): readonly Interaction[] {
+export function getInteractions(runId?: string): readonly Interaction[] {
+  if (runId !== undefined) return interactions.filter(i => i.runId === runId)
   return interactions
 }
 

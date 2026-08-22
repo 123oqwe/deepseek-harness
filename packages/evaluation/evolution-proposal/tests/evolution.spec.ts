@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { EvalRunner } from '../../eval-runner/src/index.ts'
-import { EvalRegistry } from '../../eval-registry/src/index.ts'
-import { ChampionChallenger } from '../../champion-challenger/src/index.ts'
+import { EvalRunner } from '@deepseek-ai/dsh-evalrunner'
+import { EvalRegistry } from '@deepseek-ai/dsh-evalregistry'
+import { ChampionChallenger } from '@deepseek-ai/dsh-championchallenger'
 import { EvolutionProposalManager } from '../src/index.ts'
 import type { EvalConfig, EvalMetrics } from '../../eval/src/types.ts'
 
