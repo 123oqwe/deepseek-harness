@@ -27,7 +27,7 @@ export class RetryBudget {
   recordRetry(actionId: string, attempt: number, delayMs: number, error?: import('./types.ts').ErrorClassification): void {
     this.totalRetries++
     this.perActionAttempts.set(actionId, (this.perActionAttempts.get(actionId) ?? 0) + 1)
-    this.history.push({ attempt, delayMs, error })
+    this.history.push({ attempt, delayMs, ...(error !== undefined && { error }) })
   }
 
   /** Compute exponential backoff with jitter. */

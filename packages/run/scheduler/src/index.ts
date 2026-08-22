@@ -90,7 +90,8 @@ export class Scheduler {
     // Remove from queue
     this.queue.remove(taskId)
     // Remove from active
-    return this.complete(taskId)
+    const result = this.complete(taskId)
+    return { cancelled: true, releasedLocks: result.releasedLocks }
   }
 
   getBackpressure(): BackpressureSignal {

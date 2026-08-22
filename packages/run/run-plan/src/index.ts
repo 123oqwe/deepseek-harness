@@ -1,5 +1,5 @@
 export type { RunPlan, ModelRoute, AgentNode, WorldSpec, BudgetAllocation, ApprovalGate, VerificationSpec } from './types.ts'
-export { freezePlan, verifyFrozenPlan, computePlanDigest } from './freeze.ts'
+export { freezePlan, verifyFrozenPlan } from './freeze.ts'
 export type { FrozenPlan } from './freeze.ts'
 export { AmendmentProtocol } from './amend.ts'
 export type { PlanAmendment, AmendmentResult, AmendmentType } from './amend.ts'

@@ -2,4 +2,4 @@ export type { Severity, ScanPhase, ScanFinding, ScanResult, ScanRule } from './t
 export { RULES, getRule } from './rules.ts'
 export { staticScan } from './static.ts'
 export { dynamicScan } from './dynamic.ts'
-export type { DynamicScanInput, DynamicScanInput } from './dynamic.ts'
+export type { DynamicScanInput } from './dynamic.ts'
