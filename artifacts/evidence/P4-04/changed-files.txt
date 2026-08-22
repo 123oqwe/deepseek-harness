@@ -1,0 +1,14 @@
+packages/run/run-plan/src/index.ts
+packages/run/run-plan/src/types.ts
+packages/run/run-plan/src/freeze.ts
+packages/run/run-plan/src/amend.ts
+packages/run/run-plan/tests/amendment.spec.ts
+packages/run/run-plan/package.json
+packages/run/run-plan/tsconfig.json
+packages/run/run-plan/README.md
+docs/architecture/2026-08-22-p4-04-run-plan-freeze.md
+.agent-notes/2026-08-22-p4-04-run-plan-freeze.md
+artifacts/evidence/P4-04/summary.json
+artifacts/evidence/P4-04/changed-files.txt
+artifacts/evidence/P4-04/test-results.json
+artifacts/evidence/P4-04/remaining-risks.md
