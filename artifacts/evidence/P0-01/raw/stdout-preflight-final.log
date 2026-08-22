@@ -1,0 +1,8 @@
+$ tsx scripts/first100/run-gates.ts preflight
+
+[gate] baseline:verify
+baseline: PASS - current state matches captured fingerprint
+[gate] PASS: baseline:verify
+
+[gate] Issue status report:
+  P0-01: NOT_RUN

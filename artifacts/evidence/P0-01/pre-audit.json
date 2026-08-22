@@ -1,0 +1,48 @@
+{
+  "issue_id": "P0-01",
+  "title": "Lock reproducible audit baseline and repository fingerprint",
+  "audit_classification": "WRONG_BASELINE",
+  "current_state": "SCAFFOLD_OR_WORSE",
+  "upstream_master_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "integration_branch": "integration/first-100-rebuild",
+  "integration_branch_head": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "stale_fork_sha": "47f943859bef60e4160492346772ded9b24f765a",
+  "prototype_branch": "feat/p0-01-baseline-fingerprint",
+  "prototype_pr": 1,
+  "merge_policy": "reference_only_do_not_merge",
+  "salvageable_from_prototype": [
+    "scripts/release/baseline-fingerprint.mjs — core fingerprint logic is independently correct",
+    "tests/release/baseline-fingerprint.spec.ts — test structure is reusable",
+    "docs/audit/baseline-b150a551.md — documentation structure is reusable"
+  ],
+  "must_rewrite": [
+    ".dsh/baseline.json — must be recaptured on integration branch with correct SHA",
+    "docs/audit/baseline-b150a551.md — must document correct SHA, not stale one",
+    "baseline-fingerprint.mjs verify() — must check current HEAD equals recorded git_sha",
+    "package.json — must add baseline:capture, baseline:verify, and first100:* commands"
+  ],
+  "must_delete": [],
+  "main_chain_gaps": [
+    "No baseline fingerprint system exists on upstream",
+    "No first100:* commands exist in package.json",
+    "No path-migration map from stale SHA to required baseline",
+    "No evidence package for P0-01"
+  ],
+  "shipping_files_to_wire": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "packages/bundle/base/cordis.patch.yml",
+    "docs/testing.md",
+    "BENCHMARK.md"
+  ],
+  "schema_files_verified_present": [
+    "packages/sdk/protocol/src/types.ts",
+    "packages/core/session/src/types.ts",
+    "packages/core/session/src/known-event-types.ts",
+    "packages/bundle/base/cordis.patch.yml",
+    "packages/core/agent/src/types.ts",
+    "packages/core/agent-loop/src/runtime-context.ts"
+  ],
+  "path_migration_needed": false,
+  "path_migration_note": "All declared schema and manifest paths verified present on upstream b150a551b8. No migration map needed."
+}

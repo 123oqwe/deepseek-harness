@@ -1,0 +1,18 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+baseline: FAIL - detected drift:
+  [schema_hash_mismatch] packages/sdk/protocol/src/types.ts hash changed: b9de1f85 -> 422b6a81
+baseline: FAIL - detected drift:
+  [manifest_hash_mismatch] package.json hash changed: 4adbdffa -> a34b5279
+baseline: FAIL - detected drift:
+  [schema_hash_mismatch] packages/bundle/base/cordis.patch.yml hash changed: 9870a518 -> 4e7d4748
+  [bundle_row_ids_changed] bundle row IDs changed
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  19:39:09
+   Duration  5.85s (transform 234ms, setup 267ms, import 9ms, tests 5.38s, environment 0ms)

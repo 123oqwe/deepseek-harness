@@ -1,0 +1,6 @@
+{"cmd": "node scripts/release/baseline-fingerprint.mjs capture", "exit": 0}
+{"cmd": "node scripts/release/baseline-fingerprint.mjs verify", "exit": 0}
+{"cmd": "npx vitest run scripts/release/baseline-fingerprint.spec.ts", "exit": 0, "tests_passed": 11}
+{"cmd": "pnpm typecheck", "exit": 0}
+{"cmd": "npx tsx scripts/run-oxlint.ts scripts/release/baseline-fingerprint.spec.ts scripts/first100/run-gates.ts", "exit": 0}
+{"cmd": "pnpm first100:preflight", "exit": 0}

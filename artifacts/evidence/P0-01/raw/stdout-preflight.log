@@ -1,0 +1,10 @@
+$ tsx scripts/first100/run-gates.ts preflight
+
+[gate] baseline:verify
+baseline: FAIL - detected drift:
+  [manifest_hash_mismatch] package.json hash changed: 4adbdffa -> 94f6ab65
+[gate] FAIL: baseline:verify (exit 1)
+
+[gate] Issue status report:
+  P0-01: NOT_RUN
+[ELIFECYCLE] Command failed with exit code 1.

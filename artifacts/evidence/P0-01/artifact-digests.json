@@ -1,0 +1,15 @@
+{
+  "commands.jsonl": "c0d097f16ce6dc1d3750ba15ac924d82cfa1f33d5582d07cebd5b583e1ce4660",
+  "changed-files.txt": "dc3c4ff34c86433a58606f67c529bca8d7f44d0487089649047a641b9321d70d",
+  "pre-audit.json": "e0a095db39769d5f4b523d841bc453958f8a466e2b866106b4932c14f8fc0f90",
+  "remaining-risks.md": "428eb7143e7adb9c1ce24354a84fde806b95d4cdd249b75a235235e46040658d",
+  "status.json": "2e625c9471bb3329e92962c5d3991d5bed60d5800ef5b933492e84d8ff853035",
+  "raw/stdout-green-light.log": "819ac49f02c027314eb2f9df61d4d8ffa61f711f32f61a3c942c1d9e0bf62582",
+  "raw/stdout-typecheck.log": "c9782dbad95f4f984c4e4378d388198ac0e91c80d3b294fde4f6a8aeb5755553",
+  "raw/stdout-preflight.log": "ac3bcf57b7aba7d3b3c0b65e0510a06de88a19ddcf1320e02b0ffbd1766a9200",
+  "raw/stdout-capture.log": "c544a00d6dca0e2054069848b3ea243a9ed2907d3d3191e3c6d56ab1bbbcf07a",
+  "raw/stdout-tests-final.log": "c1153842423c7c2d9bfd1ff55db18883ef023aeafc5c5ce9eff0bb22e3f5f4df",
+  "raw/stdout-red-light.log": "35c2270b0a7084fd3a85fb9128daf25015b9c3d734228a304ac3733387ff272b",
+  "raw/stdout-preflight-final.log": "23d58f4e5541d5bf77aa2c5e9ca8b77a05c3413ea4fe48cdf3088e286af55d99",
+  "raw/stdout-lint.log": "93d55247effc4b2f804df1bb3cc8810d7feab281e3d8160e6f5469dc950f58d1"
+}

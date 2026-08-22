@@ -1,0 +1,135 @@
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+ ❯ |thread-safe| scripts/release/baseline-fingerprint.spec.ts (11 tests | 8 failed) 628ms
+     × baseline.json exists and is valid JSON 7ms
+     × fingerprint covers all declared schema files 1ms
+     × fingerprint covers all declared manifest files 0ms
+     × bundle row IDs match cordis.patch.yml 0ms
+     × fingerprint is deterministic (no timestamps) 0ms
+     × baseline:verify passes on clean checkout 128ms
+     × baseline:verify recovers after restoring files 121ms
+     × integration branch HEAD equals recorded baseline SHA 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > baseline.json exists and is valid JSON
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ scripts/release/baseline-fingerprint.spec.ts:12:38
+     10| describe('P0-01 baseline fingerprint', () => {
+     11|   it('baseline.json exists and is valid JSON', () => {
+     12|     expect(existsSync(baselinePath)).toBe(true)
+       |                                      ^
+     13|     const data = JSON.parse(readFileSync(baselinePath, 'utf8'))
+     14|     expect(data.git_sha).toBeTruthy()
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > fingerprint covers all declared schema files
+Error: ENOENT: no such file or directory, open '/Users/guanjieqiao/dsh-first100-integration/.dsh/baseline.json'
+ ❯ scripts/release/baseline-fingerprint.spec.ts:27:29
+     25|
+     26|   it('fingerprint covers all declared schema files', () => {
+     27|     const data = JSON.parse(readFileSync(baselinePath, 'utf8'))
+       |                             ^
+     28|     const expected = [
+     29|       'packages/sdk/protocol/src/types.ts',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > fingerprint covers all declared manifest files
+Error: ENOENT: no such file or directory, open '/Users/guanjieqiao/dsh-first100-integration/.dsh/baseline.json'
+ ❯ scripts/release/baseline-fingerprint.spec.ts:42:29
+     40|
+     41|   it('fingerprint covers all declared manifest files', () => {
+     42|     const data = JSON.parse(readFileSync(baselinePath, 'utf8'))
+       |                             ^
+     43|     const expected = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspac…
+     44|     for (const f of expected) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > bundle row IDs match cordis.patch.yml
+Error: ENOENT: no such file or directory, open '/Users/guanjieqiao/dsh-first100-integration/.dsh/baseline.json'
+ ❯ scripts/release/baseline-fingerprint.spec.ts:50:29
+     48|
+     49|   it('bundle row IDs match cordis.patch.yml', () => {
+     50|     const data = JSON.parse(readFileSync(baselinePath, 'utf8'))
+       |                             ^
+     51|     const yaml = readFileSync(join(repoRoot, 'packages/bundle/base/cor…
+     52|     const expected = yaml.split('\n').flatMap(line => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > fingerprint is deterministic (no timestamps)
+Error: ENOENT: no such file or directory, open '/Users/guanjieqiao/dsh-first100-integration/.dsh/baseline.json'
+ ❯ scripts/release/baseline-fingerprint.spec.ts:60:29
+     58|
+     59|   it('fingerprint is deterministic (no timestamps)', () => {
+     60|     const data = JSON.parse(readFileSync(baselinePath, 'utf8'))
+       |                             ^
+     61|     const json = JSON.stringify(data)
+     62|     expect(json).not.toMatch(/\d{4}-\d{2}-\d{2}T/)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > baseline:verify passes on clean checkout
+Error: Command failed: node scripts/release/baseline-fingerprint.mjs verify
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+
+ ❯ scripts/release/baseline-fingerprint.spec.ts:67:20
+     65|
+     66|   it('baseline:verify passes on clean checkout', () => {
+     67|     const result = execSync('node scripts/release/baseline-fingerprint…
+       |                    ^
+     68|       cwd: repoRoot,
+     69|       encoding: 'utf8',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > baseline:verify recovers after restoring files
+Error: Command failed: node scripts/release/baseline-fingerprint.mjs verify
+baseline: NO baseline.json found; run `pnpm baseline:capture` first.
+
+ ❯ scripts/release/baseline-fingerprint.spec.ts:142:20
+    140|
+    141|   it('baseline:verify recovers after restoring files', () => {
+    142|     const result = execSync('node scripts/release/baseline-fingerprint…
+       |                    ^
+    143|       cwd: repoRoot,
+    144|       encoding: 'utf8',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  |thread-safe| scripts/release/baseline-fingerprint.spec.ts > P0-01 baseline fingerprint > integration branch HEAD equals recorded baseline SHA
+Error: ENOENT: no such file or directory, open '/Users/guanjieqiao/dsh-first100-integration/.dsh/baseline.json'
+ ❯ scripts/release/baseline-fingerprint.spec.ts:150:29
+    148|
+    149|   it('integration branch HEAD equals recorded baseline SHA', () => {
+    150|     const data = JSON.parse(readFileSync(baselinePath, 'utf8'))
+       |                             ^
+    151|     const currentHead = execSync('git rev-parse HEAD', {
+    152|       cwd: repoRoot,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 3 passed (11)
+   Start at  19:38:57
+   Duration  1.07s (transform 206ms, setup 234ms, import 10ms, tests 628ms, environment 0ms)
