@@ -1,0 +1,1 @@
+{"test_command":"npx vitest run packages/assurance/evidence/tests/evidence.spec.ts","total":9,"passed":9,"failed":0,"skipped":0,"status":"PASS"}
