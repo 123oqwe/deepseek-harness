@@ -18,6 +18,10 @@ import type { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
 // augmentation. The seam stays optional at runtime — see `serviceAsk`.
 import type {} from '@deepseek-ai/dsh-user-approval'
+// P0-02: Trust kernel enforcement — every tool execution must pass through
+// the kernel's policy check. The kernel is initialized at boot; if it's not
+// available, tool execution fails closed.
+import { assertKernelInitialized } from '@deepseek-ai/dsh-trust-kernel'
 import type { ToolCallView, ToolResultView } from './presentation.ts'
 import { assertSupportedJsonSchema, validateJsonSchemaValue } from './json-schema.ts'
 import type { JsonSchemaNode } from './json-schema.ts'
@@ -1340,6 +1344,9 @@ export class ToolRuntime extends Service {
    * @returns the materialized final result.
    */
   async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult> {
+    // P0-02: Trust kernel enforcement — fail closed if kernel not initialized.
+    // Every tool call passes through this checkpoint before dispatch.
+    assertKernelInitialized()
     return this.prepareExecution(exec, prepared => this.completeScheduledExecution(prepared))
   }
 

@@ -67,6 +67,8 @@ import { listChildren as listSubagentChildren, listDescendants as listSubagentDe
 import type { SubagentDescendantListEntry, SubagentListEntry } from './list-children.ts'
 import { snapshotSubagentDescriptor } from './descriptor.ts'
 import { subagentIdentityProjectionDefinition, subagentTimingProjectionDefinition } from './projection.ts'
+// P0-02: Trust kernel enforcement on subagent dispatch
+import { assertKernelInitialized } from '@deepseek-ai/dsh-trust-kernel'
 
 export * from './out-of-process.ts'
 export { AssistantOutputFold, finalAssistantOutput } from './assistant-output.ts'
@@ -428,6 +430,8 @@ export class SubagentRuntime extends Service {
    * @returns the published holder-owned run.
    */
   async start(name: string, request: SubagentStartRequest): Promise<SubagentRun> {
+    // P0-02: Trust kernel enforcement — subagent dispatch fails closed if kernel not initialized.
+    assertKernelInitialized()
     const provider = this.expectProvider(name)
     this.assertCapabilities(provider, request)
     assertSubagentMaxDepth(request.maxDepth)

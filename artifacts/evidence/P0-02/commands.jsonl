@@ -1,1 +1,2 @@
-{"cmd": "npx vitest run packages/boot/kernel/src", "exit": 0, "result": "tests passed"}
+{"cmd": "npx vitest run packages/kernel/trust-kernel/tests/enforcement.spec.ts", "exit": 0, "result": "5 enforcement tests passed"}
+{"cmd": "npx vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts", "exit": 0, "result": "boundary tests passed"}

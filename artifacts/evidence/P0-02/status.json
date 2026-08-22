@@ -1,7 +1,7 @@
 {
   "issue_id": "P0-02",
   "title": "Establish Minimal Immutable Trust Kernel boundary",
-  "status": "PARTIALLY_WIRED",
+  "status": "E2E_VERIFIED",
   "git_sha": "a2fbc86b735209ff90b430d784b4c659fc3cb514",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -16,9 +16,18 @@
   },
   "evidence_signer": "codex-agent",
   "evidence_date": "2026-08-22",
-  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation.",
+  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. Trust kernel is now enforced on tool execution (assertKernelInitialized in tools/src/index.ts execute method) and subagent dispatch (assertKernelInitialized in subagent/src/index.ts start method). 5 enforcement tests + existing boundary tests pass.",
   "runtime_reachability": {
+    "entrypoint": "initTrustKernel at boot, assertKernelInitialized at tool execute and subagent start",
+    "shipping_files_wired": [
+      "packages/boot/app-boot/src/index.ts (initTrustKernel)",
+      "packages/core/tools/src/index.ts (assertKernelInitialized in execute)",
+      "packages/subagent/subagent/src/index.ts (assertKernelInitialized in start)"
+    ],
     "wired": true
   },
-  "remaining_risks": []
+  "remaining_risks": [
+    "Kernel enforcement on workflow and SDK paths not yet added",
+    "Authorization bypass matrix test not yet written"
+  ]
 }
