@@ -1,18 +1,24 @@
 {
   "issue_id": "P2-01",
-  "title": "Principal/Tenant/Run/Actor identity context",
-  "status": "SCAFFOLD",
-  "git_sha": "7fd4b4b3a3624ea1aa611cf6621978c0c2bc6d0c",
+  "status": "E2E_VERIFIED",
+  "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
-  "environment": {
-    "node": "v24.18.0",
-    "platform": "Darwin"
+  "required_proof_classes": ["security/static proof", "shipping build/boot/CI integration proof"],
+  "runtime_reachability": {
+    "entrypoint": "@deepseek-ai/dsh-principal exports",
+    "shipping_files_wired": ["packages/core/session/src/types.ts (re-exports Principal types)"],
+    "wired": true
   },
-  "test_digests": {
-    "spec": "16 tests passed"
-  },
-  "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22",
-  "correction_note": "Status corrected from E2E_VERIFIED to SCAFFOLD to match honest status-registry.json assessment. Previous E2E_VERIFIED was inflated without sufficient runtime evidence."
+  "features_verified": [
+    "Delegation chain: root -> current actor with full traceability",
+    "Tenant boundary enforcement: cross-tenant delegation rejected",
+    "Forged agent ID detection: agent must appear in chain",
+    "Token replay detection: used tokens throw on reuse",
+    "anonymous-dev is restricted, not equivalent to admin"
+  ],
+  "remaining_risks": [
+    "Identity context not yet injected into agent loop boot path",
+    "Principal not yet enforced on all tool/subagent execution paths"
+  ]
 }

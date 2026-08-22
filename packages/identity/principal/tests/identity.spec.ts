@@ -16,7 +16,7 @@ import {
   TenantBoundaryError,
   ForgedAgentIdError,
   ReplayedTokenError,
-  type RunId,
+
   type UserPrincipal,
   type AgentPrincipal,
   type AnonymousDevPrincipal,
@@ -35,7 +35,7 @@ const agentP: AgentPrincipal = {
   kind: 'agent',
   id: 'agent-1',
   tenantId: tenantA,
-  runId: 'run-1' as unknown as RunId,
+  runId: 'run-1',
   delegatedBy: 'user-1',
   delegationDepth: 1,
 }
@@ -47,8 +47,8 @@ const anonDev: AnonymousDevPrincipal = {
 }
 
 describe('P2-01 Principal/Tenant identity', () => {
-  beforeEach(() => { clearTokens() })
-  afterEach(() => { clearTokens() })
+  beforeEach(() => clearTokens())
+  afterEach(() => clearTokens())
 
   describe('delegation chain', () => {
     it('creates a chain from a root principal', () => {
@@ -73,7 +73,7 @@ describe('P2-01 Principal/Tenant identity', () => {
         ...agentP,
         tenantId: tenantB,
       }
-      expect(() => { extendChain(chain, foreignAgent) }).toThrow(TenantBoundaryError)
+      expect(() => extendChain(chain, foreignAgent)).toThrow(TenantBoundaryError)
     })
 
     it('tracks delegation depth', () => {
@@ -94,7 +94,7 @@ describe('P2-01 Principal/Tenant identity', () => {
 
     it('throws on forged agent ID', () => {
       const chain = createChain(rootUser)
-      expect(() => { assertAgentInChain(chain, 'forged-agent') }).toThrow(ForgedAgentIdError)
+      expect(() => assertAgentInChain(chain, 'forged-agent')).toThrow(ForgedAgentIdError)
     })
   })
 
@@ -107,7 +107,7 @@ describe('P2-01 Principal/Tenant identity', () => {
 
     it('throws on replayed token', () => {
       useToken('token-1')
-      expect(() => { useToken('token-1') }).toThrow(ReplayedTokenError)
+      expect(() => useToken('token-1')).toThrow(ReplayedTokenError)
     })
   })
 
@@ -125,11 +125,11 @@ describe('P2-01 Principal/Tenant identity', () => {
     })
 
     it('assertTenant throws on cross-tenant', () => {
-      expect(() => { assertTenant(rootUser, tenantB) }).toThrow(TenantBoundaryError)
+      expect(() => assertTenant(rootUser, tenantB)).toThrow(TenantBoundaryError)
     })
 
     it('assertTenant passes for same tenant', () => {
-      expect(() => { assertTenant(rootUser, tenantA) }).not.toThrow()
+      expect(() => assertTenant(rootUser, tenantA)).not.toThrow()
     })
   })
 
@@ -153,8 +153,8 @@ describe('P2-01 Principal/Tenant identity', () => {
       expect(extended.rootTenantId).toBe(tenantA)
       expect(extended.currentPrincipalId).toBe('agent-1')
       expect(extended.entries).toHaveLength(2)
-      const e0 = extended.entries[0]; expect(e0 ? e0.principalId : '').toBe('user-1')
-      const e1 = extended.entries[1]; expect(e1 ? e1.principalId : '').toBe('agent-1')
+      expect(extended.entries[0].principalId).toBe('user-1')
+      expect(extended.entries[1].principalId).toBe('agent-1')
     })
   })
 })

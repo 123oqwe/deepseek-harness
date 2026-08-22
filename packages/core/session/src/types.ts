@@ -17,6 +17,8 @@ import type { JsonValue } from './json.ts'
 // AcceptanceGate, SDK, and all consumers reference exactly one definition.
 // See packages/run/run/src/types.ts for the authoritative source.
 export type { RunState, RunId, RunEvent, Run } from '@deepseek-ai/dsh-run'
+// P2-01: Canonical Principal/Identity types
+export type { Principal, IdentityContext, TenantId, DelegationChain } from '@deepseek-ai/dsh-principal'
 
 // The lossless-JSON payload type belongs to this client-safe face too: a wire
 // contract carrying JSON data must not import the root entry, which merges

@@ -17,3 +17,73 @@ Progress: resolved 536, reused 398, downloaded 0, added 0
 [WARN] GET https://registry.npmjs.org/@typescript-eslint%2Ftypes error (23). Will retry in 10 seconds. 2 retries left.
 [WARN] GET https://registry.npmjs.org/playwright-core error (23). Will retry in 1 minute. 1 retries left.
 [WARN] GET https://registry.npmjs.org/@typescript-eslint%2Ftypes error (23). Will retry in 1 minute. 1 retries left.
+[ERR_PNPM_BROKEN_METADATA_JSON] The operation was aborted due to timeout
+[WARN] The metadata of playwright-core is missing the "time" field; skipping the minimumReleaseAge check for this package.
+Progress: resolved 537, reused 398, downloaded 0, added 0
+Progress: resolved 537, reused 399, downloaded 0, added 0
+[ERR_PNPM_BROKEN_METADATA_JSON] The operation was aborted due to timeout
+[WARN] The metadata of @typescript-eslint/types is missing the "time" field; skipping the minimumReleaseAge check for this package.
+Progress: resolved 538, reused 399, downloaded 0, added 0
+Progress: resolved 918, reused 658, downloaded 0, added 0
+Progress: resolved 919, reused 658, downloaded 0, added 0
+Progress: resolved 921, reused 661, downloaded 0, added 0
+Progress: resolved 922, reused 661, downloaded 0, added 0
+Progress: resolved 922, reused 662, downloaded 0, added 0
+Progress: resolved 1043, reused 783, downloaded 0, added 0
+Progress: resolved 1045, reused 785, downloaded 0, added 0
+Progress: resolved 1046, reused 785, downloaded 0, added 0
+Progress: resolved 1046, reused 786, downloaded 0, added 0
+Progress: resolved 1047, reused 787, downloaded 0, added 0
+Progress: resolved 1048, reused 788, downloaded 0, added 0
+Progress: resolved 1049, reused 788, downloaded 0, added 0
+Progress: resolved 1050, reused 790, downloaded 0, added 0
+[WARN] Request took 10662ms: https://registry.npmjs.org/@aws-sdk%2Fcredential-provider-ini
+Progress: resolved 1051, reused 790, downloaded 0, added 0
+Progress: resolved 1108, reused 848, downloaded 0, added 0
+Progress: resolved 1109, reused 849, downloaded 0, added 0
+Progress: resolved 1110, reused 849, downloaded 0, added 0
+Progress: resolved 1110, reused 850, downloaded 0, added 0
+Progress: resolved 1111, reused 850, downloaded 0, added 0
+Progress: resolved 1215, reused 941, downloaded 0, added 0
+[WARN] 4 deprecated subdependencies found: glob@10.5.0, glob@11.1.0, node-domexception@1.0.0, tsconfck@3.1.6
+Already up to date
+Progress: resolved 1215, reused 941, downloaded 0, added 0, done
+packages/subprocess/subprocess-local postinstall$ node scripts/ensure-spawn-helper.mjs
+packages/subprocess/subprocess-local postinstall: Done
+. postinstall$ node scripts/install-lefthook.mjs
+. postinstall: sync hooks: ✔️(pre-push, pre-commit, pre-merge-commit)
+. postinstall: Done
+
+Done in 9m 12.9s using pnpm v11.7.0
+$ tsx scripts/first100/run-gates.ts preflight
+
+[gate] baseline:verify
+baseline: note - HEAD moved from e4d19cb548ac to 80a7be381cb6 since capture
+baseline: FAIL - detected drift:
+  [schema_hash_mismatch] packages/core/session/src/types.ts hash changed: 9d3ba4bd -> 573bcc62
+  [manifest_hash_mismatch] pnpm-lock.yaml hash changed: 1fd2f35b -> 8e13b603
+[gate] FAIL: baseline:verify (exit 1)
+
+[gate] Issue status report:
+  P0-01: E2E_VERIFIED
+  P0-02: PARTIALLY_WIRED
+  P0-03: E2E_VERIFIED
+  P0-04: E2E_VERIFIED
+  P0-05: SCAFFOLD
+  P0-06: E2E_VERIFIED
+  P0-07: SCAFFOLD
+  P0-08: E2E_VERIFIED
+  P1-01: SCAFFOLD
+  P1-02: PARTIALLY_WIRED
+  P1-07: PARTIALLY_WIRED
+  P1-08: PARTIALLY_WIRED
+  P1-09: PARTIALLY_WIRED
+  P2-01: SCAFFOLD
+  P2-02: PARTIALLY_WIRED
+  P2-03: PARTIALLY_WIRED
+  P4-01: E2E_VERIFIED
+  P4-05: E2E_VERIFIED
+  P6-01: PARTIALLY_WIRED
+  P6-07: PARTIALLY_WIRED
+  P8-01: E2E_VERIFIED
+[ELIFECYCLE] Command failed with exit code 1.

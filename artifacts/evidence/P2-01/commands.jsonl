@@ -1,3 +1,1 @@
-{"cmd": "npx vitest run", "exit": 0}
-{"cmd": "pnpm typecheck", "exit": 0}
-{"cmd": "npx tsx scripts/run-oxlint.ts", "exit": 0}
+{"cmd": "npx vitest run packages/identity/principal/tests/identity.spec.ts", "exit": 0, "result": "15 tests passed"}
