@@ -1,0 +1,1 @@
+{ "test_command": "npx vitest run packages/interaction/approval-quorum/tests/quorum.spec.ts", "total": 10, "passed": 10, "failed": 0, "skipped": 0, "status": "PASS" }

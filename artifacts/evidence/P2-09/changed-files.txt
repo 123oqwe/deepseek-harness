@@ -1,0 +1,12 @@
+packages/interaction/approval-quorum/src/index.ts
+packages/interaction/approval-quorum/src/types.ts
+packages/interaction/approval-quorum/tests/quorum.spec.ts
+packages/interaction/approval-quorum/package.json
+packages/interaction/approval-quorum/tsconfig.json
+packages/interaction/approval-quorum/README.md
+docs/architecture/2026-08-22-p2-09-approval-quorum.md
+.agent-notes/2026-08-22-p2-09-approval-quorum.md
+artifacts/evidence/P2-09/summary.json
+artifacts/evidence/P2-09/changed-files.txt
+artifacts/evidence/P2-09/test-results.json
+artifacts/evidence/P2-09/remaining-risks.md
