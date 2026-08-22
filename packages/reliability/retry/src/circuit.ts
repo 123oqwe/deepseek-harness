@@ -20,7 +20,7 @@ export class CircuitBreaker {
         provider,
         state: 'open',
         failureCount,
-        lastFailureTime: timestamp,
+        ...(timestamp !== undefined && { lastFailureTime: timestamp }),
         openUntil: timestamp + RECOVERY_TIMEOUT_MS,
       }
     } else {
@@ -28,7 +28,7 @@ export class CircuitBreaker {
         provider,
         state: 'closed',
         failureCount,
-        lastFailureTime: timestamp,
+        ...(timestamp !== undefined && { lastFailureTime: timestamp }),
       }
     }
     this.states.set(provider, state)
@@ -72,7 +72,7 @@ export class CircuitBreaker {
           provider,
           state: 'half-open',
           failureCount: current.failureCount,
-          lastFailureTime: current.lastFailureTime,
+          ...(current.lastFailureTime !== undefined && { lastFailureTime: current.lastFailureTime }),
         }
         this.states.set(provider, halfOpen)
         this.halfOpenSuccesses.set(provider, 0)

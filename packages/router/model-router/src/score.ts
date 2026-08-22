@@ -53,11 +53,11 @@ export function routeModel(candidates: readonly ModelCandidate[], request: Routi
     selected: best.candidate,
     reason: `Best score ${best.score.toFixed(1)}`,
     score: best.score,
-    fallback,
+    ...(fallback !== undefined && { fallback }),
   }
 }
 
 function privacyLevelSatisfies(candidate: 'public' | 'confidential' | 'restricted', required: 'public' | 'confidential' | 'restricted'): boolean {
   const levels: Record<string, number> = { public: 1, confidential: 2, restricted: 3 }
-  return levels[candidate] >= levels[required]
+  return (levels[candidate] ?? 0) >= (levels[required] ?? 0)
 }

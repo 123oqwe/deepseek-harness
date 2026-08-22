@@ -1,4 +1,4 @@
-import type { ExtensionProposal, PipelineStage } from './types.ts'
+import type { ExtensionProposal } from './types.ts'
 
 export class ExtensionProposalPipeline {
   private readonly proposals = new Map<string, ExtensionProposal>()

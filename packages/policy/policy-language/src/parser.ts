@@ -10,7 +10,7 @@ export function parseRule(line: string): PolicyExpr | null {
   const denyMatch = trimmed.match(/^deny\s+(.+)\s+because\s+"(.*)"$/)
   if (denyMatch) return { type: 'deny', capability: denyMatch[1] ?? '', reason: denyMatch[2] ?? '' }
   const allowMatch = trimmed.match(/^allow\s+(.+?)(?:\s+when\s+(.+))?$/)
-  if (allowMatch) return { type: 'allow', capability: allowMatch[1] ?? '', condition: allowMatch[2] }
+  if (allowMatch) return { type: 'allow', capability: allowMatch[1] ?? '', ...(allowMatch[2] !== undefined && { condition: allowMatch[2] }) }
   const approvalMatch = trimmed.match(/^require-approval\s+(.+)\s+from\s+(.+)$/)
   if (approvalMatch) return { type: 'require-approval', capability: approvalMatch[1] ?? '', approver: approvalMatch[2] ?? '' }
   const limitMatch = trimmed.match(/^limit\s+(.+)\s+to\s+(\d+)\s+actions\s+per\s+(\d+)\s+seconds$/)
