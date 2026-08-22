@@ -106,7 +106,8 @@ switch (phase) {
     break
   }
   case 'architecture': {
-    success = run('pnpm', ['run', 'typecheck'], 'typecheck')
+    success = run('node', ['scripts/architecture/check-capability-seams.mjs'], 'capability-seams')
+    if (success) success = run('pnpm', ['run', 'typecheck'], 'typecheck')
     reportStatus()
     break
   }

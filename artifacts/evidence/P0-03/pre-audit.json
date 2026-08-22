@@ -1,0 +1,15 @@
+{
+  "issue_id": "P0-03",
+  "audit_classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
+  "salvageable": [
+    "scripts/architecture/check-capability-seams.mjs",
+    "architecture.layers.json"
+  ],
+  "must_rewrite": [
+    "tests need proper type declarations"
+  ],
+  "shipping_files_to_wire": [
+    "package.json",
+    "scripts/architecture/"
+  ]
+}

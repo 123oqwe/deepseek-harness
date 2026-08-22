@@ -1,0 +1,4 @@
+{"cmd": "node scripts/architecture/check-capability-seams.mjs", "exit": 0}
+{"cmd": "npx vitest run scripts/architecture/capability-seams.spec.ts", "exit": 0, "tests_passed": 8}
+{"cmd": "pnpm typecheck", "exit": 0}
+{"cmd": "npx tsx scripts/run-oxlint.ts scripts/architecture/", "exit": 0}

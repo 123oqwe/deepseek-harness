@@ -1,0 +1,28 @@
+$ tsx scripts/first100/run-gates.ts architecture
+
+[gate] capability-seams
+capability-seams: PASS — no violations detected
+[gate] PASS: capability-seams
+
+[gate] typecheck
+$ npm run build:lib:host && npm run typecheck:contracts-ready
+npm warn Unknown env config "manage-package-manager-versions". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> @deepseek-ai/dsh-root@0.1.1-rc.2 build:lib:host
+> tsc -b tsconfig.host.json && tsdown --env.DSH_BUILD_FACE host
+
+scripts/architecture/capability-seams.spec.ts(2,35): error TS7016: Could not find a declaration file for module './check-capability-seams.mjs'. '/Users/guanjieqiao/dsh-first100-integration/scripts/architecture/check-capability-seams.mjs' implicitly has an 'any' type.
+scripts/architecture/capability-seams.spec.ts(46,48): error TS7006: Parameter 'v' implicitly has an 'any' type.
+scripts/architecture/capability-seams.spec.ts(52,52): error TS7006: Parameter 'v' implicitly has an 'any' type.
+scripts/architecture/capability-seams.spec.ts(58,48): error TS7006: Parameter 'v' implicitly has an 'any' type.
+scripts/architecture/capability-seams.spec.ts(64,49): error TS7006: Parameter 'v' implicitly has an 'any' type.
+scripts/architecture/capability-seams.spec.ts(71,22): error TS18046: 'layer' is of type 'unknown'.
+[ELIFECYCLE] Command failed with exit code 1.
+[gate] FAIL: typecheck (exit 1)
+
+[gate] Issue status report:
+  P0-01: E2E_VERIFIED
+  P0-02: E2E_VERIFIED
+  P0-03: NOT_RUN
+  P0-06: E2E_VERIFIED
+[ELIFECYCLE] Command failed with exit code 1.
