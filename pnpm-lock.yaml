@@ -3811,6 +3811,9 @@ importers:
       '@deepseek-ai/dsh-principal':
         specifier: workspace:^
         version: link:../../identity/principal
+      '@deepseek-ai/dsh-run':
+        specifier: workspace:^
+        version: link:../../run/run
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^

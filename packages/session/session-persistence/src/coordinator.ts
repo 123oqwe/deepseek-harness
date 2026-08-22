@@ -1326,11 +1326,6 @@ export class PersistenceCoordinator<TornMarker = unknown> {
   private async flush(session: Session): Promise<void> {
     const live = this.initFor(session)
     live.writes.cancelAutomaticWait()
-    // P6-07: Apply retention policy during flush (best-effort)
-    try {
-      const { applyRetentionPolicy } = await import('@deepseek-ai/dsh-session-lifecycle')
-      void applyRetentionPolicy // Available for retention enforcement during session flush
-    } catch { /* best-effort */ }
     try {
       await live.init
     } catch (error: unknown) {
@@ -1366,6 +1361,6 @@ export class PersistenceCoordinator<TornMarker = unknown> {
   }
 }
 
-// P6-07: Re-export session lifecycle (retention, deletion, pagination)
-export type { RetentionPolicy, SessionLifecycleConfig } from '@deepseek-ai/dsh-session-lifecycle'
-export { applyRetentionPolicy, deleteSession, paginateSessions } from '@deepseek-ai/dsh-session-lifecycle'
+// P6-07: Re-export session lifecycle (retention, deletion)
+export type { RetentionPolicy, SessionMetadata } from '@deepseek-ai/dsh-session-lifecycle'
+export { shouldRetain, selectForDeletion, deleteSessions, partialRepair } from '@deepseek-ai/dsh-session-lifecycle'

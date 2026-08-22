@@ -58,6 +58,7 @@
     "@deepseek-ai/cordis": "workspace:^"
   },
   "dependencies": {
-    "@deepseek-ai/dsh-principal": "workspace:^"
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-run": "workspace:^"
   }
 }

@@ -1361,7 +1361,18 @@ export class ToolRuntime extends Service {
   private generateActionManifest(exec: ToolExecutionInput): { toolName: string; riskLevel: ActionRiskLevel; digest: string } {
     const canonicalParams = canonicalizeParameters(exec.arguments as Record<string, unknown>)
     const riskLevel = classifyRisk(exec.name, canonicalParams)
-    const digest = computeDigest({ toolName: exec.name, canonicalParameters: canonicalParams })
+    const digest = computeDigest({
+      actionId: exec.callId,
+      toolName: exec.name,
+      principalId: '',
+      tenantId: '',
+      runId: '',
+      parameters: exec.arguments as Record<string, unknown>,
+      canonicalParameters: canonicalParams,
+      riskLevel,
+      requiresApproval: false,
+      createdAt: new Date().toISOString(),
+    })
     return { toolName: exec.name, riskLevel, digest }
   }
 
