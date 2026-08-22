@@ -1,0 +1,13 @@
+packages/policy/grant-store/src/index.ts
+packages/policy/grant-store/src/types.ts
+packages/policy/grant-store/src/match.ts
+packages/policy/grant-store/tests/grants.spec.ts
+packages/policy/grant-store/package.json
+packages/policy/grant-store/tsconfig.json
+packages/policy/grant-store/README.md
+docs/architecture/2026-08-22-p2-08-grant-store.md
+.agent-notes/2026-08-22-p2-08-grant-store.md
+artifacts/evidence/P2-08/summary.json
+artifacts/evidence/P2-08/changed-files.txt
+artifacts/evidence/P2-08/test-results.json
+artifacts/evidence/P2-08/remaining-risks.md
