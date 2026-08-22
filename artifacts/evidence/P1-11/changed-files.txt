@@ -1,0 +1,13 @@
+packages/extensions/extension-proposal/src/index.ts
+packages/extensions/extension-proposal/src/types.ts
+packages/extensions/extension-proposal/src/pipeline.ts
+packages/extensions/extension-proposal/tests/pipeline.spec.ts
+packages/extensions/extension-proposal/package.json
+packages/extensions/extension-proposal/tsconfig.json
+packages/extensions/extension-proposal/README.md
+docs/architecture/2026-08-22-p1-11-extension-proposal.md
+.agent-notes/2026-08-22-p1-11-extension-proposal.md
+artifacts/evidence/P1-11/summary.json
+artifacts/evidence/P1-11/changed-files.txt
+artifacts/evidence/P1-11/test-results.json
+artifacts/evidence/P1-11/remaining-risks.md
