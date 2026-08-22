@@ -1,0 +1,13 @@
+packages/router/strategy-router/src/index.ts
+packages/router/strategy-router/src/types.ts
+packages/router/strategy-router/src/rules.ts
+packages/router/strategy-router/tests/router.spec.ts
+packages/router/strategy-router/package.json
+packages/router/strategy-router/tsconfig.json
+packages/router/strategy-router/README.md
+docs/architecture/2026-08-22-p5-01-strategy-router.md
+.agent-notes/2026-08-22-p5-01-strategy-router.md
+artifacts/evidence/P5-01/summary.json
+artifacts/evidence/P5-01/changed-files.txt
+artifacts/evidence/P5-01/test-results.json
+artifacts/evidence/P5-01/remaining-risks.md
