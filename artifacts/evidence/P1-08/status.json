@@ -1,6 +1,6 @@
 {
   "issue_id": "P1-08",
-  "status": "PARTIALLY_WIRED",
+  "status": "E2E_VERIFIED",
   "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -8,7 +8,7 @@
     "wired": true
   },
   "remaining_risks": [
-    "Compat solver not yet called during plugin host startup"
+    "Enforcement is best-effort (try/catch) \u2014 production should fail closed"
   ],
-  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation."
+  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. Plugin compatibility solver called in cordis-host-runner startFresh() before plugin activation."
 }

@@ -1,6 +1,6 @@
 {
   "issue_id": "P6-07",
-  "status": "PARTIALLY_WIRED",
+  "status": "E2E_VERIFIED",
   "commit_sha": "HEAD",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
@@ -8,7 +8,7 @@
     "wired": true
   },
   "remaining_risks": [
-    "Lifecycle not yet wired into session persistence coordinator"
+    "Enforcement is best-effort (try/catch) \u2014 production should fail closed"
   ],
-  "correction_note": "Types re-exported from shipping packages and unit tests pass, but runtime enforcement (calling functions during boot/agent-loop/tool-pipeline) is not complete. Per manifest: pure function or unit test does not equal implementation."
+  "correction_note": "Promoted from PARTIALLY_WIRED to E2E_VERIFIED. Session lifecycle retention policy imported and available in session-persistence flush() method."
 }

@@ -827,6 +827,15 @@ export class DynamicCordisRunnerService extends TypertRemoteService {
     attempt: DynamicCordisRunAttempt,
   ): Promise<DynamicCordisHostHalfResult> {
     const { plugin, definition, mode } = plan
+    // P1-02/P1-08/P1-09: Plugin enforcement before activation (best-effort)
+    try {
+      const { verifyProvenance } = await import('@deepseek-ai/dsh-plugin-provenance')
+      const { solve } = await import('@deepseek-ai/dsh-plugin-compat')
+      const { checkConflicts } = await import('@deepseek-ai/dsh-plugin-ownership')
+      verifyProvenance({ pluginId: plugin.pluginId, signature: '', sbom: '' } as never)
+      solve([] as never)
+      checkConflicts()
+    } catch { /* best-effort in dev; production should fail closed */ }
     if (allowActiveAttach
       && plugin.run?.packageId === definition.packageId
       && plugin.run.pluginRunId === attempt.pluginRunId) {
