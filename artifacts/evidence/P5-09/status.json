@@ -1,0 +1,6 @@
+{
+  "issue_id": "P5-09",
+  "status": "SCAFFOLD",
+  "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "note": "Prototype code ported from branch. Needs full execution algorithm before E2E_VERIFIED."
+}
