@@ -60,7 +60,7 @@ export function getUnreadCount(recipient: string): number {
 }
 
 export function writeBlackboard(runId: string, key: string, value: unknown, writer: string): BlackboardEntry {
-  const board = blackboards.get(runId) ?? new Map()
+  const board = blackboards.get(runId) ?? new Map<string, BlackboardEntry>()
   const existing = board.get(key)
   const version = (existing ? existing.version : 0) + 1
   const entry: BlackboardEntry = { key, runId, value, writtenBy: writer, writtenAt: new Date().toISOString(), version }
