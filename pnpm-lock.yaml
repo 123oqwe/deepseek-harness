@@ -1012,6 +1012,8 @@ importers:
         specifier: ^15.0.0
         version: 15.0.0
 
+  packages/boot/config-provenance: {}
+
   packages/bundle/base:
     dependencies:
       '@deepseek-ai/cordis-plugin-hmr':

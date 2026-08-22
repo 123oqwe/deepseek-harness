@@ -249,6 +249,7 @@
     { "path": "./packages/evaluation/evolution-proposal" },
     { "path": "./packages/operator/control-plane" },
     { "path": "./packages/governance/org-policy" },
+    { "path": "./packages/boot/config-provenance" },
    { "path": "./packages/compaction/compaction-basic" },
     { "path": "./packages/compaction/command-compact" },
     { "path": "./packages/compaction/compaction-tool-result-pruner" },
