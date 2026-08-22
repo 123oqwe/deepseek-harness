@@ -68,7 +68,12 @@ export function getOrCreateWorkspace(path: string, defaultState: WorkspaceTrustS
     // Path doesn't exist; use canonical path as identity
   }
 
-  const identity: WorkspaceIdentity = { canonicalPath: canonical, trustState: defaultState, inode, volumeId }
+  const identity: WorkspaceIdentity = {
+    canonicalPath: canonical,
+    trustState: defaultState,
+    ...(inode !== undefined && { inode }),
+    ...(volumeId !== undefined && { volumeId }),
+  }
   trustRegistry.set(canonical, identity)
   return identity
 }

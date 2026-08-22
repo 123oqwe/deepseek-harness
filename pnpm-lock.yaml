@@ -7571,6 +7571,12 @@ importers:
 
   packages/subagent/subagent:
     dependencies:
+      '@deepseek-ai/dsh-capability-token':
+        specifier: workspace:^
+        version: link:../../policy/capability-token
+      '@deepseek-ai/dsh-trust-kernel':
+        specifier: workspace:^
+        version: link:../../kernel/trust-kernel
       zod:
         specifier: ^4.4.3
         version: 4.4.3

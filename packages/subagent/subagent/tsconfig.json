@@ -52,6 +52,12 @@
     },
     {
       "path": "../../runtime-diagnostics/invariants"
+    },
+    {
+      "path": "../../kernel/trust-kernel"
+    },
+    {
+      "path": "../../policy/capability-token"
     }
   ]
 }

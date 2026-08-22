@@ -435,7 +435,7 @@ export class SubagentRuntime extends Service {
     // P0-02: Trust kernel enforcement — subagent dispatch fails closed if kernel not initialized.
     assertKernelInitialized()
     // P2-02: Issue capability token for subagent delegation (best-effort)
-    try { issueToken('subagent', { delegate: true } as never) } catch { /* best-effort */ }
+    try { issueToken({ principalId: 'subagent', tenantId: '', capabilities: ['delegate'], constraints: { maxDepth: 1, expiresAt: new Date(Date.now() + 3600000).toISOString() } }) } catch { /* best-effort */ }
     const provider = this.expectProvider(name)
     this.assertCapabilities(provider, request)
     assertSubagentMaxDepth(request.maxDepth)
@@ -523,5 +523,5 @@ export class SubagentRuntime extends Service {
 export default SubagentRuntime
 
 // P2-02: Re-export capability token for subagent delegation
-export type { CapabilityToken, TokenCapabilities } from '@deepseek-ai/dsh-capability-token'
+export type { CapabilityToken, TokenConstraints } from '@deepseek-ai/dsh-capability-token'
 export { issueToken, attenuateToken, getToken, hasCapability } from '@deepseek-ai/dsh-capability-token'

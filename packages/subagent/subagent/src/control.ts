@@ -27,7 +27,7 @@ const usedIdempotencyKeys = new Set<string>()
 export function sendControl(type: ControlMessageType, runId: string, epoch: number, payload: unknown = {}): ControlMessage {
   const key = `${runId}:${type}:${epoch}`
   if (usedIdempotencyKeys.has(key)) {
-    return messages.find(m => m.idempotencyKey === key) ?? messages[0]
+    return messages.find(m => m.idempotencyKey === key) ?? messages[0]!
   }
   usedIdempotencyKeys.add(key)
 

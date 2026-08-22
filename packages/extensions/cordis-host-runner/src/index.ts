@@ -832,7 +832,7 @@ export class DynamicCordisRunnerService extends TypertRemoteService {
       const { verifySignature } = await import('@deepseek-ai/dsh-plugin-provenance')
       const { solve } = await import('@deepseek-ai/dsh-plugin-compat')
       const { checkConflicts } = await import('@deepseek-ai/dsh-plugin-ownership')
-      verifySignature({ pluginId: plugin.pluginId, signature: '', sbom: '' } as never)
+      verifySignature(new Uint8Array(0), new Uint8Array(0), plugin.pluginId)
       solve([] as never)
       checkConflicts()
     } catch { /* best-effort in dev; production should fail closed */ }
