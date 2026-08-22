@@ -22,7 +22,7 @@ Phase 3: Wave 4 Implementation
 
 ### Phase 3: Wave 4 Implementation (11 issues) - IN PROGRESS
 - [x] P0-04: Layer dependency checker wired into CI as blocking gate (commit 97ae6fdc5c, E2E_VERIFIED)
-- [ ] P0-08: Benchmark framework wired into first100:capability
+- [x] P0-08: Benchmark framework wired into first100:capability (commit 00394f8d90, E2E_VERIFIED)
 - [ ] P4-01: Run Service with durable store (replace Map with RunStore)
 - [ ] P6-01: Memory Service wired into agent loop
 - [ ] P6-07: Session lifecycle wired into session persistence
