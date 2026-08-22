@@ -808,6 +808,14 @@ importers:
 
   packages/action/action-ledger: {}
 
+  packages/action/compensation:
+    dependencies:
+      '@deepseek-ai/dsh-reconciliation':
+        specifier: workspace:^
+        version: link:../reconciliation
+
+  packages/action/reconciliation: {}
+
   packages/api/gateway:
     dependencies:
       '@deepseek-ai/dsh-typert-protocol':
@@ -895,6 +903,8 @@ importers:
       '@deepseek-ai/dsh-artifact':
         specifier: workspace:^
         version: link:../artifact
+
+  packages/assurance/evidence: {}
 
   packages/attachment/attachment:
     devDependencies:

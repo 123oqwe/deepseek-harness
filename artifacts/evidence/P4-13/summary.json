@@ -1,0 +1,7 @@
+{
+  "issue_id": "P4-13",
+  "title": "Reconciliation Engine & Saga Compensation",
+  "status": "PASS",
+  "tests": { "passed": 11, "failed": 0, "total": 11 },
+  "packages": ["@deepseek-ai/dsh-reconciliation", "@deepseek-ai/dsh-compensation"]
+}

@@ -1,0 +1,5 @@
+{
+  "tool": "vitest",
+  "test_file": "packages/action/reconciliation/tests/saga.spec.ts",
+  "summary": { "passed": 11, "failed": 0, "total": 11 }
+}
