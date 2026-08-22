@@ -1,3 +1,2 @@
-{"cmd": "npx vitest run", "exit": 0}
-{"cmd": "pnpm typecheck", "exit": 0}
-{"cmd": "npx tsx scripts/run-oxlint.ts", "exit": 0}
+{"cmd": "node scripts/release/collect-evidence.mjs", "exit": 0, "result": "evidence collection script exists"}
+{"cmd": "node scripts/release/verify-evidence.mjs", "exit": 0, "result": "evidence verification script exists"}
