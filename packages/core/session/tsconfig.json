@@ -28,6 +28,12 @@
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../identity/principal"
+    },
+    {
+      "path": "../../run/run"
     }
   ]
 }

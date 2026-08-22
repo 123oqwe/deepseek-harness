@@ -37,6 +37,15 @@
     },
     {
       "path": "../../runtime-diagnostics/invariants"
+    },
+    {
+      "path": "../../action/action-manifest"
+    },
+    {
+      "path": "../../kernel/trust-kernel"
+    },
+    {
+      "path": "../../policy/risk-taxonomy"
     }
   ]
 }
