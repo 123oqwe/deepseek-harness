@@ -1,0 +1,30 @@
+{
+  "issue_id": "P3-04",
+  "audit_date": "2026-08-22T19:24:42.538Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/execution/egress-proxy"
+  ],
+  "source_files": [
+    "packages/execution/egress-proxy/src/dns.ts",
+    "packages/execution/egress-proxy/src/index.ts",
+    "packages/execution/egress-proxy/src/policy.ts",
+    "packages/execution/egress-proxy/src/types.ts"
+  ],
+  "test_files": [
+    "packages/execution/egress-proxy/tests/ssrf.spec.ts"
+  ],
+  "changed_files": [
+    "packages/execution/egress-proxy/package.json",
+    "packages/execution/egress-proxy/src/dns.ts",
+    "packages/execution/egress-proxy/src/index.ts",
+    "packages/execution/egress-proxy/src/policy.ts",
+    "packages/execution/egress-proxy/src/types.ts",
+    "packages/execution/egress-proxy/tests/ssrf.spec.ts",
+    "packages/execution/egress-proxy/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

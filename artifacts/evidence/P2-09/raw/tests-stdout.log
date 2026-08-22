@@ -1,0 +1,18 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > initiates a quorum request 1ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > satisfies quorum with required roles 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > denies on any deny vote 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > rejects initiator approval 1ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > rejects duplicate approver 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > rejects action manifest digest mismatch 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > expires after timeout 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > rejects role not in required list 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > enforces ordered approval 0ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > enforces mutual exclusion for same person 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  03:24:40
+   Duration  466ms (transform 234ms, setup 258ms, import 13ms, tests 5ms, environment 0ms)

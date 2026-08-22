@@ -1,0 +1,32 @@
+{
+  "issue_id": "P1-05",
+  "audit_date": "2026-08-22T19:21:54.104Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/plugin/plugin-scanner"
+  ],
+  "source_files": [
+    "packages/plugin/plugin-scanner/src/dynamic.ts",
+    "packages/plugin/plugin-scanner/src/index.ts",
+    "packages/plugin/plugin-scanner/src/rules.ts",
+    "packages/plugin/plugin-scanner/src/static.ts",
+    "packages/plugin/plugin-scanner/src/types.ts"
+  ],
+  "test_files": [
+    "packages/plugin/plugin-scanner/tests/scanner.spec.ts"
+  ],
+  "changed_files": [
+    "packages/plugin/plugin-scanner/package.json",
+    "packages/plugin/plugin-scanner/src/dynamic.ts",
+    "packages/plugin/plugin-scanner/src/index.ts",
+    "packages/plugin/plugin-scanner/src/rules.ts",
+    "packages/plugin/plugin-scanner/src/static.ts",
+    "packages/plugin/plugin-scanner/src/types.ts",
+    "packages/plugin/plugin-scanner/tests/scanner.spec.ts",
+    "packages/plugin/plugin-scanner/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

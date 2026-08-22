@@ -1,0 +1,3 @@
+{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T19:35:44.199Z"}
+{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T19:35:44.199Z"}
+{"command":"npx vitest run packages/assurance/verifier/tests/verifier-isolation.spec.ts --reporter=verbose","label":"test:packages/assurance/verifier/tests/verifier-isolation.spec.ts","exit_code":0,"timestamp":"2026-08-22T19:35:44.199Z"}

@@ -1,0 +1,5 @@
+packages/sdk/parity/package.json
+packages/sdk/parity/src/index.ts
+packages/sdk/parity/src/types.ts
+packages/sdk/parity/tests/parity.spec.ts
+packages/sdk/parity/tsconfig.json

@@ -1,0 +1,18 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > rejects self-verification for high-risk runs 2ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > allows self-verification with explicit degraded approval 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > allows distinct executor and verifier 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > deterministic verifier checks real evidence 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > verifier reads real state, not executor claims 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > rejects unsigned test pass claims 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > accepts signed evidence 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > fail-closed: timeout/abstain treated as fail 0ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > verifier coordinator rejects executor==verifier 1ms
+ ✓ |thread-safe| packages/assurance/verifier/tests/verifier-isolation.spec.ts > P7-03 Independent Verifier Isolation > audit log records verification actions 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  03:37:08
+   Duration  533ms (transform 263ms, setup 289ms, import 23ms, tests 6ms, environment 0ms)

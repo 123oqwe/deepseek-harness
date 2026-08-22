@@ -1,0 +1,7 @@
+{
+  "packages/sdk/parity/package.json": "85d835472075441e24acf1edda8b69c5c222044e96b8bf7470b086659cd4c2f8",
+  "packages/sdk/parity/src/index.ts": "98f1d89ffa4508cf4c64fe1468e166356bd4a363ffbecb0f9a8a57dbb307a2c4",
+  "packages/sdk/parity/src/types.ts": "484bb474f90dc8df1cda733a232cba834203068cb069916a12792792dd921290",
+  "packages/sdk/parity/tests/parity.spec.ts": "408b1cfc46abc1b693df324f1e3e3ab251db740edd7dba54f9384fef7868bc72",
+  "packages/sdk/parity/tsconfig.json": "f25011a2551b2ec1691f6a855e52f58b02518ed6bdd3ed9a3416c29881142cb0"
+}

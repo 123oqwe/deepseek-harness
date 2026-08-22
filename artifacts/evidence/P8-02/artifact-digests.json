@@ -1,0 +1,12 @@
+{
+  "packages/api/remotes/src/action.ts": "0be479b7dc784f6c4e4857450083d2adcb55fa1c1240bee0d550efa49b891a1a",
+  "packages/api/remotes/src/approval.ts": "3883f5b1713cf4b18997bb03b317b9482a20a8f509282ac468ff63260437663d",
+  "packages/api/remotes/src/artifact.ts": "17af0c2274f25407e5fac4b60b0250b6d6a7f98e5919f3585d506d093e9f50d4",
+  "packages/api/remotes/src/resource-store.ts": "ae203156719136f4c4de195c0e85e9839cfd8ec5f78cef2fdb2c931d134ddf4e",
+  "packages/api/remotes/src/run-control.ts": "d3227df5bdbc259e4fc6caf678f9a3e867a9cc1cbcc2fd7b12b110a1e410f497",
+  "packages/api/remotes/src/run.ts": "92828608883f1815064aac955b763e514179ed1c93c0f971e5380e5f460877b6",
+  "packages/api/remotes/src/verification.ts": "9e437d547bad5fdb81a35b9df369783c1759848ea36a324f127deaea2e7461bb",
+  "packages/api/remotes/src/world.ts": "5ed38878f3c4dea6390d03467baa69e3aae659e442f6a84093b22927b0fd235f",
+  "packages/api/remotes/tsconfig.host.json": "2d3df13360082503c98695de065d50fae8ad2e97de419a2827fb879f4817c811",
+  "packages/api/remotes/tsconfig.json": "a21110c861d0050117b5e5d100cff79559e0799a0be08f136b6416a6dde006e5"
+}

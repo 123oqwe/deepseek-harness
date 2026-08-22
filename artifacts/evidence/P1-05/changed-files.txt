@@ -1,0 +1,8 @@
+packages/plugin/plugin-scanner/package.json
+packages/plugin/plugin-scanner/src/dynamic.ts
+packages/plugin/plugin-scanner/src/index.ts
+packages/plugin/plugin-scanner/src/rules.ts
+packages/plugin/plugin-scanner/src/static.ts
+packages/plugin/plugin-scanner/src/types.ts
+packages/plugin/plugin-scanner/tests/scanner.spec.ts
+packages/plugin/plugin-scanner/tsconfig.json

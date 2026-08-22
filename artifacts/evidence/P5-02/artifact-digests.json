@@ -1,0 +1,8 @@
+{
+  "packages/router/model-router/package.json": "2091ba8c43184b3893b77bc01537e9e66ee38deb63307519b784a039fa0eaf2b",
+  "packages/router/model-router/src/index.ts": "ee38c3cac20a31fa04a936a50d6088401c92815d1deb7e365103f883455ce7de",
+  "packages/router/model-router/src/score.ts": "7375323990b8c6a91811cf0fb03fc311af7600b409b8161bf2052790d972466d",
+  "packages/router/model-router/src/types.ts": "35c78eb58e9dba1ad17fb906cd875bd37b8baa07615338118496332dbe0ac627",
+  "packages/router/model-router/tests/router.spec.ts": "6f842ff29c490b351534ca85bb2b0b67cb62a05d5bdb919347cd5885f20daf53",
+  "packages/router/model-router/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

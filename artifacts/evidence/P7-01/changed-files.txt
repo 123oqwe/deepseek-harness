@@ -1,0 +1,7 @@
+packages/assurance/verification-contract/package.json
+packages/assurance/verification-contract/src/index.ts
+packages/assurance/verification-contract/src/invariant.ts
+packages/assurance/verification-contract/src/schema.ts
+packages/assurance/verification-contract/src/types.ts
+packages/assurance/verification-contract/tests/verification-contract.spec.ts
+packages/assurance/verification-contract/tsconfig.json

@@ -1,0 +1,28 @@
+{
+  "issue_id": "P7-05",
+  "audit_date": "2026-08-22T19:38:37.032Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/assurance/acceptance-gate"
+  ],
+  "source_files": [
+    "packages/assurance/acceptance-gate/src/evaluate.ts",
+    "packages/assurance/acceptance-gate/src/index.ts",
+    "packages/assurance/acceptance-gate/src/types.ts"
+  ],
+  "test_files": [
+    "packages/assurance/acceptance-gate/tests/gate.spec.ts"
+  ],
+  "changed_files": [
+    "packages/assurance/acceptance-gate/package.json",
+    "packages/assurance/acceptance-gate/src/evaluate.ts",
+    "packages/assurance/acceptance-gate/src/index.ts",
+    "packages/assurance/acceptance-gate/src/types.ts",
+    "packages/assurance/acceptance-gate/tests/gate.spec.ts",
+    "packages/assurance/acceptance-gate/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

@@ -1,0 +1,28 @@
+{
+  "issue_id": "P3-11",
+  "audit_date": "2026-08-22T19:26:07.962Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/execution/world-snapshot"
+  ],
+  "source_files": [
+    "packages/execution/world-snapshot/src/index.ts",
+    "packages/execution/world-snapshot/src/store.ts",
+    "packages/execution/world-snapshot/src/types.ts"
+  ],
+  "test_files": [
+    "packages/execution/world-snapshot/tests/restore.spec.ts"
+  ],
+  "changed_files": [
+    "packages/execution/world-snapshot/package.json",
+    "packages/execution/world-snapshot/src/index.ts",
+    "packages/execution/world-snapshot/src/store.ts",
+    "packages/execution/world-snapshot/src/types.ts",
+    "packages/execution/world-snapshot/tests/restore.spec.ts",
+    "packages/execution/world-snapshot/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

@@ -1,0 +1,8 @@
+{
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "test_files": [
+    "packages/execution/world-snapshot/tests/restore.spec.ts"
+  ]
+}

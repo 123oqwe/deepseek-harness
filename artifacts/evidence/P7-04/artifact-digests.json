@@ -1,0 +1,9 @@
+{
+  "packages/assurance/claim-graph/package.json": "afc46933fe8ef798587dfec348a0efe30592ca9024e2f49fa430f321b3fe755b",
+  "packages/assurance/claim-graph/src/consistency.ts": "61b907868c092303be6fe54afbf4c68e8e54a63f9cb2a7ca971f521da06c21df",
+  "packages/assurance/claim-graph/src/index.ts": "6cfc9cd7ad2158aa4e95a7f8923e6f43eaab5475a83698a80c97b5fbb2d79d30",
+  "packages/assurance/claim-graph/src/projector.ts": "a098c90be54bc8e4bb2980d303ffea5d7521486ab5ea2cb7e20ba6a7060a3a11",
+  "packages/assurance/claim-graph/src/types.ts": "00e633bf81ac7be957f55fc55d7e99f8f819c0601b20cb9e15b9219a3232fa29",
+  "packages/assurance/claim-graph/tests/claim-graph.spec.ts": "5a8ca90dd6440aa63d56528e47a57a2070bb3a9cf842f05994b729af948c4df1",
+  "packages/assurance/claim-graph/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

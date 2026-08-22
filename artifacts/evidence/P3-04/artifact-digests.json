@@ -1,0 +1,9 @@
+{
+  "packages/execution/egress-proxy/package.json": "12a28fcdd0e3e05a9062a0e4d15c9fbef96419ce1664cd9bbfeeef7ab0c3bd4d",
+  "packages/execution/egress-proxy/src/dns.ts": "99754991ea68dc82aab2e12a22db814ceb049dc7df4f7bd9d52b2445ac811038",
+  "packages/execution/egress-proxy/src/index.ts": "05f93983db61a57593d227697a89c5ea0d5f4bab8c4ce4b7a989fef4b8ea4e3c",
+  "packages/execution/egress-proxy/src/policy.ts": "668622967f96fd99fc61b4fb68ea84875fd43179084127632cabf5cb1d22b1bd",
+  "packages/execution/egress-proxy/src/types.ts": "df2d92bc15ba06b4819202ae2a41e7cdd21d33c80906d4e5dac6c0f6038769b4",
+  "packages/execution/egress-proxy/tests/ssrf.spec.ts": "f7c0f014a670a78f7ff333cab5f31d127c665550c5200c0a791020c3d54956bc",
+  "packages/execution/egress-proxy/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

@@ -1,0 +1,8 @@
+{
+  "packages/router/provider-resilience/package.json": "104fc4d9809f3873cca6d03f3d5c3d929909ffb8509045a266c8c0d6e83ba8aa",
+  "packages/router/provider-resilience/src/hedge.ts": "6aaf336bb4271ad93edef0599800cb675ae584bde0cec1c55f551fa267544cb0",
+  "packages/router/provider-resilience/src/index.ts": "a57da97d6bb888746e5e9a9616cf28260f8432e483bffdfd10097f76b5e13e5a",
+  "packages/router/provider-resilience/src/rate-limit.ts": "b9ccdcc8739cde8019f9087d30a19b2b11b84ce1e43784234d564b39208a331f",
+  "packages/router/provider-resilience/tests/fallback.spec.ts": "6b07ebcd621687e9fdc5ad16c9a325f09c60ace5d50f65b938aaf6e5adf068ed",
+  "packages/router/provider-resilience/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

@@ -1,0 +1,18 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > starts as unverified without evidence 2ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > becomes verified when gate marks it 0ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > becomes conflicted when contradiction added 0ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > becomes stale when evidence expires 0ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > propagates conflicted status to derived claims 0ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > traces claims to evidence 1ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > reports unverified when no evidence found 0ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > handles circular derivations gracefully 1ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > does not allow unverified claims to be marked verified without evidence 0ms
+ ✓ |thread-safe| packages/assurance/claim-graph/tests/claim-graph.spec.ts > P7-04 ClaimGraph > supports multiple evidence sources 1ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  03:38:35
+   Duration  522ms (transform 261ms, setup 288ms, import 17ms, tests 6ms, environment 0ms)

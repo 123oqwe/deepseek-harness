@@ -1,0 +1,28 @@
+{
+  "issue_id": "P5-02",
+  "audit_date": "2026-08-22T19:28:49.218Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/router/model-router"
+  ],
+  "source_files": [
+    "packages/router/model-router/src/index.ts",
+    "packages/router/model-router/src/score.ts",
+    "packages/router/model-router/src/types.ts"
+  ],
+  "test_files": [
+    "packages/router/model-router/tests/router.spec.ts"
+  ],
+  "changed_files": [
+    "packages/router/model-router/package.json",
+    "packages/router/model-router/src/index.ts",
+    "packages/router/model-router/src/score.ts",
+    "packages/router/model-router/src/types.ts",
+    "packages/router/model-router/tests/router.spec.ts",
+    "packages/router/model-router/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

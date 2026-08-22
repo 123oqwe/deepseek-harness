@@ -1,0 +1,14 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > maps an inspected session without a cwd to session-not-found 18ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > resumes through a concurrently attached ordinary Session without optional defaults 8ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > rejects a subagent Session published after durable inspection 5ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > reclassifies failed resumes after a live or attached subagent wins publication 8ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > uses the shared cold-resume policy for the Agent Host Context 58ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > applies the subagent ownership fence to the Agent Host Context 58ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  03:42:46
+   Duration  984ms (transform 458ms, setup 283ms, import 318ms, tests 157ms, environment 0ms)

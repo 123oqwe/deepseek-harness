@@ -1,0 +1,16 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > freezes contract with digest 2ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > validates contract 0ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > rejects invalid schema version 0ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > evaluates criteria with results 0ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > fails when criteria not met 0ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > isSatisfied checks all criteria 0ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > checkInvariants detects unevaluated criteria 0ms
+ ✓ |thread-safe| packages/assurance/verification-contract/tests/verification-contract.spec.ts > P7-01 VerificationContract > same input produces same digest 0ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  03:35:42
+   Duration  557ms (transform 274ms, setup 301ms, import 28ms, tests 5ms, environment 0ms)

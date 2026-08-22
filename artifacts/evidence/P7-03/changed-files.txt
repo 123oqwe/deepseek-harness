@@ -1,0 +1,8 @@
+packages/assurance/verifier/package.json
+packages/assurance/verifier/src/coordinator.ts
+packages/assurance/verifier/src/index.ts
+packages/assurance/verifier/src/invariant.ts
+packages/assurance/verifier/src/provider.ts
+packages/assurance/verifier/src/types.ts
+packages/assurance/verifier/tests/verifier-isolation.spec.ts
+packages/assurance/verifier/tsconfig.json

@@ -1,0 +1,19 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > creates a consistent snapshot with file digests 3ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > restores to a new world identity 1ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > old tokens are not inherited on restore 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > verifies content matches snapshot digests 1ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > detects content mismatch on verify 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > tracks rollback events in lineage 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > marks inconsistent snapshots explicitly 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > lists snapshots by world 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > deletes snapshots cleanly 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > handles snapshot corruption detection 0ms
+ ✓ |thread-safe| packages/execution/world-snapshot/tests/restore.spec.ts > P3-11 World Snapshot / Restore / Rollback > survives 100 create/restore/delete cycles without leak 1ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  03:27:26
+   Duration  501ms (transform 238ms, setup 265ms, import 22ms, tests 8ms, environment 0ms)

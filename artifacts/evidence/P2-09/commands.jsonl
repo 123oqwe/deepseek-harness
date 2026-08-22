@@ -1,0 +1,3 @@
+{"command":"pnpm run typecheck","label":"typecheck","exit_code":0,"timestamp":"2026-08-22T19:23:26.687Z"}
+{"command":"pnpm run lint","label":"lint","exit_code":0,"timestamp":"2026-08-22T19:23:26.687Z"}
+{"command":"npx vitest run packages/interaction/approval-quorum/tests/quorum.spec.ts --reporter=verbose","label":"test:packages/interaction/approval-quorum/tests/quorum.spec.ts","exit_code":0,"timestamp":"2026-08-22T19:23:26.687Z"}

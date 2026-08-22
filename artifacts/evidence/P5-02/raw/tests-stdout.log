@@ -1,0 +1,17 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > scores candidates 2ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies insufficient privacy 0ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies missing tool support 0ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies small context window 0ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > routes to best candidate 0ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > provides fallback when multiple qualify 0ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > filters unavailable candidates 1ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > returns undefined when no candidates qualify 0ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > selects cheaper model when cost is priority 0ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  03:30:07
+   Duration  513ms (transform 250ms, setup 280ms, import 14ms, tests 5ms, environment 0ms)

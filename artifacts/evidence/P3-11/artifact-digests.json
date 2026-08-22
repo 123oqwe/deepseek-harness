@@ -1,0 +1,8 @@
+{
+  "packages/execution/world-snapshot/package.json": "3b282e115501011b8cb73b00eb5a6e3c37fc87a34a7ca178e40331045bdabccc",
+  "packages/execution/world-snapshot/src/index.ts": "85b192c3eadbef58eb296caf23bc888c96a4e294ede28e0bcc25780f7dd4a3d8",
+  "packages/execution/world-snapshot/src/store.ts": "ab3822599dec1b93a4ef088dbf7f4cbb41f62087fc8ea265e3a3b2482d1dd8d9",
+  "packages/execution/world-snapshot/src/types.ts": "767961ec7d4535a399c438dc6c61c0815bd10caeb1e32a5f95f029848527b390",
+  "packages/execution/world-snapshot/tests/restore.spec.ts": "02ae1b7db477f9ebbbd95951d2fe8195aafd845641ee5a1338937b00e12effd3",
+  "packages/execution/world-snapshot/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

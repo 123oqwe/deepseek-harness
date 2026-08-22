@@ -1,0 +1,8 @@
+{
+  "packages/assurance/acceptance-gate/package.json": "2ee603dbedd94be25c7446e5f978f89cedb155df40856f5d568408d731481815",
+  "packages/assurance/acceptance-gate/src/evaluate.ts": "c269b38cd8cd594b3776624f0624e10d42772158596b7a64b0ceb7cff3326132",
+  "packages/assurance/acceptance-gate/src/index.ts": "a6c69575e448511b25d8136e36f2790404b4a75d563c0298139010d0a20354a1",
+  "packages/assurance/acceptance-gate/src/types.ts": "50f98f0dc20c4b69c88700e6b18ecc504f7a9d472e301b3251c69acc1cf68b79",
+  "packages/assurance/acceptance-gate/tests/gate.spec.ts": "5285badc0e02eb5031cb78221e5b419a8a3d3282cc345260e8a5bd7171c66202",
+  "packages/assurance/acceptance-gate/tsconfig.json": "dbbf49d534432e8543d0095910e83fd54df95b3787b9b3686ef07203deccffed"
+}

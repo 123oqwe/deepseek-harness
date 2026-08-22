@@ -1,0 +1,9 @@
+{
+  "issue_id": "P3-04",
+  "entrypoint": "packages/execution/egress-proxy/src/index.ts",
+  "wired": true,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T19:24:42.538Z"
+}

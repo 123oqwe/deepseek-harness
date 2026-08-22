@@ -1,0 +1,9 @@
+{
+  "issue_id": "P5-02",
+  "entrypoint": "packages/router/model-router/src/index.ts",
+  "wired": true,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T19:28:49.218Z"
+}

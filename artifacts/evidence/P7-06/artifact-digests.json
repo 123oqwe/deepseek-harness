@@ -1,0 +1,9 @@
+{
+  "packages/assurance/repair/package.json": "705efe9024a0b849afa429b61d61fb9574bcd92f372f9b709474b26d7c79e118",
+  "packages/assurance/repair/src/coordinator.ts": "c0bd844249ee4c7702c08d76e0a6ef98abbab292f7dff9051535586afc8c28ed",
+  "packages/assurance/repair/src/index.ts": "6f448c0ebaac6c8f47990d7241ca34bbf3e27a31aa0e8975112d32832643cdbe",
+  "packages/assurance/repair/src/policy.ts": "d036b5dabee2fa3bda47aa7f09e68436a5ef5fca88856d0cb66dc48c6984172d",
+  "packages/assurance/repair/src/types.ts": "f3e4e4aece2b643f01f826dd58adbaeaeb89c60e0b1db8b1fac103484aff4fa3",
+  "packages/assurance/repair/tests/repair.spec.ts": "2d71c73b8f7257571756e551d1543fd69db0f370c3191717baa43a439942881a",
+  "packages/assurance/repair/tsconfig.json": "f25011a2551b2ec1691f6a855e52f58b02518ed6bdd3ed9a3416c29881142cb0"
+}

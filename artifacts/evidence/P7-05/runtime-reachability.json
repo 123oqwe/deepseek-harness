@@ -1,0 +1,9 @@
+{
+  "issue_id": "P7-05",
+  "entrypoint": "packages/assurance/acceptance-gate/src/index.ts",
+  "wired": true,
+  "compilation": "PASS",
+  "lint": "PASS",
+  "tests": "PASS",
+  "timestamp": "2026-08-22T19:38:37.032Z"
+}

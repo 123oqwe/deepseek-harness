@@ -1,0 +1,10 @@
+{
+  "packages/plugin/plugin-scanner/package.json": "ffdbac8e18ffc4b1aa84bb46a814d51db7f3c6c8aae6725026b91a35c13c61d7",
+  "packages/plugin/plugin-scanner/src/dynamic.ts": "2a874df0d069c29895b84120786b26cdeca23d51be791aed44774b5369a35939",
+  "packages/plugin/plugin-scanner/src/index.ts": "1152b0ad4d9a1c3e4e2c41eef5823035b1935cb3a7ef753816e75da9290c4ccc",
+  "packages/plugin/plugin-scanner/src/rules.ts": "7b99484f93c60a7bee1d29127ce724e01acc52193fdaf843b008e24647d4cf27",
+  "packages/plugin/plugin-scanner/src/static.ts": "d2dce127e2d3459a31d89e29f00c87f79b2f2d41e9775fba6d03925073a70898",
+  "packages/plugin/plugin-scanner/src/types.ts": "c9d0b1aacdfe4681cf905cd7fe8972dec12258edb10f5697a3935bee379feb70",
+  "packages/plugin/plugin-scanner/tests/scanner.spec.ts": "d9ff5501d952f173c93be452dd5e3293b638d764437b7c735a870498dd0cf82c",
+  "packages/plugin/plugin-scanner/tsconfig.json": "da984022c9fe2ae303044c89ff9a7b42672c9c0a834aa1e74f9fa662262fd707"
+}

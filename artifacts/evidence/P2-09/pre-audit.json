@@ -1,0 +1,26 @@
+{
+  "issue_id": "P2-09",
+  "audit_date": "2026-08-22T19:23:26.687Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/interaction/approval-quorum"
+  ],
+  "source_files": [
+    "packages/interaction/approval-quorum/src/index.ts",
+    "packages/interaction/approval-quorum/src/types.ts"
+  ],
+  "test_files": [
+    "packages/interaction/approval-quorum/tests/quorum.spec.ts"
+  ],
+  "changed_files": [
+    "packages/interaction/approval-quorum/package.json",
+    "packages/interaction/approval-quorum/src/index.ts",
+    "packages/interaction/approval-quorum/src/types.ts",
+    "packages/interaction/approval-quorum/tests/quorum.spec.ts",
+    "packages/interaction/approval-quorum/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

@@ -1,0 +1,26 @@
+{
+  "issue_id": "P8-07",
+  "audit_date": "2026-08-22T19:42:48.853Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/sdk/parity"
+  ],
+  "source_files": [
+    "packages/sdk/parity/src/index.ts",
+    "packages/sdk/parity/src/types.ts"
+  ],
+  "test_files": [
+    "packages/sdk/parity/tests/parity.spec.ts"
+  ],
+  "changed_files": [
+    "packages/sdk/parity/package.json",
+    "packages/sdk/parity/src/index.ts",
+    "packages/sdk/parity/src/types.ts",
+    "packages/sdk/parity/tests/parity.spec.ts",
+    "packages/sdk/parity/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

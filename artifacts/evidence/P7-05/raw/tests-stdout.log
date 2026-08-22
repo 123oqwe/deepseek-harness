@@ -1,0 +1,18 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > rejects when required check is missing 2ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > rejects when required check fails 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > needs-human when claims are conflicted 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > needs-human when approval pending 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > accepts when all checks pass, no conflicts, approvals granted 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > skips non-required failed checks 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > enforces state transition rules 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > OutcomePackage has stable content digest and signature 1ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > OutcomePackage detects tampering 0ms
+ ✓ |thread-safe| packages/assurance/acceptance-gate/tests/gate.spec.ts > P7-05 AcceptanceGate & OutcomePackage > execution completed does not equal accepted 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  03:39:58
+   Duration  509ms (transform 243ms, setup 267ms, import 25ms, tests 5ms, environment 0ms)

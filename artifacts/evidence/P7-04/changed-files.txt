@@ -1,0 +1,7 @@
+packages/assurance/claim-graph/package.json
+packages/assurance/claim-graph/src/consistency.ts
+packages/assurance/claim-graph/src/index.ts
+packages/assurance/claim-graph/src/projector.ts
+packages/assurance/claim-graph/src/types.ts
+packages/assurance/claim-graph/tests/claim-graph.spec.ts
+packages/assurance/claim-graph/tsconfig.json

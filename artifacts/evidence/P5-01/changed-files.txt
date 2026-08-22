@@ -1,0 +1,6 @@
+packages/router/strategy-router/package.json
+packages/router/strategy-router/src/index.ts
+packages/router/strategy-router/src/rules.ts
+packages/router/strategy-router/src/types.ts
+packages/router/strategy-router/tests/router.spec.ts
+packages/router/strategy-router/tsconfig.json

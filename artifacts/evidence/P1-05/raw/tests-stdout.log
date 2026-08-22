@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects child_process import 3ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects eval usage 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects native addon 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects dynamic require 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects postinstall script 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > passes on benign code 1ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects fs write operations 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects net server creation 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > flags large dependency count as informational 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > detects undeclared network access 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > passes when network is declared 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > detects undeclared filesystem write 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > detects undeclared process spawn 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > fails on timeout 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > fails on crash 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > wildcard declaration allows any 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > rules > has 14 rules 0ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > rules > all rules have version 0ms
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  03:23:24
+   Duration  539ms (transform 251ms, setup 265ms, import 33ms, tests 7ms, environment 0ms)

@@ -1,0 +1,32 @@
+{
+  "issue_id": "P7-03",
+  "audit_date": "2026-08-22T19:35:44.199Z",
+  "git_sha": "5f4a82ecebe8ddb1bc5b89e571fc66a5976848ff",
+  "packages": [
+    "packages/assurance/verifier"
+  ],
+  "source_files": [
+    "packages/assurance/verifier/src/coordinator.ts",
+    "packages/assurance/verifier/src/index.ts",
+    "packages/assurance/verifier/src/invariant.ts",
+    "packages/assurance/verifier/src/provider.ts",
+    "packages/assurance/verifier/src/types.ts"
+  ],
+  "test_files": [
+    "packages/assurance/verifier/tests/verifier-isolation.spec.ts"
+  ],
+  "changed_files": [
+    "packages/assurance/verifier/package.json",
+    "packages/assurance/verifier/src/coordinator.ts",
+    "packages/assurance/verifier/src/index.ts",
+    "packages/assurance/verifier/src/invariant.ts",
+    "packages/assurance/verifier/src/provider.ts",
+    "packages/assurance/verifier/src/types.ts",
+    "packages/assurance/verifier/tests/verifier-isolation.spec.ts",
+    "packages/assurance/verifier/tsconfig.json"
+  ],
+  "classification": "PORTED_FROM_PROTOTYPE",
+  "salvageable": true,
+  "main_chain_gaps": [],
+  "notes": "Code ported from prototype branch to integration branch"
+}

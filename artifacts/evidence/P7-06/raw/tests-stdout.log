@@ -1,0 +1,18 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > creates a repair plan with budget 3ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > executes repair round 1ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > does not repeat non-repeatable external effects 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > budget exhaustion stops repair 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > cannot mark failed check as optional 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > determines correct outcomes 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > human-takeover action triggers needs-human 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > tracks external writes per action 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > budget check detects token exhaustion 0ms
+ ✓ |thread-safe| packages/assurance/repair/tests/repair.spec.ts > P7-06 Bounded Repair/Replan Loop > finalizes as repaired when all checks pass 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  03:41:21
+   Duration  560ms (transform 277ms, setup 297ms, import 35ms, tests 7ms, environment 0ms)

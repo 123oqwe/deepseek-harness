@@ -1,0 +1,19 @@
+
+ RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
+
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > allows explicitly allowed host 2ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > blocks explicitly blocked host 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > blocks host not in allowlist 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > blocks SSRF to private IP 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > blocks SSRF to loopback 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > allows private IPs when policy permits 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > rejects invalid URL 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > wildcard allowlist allows all non-blocked 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > detects private IP ranges 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > detects loopback IPs 0ms
+ ✓ |thread-safe| packages/execution/egress-proxy/tests/ssrf.spec.ts > P3-04 Egress Proxy > blocks wildcard subdomain pattern 0ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  03:26:06
+   Duration  502ms (transform 246ms, setup 267ms, import 22ms, tests 5ms, environment 0ms)
