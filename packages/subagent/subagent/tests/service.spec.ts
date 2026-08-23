@@ -325,7 +325,7 @@ describe('SubagentRuntime', () => {
     const error = new SubagentError('boom', 'NO_PROVIDER')
     // Verify SubagentError participates in the harness error taxonomy.
     // Check the prototype chain: SubagentError -> HarnessError -> Error
-    const grandparent = Object.getPrototypeOf(Object.getPrototypeOf(error))
+    const grandparent = Object.getPrototypeOf(Object.getPrototypeOf(error)) as { constructor: { name: string } }
     expect(grandparent.constructor.name).toBe('HarnessError')
     expect(grandparent.constructor).toBe(Object.getPrototypeOf(SubagentError))
     // SubagentError has the HarnessError interface: code field
