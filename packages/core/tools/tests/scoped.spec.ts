@@ -2,6 +2,7 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { Events } from '@deepseek-ai/cordis'
 import { bindScopeParent, createScope } from '@deepseek-ai/dsh-scope'
+import { initTrustKernel, resetKernelForTesting } from '@deepseek-ai/dsh-trust-kernel'
 import type { Scope } from '@deepseek-ai/dsh-scope'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
@@ -15,6 +16,9 @@ const testToolSignal = new AbortController().signal
 
 /** Mount the registry (with its systemPrompt dependency) on a fresh context. */
 async function mount(): Promise<Context> {
+  // Trust Kernel must be initialized before any plugin loads.
+  resetKernelForTesting()
+  initTrustKernel({ insecure: true })
   const ctx = new Context()
   await ctx.plugin(SystemPrompt, {})
   await ctx.plugin(ToolRuntime)

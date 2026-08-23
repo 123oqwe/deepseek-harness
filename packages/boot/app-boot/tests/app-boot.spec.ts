@@ -2,8 +2,9 @@ import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import { clearSchemas } from '@deepseek-ai/dsh-schema-registry'
 import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
 import {
   addHarnessSourceSection, assertEntriesActivated, assertEntriesLoaded, boot,
@@ -546,6 +547,7 @@ describe('loadOverlayPatches', () => {
 })
 
 describe('boot', () => {
+  beforeEach(() => { clearSchemas() })
   it('boots a leaf config through the real Loader and settles the tree', async () => {
     const dir = tmp()
     writeFileSync(join(dir, 'noop.mjs'), 'export const name = "noop"\nexport function apply() {}\n')
@@ -614,6 +616,8 @@ describe('boot', () => {
     } finally {
       await configOwned.fiber.dispose()
     }
+    // Clear schemas between boot calls so the second boot can re-register builtins.
+    clearSchemas()
     const harnessBaseUrl = pathToFileURL(join(harness, 'entry.mjs')).href
     const ctx = await boot(NAME, hostOwnedPath, undefined, undefined, harnessBaseUrl)
     try {

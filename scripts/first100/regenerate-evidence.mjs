@@ -86,6 +86,7 @@ function findRelatedTests(sourceFiles) {
   const SKIP_HEAVY_PACKAGES = new Set([
     'packages/workflow/workflow-worker-thread', // requires mock LLM server
     'packages/sdk/server', // requires full SDK server setup
+    'packages/core/tools', // requires full trust-kernel tool pipeline integration
   ])
   for (const src of sourceFiles) {
     const dir = dirname(src)
