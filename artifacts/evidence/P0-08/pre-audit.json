@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-08",
   "title": "把 BENCHMARK.md 升级为通用 Harness 能力基准框架",
-  "audit_date": "2026-08-23T02:17:19.865Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:04:12.974Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "benchmarks/harness-capability/README.md",
     "benchmarks/harness-capability/manifest.yml",

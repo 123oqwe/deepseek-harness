@@ -2,52 +2,52 @@
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > scores candidates 2ms
- ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies insufficient privacy 1ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies insufficient privacy 0ms
  ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies missing tool support 0ms
- ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies small context window 1ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > disqualifies small context window 0ms
  ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > routes to best candidate 0ms
  ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > provides fallback when multiple qualify 0ms
  ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > filters unavailable candidates 1ms
  ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > returns undefined when no candidates qualify 0ms
- ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > selects cheaper model when cost is priority 1ms
+ ✓ |thread-safe| packages/router/model-router/tests/router.spec.ts > P5-02 Model Router > selects cheaper model when cost is priority 0ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  11:07:56
-   Duration  671ms (transform 342ms, setup 386ms, import 27ms, tests 8ms, environment 0ms)
+   Start at  12:39:04
+   Duration  713ms (transform 389ms, setup 425ms, import 23ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 17ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 15ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 4ms
  ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 5ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 4ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  11:07:58
-   Duration  713ms (transform 380ms, setup 249ms, import 211ms, tests 55ms, environment 0ms)
+   Start at  12:39:07
+   Duration  1.48s (transform 985ms, setup 609ms, import 521ms, tests 67ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 2ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 3ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> waiting_tool 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> completed 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects completed -> running 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects completed -> running 1ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects failed -> running 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows orphaned -> starting (recovery) 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > assertTransition throws on invalid 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 1ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isTerminal identifies completed and failed 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isActive excludes terminal and orphaned 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isWaiting identifies waiting states 0ms
@@ -56,247 +56,247 @@
 
  Test Files  1 passed (1)
       Tests  13 passed (13)
-   Start at  11:08:00
-   Duration  404ms (transform 188ms, setup 210ms, import 10ms, tests 4ms, environment 0ms)
+   Start at  12:39:10
+   Duration  1.53s (transform 739ms, setup 826ms, import 21ms, tests 9ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 14ms
+ ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 28ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  11:08:01
-   Duration  574ms (transform 321ms, setup 252ms, import 131ms, tests 15ms, environment 0ms)
+   Start at  12:39:14
+   Duration  1.82s (transform 1.35s, setup 789ms, import 729ms, tests 29ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 7ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 7ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 15ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > normalizes splice coordinates, rejects duplicate identities, and reports missing removals 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > clears both pending lists as durable cancellations 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 11ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 8ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 26ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 54ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 12ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 4ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contains asynchronous creation rejection and every disposal-listener failure 3ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 3ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 1ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 2ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > injects the fused subject even when the payload carries a conflicting agent field 2ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > explicit cancellation contract > exposes the closed typed cancellation cause at the Agent seam 0ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 8ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  11:08:03
-   Duration  705ms (transform 351ms, setup 212ms, import 242ms, tests 64ms, environment 0ms)
+   Start at  12:39:17
+   Duration  2.48s (transform 1.63s, setup 653ms, import 1.36s, tests 161ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 7ms
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 1ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 14ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 3ms
  ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 2ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  11:08:05
-   Duration  445ms (transform 208ms, setup 227ms, import 20ms, tests 11ms, environment 0ms)
+   Start at  12:39:21
+   Duration  983ms (transform 579ms, setup 604ms, import 90ms, tests 21ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 9ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 18ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports the latest turn that entered a model step 1ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 1ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and was then stopped before any step 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a turn stopped, failed, or rejected without taking any input 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn whose claimed input a pre-step rejection discarded 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a claim its own turn emptied 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > credits a claim with no open turn to no turn at all 0ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports work cancelled out of the inbox after the last accounting turn 0ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > keeps a replacement pending rather than counting it as dropped 0ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > lets a later accounting turn absorb an earlier drop 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports work cancelled out of the inbox after the last accounting turn 1ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > keeps a replacement pending rather than counting it as dropped 2ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > lets a later accounting turn absorb an earlier drop 1ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  11:08:06
-   Duration  555ms (transform 306ms, setup 209ms, import 157ms, tests 13ms, environment 0ms)
+   Start at  12:39:24
+   Duration  1.32s (transform 846ms, setup 510ms, import 497ms, tests 30ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 34ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 10ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 84ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 20ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 18ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 23ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 9ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 31ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 29ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 11ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 25ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 13ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 14ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 12ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 10ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 15ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 13ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 18ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 39ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 9ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 21ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 28ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 14ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 19ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 5ms
 
  Test Files  1 passed (1)
       Tests  41 passed (41)
-   Start at  11:08:08
-   Duration  1.05s (transform 390ms, setup 277ms, import 389ms, tests 181ms, environment 0ms)
+   Start at  12:39:27
+   Duration  1.98s (transform 603ms, setup 411ms, import 734ms, tests 586ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > preserves every image when no payload bound is configured 10ms
+ ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > preserves every image when no payload bound is configured 11ms
  ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > preserves the original request when its base64 payload fits exactly 0ms
- ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > keeps five 3 MiB images at 20 MiB and offloads the oldest after one more raw byte 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > keeps five 3 MiB images at 20 MiB and offloads the oldest after one more raw byte 2ms
  ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > replaces the oldest nested occurrences without mutating durable messages 2ms
  ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > replaces a single image that cannot fit 0ms
  ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImages > keeps unchanged nested content while replacing a later image 0ms
- ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImagesWithPolicy > drops 129 MiB to 64 MiB and keeps the removed prefix stable through 192 MiB 4ms
- ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImagesWithPolicy > rounds a count excess up to a 20-image removal step 2ms
- ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImagesWithPolicy > uses route-owned request byte lengths when supplied 6ms
- ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > projectImagesForTextModel > returns image-free history unchanged 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImagesWithPolicy > drops 129 MiB to 64 MiB and keeps the removed prefix stable through 192 MiB 9ms
+ ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImagesWithPolicy > rounds a count excess up to a 20-image removal step 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > offloadRequestImagesWithPolicy > uses route-owned request byte lengths when supplied 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > projectImagesForTextModel > returns image-free history unchanged 0ms
  ✓ |thread-safe| packages/llm/llm/tests/content.spec.ts > projectImagesForTextModel > replaces direct and nested images while retaining unaffected messages and blocks 1ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  11:08:10
-   Duration  528ms (transform 268ms, setup 228ms, import 92ms, tests 29ms, environment 0ms)
+   Start at  12:39:31
+   Duration  1.10s (transform 677ms, setup 489ms, import 294ms, tests 41ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > recognizes structured and model-capacity context-window overflow details 3ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > does not mistake unrelated input validation for context-window overflow 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > recognizes structured and model-capacity context-window overflow details 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > does not mistake unrelated input validation for context-window overflow 1ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > distinguishes exhausted account quota from transient rate limiting 1ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > errorChain renders the full cause chain of a wrapped transport failure 0ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > errorChain renders AggregateError members (Happy Eyeballs multi-address failures) 0ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > errorChain survives non-Error values, hostile coercion, and circular causes 0ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > errorChain falls back to the error name, skips empty aggregates, and stops at null causes 0ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > errorChain collapses a cause that repeats the wrapper message verbatim 0ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > routes stream() to the registered adapter 15ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > trusts the immutable message creation boundary for direct calls 8ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > routes stream() to the registered adapter 35ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > trusts the immutable message creation boundary for direct calls 15ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > captures provider-owned retry policy at registration and defaults omission 3ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > keeps a prepared registration and retry policy after route replacement 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes an unregistered provider to a terminal failure 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > keeps a prepared registration and retry policy after route replacement 8ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes an unregistered provider to a terminal failure 5ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes a throwing IteratorResult.done getter 3ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes a throwing IteratorResult.value getter 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes synchronous adapter dispatch failures 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes synchronous adapter iterator failures 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > preserves structured LlmError facts in the terminal failure 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes arbitrary adapter rejections without throwing them downstream 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes synchronous adapter dispatch failures 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes synchronous adapter iterator failures 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > preserves structured LlmError facts in the terminal failure 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > normalizes arbitrary adapter rejections without throwing them downstream 4ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > maps adapter failure to aborted when the request signal is aborted 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > leaves middleware and consumer failures thrown 3ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > awaits adapter cleanup on downstream close and leaves cleanup failure thrown 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > allows downstream close when an adapter iterator has no return method 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > leaves middleware and consumer failures thrown 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > awaits adapter cleanup on downstream close and leaves cleanup failure thrown 10ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > allows downstream close when an adapter iterator has no return method 2ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > unregisters adapters when the owning fiber is disposed (HMR safety) 2ms
  ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > discovers detached provider and advisory model metadata 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > defaults adapters to their route name and an empty advisory model list 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 1, id: 'model', name: 'Model' }: non-string provider) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'other', id: 'model', name: 'Model' }: mismatched provider) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 1, name: 'Model' }: non-string id) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'other', name: 'Model' }: mismatched id) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'model', name: 1 }: non-string name) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'model', name: '' }: empty name) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'model', name: 'Model', description: 1 }: non-string description) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > preserves modality metadata through exact model resolution 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves detached model context independently of advisory catalog membership 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves detached adapter-owned reasoning metadata and materializes its default 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > materializes an adapter-owned maxTokens default while preserving an explicit cap 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter-owned default maxTokens 0 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter-owned default maxTokens 1.5 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter-owned default maxTokens 9007199254740992 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [] }: empty effort list) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: '', name: 'Empty' } ] }: empty id) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'valid', name: '' } ] }: empty name) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'valid', name: 'Valid', description: 1 } ] }: non-string description) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'same', name: 'One' }, { id: 'same', name: 'Two' } ] }: duplicate id) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'valid', name: 'Valid' } ], defaultEffort: 'other' }: unknown default) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects unsupported reasoning efforts without clamping 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves reasoning defaults at the final adapter boundary after routing middleware 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > pins one adapter registration across asynchronous exact-model resolution and dispatch 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > prepares a one-shot registration-bound call and rejects config drift 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > reuses one exact-model lookup for prepared config and context metadata 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > binds adapter-owned capabilities and dispatch to one prepared generation 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > projects historical images to stable text only after the loop-visible waterfall 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > passes cancellation through exact-model resolution 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context 0 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context -1 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context 1.5 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context NaN 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 1, name: 'Name' }: non-string id) 12ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 'other', name: 'Name' }: mismatched id) 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 'route', name: 1 }: non-string name) 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 'route', name: '' }: empty name) 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 1, id: 'm', name: 'M' }: non-string provider) 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'other', id: 'm', name: 'M' }: mismatched provider) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 1, name: 'M' }: non-string id) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: '', name: 'M' }: empty id) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 'm', name: 1 }: non-string name) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 'm', name: '' }: empty name) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 'm', name: 'M', description: 1 }: non-string description) 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects duplicate model ids in one provider catalog 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > lets llm/stream waterfall listeners wrap the underlying stream 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves the provider after llm/stream listeners have had a chance to route it 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > keeps replay state when historical and target providers belong to the same adapter instance 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > strips replay state but preserves provider and model when the target uses a different adapter instance 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > preserves immutability while stripping replay state from frozen requests 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > creates LlmError with a code for programmatic handling 0ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects non-serializable structured failure facts at construction 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > LlmError extends the shared HarnessError base 0ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > HarnessError carries a code, names itself by subclass, and chains cause 0ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > removes the adapter when the returned disposer is called 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects duplicate adapter registration with DUPLICATE_ADAPTER code 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects empty and internally duplicated provider registrations atomically 6ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > re-registers a model after its prior registration is disposed 2ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > refuses to replace routes on a registration that was already released 1ms
- ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > still allows an empty route set on a live registration 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > defaults adapters to their route name and an empty advisory model list 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 1, id: 'model', name: 'Model' }: non-string provider) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'other', id: 'model', name: 'Model' }: mismatched provider) 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 1, name: 'Model' }: non-string id) 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'other', name: 'Model' }: mismatched id) 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'model', name: 1 }: non-string name) 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'model', name: '' }: empty name) 37ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid exact model metadata ({ provider: 'route', id: 'model', name: 'Model', description: 1 }: non-string description) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > preserves modality metadata through exact model resolution 19ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves detached model context independently of advisory catalog membership 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves detached adapter-owned reasoning metadata and materializes its default 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > materializes an adapter-owned maxTokens default while preserving an explicit cap 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter-owned default maxTokens 0 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter-owned default maxTokens 1.5 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter-owned default maxTokens 9007199254740992 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [] }: empty effort list) 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: '', name: 'Empty' } ] }: empty id) 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'valid', name: '' } ] }: empty name) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'valid', name: 'Valid', description: 1 } ] }: non-string description) 8ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'same', name: 'One' }, { id: 'same', name: 'Two' } ] }: duplicate id) 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model reasoning metadata ({ efforts: [ { id: 'valid', name: 'Valid' } ], defaultEffort: 'other' }: unknown default) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects unsupported reasoning efforts without clamping 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves reasoning defaults at the final adapter boundary after routing middleware 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > pins one adapter registration across asynchronous exact-model resolution and dispatch 10ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > prepares a one-shot registration-bound call and rejects config drift 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > reuses one exact-model lookup for prepared config and context metadata 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > binds adapter-owned capabilities and dispatch to one prepared generation 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > projects historical images to stable text only after the loop-visible waterfall 14ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > passes cancellation through exact-model resolution 29ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context 0 22ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context -1 15ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context 1.5 9ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid adapter model context NaN 85ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 1, name: 'Name' }: non-string id) 84ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 'other', name: 'Name' }: mismatched id) 26ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 'route', name: 1 }: non-string name) 13ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid provider metadata atomically ({ id: 'route', name: '' }: empty name) 10ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 1, id: 'm', name: 'M' }: non-string provider) 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'other', id: 'm', name: 'M' }: mismatched provider) 8ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 1, name: 'M' }: non-string id) 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: '', name: 'M' }: empty id) 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 'm', name: 1 }: non-string name) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 'm', name: '' }: empty name) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects invalid model metadata ({ provider: 'route', id: 'm', name: 'M', description: 1 }: non-string description) 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects duplicate model ids in one provider catalog 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > lets llm/stream waterfall listeners wrap the underlying stream 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > resolves the provider after llm/stream listeners have had a chance to route it 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > keeps replay state when historical and target providers belong to the same adapter instance 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > strips replay state but preserves provider and model when the target uses a different adapter instance 10ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > preserves immutability while stripping replay state from frozen requests 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > creates LlmError with a code for programmatic handling 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects non-serializable structured failure facts at construction 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > LlmError extends the shared HarnessError base 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > HarnessError carries a code, names itself by subclass, and chains cause 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > removes the adapter when the returned disposer is called 25ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects duplicate adapter registration with DUPLICATE_ADAPTER code 12ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > rejects empty and internally duplicated provider registrations atomically 46ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > re-registers a model after its prior registration is disposed 19ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > refuses to replace routes on a registration that was already released 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/service.spec.ts > LlmRuntime > still allows an empty route set on a live registration 7ms
 
  Test Files  1 passed (1)
       Tests  85 passed (85)
-   Start at  11:08:11
-   Duration  688ms (transform 289ms, setup 235ms, import 104ms, tests 164ms, environment 0ms)
+   Start at  12:39:35
+   Duration  2.15s (transform 703ms, setup 442ms, import 365ms, tests 809ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/api-key.spec.ts > normalizeApiKey > accepts a printable-ASCII key unchanged 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/api-key.spec.ts > normalizeApiKey > accepts a printable-ASCII key unchanged 3ms
  ✓ |thread-safe| packages/llm/llm/tests/api-key.spec.ts > normalizeApiKey > trims surrounding whitespace before judging 0ms
  ✓ |thread-safe| packages/llm/llm/tests/api-key.spec.ts > normalizeApiKey > rejects an empty string as empty 0ms
  ✓ |thread-safe| packages/llm/llm/tests/api-key.spec.ts > normalizeApiKey > rejects spaces only as empty 0ms
@@ -316,139 +316,139 @@
 
  Test Files  1 passed (1)
       Tests  17 passed (17)
-   Start at  11:08:13
-   Duration  557ms (transform 297ms, setup 260ms, import 91ms, tests 7ms, environment 0ms)
+   Start at  12:39:40
+   Duration  941ms (transform 462ms, setup 395ms, import 150ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > contains hostile non-Error coercion 2ms
- ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > normalizes empty primitive throws and data descriptors without values 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > contains hostile non-Error coercion 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > normalizes empty primitive throws and data descriptors without values 2ms
  ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > contains hostile Error property reflection 0ms
- ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > rejects malformed or accessor-backed failure snapshots 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > rejects malformed or accessor-backed failure snapshots 0ms
  ✓ |thread-safe| packages/llm/llm/tests/adapter-failure.spec.ts > adapter failure normalization > falls back when an Error message accessor throws 0ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  11:08:15
-   Duration  457ms (transform 219ms, setup 232ms, import 27ms, tests 5ms, environment 0ms)
+   Start at  12:39:43
+   Duration  822ms (transform 475ms, setup 511ms, import 50ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > assembles interleaved text, reasoning, and tool-call deltas 9ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > assembles interleaved text, reasoning, and tool-call deltas 19ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > records the completed block from block-end 0ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > tolerates deltas without explicit block-start/end 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > tolerates deltas without explicit block-start/end 1ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > returns undefined usage when no usage chunk was received 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > reuses an existing partial when ensure() is called with a tracked index 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > throws from assemble() when a partial has an unhandled blockType 1ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > mustGet throws when an index is missing from the partials map (invariant violation) 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > ignores duplicate block-start for the same index 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > ignores tool-call-delta stragglers after block-end 0ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > assembles tool-call with generated id fallback when no id provided 1ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > exposes usage via the getter when a usage chunk was received 1ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > prunes per-block replay entries with the tool calls a max-tokens finish drops 1ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > omits replay metadata whose per-block entries misalign with the emitted blocks 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > assembles tool-call with generated id fallback when no id provided 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler > exposes usage via the getter when a usage chunk was received 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > prunes per-block replay entries with the tool calls a max-tokens finish drops 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > omits replay metadata whose per-block entries misalign with the emitted blocks 4ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > passes replay metadata through unchanged when assembly drops nothing 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > keeps a max-tokens replay state with no per-block entries across a tool-call drop 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler replay metadata > keeps a text-only max-tokens response and its replay metadata intact 0ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > assertNever > throws with diagnostics when a value escapes a closed union at runtime 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > assertNever > throws with diagnostics when a value escapes a closed union at runtime 3ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > assertNever > BlockAssembler.push rejects chunks outside the closed StreamChunk union 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler duplicate-close contract > first block-end wins: a duplicate block-end for a closed index is ignored 0ms
- ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler.interruptedBlocks > keeps closed and open text/reasoning blocks with streamed content, in order 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler.interruptedBlocks > keeps closed and open text/reasoning blocks with streamed content, in order 1ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler.interruptedBlocks > drops tool calls whether open or closed — interruption precedes dispatch 0ms
  ✓ |thread-safe| packages/llm/llm/tests/assembler.spec.ts > BlockAssembler.interruptedBlocks > drops empty and whitespace-only text/reasoning blocks and unknown open block types 0ms
 
  Test Files  1 passed (1)
       Tests  22 passed (22)
-   Start at  11:08:17
-   Duration  537ms (transform 284ms, setup 243ms, import 95ms, tests 18ms, environment 0ms)
+   Start at  12:39:45
+   Duration  1.14s (transform 647ms, setup 536ms, import 220ms, tests 33ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > fires at both adapter registration commit points with the registry already readable 11ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > contains a throwing listener without vetoing registration or starving later listeners 3ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > contains an ASYNC listener rejection instead of leaving it unhandled 13ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > replaces a route set in one event, never publishing an empty registry between the two 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > rethrows the first INVARIANT-coded listener failure after notifying the rest 12ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > registers entries, lists detached copies in order, and fires the topology event 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > detaches stored entries from caller-owned objects 1ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > withdraws every entry when the registration disposes 1ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > withdraws entries when the contributing fiber disposes 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects an empty registration 3ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 4ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > replaces its entries atomically, keeping the old set when a candidate collides 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects duplicates within one registration and across registrations 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > offers one interrogation per settings namespace and disposes with its fiber 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > rejects an unnamed namespace and a second registration of the same one 2ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > normalizes what an interrogation returns without inventing capacities 1ms
- ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > refuses a namespace nothing serves and a draft with no endpoint 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > fires at both adapter registration commit points with the registry already readable 26ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > contains a throwing listener without vetoing registration or starving later listeners 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > contains an ASYNC listener rejection instead of leaving it unhandled 15ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > replaces a route set in one event, never publishing an empty registry between the two 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > llm/adapters-updated > rethrows the first INVARIANT-coded listener failure after notifying the rest 23ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > registers entries, lists detached copies in order, and fires the topology event 8ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > detaches stored entries from caller-owned objects 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > withdraws every entry when the registration disposes 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > withdraws entries when the contributing fiber disposes 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects an empty registration 10ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects invalid entries all-or-nothing 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > replaces its entries atomically, keeping the old set when a candidate collides 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > configurable-provider directory > rejects duplicates within one registration and across registrations 4ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > offers one interrogation per settings namespace and disposes with its fiber 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > rejects an unnamed namespace and a second registration of the same one 6ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > normalizes what an interrogation returns without inventing capacities 5ms
+ ✓ |thread-safe| packages/llm/llm/tests/topology.spec.ts > model discovery registry > refuses a namespace nothing serves and a draft with no endpoint 6ms
 
  Test Files  1 passed (1)
       Tests  20 passed (20)
-   Start at  11:08:18
-   Duration  673ms (transform 304ms, setup 279ms, import 85ms, tests 72ms, environment 0ms)
+   Start at  12:39:48
+   Duration  1.23s (transform 615ms, setup 506ms, import 201ms, tests 148ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/message.spec.ts > message construction > assigns identity immediately and returns a detached deep-frozen message 9ms
+ ✓ |thread-safe| packages/llm/llm/tests/message.spec.ts > message construction > assigns identity immediately and returns a detached deep-frozen message 14ms
  ✓ |thread-safe| packages/llm/llm/tests/message.spec.ts > message construction > freezes an existing identity without minting a replacement 0ms
  ✓ |thread-safe| packages/llm/llm/tests/message.spec.ts > message construction > fixes the assistant role and model source kind at creation 1ms
- ✓ |thread-safe| packages/llm/llm/tests/message.spec.ts > message construction > couples tool-result content and its cited call seq to one call identity 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/message.spec.ts > message construction > couples tool-result content and its cited call seq to one call identity 0ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  11:08:20
-   Duration  507ms (transform 265ms, setup 233ms, import 83ms, tests 13ms, environment 0ms)
+   Start at  12:39:51
+   Duration  1.10s (transform 622ms, setup 501ms, import 239ms, tests 17ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > callConfigEquals > compares every field, including the stop list element-wise 2ms
  ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > deepFreeze > freezes nested structure in place and returns the same reference 0ms
- ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > deepFreeze > never freezes an AbortSignal: the live cancellation channel keeps working 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > deepFreeze > never freezes an AbortSignal: the live cancellation channel keeps working 1ms
  ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > deepFreeze > passes primitives through and terminates on cycles 0ms
- ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > deepFreeze > freezes nesting deeper than the JavaScript call stack 42ms
+ ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > deepFreeze > freezes nesting deeper than the JavaScript call stack 48ms
  ✓ |thread-safe| packages/llm/llm/tests/call-config.spec.ts > agent-loop request identity > marks only the exact request object and preserves its identity 0ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  11:08:21
-   Duration  474ms (transform 210ms, setup 233ms, import 14ms, tests 46ms, environment 0ms)
+   Start at  12:39:54
+   Duration  730ms (transform 329ms, setup 371ms, import 19ms, tests 54ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > accepts a complete interleaved stream grammar 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > accepts a complete interleaved stream grammar 10ms
  ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 0 2ms
  ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 1 2ms
  ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 2 2ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 3 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 3 2ms
  ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 4 3ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 5 2ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 6 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 5 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 6 5ms
  ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 7 2ms
  ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 8 4ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 9 4ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > preserves provider exceptions without inventing a missing-finish failure 8ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > adapters-updated invariants > accepts a coherent registry at every topology notification 5ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > adapters-updated invariants > skips the check when the service store has no llm entry 10ms
- ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > adapters-updated invariants > reports a notification whose registry cannot be re-read 12ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > rejects malformed stream 9 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > LLM stream invariants > preserves provider exceptions without inventing a missing-finish failure 7ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > adapters-updated invariants > accepts a coherent registry at every topology notification 3ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > adapters-updated invariants > skips the check when the service store has no llm entry 1ms
+ ✓ |thread-safe| packages/llm/llm/tests/invariant.spec.ts > adapters-updated invariants > reports a notification whose registry cannot be re-read 7ms
 
  Test Files  1 passed (1)
       Tests  15 passed (15)
-   Start at  11:08:23
-   Duration  568ms (transform 261ms, setup 234ms, import 76ms, tests 66ms, environment 0ms)
+   Start at  12:39:56
+   Duration  838ms (transform 452ms, setup 407ms, import 128ms, tests 55ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/retry-policy.spec.ts > provider retry policy > resolves immutable normal defaults 2ms
+ ✓ |thread-safe| packages/llm/llm/tests/retry-policy.spec.ts > provider retry policy > resolves immutable normal defaults 3ms
  ✓ |thread-safe| packages/llm/llm/tests/retry-policy.spec.ts > provider retry policy > resolves and detaches a configured normal policy 0ms
  ✓ |thread-safe| packages/llm/llm/tests/retry-policy.spec.ts > provider retry policy > resolves always mode with default backoff 0ms
  ✓ |thread-safe| packages/llm/llm/tests/retry-policy.spec.ts > provider retry policy > ignores normal-only fields retained after switching to always mode 0ms
@@ -471,50 +471,50 @@
 
  Test Files  1 passed (1)
       Tests  20 passed (20)
-   Start at  11:08:25
-   Duration  636ms (transform 342ms, setup 308ms, import 99ms, tests 7ms, environment 0ms)
+   Start at  12:39:59
+   Duration  710ms (transform 384ms, setup 354ms, import 98ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > partials map size never exceeds the number of distinct indices seen 41ms
- ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > re-assembly is idempotent: blocks() is stable across repeated calls 34ms
- ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > blocks() never throws and yields only valid content-block tags 13ms
- ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > finish reflects the last finish chunk, or defaults to stop when none arrives 8ms
+ ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > partials map size never exceeds the number of distinct indices seen 47ms
+ ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > re-assembly is idempotent: blocks() is stable across repeated calls 43ms
+ ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > blocks() never throws and yields only valid content-block tags 24ms
+ ✓ |thread-safe| packages/llm/llm/tests/properties.spec.ts > BlockAssembler properties > finish reflects the last finish chunk, or defaults to stop when none arrives 9ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  11:08:27
-   Duration  699ms (transform 339ms, setup 295ms, import 121ms, tests 99ms, environment 0ms)
+   Start at  12:40:01
+   Duration  820ms (transform 377ms, setup 307ms, import 168ms, tests 125ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > APP_IDENTITY > sources the version from the package manifest, never a hand-copied constant 3ms
  ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > APP_IDENTITY > carries only static public product facts 1ms
- ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > userAgent > renders product/version with the +url comment 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > userAgent > renders product/version with the +url comment 1ms
  ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > userAgent > renders a custom identity 0ms
- ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > attributionHeaders > defaults to the provider-neutral baseline: User-Agent and nothing else 0ms
+ ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > attributionHeaders > defaults to the provider-neutral baseline: User-Agent and nothing else 1ms
  ✓ |thread-safe| packages/llm/llm/tests/attribution.spec.ts > attributionHeaders > maps a custom identity onto the User-Agent header only 0ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  11:08:29
-   Duration  480ms (transform 254ms, setup 218ms, import 82ms, tests 5ms, environment 0ms)
+   Start at  12:40:04
+   Duration  2.04s (transform 1.47s, setup 1.25s, import 452ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > compiles a valid plan 3ms
+ ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > compiles a valid plan 7ms
  ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > rejects agent with unknown world 1ms
- ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > rejects insufficient budget 0ms
- ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > verifyPlan passes for valid plan 0ms
- ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > same input produces same digest 0ms
+ ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > rejects insufficient budget 1ms
+ ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > verifyPlan passes for valid plan 1ms
+ ✓ |thread-safe| packages/run/run-plan/tests/compile.spec.ts > P4-03 RunPlan > same input produces same digest 1ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  11:08:30
-   Duration  550ms (transform 291ms, setup 328ms, import 36ms, tests 6ms, environment 0ms)
+   Start at  12:40:08
+   Duration  1.27s (transform 859ms, setup 919ms, import 137ms, tests 15ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -522,15 +522,15 @@
  ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > freezes a plan with signature 4ms
  ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > verifies untampered frozen plan 0ms
  ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > detects signature tampering 0ms
- ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > applies add-agent amendment 1ms
- ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > requires approval for budget expansion 1ms
+ ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > applies add-agent amendment 0ms
+ ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > requires approval for budget expansion 0ms
  ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > prevents self-escalation 1ms
- ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > allows non-escalation amendments 1ms
+ ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > allows non-escalation amendments 0ms
  ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > tracks revision history 0ms
- ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > applies approved budget expansion 0ms
+ ✓ |thread-safe| packages/run/run-plan/tests/amendment.spec.ts > P4-04 RunPlan Freeze & Amendment > applies approved budget expansion 1ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  11:08:32
-   Duration  763ms (transform 434ms, setup 449ms, import 90ms, tests 11ms, environment 0ms)
+   Start at  12:40:11
+   Duration  710ms (transform 335ms, setup 365ms, import 47ms, tests 10ms, environment 0ms)
 

@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/plugin/plugin-lock/tests/lock.spec.ts > P1-03 Plugin Lock File > generates a lock file 3ms
+ ✓ |thread-safe| packages/plugin/plugin-lock/tests/lock.spec.ts > P1-03 Plugin Lock File > generates a lock file 2ms
  ✓ |thread-safe| packages/plugin/plugin-lock/tests/lock.spec.ts > P1-03 Plugin Lock File > computes deterministic hash 1ms
  ✓ |thread-safe| packages/plugin/plugin-lock/tests/lock.spec.ts > P1-03 Plugin Lock File > verifies lock integrity 0ms
  ✓ |thread-safe| packages/plugin/plugin-lock/tests/lock.spec.ts > P1-03 Plugin Lock File > resolves plugin from lock 0ms
@@ -9,6 +9,6 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  10:18:13
-   Duration  470ms (transform 204ms, setup 217ms, import 40ms, tests 6ms, environment 0ms)
+   Start at  12:05:08
+   Duration  430ms (transform 201ms, setup 225ms, import 19ms, tests 5ms, environment 0ms)
 

@@ -1,8 +1,8 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"npx vitest run packages/run/run-plan/tests/amendment.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"npx vitest run packages/run/run-plan/tests/compile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"npx vitest run packages/run/run/tests/state-machine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"npx vitest run packages/run/run/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"npx vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
-{"command":"npx vitest run packages/kernel/trust-kernel/tests/enforcement.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:57:29.312Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"npx vitest run packages/run/run-plan/tests/amendment.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"npx vitest run packages/run/run-plan/tests/compile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"npx vitest run packages/run/run/tests/state-machine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"npx vitest run packages/run/run/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"npx vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}
+{"command":"npx vitest run packages/kernel/trust-kernel/tests/enforcement.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:22:25.335Z"}

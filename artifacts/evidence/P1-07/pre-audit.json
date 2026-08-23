@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-07",
   "title": "项目 Trust Boundary：未信任目录不加载项目级执行内容",
-  "audit_date": "2026-08-23T02:20:26.393Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:05:40.561Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/workspace/workspace-trust/src/index.ts",
     "packages/workspace/workspace-trust/src/types.ts",

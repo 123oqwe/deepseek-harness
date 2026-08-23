@@ -1,11 +1,11 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/policy/grant-store/tests/grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/interaction/user-approval/tests/argument-binding.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/permission-presets.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
-{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:44:14.638Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/policy/grant-store/tests/grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/interaction/user-approval/tests/argument-binding.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/permission-presets.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}
+{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:13:20.570Z"}

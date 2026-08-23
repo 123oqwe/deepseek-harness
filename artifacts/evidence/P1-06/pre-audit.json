@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-06",
   "title": "不可信插件 Out-of-Process Host",
-  "audit_date": "2026-08-23T02:18:23.234Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:05:18.340Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/plugin/plugin-host-protocol/src/types.ts",
     "packages/plugin/plugin-host/src/index.ts",
@@ -33,19 +33,7 @@
     "packages/boot/app-boot/tests/config-reload.spec.ts",
     "packages/boot/app-boot/tests/user-patches.spec.ts",
     "packages/host/plugin-inventory/tests/inventory.spec.ts",
-    "packages/host/plugin-inventory/tests/invariant.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts"
+    "packages/host/plugin-inventory/tests/invariant.spec.ts"
   ],
   "doc_files": [],
   "other_files": [],
@@ -62,5 +50,5 @@
   "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 8 files, Tests: 21 files, Docs: 0 files"
+  "notes": "Source: 8 files, Tests: 9 files, Docs: 0 files"
 }

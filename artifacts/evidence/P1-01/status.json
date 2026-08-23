@@ -2,7 +2,7 @@
   "issue_id": "P1-01",
   "title": "Plugin Manifest v2：声明能力、权限与副作用",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,10 +13,10 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "5/10 passed"
+    "tests": "104/127 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T02:17:21.000Z",
+  "evidence_date": "2026-08-23T05:29:52.368Z",
   "runtime_reachability": {
     "issue_id": "P1-01",
     "source_files": 8,
@@ -24,10 +24,9 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-23T02:17:21.000Z"
+    "timestamp": "2026-08-23T04:04:13.862Z"
   },
   "remaining_risks": [
-    "5 test(s) failing",
-    "Code ported from prototype branch; needs deeper integration verification"
+    "23 test(s) failing"
   ]
 }

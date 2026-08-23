@@ -1,7 +1,7 @@
 {
   "total": 26,
-  "passed": 22,
-  "failed": 4,
+  "passed": 23,
+  "failed": 3,
   "test_files": [
     "packages/assurance/verifier/tests/verifier-isolation.spec.ts",
     "packages/subagent/subagent/tests/continuation.spec.ts",

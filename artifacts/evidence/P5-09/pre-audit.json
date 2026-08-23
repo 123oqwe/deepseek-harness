@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-09",
   "title": "ACP Provider：远程可继续会话、Trace 枚举与安全身份",
-  "audit_date": "2026-08-23T03:15:03.730Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:46:19.526Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/subagent/subagent-acp/src/session.ts",
     "packages/subagent/subagent-acp/src/events.ts",

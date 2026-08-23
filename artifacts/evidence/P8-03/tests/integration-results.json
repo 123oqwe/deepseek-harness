@@ -1,7 +1,7 @@
 {
   "total": 27,
-  "passed": 23,
-  "failed": 4,
+  "passed": 26,
+  "failed": 1,
   "test_files": [
     "packages/api/remotes/tests/agent-lookup.spec.ts",
     "packages/sdk/protocol/tests/version-negotiation.spec.ts",

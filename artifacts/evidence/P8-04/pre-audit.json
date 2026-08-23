@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-04",
   "title": "双向 Server→Client Requests：持久审批、澄清、人工接管与 Quorum",
-  "audit_date": "2026-08-23T03:45:08.782Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T05:11:37.282Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/sdk/protocol/src/server-requests.ts",
     "packages/api/remotes/src/human-interaction.ts",

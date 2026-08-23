@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-03",
   "title": "一等公民 ActionManifest",
-  "audit_date": "2026-08-23T02:35:02.695Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:10:01.361Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/action/action-manifest/src/index.ts",
     "packages/action/action-manifest/src/types.ts",
@@ -26,18 +26,6 @@
   ],
   "test_files": [
     "packages/action/action-manifest/tests/manifest.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/core/agent-loop/tests/config-session-id.spec.ts",
     "packages/core/agent-loop/tests/request-error.spec.ts",
     "packages/core/agent-loop/tests/contract-regressions.spec.ts",
@@ -86,5 +74,5 @@
   "classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 8 files, Tests: 44 files, Docs: 0 files"
+  "notes": "Source: 8 files, Tests: 32 files, Docs: 0 files"
 }

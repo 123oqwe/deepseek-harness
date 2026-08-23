@@ -1,7 +1,7 @@
 {
   "total": 9,
-  "passed": 6,
-  "failed": 3,
+  "passed": 9,
+  "failed": 0,
   "test_files": [
     "packages/evaluation/evolution-proposal/tests/evolution.spec.ts",
     "packages/session/session-telemetry/tests/telemetry.spec.ts",

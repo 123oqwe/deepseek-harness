@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-02",
   "title": "可衰减 Capability Token 与子 Agent 委托",
-  "audit_date": "2026-08-23T02:28:05.067Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:08:36.533Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/policy/capability-token/src/index.ts",
     "packages/policy/capability-token/src/types.ts",
@@ -44,18 +44,6 @@
     "packages/core/agent-loop/tests/tool-order.spec.ts",
     "packages/core/agent-loop/tests/invariant.spec.ts",
     "packages/core/agent-loop/tests/properties.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/subagent/subagent/tests/continuation.spec.ts",
     "packages/subagent/subagent/tests/run-settlement.spec.ts",
     "packages/subagent/subagent/tests/request-contract.spec.ts",
@@ -87,5 +75,5 @@
   "classification": "CAPABILITY_ATTENUATION_BUG",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 8 files, Tests: 45 files, Docs: 0 files"
+  "notes": "Source: 8 files, Tests: 33 files, Docs: 0 files"
 }

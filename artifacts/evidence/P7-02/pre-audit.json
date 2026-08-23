@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-02",
   "title": "EvidenceCollector：内容寻址、可追溯、不可伪造的证据层",
-  "audit_date": "2026-08-23T03:28:23.459Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:59:01.684Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/assurance/evidence/src/index.ts",
     "packages/assurance/evidence/src/types.ts",
@@ -50,18 +50,6 @@
     "packages/core/agent-loop/tests/tool-order.spec.ts",
     "packages/core/agent-loop/tests/invariant.spec.ts",
     "packages/core/agent-loop/tests/properties.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/core/session/tests/scoped.spec.ts",
     "packages/core/session/tests/request-header.spec.ts",
     "packages/core/session/tests/derived-cache.spec.ts",
@@ -108,5 +96,5 @@
   "classification": "DIGEST_ONLY_EVIDENCE",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 11 files, Tests: 58 files, Docs: 0 files"
+  "notes": "Source: 11 files, Tests: 46 files, Docs: 0 files"
 }

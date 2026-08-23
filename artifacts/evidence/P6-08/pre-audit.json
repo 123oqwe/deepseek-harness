@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-08",
   "title": "静态加密、租户密钥、Tamper-Evident Audit 与 Data Residency",
-  "audit_date": "2026-08-23T03:24:14.643Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:56:36.799Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/storage/storage-encryption/src/index.ts",
     "packages/storage/storage-encryption/src/keyring.ts",

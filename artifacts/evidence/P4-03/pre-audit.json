@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-03",
   "title": "RunPlan：模型、Agent、工具、世界、预算与验证的可执行计划",
-  "audit_date": "2026-08-23T02:57:06.550Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:21:52.977Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/run/run-plan/src/index.ts",
     "packages/run/run-plan/src/types.ts",

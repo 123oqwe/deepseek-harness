@@ -6,6 +6,6 @@
   "packages/llm/llm-retry/src/index.ts": "73a3f4cee1e3c4a315f41f38d12ea1676661f0475dd6f367901b22b6e23dfd72",
   "packages/llm/llm-retry/src/types.ts": "9c377ed575053427da1f0cef97c056aee0f6c4a80d413dea0f70086bbd05fb0b",
   "packages/guard/repeat-tool-reminder/src/index.ts": "5cd612ff3b24eef3febb1b8b4ac6b76b0f431de3def509a9a7021ec2d51d9363",
-  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff",
+  "packages/core/agent-loop/src/agent.ts": "3597bbc96e78445cf21141d22a156da024f933d6eba5e1d33a8586e9c80f3280",
   "packages/workflow/workflow-worker-thread/src/runtime.ts": "3ecbd893fc8b776ab6e93a7e5edd99c8ce5d3da255bb9b378242b80131138c78"
 }

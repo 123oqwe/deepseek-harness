@@ -15,8 +15,8 @@
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  10:55:26
-   Duration  446ms (transform 200ms, setup 217ms, import 37ms, tests 8ms, environment 0ms)
+   Start at  12:20:03
+   Duration  424ms (transform 199ms, setup 222ms, import 19ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -30,27 +30,27 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  10:55:27
-   Duration  410ms (transform 194ms, setup 216ms, import 12ms, tests 5ms, environment 0ms)
+   Start at  12:20:05
+   Duration  435ms (transform 210ms, setup 236ms, import 13ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/compaction/compaction/tests/compaction.spec.ts > CompactionEngine seam > registers as ctx.compaction 4ms
- ✓ |thread-safe| packages/compaction/compaction/tests/compaction.spec.ts > CompactionEngine seam > disposing the fiber unregisters ctx.compaction (HMR safety) 10ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/compaction.spec.ts > CompactionEngine seam > disposing the fiber unregisters ctx.compaction (HMR safety) 11ms
  ✓ |thread-safe| packages/compaction/compaction/tests/compaction.spec.ts > CompactionEngine seam > exposes the abstract contract methods 1ms
  ✓ |thread-safe| packages/compaction/compaction/tests/compaction.spec.ts > CompactionEngine seam > compaction/* events merge into SessionEventMap and are log-only 8ms
  ✓ |thread-safe| packages/compaction/compaction/tests/compaction.spec.ts > CompactionEngine seam > threads the cancellation signal through to the backend 1ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  10:55:29
-   Duration  565ms (transform 308ms, setup 216ms, import 144ms, tests 25ms, environment 0ms)
+   Start at  12:20:06
+   Duration  578ms (transform 322ms, setup 220ms, import 156ms, tests 27ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/compaction/compaction/tests/tool-pairing.spec.ts > tool-pairing boundaries > classifies closed and open single-call steps 9ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/tool-pairing.spec.ts > tool-pairing boundaries > classifies closed and open single-call steps 8ms
  ✓ |thread-safe| packages/compaction/compaction/tests/tool-pairing.spec.ts > tool-pairing boundaries > requires every result from a multiple-call assistant message 0ms
  ✓ |thread-safe| packages/compaction/compaction/tests/tool-pairing.spec.ts > tool-pairing boundaries > keeps neutral nodes inside an open pair unbalanced and free nodes balanced 1ms
  ✓ |thread-safe| packages/compaction/compaction/tests/tool-pairing.spec.ts > tool-pairing surface identity > rebuilds after replace and rejects sequences removed from current membership 1ms
@@ -64,38 +64,38 @@
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  10:55:30
-   Duration  551ms (transform 304ms, setup 212ms, import 149ms, tests 14ms, environment 0ms)
+   Start at  12:20:08
+   Duration  601ms (transform 334ms, setup 234ms, import 164ms, tests 14ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > accepts successful and failed compaction lifecycles 13ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > accepts successful and failed compaction lifecycles 11ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > accepts standalone successful and failed compaction lifecycles between turns 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > clears an inherited open compaction trace at end-seed during replay 3ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > allows repair turn boundaries after end-seed clears a seeded numbered orphan 3ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > accepts inherited repair boundaries before the end-seed that clears a standalone orphan 3ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > allows repair turn boundaries after end-seed clears a seeded numbered orphan 2ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > accepts inherited repair boundaries before the end-seed that clears a standalone orphan 5ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects a closed standalone bracket that contains a turn before end-seed 9ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rebuilds an open trace when the companion loads after the session 4ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > adopts a bare session and ignores unrelated committed events 1ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > adopts a bare session and ignores unrelated committed events 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects compaction outside or for a different open turn 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects a standalone bracket while a turn is open and a numbered bracket between turns 2ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > attributes a nested standalone start to the standalone owner 1ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > attributes a nested standalone start to the standalone owner 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects an unenclosed compaction event when replaying an existing session 3ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects turn boundaries that cross live standalone or numbered compaction brackets 2ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects a replacement checkpoint for another compaction transaction 8ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > requires checkpoint provenance to name an open transaction 2ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects a replacement checkpoint for another compaction transaction 14ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > requires checkpoint provenance to name an open transaction 8ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects empty start id 2ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects empty start source command id 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects summary without start 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects nested start 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects repeated summary 2ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects empty start source command id 2ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects summary without start 2ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects nested start 5ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects repeated summary 8ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects summary for another compaction 2ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects summary for another source command 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects empty shadow set 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects wrong endpoints 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects invalid token count 1ms
- ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects end without start 1ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects summary for another source command 5ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects empty shadow set 4ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects wrong endpoints 7ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects invalid token count 2ms
+ ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects end without start 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects wrong end turn 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects end for another compaction 2ms
  ✓ |thread-safe| packages/compaction/compaction/tests/invariant.spec.ts > compaction invariants > rejects end missing the source command 1ms
@@ -104,8 +104,8 @@
 
  Test Files  1 passed (1)
       Tests  31 passed (31)
-   Start at  10:55:32
-   Duration  759ms (transform 360ms, setup 261ms, import 175ms, tests 84ms, environment 0ms)
+   Start at  12:20:09
+   Duration  802ms (transform 409ms, setup 243ms, import 255ms, tests 120ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -118,8 +118,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  10:55:34
-   Duration  470ms (transform 225ms, setup 253ms, import 21ms, tests 5ms, environment 0ms)
+   Start at  12:20:11
+   Duration  407ms (transform 187ms, setup 209ms, import 19ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -133,71 +133,71 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  10:55:35
-   Duration  435ms (transform 198ms, setup 221ms, import 14ms, tests 4ms, environment 0ms)
+   Start at  12:20:12
+   Duration  405ms (transform 188ms, setup 210ms, import 10ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 18ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 9ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 16ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 11ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 18ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 9ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > merges partial records and leaves an already-accounted cwd drift ungrouped 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > creates newest-first and idempotently reuses a canonical path without retitling 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > serializes concurrent same-path creates into one entity 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > allows a duplicate display name on a different canonical path 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back the provisional cache when the record write fails 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 7ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports an order write and pending-marker rollback failure together 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls registry order and cache back when record deletion fails 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 7ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects table access before the registry has started 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > keeps self-anchored and already-positioned moves write-free and rejects unknown ids 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 13ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > treats self-anchored and already-in-place moves as no-ops without writing 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects moves naming an unaccounted session or anchor 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > validates a lazy live session without requiring it in persistence.list() 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 7ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 7ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 16ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 13ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > accepts unaccounted and live sessions but rejects unknown ids without writing 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 16ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 8ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 14ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 13ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > merges partial records and leaves an already-accounted cwd drift ungrouped 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > creates newest-first and idempotently reuses a canonical path without retitling 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > serializes concurrent same-path creates into one entity 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > allows a duplicate display name on a different canonical path 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back the provisional cache when the record write fails 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports an order write and pending-marker rollback failure together 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls registry order and cache back when record deletion fails 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects table access before the registry has started 2ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > keeps self-anchored and already-positioned moves write-free and rejects unknown ids 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > treats self-anchored and already-in-place moves as no-ops without writing 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects moves naming an unaccounted session or anchor 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > validates a lazy live session without requiring it in persistence.list() 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 2ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 11ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > accepts unaccounted and live sessions but rejects unknown ids without writing 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > propagates a persistence-listing failure instead of reporting an unknown session 2ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 9ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 6ms
 
  Test Files  1 passed (1)
       Tests  43 passed (43)
-   Start at  10:55:37
-   Duration  1.15s (transform 493ms, setup 241ms, import 397ms, tests 315ms, environment 0ms)
+   Start at  12:20:14
+   Duration  972ms (transform 452ms, setup 237ms, import 349ms, tests 203ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > accepts a put whose record has a cached entity and ignores foreign events 12ms
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails deletion while the registry still publishes the entity 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > allows deletion after the registry removed the cache entry for rollback or explicit deletion 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails a put whose record the registry cache does not hold 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > accepts a put whose record has a cached entity and ignores foreign events 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails deletion while the registry still publishes the entity 1ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > allows deletion after the registry removed the cache entry for rollback or explicit deletion 1ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails a put whose record the registry cache does not hold 1ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  10:55:39
-   Duration  814ms (transform 463ms, setup 240ms, import 355ms, tests 23ms, environment 0ms)
+   Start at  12:20:16
+   Duration  653ms (transform 362ms, setup 203ms, import 270ms, tests 12ms, environment 0ms)
 

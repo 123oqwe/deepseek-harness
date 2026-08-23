@@ -1,2 +1,2 @@
-- 21 test(s) failing
+- 18 test(s) failing
 - Code ported from prototype branch; needs deeper integration verification

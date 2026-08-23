@@ -1,8 +1,8 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > runs eval and produces result 2ms
- ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > registry stores and retrieves results 1ms
+ ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > runs eval and produces result 3ms
+ ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > registry stores and retrieves results 0ms
  ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > champion-challenger compares metrics 0ms
  ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > auto-rollback triggers on success rate degradation 0ms
  ✓ |thread-safe| packages/evaluation/evolution-proposal/tests/evolution.spec.ts > P7-10 Evaluation Plane & Champion-Challenger > non-auto-evolvable components cannot be auto-evolved 0ms
@@ -14,155 +14,150 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  11:41:44
-   Duration  438ms (transform 213ms, setup 220ms, import 35ms, tests 6ms, environment 0ms)
+   Start at  13:07:55
+   Duration  753ms (transform 398ms, setup 436ms, import 42ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > hands every appended event over with envelope identity and cloned body 18ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > stamps header facts on every record when present 3ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > maps outcome flags to severity, unknown types falling through as info 3ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > hands every appended event over with envelope identity and cloned body 22ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > stamps header facts on every record when present 4ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > maps outcome flags to severity, unknown types falling through as info 5ms
  ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > passes unknown merged event types through unchanged 3ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > ships only the first chunk of each (turn, step), per session 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > captures one canonical-log prefix at a time without following later events 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > runs the currently mounted redaction policy during canonical-log capture 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > contains each backend failure independently while replaying a prefix 2ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator capture > ships only the first chunk of each (turn, step), per session 3ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > captures one canonical-log prefix at a time without following later events 4ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > runs the currently mounted redaction policy during canonical-log capture 3ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > contains each backend failure independently while replaying a prefix 3ms
  ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > captures a pending prefix after coordinator reload without retained records 9ms
  ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator on-demand capture > registers no continuous capture, flush, or ops listeners 8ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > exports an unpublished suffix without re-exporting constructor history 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > resume shape: a full-log seed exports only its own end-seed and rebuilds the chunk projection 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > stamps session.seed_length from the header so receivers can stitch fork streams 2ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > exports an unpublished suffix without re-exporting constructor history 3ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > resume shape: a full-log seed exports only its own end-seed and rebuilds the chunk projection 3ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > stamps session.seed_length from the header so receivers can stitch fork streams 3ms
  ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > adopts exactly once when created fires after the sweep 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > resumes from the handoff cursor across a reload, re-dropping mid-step chunks 8ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > replays past a record the backend rejects: one event withheld, the rest adopted 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > re-hands the full log when no cursor survived (fresh session object) 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > forwards session/flush as a hint without awaiting backend work 2ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > resumes from the handoff cursor across a reload, re-dropping mid-step chunks 10ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > replays past a record the backend rejects: one event withheld, the rest adopted 4ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator adoption > re-hands the full log when no cursor survived (fresh session object) 5ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > forwards session/flush as a hint without awaiting backend work 4ms
  ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > ignores flush hints for sessions it never adopted 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > emits no marker for a session whose announcement was vetoed before adoption 8ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > emits each adopted session’s shutdown record before awaiting backend shutdown 8ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > emits the shutdown marker at the session’s own disposal edge, then retires it 8ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > warns instead of throwing when backend shutdown fails 8ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > contains emit failures: the append succeeds and capture heals 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > relays agent/error Error values as an ops record with normalized identity 2ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > emits no marker for a session whose announcement was vetoed before adoption 15ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > emits each adopted session’s shutdown record before awaiting backend shutdown 11ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > emits the shutdown marker at the session’s own disposal edge, then retires it 10ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > warns instead of throwing when backend shutdown fails 11ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > contains emit failures: the append succeeds and capture heals 7ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > relays agent/error Error values as an ops record with normalized identity 3ms
  ✓ |thread-safe| packages/session/session-telemetry/tests/telemetry.spec.ts > SessionTelemetryCoordinator lifecycle and containment > relays agent/error non-Error values as an ops record with normalized identity 2ms
 
  Test Files  1 passed (1)
       Tests  26 passed (26)
-   Start at  11:41:46
-   Duration  681ms (transform 321ms, setup 211ms, import 168ms, tests 115ms, environment 0ms)
+   Start at  13:07:57
+   Duration  1.06s (transform 583ms, setup 463ms, import 242ms, tests 163ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > passes records through unchanged when no listener is mounted 19ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > applies a mounted rule to every outbound record, ops records included 4ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > keeps the canonical log untouched by a mounted rule 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > stacks listeners outermost-first around next() 4ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > a listener that skips next() replaces everything beneath it 2ms
- ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > a throwing rule withholds the record fail-closed without disturbing the log 2ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > passes records through unchanged when no listener is mounted 18ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > applies a mounted rule to every outbound record, ops records included 12ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > keeps the canonical log untouched by a mounted rule 4ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > stacks listeners outermost-first around next() 6ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > a listener that skips next() replaces everything beneath it 5ms
+ ✓ |thread-safe| packages/session/session-telemetry/tests/redact.spec.ts > session-telemetry/record waterfall > a throwing rule withholds the record fail-closed without disturbing the log 4ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  11:41:48
-   Duration  600ms (transform 325ms, setup 237ms, import 150ms, tests 35ms, environment 0ms)
+   Start at  13:07:59
+   Duration  1.06s (transform 575ms, setup 382ms, import 311ms, tests 52ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > makes an effect visible to a reentrant owner restart and awaits setup plus cleanup 5ms
- ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > rolls back collected cleanup and its owner-list entry when setup throws synchronously 5ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > rolls back collected cleanup and its owner-list entry when setup throws synchronously 7ms
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > makes a reentrant owner restart await asynchronous rollback after synchronous setup failure 1ms
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > keeps ordinary teardown synchronous and the public disposer single-shot 1ms
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > rejects cleanup-time registration while a restart is unloading 1ms
- ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > keeps effect registration legal while child fibers are PENDING and LOADING 7ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > keeps effect registration legal while child fibers are PENDING and LOADING 8ms
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis effect ownership > resolves dependencies that internal/plugin adds before child activation 2ms
- ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > rolls back parent and runtime ownership when internal/plugin publication throws 1ms
- ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > contains teardown notification failures so ownership cleanup and peers complete 3ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > rolls back parent and runtime ownership when internal/plugin publication throws 2ms
+ ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > contains teardown notification failures so ownership cleanup and peers complete 4ms
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > makes a LOADING parent join child cleanup started before its unload snapshot 2ms
  ✓ |thread-safe| packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts > Cordis child publication ownership > lets parent disposal during internal/plugin await the unpublished child to quiescence 2ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  11:41:49
-   Duration  453ms (transform 201ms, setup 224ms, import 12ms, tests 31ms, environment 0ms)
+   Start at  13:08:01
+   Duration  569ms (transform 278ms, setup 322ms, import 13ms, tests 37ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: 42 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: 42 11ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{}} 1ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{},"output":{"schema":{"type":"json"}}} 0ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{},"output":{"schema":{"type":"json"}},"execute":true} 0ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > rejects an invalid dynamic tool declaration before registration: {"parameters":{},"output":{"schema":{"type":"json"},"presentationMeta":true}} 0ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > bounds the preview of an invalid dynamic renderer return 1ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > isolates sandbox globals: no process/Buffer, and globalThis writes do not leak to the host 13ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call require('fs') with a redirect to the cordis alternative 8ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call setTimeout(() => {}, 5) with a redirect to the cordis alternative 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call fetch('https://example.com') with a redirect to the cordis alternative 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > lets a host half schedule through the cordis timer service (inject: ['timer']) 57ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > provides btoa/atob and the tagged console variants inside the sandbox 4ms
- × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > makes instanceof inside the sandbox see BOTH realms (patched vm constructors, host untouched) 8ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > honors the configured vmTimeoutMs for the synchronous portion 55ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "throw new Error('boom in sandbox')" with a teaching message 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "throw 'plain-string-throw'" with a teaching message 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "return 42" with a teaching message 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "const plugin = (ctx) => {}" with a teaching message 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "return { name: 'broken', apply(ctx) { throw new Error('apply exploded') } }" with a teaching message 6ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > passes a null throw through untouched (no SyntaxError misclassification) 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > answers TypeScript syntax in the plain-JS sandbox with the fix, at define time 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > surfaces the offending line + caret and the bracket-balance hint on a syntax error 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > dynamic tool declaration boundary > bounds the preview of an invalid dynamic renderer return 2ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > isolates sandbox globals: no process/Buffer, and globalThis writes do not leak to the host 32ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call require('fs') with a redirect to the cordis alternative 16ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call setTimeout(() => {}, 5) with a redirect to the cordis alternative 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > traps the Node API call fetch('https://example.com') with a redirect to the cordis alternative 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > lets a host half schedule through the cordis timer service (inject: ['timer']) 64ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > provides btoa/atob and the tagged console variants inside the sandbox 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > makes instanceof inside the sandbox see BOTH realms (patched vm constructors, host untouched) 13ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > sandbox isolation and Node-API traps > honors the configured vmTimeoutMs for the synchronous portion 60ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "throw new Error('boom in sandbox')" with a teaching message 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "throw 'plain-string-throw'" with a teaching message 11ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "return 42" with a teaching message 18ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "const plugin = (ctx) => {}" with a teaching message 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > refuses "return { name: 'broken', apply(ctx) { throw new Error('apply exploded') } }" with a teaching message 16ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > host-half failures leave nothing running > passes a null throw through untouched (no SyntaxError misclassification) 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > answers TypeScript syntax in the plain-JS sandbox with the fix, at define time 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > surfaces the offending line + caret and the bracket-balance hint on a syntax error 4ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > syntaxErrorContext falls back to String(error) when the stack has no vm prelude 0ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > handles a runtime-thrown SyntaxError (no source-line prelude) with the generic hint 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox.spec.ts > parse failures teach the fix > handles a runtime-thrown SyntaxError (no source-line prelude) with the generic hint 10ms
 
- Test Files  1 failed (1)
-      Tests  1 failed | 23 passed (24)
-   Start at  11:41:51
-   Duration  1.09s (transform 615ms, setup 212ms, import 497ms, tests 194ms, environment 0ms)
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  13:08:03
+   Duration  1.56s (transform 914ms, setup 297ms, import 753ms, tests 312ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > provider first: the consumer activates immediately and its tool reaches the provided service 27ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > consumer first: runs but stays parked on the missing service, then activates when the provider runs 7ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > stopping the provider sends the consumer back to pending and unwinds its registrations 6ms
- × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > running the provider again re-runs the consumer through a fresh guard (tool back) 6ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > a duplicate provide fails loud and leaves the second package not running 9ms
- × |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > a primitive (or null) provided value passes through the façade unwrapped, on both read paths 11ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > provider first: the consumer activates immediately and its tool reaches the provided service 28ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > consumer first: runs but stays parked on the missing service, then activates when the provider runs 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > stopping the provider sends the consumer back to pending and unwinds its registrations 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > running the provider again re-runs the consumer through a fresh guard (tool back) 10ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > a duplicate provide fails loud and leaves the second package not running 16ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > a primitive (or null) provided value passes through the façade unwrapped, on both read paths 9ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > cross-package provide/inject > stopping the consumer leaves the provider and its service intact 5ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > the host half's listeners have stopped by the time stop returns 5ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > unregisters a self-made tool on stop, and registers it again on the next run 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > names the replace recipe when a run collides with a live registration 15ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/composition.spec.ts > stop reaches quiescence > names the replace recipe when a run collides with a live registration 10ms
 
- Test Files  1 failed (1)
-      Tests  4 failed | 6 passed (10)
-   Start at  11:41:53
-   Duration  993ms (transform 620ms, setup 226ms, import 486ms, tests 96ms, environment 0ms)
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  13:08:06
+   Duration  1.21s (transform 735ms, setup 287ms, import 557ms, tests 103ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > keeps currentPackageId when an update fails and clears nextPackageId after rollback 79ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > cancels and retracts a Host activation owned by the pending approval 12ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > does not stop an existing Host run when an attaching page fails to load Client code 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > keeps currentPackageId when an update fails and clears nextPackageId after rollback 31ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > cancels and retracts a Host activation owned by the pending approval 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/versioning.spec.ts > dynamic Plugin versions > does not stop an existing Host run when an attaching page fails to load Client code 5ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  11:41:55
-   Duration  3.24s (transform 2.50s, setup 339ms, import 2.59s, tests 98ms, environment 0ms)
+   Start at  13:08:08
+   Duration  1.16s (transform 784ms, setup 293ms, import 605ms, tests 44ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.root with a teaching error 26ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.parent with a teaching error 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.root with a teaching error 29ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.parent with a teaching error 8ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.scope with a teaching error 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.fiber with a teaching error 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.fiber with a teaching error 5ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.reflect with a teaching error 4ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.registry with a teaching error 4ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.events with a teaching error 4ms
@@ -173,7 +168,7 @@
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.set() with a teaching error 4ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies ctx.mixin() with a teaching error 7ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > the classic ctx.root.tools.register bypass registers nothing and fails loud 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > rejects assignment to the façade rather than silently dropping it 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > rejects assignment to the façade rather than silently dropping it 6ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > denies a service whose method returns a Context (the .ctx escape), registering nothing 4ms
 stdout | packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > reads a symbol property as undefined and answers the `in` operator without throwing
 [cordis:probe-1] probe true true true false
@@ -184,60 +179,56 @@ stdout | packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > 
 stdout | packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows a service the host half DID declare in inject
 [cordis:probe-1] has systemPrompt: object
 
- × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > guards an async injected-service method: a host-realm Promise resolves through the guard 11ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > reads a symbol property as undefined and answers the `in` operator without throwing 6ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > denies an undeclared live service (property access), naming the inject fix 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows optional undeclared services through ctx.get 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows a service the host half DID declare in inject 3ms
- × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > a cross-package consumer must declare the provider — the undeclared path is refused, not left as a zombie tool 19ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox tools façade — get is a read-only schema view > ctx.tools.get returns a schema, not the live ToolDefinition with execute 8ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox tools façade — get is a read-only schema view > ctx.tools.get returns undefined for an unknown tool 5ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > guards an async injected-service method: a host-realm Promise resolves through the guard 17ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — escape surface is closed > reads a symbol property as undefined and answers the `in` operator without throwing 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > denies an undeclared live service (property access), naming the inject fix 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows optional undeclared services through ctx.get 9ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > allows a service the host half DID declare in inject 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox context façade — inject gate on services > a cross-package consumer must declare the provider — the undeclared path is refused, not left as a zombie tool 27ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox tools façade — get is a read-only schema view > ctx.tools.get returns a schema, not the live ToolDefinition with execute 9ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts > sandbox tools façade — get is a read-only schema view > ctx.tools.get returns undefined for an unknown tool 7ms
 
- Test Files  1 failed (1)
-      Tests  4 failed | 20 passed (24)
-   Start at  11:42:00
-   Duration  1.21s (transform 716ms, setup 282ms, import 542ms, tests 152ms, environment 0ms)
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  13:08:12
+   Duration  1.64s (transform 1.04s, setup 354ms, import 846ms, tests 195ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > lists the whole registry for a global surface, each row carrying its owning session 52ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > tells a global surface which definitions even have a browser half to load 10ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > records a definition without running it, and mints ids that are never reused 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":" ","purpose":"p","host":"return () => {}"} 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":"n","purpose":"","host":"return () => {}"} 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":"n","purpose":"p"} 2ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > keeps unparseable code out of the registry, teaching the TypeScript removal 14ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > hides another session's definition, so only its own card can address it 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > starts a host-only package immediately, with no request and no approval 9ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > returns awaiting approval, then records the page activation asynchronously 9ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > returns awaiting approval, then records a refusal without starting 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > records an asynchronous Client failure and unwinds the Host half it started 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > replaces a prior run and records failure when the repeated run cannot load Client code 7ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > binds a running host half instead of evaluating it twice 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > shares one activation when two pages start the same Package concurrently 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > hands the browser half's source only to the owning session, and only while it runs 6ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > accepts and ignores an answer to a request nobody is waiting for 8ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > refuses an answer after stop cancels the request and allows a fresh direct run 8ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > cancels a pending request after its provisional activation is stopped 8ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > keeps a published request answerable after the creating Tool call ends 7ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > reports the sandbox failure and starts nothing when the host half throws 16ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > stops both halves while keeping the definition runnable 9ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > announces the stop of a host-only package too, so a global surface drops its row 11ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > refuses to stop a definition that is not running 5ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > stops a running definition on undefine and forgets it 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > lists the whole registry for a global surface, each row carrying its owning session 34ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > tells a global surface which definitions even have a browser half to load 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > records a definition without running it, and mints ids that are never reused 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":" ","purpose":"p","host":"return () => {}"} 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":"n","purpose":"","host":"return () => {}"} 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > refuses an incomplete define request: {"name":"n","purpose":"p"} 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > keeps unparseable code out of the registry, teaching the TypeScript removal 17ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner definitions > hides another session's definition, so only its own card can address it 5ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > starts a host-only package immediately, with no request and no approval 10ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > returns awaiting approval, then records the page activation asynchronously 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > returns awaiting approval, then records a refusal without starting 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > records an asynchronous Client failure and unwinds the Host half it started 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > replaces a prior run and records failure when the repeated run cannot load Client code 10ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > binds a running host half instead of evaluating it twice 9ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > shares one activation when two pages start the same Package concurrently 10ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > hands the browser half's source only to the owning session, and only while it runs 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > accepts and ignores an answer to a request nobody is waiting for 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > refuses an answer after stop cancels the request and allows a fresh direct run 10ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > cancels a pending request after its provisional activation is stopped 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > keeps a published request answerable after the creating Tool call ends 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner dispatch > reports the sandbox failure and starts nothing when the host half throws 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > stops both halves while keeping the definition runnable 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > announces the stop of a host-only package too, so a global surface drops its row 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > refuses to stop a definition that is not running 3ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > stops a running definition on undefine and forgets it 7ms
  ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > answers a missing definition with the memory-only explanation 3ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > unwinds every host half when the runner itself is disposed 8ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > keeps the last report per package and shows it to a snapshot reader 6ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > drops a report for a definition the reporting session does not own 4ms
- ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > clears the report when a fresh dispatch starts and when one stops 8ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > dynamic runner teardown > unwinds every host half when the runner itself is disposed 6ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > keeps the last report per package and shows it to a snapshot reader 4ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > drops a report for a definition the reporting session does not own 7ms
+ ✓ |thread-safe| packages/extensions/cordis-host-runner/tests/runner.spec.ts > render failure reports > clears the report when a fresh dispatch starts and when one stops 10ms
 
  Test Files  1 passed (1)
       Tests  30 passed (30)
-   Start at  11:42:03
-   Duration  2.26s (transform 1.52s, setup 212ms, import 1.59s, tests 260ms, environment 0ms)
+   Start at  13:08:16
+   Duration  2.50s (transform 1.70s, setup 526ms, import 1.44s, tests 224ms, environment 0ms)
 

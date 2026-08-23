@@ -5,5 +5,5 @@
   "apps/cli/src/dump-config.ts": "6fabe5c36c4e7d2fe82efa89d8dcc712070cc348c23b86fcda50d22690b1cf8a",
   "packages/settings/settings/src/index.ts": "a4914d09f8ad1f41a4c5b42f53da76d610b89a5a1678716444d64c40b4b60596",
   "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1",
-  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15"
+  "package.json": "0b44f9e0a8df1a42b645c222c7db958bf8dd11bf008f8ffa8d35782a1af8be62"
 }

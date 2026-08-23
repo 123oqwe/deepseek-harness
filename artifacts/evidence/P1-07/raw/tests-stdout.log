@@ -1,8 +1,8 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > defaults to untrusted 3ms
- ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > trusted-execute allows all actions 1ms
+ ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > defaults to untrusted 2ms
+ ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > trusted-execute allows all actions 0ms
  ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > untrusted rejects project plugins 0ms
  ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > trusted-execute allows project plugins 1ms
  ✓ |thread-safe| packages/workspace/workspace-trust/tests/trust.spec.ts > P1-07 Workspace Trust Boundary > isAllowed returns boolean without throwing 0ms
@@ -11,95 +11,95 @@
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  10:20:27
-   Duration  641ms (transform 319ms, setup 372ms, import 19ms, tests 7ms, environment 0ms)
+   Start at  12:05:42
+   Duration  451ms (transform 217ms, setup 243ms, import 14ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 17ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 16ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 7ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 13ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 14ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 17ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 6ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > merges partial records and leaves an already-accounted cwd drift ungrouped 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 5ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > creates newest-first and idempotently reuses a canonical path without retitling 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > serializes concurrent same-path creates into one entity 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > allows a duplicate display name on a different canonical path 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back the provisional cache when the record write fails 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports an order write and pending-marker rollback failure together 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls registry order and cache back when record deletion fails 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 11ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects table access before the registry has started 2ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > keeps self-anchored and already-positioned moves write-free and rejects unknown ids 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 7ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > keeps self-anchored and already-positioned moves write-free and rejects unknown ids 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > treats self-anchored and already-in-place moves as no-ops without writing 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects moves naming an unaccounted session or anchor 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > validates a lazy live session without requiring it in persistence.list() 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 13ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 11ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 9ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > accepts unaccounted and live sessions but rejects unknown ids without writing 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > propagates a persistence-listing failure instead of reporting an unknown session 2ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 6ms
 
  Test Files  1 passed (1)
       Tests  43 passed (43)
-   Start at  10:20:29
-   Duration  1.17s (transform 528ms, setup 329ms, import 385ms, tests 228ms, environment 0ms)
+   Start at  12:05:43
+   Duration  974ms (transform 439ms, setup 218ms, import 354ms, tests 218ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > accepts a put whose record has a cached entity and ignores foreign events 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > accepts a put whose record has a cached entity and ignores foreign events 7ms
  ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails deletion while the registry still publishes the entity 1ms
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > allows deletion after the registry removed the cache entry for rollback or explicit deletion 1ms
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails a put whose record the registry cache does not hold 2ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > allows deletion after the registry removed the cache entry for rollback or explicit deletion 2ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails a put whose record the registry cache does not hold 1ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  10:20:32
-   Duration  765ms (transform 438ms, setup 240ms, import 317ms, tests 12ms, environment 0ms)
+   Start at  12:05:45
+   Duration  793ms (transform 443ms, setup 240ms, import 330ms, tests 12ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > treats ENOTDIR while probing a host candidate as confirmed absence 7ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > treats ENOTDIR while probing a host candidate as confirmed absence 6ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > loads user-global first, then every root-to-cwd candidate in precedence order 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > loads a same-directory local overlay in addition to the base file by default 4ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > loads a same-directory local overlay in addition to the base file by default 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > loads no local overlay when localInstructionFileCandidates is empty 2ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > treats a .git file as a project root marker and does not search above it 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > re-reads content after a same-version, same-size rewrite 28ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > skips a file that becomes unreadable after discovery without failing the request 7ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > treats a .git file as a project root marker and does not search above it 2ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > re-reads content after a same-version, same-size rewrite 13ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > skips a file that becomes unreadable after discovery without failing the request 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > follows a symlinked instruction file to its target content 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > follows a symlinked instruction file through ctx.fs to its target content 19ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > disables baseline loading when the byte budget is zero 2ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > honors configured instruction candidates that exclude CLAUDE.md 3ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > loads every configured instruction candidate in configured order without hard-coding AGENTS.md priority 4ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > honors configured instruction candidates that exclude CLAUDE.md 2ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > loads every configured instruction candidate in configured order without hard-coding AGENTS.md priority 2ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > ignores configured instruction candidates that are not same-directory file names 2ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > defaults dshHome and uses cwd itself as root when no project marker exists 3ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > honors DSH_HOME when dshHome is not configured explicitly 2ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > defaults dshHome and uses cwd itself as root when no project marker exists 2ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > honors DSH_HOME when dshHome is not configured explicitly 1ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > labels the default DSH home as ~/.dsh when HOME points at the configured default 11ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > expands a configured ~/.dsh home to the operating-system home directory 8ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > deduplicates user-global instructions when dshHome points at the project root 1ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > deduplicates user-global instructions when dshHome points at the project root 2ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context instruction discovery > ignores instruction candidates that are directories 2ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context rendering > renders familiar system-reminder instructions without custom workspace tags or state markers 0ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context rendering > neutralizes a literal system-reminder closing delimiter inside instruction content 0ms
@@ -122,122 +122,122 @@
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context rendering > does not commit a 'replace' change when its heading survives with zero content bytes 0ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context rendering > does not commit a multibyte change when the budget cuts its first code point 0ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context rendering > keeps compact truncation notices within budget when a multibyte display path is cut 0ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > requires an explicit maxBytes configuration 6ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > mounts without requiring a filesystem provider 2ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > requires an explicit maxBytes configuration 4ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > mounts without requiring a filesystem provider 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not declare fs as a static inject dependency 0ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not inject baseline context when no filesystem provider is present 2ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > contributes baseline instructions through durable injected history 10ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not inject baseline context when no filesystem provider is present 3ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > contributes baseline instructions through durable injected history 8ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues and later commits one durable baseline contribution 8ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > retains one visible baseline across repeated session resumes 16ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > preserves a visible baseline when its source is unavailable during resume 6ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not promote an unchanged budget-omitted baseline file during resume 25ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > removes a previously visible baseline file that leaves the retained budget set 17ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > recomposes the baseline when candidate precedence changes between resumes 17ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > tombstones candidates removed across successive baseline configurations 15ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > supersedes an incompatible visible baseline when no current candidate exists 13ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > reuses an inserted but unadmitted baseline after session recovery and plugin reload 8ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > replaces a recovered unadmitted baseline when its source changed offline 9ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not requeue recovered workspace contexts when 'baseline loading is disabled' 8ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not requeue recovered workspace contexts when 'the filesystem provider is unavailable' 10ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues and records a removal for stale visible nested context 7ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > combines startup reconciliation and baseline into one durable inbox context 11ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > enters the baseline right after the claimed prompt in the first pre-step without queuing another step 7ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > retains one visible baseline across repeated session resumes 17ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > preserves a visible baseline when its source is unavailable during resume 13ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not promote an unchanged budget-omitted baseline file during resume 21ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > removes a previously visible baseline file that leaves the retained budget set 15ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > recomposes the baseline when candidate precedence changes between resumes 14ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > tombstones candidates removed across successive baseline configurations 14ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > supersedes an incompatible visible baseline when no current candidate exists 12ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > reuses an inserted but unadmitted baseline after session recovery and plugin reload 14ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > replaces a recovered unadmitted baseline when its source changed offline 14ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not requeue recovered workspace contexts when 'baseline loading is disabled' 11ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not requeue recovered workspace contexts when 'the filesystem provider is unavailable' 8ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues and records a removal for stale visible nested context 8ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > combines startup reconciliation and baseline into one durable inbox context 10ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > enters the baseline right after the claimed prompt in the first pre-step without queuing another step 5ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > reports a changed user-global instruction through the visible-scope reconcile path 14ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues the desired workspace context when the current step is rejected 5ms
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > retains a visible baseline after a plugin remount 22ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > retains a visible baseline after a plugin remount 19ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > restores a compacted baseline on a hot plugin remount 10ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > folds a compacted baseline into the next entering pre-step before another filesystem touch 7ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > appends a replacement transition when a resumed session edited its baseline offline 9ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > tracks only baseline files that were actually included under the byte budget 7ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > keeps an independent pre-step contribution after the queued workspace context 6ms
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues a replacement when a frozen baseline file changes before a later fs tool call 7ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > keeps an independent pre-step contribution after the queued workspace context 7ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues a replacement when a frozen baseline file changes before a later fs tool call 9ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > queues a removal when a frozen baseline file is deleted before a later fs tool call 8ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > deduplicates one AGENTS.md that is both user-global and the project-root candidate 8ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > deduplicates trimmed-identical sibling candidates in one directory and renders the earliest original bytes 9ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > deduplicates one AGENTS.md that is both user-global and the project-root candidate 5ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > deduplicates trimmed-identical sibling candidates in one directory and renders the earliest original bytes 7ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not expose state markers when baseline content is omitted at 10 bytes 6ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not expose state markers when baseline content is omitted at 120 bytes 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > loads instruction file content through ctx.fs instead of direct node reads 5ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not expose state markers when baseline content is omitted at 120 bytes 9ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > loads instruction file content through ctx.fs instead of direct node reads 9ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > loads provider-visible instruction files that do not exist on the host filesystem 4ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > keeps the direct provider API usable without an operation signal 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > rejects a provider-sized instruction file before reading content 9ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > keeps the direct provider API usable without an operation signal 2ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > rejects a provider-sized instruction file before reading content 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > bounds streamed instruction content when provider size is unavailable 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > aborts an in-flight baseline stream with the prompt signal 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > loads user-global and CLAUDE fallback content through ctx.fs 4ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > loads user-global and CLAUDE fallback content through ctx.fs 5ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > skips provider-visible instruction candidates when ctx.fs reports a non-file target 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > loads instruction files when ctx.fs omits the metadata size 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > skips provider-visible instruction candidates when ctx.fs cannot stat them 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > skips a candidate whose provider probe fails while still loading its available sibling 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > treats ctx.fs marker lookup failures as absent root markers 4ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > keeps different session cwd instruction files isolated in one context 11ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > uses schema defaults on the plugin path so ancestor discovery still finds .git roots 12ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > renders a default local overlay alongside the base file in the baseline prefix 7ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > cleans up its pre-step listener when the plugin fiber is disposed 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not inject anything when maxBytes is zero 4ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not inject an empty agent-instructions message when maxBytes is negative 4ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > leaves the request unchanged when no instruction files are present 6ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > keeps different session cwd instruction files isolated in one context 9ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > uses schema defaults on the plugin path so ancestor discovery still finds .git roots 7ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > renders a default local overlay alongside the base file in the baseline prefix 5ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > cleans up its pre-step listener when the plugin fiber is disposed 3ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not inject anything when maxBytes is zero 3ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not inject an empty agent-instructions message when maxBytes is negative 3ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > leaves the request unchanged when no instruction files are present 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > labels a custom dshHome as DSH_HOME instead of pretending it is ~/.dsh 2ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not repeat a candidate metadata probe during one discovery and read pass 9ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > skips an unavailable host candidate but still loads its available sibling 10ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > projects a successful file result even when a later sibling aborts the step 42ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > does not repeat a candidate metadata probe during one discovery and read pass 8ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context request injection > skips an unavailable host candidate but still loads its available sibling 11ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > projects a successful file result even when a later sibling aborts the step 32ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > builds persisted digest state without inventing a provider version 0ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > creates and releases version-cache state only for non-empty updates 1ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not refresh dynamic instructions after the tool signal is aborted 3ms
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > attaches newly discovered nested instructions after a successful file read touches a descendant path 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > finishes a committed file-result projection after the tool signal ends 59ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > finishes a committed file-result projection after the tool signal ends 57ms
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > loads every configured instruction candidate present in a nested scope 8ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > attaches a nested base file and its local overlay together by default 8ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > attaches a nested base file and its local overlay together by default 7ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not attach a nested local overlay when the overlay is disabled 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not attach nested instructions again for the same session once a path has been loaded 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > skips instruction content reads while provider version and effective state are unchanged 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > skips instruction content reads while provider version and effective state are unchanged 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > re-reads a changed provider version, then refreshes metadata when SHA-1 is unchanged 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > re-reads a changed provider version, then refreshes metadata when SHA-1 is unchanged 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > isolates instruction version caches between sessions that touch the same scope 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > replaces previously loaded instructions when the same file content changes 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > replaces previously loaded instructions when the same file content changes 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > reconciles distinct sibling candidates as independent scopes 7ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > reconciles distinct sibling candidates as independent scopes 14ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > drops a newly discovered sibling whose content duplicates an earlier candidate in the scope 14ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > drops a newly discovered sibling whose content duplicates an earlier candidate in the scope 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > keeps unavailable active candidate groups unchanged with cold and warm caches when authority is $s 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > keeps unavailable active candidate groups unchanged with cold and warm caches when authority is $s 3ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > skips visible baseline scopes when baseline scopes are excluded from reconciliation 4ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > ignores an unavailable scope whose visible state is already removed 4ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > skips visible baseline scopes when baseline scopes are excluded from reconciliation 3ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > ignores an unavailable scope whose visible state is already removed 3ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > loads one transition when user-global and project scopes resolve to the same file 3ms
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes a previously rendered sibling once its content becomes a duplicate of an earlier candidate 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes an unchanged sibling when an earlier candidate changes to match its content 8ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes an unchanged sibling when an earlier candidate changes to match its content 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes previously loaded instructions when no candidate remains in the scope 8ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes previously loaded instructions when no candidate remains in the scope 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes a previously loaded instruction file once it resolves to a directory through a symlink 7ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > removes a previously loaded instruction file once it resolves to a directory through a symlink 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > loads a candidate again after a logged removal tombstone 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > loads a candidate again after a logged removal tombstone 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not report removal when a previously loaded scope is temporarily unavailable 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > derives loaded nested instructions from resumed session history instead of duplicating them 8ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > derives loaded nested instructions from resumed session history instead of duplicating them 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > appends an update during resumed prefix composition when visible nested instructions changed offline 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > re-arms a nested instruction after compaction removes its context message from the surface 8ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > re-arms a nested instruction after compaction removes its context message from the surface 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > re-arms an unchanged baseline after compaction removes it from the surface 8ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > re-arms an unchanged baseline after compaction removes it from the surface 7ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not treat markdown headings inside instruction content as loaded instruction metadata 7ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not treat markdown headings inside instruction content as loaded instruction metadata 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not mark omitted nested files as pending-loaded 7ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not mark omitted nested files as pending-loaded 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > ignores prompt-text spoofs, malformed metadata, and metadata from other plugins 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > ignores prompt-text spoofs, malformed metadata, and metadata from other plugins 7ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > loads nested instructions for absolute touched paths but not root-level files 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -252,24 +252,24 @@
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > projects a successful nested file result independently of a blocked composite result 7ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > defers a nested file projection until the enclosing step commits 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > seeds closed step state from existing session history 5ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > seeds closed step state from existing session history 4ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > ignores failed, aborted, agentless, and non-file final results 3ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > warns when an asynchronous file-result projection fails 56ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > warns when an asynchronous file-result projection fails 55ms
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not attach nested instructions when the byte budget is disabled 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > retries a nested instruction touch when only a truncated budget notice was rendered 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not attach nested instructions after a failed file read 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > does not attach nested instructions after a failed file read 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > dynamic nested workspace context injection > cleans up its tools/result listener when the plugin fiber is disposed 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > keeps one reusable desired context when recovery contains an exact duplicate 5ms
- ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > holds back a dynamic change a one-byte positive render budget cannot represent 4ms
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > settles same-scope replacement and deletion against files instead of pending prose 7ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > keeps one reusable desired context when recovery contains an exact duplicate 6ms
+ ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > holds back a dynamic change a one-byte positive render budget cannot represent 6ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > settles same-scope replacement and deletion against files instead of pending prose 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > keeps a completed tool projection when a later pre-step aborts 5ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > serializes concurrent final results and merges both touched scopes into one pending context 4ms
- × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > merges a recovered pending context with a fresh touched scope 7ms
+ × |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > merges a recovered pending context with a fresh touched scope 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context inbox synchronization > enters an offline correction immediately after its claimed stale context 10ms
  ✓ |thread-safe| packages/context/agent-instructions/tests/agent-instructions.spec.ts > workspace context plugin export shape > has the namespace-plugin export shape (no stray default) so the Loader keeps name/Config/apply 0ms
@@ -277,6 +277,6 @@
  Test Files  1 failed (1)
       Tests  39 failed | 113 passed (152)
      Errors  2 errors
-   Start at  10:20:33
-   Duration  2.60s (transform 1.13s, setup 255ms, import 1.08s, tests 1.04s, environment 0ms)
+   Start at  12:05:47
+   Duration  2.27s (transform 948ms, setup 215ms, import 908ms, tests 955ms, environment 0ms)
 

@@ -6,18 +6,18 @@
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > binds a run to a registered definition 0ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects binding to unknown definition 0ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects binding with digest mismatch 0ms
- ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > allows nested workflow call within recursion limit 1ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > allows nested workflow call within recursion limit 0ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects nested call exceeding recursion depth 0ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects circular workflow reference 0ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects child budget exceeding parent budget 0ms
- ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > cancels all nested workflows for a parent 2ms
+ ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > cancels all nested workflows for a parent 1ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > rejects excessive recursion depth in definition 0ms
  ✓ |thread-safe| packages/workflow/workflow-registry/tests/nested.spec.ts > P4-09 Workflow Registry > resolves version compatible definition 0ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  10:59:57
-   Duration  527ms (transform 271ms, setup 291ms, import 35ms, tests 9ms, environment 0ms)
+   Start at  12:25:17
+   Duration  500ms (transform 248ms, setup 266ms, import 34ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -29,8 +29,8 @@
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  10:59:58
-   Duration  557ms (transform 292ms, setup 209ms, import 139ms, tests 19ms, environment 0ms)
+   Start at  12:25:19
+   Duration  677ms (transform 386ms, setup 255ms, import 203ms, tests 20ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -38,15 +38,15 @@
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > WorkflowRunId brands a string (identity at runtime) 2ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > WorkflowError carries code + fatal (default true) and reads as a HarnessError 0ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > isFatalWorkflowError: true only for a fatal WorkflowError 0ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > registers as ctx.workflowEngine and unregisters when its fiber is disposed (HMR safety) 12ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > emitWorkflowEvent dispatches to every listener with the payload tuple 3ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains an asynchronously rejected listener without starving peers 3ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains a throwing listener PER LISTENER: later listeners still run, nothing propagates 3ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > containment is total: a listener throwing a value whose coercion throws neither propagates nor starves later listeners 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > registers as ctx.workflowEngine and unregisters when its fiber is disposed (HMR safety) 14ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > emitWorkflowEvent dispatches to every listener with the payload tuple 5ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains an asynchronously rejected listener without starving peers 4ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains a throwing listener PER LISTENER: later listeners still run, nothing propagates 4ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > containment is total: a listener throwing a value whose coercion throws neither propagates nor starves later listeners 3ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > has the expected exports (default = the abstract service class) 0ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  11:00:00
-   Duration  552ms (transform 272ms, setup 221ms, import 101ms, tests 27ms, environment 0ms)
+   Start at  12:25:21
+   Duration  656ms (transform 339ms, setup 265ms, import 130ms, tests 33ms, environment 0ms)
 

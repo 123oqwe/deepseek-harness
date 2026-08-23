@@ -1,20 +1,8 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/policy/risk-taxonomy/tests/classify.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/permission-presets.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/schema.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/scoped.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/code-mode.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/execution-signal-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/tools.spec.ts --reporter=verbose","exit_code":143,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/execution-mode.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/py-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/properties.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/json-schema.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/ts-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/core/tools/tests/gen-tool-catalog.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
-{"command":"npx vitest run packages/action/action-manifest/tests/manifest.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:38:49.227Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"npx vitest run packages/policy/risk-taxonomy/tests/classify.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/permission-presets.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}
+{"command":"npx vitest run packages/action/action-manifest/tests/manifest.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T04:11:06.768Z"}

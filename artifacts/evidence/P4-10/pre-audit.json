@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-10",
   "title": "Workflow 预算、Scheduler、Backpressure、公平性与资源锁",
-  "audit_date": "2026-08-23T03:00:01.857Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:25:23.161Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/run/scheduler/src/index.ts",
     "packages/run/scheduler/src/queue.ts",

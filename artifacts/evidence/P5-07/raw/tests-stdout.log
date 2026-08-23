@@ -1,33 +1,33 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > ships one independently installable provider-only Bundle patch 11ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > accepts one or more text blocks and rejects empty or non-text tasks 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > registers the default descriptor, validates config, and unregisters on HMR 25ms
- × |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > keeps named instances, runs, and HMR ownership isolated 5004ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > ships one independently installable provider-only Bundle patch 37ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > accepts one or more text blocks and rejects empty or non-text tasks 3ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > registers the default descriptor, validates config, and unregisters on HMR 29ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > keeps named instances, runs, and HMR ownership isolated 5010ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > rejects duplicate provider names without replacing the first instance 10ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > rejects duplicate provider names without replacing the first instance 16ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > accepts only the three fixed non-interactive permission modes 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > resolves the safe permission default when apply is called directly 5ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > maps never to the official thread/start fields 10ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > resolves the safe permission default when apply is called directly 4ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > maps never to the official thread/start fields 3ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > maps approve-for-me to the official thread/start fields 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > maps dangerously-bypass-approvals-and-sandbox to the official thread/start fields 1ms
- × |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > requires a parent session cwd without suggesting unsupported config 8ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > requires a parent session cwd without suggesting unsupported config 11ms
    → expected [Function] to throw error including 'subagent-codex: no working directory …' but got 'Trust Kernel not initialized: call in…'
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > keeps the namespace export shape and package-owned empty invariant 3ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > sends the fixed handshake, thread, and turn payloads and keeps final_answer 12ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > uses the last nullable-phase answer when no explicit final exists 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > maps the complete string error union without changing stop reasons 7ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > maps all object error variants and only numeric HTTP status 2ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > uses unknown for version-external or malformed error info 2ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > task admission and package contracts > keeps the namespace export shape and package-owned empty invariant 2ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > sends the fixed handshake, thread, and turn payloads and keeps final_answer 4ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > uses the last nullable-phase answer when no explicit final exists 2ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > maps the complete string error union without changing stop reasons 6ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > maps all object error variants and only numeric HTTP status 3ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > uses unknown for version-external or malformed error info 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > rejects invalid handshake, thread, and turn response shapes 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > fails closed for empty output, malformed messages, phases, and terminal status 18ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > fails closed when terminal notification params are not an object 1ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > fails closed for empty output, malformed messages, phases, and terminal status 24ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > fails closed when terminal notification params are not an object 0ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > keeps an unsupported request authoritative over an early terminal in the same chunk 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > answers all five unattended request classes without granting authority 2ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > answers all five unattended request classes without granting authority 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > records only a safe diagnostic for an explicit sandbox failure 0ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > records declined command and file items without retaining their payloads 0ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > records declined command and file items without retaining their payloads 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > recognizes large, split, and ordered stderr signatures without retaining raw text 0ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > does not reapply an old stderr signature after a newer request diagnostic 0ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > keeps a newer request diagnostic after replaying an older early item 0ms
@@ -36,25 +36,25 @@ If this is a long-running test, pass a timeout value as the last argument or con
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > rejects conflicting early turn identities before accepting output 0ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > does not retain a diagnostic from a mismatched early item 0ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > does not retain a diagnostic from a mismatched provisional request 0ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > rejects conflicting early notifications and requests before turn/start 0ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > rejects conflicting early notifications and requests before turn/start 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > interrupts only an active open turn and contains remote interrupt failure 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > ignores unrelated and out-of-window notifications 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > rejects pending work on abort, EOF, and stream error 3ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > ignores unrelated and out-of-window notifications 0ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > CodexAppServerWire > rejects pending work on abort, EOF, and stream error 2ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > spawns the fixed app-server, publishes after thread creation, and disposes once 2ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > settles local cancellation immediately and sends best-effort interrupt 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > reports turn-start failures and omits captured facts after success 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > preserves representative terminal categories, HTTP status, and mapping 3ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > includes a queued stderr permission fact in a max-token result 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > flattens child exit and protocol failures after publication 20ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > attaches a safe permission diagnostic when a published run fails 2ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > drains queued stderr before settling a failed published run 2ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > forwards stderr while extracting only a fixed safe permission signature 2ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > flattens child exit and protocol failures after publication 15ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > attaches a safe permission diagnostic when a published run fails 1ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > drains queued stderr before settling a failed published run 0ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > forwards stderr while extracting only a fixed safe permission signature 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > contains host stderr write failures without changing run settlement 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > rejects before spawn when pre-aborted and rolls back startup failures 9ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > rejects before spawn when pre-aborted and rolls back startup failures 4ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > rolls back an abort that wins immediately after thread creation 1ms
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > keeps overlapping runs isolated 2ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > keeps overlapping runs isolated 1ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > isolates permission modes and diagnostics across overlapping runs 1ms
- × |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > uses the registered provider config and logs flattened errors 6ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > run lifecycle and quiescence > uses the registered provider config and logs flattened errors 7ms
    → expected 'Trust Kernel not initialized: call in…' to contain 'Product subagent failure (product: Co…'
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > disposeCodexChild > closes stdin, terminates, and waits for the managed tree 0ms
  ✓ |thread-safe| packages/subagent/subagent-codex/tests/subagent-codex.spec.ts > disposeCodexChild > does not finish disposal before the managed tree exits 0ms
@@ -66,152 +66,152 @@ If this is a long-running test, pass a timeout value as the last argument or con
  Test Files  1 failed (1)
       Tests  3 failed | 54 passed (57)
      Errors  2 errors
-   Start at  11:13:19
-   Duration  7.61s (transform 1.71s, setup 339ms, import 1.83s, tests 5.20s, environment 0ms)
+   Start at  12:44:20
+   Duration  8.32s (transform 2.19s, setup 264ms, import 2.63s, tests 5.21s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > starts approve-for-me through the real app-server and returns exact text 457ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > starts approve-for-me through the real app-server and returns exact text 952ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > fails a missing platform payload without falling back to a host codex 121ms
- × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > runs two named instances concurrently and unloads one without revoking its run 11ms
+ ✓ |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > fails a missing platform payload without falling back to a host codex 251ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > runs two named instances concurrently and unloads one without revoking its run 17ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > overrides on-request with never and reports a denied command safely 5ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > overrides on-request with never and reports a denied command safely 8ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > reports a real service failure and an early app-server exit safely 5ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > reports a real service failure and an early app-server exit safely 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > executes an explicitly selected dangerous bypass write in the isolated workspace 12ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > executes an explicitly selected dangerous bypass write in the isolated workspace 9ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > settles cancellation locally and leaves the real app-server tree quiescent 9ms
+ × |thread-safe| packages/subagent/subagent-codex/tests/real-product.spec.ts > real @openai/codex 0.147.0 product > settles cancellation locally and leaves the real app-server tree quiescent 27ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
 
  Test Files  1 failed (1)
       Tests  6 failed | 1 passed (7)
-   Start at  11:13:28
-   Duration  1.84s (transform 718ms, setup 236ms, import 746ms, tests 622ms, environment 0ms)
+   Start at  12:44:30
+   Duration  2.98s (transform 1.06s, setup 257ms, import 1.20s, tests 1.27s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > returns both identities at inbox acceptance, without waiting for the turn or the log 161ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > uses a caller-reserved child identity and rejects a duplicate reservation 147ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects without ids when the provider has no prepareContinuable capability 9ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > returns both identities at inbox acceptance, without waiting for the turn or the log 176ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > uses a caller-reserved child identity and rejects a duplicate reservation 140ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects without ids when the provider has no prepareContinuable capability 10ms
  ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects synchronously when persistence is not configured 7ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > publishes the reserved child id and appends the pre-turn descriptor 90ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > publishes the reserved child id and appends the pre-turn descriptor 82ms
  ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rolls the child back completely when the caller signal aborts before acceptance 34ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rolls the child back when the signal aborts between publication and acceptance 34ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rolls an unpublished Activation back when lifecycle publication fails 36ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects a continuable child that would exceed the configured depth cap 9ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects an invalid continuable depth cap before provider preparation 9ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rolls the child back when the signal aborts between publication and acceptance 38ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rolls an unpublished Activation back when lifecycle publication fails 44ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects a continuable child that would exceed the configured depth cap 8ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > rejects an invalid continuable depth cap before provider preparation 7ms
  ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > omits undeclared composition fields from the descriptor 69ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > records a declared tool filter in the descriptor 76ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > cold-resumes without inventing a model route the descriptor never declared 136ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > continues turn numbering after an inherited fork prefix and pre-turn descriptor 94ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > records the declared persona in the descriptor and reapplies it on cold resume 157ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > enqueues in the same Activation while it is running, preserving one inbox FIFO 133ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > cold-resumes a settled child into a new Activation 148ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > cold-resumes after the initial provider unregisters 161ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > wakes a waiting Activation instead of cold-resuming it 159ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > rejects a parent that is not the durable direct parent 84ms
- × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > reports an unresumable child whose persisted log has no supported descriptor 21ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > records a declared tool filter in the descriptor 69ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > cold-resumes without inventing a model route the descriptor never declared 138ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > continues turn numbering after an inherited fork prefix and pre-turn descriptor 84ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.startContinuable > records the declared persona in the descriptor and reapplies it on cold resume 160ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > enqueues in the same Activation while it is running, preserving one inbox FIFO 150ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > cold-resumes a settled child into a new Activation 156ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > cold-resumes after the initial provider unregisters 191ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > wakes a waiting Activation instead of cold-resuming it 145ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > rejects a parent that is not the durable direct parent 87ms
+ × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > reports an unresumable child whose persisted log has no supported descriptor 13ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > reports an unknown child id as unavailable 16ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > propagates cancellation while inspecting a cold child 115ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > preserves a SubagentError raised while cold-materializing a child 114ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > cold-resumes a delivery that lost the race with final disposal 151ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable child ownership > keeps a parent Activation waiting until its child completes disposal 208ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable child ownership > does not add a top-level parent to the waiting graph 94ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > settles when the best-effort final flush has no listeners 120ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > logs a failed final flush after every listener settles without failing the Activation 167ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > logs a teardown failure reached through normal settlement 133ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > disposes every live Activation forest child-first on manager teardown 124ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > drains one parent forest without disabling a sibling parent forest 210ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > retains a continuable root while draining only its descendants 196ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > releases only selected direct children 205ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > reports selected-child disposal failures after releasing the child 98ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects selected-child teardown through another live parent 135ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects selected-child teardown through a stale parent identity 7ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > reports an unknown child id as unavailable 6ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > propagates cancellation while inspecting a cold child 90ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > preserves a SubagentError raised while cold-materializing a child 84ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.followup residency routing > cold-resumes a delivery that lost the race with final disposal 79ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable child ownership > keeps a parent Activation waiting until its child completes disposal 147ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable child ownership > does not add a top-level parent to the waiting graph 217ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > settles when the best-effort final flush has no listeners 129ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > logs a failed final flush after every listener settles without failing the Activation 218ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > logs a teardown failure reached through normal settlement 162ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > disposes every live Activation forest child-first on manager teardown 147ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > drains one parent forest without disabling a sibling parent forest 246ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > retains a continuable root while draining only its descendants 212ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > releases only selected direct children 219ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > reports selected-child disposal failures after releasing the child 105ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects selected-child teardown through another live parent 144ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects selected-child teardown through a stale parent identity 8ms
  × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > finds scoped descendants after an intermediate one-shot Agent leaves the registry 8ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > awaits and rolls back an admitted materialization below a scoped root 34ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > ignores a stale scoped root without disabling its live same-id Agent 81ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > reports a scoped teardown failure after releasing the selected branch 88ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects new materialization and delivery once draining begins 90ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects an initial prompt when drain starts after materialization 36ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > waits for a published materialization to finish rollback before drain resolves 33ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > admits a live follow-up before a later drain can begin disposal 86ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > has no automatic replay for an accepted but unlogged message 96ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > rechecks exact parent liveness after cold-resume materialization 86ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > clears the accepted reservation when Agent.followup throws 82ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports the child's own terminal reason, not teardown success 79ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > rejects a live delivery whose caller signal aborted before admission 128ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports this epoch's own output, captured while the child was still live 136ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > keeps the epoch's earlier text past a final empty usage-only message 78ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports a resumed epoch that opened no turn without the previous answer 149ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports handle-disposal failure on the terminal edge 59ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports a pre-disposal teardown failure on the terminal edge 57ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > preserves independent pre-disposal and handle-disposal failures 59ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > cancels a running turn before the best-effort final flush 69ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > releases an accepted message that is discarded instead of run 99ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > settles after a delivery discarded inside its own admission window 138ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > releases older ids discarded during a later admission window 132ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports a prompt a pre-step rejection discarded as refusal 90ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > retains the Activation while an accepted message is still in the inbox 149ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable report delivery > wakes an idle parent for a next-step report 188ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > tells the parent what the child finished with, without being asked 77ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > awaits and rolls back an admitted materialization below a scoped root 43ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > ignores a stale scoped root without disabling its live same-id Agent 100ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > reports a scoped teardown failure after releasing the selected branch 115ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects new materialization and delivery once draining begins 96ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > rejects an initial prompt when drain starts after materialization 58ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > waits for a published materialization to finish rollback before drain resolves 51ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > admits a live follow-up before a later drain can begin disposal 112ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable durability and teardown > has no automatic replay for an accepted but unlogged message 121ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > rechecks exact parent liveness after cold-resume materialization 178ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > clears the accepted reservation when Agent.followup throws 387ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports the child's own terminal reason, not teardown success 97ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > rejects a live delivery whose caller signal aborted before admission 138ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports this epoch's own output, captured while the child was still live 146ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > keeps the epoch's earlier text past a final empty usage-only message 90ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports a resumed epoch that opened no turn without the previous answer 147ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports handle-disposal failure on the terminal edge 77ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports a pre-disposal teardown failure on the terminal edge 85ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > preserves independent pre-disposal and handle-disposal failures 86ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > cancels a running turn before the best-effort final flush 74ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > releases an accepted message that is discarded instead of run 87ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > settles after a delivery discarded inside its own admission window 136ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > releases older ids discarded during a later admission window 139ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > reports a prompt a pre-step rejection discarded as refusal 81ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable review regressions > retains the Activation while an accepted message is still in the inbox 144ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable report delivery > wakes an idle parent for a next-step report 197ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > tells the parent what the child finished with, without being asked 85ms
  ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > delivers even when the child already reported for itself 82ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > delivers the terminal reason when the child never had a chance to report 186ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > tells the parent a policy-rejected delivery was declined, not finished 89ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports a turn that failed before reaching its first step 82ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports accepted work cut short before its first step as stopped 67ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports a child stopped before it ever reached the model as stopped 99ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports a child an ancestor interrupted before its first step as stopped 95ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports accepted work cancelled before any turn could open as stopped 139ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > withholds an outcome the harness could not durably release 138ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > gives an idle parent one ordinary turn on the notice 94ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > batches simultaneous notices into one step of a busy parent 88ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > holds a maintaining parent live until it can read the notice 248ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > delivers the terminal reason when the child never had a chance to report 82ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > tells the parent a policy-rejected delivery was declined, not finished 82ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports a turn that failed before reaching its first step 94ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports accepted work cut short before its first step as stopped 58ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports a child stopped before it ever reached the model as stopped 60ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports a child an ancestor interrupted before its first step as stopped 83ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > reports accepted work cancelled before any turn could open as stopped 93ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > withholds an outcome the harness could not durably release 142ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > gives an idle parent one ordinary turn on the notice 85ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > batches simultaneous notices into one step of a busy parent 141ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > holds a maintaining parent live until it can read the notice 249ms
  ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > delivers before releasing the ownership that lets the parent settle 130ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > does not wake a parent whose own teardown already began 60ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > does not wake a parent below a scoped teardown root 55ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > records but cannot deliver a teardown notice once the parent is disposed too 69ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > drops the notice without disturbing teardown when the parent is gone 60ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > logs a rejected notice instead of failing the child's teardown 61ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > stays silent about a child the caller was told does not exist 32ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable lifecycle observation > emits one paired start/end per residency epoch 138ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > exposes no host authority, residency query, cancellation, steering, or report operation 7ms
- × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > keeps one-shot runs free of a steering capability 6ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > does not wake a parent whose own teardown already began 67ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > does not wake a parent below a scoped teardown root 63ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > records but cannot deliver a teardown notice once the parent is disposed too 70ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > drops the notice without disturbing teardown when the parent is gone 61ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > logs a rejected notice instead of failing the child's teardown 59ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable settlement delivery > stays silent about a child the caller was told does not exist 34ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable lifecycle observation > emits one paired start/end per residency epoch 142ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > exposes no host authority, residency query, cancellation, steering, or report operation 11ms
+ × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > keeps one-shot runs free of a steering capability 7ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > reports a caller-signal abort before acceptance without delivering 75ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > does not cancel an accepted turn when the caller signal aborts afterwards 147ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rejects a duplicate Activation at the agent registry collision boundary 96ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rejects a parent that is no longer the live registry entry 151ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rejects establishing a child under a parent whose disposal already began 166ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > reports a failing branch after every branch settles, without pinning the rest 338ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rolls the transfer back when ownership registration fails after handle transfer 228ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > reapplies the descriptor model route on cold resume 553ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > unloading the manager drains its live activations 172ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > aborts the current turn durably, parks accepted follow-ups, and resumes them only on a waking send 222ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > interrupts only the target while its resident descendant keeps running 228ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > authorizes the human address against the live target's durable direct parent 145ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > lets a deep exact live ancestor interrupt its descendant with the parent cause 191ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > reports a caller-signal abort before acceptance without delivering 85ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable public API > does not cancel an accepted turn when the caller signal aborts afterwards 135ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rejects a duplicate Activation at the agent registry collision boundary 52ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rejects a parent that is no longer the live registry entry 43ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rejects establishing a child under a parent whose disposal already began 71ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > reports a failing branch after every branch settles, without pinning the rest 78ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > rolls the transfer back when ownership registration fails after handle transfer 54ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > reapplies the descriptor model route on cold resume 141ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > continuable errors > unloading the manager drains its live activations 71ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > aborts the current turn durably, parks accepted follow-ups, and resumes them only on a waking send 138ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > interrupts only the target while its resident descendant keeps running 199ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > authorizes the human address against the live target's durable direct parent 135ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > lets a deep exact live ancestor interrupt its descendant with the parent cause 181ms
  ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > rejects self, sibling, stale, and unrelated ancestor callers without touching the target 188ms
- × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > accepts absent and one-shot ids as no-ops without touching the one-shot Agent 10ms
+ × |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > accepts absent and one-shot ids as no-ops without touching the one-shot Agent 7ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > accepts an interrupt after natural completion 134ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > accepts an interrupt that lost the race with disposal without signalling twice 94ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > accepts an interrupt after natural completion 75ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation.spec.ts > SubagentRuntime.interrupt > accepts an interrupt that lost the race with disposal without signalling twice 93ms
 
  Test Files  1 failed (1)
       Tests  4 failed | 99 passed (103)
      Errors  201 errors
-   Start at  11:13:31
-   Duration  12.90s (transform 982ms, setup 232ms, import 1.01s, tests 11.45s, environment 0ms)
+   Start at  12:44:35
+   Duration  12.80s (transform 1.48s, setup 284ms, import 1.58s, tests 10.74s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/run-settlement.spec.ts > outcome mapping helpers > settleRun maps the completed stop reason onto its Task outcome 3ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/run-settlement.spec.ts > outcome mapping helpers > settleRun maps the completed stop reason onto its Task outcome 2ms
  ✓ |thread-safe| packages/subagent/subagent/tests/run-settlement.spec.ts > outcome mapping helpers > settleRun maps the aborted stop reason onto its Task outcome 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/run-settlement.spec.ts > outcome mapping helpers > settleRun maps the error stop reason onto its Task outcome 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/run-settlement.spec.ts > outcome mapping helpers > settleRun maps the max-tokens stop reason onto its Task outcome 0ms
@@ -223,8 +223,8 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  11:13:45
-   Duration  1.02s (transform 643ms, setup 275ms, import 538ms, tests 6ms, environment 0ms)
+   Start at  12:44:49
+   Duration  1.14s (transform 736ms, setup 287ms, import 648ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -241,29 +241,29 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  11:13:48
-   Duration  501ms (transform 264ms, setup 298ms, import 18ms, tests 5ms, environment 0ms)
+   Start at  12:44:51
+   Duration  545ms (transform 276ms, setup 313ms, import 15ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > registers, lists, looks up, starts, and removes providers 15ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > registers, lists, looks up, starts, and removes providers 25ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rolls registration back when provider-added throws 6ms
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects duplicate and absent provider names with typed errors 7ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects duplicate and absent provider names with typed errors 10ms
    → expected Error: Trust Kernel not initialized: call… to match object { code: 'NO_PROVIDER' }
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > resolves the one-shot descriptor and exposes no provider continuation operations 2ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > resolves the one-shot descriptor and exposes no provider continuation operations 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > does not expose manager teardown and treats public drains as no-ops when no manager was bound 3ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > does not expose manager teardown and treats public drains as no-ops when no manager was bound 2ms
  ✓ |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > treats interrupt as an accepted no-op when no manager was bound 2ms
- ✓ |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects continuable operations when their runtime services are absent 2ms
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported outputSchema before provider startup 2ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects continuable operations when their runtime services are absent 5ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported outputSchema before provider startup 7ms
    → expected Error: Trust Kernel not initialized: call… to match object { code: 'UNSUPPORTED_CAPABILITY' }
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported depthLimit before provider startup 2ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported depthLimit before provider startup 3ms
    → expected Error: Trust Kernel not initialized: call… to match object { code: 'UNSUPPORTED_CAPABILITY' }
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported toolFilter before provider startup 2ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported toolFilter before provider startup 3ms
    → expected Error: Trust Kernel not initialized: call… to match object { code: 'UNSUPPORTED_CAPABILITY' }
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported persona before provider startup 5ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > rejects unsupported persona before provider startup 6ms
    → expected Error: Trust Kernel not initialized: call… to match object { code: 'UNSUPPORTED_CAPABILITY' }
  × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > validates depth and schema semantics before provider startup 4ms
    → expected [Function] to throw error including 'non-negative safe integer' but got 'Trust Kernel not initialized: call in…'
@@ -271,7 +271,7 @@ If this is a long-running test, pass a timeout value as the last argument or con
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > mints distinct lifecycle identities when provider and child ids repeat 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > emits no run lifecycle when provider startup rejects 2ms
+ × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > emits no run lifecycle when provider startup rejects 3ms
    → expected [Function] to throw error including 'setup rolled back' but got 'Trust Kernel not initialized: call in…'
  × |thread-safe| packages/subagent/subagent/tests/service.spec.ts > SubagentRuntime > emits an enriched end event and maps result rejection to error telemetry 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -304,109 +304,109 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 failed (1)
       Tests  13 failed | 28 passed (41)
-   Start at  11:13:49
-   Duration  1.08s (transform 605ms, setup 225ms, import 551ms, tests 66ms, environment 0ms)
+   Start at  12:44:53
+   Duration  1.28s (transform 756ms, setup 350ms, import 599ms, tests 89ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists live children without persistence, query services, or the continuation runtime 17ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > fails loud when the projection registry is not mounted, even with no children 11ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists live children without persistence, query services, or the continuation runtime 21ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > fails loud when the projection registry is not mounted, even with no children 16ms
  ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > fails loud when the session store is not mounted 2ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists a persisted continuable child as inactive with its durable label 123ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists a persisted continuable child as inactive with its durable label 130ms
  × |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists one-shot and continuable children under the same parent 10ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > accepts a persisted (non-live) parent target after restart 62ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > orders children by createdAt then id without listing ordinary forks 63ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > omits a live child that has not appended its descriptor yet 13ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists a one-shot child with its durable creation label 39ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > reports a live child as running while keeping settled siblings complete 69ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists the last descriptor when a log carries more than one 147ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > accepts a persisted (non-live) parent target after restart 61ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > orders children by createdAt then id without listing ordinary forks 47ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > omits a live child that has not appended its descriptor yet 7ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists a one-shot child with its durable creation label 49ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > reports a live child as running while keeping settled siblings complete 67ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists the last descriptor when a log carries more than one 100ms
  ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > serves the serializable null sentinel when a later descriptor invalidates the identity 8ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses a settled child whose later descriptor invalidated the identity as corrupt 45ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > serves a cached own-suffix identity directly without inspection 58ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > refuses a cached ancestor identity from the fork seed and lets preparation rule 41ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (version) as corrupt 120ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (id) as corrupt 91ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (createdAt) as corrupt 84ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (cwd) as corrupt 84ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (parentSession) as corrupt 225ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (seedLength) as corrupt 171ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (delegationDepth) as corrupt 89ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lets preparation rule when the cache serves the null sentinel 33ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > maps a child rejected by persistence inspection to unavailable 32ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses a malformed descriptor payload as corrupt 55ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an unknown descriptor version as corrupt 32ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists a fork whose seed replays an ancestor descriptor under that identity 35ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > does not filter by provider availability: children of unmounted providers stay listed 36ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > contains a foreign unit failure during a cold fold to that child as corrupt 88ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > contains a foreign unit failure during a live snapshot to that child as corrupt 8ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > fails the whole enumeration when the persisted listing itself fails 66ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > maps a failed cold inspection to one unavailable diagnostic and retries it next listing 98ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists compacted and uncompacted children identically 92ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > reports an origin-classified grandchild without inspecting it 87ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > inspects each cold child exactly once and a live child never 83ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > serves a cold child from the projection cache without any inspection 63ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > falls back to inspection when the cache serves no identity for the child 47ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > takes the preparation rung directly when no projection cache is mounted 33ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > silently falls through to preparation when the cache read throws 47ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > does not count an ordinary grandchild without subagent origin 86ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > counts an origin-classified diagnostic grandchild 80ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > a pre-aborted signal stops before any persistence read 7ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > forwards cancellation to the persisted listing and reports the stable subagent error 7ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > forwards cancellation to a cold inspection and reports the stable subagent error 35ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > an abort observed after a cold inspection resolves cannot become a successful result 48ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > a cold inspection failure during an abort cannot become an unavailable diagnostic 70ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > returns an empty array for a parent with no children 10ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > SubagentError from listChildren is typed with its stable code 9ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > flattens the complete tree in stable pre-order with verified parent and depth 100ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > returns an empty result when the root has no descendants 35ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > omits a live creation-window candidate while continuing through its subtree 66ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > contains a corrupt parent cycle without revisiting the requested root 92ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > walks a deeply nested ordinary-session chain without consuming the call stack 1037ms
- × |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > discovers continuable descendants below ordinary and one-shot intermediates 383ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses a settled child whose later descriptor invalidated the identity as corrupt 53ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > serves a cached own-suffix identity directly without inspection 43ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > refuses a cached ancestor identity from the fork seed and lets preparation rule 74ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (version) as corrupt 90ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (id) as corrupt 90ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (createdAt) as corrupt 92ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (cwd) as corrupt 98ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (parentSession) as corrupt 98ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (seedLength) as corrupt 95ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an inspection returning another lifecycle (delegationDepth) as corrupt 96ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lets preparation rule when the cache serves the null sentinel 40ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > maps a child rejected by persistence inspection to unavailable 128ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses a malformed descriptor payload as corrupt 101ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > diagnoses an unknown descriptor version as corrupt 64ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists a fork whose seed replays an ancestor descriptor under that identity 66ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > does not filter by provider availability: children of unmounted providers stay listed 58ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > contains a foreign unit failure during a cold fold to that child as corrupt 178ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > contains a foreign unit failure during a live snapshot to that child as corrupt 9ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > fails the whole enumeration when the persisted listing itself fails 116ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > maps a failed cold inspection to one unavailable diagnostic and retries it next listing 200ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > lists compacted and uncompacted children identically 143ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > reports an origin-classified grandchild without inspecting it 197ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > inspects each cold child exactly once and a live child never 260ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > serves a cold child from the projection cache without any inspection 123ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > falls back to inspection when the cache serves no identity for the child 43ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > takes the preparation rung directly when no projection cache is mounted 54ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > silently falls through to preparation when the cache read throws 38ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > does not count an ordinary grandchild without subagent origin 89ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > counts an origin-classified diagnostic grandchild 88ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > a pre-aborted signal stops before any persistence read 6ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > forwards cancellation to the persisted listing and reports the stable subagent error 6ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > forwards cancellation to a cold inspection and reports the stable subagent error 31ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > an abort observed after a cold inspection resolves cannot become a successful result 36ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > a cold inspection failure during an abort cannot become an unavailable diagnostic 41ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > returns an empty array for a parent with no children 7ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listChildren > SubagentError from listChildren is typed with its stable code 6ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > flattens the complete tree in stable pre-order with verified parent and depth 95ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > returns an empty result when the root has no descendants 21ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > omits a live creation-window candidate while continuing through its subtree 44ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > contains a corrupt parent cycle without revisiting the requested root 65ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > walks a deeply nested ordinary-session chain without consuming the call stack 898ms
+ × |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > discovers continuable descendants below ordinary and one-shot intermediates 453ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > diagnoses a settled descriptor-less node while walking its subtree 59ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > keeps traversing below a corrupt intermediate and positions its diagnostic 60ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > verifies a cold candidate still belongs to its enumerated lifecycle 38ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > a pre-aborted signal stops the descendant scan before persistence reads 64ms
- ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > fails loud when the projection registry is not mounted 6ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > diagnoses a settled descriptor-less node while walking its subtree 114ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > keeps traversing below a corrupt intermediate and positions its diagnostic 73ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > verifies a cold candidate still belongs to its enumerated lifecycle 51ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > a pre-aborted signal stops the descendant scan before persistence reads 63ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/list-children.spec.ts > SubagentRuntime.listDescendants > fails loud when the projection registry is not mounted 10ms
 
  Test Files  1 failed (1)
       Tests  2 failed | 57 passed (59)
      Errors  38 errors
-   Start at  11:13:51
-   Duration  6.15s (transform 910ms, setup 215ms, import 918ms, tests 4.80s, environment 0ms)
+   Start at  12:44:55
+   Duration  7.15s (transform 1.27s, setup 257ms, import 1.32s, tests 5.37s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > seeds the parent sandbox override and pins approval to never 178ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > captures policy at delegation before asynchronous child creation 128ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > leaves an unswitched sandbox on the deployment default while still pinning approval 96ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > pins approval after the fork prefix of an unswitched fork child 92ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > lets a later child-side switch win over the delegation snapshot 92ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > cold-resumes on the persisted snapshot without re-capturing the parent 148ms
- ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > places inherited events after a fork prefix so fresh policy wins stale seed state 89ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > seeds the parent sandbox override and pins approval to never 111ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > captures policy at delegation before asynchronous child creation 86ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > leaves an unswitched sandbox on the deployment default while still pinning approval 244ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > pins approval after the fork prefix of an unswitched fork child 163ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > lets a later child-side switch win over the delegation snapshot 93ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > cold-resumes on the persisted snapshot without re-capturing the parent 161ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/continuation-inheritance.spec.ts > continuable policy inheritance > places inherited events after a fork prefix so fresh policy wins stale seed state 144ms
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
      Errors  18 errors
-   Start at  11:13:59
-   Duration  2.86s (transform 1.47s, setup 393ms, import 1.43s, tests 825ms, environment 0ms)
+   Start at  12:45:04
+   Duration  2.94s (transform 1.35s, setup 424ms, import 1.23s, tests 1.00s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/timing-projection.spec.ts > subagent timing projection > registers with the optional session projection registry 15ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/timing-projection.spec.ts > subagent timing projection > registers with the optional session projection registry 16ms
  ✓ |thread-safe| packages/subagent/subagent/tests/timing-projection.spec.ts > subagent timing projection > resets inherited seed timing at the child descriptor and sums later completed turns 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/timing-projection.spec.ts > subagent timing projection > exposes an open turn start and never subtracts time for reversed boundaries 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/timing-projection.spec.ts > subagent timing projection > ignores completed pre-descriptor turns and unrelated events 0ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  11:14:03
-   Duration  911ms (transform 548ms, setup 231ms, import 467ms, tests 16ms, environment 0ms)
+   Start at  12:45:08
+   Duration  1.09s (transform 702ms, setup 317ms, import 563ms, tests 18ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -414,33 +414,33 @@ If this is a long-running test, pass a timeout value as the last argument or con
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > NO_START_CAPABILITIES > advertises nothing and is frozen (shared by every out-of-process backend) 3ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > assertPositiveFinite > accepts positive finite bounds and rejects zero, negatives, and NaN 2ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > child cwd resolution > accepts an absolute enterable directory and rejects relative or missing paths 1ms
- ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > child cwd resolution > rejects an existing path that is a file, not a directory 2ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > child cwd resolution > rejects an existing path that is a file, not a directory 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > child cwd resolution > rejects a directory without search permission 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > child cwd resolution > validateConfiguredCwd: undefined passes through, empty fails, relative resolves at load 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > child cwd resolution > resolveChildCwd: override wins, else the parent session cwd validates, else loud failure 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > settleRunResult > passes a successful attempt through and removes the abort listener 1ms
- ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > settleRunResult > reads an in-flight rejection as aborted when cancellation already settled 0ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > settleRunResult > reads an in-flight rejection as aborted when cancellation already settled 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > settleRunResult > flattens a failure through a contained onError sink 0ms
- ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > settleRunResult > flattens a failure without a sink 1ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > settleRunResult > flattens a failure without a sink 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/out-of-process.spec.ts > subprocessRunHandle > publishes an idempotent dispose that cancels locally and awaits teardown 1ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  11:14:05
-   Duration  1.02s (transform 601ms, setup 236ms, import 557ms, tests 15ms, environment 0ms)
+   Start at  12:45:10
+   Duration  933ms (transform 578ms, setup 255ms, import 478ms, tests 14ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/invariant.spec.ts > subagent invariants > accepts provider and run lifecycle pairs 8ms
- ✓ |thread-safe| packages/subagent/subagent/tests/invariant.spec.ts > subagent invariants > rejects malformed provider transitions 4ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/invariant.spec.ts > subagent invariants > accepts provider and run lifecycle pairs 7ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/invariant.spec.ts > subagent invariants > rejects malformed provider transitions 3ms
  ✓ |thread-safe| packages/subagent/subagent/tests/invariant.spec.ts > subagent invariants > rejects malformed and unpaired run transitions 2ms
  ✓ |thread-safe| packages/subagent/subagent/tests/invariant.spec.ts > subagent invariants > accepts the recorded provider name after registration ends 2ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  11:14:07
-   Duration  1.21s (transform 741ms, setup 326ms, import 654ms, tests 17ms, environment 0ms)
+   Start at  12:45:12
+   Duration  1.01s (transform 618ms, setup 264ms, import 531ms, tests 16ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -455,34 +455,34 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  11:14:10
-   Duration  517ms (transform 251ms, setup 292ms, import 14ms, tests 5ms, environment 0ms)
+   Start at  12:45:14
+   Duration  488ms (transform 239ms, setup 264ms, import 18ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > installs contributions in registration order and commits them 10ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > installs contributions in registration order and commits them 7ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > makes repeated removal and converging ownership idempotent 2ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > makes the opposite ownership convergence idempotent 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > skips a contribution removed before a child is applied 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > invalidates a provisioning batch revoked before commit 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > catches a contribution revoked inside its own installer 1ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > attempts every contribution-removal disposer before reporting failures 3ms
- ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > attempts every child-scope disposer before reporting failures 5ms
- ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > rolls back earlier installations when a later contribution throws 3ms
- ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > does not dispose twice when revocation precedes setup rollback 1ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > attempts every child-scope disposer before reporting failures 7ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > rolls back earlier installations when a later contribution throws 1ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > does not dispose twice when revocation precedes setup rollback 3ms
  ✓ |thread-safe| packages/subagent/subagent/tests/activation-setup-registry.spec.ts > SubagentActivationSetupRegistry > does not cross-release independent child scopes 2ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  11:14:12
-   Duration  872ms (transform 451ms, setup 382ms, import 149ms, tests 32ms, environment 0ms)
+   Start at  12:45:16
+   Duration  582ms (transform 310ms, setup 252ms, import 113ms, tests 29ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > selects the last non-empty message past a later empty usage-only message 6ms
- ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > prefers a non-empty message over text streamed before and after it 1ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > selects the last non-empty message past a later empty usage-only message 2ms
+ ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > prefers a non-empty message over text streamed before and after it 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > treats textless assistant content as a non-empty message 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > falls back to text deltas without including reasoning or tool-result content 0ms
  ✓ |thread-safe| packages/subagent/subagent/tests/assistant-output.spec.ts > finalAssistantOutput > returns undefined when the child produced neither messages nor text 0ms
@@ -491,6 +491,6 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  11:14:14
-   Duration  571ms (transform 293ms, setup 329ms, import 25ms, tests 14ms, environment 0ms)
+   Start at  12:45:17
+   Duration  475ms (transform 233ms, setup 265ms, import 14ms, tests 5ms, environment 0ms)
 

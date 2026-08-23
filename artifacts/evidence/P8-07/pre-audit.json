@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-07",
   "title": "Schema-Generated TS/Python SDK Parity 与 Contract Test Matrix",
-  "audit_date": "2026-08-23T03:46:19.656Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T05:13:02.836Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/sdk/schema/control-protocol.json",
     "packages/sdk/codegen/src/index.ts",

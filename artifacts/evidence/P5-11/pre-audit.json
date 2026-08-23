@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-11",
   "title": "通用 Taskboard、Mailbox 与 Blackboard 原语",
-  "audit_date": "2026-08-23T03:17:00.704Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:48:19.100Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/collaboration/taskboard/src/index.ts",
     "packages/collaboration/taskboard/src/types.ts",

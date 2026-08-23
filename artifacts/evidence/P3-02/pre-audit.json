@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-02",
   "title": "扩展 Sandbox Policy 为全维度安全词汇",
-  "audit_date": "2026-08-23T02:47:55.078Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:15:23.141Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/sandbox/sandbox/src/policy.ts",
     "packages/sandbox/sandbox/src/network.ts",

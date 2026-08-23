@@ -1,7 +1,7 @@
 {
-  "total": 21,
-  "passed": 15,
-  "failed": 6,
+  "total": 9,
+  "passed": 7,
+  "failed": 2,
   "test_files": [
     "packages/plugin/plugin-host/tests/isolation.spec.ts",
     "packages/boot/app-boot/tests/config-dump.spec.ts",
@@ -11,18 +11,6 @@
     "packages/boot/app-boot/tests/config-reload.spec.ts",
     "packages/boot/app-boot/tests/user-patches.spec.ts",
     "packages/host/plugin-inventory/tests/inventory.spec.ts",
-    "packages/host/plugin-inventory/tests/invariant.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts"
+    "packages/host/plugin-inventory/tests/invariant.spec.ts"
   ]
 }

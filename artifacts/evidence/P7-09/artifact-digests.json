@@ -9,7 +9,7 @@
   "tests/capability/worlds/multi-tenant-world.ts": "32a813388c4bd404e42164322232c4048f1edb095c3abefe7a96cdaf24f60370",
   "tests/capability/worlds/sdk-reconnect-world.ts": "8395c85e899752412311dad52d8a97fa0481fcfaa7b516ff8af19d94019d5c13",
   "BENCHMARK.md": "1ddc769109451fa146123e84a0b2c459bea130463618a2aa7267349768502f5a",
-  "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
+  "package.json": "0b44f9e0a8df1a42b645c222c7db958bf8dd11bf008f8ffa8d35782a1af8be62",
   "docs/testing.md": "f47370270ceee93392660f8982c8e293883c1dd2cb625e580814a67474660036",
   "packages/test-support/README.md": "3f8d394bdfa08a12ee5f1dc287ffc328b5d545027ce1534aa9b9600636c2d93a",
   "examples/jsonrpc-agent/README.md": "92ecff34b81f4c4d558d529c233edf232afd12815a2743633947ca442b8dc610"

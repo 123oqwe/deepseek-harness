@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-03",
   "title": "结构化 Out-of-Band Denial 与执行错误",
-  "audit_date": "2026-08-23T02:48:29.216Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:15:49.061Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/execution/execution-world/src/errors.ts",
     "packages/execution/execution-world/src/outcome.ts",
@@ -32,18 +32,6 @@
     "packages/sandbox/sandbox/tests/vocabulary.spec.ts",
     "packages/sandbox/sandbox/tests/policy.spec.ts",
     "packages/sandbox/sandbox/tests/roots.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/core/agent-loop/tests/config-session-id.spec.ts",
     "packages/core/agent-loop/tests/request-error.spec.ts",
     "packages/core/agent-loop/tests/contract-regressions.spec.ts",
@@ -90,5 +78,5 @@
   "classification": "EXECUTION_SECURITY_SCAFFOLD_NOT_REAL",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 7 files, Tests: 51 files, Docs: 0 files"
+  "notes": "Source: 7 files, Tests: 39 files, Docs: 0 files"
 }

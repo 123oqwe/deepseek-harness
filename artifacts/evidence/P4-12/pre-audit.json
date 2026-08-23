@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-12",
   "title": "外部副作用 Idempotency Ledger",
-  "audit_date": "2026-08-23T03:01:40.867Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:27:26.557Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/action/action-ledger/src/index.ts",
     "packages/action/action-ledger/src/types.ts",
@@ -42,18 +42,6 @@
     "packages/core/agent-loop/tests/tool-order.spec.ts",
     "packages/core/agent-loop/tests/invariant.spec.ts",
     "packages/core/agent-loop/tests/properties.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/session/session-persistence/tests/persistence.spec.ts",
     "packages/session/session-persistence/tests/write-behind.spec.ts",
     "packages/session/session-persistence/tests/preparations.spec.ts",
@@ -73,5 +61,5 @@
   "classification": "VOLATILE_LEDGER_AND_AMBIGUOUS_OVERWRITE",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 7 files, Tests: 35 files, Docs: 0 files"
+  "notes": "Source: 7 files, Tests: 23 files, Docs: 0 files"
 }

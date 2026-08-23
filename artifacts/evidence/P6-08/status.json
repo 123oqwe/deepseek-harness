@@ -2,7 +2,7 @@
   "issue_id": "P6-08",
   "title": "静态加密、租户密钥、Tamper-Evident Audit 与 Data Residency",
   "status": "E2E_VERIFIED",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "9/9 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T03:24:14.643Z",
+  "evidence_date": "2026-08-23T04:56:36.799Z",
   "runtime_reachability": {
     "issue_id": "P6-08",
     "source_files": 10,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "PASS",
-    "timestamp": "2026-08-23T03:24:14.643Z"
+    "timestamp": "2026-08-23T04:56:36.799Z"
   },
   "remaining_risks": [
     "Code ported from prototype branch; needs deeper integration verification"

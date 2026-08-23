@@ -1,25 +1,13 @@
 {
-  "total": 18,
-  "passed": 15,
-  "failed": 3,
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
   "test_files": [
     "packages/policy/risk-taxonomy/tests/classify.spec.ts",
     "packages/interaction/permission-presets/tests/profile.spec.ts",
     "packages/interaction/permission-presets/tests/permission-presets.spec.ts",
     "packages/interaction/permission-presets/tests/projection.spec.ts",
     "packages/interaction/permission-presets/tests/invariant.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/action/action-manifest/tests/manifest.spec.ts"
   ]
 }

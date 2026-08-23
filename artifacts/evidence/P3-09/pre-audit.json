@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-09",
   "title": "MicroVM / Remote ExecutionWorld 与 Attestation",
-  "audit_date": "2026-08-23T02:54:39.127Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:19:08.049Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/execution/execution-world-remote/src/index.ts",
     "packages/execution/execution-world-remote/src/client.ts",

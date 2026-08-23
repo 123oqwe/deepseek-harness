@@ -1,7 +1,7 @@
 {
   "total": 25,
-  "passed": 6,
-  "failed": 19,
+  "passed": 0,
+  "failed": 25,
   "test_files": [
     "packages/assurance/repair/tests/repair.spec.ts",
     "packages/llm/llm-retry/tests/transport-recovery.spec.ts",

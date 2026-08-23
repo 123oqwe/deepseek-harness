@@ -1,23 +1,11 @@
 {
-  "total": 16,
-  "passed": 13,
-  "failed": 3,
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
   "test_files": [
     "packages/action/reconciliation/tests/saga.spec.ts",
     "packages/action/action-ledger/tests/idempotency.spec.ts",
     "packages/run/run/tests/state-machine.spec.ts",
-    "packages/run/run/tests/recovery.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts"
+    "packages/run/run/tests/recovery.spec.ts"
   ]
 }

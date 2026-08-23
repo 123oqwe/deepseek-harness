@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-03",
   "title": "远程生命周期控制：Pause、Resume、Cancel、Fork、Retry、Reconcile、Close",
-  "audit_date": "2026-08-23T03:43:56.245Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T05:10:20.072Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/api/remotes/src/run-control.ts",
     "packages/sdk/protocol/src/commands.ts",

@@ -14,8 +14,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  11:45:59
-   Duration  426ms (transform 198ms, setup 226ms, import 12ms, tests 5ms, environment 0ms)
+   Start at  13:12:40
+   Duration  450ms (transform 209ms, setup 247ms, import 12ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -23,21 +23,21 @@
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > maps an inspected session without a cwd to session-not-found 14ms
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > resumes through a concurrently attached ordinary Session without optional defaults 6ms
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > rejects a subagent Session published after durable inspection 4ms
- ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > reclassifies failed resumes after a live or attached subagent wins publication 7ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > reclassifies failed resumes after a live or attached subagent wins publication 8ms
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > uses the shared cold-resume policy for the Agent Host Context 56ms
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > applies the subagent ownership fence to the Agent Host Context 56ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  11:46:01
-   Duration  783ms (transform 359ms, setup 211ms, import 253ms, tests 144ms, environment 0ms)
+   Start at  13:12:42
+   Duration  951ms (transform 428ms, setup 292ms, import 279ms, tests 146ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > invokes a strict direct method with schema decoding and a live lookup 13ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > invokes a strict direct method with schema decoding and a live lookup 15ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > resolves strict Remote Scope identity without adding a business argument 3ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > derives SRC direct lookup and JSON parameters from marker and parameter names 3ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > derives SRC direct lookup and JSON parameters from marker and parameter names 4ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > does not downgrade an observed SRC lookup after its provider unloads 3ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > derives SRC Remote Scope identity and preserves the scoped Proxy receiver 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > derives exported, empty, inherited, and distinct-namespace SRC methods 3ms
@@ -50,24 +50,24 @@
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > never downgrades an observed strict endpoint after definition disposal 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > seeds the no-downgrade guard from definitions present before Gateway startup 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > retains the no-downgrade guard across Gateway Service reloads 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects ambiguous SRC endpoints independently of reflection order 2ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects ambiguous SRC endpoints independently of reflection order 3ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects SRC signatures that cannot map one wire field to each position 8ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects a SRC parameter matching more than one lookup provider 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > requires exact wire fields before invoking business code 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > distinguishes strict input and result validation failures 3ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > requires exact wire fields before invoking business code 3ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > distinguishes strict input and result validation failures 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON values after strict codec validation 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 0 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 1 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 2 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 3 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 4 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 5 2ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 3 6ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 4 4ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 5 3ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 6 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 7 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects non-JSON SRC input 8 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > admits an omitted SRC field and hands the Host method undefined 3ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > admits an omitted SRC field and hands the Host method undefined 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > rejects cyclic SRC input and non-JSON SRC results 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > accepts dense JSON and rejects decorated arrays and object properties 7ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > accepts dense JSON and rejects decorated arrays and object properties 3ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > validates strict provider identity against generated wire metadata 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > validates binding identity and active method availability 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > requires a visible binding and supports explicitly provided plain Services 2ms
@@ -77,22 +77,22 @@
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > mounts a shared /api interceptor through an optional Connection and returns existing RPC results 5ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > preserves a lookup policy rejection through the Connection RPC result 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > caches SRC ownership until the Cordis Service set changes 3ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > dispatches claimed invocations through /api and leaves unclaimed endpoints to its fallback 41ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.host.spec.ts > TypertGatewayService > dispatches claimed invocations through /api and leaves unclaimed endpoints to its fallback 43ms
 
  Test Files  1 passed (1)
       Tests  43 passed (43)
-   Start at  11:46:02
-   Duration  1.88s (transform 1.22s, setup 214ms, import 1.32s, tests 161ms, environment 0ms)
+   Start at  13:12:44
+   Duration  1.96s (transform 1.26s, setup 260ms, import 1.34s, tests 174ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > mounts concrete direct methods, validates both boundaries, and withdraws retained handles 17ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > encodes declared undefined as an omitted argument and distinguishes it from null results 3ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > projects one direct lookup descriptor onto an Agent-scoped alias 3ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > uses the caller Context identity for scoped namespace methods 6ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rejects weak descriptors and namespace collisions before registration 7ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rejects duplicate, live, scoped-service, and Context namespace collisions 6ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > mounts concrete direct methods, validates both boundaries, and withdraws retained handles 19ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > encodes declared undefined as an omitted argument and distinguishes it from null results 5ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > projects one direct lookup descriptor onto an Agent-scoped alias 5ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > uses the caller Context identity for scoped namespace methods 4ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rejects weak descriptors and namespace collisions before registration 13ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rejects duplicate, live, scoped-service, and Context namespace collisions 7ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rolls back earlier descriptors when a later descriptor fails to install 5ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rolls back a direct projection when its scoped projection fails to install 3ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > unwinds an already-installed namespace when a later namespace fails to install 3ms
@@ -101,7 +101,7 @@
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > unparks a namespace dependent only after its contribution methods exist 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rejects weak parameter and Context codecs plus malformed scope projections 3ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > validates invocation arity, required binders, live Connection, and mutable descriptor codecs 3ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > withdraws a pending invocation and preserves a direct namespace until its last method leaves 3ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > withdraws a pending invocation and preserves a direct namespace until its last method leaves 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > fails a method obtained from a withdrawn namespace getter 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > preserves a __proto__ wire parameter as an own named argument 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > rolls back Remote registration when namespace Service startup fails 6ms
@@ -112,33 +112,33 @@
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > folds a transport throw into the error branch 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > folds a carrier throw that is not an Error into the error branch 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > owns each $on subscription in the calling fiber 2ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > isolates a throwing listener from the rest of the same event 3ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > isolates a throwing listener from the rest of the same event 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > contains an async listener whose promise rejects 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > retires only its own registration when one listener subscribes twice 2ms
  ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > separates the consumer verb from the carrier handoff 0ms
- ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > drops a forwarded event nobody subscribes to 2ms
+ ✓ |thread-safe| packages/api/gateway/tests/gateway.client.spec.ts > Client Typert API > drops a forwarded event nobody subscribes to 1ms
 
  Test Files  1 passed (1)
       Tests  30 passed (30)
-   Start at  11:46:05
-   Duration  571ms (transform 229ms, setup 210ms, import 84ms, tests 103ms, environment 0ms)
+   Start at  13:12:47
+   Duration  653ms (transform 260ms, setup 256ms, import 91ms, tests 114ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/webserver/tests/webserver.spec.ts > real Loader composition > serves registered routes, index taps, and the fallback-seat semantics 95ms
+ ✓ |thread-safe| packages/host/webserver/tests/webserver.spec.ts > real Loader composition > serves registered routes, index taps, and the fallback-seat semantics 101ms
  ✓ |thread-safe| packages/host/webserver/tests/webserver.spec.ts > real Loader composition > collects injection rows fresh per render and layers taps over the rendered rows 9ms
- ✓ |thread-safe| packages/host/webserver/tests/webserver.spec.ts > real Loader composition > fails the fiber when the port is already taken (fail-loud at activation) 12ms
+ ✓ |thread-safe| packages/host/webserver/tests/webserver.spec.ts > real Loader composition > fails the fiber when the port is already taken (fail-loud at activation) 13ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  11:46:07
-   Duration  595ms (transform 226ms, setup 207ms, import 100ms, tests 117ms, environment 0ms)
+   Start at  13:12:48
+   Duration  655ms (transform 257ms, setup 245ms, import 101ms, tests 124ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 2ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates exact version match 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 0ms
@@ -151,8 +151,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  11:46:08
-   Duration  403ms (transform 191ms, setup 212ms, import 13ms, tests 4ms, environment 0ms)
+   Start at  13:12:50
+   Duration  454ms (transform 214ms, setup 252ms, import 12ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -161,7 +161,7 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > returns undefined for cross-tenant access 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > lists resources with pagination 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > filters resources by field 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > updates with optimistic concurrency token 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > updates with optimistic concurrency token 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives created events 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives updated events 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives deleted events 0ms
@@ -170,23 +170,23 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  11:46:10
-   Duration  442ms (transform 203ms, setup 227ms, import 13ms, tests 6ms, environment 0ms)
+   Start at  13:12:52
+   Duration  469ms (transform 221ms, setup 262ms, import 11ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 15ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 16ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves structured error data from an error response frame 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 11ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 11ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 11ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 12ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 0ms
@@ -198,8 +198,8 @@
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  11:46:11
-   Duration  522ms (transform 217ms, setup 228ms, import 39ms, tests 68ms, environment 0ms)
+   Start at  13:12:53
+   Duration  640ms (transform 300ms, setup 324ms, import 35ms, tests 73ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -217,13 +217,13 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  11:46:13
-   Duration  413ms (transform 191ms, setup 213ms, import 13ms, tests 6ms, environment 0ms)
+   Start at  13:12:55
+   Duration  463ms (transform 211ms, setup 246ms, import 13ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > pauses a running run 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > pauses a running run 3ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > resumes a paused run 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > cancels a running run 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > cancel propagates to children 0ms
@@ -236,60 +236,60 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  11:46:14
-   Duration  454ms (transform 219ms, setup 215ms, import 52ms, tests 6ms, environment 0ms)
+   Start at  13:12:57
+   Duration  625ms (transform 323ms, setup 328ms, import 68ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 17ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 14ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 12ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > merges partial records and leaves an already-accounted cwd drift ungrouped 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > creates newest-first and idempotently reuses a canonical path without retitling 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 21ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 9ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 16ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 10ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 14ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 8ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > merges partial records and leaves an already-accounted cwd drift ungrouped 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > creates newest-first and idempotently reuses a canonical path without retitling 5ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > serializes concurrent same-path creates into one entity 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > allows a duplicate display name on a different canonical path 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back the provisional cache when the record write fails 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports an order write and pending-marker rollback failure together 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls registry order and cache back when record deletion fails 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects table access before the registry has started 2ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back the provisional cache when the record write fails 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports an order write and pending-marker rollback failure together 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls registry order and cache back when record deletion fails 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 14ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects table access before the registry has started 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 7ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > keeps self-anchored and already-positioned moves write-free and rejects unknown ids 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > treats self-anchored and already-in-place moves as no-ops without writing 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects moves naming an unaccounted session or anchor 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > treats self-anchored and already-in-place moves as no-ops without writing 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects moves naming an unaccounted session or anchor 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > validates a lazy live session without requiring it in persistence.list() 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 2ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 11ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 12ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 10ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > accepts unaccounted and live sessions but rejects unknown ids without writing 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > propagates a persistence-listing failure instead of reporting an unknown session 2ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 6ms
 
  Test Files  1 passed (1)
       Tests  43 passed (43)
-   Start at  11:46:16
-   Duration  943ms (transform 434ms, setup 213ms, import 346ms, tests 209ms, environment 0ms)
+   Start at  13:12:58
+   Duration  1.29s (transform 608ms, setup 270ms, import 507ms, tests 261ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -301,6 +301,6 @@
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  11:46:18
-   Duration  708ms (transform 390ms, setup 223ms, import 280ms, tests 11ms, environment 0ms)
+   Start at  13:13:01
+   Duration  766ms (transform 450ms, setup 278ms, import 291ms, tests 12ms, environment 0ms)
 

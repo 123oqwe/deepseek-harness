@@ -2,7 +2,7 @@
   "issue_id": "P6-09",
   "title": "一等公民 Artifact Store、版本、内容寻址与 Lineage",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,10 +13,10 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "12/16 passed"
+    "tests": "295/297 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T03:24:35.804Z",
+  "evidence_date": "2026-08-23T05:35:44.056Z",
   "runtime_reachability": {
     "issue_id": "P6-09",
     "source_files": 8,
@@ -24,10 +24,9 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-23T03:24:35.804Z"
+    "timestamp": "2026-08-23T04:56:53.790Z"
   },
   "remaining_risks": [
-    "4 test(s) failing",
-    "Code ported from prototype branch; needs deeper integration verification"
+    "2 test(s) failing"
   ]
 }

@@ -2,7 +2,7 @@
   "issue_id": "P1-06",
   "title": "不可信插件 Out-of-Process Host",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,21 +13,20 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "15/21 passed"
+    "tests": "93/115 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T02:18:23.234Z",
+  "evidence_date": "2026-08-23T05:30:26.275Z",
   "runtime_reachability": {
     "issue_id": "P1-06",
     "source_files": 8,
-    "test_files": 21,
+    "test_files": 9,
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-23T02:18:23.234Z"
+    "timestamp": "2026-08-23T04:05:18.340Z"
   },
   "remaining_risks": [
-    "6 test(s) failing",
-    "Code ported from prototype branch; needs deeper integration verification"
+    "22 test(s) failing"
   ]
 }

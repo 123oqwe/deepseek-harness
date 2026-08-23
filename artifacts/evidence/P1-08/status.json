@@ -2,7 +2,7 @@
   "issue_id": "P1-08",
   "title": "插件 ABI、Capability 与 Schema 兼容协商",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,10 +13,10 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "7/11 passed"
+    "tests": "115/136 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T02:20:37.579Z",
+  "evidence_date": "2026-08-23T05:30:53.006Z",
   "runtime_reachability": {
     "issue_id": "P1-08",
     "source_files": 5,
@@ -24,10 +24,9 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-23T02:20:37.579Z"
+    "timestamp": "2026-08-23T04:05:50.526Z"
   },
   "remaining_risks": [
-    "4 test(s) failing",
-    "Code ported from prototype branch; needs deeper integration verification"
+    "21 test(s) failing"
   ]
 }

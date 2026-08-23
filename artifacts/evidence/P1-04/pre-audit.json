@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-04",
   "title": "隔离安装与默认禁止生命周期脚本",
-  "audit_date": "2026-08-23T02:18:14.491Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:05:10.074Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/plugin/plugin-installer/src/index.ts",
     "packages/plugin/plugin-installer/src/quarantine.ts",

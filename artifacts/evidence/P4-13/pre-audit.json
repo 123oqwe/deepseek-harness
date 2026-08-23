@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-13",
   "title": "Reconciliation Engine 与 Saga Compensation",
-  "audit_date": "2026-08-23T03:04:04.567Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:28:57.307Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/action/reconciliation/src/index.ts",
     "packages/action/reconciliation/src/types.ts",
@@ -26,19 +26,7 @@
     "packages/action/reconciliation/tests/saga.spec.ts",
     "packages/action/action-ledger/tests/idempotency.spec.ts",
     "packages/run/run/tests/state-machine.spec.ts",
-    "packages/run/run/tests/recovery.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts"
+    "packages/run/run/tests/recovery.spec.ts"
   ],
   "doc_files": [],
   "other_files": [],
@@ -54,5 +42,5 @@
   "classification": "DURABILITY_SCAFFOLD_NOT_CRASH_SAFE",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 7 files, Tests: 16 files, Docs: 0 files"
+  "notes": "Source: 7 files, Tests: 4 files, Docs: 0 files"
 }

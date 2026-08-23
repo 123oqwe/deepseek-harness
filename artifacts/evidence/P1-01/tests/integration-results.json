@@ -1,7 +1,7 @@
 {
   "total": 10,
-  "passed": 5,
-  "failed": 5,
+  "passed": 6,
+  "failed": 4,
   "test_files": [
     "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
     "packages/plugin/plugin-manifest/tests/integration.spec.ts",

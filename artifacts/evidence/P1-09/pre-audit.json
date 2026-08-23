@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-09",
   "title": "Service/Tool/Event 命名空间与所有权冲突检测",
-  "audit_date": "2026-08-23T02:21:09.848Z",
-  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
+  "audit_date": "2026-08-23T04:06:18.536Z",
+  "git_sha": "08aac47cd28ad96b2bb24b596f51865f77f24e65",
   "manifest_files": [
     "packages/plugin/plugin-ownership/src/index.ts",
     "packages/plugin/plugin-ownership/src/types.ts",
@@ -22,18 +22,6 @@
   ],
   "test_files": [
     "packages/plugin/plugin-ownership/tests/ownership.spec.ts",
-    "packages/core/tools/tests/schema.spec.ts",
-    "packages/core/tools/tests/scoped.spec.ts",
-    "packages/core/tools/tests/code-mode.spec.ts",
-    "packages/core/tools/tests/execution-signal-types.spec.ts",
-    "packages/core/tools/tests/tools.spec.ts",
-    "packages/core/tools/tests/execution-mode.spec.ts",
-    "packages/core/tools/tests/py-types.spec.ts",
-    "packages/core/tools/tests/invariant.spec.ts",
-    "packages/core/tools/tests/properties.spec.ts",
-    "packages/core/tools/tests/json-schema.spec.ts",
-    "packages/core/tools/tests/ts-types.spec.ts",
-    "packages/core/tools/tests/gen-tool-catalog.spec.ts",
     "packages/extensions/cordis-host-runner/tests/sandbox.spec.ts",
     "packages/extensions/cordis-host-runner/tests/composition.spec.ts",
     "packages/extensions/cordis-host-runner/tests/versioning.spec.ts",
@@ -56,5 +44,5 @@
   "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 6 files, Tests: 20 files, Docs: 0 files"
+  "notes": "Source: 6 files, Tests: 8 files, Docs: 0 files"
 }

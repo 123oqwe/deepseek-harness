@@ -5,7 +5,7 @@
   "packages/assurance/outcome-package/src/index.ts": "2d3dd7b044064a605f7f4dcf7768ae2020817f602506e07cccc51678df223420",
   "packages/assurance/outcome-package/src/types.ts": "d4dd540279fcc717c7564ea08e2f9ad57186d656d588b1b79da541144e438b62",
   "packages/workflow/workflow/src/types.ts": "c9ad2d29e0b65174671fe554277a6f181e3729551582e661a4c682ad73e52ba5",
-  "packages/core/agent-loop/src/agent.ts": "3178b37c83533f72482d1a4caa44cd31f905dffe1ecc23134156c297f1bfbaff",
+  "packages/core/agent-loop/src/agent.ts": "3597bbc96e78445cf21141d22a156da024f933d6eba5e1d33a8586e9c80f3280",
   "packages/core/session/src/known-event-types.ts": "23ed63cf702d770839baf1bee86754f69d33c040d05c3fc3654dd0424d7a9fcb",
   "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",
   "packages/attachment/attachment/src/types.ts": "7c45a652727db7802a76bc791af136e2a18d12640f9c11b6e5ee309a9171ef16"

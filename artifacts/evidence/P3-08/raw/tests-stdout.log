@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > creates container from valid spec 2ms
+ ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > creates container from valid spec 3ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects invalid image digest 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects Docker socket mount 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects host home mount 0ms
@@ -13,13 +13,13 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  10:54:34
-   Duration  426ms (transform 197ms, setup 217ms, import 23ms, tests 4ms, environment 0ms)
+   Start at  12:19:00
+   Duration  879ms (transform 416ms, setup 460ms, import 53ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 3ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 4ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > rejects invalid transition 1ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroys a world 0ms
@@ -27,8 +27,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  10:54:36
-   Duration  559ms (transform 207ms, setup 230ms, import 22ms, tests 6ms, environment 0ms)
+   Start at  12:19:02
+   Duration  646ms (transform 330ms, setup 366ms, import 33ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -42,6 +42,6 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  10:54:37
-   Duration  417ms (transform 190ms, setup 215ms, import 11ms, tests 4ms, environment 0ms)
+   Start at  12:19:06
+   Duration  615ms (transform 305ms, setup 329ms, import 27ms, tests 4ms, environment 0ms)
 
