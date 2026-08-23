@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-06",
   "title": "Compaction 保真度、来源证明与 Tool Pairing 强化",
-  "audit_date": "2026-08-23T01:42:33.744Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T03:23:04.291Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/compaction/compaction/src/coverage.ts",
     "packages/compaction/compaction/src/provenance.ts",

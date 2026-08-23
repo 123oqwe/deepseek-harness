@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-12",
   "title": "多 Agent 协调安全、Worktree 隔离与 Router Regret 评测",
-  "audit_date": "2026-08-23T01:37:20.379Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T03:18:04.145Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/workspace/worktree-provider/src/index.ts",
     "packages/workspace/worktree-provider/src/merge.ts",
@@ -28,12 +28,6 @@
     "packages/workspace/worktree-provider/tests/worktree.spec.ts",
     "packages/collaboration/coordination-guard/tests/coordination.spec.ts",
     "packages/evaluation/router-regret/tests/regret.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/session.spec.ts",
     "packages/subagent/subagent/tests/continuation.spec.ts",
     "packages/subagent/subagent/tests/run-settlement.spec.ts",
     "packages/subagent/subagent/tests/request-contract.spec.ts",
@@ -65,5 +59,5 @@
   "classification": "ROUTER_PROVIDER_SCAFFOLD_NOT_ON_MAIN_PATH",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 8 files, Tests: 24 files, Docs: 0 files"
+  "notes": "Source: 8 files, Tests: 18 files, Docs: 0 files"
 }

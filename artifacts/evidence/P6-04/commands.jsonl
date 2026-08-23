@@ -1,25 +1,25 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/context/retrieval-planner/tests/planner.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/context/agent-instructions/tests/agent-instructions.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/session-query/session-query/tests/tracing.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/session-query/session-query/tests/search-helpers.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/session-query/session-query/tests/session-query.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/config-session-id.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/request-error.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/contract-regressions.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/agent-initiator.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/coverage-edges.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/resume.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/loop.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/scope-lifecycle.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/runtime-context.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/request-reconstruction.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/tool-calls.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/interception.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/agent.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/cancel.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/tool-order.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:40:54.254Z"}
-{"command":"npx vitest run packages/core/agent-loop/tests/properties.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:40:54.254Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/context/retrieval-planner/tests/planner.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/context/agent-instructions/tests/agent-instructions.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/session-query/session-query/tests/tracing.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/session-query/session-query/tests/search-helpers.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/session-query/session-query/tests/session-query.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/config-session-id.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/request-error.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/contract-regressions.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/agent-initiator.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/coverage-edges.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/resume.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/loop.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/scope-lifecycle.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/runtime-context.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/request-reconstruction.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/tool-calls.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/interception.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/agent.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/cancel.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/tool-order.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:21:13.290Z"}
+{"command":"npx vitest run packages/core/agent-loop/tests/properties.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:21:13.290Z"}

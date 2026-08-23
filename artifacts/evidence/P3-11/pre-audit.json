@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-11",
   "title": "ExecutionWorld Snapshot / Restore / Rollback",
-  "audit_date": "2026-08-23T01:08:13.485Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T02:55:25.021Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/execution/world-snapshot/src/index.ts",
     "packages/execution/world-snapshot/src/types.ts",

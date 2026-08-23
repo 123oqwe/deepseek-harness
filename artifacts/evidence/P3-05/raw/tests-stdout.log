@@ -16,8 +16,8 @@
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  09:06:22
-   Duration  542ms (transform 277ms, setup 308ms, import 20ms, tests 5ms, environment 0ms)
+   Start at  10:53:22
+   Duration  449ms (transform 207ms, setup 224ms, import 22ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -29,60 +29,60 @@
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt read-only: allow-default with every file write denied except the /dev/null literal 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write dedups a workspace root that already IS the temp dir 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 10ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 8ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > an EMPTY runnerCommand means unconfigured: the platform chain still gates the wrap 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 9ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 8ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects runner failure signatures when no custom runner consumes them 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "  " 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\ncontinued" 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\rcontinued" 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux probes bwrap first: a passing probe wraps with the bwrap dialect at full enforcement 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux falls back to the launcher when the bwrap probe fails, speaking the landlock dialect 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > darwin selects its sole candidate WITHOUT probing: nothing to arbitrate 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > darwin selects its sole candidate WITHOUT probing: nothing to arbitrate 1ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a platform with no chain fails closed without a single probe: the command never runs 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > caches the verdict for the provider lifetime: one chain walk across wraps 1ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > the unavailable verdict is cached too, and the error is structured 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 578ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 630ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue chain entry throws via the probe walk's exhaustiveness guard (closed union) 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue cached runner tag throws via the exhaustiveness guard (closed union) 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 9ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 10ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > walks the real platform chain when nothing is injected (usable here or fail closed there) 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 573ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 575ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 579ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 1837ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 575ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 565ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 683ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 611ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 650ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 1914ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 554ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 583ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > selects the rung when the injected probe passes, speaking the ACL dialect 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 122ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 133ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > falls back to the runner source through tsx when the built entry is absent 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads an empty runner invocation as unusable (the probe's empty-argv guard) 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads an empty runner invocation as unusable (the probe's empty-argv guard) 1ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > prefers the built lib/runner.js entry when the resolved file exists 2ms
 
  Test Files  1 passed (1)
       Tests  38 passed (38)
-   Start at  09:06:24
-   Duration  6.29s (transform 469ms, setup 261ms, import 318ms, tests 5.48s, environment 0ms)
+   Start at  10:53:23
+   Duration  6.52s (transform 401ms, setup 211ms, import 283ms, tests 5.83s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 15ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 13ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 3ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > a fresh provider gives a resumed session a new temp path and SID, so crash residue cannot collide 5ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 5ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 4ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace grant failure disposes its SID, aggregates cleanup failure, and never creates a temp directory 3ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > rejects a workspace containing the ambient temp root before any ACL mutation 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 5ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > agentless calls pass a temp root and no capabilities; the runner owns the private child lifecycle 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > provider teardown reports grant and directory cleanup failures without aborting teardown 5ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  09:06:31
-   Duration  829ms (transform 481ms, setup 249ms, import 326ms, tests 47ms, environment 0ms)
+   Start at  10:53:31
+   Duration  727ms (transform 409ms, setup 212ms, import 283ms, tests 42ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -98,8 +98,8 @@
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  09:06:33
-   Duration  434ms (transform 211ms, setup 236ms, import 13ms, tests 4ms, environment 0ms)
+   Start at  10:53:33
+   Duration  430ms (transform 192ms, setup 217ms, import 10ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -112,8 +112,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  09:06:35
-   Duration  444ms (transform 210ms, setup 233ms, import 20ms, tests 5ms, environment 0ms)
+   Start at  10:53:34
+   Duration  439ms (transform 195ms, setup 221ms, import 19ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -127,5 +127,6 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:06:36
-   Duration  434ms (transform 212ms, setup 236ms, import 12ms, tests 4ms, environment 0ms)
+   Start at  10:53:36
+   Duration  431ms (transform 205ms, setup 235ms, import 11ms, tests 4ms, environment 0ms)
+

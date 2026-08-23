@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-04",
   "title": "双向 Server→Client Requests：持久审批、澄清、人工接管与 Quorum",
-  "audit_date": "2026-08-23T02:01:29.865Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T03:45:08.782Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/sdk/protocol/src/server-requests.ts",
     "packages/api/remotes/src/human-interaction.ts",
@@ -35,9 +35,6 @@
     "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
     "packages/interaction/human-channel/tests/server-request.spec.ts",
     "packages/interaction/human-channel/tests/emergency-stop.spec.ts",
-    "packages/sdk/server/tests/plugin-shape.spec.ts",
-    "packages/sdk/server/tests/plugin-apply.spec.ts",
-    "packages/sdk/server/tests/server.spec.ts",
     "packages/sdk/client/tests/dispose.spec.ts",
     "packages/sdk/client/tests/sdk-client.spec.ts",
     "packages/interaction/user-approval/tests/argument-binding.spec.ts"
@@ -58,5 +55,5 @@
   "classification": "CONTROL_PLANE_SCAFFOLD_NOT_BACKED_BY_AUTHORITIES",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 9 files, Tests: 13 files, Docs: 0 files"
+  "notes": "Source: 9 files, Tests: 10 files, Docs: 0 files"
 }

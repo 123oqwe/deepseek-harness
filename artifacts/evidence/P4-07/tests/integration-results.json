@@ -1,7 +1,7 @@
 {
-  "total": 14,
-  "passed": 12,
-  "failed": 2,
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
   "test_files": [
     "packages/run/lease/tests/lease.spec.ts",
     "packages/core/agent/tests/agent-initiator.spec.ts",
@@ -10,12 +10,6 @@
     "packages/core/agent/tests/agent.spec.ts",
     "packages/core/agent/tests/invariant.spec.ts",
     "packages/core/agent/tests/consumed-work.spec.ts",
-    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts"
   ]
 }

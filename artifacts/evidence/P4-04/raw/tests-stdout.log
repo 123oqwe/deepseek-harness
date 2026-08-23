@@ -13,8 +13,8 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  09:10:15
-   Duration  484ms (transform 222ms, setup 241ms, import 31ms, tests 5ms, environment 0ms)
+   Start at  10:57:30
+   Duration  436ms (transform 198ms, setup 213ms, import 28ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -27,8 +27,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  09:10:17
-   Duration  481ms (transform 232ms, setup 259ms, import 26ms, tests 5ms, environment 0ms)
+   Start at  10:57:31
+   Duration  423ms (transform 195ms, setup 213ms, import 25ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -43,34 +43,34 @@
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  09:10:19
-   Duration  472ms (transform 219ms, setup 244ms, import 26ms, tests 5ms, environment 0ms)
+   Start at  10:57:33
+   Duration  426ms (transform 193ms, setup 209ms, import 28ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > recovers runs from a different process via JSONL ledger 182ms
- ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > lists all non-terminal runs after recovery 173ms
+ ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > recovers runs from a different process via JSONL ledger 168ms
+ ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > lists all non-terminal runs after recovery 162ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  09:10:20
-   Duration  829ms (transform 237ms, setup 257ms, import 32ms, tests 356ms, environment 0ms)
+   Start at  10:57:34
+   Duration  757ms (transform 203ms, setup 219ms, import 31ms, tests 331ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > initializes before any plugin loads 4ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > forbids re-initialization 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > forbids re-initialization 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > root principal has stable id and insecure flag 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > insecure mode sets principal.insecure = true 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > kernel deny is monotonic and cannot be overridden 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > non-kernel capabilities are delegated to plugins 1ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is tamper-evident 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is tamper-evident 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is durable: survives process restart (new kernel instance) 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit log file exists on disk after append 1ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: rejects random bytes with trusted keyId 50ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: accepts valid signature 87ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: rejects random bytes with trusted keyId 24ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: accepts valid signature 49ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification rejects untrusted key ids 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification rejects missing key id 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > insecure mode skips signature verification 1ms
@@ -82,19 +82,20 @@
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  09:10:22
-   Duration  608ms (transform 216ms, setup 234ms, import 29ms, tests 159ms, environment 0ms)
+   Start at  10:57:36
+   Duration  525ms (transform 208ms, setup 225ms, import 27ms, tests 92ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized throws when kernel not initialized 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized throws when kernel not initialized 3ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized passes after initTrustKernel 3ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel can only be initialized once 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel can only be initialized once 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > isKernelInitialized returns false after reset 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel initialized in test mode (insecure) allows operations 1ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  09:10:24
-   Duration  462ms (transform 223ms, setup 247ms, import 25ms, tests 9ms, environment 0ms)
+   Start at  10:57:38
+   Duration  909ms (transform 348ms, setup 385ms, import 38ms, tests 9ms, environment 0ms)
+

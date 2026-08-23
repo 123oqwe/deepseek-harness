@@ -1,8 +1,8 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > requests approval and marks run as waiting 2ms
- ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > approves a request 0ms
+ ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > requests approval and marks run as waiting 3ms
+ ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > approves a request 1ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > denies a request 0ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > consumes an approved request 0ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > rejects consume of non-approved 1ms
@@ -12,14 +12,14 @@
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  08:57:41
-   Duration  427ms (transform 194ms, setup 216ms, import 22ms, tests 6ms, environment 0ms)
+   Start at  10:43:54
+   Duration  696ms (transform 339ms, setup 400ms, import 28ms, tests 9ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > canonicalizes approval request with digest id 2ms
- ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > same request produces same digest 0ms
+ ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > canonicalizes approval request with digest id 3ms
+ ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > same request produces same digest 1ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > different parameters produce different digest 1ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > verifyDigest checks integrity 0ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > isExpired checks validity 0ms
@@ -30,18 +30,18 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  08:57:43
-   Duration  427ms (transform 199ms, setup 219ms, import 23ms, tests 5ms, environment 0ms)
+   Start at  10:43:56
+   Duration  512ms (transform 239ms, setup 270ms, import 27ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > round-trips a session: create + append → load returns identical meta and byte-identical events 17ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > rejects a fractional creation timestamp without reserving its session id 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > crash recovery: load preserves an interrupted (unclosed) turn and closes it with turn/end {interrupted} 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > crash recovery: an unstarted assistant tool request gets a retryable synthetic result 8ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > crash recovery: a recorded tool call with no result tells the model to assess retry risk 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > list() excludes a created-but-never-appended (zero-event) session 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > round-trips a session: create + append → load returns identical meta and byte-identical events 20ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > rejects a fractional creation timestamp without reserving its session id 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > crash recovery: load preserves an interrupted (unclosed) turn and closes it with turn/end {interrupted} 6ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > crash recovery: an unstarted assistant tool request gets a retryable synthetic result 9ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > crash recovery: a recorded tool call with no result tells the model to assess retry risk 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > list() excludes a created-but-never-appended (zero-event) session 4ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > rejects pre-aborted observation reads with the exact cancellation reason 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > readFrom returns exactly the stored suffix from the requested seq, without mutating the log 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > lists stable lightweight revisions that change after an append 2ms
@@ -49,125 +49,125 @@
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > append rejects a mid-batch seq gap 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence contract: memory > append rejects non-JSON-serializable event data, naming the event type 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > the inherited readRaw default > rejects unsupported reads distinctly from absence and honors an aborted signal 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > persists a live session driven through the store, surviving reload 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > persists a live session driven through the store, surviving reload 4ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects crash-repair load while a live session owns the persisted prefix 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rechecks live ownership after a cold load enters the per-id chain 5ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > does not load an unmaterialized empty live session 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rechecks live ownership after a cold load enters the per-id chain 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > does not load an unmaterialized empty live session 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > round-trips the seed boundary (seedLength) through persistence 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > round-trips the delegation depth through persistence 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > source-frozen events cannot be mutated after buffering and persist unchanged 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > load and inspect return immutable identified-message snapshots 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > loads pre-identity message logs into resumable current sessions 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > loads pre-react-loop session logs into resumable current sessions 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > loads pre-identity message logs into resumable current sessions 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > loads pre-react-loop session logs into resumable current sessions 6ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects malformed persisted message events before returning them 6ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > append snapshots the batch: mutating the caller array/events after the call is ignored 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > fork: a seeded new session persists its seed once (no double-write on a no-op flush) 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > resume: a re-created session seeded with the loaded log does not re-append its seed and continues the seq 5ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: applying the plugin seeds existing live sessions 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: applying the plugin seeds existing live sessions 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: dispose drains remaining buffers 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: reloading the backend adopts a still-live, already-materialized session 6ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: adoption persists the live SUFFIX that was ahead of the stored prefix 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR adoption does NOT crash-repair an active open turn as interrupted (truncate without closers) 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a NEW live session colliding on a persisted id is rejected, not silently adopted 15ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > an abandoned lazy session (never materialized) releases its id for reuse 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > session disposal drains buffered events before retiring ownership 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: reloading the backend adopts a still-live, already-materialized session 7ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR: adoption persists the live SUFFIX that was ahead of the stored prefix 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > HMR adoption does NOT crash-repair an active open turn as interrupted (truncate without closers) 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a NEW live session colliding on a persisted id is rejected, not silently adopted 17ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > an abandoned lazy session (never materialized) releases its id for reuse 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > session disposal drains buffered events before retiring ownership 5ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > initFor is idempotent: re-emitting session/created does not re-initialize 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session claims cursor-0 ownerless state created via the public API and persists its seed 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a fresh session reusing a previously-loaded id is rejected (ownerless guard) 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session whose complete seed matches loaded ownerless state claims it without appending 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session whose complete seed matches loaded ownerless state claims it without appending 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session whose seed matches the loaded prefix claims ownerless state and persists the suffix 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session at a DIFFERENT cwd cannot claim cursor-0 ownerless state (cwd scope) 6ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session at a DIFFERENT cwd cannot claim loaded-prefix ownerless state (cwd scope) 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a no-cwd ownerless state cannot be claimed by a live session WITH a cwd (cwd scope, undefined side) 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > append adopts a storage-only session (fresh instance) and continues the seq 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > append of an empty batch is a no-op (stays lazy) 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session at a DIFFERENT cwd cannot claim cursor-0 ownerless state (cwd scope) 11ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a live session at a DIFFERENT cwd cannot claim loaded-prefix ownerless state (cwd scope) 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > a no-cwd ownerless state cannot be claimed by a live session WITH a cwd (cwd scope, undefined side) 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > append adopts a storage-only session (fresh instance) and continues the seq 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > append of an empty batch is a no-op (stays lazy) 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > load and inspect reject a missing session 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > create rejects a duplicate id (in memory and on a persisted log) 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects a newer format version on load, naming the upgrade direction 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > create rejects a duplicate id (in memory and on a persisted log) 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects a newer format version on load, naming the upgrade direction 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects an older format version on load without claiming an upgrade path 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects an unknown event type on load unless the event is marked ignorable 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > round-trips a header with parentSession (fork lineage) 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > flush before init resolves uses cursor 0 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > rejects an unknown event type on load unless the event is marked ignorable 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > round-trips a header with parentSession (fork lineage) 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > flush before init resolves uses cursor 0 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator orchestration: memory > torn-tail load: a never-committed tail is truncated and the open turn closed during load (commitRepair w/ tornMarker) 0ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator seed ownership > retains the immutable session seed without cloning it 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator bounded writes > cancels the batching deadline when live initialization rejects 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator bounded writes > starts a follow-up batch for events admitted during an in-flight write 108ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator bounded writes > retries a failed overlapping background write at the explicit flush barrier 56ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator stored identity > rejects a mismatched backend header before repair or state publication 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator stored identity > reserves a cold id across asynchronous storage repair 59ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator seed ownership > retains the immutable session seed without cloning it 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator bounded writes > cancels the batching deadline when live initialization rejects 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator bounded writes > starts a follow-up batch for events admitted during an in-flight write 114ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator bounded writes > retries a failed overlapping background write at the explicit flush barrier 68ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator stored identity > rejects a mismatched backend header before repair or state publication 5ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator stored identity > reserves a cold id across asynchronous storage repair 61ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects invalid preparation cache capacity 0 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects invalid preparation cache capacity 1.5 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects invalid write batch delay 0 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects invalid write batch delay 1.5 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects invalid write batch delay 2147483648 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > retries invalidated prepare and load reservations 4ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > prefers a session that becomes live across preparation reads 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > prefers a session that becomes live across preparation reads 5ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects a prepared commit when durable state already has a live owner 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects publication after a preparation state no longer matches 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects publication after a preparation state no longer matches 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > observes a restored suffix initialization failure 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > writes new events after publishing a preparation with no unpublished suffix 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > writes new events after publishing a preparation with no unpublished suffix 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > reuses the exact Session from inspect through repeated unpublished prepare calls 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > reloads a cached inspection after the durable revision changes 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > does not restore from a cached inspection after the durable revision changes 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > retains a reserved preparation when inspection observes a newer external revision 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > queues a same-tick cold append behind preparation readiness 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > allows a same-tick cold append to start before inspection 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > does not restore from a cached inspection after the durable revision changes 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > retains a reserved preparation when inspection observes a newer external revision 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > queues a same-tick cold append behind preparation readiness 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > allows a same-tick cold append to start before inspection 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > retries cold append adoption when the prepared revision becomes stale 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > inspects an open live turn without balancing it 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > keeps synthetic recovery in memory during inspect and commits it only once on prepare 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > reloads the committed graph when another writer appends after repair 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects preparation when storage disappears during the post-repair reload 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > waits for an existing reservation and reuses it after release 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > evicts only ready preparations by LRU capacity 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects append while an unpublished preparation owns the persisted cursor 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > promptly rejects a queued inspect without invoking it and keeps the same-id chain healthy 107ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > reloads the committed graph when another writer appends after repair 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects preparation when storage disappears during the post-repair reload 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > waits for an existing reservation and reuses it after release 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > evicts only ready preparations by LRU capacity 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator session preparations > rejects append while an unpublished preparation owns the persisted cursor 4ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > promptly rejects a queued inspect without invoking it and keeps the same-id chain healthy 108ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > keeps a shared cold read alive when its creating inspect is cancelled 56ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > preserves inspect cancellation when the session concurrently becomes live 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > readFrom via the seek hook: serves the suffix, maps undefined to not-found, and relays hook failures by abort state 55ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > rejects a cancelled inspect while an in-flight retirement drain is still pending 56ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator observation cancellation > rejects a cancelled inspect while an in-flight retirement drain is still pending 54ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a retiring unmaterialized owner without buffered events releases its id 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a superseded retirement leaves the successor lifecycle's pending drain in place 55ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a replacement queued before retirement cleanup still collides with the live owner 211ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a racing cold load survives retirement cleanup and rejects same-id reuse 262ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a settled chain tail cannot delete a newer operation for the same id 106ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > backend teardown retries a failed session retirement before close 57ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a superseded retirement leaves the successor lifecycle's pending drain in place 54ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a replacement queued before retirement cleanup still collides with the live owner 210ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a racing cold load survives retirement cleanup and rejects same-id reuse 266ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > a settled chain tail cannot delete a newer operation for the same id 105ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > backend teardown retries a failed session retirement before close 56ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > backend teardown waits for an in-flight session retirement before close 3ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > backend teardown waits for a detached public append before close 55ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > provides a cancellation-aware default preparation for simple backends 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > PersistenceCoordinator retirement > backend teardown waits for a detached public append before close 53ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > provides a cancellation-aware default preparation for simple backends 4ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > requires SessionStore for the default preparation 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > registers as ctx.sessionPersistence and is removed on fiber dispose (HMR safety) 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > round-trips through the registered service instance 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects non-JSON session metadata before registering lazy state 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a legacy header delta from a pre-change live producer 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a legacy fallback header buffered by a pre-change live producer 2ms
- ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a legacy stored prefix during live HMR adoption 2ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a legacy fallback header buffered by a pre-change live producer 3ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a legacy stored prefix during live HMR adoption 3ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a stored legacy fallback header during load 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > rejects a stored legacy named-mode event during load 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/persistence.spec.ts > SessionPersistence service registration > retires all coordinator bookkeeping for disposed sessions 3ms
 
  Test Files  1 passed (1)
       Tests  108 passed (108)
-   Start at  08:57:44
-   Duration  2.23s (transform 429ms, setup 229ms, import 279ms, tests 1.53s, environment 0ms)
+   Start at  10:43:58
+   Duration  2.50s (transform 535ms, setup 263ms, import 383ms, tests 1.61s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > uses one fixed window from the first queued event and owns its copy 5ms
- ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > coalesces twenty events admitted ten milliseconds apart into one 200 ms batch 1ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > uses one fixed window from the first queued event and owns its copy 6ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > coalesces twenty events admitted ten milliseconds apart into one 200 ms batch 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > makes concurrent flushes one immediate barrier that drains admitted tails 1ms
- ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > starts a new window for work admitted after an already-quiescent barrier 0ms
- ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > starts an over-budget tail immediately after the active write 0ms
- ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > keeps a tail deadline that has not expired when the active write finishes 0ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > starts a new window for work admitted after an already-quiescent barrier 1ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > starts an over-budget tail immediately after the active write 1ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > keeps a tail deadline that has not expired when the active write finishes 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > pauses automatic retries after failure and preserves order for new work 2ms
  ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > observes an overlapping background failure and retries it inside flush 1ms
  ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > surfaces a barrier failure without detached logging and retains its batch 1ms
- ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > retains a failed batch larger than the engine call-argument limit 280ms
+ ✓ |thread-safe| packages/session/session-persistence/tests/write-behind.spec.ts > SessionWriteBehind > retains a failed batch larger than the engine call-argument limit 434ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  08:57:47
-   Duration  702ms (transform 196ms, setup 215ms, import 16ms, tests 293ms, environment 0ms)
+   Start at  10:44:02
+   Duration  1.13s (transform 373ms, setup 442ms, import 24ms, tests 451ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -195,13 +195,13 @@
 
  Test Files  1 passed (1)
       Tests  20 passed (20)
-   Start at  08:57:49
-   Duration  566ms (transform 311ms, setup 230ms, import 144ms, tests 11ms, environment 0ms)
+   Start at  10:44:05
+   Duration  622ms (transform 322ms, setup 235ms, import 150ms, tests 11ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 2ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates exact version match 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 0ms
@@ -214,8 +214,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  08:57:51
-   Duration  442ms (transform 214ms, setup 237ms, import 15ms, tests 4ms, environment 0ms)
+   Start at  10:44:06
+   Duration  459ms (transform 217ms, setup 239ms, import 19ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -233,23 +233,23 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  08:57:52
-   Duration  412ms (transform 195ms, setup 218ms, import 13ms, tests 6ms, environment 0ms)
+   Start at  10:44:08
+   Duration  447ms (transform 214ms, setup 238ms, import 13ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 17ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 15ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves structured error data from an error response frame 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 11ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 13ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 13ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 12ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 0ms
@@ -257,12 +257,12 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error write failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > uses a fallback message for malformed JSON-RPC error responses 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 11ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  08:57:53
-   Duration  543ms (transform 219ms, setup 230ms, import 40ms, tests 73ms, environment 0ms)
+   Start at  10:44:10
+   Duration  644ms (transform 266ms, setup 282ms, import 48ms, tests 69ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -280,8 +280,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  08:57:55
-   Duration  422ms (transform 191ms, setup 215ms, import 11ms, tests 6ms, environment 0ms)
+   Start at  10:44:11
+   Duration  454ms (transform 210ms, setup 242ms, import 15ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -299,5 +299,6 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  08:57:57
-   Duration  470ms (transform 231ms, setup 226ms, import 59ms, tests 6ms, environment 0ms)
+   Start at  10:44:13
+   Duration  458ms (transform 217ms, setup 220ms, import 46ms, tests 6ms, environment 0ms)
+

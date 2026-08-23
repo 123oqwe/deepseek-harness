@@ -15,28 +15,28 @@
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  09:20:45
-   Duration  603ms (transform 310ms, setup 337ms, import 34ms, tests 7ms, environment 0ms)
+   Start at  11:04:05
+   Duration  437ms (transform 206ms, setup 223ms, import 28ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > prepares an entry 2ms
  ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > returns confirmed entry on duplicate prepare 1ms
- ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > transitions prepared -> sent -> confirmed 1ms
+ ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > transitions prepared -> sent -> confirmed 0ms
  ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > marks ambiguous on timeout 0ms
  ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > compensates an entry 0ms
  ✓ |thread-safe| packages/action/action-ledger/tests/idempotency.spec.ts > P4-12 Idempotency Ledger > getByState filters entries 1ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:20:47
-   Duration  530ms (transform 277ms, setup 309ms, import 25ms, tests 7ms, environment 0ms)
+   Start at  11:04:07
+   Duration  408ms (transform 187ms, setup 209ms, import 11ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/run/run/tests/state-machine.spec.ts > P4-01 Run Service State Machine > creates a run in pending state 3ms
+ ✓ |thread-safe| packages/run/run/tests/state-machine.spec.ts > P4-01 Run Service State Machine > creates a run in pending state 2ms
  ✓ |thread-safe| packages/run/run/tests/state-machine.spec.ts > P4-01 Run Service State Machine > transitions pending -> running -> completed 0ms
  ✓ |thread-safe| packages/run/run/tests/state-machine.spec.ts > P4-01 Run Service State Machine > rejects invalid transition 0ms
  ✓ |thread-safe| packages/run/run/tests/state-machine.spec.ts > P4-01 Run Service State Machine > rejects transition from terminal state 0ms
@@ -46,28 +46,28 @@
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  09:20:49
-   Duration  613ms (transform 342ms, setup 371ms, import 47ms, tests 7ms, environment 0ms)
+   Start at  11:04:08
+   Duration  461ms (transform 214ms, setup 236ms, import 29ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > recovers runs from a different process via JSONL ledger 201ms
- ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > lists all non-terminal runs after recovery 170ms
+ ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > recovers runs from a different process via JSONL ledger 180ms
+ ✓ |process-bound| packages/run/run/tests/recovery.spec.ts > P4-01 Run Service Cross-Process Recovery > lists all non-terminal runs after recovery 230ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  09:20:50
-   Duration  894ms (transform 269ms, setup 290ms, import 35ms, tests 372ms, environment 0ms)
+   Start at  11:04:10
+   Duration  856ms (transform 214ms, setup 234ms, import 32ms, tests 411ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > compiles every value root and the author-only json node 4ms
  ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > keeps the implicit parameter root open while preserving explicit object openness 0ms
- ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > rejects runtime-forged author forms rather than compiling them lossily 1ms
+ ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > rejects runtime-forged author forms rather than compiling them lossily 2ms
  ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > rejects cyclic author schemas 1ms
- ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > compiles deeply nested author unions without using the JavaScript call stack 52ms
+ ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > compiles deeply nested author unions without using the JavaScript call stack 54ms
  ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > preserves a property literally named __proto__ as schema data 0ms
  ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > infers scalar literals, arrays, objects, json, and exact-one unions 0ms
  ✓ |thread-safe| packages/core/tools/tests/schema.spec.ts > the unified author schema DSL > bounds inference for deeply nested author schemas 0ms
@@ -76,36 +76,36 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:20:52
-   Duration  820ms (transform 468ms, setup 227ms, import 336ms, tests 62ms, environment 0ms)
+   Start at  11:04:13
+   Duration  839ms (transform 463ms, setup 272ms, import 280ms, tests 64ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > keeps final-result observers synchronous 2ms
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > files a scoped tool in its layer: visible/executable for that scope only 31ms
+ ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > keeps final-result observers synchronous 1ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > files a scoped tool in its layer: visible/executable for that scope only 18ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > scoped shadows global on a name conflict, in either registration order 11ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > scoped shadows global on a name conflict, in either registration order 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > rejects a duplicate name within one layer, naming agent.ctx for the global case 9ms
- ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > disposing the scope unwinds its registrations and leaves no residue 5ms
+ ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > rejects a duplicate name within one layer, naming agent.ctx for the global case 6ms
+ ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped tool registration > disposing the scope unwinds its registrations and leaves no residue 4ms
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > masks global tools, merges scope-local tools afterward, and keeps assembly with execution 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > applies snapshotted filters to the live global registry before merging later scope-local tools 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > composes multiple restrictions by intersection and lifts each independently 3ms
+ ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > composes multiple restrictions by intersection and lifts each independently 2ms
  ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > compiles the readonly filter values at registration 2ms
- ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > fails loud on an unscoped call, an empty filter, and names it does not inherit 6ms
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() over an inherited scope layer > filters tools the child inherits from an ancestor scope, not only global ones 4ms
+ ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() > fails loud on an unscoped call, an empty filter, and names it does not inherit 4ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() over an inherited scope layer > filters tools the child inherits from an ancestor scope, not only global ones 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() over an inherited scope layer > keeps the child's own registrations outside its own filter 3ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() over an inherited scope layer > keeps the child's own registrations outside its own filter 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() over an inherited scope layer > lets an ancestor's restriction reach every scope nested inside it 3ms
+ ✓ |thread-safe| packages/core/tools/tests/scoped.spec.ts > restrict() over an inherited scope layer > lets an ancestor's restriction reach every scope nested inside it 2ms
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > an agent.ctx pre-execute listener gates only its own agent (and never subject-less calls) 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > applies scoped guards after pre-execute and unwinds duplicate registrations independently 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > composes global guards monotonically when one abstains and a later one denies 2ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > composes global guards monotonically when one abstains and a later one denies 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > live-iterates a guard registered by an earlier guard 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -113,69 +113,69 @@
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > shares one token and materialized argument value across the pipeline 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > normalizes non-cloneable arguments and still publishes one scoped final outcome 3ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > normalizes non-cloneable arguments and still publishes one scoped final outcome 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > reads a stateful parent accessor once before policy, dispatch, and result observation 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > uses one input snapshot for the normalized error shell 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > normalizes a throwing arguments accessor without rereading it or losing the final notification 5ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > normalizes a throwing arguments accessor without rereading it or losing the final notification 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > rejects cloneable non-JSON arguments (Map) before policy or dispatch 3ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > rejects cloneable non-JSON arguments (Map) before policy or dispatch 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > rejects cloneable non-JSON arguments (class instance) before policy or dispatch 3ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > rejects cloneable non-JSON arguments (class instance) before policy or dispatch 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > reads nested arguments once into the executed snapshot 3ms
+ × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > reads nested arguments once into the executed snapshot 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/scoped.spec.ts > scoped execution dispatch > notifies every tools/result observer with the frozen final outcome and contains failures 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
 
  Test Files  1 failed (1)
       Tests  20 failed | 7 passed (27)
-   Start at  09:20:54
-   Duration  926ms (transform 501ms, setup 243ms, import 354ms, tests 123ms, environment 0ms)
+   Start at  11:04:15
+   Duration  967ms (transform 499ms, setup 281ms, import 317ms, tests 88ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'native' contributes every schema, no run_code, no SDK section — and needs no runtime 16ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'code' contributes exactly [run_code] plus the SDK section declaring the other tools 5ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'code' states the run_code-only rule BEFORE the per-tool guidance that names each tool 7ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'both' omits the run_code-only rule, because native calls do execute there 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > projects deeply nested output schemas into the Code Mode SDK without structured-clone recursion 101ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > treats expert assembly output as authoritative in mode code 5ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'native' contributes every schema, no run_code, no SDK section — and needs no runtime 21ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'code' contributes exactly [run_code] plus the SDK section declaring the other tools 8ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'code' states the run_code-only rule BEFORE the per-tool guidance that names each tool 4ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'both' omits the run_code-only rule, because native calls do execute there 10ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > projects deeply nested output schemas into the Code Mode SDK without structured-clone recursion 128ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > treats expert assembly output as authoritative in mode code 4ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > treats expert assembly output as authoritative in mode both 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > lets one scope shadow the default SDK section in mode code 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > lets one scope shadow the default SDK section in mode code 4ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > lets one scope shadow the default SDK section in mode both 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'both' contributes every native schema plus run_code, and the SDK section 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > mode 'both' contributes every native schema plus run_code, and the SDK section 4ms
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps the run_code transport outside scoped allow-list filtering in mode code 13ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps the run_code transport outside scoped allow-list filtering in mode both 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps the run_code transport outside scoped deny-list filtering in mode code 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps the run_code transport outside scoped deny-list filtering in mode both 4ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps the run_code transport outside scoped deny-list filtering in mode both 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > reserves run_code against scoped shadows and explicit restrictions in mode code 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > reserves run_code against scoped shadows and explicit restrictions in mode both 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps run_code in the toolOrder universe without exposing it as a restriction target in mode code 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps run_code in the toolOrder universe without exposing it as a restriction target in mode both 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > keeps run_code in the toolOrder universe without exposing it as a restriction target in mode both 7ms
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > never exposes run_code to programs, even under mode 'both' (no recursive dispatch path) 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > renders byte-identical SDK text across consecutive assemblies of an unchanged tool set 2ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > rejects every assembly when a non-native mode has no code runtime 10ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > rejects every assembly when the runtime language has no registered SDK renderer 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > assembles under a python runtime by picking the Python SDK renderer 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > assembles under a python runtime in mode 'both' as well, SDK and schema together 4ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > renders byte-identical SDK text across consecutive assemblies of an unchanged tool set 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > rejects every assembly when a non-native mode has no code runtime 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > rejects every assembly when the runtime language has no registered SDK renderer 2ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > assembles under a python runtime by picking the Python SDK renderer 5ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > assembles under a python runtime in mode 'both' as well, SDK and schema together 3ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > emits a TypeScript-flavored run_code schema under a typescript runtime 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > emits a Python-flavored run_code schema under a python runtime (matches the SDK language) 5ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > emits a Python-flavored run_code schema under a python runtime (matches the SDK language) 3ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > resolves the run_code schema flavor lazily and fails loud on a language absent from the flavor table 3ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > degrades the run_code flavor to TypeScript when no runtime is mounted 2ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > rejects the assembly when toolOrder names a native tool that mode 'code' no longer contributes 2ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > removes run_code and the SDK section when the registry fiber disposes (HMR safety) 4ms
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > overlaps concurrency-safe calls under Promise.all and logs a start event per dispatch 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > mode-aware wire contribution > removes run_code and the SDK section when the registry fiber disposes (HMR safety) 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > overlaps concurrency-safe calls under Promise.all and logs a start event per dispatch 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > an exclusive call bars overlap: safe calls drain first, it runs alone, later calls wait 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -187,15 +187,15 @@
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > an exclusive call holds its barrier through post-execute: the next start waits for the commit 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > run settlement drains a commit already in progress: the settle event is appended inside the turn 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > run settlement drains a commit already in progress: the settle event is appended inside the turn 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > post-execute and context commitment stay in submission order under out-of-order completion 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > post-execute and context commitment stay in submission order under out-of-order completion 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the sub-dispatch scheduler (native concurrency contract) > a queued-unstarted call abandoned by run settlement logs no start event 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > bridges tool calls, returns only the curated output, and logs one event per dispatch 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > bridges tool calls, returns only the curated output, and logs one event per dispatch 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > exposes only an opaque parent token to nested result observers 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > exposes only an opaque parent token to nested result observers 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > forwards a nested terminal conclusion onto the successful run_code result 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -226,14 +226,14 @@
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > CodeRunFailedError is a HarnessError with the CODE_RUN_FAILED code 0ms
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > aborting the outer signal aborts the in-flight sub-dispatch and abandons queued ones 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > a runtime that starts a binding call and then REJECTS still reaches quiescence before returning 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > a runtime that starts a binding call and then REJECTS still reaches quiescence before returning 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > runs without an owning agent: dispatches work, event logging is skipped 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > executing run_code under a missing runtime is a structured isError, not a crash 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > presents the model-authored description as the execute-card title over the program input 2ms
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > rejects a whitespace-only description with a structured isError 2ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > presents the model-authored description as the execute-card title over the program input 3ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > rejects a whitespace-only description with a structured isError 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > keeps logs only in durable content without a result presenter 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -245,7 +245,7 @@
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > keeps a post-policy spill preview in durable content without a result presenter 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > keeps canonical failure content durable without a result presenter 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > keeps canonical failure content durable without a result presenter 8ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > logs the complete sub-result content verbatim, non-text blocks and long text included 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -253,42 +253,42 @@
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > dispatches and durably logs binding arguments deeper than the structured-clone call stack 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > gives the tool and durable log the same immutable argument value 6ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > gives the tool and durable log the same immutable argument value 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > exposes a tool named __proto__ as an ordinary own binding 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > exposes a tool named __proto__ as an ordinary own binding 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > renders every non-string JSON root as pretty JSON while preserving strings raw 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > renders deeply nested JSON without recursive traversal or quadratic indentation 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > short-circuits a pre-aborted outer signal before the code runtime 2ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > short-circuits a pre-aborted outer signal before the code runtime 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > reports cancellation after rejecting a late binding without dispatching it 3ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > reports cancellation after rejecting a late binding without dispatching it 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > a tool/code-dispatch event never derives a model message 3ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > a tool/code-dispatch event never derives a model message 1ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > direct construction rejects a non-positive parallel sub-call cap at load 2ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > direct construction in code mode defaults the parallel sub-call cap 2ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > defaults to native mode under direct construction with no config 2ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > defaults to native mode under direct construction with no config 1ms
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > denies a model-direct native-tool call under code mode as UNKNOWN_TOOL 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > the run_code dispatch bridge > routes a pre-aborted collapsed call through ABORTED_BEFORE_DISPATCH 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > gives one agent Code Mode while the deployment stays native 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > inherits a STANDING preset scope's mode down the chain, agents beside it unaffected 4ms
+ × |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > inherits a STANDING preset scope's mode down the chain, agents beside it unaffected 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > keeps run_code out of a native agent's dispatch table 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > lets an agent opt out of a code-mode deployment 4ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > lets an agent opt out of a code-mode deployment 3ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > restores the deployment default when the agent unloads 3ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > refuses a second declaration for the same agent 6ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > refuses an unscoped declaration 2ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > refuses a second declaration for the same agent 5ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > refuses an unscoped declaration 3ms
  ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > reserves run_code even where no agent presents it 2ms
- ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > reports the missing runtime against the agent's own mode 5ms
+ ✓ |thread-safe| packages/core/tools/tests/code-mode.spec.ts > per-agent presentation > reports the missing runtime against the agent's own mode 3ms
 
  Test Files  1 failed (1)
       Tests  55 failed | 36 passed (91)
-   Start at  09:20:56
-   Duration  1.46s (transform 675ms, setup 373ms, import 441ms, tests 383ms, environment 0ms)
+   Start at  11:04:17
+   Duration  1.33s (transform 560ms, setup 267ms, import 411ms, tests 422ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -297,41 +297,41 @@
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  09:20:59
-   Duration  1.01s (transform 644ms, setup 258ms, import 523ms, tests 4ms, environment 0ms)
+   Start at  11:04:19
+   Duration  1.04s (transform 671ms, setup 389ms, import 415ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > registers tools, exposes schemas, and feeds the system-prompt assembly 27ms
- ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > schemas() drops host callbacks — they must never reach the model 5ms
+ ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > registers tools, exposes schemas, and feeds the system-prompt assembly 15ms
+ ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > schemas() drops host callbacks — they must never reach the model 3ms
  ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > schemas() excludes timeoutMs — the budget must never reach the model 3ms
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > executes a tool and returns its content 17ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > executes a tool and returns its content 12ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > projects presentation metadata from the canonical value 6ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > projects presentation metadata from the canonical value 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > omits meta when no presentation projector is declared 6ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > omits meta when no presentation projector is declared 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > normalizes a contract-violating non-cloneable result before final notification 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > normalizes a contract-violating non-cloneable result before final notification 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > finalizes errors discovered while snapshotting non-content result fields 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > finalizes errors discovered while snapshotting non-content result fields 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > normalizes a throwing final content callback without invoking it again 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > normalizes a throwing final content callback without invoking it again 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > requires every raw registration to declare its canonical output 4ms
+ ✓ |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > requires every raw registration to declare its canonical output 3ms
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > rejects lossy and schema-mismatched body values before post-execute 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > classifies a throwing body snapshot as invalid tool output 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.render projector as one failed call 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.render projector as one failed call 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.presentationMeta projector as one failed call 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.render snapshot as one failed call 2ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.render snapshot as one failed call 6ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.presentationMeta snapshot as one failed call 4ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a throwing output.presentationMeta snapshot as one failed call 3ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > keeps value/meta through content replacement and recomputes both projections after value replacement 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > keeps value/meta through content replacement and recomputes both projections after value replacement 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > fails a post-execute decision that replaces both projections or supplies an invalid value 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -343,15 +343,15 @@
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > derives a stable failure message from non-text or empty block feedback 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a non-JSON post-execute failure projection as a safe final error 6ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > contains a non-JSON post-execute failure projection as a safe final error 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > rejects value replacement on a failed dispatch 7ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > rejects value replacement on a failed dispatch 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > fails value replacement when the owning tool disappears before post-policy resolves 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > fails value replacement when the owning tool disappears before post-policy resolves 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > normalizes wrapper-authored failure metadata and contexts 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > normalizes wrapper-authored failure metadata and contexts 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > fails wrapper-authored success normalization when the owning tool disappears 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > fails wrapper-authored success normalization when the owning tool disappears 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > suppresses presentation metadata only for nested composite dispatches 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -366,22 +366,22 @@
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > an ask decision degrades to deny when no approval seam is mounted 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > an ask decision with no reason degrades to deny with a default message 6ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > an ask decision with no reason degrades to deny with a default message 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > dispatches the tool when the answerer grants allowed-once, forwarding the ask fields 5ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > dispatches the tool when the answerer grants allowed-once, forwarding the ask fields 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies with the user-rejection reason on rejected 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies with the user-rejection reason on rejected 10ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies with the cancellation reason on cancelled 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies with the cancellation reason on cancelled 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > returns ABORTED_BEFORE_DISPATCH when caller cancellation overtakes approval 5009ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > returns ABORTED_BEFORE_DISPATCH when caller cancellation overtakes approval 5005ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies with the no-channel reason when the seam is mounted but nobody answers 6ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies with the no-channel reason when the seam is mounted but nobody answers 8ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > denies an agent-less execution without asking — nothing to route or audit through 4ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > turns a rogue outcome from a NON-conforming approval stand-in into an isError result 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > ask routing through ctx.approval > turns a rogue outcome from a NON-conforming approval stand-in into an isError result 2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > a tools/post-execute listener can replace the result content (accept)  2ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
@@ -406,30 +406,30 @@ If this is a long-running test, pass a timeout value as the last argument or con
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > skips dispatch when caller cancellation arrives while pre-execute awaits 5002ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves a pre-execute denial that settles after cancellation 5004ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves a pre-execute denial that settles after cancellation 5009ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves an async pre-execute failure that settles after cancellation 5003ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves an async pre-execute failure that settles after cancellation 5007ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > rechecks caller cancellation after an async around-dispatch wrapper delegates 5003ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > rechecks caller cancellation after an async around-dispatch wrapper delegates 5005ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > skips dispatch when an around wrapper supplies an already-aborted signal 3ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > skips dispatch when an around wrapper supplies an already-aborted signal 5ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > uses ABORTED_BEFORE_DISPATCH when cancellation overtakes a wrapper short-circuit 5001ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > uses ABORTED_BEFORE_DISPATCH when cancellation overtakes a wrapper short-circuit 5002ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > replaces a late wrapper success with ABORTED and preserves deferred contexts 5004ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > replaces a late wrapper success with ABORTED and preserves deferred contexts 5003ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > replaces a late post-execute success with ABORTED and preserves contexts 5005ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves an around-dispatch failure that settles after cancellation 5003ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves an around-dispatch failure that settles after cancellation 5001ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
- × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves a tool-owned failure after the body observes cancellation 5003ms
+ × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves a tool-owned failure after the body observes cancellation 5002ms
    → Test timed out in 5000ms.
 If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
  × |thread-safe| packages/core/tools/tests/tools.spec.ts > ToolRuntime > preserves a post-policy failure that settles after cancellation 5002ms
@@ -438,26 +438,26 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > returns parallel only for an explicit true classifier 15ms
+ ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > returns parallel only for an explicit true classifier 13ms
  ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > defaults to exclusive for a tool with no isConcurrencySafe declaration 2ms
  ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > returns exclusive for an unknown tool 2ms
  ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > returns exclusive when the classifier returns false for these args 2ms
- ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > classifies invalid defineContentToolFixture arguments as exclusive without throwing 2ms
- ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > treats a throwing raw classifier as exclusive 5ms
- ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > treats a truthy non-boolean raw result as exclusive 2ms
- ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > passes parsed arguments directly to a raw definition 2ms
+ ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > classifies invalid defineContentToolFixture arguments as exclusive without throwing 5ms
+ ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > treats a throwing raw classifier as exclusive 2ms
+ ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > treats a truthy non-boolean raw result as exclusive 1ms
+ ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > passes parsed arguments directly to a raw definition 1ms
  ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > isConcurrencySafe never reaches the model-facing schemas() projection 2ms
  ✓ |thread-safe| packages/core/tools/tests/execution-mode.spec.ts > ToolRuntime.executionMode > ToolExecutionMode is the object-tagged union 0ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:22:01
-   Duration  978ms (transform 570ms, setup 357ms, import 322ms, tests 35ms, environment 0ms)
+   Start at  11:05:22
+   Duration  699ms (transform 405ms, setup 224ms, import 259ms, tests 33ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > jsonSchemaToPy > maps the defineTool DSL subset 3ms
+ ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > jsonSchemaToPy > maps the defineTool DSL subset 2ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > jsonSchemaToPy > is total: unsupported or hostile constructs degrade to Any, never throw 2ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > jsonSchemaToPy > leans on JSON.stringify to keep a Literal parseable 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > jsonSchemaToPy > passes NEL and the line/paragraph separators through raw, which CPython does not treat as line terminators 0ms
@@ -468,11 +468,11 @@ If this is a long-running test, pass a timeout value as the last argument or con
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > prefixes Tool when a name CamelCases to a non-letter head, and degrades a malformed schema to Any 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > treats every field as optional when the object carries no required array 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders an enum inside an object property as a Literal field 0ms
- ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders one level of nested object as its own named TypedDict declared before the parent 1ms
+ ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders one level of nested object as its own named TypedDict declared before the parent 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders a oneOf of object branches as a union of named TypedDicts declared before the parent 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > degrades a context-free oneOf of object branches to a union of dict[str, Any] 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > suffixes a counter when two tools CamelCase to the same class base 0ms
- ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > caps class-name length so a deep single-field chain stays linear 70ms
+ ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > caps class-name length so a deep single-field chain stays linear 44ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > skips an already-taken counter suffix when a sibling object occupies it 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > references the named TypedDict from a reserved/subscript tool too 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > degrades an object to dict[str, Any] when a field name is not a legal Python attribute 0ms
@@ -496,11 +496,11 @@ If this is a long-running test, pass a timeout value as the last argument or con
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders a pass body and a minimal import for an empty tool set 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > omits the docstring/comment when a schema has no description 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > marks an open object TypedDict and declares a closed empty object 0ms
- ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders a deeply nested array schema without exhausting the call stack, capped at CPython's bracket limit 35ms
+ ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders a deeply nested array schema without exhausting the call stack, capped at CPython's bracket limit 26ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > keeps a chain just under the nesting cap exact, and restarts nesting per TypedDict field 1ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > caps the argument annotation, the site whose enclosing paren stays open 2ms
- ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders a deeply nested oneOf chain in linear time (no per-level re-materialization) 599ms
- ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > names a deep oneOf-of-object chain in linear time (bounded propagated class names) 587ms
+ ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > renders a deeply nested oneOf chain in linear time (no per-level re-materialization) 511ms
+ ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > names a deep oneOf-of-object chain in linear time (bounded propagated class names) 519ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > caps the class name for a tool whose name exceeds the base length limit 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > emits pass for a subscript-only tool set (comments are not statements) 0ms
  ✓ |thread-safe| packages/core/tools/tests/py-types.spec.ts > renderToolsSdkPy > degrades an object whose field would be name-mangled (__token) to dict[str, Any] 0ms
@@ -513,58 +513,58 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 passed (1)
       Tests  53 passed (53)
-   Start at  09:22:03
-   Duration  2.19s (transform 545ms, setup 303ms, import 353ms, tests 1.32s, environment 0ms)
+   Start at  11:05:23
+   Duration  1.78s (transform 397ms, setup 211ms, import 271ms, tests 1.12s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > accepts dispatch and denial stage orders with frozen results 7ms
- ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects repeated and out-of-order pipeline stages 4ms
+ ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects repeated and out-of-order pipeline stages 3ms
  ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects mutable or anonymous final snapshots 2ms
  ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > requires code-dispatch records to be turn-enclosed 3ms
- ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > does not commit a rejected dispatch edge into the root index 2ms
- ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects a nested code dispatch that changes its parent chain root before append 3ms
+ ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > does not commit a rejected dispatch edge into the root index 3ms
+ ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects a nested code dispatch that changes its parent chain root before append 2ms
  ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > requires non-empty dispatch identities and keeps one subcall on one root 2ms
  ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > indexes dispatch records emitted for a bare session 2ms
  ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > replays enclosed code-dispatch records on late registration 2ms
- ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects an unenclosed code-dispatch record on late registration 17ms
+ ✓ |thread-safe| packages/core/tools/tests/invariant.spec.ts > tool-pipeline invariants > rejects an unenclosed code-dispatch record on late registration 10ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:22:07
-   Duration  854ms (transform 489ms, setup 369ms, import 207ms, tests 45ms, environment 0ms)
+   Start at  11:05:26
+   Duration  562ms (transform 291ms, setup 210ms, import 135ms, tests 37ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > JSON Schema `required` equals the required:true keys at every level 26ms
- ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > conversion is total (never throws) for any spec 15ms
- ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > validateArgs is total (never throws) for any spec and any input 21ms
- ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > the property-testing ↔ runtime-validation composition: args satisfying the spec pass validateArgs 17ms
- ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > the property-testing ↔ runtime-validation composition: dropping a required key is always rejected 17ms
- ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > the property-testing ↔ runtime-validation composition: a non-object top level is always rejected 15ms
+ ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > JSON Schema `required` equals the required:true keys at every level 25ms
+ ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > conversion is total (never throws) for any spec 12ms
+ ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > validateArgs is total (never throws) for any spec and any input 17ms
+ ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > the property-testing ↔ runtime-validation composition: args satisfying the spec pass validateArgs 19ms
+ ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > the property-testing ↔ runtime-validation composition: dropping a required key is always rejected 16ms
+ ✓ |thread-safe| packages/core/tools/tests/properties.spec.ts > schema DSL properties > the property-testing ↔ runtime-validation composition: a non-object top level is always rejected 10ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:22:09
-   Duration  1.03s (transform 543ms, setup 306ms, import 372ms, tests 113ms, environment 0ms)
+   Start at  11:05:28
+   Duration  952ms (transform 525ms, setup 227ms, import 442ms, tests 101ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > accepts every JSON root and every supported node 7ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > retains an object-root guard only at consumers that need it 2ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > accepts every JSON root and every supported node 3ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > retains an object-root guard only at consumers that need it 1ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > rejects non-schema nodes, unknown types, and type arrays 1ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > enforces oneOf vocabulary and its minimum branch count 2ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > rejects unknown and misplaced keywords without accepted-then-ignored behavior 1ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > enforces oneOf vocabulary and its minimum branch count 1ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > rejects unknown and misplaced keywords without accepted-then-ignored behavior 0ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > reports every independent schema violation 1ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > validates object properties, required names, and openness 1ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > validates object properties, required names, and openness 0ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > requires type-correct scalar enum and const values 1ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > validates annotation types and lossless JSON payloads 2ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > accepts lossless annotation containers from another JavaScript realm 3ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > rejects cyclic/exotic schema structure but permits sibling reuse 2ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > asserts deeply nested raw unions without using the JavaScript call stack 43ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > validates annotation types and lossless JSON payloads 1ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > accepts lossless annotation containers from another JavaScript realm 2ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > rejects cyclic/exotic schema structure but permits sibling reuse 1ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > asserts deeply nested raw unions without using the JavaScript call stack 31ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > the enforced raw JSON Schema subset > uses own-property semantics for required declarations 0ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > validates scalar, array, object, and null roots 1ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > rejects wrong scalar types and lossy numbers 0ms
@@ -574,42 +574,42 @@ If this is a long-running test, pass a timeout value as the last argument or con
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > returns a violation instead of throwing for a container with a hostile getter 0ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > validates dense arrays per index and rejects lossy arrays 1ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > validates exact-one oneOf semantics, including overlap 0ms
- ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > validates deeply nested exact-one unions without using the JavaScript call stack 46ms
+ ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > validates deeply nested exact-one unions without using the JavaScript call stack 34ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > an unconstrained schema accepts only lossless JSON values 1ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > uses own properties for requiredness, recursion, and closed-object checks 0ms
  ✓ |thread-safe| packages/core/tools/tests/json-schema.spec.ts > validateJsonSchemaValue > keeps assertNever as a forged-schema backstop 0ms
 
  Test Files  1 passed (1)
       Tests  25 passed (25)
-   Start at  09:22:11
-   Duration  1.04s (transform 571ms, setup 295ms, import 411ms, tests 119ms, environment 0ms)
+   Start at  11:05:30
+   Duration  784ms (transform 434ms, setup 265ms, import 258ms, tests 82ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > maps every unified schema construct 4ms
+ ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > maps every unified schema construct 5ms
  ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > renders objects with required/optional keys, nested shapes, and per-property docs 1ms
  ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > is total: unsupported or hostile constructs degrade to unknown, never throw 2ms
  ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > escapes a comment-closer inside a description so the generated JSDoc cannot end early 0ms
- ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > renders deeply nested unions without using the JavaScript call stack 51ms
+ ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > jsonSchemaToTs > renders deeply nested unions without using the JavaScript call stack 40ms
  ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > renderToolsSdk > declares every tool in lexicographic order with quoted keys for exotic names 1ms
  ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > renderToolsSdk > names both required call arguments, not just the program 0ms
- ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > renderToolsSdk > is deterministic: same tool set, byte-identical text regardless of input order 1ms
+ ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > renderToolsSdk > is deterministic: same tool set, byte-identical text regardless of input order 0ms
  ✓ |thread-safe| packages/core/tools/tests/ts-types.spec.ts > renderToolsSdk > renders an empty declaration for an empty tool set 0ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  09:22:13
-   Duration  1.00s (transform 606ms, setup 301ms, import 424ms, tests 62ms, environment 0ms)
+   Start at  11:05:32
+   Duration  750ms (transform 425ms, setup 238ms, import 272ms, tests 50ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > boots every shipped tool package and harvests its model-facing schemas 160ms
- ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > resolves a runtime-spread enum to its literal members (the payoff over AST) 119ms
- ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > attributes each harvested tool with its registering plugin source 123ms
- ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > harvests search tools without depending on the generator process PATH 126ms
- ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > records the shipped `subagent_fork` alias in a note (config-driven tool name) 94ms
+ ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > boots every shipped tool package and harvests its model-facing schemas 163ms
+ ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > resolves a runtime-spread enum to its literal members (the payoff over AST) 97ms
+ ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > attributes each harvested tool with its registering plugin source 110ms
+ ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > harvests search tools without depending on the generator process PATH 111ms
+ ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog collectToolCatalog > records the shipped `subagent_fork` alias in a note (config-driven tool name) 91ms
  ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog assertManifestComplete > passes when the manifest lists every on-disk tool package (the default) 4ms
  ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog assertManifestComplete > throws, naming the omitted package, when a tool package is missing from the manifest 7ms
  ✓ |thread-safe| packages/core/tools/tests/gen-tool-catalog.spec.ts > gen-tool-catalog assertToolsHarvested > accepts a boot that registered at least one tool 0ms
@@ -618,5 +618,6 @@ If this is a long-running test, pass a timeout value as the last argument or con
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:22:15
-   Duration  3.77s (transform 2.26s, setup 268ms, import 2.66s, tests 637ms, environment 0ms)
+   Start at  11:05:33
+   Duration  3.14s (transform 1.82s, setup 211ms, import 2.16s, tests 585ms, environment 0ms)
+

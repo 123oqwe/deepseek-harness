@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-01",
   "title": "锁定可复现审计基线与仓库指纹",
-  "audit_date": "2026-08-23T00:38:15.399Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T02:13:55.470Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "docs/audit/baseline-b150a551.md",
     "scripts/release/baseline-fingerprint.mjs",

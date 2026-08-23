@@ -1,8 +1,8 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"npx vitest run packages/execution/local-isolation/tests/process-isolation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/local.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/acl-grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"npx vitest run packages/execution/execution-world/tests/world.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
-{"command":"npx vitest run packages/execution/execution-world/tests/denial.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:06:21.830Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"npx vitest run packages/execution/local-isolation/tests/process-isolation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/local.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/acl-grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"npx vitest run packages/execution/execution-world/tests/world.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}
+{"command":"npx vitest run packages/execution/execution-world/tests/denial.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:53:21.128Z"}

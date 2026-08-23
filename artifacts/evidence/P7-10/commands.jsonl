@@ -1,11 +1,11 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/evaluation/evolution-proposal/tests/evolution.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/session/session-telemetry/tests/telemetry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/session/session-telemetry/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/composition.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/versioning.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:57:54.038Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/runner.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:57:54.038Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/evaluation/evolution-proposal/tests/evolution.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/session/session-telemetry/tests/telemetry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/session/session-telemetry/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/extensions/tool-cordis/tests/cordis-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/composition.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/versioning.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:41:43.721Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/runner.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:41:43.721Z"}

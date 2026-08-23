@@ -1,3 +1,3 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T00:41:47.837Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T00:41:47.837Z"}
-{"command":"npx vitest run packages/plugin/plugin-installer/tests/quarantine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:41:47.837Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T02:18:14.491Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T02:18:14.491Z"}
+{"command":"npx vitest run packages/plugin/plugin-installer/tests/quarantine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:18:14.491Z"}

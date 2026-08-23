@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-03",
   "title": "一等公民 ActionManifest",
-  "audit_date": "2026-08-23T00:50:31.057Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T02:35:02.695Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/action/action-manifest/src/index.ts",
     "packages/action/action-manifest/src/types.ts",

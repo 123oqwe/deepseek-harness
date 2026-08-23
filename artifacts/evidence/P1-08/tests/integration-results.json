@@ -1,7 +1,7 @@
 {
   "total": 11,
-  "passed": 8,
-  "failed": 3,
+  "passed": 7,
+  "failed": 4,
   "test_files": [
     "packages/plugin/plugin-compat/tests/solver.spec.ts",
     "packages/boot/app-boot/tests/config-dump.spec.ts",

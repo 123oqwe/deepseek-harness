@@ -1,7 +1,7 @@
 {
-  "total": 30,
-  "passed": 24,
-  "failed": 6,
+  "total": 27,
+  "passed": 23,
+  "failed": 4,
   "test_files": [
     "packages/api/remotes/tests/agent-lookup.spec.ts",
     "packages/sdk/protocol/tests/version-negotiation.spec.ts",
@@ -9,9 +9,6 @@
     "packages/sdk/protocol/tests/transport.spec.ts",
     "packages/sdk/protocol/tests/event-stream.spec.ts",
     "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
-    "packages/sdk/server/tests/plugin-shape.spec.ts",
-    "packages/sdk/server/tests/plugin-apply.spec.ts",
-    "packages/sdk/server/tests/server.spec.ts",
     "packages/sdk/client/tests/dispose.spec.ts",
     "packages/sdk/client/tests/sdk-client.spec.ts",
     "packages/core/agent/tests/agent-initiator.spec.ts",

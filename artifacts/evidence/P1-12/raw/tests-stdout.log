@@ -1,10 +1,10 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L0-unknown for no checks 1ms
- ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L1-inspected for manifest + scan 0ms
+ ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L0-unknown for no checks 9ms
+ ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L1-inspected for manifest + scan 3ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L2-signed for full passed with signature+sbom 0ms
- ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L3-verified with dynamic test 0ms
+ ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L3-verified with dynamic test 2ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L4-production with org allowlist + audit 0ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L1-inspected when scan fails but manifest passes 0ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > creates report with binding digest 1ms
@@ -14,26 +14,27 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  08:46:11
-   Duration  447ms (transform 207ms, setup 231ms, import 22ms, tests 5ms, environment 0ms)
+   Start at  10:25:15
+   Duration  1.08s (transform 553ms, setup 613ms, import 68ms, tests 23ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 27ms
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 6ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 65ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 17ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  08:46:12
-   Duration  566ms (transform 309ms, setup 230ms, import 122ms, tests 34ms, environment 0ms)
+   Start at  10:25:18
+   Duration  1.13s (transform 657ms, setup 461ms, import 290ms, tests 83ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 7ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 11ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  08:46:14
-   Duration  430ms (transform 200ms, setup 229ms, import 10ms, tests 8ms, environment 0ms)
+   Start at  10:25:21
+   Duration  595ms (transform 304ms, setup 341ms, import 19ms, tests 13ms, environment 0ms)
+

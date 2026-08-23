@@ -1,7 +1,7 @@
 {
-  "total": 31,
-  "passed": 10,
-  "failed": 21,
+  "total": 25,
+  "passed": 6,
+  "failed": 19,
   "test_files": [
     "packages/assurance/repair/tests/repair.spec.ts",
     "packages/llm/llm-retry/tests/transport-recovery.spec.ts",
@@ -27,12 +27,6 @@
     "packages/core/agent-loop/tests/cancel.spec.ts",
     "packages/core/agent-loop/tests/tool-order.spec.ts",
     "packages/core/agent-loop/tests/invariant.spec.ts",
-    "packages/core/agent-loop/tests/properties.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
+    "packages/core/agent-loop/tests/properties.spec.ts"
   ]
 }

@@ -13,8 +13,8 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  09:07:25
-   Duration  457ms (transform 211ms, setup 234ms, import 23ms, tests 4ms, environment 0ms)
+   Start at  10:54:34
+   Duration  426ms (transform 197ms, setup 217ms, import 23ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -27,8 +27,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  09:07:27
-   Duration  420ms (transform 192ms, setup 213ms, import 23ms, tests 5ms, environment 0ms)
+   Start at  10:54:36
+   Duration  559ms (transform 207ms, setup 230ms, import 22ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -42,5 +42,6 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:07:28
-   Duration  419ms (transform 201ms, setup 224ms, import 15ms, tests 4ms, environment 0ms)
+   Start at  10:54:37
+   Duration  417ms (transform 190ms, setup 215ms, import 11ms, tests 4ms, environment 0ms)
+

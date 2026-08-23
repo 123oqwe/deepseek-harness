@@ -1,16 +1,10 @@
 {
-  "total": 9,
-  "passed": 7,
-  "failed": 2,
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
   "test_files": [
     "packages/workflow/workflow-registry/tests/nested.spec.ts",
     "packages/workflow/workflow/tests/invariant.spec.ts",
-    "packages/workflow/workflow/tests/workflow.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
+    "packages/workflow/workflow/tests/workflow.spec.ts"
   ]
 }

@@ -2,7 +2,7 @@
   "issue_id": "P5-12",
   "title": "多 Agent 协调安全、Worktree 隔离与 Router Regret 评测",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,21 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "18/24 passed"
+    "tests": "14/18 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T01:37:20.379Z",
+  "evidence_date": "2026-08-23T03:18:04.145Z",
   "runtime_reachability": {
     "issue_id": "P5-12",
     "source_files": 8,
-    "test_files": 24,
+    "test_files": 18,
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-23T01:37:20.379Z"
+    "timestamp": "2026-08-23T03:18:04.145Z"
   },
   "remaining_risks": [
-    "6 test(s) failing",
+    "4 test(s) failing",
     "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

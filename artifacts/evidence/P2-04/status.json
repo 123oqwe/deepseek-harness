@@ -2,7 +2,7 @@
   "issue_id": "P2-04",
   "title": "通用副作用与风险分类体系",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "15/18 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T00:53:00.244Z",
+  "evidence_date": "2026-08-23T02:38:49.227Z",
   "runtime_reachability": {
     "issue_id": "P2-04",
     "source_files": 6,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-23T00:53:00.244Z"
+    "timestamp": "2026-08-23T02:38:49.227Z"
   },
   "remaining_risks": [
     "3 test(s) failing",

@@ -14,29 +14,29 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:58:46
-   Duration  434ms (transform 208ms, setup 230ms, import 16ms, tests 6ms, environment 0ms)
+   Start at  11:42:36
+   Duration  458ms (transform 215ms, setup 243ms, import 15ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > maps an inspected session without a cwd to session-not-found 15ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > maps an inspected session without a cwd to session-not-found 14ms
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > resumes through a concurrently attached ordinary Session without optional defaults 6ms
  ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > rejects a subagent Session published after durable inspection 4ms
- ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > reclassifies failed resumes after a live or attached subagent wins publication 8ms
- ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > uses the shared cold-resume policy for the Agent Host Context 57ms
- ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > applies the subagent ownership fence to the Agent Host Context 55ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > reclassifies failed resumes after a live or attached subagent wins publication 7ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > uses the shared cold-resume policy for the Agent Host Context 56ms
+ ✓ |thread-safe| packages/api/remotes/tests/agent-lookup.spec.ts > API Remote Agent resolver races > applies the subagent ownership fence to the Agent Host Context 56ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:58:47
-   Duration  849ms (transform 405ms, setup 253ms, import 246ms, tests 146ms, environment 0ms)
+   Start at  11:42:38
+   Duration  842ms (transform 398ms, setup 224ms, import 276ms, tests 144ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates exact version match 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > fails on major version mismatch 0ms
@@ -48,13 +48,13 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:58:49
-   Duration  411ms (transform 191ms, setup 214ms, import 13ms, tests 4ms, environment 0ms)
+   Start at  11:42:39
+   Duration  628ms (transform 322ms, setup 351ms, import 24ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 16ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 15ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 0ms
@@ -63,8 +63,8 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 13ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 13ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 11ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 0ms
@@ -72,12 +72,12 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error write failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > uses a fallback message for malformed JSON-RPC error responses 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 11ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  09:58:51
-   Duration  526ms (transform 214ms, setup 223ms, import 37ms, tests 74ms, environment 0ms)
+   Start at  11:42:41
+   Duration  647ms (transform 292ms, setup 296ms, import 52ms, tests 69ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -95,8 +95,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:58:52
-   Duration  434ms (transform 208ms, setup 236ms, import 13ms, tests 6ms, environment 0ms)
+   Start at  11:42:43
+   Duration  422ms (transform 201ms, setup 225ms, import 12ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -108,151 +108,84 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > rejects invalid state transitions 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > rejects stale revision 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > duplicate commandId is idempotent 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork creates new run without inheriting secrets 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork creates new run without inheriting secrets 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork lineage is tracked 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > validateTransition checks rules 0ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:58:54
-   Duration  486ms (transform 247ms, setup 251ms, import 48ms, tests 6ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/sdk/server/tests/plugin-shape.spec.ts > dsh-sdk-jsonrpc-server plugin export shape > has the namespace-plugin export shape (no stray default) so the Loader keeps name/inject/Config/apply 2ms
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  09:58:55
-   Duration  779ms (transform 480ms, setup 221ms, import 363ms, tests 3ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > serves initialize over the injected stdio pair 92ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > does not answer initialize until async sibling Loader entries settle 97ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > drives a session/prompt turn end-to-end and forwards session notifications as output frames 296ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > answers shutdown before exiting 0 exactly once, even against a racing second shutdown 157ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > still disposes and exits once when the flush callback fails 124ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > stops serving on a bare fiber dispose (HMR-style unload) without calling exit 100ms
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-     Errors  1 error
-   Start at  09:58:57
-   Duration  2.47s (transform 1.12s, setup 220ms, import 1.20s, tests 868ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > creates a harness agent and calls the configured OpenAI-compatible endpoint 341ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > queues overlapping prompts for one session without blocking other sessions 1ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects a prompt for a session whose agent was disposed outside the server 1ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > forwards whole-agent status without attributing a turn outcome 3ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > notifies the host when a child session is created with parent lineage 81ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > creates an SDK session without an optional system prompt 158ms
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > notifies the host when a subagent run settles 75ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > ignores a remote run id that collides with a local child of the same parent 69ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > retains locality across continuation runs on one live child 68ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > correlates reused local ids by parent scope when runs settle out of order 68ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > keeps locality bound to the accepted run across provider re-registration 69ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > uses the recorded local flag when start was missed and ignores remote runs 68ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > does not re-register an LLM adapter whose provider already has an owner 68ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects a missing non-DeepSeek provider when an LLM service already exists 68ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens 0 at the wire boundary 69ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens -1 at the wire boundary 71ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens 1.5 at the wire boundary 67ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens NaN at the wire boundary 82ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens 9007199254740992 at the wire boundary 66ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > reports no adapter when the LLM service is absent 1ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects unknown JSON-RPC runtime methods 66ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > coalesces concurrent session creation and retries a failed creation 2ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > resolves a relative cwd before creating the session 2ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > settles every teardown and aggregates multiple failures 0ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > continues teardown after a subscription disposer fails 0ms
-
- Test Files  1 failed (1)
-      Tests  6 failed | 19 passed (25)
-     Errors  4 errors
-   Start at  09:59:01
-   Duration  3.55s (transform 1.43s, setup 221ms, import 1.58s, tests 1.57s, environment 0ms)
+   Start at  11:42:44
+   Duration  464ms (transform 227ms, setup 228ms, import 48ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > returns immediately for an already-exited child (no EOF, no signals) 2ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > returns immediately for a child already dead by signal 0ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 1: a cooperative child quiesces on stdin EOF — no signal is ever sent 7ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 1: a cooperative child quiesces on stdin EOF — no signal is ever sent 6ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child that exits synchronously on stdin EOF 0ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 2: a child that ignores EOF but honors SIGTERM dies on the middle rung 29ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child that exits synchronously on SIGTERM 22ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 2: a child that ignores EOF but honors SIGTERM dies on the middle rung 27ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child that exits synchronously on SIGTERM 21ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 3: a SIGTERM-trapping child is SIGKILLed, and dispose resolves only after the exit 48ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child already gone when the final exit wait begins 43ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > accepts a late OS exitCode marker before the final forced wait 15ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > accepts a late OS signalCode marker before the final forced wait 13ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > walks the ladder for a child spawned without a stdin pipe 28ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > skips the redundant SIGTERM tier on Windows and awaits forced exit 28ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child already gone when the final exit wait begins 42ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > accepts a late OS exitCode marker before the final forced wait 14ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > accepts a late OS signalCode marker before the final forced wait 12ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > walks the ladder for a child spawned without a stdin pipe 27ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > skips the redundant SIGTERM tier on Windows and awaits forced exit 27ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > propagates a forced-termination error without waiting for the grace 2ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > wraps a synchronous forced-termination exception and removes its listeners 1ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds a refused forced termination that produces no error or exit 14ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds an accepted forced termination that never reports exit 14ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > wraps a synchronous forced-termination exception and removes its listeners 2ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds a refused forced termination that produces no error or exit 13ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds an accepted forced termination that never reports exit 13ms
 
  Test Files  1 passed (1)
       Tests  16 passed (16)
-   Start at  09:59:05
-   Duration  722ms (transform 212ms, setup 235ms, import 16ms, tests 267ms, environment 0ms)
+   Start at  11:42:46
+   Duration  668ms (transform 198ms, setup 217ms, import 15ms, tests 259ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > ignores notifications that precede the submitted message receipt 2ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > runs a turn end to end and reuses the runtime across sessions 209ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > keeps events root-scoped while streaming notifications for the session tree 171ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > sends the configured cwd/provider/model/maxTokens in the handshake exactly once 177ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > resolves a relative launch cwd to an absolute workspace before the handshake 195ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > propagates a JSON-RPC error response from initialize and closes the runtime 365ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > retries a failed handshake with a fresh runtime process 385ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > rejects a malformed initialize result as a protocol error 168ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > supports await using disposal 187ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > times out a hung request at the per-call bound 373ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > a timed-out request leaves no pending transport state 349ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > applies the client-wide request timeout when no per-call bound is given 407ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > rejects a malformed prompt acceptance as a protocol error 197ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails pending requests with exit code and stderr tail when the runtime dies 177ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > flushes an unterminated stderr line into the tail at close 196ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails fast when the command does not exist 208ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() is idempotent, reaps the child, and fails later use 186ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates through SIGTERM when the runtime ignores EOF 294ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates to SIGKILL when the runtime traps SIGTERM too 597ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > delivers notifications to unfiltered and filtered subscriptions in wire order 182ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > contains a throwing filter to its own subscription 170ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() drops queued notifications; runtime death keeps them drainable 192ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > subscriptions created after termination are born failed 356ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > closes subscriptions with the runtime and rejects parked waiters 205ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > scopes the session tree across multi-hop lineage and ignores foreign sessions 201ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects a non-object session.event envelope as a protocol error 178ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a content array as a protocol error 170ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a data member as a protocol error 191ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > stderr tail bound > keeps only the newest lines up to the limit 196ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > runs a turn end to end and reuses the runtime across sessions 175ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > keeps events root-scoped while streaming notifications for the session tree 191ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > sends the configured cwd/provider/model/maxTokens in the handshake exactly once 193ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > resolves a relative launch cwd to an absolute workspace before the handshake 174ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > propagates a JSON-RPC error response from initialize and closes the runtime 360ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > retries a failed handshake with a fresh runtime process 344ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > rejects a malformed initialize result as a protocol error 199ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > supports await using disposal 198ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > times out a hung request at the per-call bound 399ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > a timed-out request leaves no pending transport state 346ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > applies the client-wide request timeout when no per-call bound is given 408ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > rejects a malformed prompt acceptance as a protocol error 203ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails pending requests with exit code and stderr tail when the runtime dies 182ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > flushes an unterminated stderr line into the tail at close 188ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails fast when the command does not exist 205ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() is idempotent, reaps the child, and fails later use 196ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates through SIGTERM when the runtime ignores EOF 282ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates to SIGKILL when the runtime traps SIGTERM too 602ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > delivers notifications to unfiltered and filtered subscriptions in wire order 181ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > contains a throwing filter to its own subscription 221ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() drops queued notifications; runtime death keeps them drainable 198ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > subscriptions created after termination are born failed 395ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > closes subscriptions with the runtime and rejects parked waiters 197ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > scopes the session tree across multi-hop lineage and ignores foreign sessions 184ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects a non-object session.event envelope as a protocol error 246ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a content array as a protocol error 231ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a data member as a protocol error 287ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > stderr tail bound > keeps only the newest lines up to the limit 393ms
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > pure helpers > normalizeInput wraps strings and passes blocks through 0ms
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > pure helpers > finalResponse reads the last assistant message and tolerates absence 0ms
 
  Test Files  1 passed (1)
       Tests  31 passed (31)
-   Start at  09:59:07
-   Duration  7.36s (transform 234ms, setup 211ms, import 75ms, tests 6.89s, environment 0ms)
+   Start at  11:42:48
+   Duration  7.86s (transform 246ms, setup 223ms, import 77ms, tests 7.38s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > RpcId > brands a raw string at zero runtime cost 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > RpcId > brands a raw string at zero runtime cost 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > transportError > folds Error and non-Error throws into the internal error branch 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcErrorSchema > accepts every code branch with its required details 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcErrorSchema > rejects a known code with missing details 1ms
@@ -260,11 +193,11 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > wire full-form schemas > parses the four quadrants and the union discriminates on type 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > wire full-form schemas > rejects a quadrant missing its members but accepts a valueless success result 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > rpcReceiptSchema > accepts both receipt branches with the closed reason set 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > sessions domain schemas > validates ids, summaries, and the event passthrough envelope 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > sessions domain schemas > validates the per-method request/value pairs 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > subagent domain schemas > carries optional request-local browser-zone provenance on prompts 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > sessions domain schemas > validates ids, summaries, and the event passthrough envelope 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > sessions domain schemas > validates the per-method request/value pairs 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > subagent domain schemas > carries optional request-local browser-zone provenance on prompts 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > host domain schemas > validates describe request/value 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > host domain schemas > validates the browse listing/creation payloads 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > host domain schemas > validates the browse listing/creation payloads 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > validates ids, the view row, and list request/value 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > archiveSession request/value carry the id and the full updated set 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > insertSessionBefore accepts an anchored and an anchorless move 0ms
@@ -273,8 +206,8 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > validates workspace deletion payload and receipt 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > workspace domain schemas > insertBefore accepts an anchored or anchorless Workspace move and returns the complete order 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > skills domain schemas > validates the list request/value pair 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > goals domain schemas > requires at least one replacement field for goal.edit 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > accepts every mux frame branch 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > goals domain schemas > requires at least one replacement field for goal.edit 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > accepts every mux frame branch 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > rejects an empty question batch (ask() guarantees at least one, so an empty frame is host breakage) 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > carries a question presentation intent through, and rejects an unknown one 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/rpc-schemas.spec.ts > events frame schemas > accepts every queue placement and rejects unknown placements 0ms
@@ -287,39 +220,39 @@
 
  Test Files  1 passed (1)
       Tests  32 passed (32)
-   Start at  09:59:16
-   Duration  655ms (transform 303ms, setup 247ms, import 180ms, tests 40ms, environment 0ms)
+   Start at  11:42:57
+   Duration  677ms (transform 320ms, setup 280ms, import 149ms, tests 36ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > returns a selected path or explicit cancellation from the native capability 22ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > propagates abort into the native capability as a cancelled RPC error 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > folds a non-abort native-chooser failure into an internal error 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > refuses the native RPC under a browse composition 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > serves listings and creation through the browse capability, defaulting to home 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > maps typed picker failures onto the wire error codes and folds unknown throws to internal 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > reports an aborted listing as cancelled, like the other signal-following RPCs 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > returns a selected path or explicit cancellation from the native capability 27ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > propagates abort into the native capability as a cancelled RPC error 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > folds a non-abort native-chooser failure into an internal error 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.pickDirectory > refuses the native RPC under a browse composition 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > serves listings and creation through the browse capability, defaulting to home 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > maps typed picker failures onto the wire error codes and folds unknown throws to internal 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > reports an aborted listing as cancelled, like the other signal-following RPCs 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.listDirectory / host.createDirectory > refuses the browse RPCs under a native composition 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.openPath > describes whether this deployment can reach a user-visible native desktop 9ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.openPath > opens through the injected native boundary 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > host.openPath > propagates abort into the native boundary as a cancelled RPC error 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > serializes concurrent creates of one path into a single registration 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > adopts only existing directories 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > adopts only existing directories 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.create > adopts different paths that derive the same Workspace title 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.insertBefore > commits the complete order, streams one order frame, and maps unknown ids 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > session creation and Workspace membership > attaches a preallocated idempotent session while cwd-only sessions stay ungrouped 10ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > session creation and Workspace membership > retains a published session when attachment fails and repairs it on retry 12ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > projects subagent origin in attached summaries and creation increments 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > workspace.insertBefore > commits the complete order, streams one order frame, and maps unknown ids 9ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > session creation and Workspace membership > attaches a preallocated idempotent session while cwd-only sessions stay ungrouped 11ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > session creation and Workspace membership > retains a published session when attachment fails and repairs it on retry 13ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > projects subagent origin in attached summaries and creation increments 6ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > streams committed Workspace and Session increments after empty baselines 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > does not publish a Workspace whose registry-order commit fails 6ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > deletes the registration, keeps its session and folder, and streams one removal 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > archives a session into the global set, keeps its accounting, and streams the set once 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > does not publish a Workspace whose registry-order commit fails 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > deletes the registration, keeps its session and folder, and streams one removal 11ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-workspace.spec.ts > Host Workspace increments > archives a session into the global set, keeps its accounting, and streams the set once 10ms
 
  Test Files  1 passed (1)
       Tests  22 passed (22)
-   Start at  09:59:17
-   Duration  1.82s (transform 1.19s, setup 230ms, import 1.26s, tests 147ms, environment 0ms)
+   Start at  11:42:59
+   Duration  3.38s (transform 2.37s, setup 237ms, import 2.76s, tests 169ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -327,89 +260,89 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > cuts at the anchored completed turn and records lineage and cwd 18ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > attaches a subagent fork to its nearest workspace-owning ancestor 7ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > forks a persisted subagent without resuming its Agent 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > uses the last completed turn only for omitted and past-end anchors 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > cuts through an aborted turn: stopped is closed, not open 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > rejects an in-log anchor whose turn is still open 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > installs the latest logged model selection before the child can run 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > uses the last completed turn only for omitted and past-end anchors 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > cuts through an aborted turn: stopped is closed, not open 14ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > rejects an in-log anchor whose turn is still open 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-fork.spec.ts > sessions.fork > installs the latest logged model selection before the child can run 6ms
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  09:59:20
-   Duration  1.63s (transform 1.12s, setup 228ms, import 1.17s, tests 50ms, environment 0ms)
+   Start at  11:43:03
+   Duration  1.52s (transform 1.03s, setup 216ms, import 1.07s, tests 62ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > reports an actionable error when no settings provider is mounted 14ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > describes layered redacted namespaces with their secret slots 6ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > opens the provider-resolved document without accepting a browser path 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > opens the provider-resolved document without accepting a browser path 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > refuses to open settings when the provider has no local document 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > does not prepare or open a settings document after cancellation 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves every registered namespace, including one this repository never named 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves product preference namespaces without invalidating the model catalog 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves the agent-preset namespace, so a browser preset picker can persist its choice 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > does not prepare or open a settings document after cancellation 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves every registered namespace, including one this repository never named 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves product preference namespaces without invalidating the model catalog 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > serves the agent-preset namespace, so a browser preset picker can persist its choice 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > keeps serving a provider namespace whose directory entry is gone 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > forwards a provider settings change for model-catalog consumers 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > broadcasts a permission change without invalidating the model catalog 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > broadcasts a permission change without invalidating the model catalog 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > forwards an Agent-default settings change for model-catalog consumers 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > maps a stale expectedRevision to settings-conflict carrying both revisions 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > updates the user layer, answers with the new redacted view, and broadcasts the frame 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > replace resets the user layer wholesale 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > rejects an invalid namespace name as settings-rejected 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > rejects a schema-invalid patch as settings-rejected 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > answers an unregistered namespace as the seam does, and a malformed one alike 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > maps a read-only provider refusal onto the same rejection 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > answers an unregistered namespace as the seam does, and a malformed one alike 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > settings domain > maps a read-only provider refusal onto the same rejection 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > reports an actionable error when no credential provider is mounted 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > describes value-free views and flips state through set/unset with frames 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > maps a shadowed write onto credential-rejected for set and unset alike 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > merges the configurable directory with live routes and appends undeclared ones 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > credentials domain > maps a shadowed write onto credential-rejected for set and unset alike 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > merges the configurable directory with live routes and appends undeclared ones 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > serves the host-scoped catalog with per-provider failures contained 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm domain > forwards llm/adapters-updated at every topology commit point 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > carries a draft to its namespace and returns candidates without storing anything 9ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > carries the route being edited so an adapter can answer from its own registry 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > carries a draft to its namespace and returns candidates without storing anything 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > carries the route being edited so an adapter can answer from its own registry 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > omits a credential and protocol the draft does not name 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > reports a failed interrogation as the form's next move, naming no credential 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-config.spec.ts > llm.discoverModels > reports a namespace no adapter family serves 3ms
 
  Test Files  1 passed (1)
       Tests  30 passed (30)
-   Start at  09:59:23
-   Duration  1.65s (transform 1.10s, setup 214ms, import 1.14s, tests 134ms, environment 0ms)
+   Start at  11:43:06
+   Duration  1.79s (transform 1.17s, setup 245ms, import 1.21s, tests 139ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > accepts through the composed title service: normalized user-source event, echoed seq 19ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > maps only an empty-normalizing title to title-invalid, with a presentable message 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > accepts through the composed title service: normalized user-source event, echoed seq 24ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > maps only an empty-normalizing title to title-invalid, with a presentable message 6ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > maps a non-validation rename failure (stale session object) to internal, not title-invalid 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > answers internal when the composition mounts no session-title service 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-rename.spec.ts > sessions.rename > answers internal when the composition mounts no session-title service 3ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  09:59:25
-   Duration  1.54s (transform 1.06s, setup 227ms, import 1.10s, tests 31ms, environment 0ms)
+   Start at  11:43:08
+   Duration  1.64s (transform 1.14s, setup 221ms, import 1.20s, tests 40ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session export compression config > defaults to level 6 and rejects values outside the integer 0-9 range 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session export compression config > defaults to level 6 and rejects values outside the integer 0-9 range 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > cold blank probe config > accepts a per-Session byte bound including zero and rejects invalid bounds 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > streams a ZIP with the root artifact verbatim under its original filename 47ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > preflights root preparation through HEAD without streaming a body 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > streams a ZIP with the root artifact verbatim under its original filename 58ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > preflights root preparation through HEAD without streaming a body 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > returns a bodyless preparation error from HEAD 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > uses the resolved compression level for ZIP entries 313ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes descendant artifacts under subagents/<id>/ when requested 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > uses the resolved compression level for ZIP entries 332ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes descendant artifacts under subagents/<id>/ when requested 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > flushes each live root and descendant immediately before reading its artifact 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > reads a cold artifact without asking the live-session store to flush 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > reads a cold artifact without asking the live-session store to flush 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 404 for a missing root session 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 501 when the persistence backend has no per-session raw artifacts 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 400 when the sessionId query parameter is absent 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 400 for an includeDescendants value other than true or false 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 500 when the deployment mounts no persistence or session-query service 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > fails the whole export when a descendant has no stored artifact 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > keeps an astral character whole when its surrogate pair straddles a push boundary 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > splits a long artifact on a plain code-unit boundary without backoff 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > waits for response pull capacity before reading the next archive entry 62ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > keeps an astral character whole when its surrogate pair straddles a push boundary 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > splits a long artifact on a plain code-unit boundary without backoff 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > waits for response pull capacity before reading the next archive entry 74ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > exports an empty artifact as an empty zip entry 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > exports a shared lineage node once (seen-set dedup) 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 500 without leaking the backend error when the root artifact read fails 2ms
@@ -424,20 +357,20 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > collects media referenced from nested tool results 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > scans the wrapped, inserted, and chunk carriers plus non-object content items 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > deduplicates one media object referenced by several included logs 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes descendant media only when descendants are requested 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > fails the whole export when a referenced image cannot be read 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > includes descendant media only when descendants are requested 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > fails the whole export when a referenced image cannot be read 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/session-export.spec.ts > session.export download endpoint > answers 500 when the deployment mounts no attachments service 2ms
 
  Test Files  1 passed (1)
       Tests  35 passed (35)
-   Start at  09:59:28
-   Duration  2.05s (transform 1.07s, setup 217ms, import 1.13s, tests 500ms, environment 0ms)
+   Start at  11:43:11
+   Duration  2.20s (transform 1.17s, setup 233ms, import 1.23s, tests 550ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > attaches the three standard card views, omits view without a presenter, soft-falls on throw 22ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > serves history entries with call/result views, backscan pairing, and soft-falls 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > serves history entries with call/result views, backscan pairing, and soft-falls 7ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > counts only append-origin messages toward maxMessages and keeps each compaction summary with its replacement 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > paginates a message with many provenance sources without variadic argument expansion 6ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-view.spec.ts > mux live view computation > drops a disposed session from the live open-call table (result after dispose gets no view) 4ms
@@ -445,65 +378,65 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:59:31
-   Duration  1.65s (transform 1.14s, setup 217ms, import 1.20s, tests 48ms, environment 0ms)
+   Start at  11:43:14
+   Duration  1.75s (transform 1.22s, setup 221ms, import 1.29s, tests 50ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > serves the unit value on the tail page with asOfSeq = last event seq 19ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > publishes the attachments imageLimits as a constant unit while both seams are composed 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > serves the unit value on the tail page with asOfSeq = last event seq 18ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > publishes the attachments imageLimits as a constant unit while both seams are composed 9ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > leaves the imageLimits key absent while no attachment service is composed 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > never carries the block on loadOlder pages (beforeSeq present) 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > serves no block when the composition has no projection registry 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > never exposes a host-only unit through history, listing, or push frames 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > drops a disposed registration from subsequent tail pages (empty block, key absent) 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > removes the gateway-owned Session-list unit when the gateway fiber unloads 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > serves attached rows from the live registry cut, watermarked for client seeding 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > never exposes a host-only unit through history, listing, or push frames 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > drops a disposed registration from subsequent tail pages (empty block, key absent) 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.history projections block > removes the gateway-owned Session-list unit when the gateway fiber unloads 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > serves attached rows from the live registry cut, watermarked for client seeding 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > omits the column entirely when no registry is mounted 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > serves cold rows from the persisted projection cache with zero log loads 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > cold rows without a cache plugin (or without a stored row) just lack the column 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > a throwing column read degrades that row, never the listing 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session/projection push frame > broadcasts a frame per changed unit with the causing seq, and none for same-reference applies 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session.list projections column > a throwing column read degrades that row, never the listing 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session/projection push frame > broadcasts a frame per changed unit with the causing seq, and none for same-reference applies 6ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-projections.spec.ts > session/projection push frame > emits no projection frames when the composition has no registry 3ms
 
  Test Files  1 passed (1)
       Tests  15 passed (15)
-   Start at  09:59:34
-   Duration  1.71s (transform 1.15s, setup 222ms, import 1.22s, tests 77ms, environment 0ms)
+   Start at  11:43:17
+   Duration  3.61s (transform 2.62s, setup 305ms, import 3.00s, tests 80ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > searches only list-visible ids and current conversation-message events 16ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > returns an empty page without invoking the index when no session is visible 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > searches only list-visible ids and current conversation-message events 20ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > returns an empty page without invoking the index when no session is visible 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > rejects snippets whose recorded provider violates the Host filters 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > pages the globally ranked stream until the 20-item Host boundary is known 6ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > learns a provider maxLimit of 10 and collects the 20-item result plus lookahead 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > counts a page-limit probe inside the 100-call budget 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > counts a page-limit probe inside the 100-call budget 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > restarts a stale continuation with its learned limit and original visibility snapshot 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > counts continuous stale restarts against the 100-call budget 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > gives abort priority over a coincident stale continuation failure 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > does not retry a stale first-page failure 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > gives abort priority over a coincident stale continuation failure 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > does not retry a stale first-page failure 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > does not adapt an invalid-limit continuation failure 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > stops page-limit adaptation at one item 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > gives abort priority over a coincident invalid first-page limit 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > stops page-limit adaptation at one item 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > gives abort priority over a coincident invalid first-page limit 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > rejects an oversized provider page 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > uses the learned provider limit for the overproduction guard 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > bounds provider snippets to 240 Unicode code points without splitting astral text 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > fails closed when the provider repeats a continuation cursor 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > validates a repeated cursor before accepting the authorized lookahead 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > does not count duplicate session ids toward the result or lookahead boundary 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > cancels on a continuation page and passes the carrier signal to both calls 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > keeps visibility sets above SQLite variable limits out of provider bindings 547ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > uses the learned provider limit for the overproduction guard 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > bounds provider snippets to 240 Unicode code points without splitting astral text 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > fails closed when the provider repeats a continuation cursor 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > validates a repeated cursor before accepting the authorized lookahead 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > does not count duplicate session ids toward the result or lookahead boundary 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > cancels on a continuation page and passes the carrier signal to both calls 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > keeps visibility sets above SQLite variable limits out of provider bindings 560ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > propagates cancellation through visible-session collection and stops cold-summary work 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > awaits every started cold-summary stat before returning cancellation 56ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > maps missing composition, query cancellation, and provider failure 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > awaits every started cold-summary stat before returning cancellation 55ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-search.spec.ts > session.search > maps missing composition, query cancellation, and provider failure 5ms
 
  Test Files  1 passed (1)
       Tests  24 passed (24)
-   Start at  09:59:37
-   Duration  2.41s (transform 1.21s, setup 245ms, import 1.28s, tests 692ms, environment 0ms)
+   Start at  11:43:22
+   Duration  2.41s (transform 1.20s, setup 226ms, import 1.27s, tests 719ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -511,18 +444,18 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > records the resolved preset on the session header 16ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > records the default when the caller names none 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > rejects an unknown preset and names the ones that exist 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > refuses to adopt a live session under a different preset 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > refuses to adopt a live session under a different preset 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > adopts a live session under the preset it SWITCHED to 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > adopts a live session unchanged when the caller names no preset 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > leaves the header preset-less when no roster is composed 6ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > says why a preset-less session cannot be adopted under one 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > adopts a live session unchanged when the caller names no preset 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > leaves the header preset-less when no roster is composed 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.create with an agent preset > says why a preset-less session cannot be adopted under one 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > a capability the session's preset mounts > serves the goal RPC from the session's own goal service 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > a capability the session's preset mounts > serves the skill catalog from the session's own registry 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > a capability the session's preset mounts > says so when no composition mounts the capability at all 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.list > marks the default and carries each preset's trust 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.list > answers with an empty roster when the deployment composes no presets 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > recomposes a blank session 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > records the switch in the log, and the list reads it back 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > recomposes a blank session 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > records the switch in the log, and the list reads it back 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > forwards the owner event so clients can drop that session's catalogs 6ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > serializes two concurrent selects on one session 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > agentPreset.select > refuses once the conversation has started 3ms
@@ -540,29 +473,29 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > opening a preset directory > refuses a preset that ships with the deployment 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > opening a preset directory > reports the roster capability on list 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > opening a preset directory > counts an injected opener as openable 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > skills over the layered host registry > passes the live agent as the view scope to the host registry 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > skills over the layered host registry > passes the live agent as the view scope to the host registry 7ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > skills over the layered host registry > resolves a cold session to its recorded preset standing key 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > skills over the layered host registry > serves the global view when the roster no longer supplies the recorded preset 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.history presenter scope > asks the roster for the RECORDED preset's standing key on a cold read 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.history presenter scope > asks the roster for the RECORDED preset's standing key on a cold read 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.history presenter scope > resolves a switched session from the LOG, not its creation header 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-agent-preset.spec.ts > session.history presenter scope > serves a COLD transcript whose standing mount is no longer usable 3ms
 
  Test Files  1 passed (1)
       Tests  38 passed (38)
-   Start at  09:59:40
-   Duration  1.85s (transform 1.22s, setup 248ms, import 1.28s, tests 144ms, environment 0ms)
+   Start at  11:43:25
+   Duration  1.84s (transform 1.19s, setup 277ms, import 1.19s, tests 143ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > carries payload out and value back through the full wire form 41ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > round-trips a trimmed session search query and its bounded result metadata 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > rejects an overlong session-search snippet at the client value boundary 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > routes session fork with its optional cut anchor through the wire 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > routes workspace rename, delete, and ordering through the wire 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > routes the agent-preset roster and switch through the wire 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > carries payload out and value back through the full wire form 88ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > round-trips a trimmed session search query and its bounded result metadata 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > rejects an overlong session-search snippet at the client value boundary 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > routes session fork with its optional cut anchor through the wire 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > routes workspace rename, delete, and ordering through the wire 8ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > routes the agent-preset roster and switch through the wire 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > passes business errors through as 200 + err result, not a throw 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > throws on rpcId echo mismatch 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > throws on rpcId echo mismatch 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > rejects an invalid payload at the handler as 200 + bad-request with issues 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > round-trips subagent.interrupt and rejects a one-shot or incomplete address 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > rejects a method/path mismatch as bad-request 0ms
@@ -577,46 +510,46 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > unary round trip > throws on an S→C ok value that fails the method value schema (second-level parse) 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > workspace domain round trip > routes both workspace methods through their handler rows and value schemas 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > workspace domain round trip > rejects a pathless create payload at the handler schema 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > yields frames in order and skips the comment preamble 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > reassembles frames across arbitrary chunk boundaries 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > yields frames in order and skips the comment preamble 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > reassembles frames across arbitrary chunk boundaries 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > emits a stream/error frame then closes when the impl throws mid-stream 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > drops a malformed SSE frame and keeps the stream alive (S→C two-level parse) 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > fires onOpen once headers are in, before the first frame, and not on transport failure 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > stops consuming when the caller aborts 12ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > goals unary surface > round-trips every goal method with its own payload and value shape 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > fires onOpen once headers are in, before the first frame, and not on transport failure 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > SSE stream path > stops consuming when the caller aborts 13ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > goals unary surface > round-trips every goal method with its own payload and value shape 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > goals unary surface > passes business errors through as results, not throws 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > goals unary surface > rejects an invalid goal payload at the handler as bad-request 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > respond path > round-trips a client-response to a receipt 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > respond path > returns bad-response for a malformed client-response without reaching the impl 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > goals unary surface > rejects an invalid goal payload at the handler as bad-request 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > respond path > round-trips a client-response to a receipt 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > respond path > returns bad-response for a malformed client-response without reaching the impl 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > envelope tap > delivers one microtask batch of full forms per unary call 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > envelope tap > isolates a throwing listener and keeps serving the call 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > envelope tap > buffers nothing with zero subscribers and unsubscribes cleanly 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > config unary surface > round-trips every settings/credentials/llm method with its own payload and value shape 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > config unary surface > rejects an invalid credential reference name at the carrier boundary 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > envelope tap > isolates a throwing listener and keeps serving the call 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > envelope tap > buffers nothing with zero subscribers and unsubscribes cleanly 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > config unary surface > round-trips every settings/credentials/llm method with its own payload and value shape 9ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/client-handler.spec.ts > config unary surface > rejects an invalid credential reference name at the carrier boundary 1ms
 
  Test Files  1 passed (1)
       Tests  38 passed (38)
-   Start at  09:59:43
-   Duration  1.80s (transform 1.22s, setup 229ms, import 1.28s, tests 114ms, environment 0ms)
+   Start at  11:43:28
+   Duration  2.19s (transform 1.38s, setup 340ms, import 1.40s, tests 194ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs subscription baseline > is omitted for a session with no tasks — absence is the empty set 15ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs subscription baseline > carries the live set for a session that already has tasks when the stream opens 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs change pushes > pushes the owner's whole set on registration, stopping, and settlement 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs subscription baseline > is omitted for a session with no tasks — absence is the empty set 17ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs subscription baseline > carries the live set for a session that already has tasks when the stream opens 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs change pushes > pushes the owner's whole set on registration, stopping, and settlement 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs change pushes > drops ownerSession, reported, and outputLimitBytes from the wire view 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs change pushes > fans an unowned change out to every subscribed session 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs change pushes > fans an unowned change out to every subscribed session 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs change pushes > serves a cold session the unowned set without resuming it 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs without the registry > emits no frames at all, so the client renders no entry point 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs without the registry > emits no frames at all, so the client renders no entry point 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs never consumes model output > drives the whole lifecycle without calling the single consuming cursor 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs never consumes model output > reads nothing while minting the subscription baseline either 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs baseline for a session born after the stream opened > carries the already-visible unowned set to the new session 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-jobs.spec.ts > session/jobs baseline for a session born after the stream opened > carries the already-visible unowned set to the new session 3ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:59:46
-   Duration  1.72s (transform 1.21s, setup 252ms, import 1.25s, tests 47ms, environment 0ms)
+   Start at  11:43:32
+   Duration  1.75s (transform 1.20s, setup 237ms, import 1.27s, tests 54ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -628,35 +561,35 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > serves the page without projections when a hostile unit breaks the fold 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > reads one-shot history and rejects an address with the wrong mode 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > rejects a diagnostic address before reading history 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > maps the missing projections capability to one wire face on list, history, and prompt 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > maps the missing projections capability to one wire face on list, history, and prompt 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > routes human content through the exact live parent with rpc attribution 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > canonicalizes browser-zone provenance before delivering a child prompt 37ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > fails before delivery when the parent is absent and maps continuation failures 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > maps history disappearance and hides unexpected backend details 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > canonicalizes browser-zone provenance before delivering a child prompt 40ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > fails before delivery when the parent is absent and maps continuation failures 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > maps history disappearance and hides unexpected backend details 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > interrupts through the core primitive alone while the parent Agent is offline 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > maps interrupt authorization rejection without touching other services 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > hides unexpected interrupt failures behind the internal code 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > maps interrupt authorization rejection without touching other services 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-subagents.spec.ts > subagent gateway > hides unexpected interrupt failures behind the internal code 1ms
 
  Test Files  1 passed (1)
       Tests  15 passed (15)
-   Start at  09:59:48
-   Duration  1.73s (transform 1.18s, setup 251ms, import 1.20s, tests 83ms, environment 0ms)
+   Start at  11:43:35
+   Duration  1.84s (transform 1.26s, setup 261ms, import 1.29s, tests 84ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > sessions.list cold merge > verifies only small possibly-blank artifacts and treats every unavailable probe as visible 18ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > sessions.list cold merge > verifies only small possibly-blank artifacts and treats every unavailable probe as visible 17ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > sessions.list cold merge > can disable bounded blank probes without hiding cold Sessions 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > sessions.list cold merge > replaces a probed cold row with the live Session that attached during the read 6ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > attached updatedAt tracks human prompts > ignores pickup and non-prompt work after the latest human message 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > cold history recovery view > shows in-memory interruption repair without activating the session 13ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > Remote Agent and Session lookup policy > deduplicates a cold resume across Agent and Session parameters 112ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > Remote Agent and Session lookup policy > preserves the subagent ownership fence for cold and live Remote lookups 56ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > sessions.list cold merge > replaces a probed cold row with the live Session that attached during the read 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > attached updatedAt tracks human prompts > ignores pickup and non-prompt work after the latest human message 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > cold history recovery view > shows in-memory interruption repair without activating the session 12ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > Remote Agent and Session lookup policy > deduplicates a cold resume across Agent and Session parameters 108ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > Remote Agent and Session lookup policy > preserves the subagent ownership fence for cold and live Remote lookups 57ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > subagent ownership fence > reads a cold child without an Agent and rejects generic resume or adoption 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > subagent ownership fence > no longer treats a descriptor-only cold child without origin as subagent-owned 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > subagent ownership fence > rejects origin-marked and runtime-owned live children from generic controls 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > subagent ownership fence > does not classify an ordinary fork from an inherited ancestor descriptor 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > subagent ownership fence > canonicalizes a supplied browser zone on the exact prompt and rejects invalid names 24ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > subagent ownership fence > canonicalizes a supplied browser zone on the exact prompt and rejects invalid names 25ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > degenerate composition (no persistence, no factory) > list skips the cold merge and history reports missing persistence as internal 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > degenerate composition (no persistence, no factory) > maps a persistence catalog miss to session-not-found without inspection 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-cold.spec.ts > sessions.prompt synchronous rejection > maps a synchronous send throw (disposed/invalid input) to agent-busy with the reason attached 3ms
@@ -664,69 +597,69 @@
 
  Test Files  1 passed (1)
       Tests  16 passed (16)
-   Start at  09:59:51
-   Duration  1.95s (transform 1.22s, setup 233ms, import 1.28s, tests 260ms, environment 0ms)
+   Start at  11:43:37
+   Duration  1.99s (transform 1.22s, setup 242ms, import 1.29s, tests 255ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > round-trips ask → requested frame → respond → outcome + resolved broadcast 22ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > replays a still-pending requested frame (same rpcId) on a later mux open 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > rejects malformed and mismatched answers as bad-response, unknown ids as not-pending 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > round-trips ask → requested frame → respond → outcome + resolved broadcast 21ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > replays a still-pending requested frame (same rpcId) on a later mux open 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > rejects malformed and mismatched answers as bad-response, unknown ids as not-pending 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > withdraws the question on the ask signal: cancelled outcome, resolved broadcast, late answer not-pending 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > an ask whose signal aborted before dispatch settles cancelled without publishing 16ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > gateway teardown settles pending approvals as cancelled (question-provider parity) 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > an ask whose signal aborted before dispatch settles cancelled without publishing 15ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > gateway teardown settles pending approvals as cancelled (question-provider parity) 4ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > carries callId on the frame and ignores a late abort after the answer settled 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > pairs parallel asks by callId: each requested frame carries its own audit id 11ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > gives parallel callId-less asks distinct audit ids (claimed-entry skip); both stay answerable 10ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > pairs parallel asks by callId: each requested frame carries its own audit id 10ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > gives parallel callId-less asks distinct audit ids (claimed-entry skip); both stay answerable 12ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > delegates a dispatch whose only asked candidate is already decided (stale re-dispatch) 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > delegates an ask whose session log carries no asked audit event (foreign channel) 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-approval.spec.ts > approval pending registry > delegates an ask whose session log carries no asked audit event (foreign channel) 5ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  09:59:54
-   Duration  1.71s (transform 1.16s, setup 236ms, import 1.20s, tests 90ms, environment 0ms)
+   Start at  11:43:41
+   Duration  1.97s (transform 1.36s, setup 359ms, import 1.32s, tests 90ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-question.spec.ts > question response validation > accepts selected options with custom text for multi-select questions 20ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-question.spec.ts > question response validation > accepts selected options with custom text for multi-select questions 24ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-question.spec.ts > question response validation > keeps selected options and custom text mutually exclusive for single-select questions 4ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  09:59:57
-   Duration  1.51s (transform 1.04s, setup 213ms, import 1.10s, tests 24ms, environment 0ms)
+   Start at  11:43:44
+   Duration  1.80s (transform 1.28s, setup 250ms, import 1.33s, tests 29ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > validates an ordered image batch before persisting any member 25ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > allows a text-only selection while durable or pending images remain available for later models 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > allows a text-only selection while durable or pending images remain available for later models 7ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > authorizes attachment bytes only when the session event stream references the id 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > groups successful providers and leaves an unlisted current selection out of the catalog 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > accepts an advisory-unlisted model, rejects an unavailable provider, and switches only after the next assembly 6ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > reads the Agent default live for a session whose log names no selection 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > accepts an advisory-unlisted model, rejects an unavailable provider, and switches only after the next assembly 7ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > reads the Agent default live for a session whose log names no selection 5ms
  ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > keeps a session on its logged selection when the Agent default differs 4ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > saves an accepted selection as the default and survives a storage failure 5ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > refuses a prompt no adapter can route, and reports it on the directory 7ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > serves a session and its catalog when the stored default names a route that is gone 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > saves an accepted selection as the default and survives a storage failure 6ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > refuses a prompt no adapter can route, and reports it on the directory 5ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-models.spec.ts > Web session model selection > serves a session and its catalog when the stored default names a route that is gone 5ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  10:00:00
-   Duration  1.68s (transform 1.08s, setup 251ms, import 1.11s, tests 74ms, environment 0ms)
+   Start at  11:43:46
+   Duration  1.66s (transform 1.10s, setup 248ms, import 1.14s, tests 75ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-blank.spec.ts > summary blank = conversation not started > standalone events (command lifecycle, plan/mode, title) keep the session blank 14ms
- ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-blank.spec.ts > summary blank = conversation not started > the first turn clears blank 3ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-blank.spec.ts > summary blank = conversation not started > standalone events (command lifecycle, plan/mode, title) keep the session blank 20ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/api-proxy-blank.spec.ts > summary blank = conversation not started > the first turn clears blank 4ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  10:00:02
-   Duration  1.65s (transform 1.18s, setup 217ms, import 1.25s, tests 18ms, environment 0ms)
+   Start at  11:43:49
+   Duration  2.00s (transform 1.44s, setup 235ms, import 1.55s, tests 25ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -734,11 +667,11 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > opens with macOS open(1) 3ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > bypasses macOS file associations for text documents 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > uses the Linux desktop association for text documents 0ms
- ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > hands WSL text documents to the Windows desktop from the distribution marker 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > hands WSL text documents to the Windows desktop from the distribution marker 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > hands WSL text documents to the Windows desktop from the interop marker 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > hands WSL text documents to the Windows desktop from the kernel release 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > rejects an empty WSL path translation before invoking Windows 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > does not invoke Windows when the request aborts during WSL path translation 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > does not invoke Windows when the request aborts during WSL path translation 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > opens with Windows Invoke-Item and escapes single quotes 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > uses the Windows desktop association for text documents 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/native-path-opener.spec.ts > native path opener > opens with Linux xdg-open 0ms
@@ -758,23 +691,23 @@
 
  Test Files  1 passed (1)
       Tests  24 passed (24)
-   Start at  10:00:05
-   Duration  529ms (transform 280ms, setup 271ms, import 59ms, tests 13ms, environment 0ms)
+   Start at  11:43:53
+   Duration  508ms (transform 243ms, setup 242ms, import 49ms, tests 11ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > carries a success result and echoes the minted rpcId 43ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > carries a success result and echoes the minted rpcId 39ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > carries the tail-page projections block through the wire schema (Zod must not strip it) 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > carries a business error as 200 + error result 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > covers create/prompt/updateQueue/cancel/describe passthrough 7ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips every agent-preset method, authoring included 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips the native picker without the default unary timeout 17ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips the browse listing and creation calls through the wire form 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips host.openPath through the wire form 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips host.openPath through the wire form 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips skill.list through the wire form 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > lets host.pickDirectory finish after the 30-second default unary deadline 3ms
- ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips the subagent domain through the wire form 1ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > lets host.pickDirectory finish after the 30-second default unary deadline 4ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > round-trips the subagent domain through the wire form 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > keeps caller and connection aborts on a deadline-exempt unary 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > propagates the carrier Request signal into session.search 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > unary round trip (handler ⇄ client, no network) > propagates the carrier Request signal into subagent.prompt 0ms
@@ -792,15 +725,16 @@
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > SSE streams through the carrier > drops frames after the consumer aborts mid-stream 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > SSE streams through the carrier > swallows a reader.cancel rejection on early exit 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > SSE streams through the carrier > surfaces a mid-stream impl failure as one stream/error frame, then the stream ends 1ms
- ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > client respond and transport failures > passes a client-response through and parses the receipt 0ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > client respond and transport failures > passes a client-response through and parses the receipt 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > client respond and transport failures > throws on non-OK unary and respond and stream transport 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > client respond and transport failures > throws on an rpcId echo mismatch 0ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > envelope observation > batches envelopes per microtask and isolates a throwing listener 2ms
- ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > envelope observation > skips buffering entirely with no listeners and after unsubscribe 2ms
+ ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > envelope observation > skips buffering entirely with no listeners and after unsubscribe 1ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > envelope observation > coalesces multiple calls in one microtask window into one flush 2ms
  ✓ |thread-safe| packages/host/apiproxy/tests/fetch-carrier.spec.ts > resolveBase > prefers a real location.origin and falls back to the internal authority 1ms
 
  Test Files  1 passed (1)
       Tests  35 passed (35)
-   Start at  10:00:07
-   Duration  783ms (transform 373ms, setup 299ms, import 201ms, tests 96ms, environment 0ms)
+   Start at  11:43:54
+   Duration  750ms (transform 341ms, setup 256ms, import 202ms, tests 93ms, environment 0ms)
+

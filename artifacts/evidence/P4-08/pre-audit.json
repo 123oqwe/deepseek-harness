@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-08",
   "title": "Workflow Journal 与步骤级 Resume",
-  "audit_date": "2026-08-23T01:13:05.371Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T02:59:49.252Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/workflow/workflow-journal/src/index.ts",
     "packages/workflow/workflow-journal/src/types.ts",
@@ -29,13 +29,7 @@
   "test_files": [
     "packages/workflow/workflow-journal/tests/resume.spec.ts",
     "packages/workflow/workflow/tests/invariant.spec.ts",
-    "packages/workflow/workflow/tests/workflow.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
+    "packages/workflow/workflow/tests/workflow.spec.ts"
   ],
   "doc_files": [],
   "other_files": [],
@@ -53,5 +47,5 @@
   "classification": "NOT_DURABLE_AND_BAD_RESUME_SEMANTICS",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 9 files, Tests: 9 files, Docs: 0 files"
+  "notes": "Source: 9 files, Tests: 3 files, Docs: 0 files"
 }

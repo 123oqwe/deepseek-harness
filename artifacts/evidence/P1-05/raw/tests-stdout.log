@@ -22,26 +22,27 @@
 
  Test Files  1 passed (1)
       Tests  18 passed (18)
-   Start at  08:41:51
-   Duration  435ms (transform 206ms, setup 228ms, import 22ms, tests 6ms, environment 0ms)
+   Start at  10:18:18
+   Duration  453ms (transform 217ms, setup 234ms, import 21ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 28ms
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 6ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 50ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 14ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  08:41:52
-   Duration  544ms (transform 290ms, setup 216ms, import 115ms, tests 35ms, environment 0ms)
+   Start at  10:18:19
+   Duration  860ms (transform 497ms, setup 291ms, import 264ms, tests 66ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 7ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 8ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  08:41:54
-   Duration  422ms (transform 198ms, setup 224ms, import 11ms, tests 8ms, environment 0ms)
+   Start at  10:18:21
+   Duration  490ms (transform 234ms, setup 265ms, import 10ms, tests 9ms, environment 0ms)
+

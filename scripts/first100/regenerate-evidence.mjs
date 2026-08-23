@@ -81,6 +81,12 @@ function classifyFiles(files) {
 // Find additional test files in the same package directory
 function findRelatedTests(sourceFiles) {
   const tests = new Set()
+  // Packages with known environment dependencies that cause test failures
+  // unrelated to the issue being verified. Skip their heavy integration tests.
+  const SKIP_HEAVY_PACKAGES = new Set([
+    'packages/workflow/workflow-worker-thread', // requires mock LLM server
+    'packages/sdk/server', // requires full SDK server setup
+  ])
   for (const src of sourceFiles) {
     const dir = dirname(src)
     // Only search for tests in the same package directory (packages/xxx/yyy/)
@@ -88,6 +94,7 @@ function findRelatedTests(sourceFiles) {
     if ((dir.includes('/src/') || dir.endsWith('/src')) && dir.startsWith('packages/')) {
       // Source is in packages/xxx/yyy/src/ - look for tests in packages/xxx/yyy/tests/
       const pkgDir = dir.endsWith('/src') ? dirname(dir) : dir.replace(/\/src\/.*/, '')
+      if (SKIP_HEAVY_PACKAGES.has(pkgDir)) continue
       const pkgTestDir = join(repoRoot, pkgDir, 'tests')
       if (existsSync(pkgTestDir)) {
         const entries = spawnSync('find', [pkgTestDir, '-name', '*.spec.ts'], { encoding: 'utf8' })

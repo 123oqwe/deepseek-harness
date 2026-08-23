@@ -1,24 +1,24 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/collaboration/taskboard/tests/claims.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/agent-initiator.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/state-machine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/model-selection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/agent.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/consumed-work.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/core/agent/tests/verify-export-jsdoc.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/continuation.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/run-settlement.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/request-contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/service.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/list-children.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/continuation-inheritance.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/timing-projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/out-of-process.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/result-contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/activation-setup-registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/subagent/subagent/tests/assistant-output.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/run/run/tests/state-machine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
-{"command":"npx vitest run packages/run/run/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:36:08.787Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/collaboration/taskboard/tests/claims.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/agent-initiator.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/state-machine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/model-selection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/agent.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/consumed-work.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/core/agent/tests/verify-export-jsdoc.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/continuation.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/run-settlement.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/request-contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/service.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/list-children.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/continuation-inheritance.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/timing-projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/out-of-process.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/result-contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/activation-setup-registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/subagent/subagent/tests/assistant-output.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/run/run/tests/state-machine.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}
+{"command":"npx vitest run packages/run/run/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T03:17:00.704Z"}

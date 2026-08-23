@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates exact version match 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 0ms
@@ -14,8 +14,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  10:03:03
-   Duration  460ms (transform 219ms, setup 241ms, import 18ms, tests 4ms, environment 0ms)
+   Start at  11:46:20
+   Duration  406ms (transform 188ms, setup 210ms, import 12ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -33,22 +33,22 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  10:03:05
-   Duration  423ms (transform 198ms, setup 222ms, import 14ms, tests 6ms, environment 0ms)
+   Start at  11:46:22
+   Duration  410ms (transform 192ms, setup 211ms, import 14ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 14ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 15ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves structured error data from an error response frame 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 11ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 12ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
@@ -57,12 +57,12 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error write failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > uses a fallback message for malformed JSON-RPC error responses 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 11ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  10:03:06
-   Duration  498ms (transform 209ms, setup 215ms, import 39ms, tests 69ms, environment 0ms)
+   Start at  11:46:23
+   Duration  492ms (transform 203ms, setup 209ms, import 39ms, tests 69ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -80,8 +80,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  10:03:08
-   Duration  436ms (transform 208ms, setup 234ms, import 13ms, tests 5ms, environment 0ms)
+   Start at  11:46:25
+   Duration  413ms (transform 197ms, setup 219ms, import 11ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -95,12 +95,12 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > duplicate commandId is idempotent 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork creates new run without inheriting secrets 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork lineage is tracked 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > validateTransition checks rules 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > validateTransition checks rules 1ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  10:03:09
-   Duration  499ms (transform 249ms, setup 266ms, import 46ms, tests 5ms, environment 0ms)
+   Start at  11:46:26
+   Duration  1.35s (transform 508ms, setup 528ms, import 71ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -109,127 +109,61 @@
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > returns immediately for a child already dead by signal 0ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 1: a cooperative child quiesces on stdin EOF — no signal is ever sent 7ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child that exits synchronously on stdin EOF 0ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 2: a child that ignores EOF but honors SIGTERM dies on the middle rung 29ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child that exits synchronously on SIGTERM 22ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 2: a child that ignores EOF but honors SIGTERM dies on the middle rung 27ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child that exits synchronously on SIGTERM 21ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > tier 3: a SIGTERM-trapping child is SIGKILLed, and dispose resolves only after the exit 49ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child already gone when the final exit wait begins 44ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > recognizes a child already gone when the final exit wait begins 41ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > accepts a late OS exitCode marker before the final forced wait 14ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > accepts a late OS signalCode marker before the final forced wait 13ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > walks the ladder for a child spawned without a stdin pipe 28ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > skips the redundant SIGTERM tier on Windows and awaits forced exit 28ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > propagates a forced-termination error without waiting for the grace 1ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > wraps a synchronous forced-termination exception and removes its listeners 2ms
- ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds a refused forced termination that produces no error or exit 13ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > walks the ladder for a child spawned without a stdin pipe 27ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > skips the redundant SIGTERM tier on Windows and awaits forced exit 30ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > propagates a forced-termination error without waiting for the grace 2ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > wraps a synchronous forced-termination exception and removes its listeners 4ms
+ ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds a refused forced termination that produces no error or exit 12ms
  ✓ |thread-safe| packages/sdk/client/tests/dispose.spec.ts > disposeRuntimeProcess > bounds an accepted forced termination that never reports exit 14ms
 
  Test Files  1 passed (1)
       Tests  16 passed (16)
-   Start at  10:03:11
-   Duration  678ms (transform 199ms, setup 219ms, import 16ms, tests 267ms, environment 0ms)
+   Start at  11:46:29
+   Duration  889ms (transform 267ms, setup 296ms, import 24ms, tests 267ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > ignores notifications that precede the submitted message receipt 2ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > runs a turn end to end and reuses the runtime across sessions 201ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > keeps events root-scoped while streaming notifications for the session tree 180ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > sends the configured cwd/provider/model/maxTokens in the handshake exactly once 171ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > resolves a relative launch cwd to an absolute workspace before the handshake 168ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > propagates a JSON-RPC error response from initialize and closes the runtime 331ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > retries a failed handshake with a fresh runtime process 348ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > rejects a malformed initialize result as a protocol error 183ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > supports await using disposal 183ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > times out a hung request at the per-call bound 375ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > a timed-out request leaves no pending transport state 317ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > applies the client-wide request timeout when no per-call bound is given 408ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > rejects a malformed prompt acceptance as a protocol error 192ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails pending requests with exit code and stderr tail when the runtime dies 190ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > flushes an unterminated stderr line into the tail at close 158ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails fast when the command does not exist 208ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() is idempotent, reaps the child, and fails later use 193ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates through SIGTERM when the runtime ignores EOF 300ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > ignores notifications that precede the submitted message receipt 4ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > runs a turn end to end and reuses the runtime across sessions 227ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > keeps events root-scoped while streaming notifications for the session tree 194ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > sends the configured cwd/provider/model/maxTokens in the handshake exactly once 205ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > resolves a relative launch cwd to an absolute workspace before the handshake 201ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > propagates a JSON-RPC error response from initialize and closes the runtime 370ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > retries a failed handshake with a fresh runtime process 353ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > rejects a malformed initialize result as a protocol error 188ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > DeepSeekHarness > supports await using disposal 189ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > times out a hung request at the per-call bound 369ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > a timed-out request leaves no pending transport state 340ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > applies the client-wide request timeout when no per-call bound is given 407ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > rejects a malformed prompt acceptance as a protocol error 171ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails pending requests with exit code and stderr tail when the runtime dies 182ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > flushes an unterminated stderr line into the tail at close 188ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > fails fast when the command does not exist 207ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() is idempotent, reaps the child, and fails later use 170ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates through SIGTERM when the runtime ignores EOF 277ms
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > escalates to SIGKILL when the runtime traps SIGTERM too 599ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > delivers notifications to unfiltered and filtered subscriptions in wire order 196ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > contains a throwing filter to its own subscription 176ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() drops queued notifications; runtime death keeps them drainable 170ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > delivers notifications to unfiltered and filtered subscriptions in wire order 186ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > contains a throwing filter to its own subscription 195ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > close() drops queued notifications; runtime death keeps them drainable 176ms
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > subscriptions created after termination are born failed 331ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > closes subscriptions with the runtime and rejects parked waiters 178ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > scopes the session tree across multi-hop lineage and ignores foreign sessions 165ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects a non-object session.event envelope as a protocol error 166ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a content array as a protocol error 189ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a data member as a protocol error 166ms
- ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > stderr tail bound > keeps only the newest lines up to the limit 179ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > closes subscriptions with the runtime and rejects parked waiters 199ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > HarnessClient > scopes the session tree across multi-hop lineage and ignores foreign sessions 185ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects a non-object session.event envelope as a protocol error 198ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a content array as a protocol error 195ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > wire payload validation > rejects an assistant/message without a data member as a protocol error 189ms
+ ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > stderr tail bound > keeps only the newest lines up to the limit 198ms
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > pure helpers > normalizeInput wraps strings and passes blocks through 0ms
  ✓ |thread-safe| packages/sdk/client/tests/sdk-client.spec.ts > pure helpers > finalResponse reads the last assistant message and tolerates absence 0ms
 
  Test Files  1 passed (1)
       Tests  31 passed (31)
-   Start at  10:03:12
-   Duration  7.08s (transform 233ms, setup 209ms, import 77ms, tests 6.62s, environment 0ms)
+   Start at  11:46:31
+   Duration  7.80s (transform 444ms, setup 427ms, import 148ms, tests 6.90s, environment 1ms)
 
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/sdk/server/tests/plugin-shape.spec.ts > dsh-sdk-jsonrpc-server plugin export shape > has the namespace-plugin export shape (no stray default) so the Loader keeps name/inject/Config/apply 2ms
-
- Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  10:03:21
-   Duration  902ms (transform 594ms, setup 236ms, import 484ms, tests 3ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > serves initialize over the injected stdio pair 88ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > does not answer initialize until async sibling Loader entries settle 90ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > drives a session/prompt turn end-to-end and forwards session notifications as output frames 196ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > answers shutdown before exiting 0 exactly once, even against a racing second shutdown 161ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > still disposes and exits once when the flush callback fails 123ms
- ✓ |thread-safe| packages/sdk/server/tests/plugin-apply.spec.ts > dsh-sdk-jsonrpc-server plugin apply > stops serving on a bare fiber dispose (HMR-style unload) without calling exit 98ms
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-     Errors  1 error
-   Start at  10:03:23
-   Duration  2.50s (transform 1.19s, setup 244ms, import 1.27s, tests 756ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > creates a harness agent and calls the configured OpenAI-compatible endpoint 324ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > queues overlapping prompts for one session without blocking other sessions 1ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects a prompt for a session whose agent was disposed outside the server 1ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > forwards whole-agent status without attributing a turn outcome 3ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > notifies the host when a child session is created with parent lineage 72ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > creates an SDK session without an optional system prompt 156ms
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > notifies the host when a subagent run settles 73ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > ignores a remote run id that collides with a local child of the same parent 70ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > retains locality across continuation runs on one live child 69ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > correlates reused local ids by parent scope when runs settle out of order 76ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > keeps locality bound to the accepted run across provider re-registration 73ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- × |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > uses the recorded local flag when start was missed and ignores remote runs 74ms
-   → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > does not re-register an LLM adapter whose provider already has an owner 73ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects a missing non-DeepSeek provider when an LLM service already exists 68ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens 0 at the wire boundary 65ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens -1 at the wire boundary 65ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens 1.5 at the wire boundary 64ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens NaN at the wire boundary 65ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects invalid initialize maxTokens 9007199254740992 at the wire boundary 64ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > reports no adapter when the LLM service is absent 1ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > rejects unknown JSON-RPC runtime methods 66ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > coalesces concurrent session creation and retries a failed creation 2ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > resolves a relative cwd before creating the session 2ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > settles every teardown and aggregates multiple failures 0ms
- ✓ |thread-safe| packages/sdk/server/tests/server.spec.ts > HarnessSdkJsonRpcServer > continues teardown after a subscription disposer fails 0ms
-
- Test Files  1 failed (1)
-      Tests  6 failed | 19 passed (25)
-     Errors  4 errors
-   Start at  10:03:26
-   Duration  3.52s (transform 1.45s, setup 217ms, import 1.60s, tests 1.53s, environment 0ms)

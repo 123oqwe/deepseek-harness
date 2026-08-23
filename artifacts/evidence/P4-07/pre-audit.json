@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-07",
   "title": "Worker Lease、Heartbeat 与 Fencing Token",
-  "audit_date": "2026-08-23T01:11:39.261Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T02:59:34.227Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/run/lease/src/index.ts",
     "packages/run/lease/src/types.ts",
@@ -30,13 +30,7 @@
     "packages/core/agent/tests/agent.spec.ts",
     "packages/core/agent/tests/invariant.spec.ts",
     "packages/core/agent/tests/consumed-work.spec.ts",
-    "packages/core/agent/tests/verify-export-jsdoc.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/source-worker.compat.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/realm.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/meta.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/workflow-worker-thread.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
-    "packages/workflow/workflow-worker-thread/tests/session.spec.ts"
+    "packages/core/agent/tests/verify-export-jsdoc.spec.ts"
   ],
   "doc_files": [],
   "other_files": [],
@@ -52,5 +46,5 @@
   "classification": "DURABILITY_SCAFFOLD_NOT_CRASH_SAFE",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 7 files, Tests: 14 files, Docs: 0 files"
+  "notes": "Source: 7 files, Tests: 8 files, Docs: 0 files"
 }

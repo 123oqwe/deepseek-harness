@@ -11,73 +11,73 @@
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  09:08:31
-   Duration  688ms (transform 324ms, setup 377ms, import 21ms, tests 4ms, environment 0ms)
+   Start at  10:55:42
+   Duration  439ms (transform 208ms, setup 233ms, import 16ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 18ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 8ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 15ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 14ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > stays pending without sessionPersistence and never opens or marks the domain 26ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > bootstraps once from list headers only, in workspace/session createdAt order 10ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > breaks equal bootstrap timestamps by session id and canonical path 19ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > does not rerun bootstrap for a genuinely initialized empty registry 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses partial records after a bootstrap record write fails 13ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > reuses durable order when the final initialized marker write fails 8ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > merges partial records and leaves an already-accounted cwd drift ungrouped 5ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > orders headerless partial records by prior order, then stable id 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry lifecycle and bootstrap > closes its domain on disposal and reloads the persisted stable order 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > creates newest-first and idempotently reuses a canonical path without retitling 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > serializes concurrent same-path creates into one entity 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > serializes concurrent same-path creates into one entity 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > allows a duplicate display name on a different canonical path 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects nonexistent and non-directory paths without changing order 5ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back the provisional cache when the record write fails 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > does not publish a Workspace when its pending marker cannot be written 6ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls back a record when registry-order persistence fails 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports both order and rollback failures while retaining the recoverable record 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports a record write and pending-marker rollback failure together 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > reports an order write and pending-marker rollback failure together 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > deletes only the registration and leaves its directory and session headers untouched 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rolls registry order and cache back when record deletion fails 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > commits deletion and leaves a recoverable marker when marker cleanup fails 6ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > keeps the failed deletion unpublished when record and order rollback both fail 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > WorkspaceRegistry create and lookup > rejects table access before the registry has started 2ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > moves a workspace before an anchor or to the end and restores that order after restart 6ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace registry ordering > keeps self-anchored and already-positioned moves write-free and rejects unknown ids 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 8ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > prepends new attaches and keeps repeat attach idempotent 6ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > moves one id before an anchor or to the end, durably 5ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > treats self-anchored and already-in-place moves as no-ops without writing 4ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects moves naming an unaccounted session or anchor 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > validates a lazy live session without requiring it in persistence.list() 3ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 4ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > rejects mismatched, missing, unresolved, non-directory, and unknown cwd facts 4ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > Workspace session ordering > decides detach/attach membership at domain write-chain slots 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > requires both candidate id and matching canonical cwd without re-reading on list() 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > rejects duplicate candidate ownership, duplicate paths, and initialized order drift 13ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 5ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 12ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 10ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 6ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > accepts unaccounted and live sessions but rejects unknown ids without writing 5ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > fails list if the durable order and entity cache are externally diverged 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > header-validated membership projection > recovers only an explicitly marked interrupted create or delete 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > keeps createdAt stable, advances updatedAt, and preserves snapshot on write failure 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > workspace mutation and status > reports directory disappearance without mutating the workspace 8ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > archives durably in order, idempotently skips repeats, and leaves accounting untouched 3ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > accepts unaccounted and live sessions but rejects unknown ids without writing 3ms
  ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > propagates a persistence-listing failure instead of reporting an unknown session 2ms
- ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 8ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/workspace.spec.ts > registry-global session archive > restores the archive set across restarts and defaults it for pre-field media 6ms
 
  Test Files  1 passed (1)
       Tests  43 passed (43)
-   Start at  09:08:32
-   Duration  1.12s (transform 526ms, setup 281ms, import 383ms, tests 251ms, environment 0ms)
+   Start at  10:55:43
+   Duration  1.11s (transform 514ms, setup 280ms, import 386ms, tests 251ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > accepts a put whose record has a cached entity and ignores foreign events 7ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > accepts a put whose record has a cached entity and ignores foreign events 6ms
  ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails deletion while the registry still publishes the entity 1ms
- ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > allows deletion after the registry removed the cache entry for rollback or explicit deletion 1ms
+ ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > allows deletion after the registry removed the cache entry for rollback or explicit deletion 2ms
  ✓ |thread-safe| packages/workspace/workspace/tests/invariant.spec.ts > workspace cache/table invariant > fails a put whose record the registry cache does not hold 1ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  09:08:35
-   Duration  794ms (transform 437ms, setup 251ms, import 308ms, tests 12ms, environment 0ms)
+   Start at  10:55:46
+   Duration  930ms (transform 449ms, setup 254ms, import 321ms, tests 12ms, environment 1ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -90,8 +90,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  09:08:37
-   Duration  473ms (transform 231ms, setup 266ms, import 9ms, tests 6ms, environment 0ms)
+   Start at  10:55:48
+   Duration  492ms (transform 223ms, setup 278ms, import 8ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -105,8 +105,8 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:08:38
-   Duration  535ms (transform 257ms, setup 292ms, import 10ms, tests 11ms, environment 0ms)
+   Start at  10:55:49
+   Duration  439ms (transform 206ms, setup 235ms, import 9ms, tests 11ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -125,8 +125,8 @@
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  09:08:40
-   Duration  691ms (transform 401ms, setup 349ms, import 133ms, tests 8ms, environment 0ms)
+   Start at  10:55:51
+   Duration  524ms (transform 276ms, setup 225ms, import 108ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -137,8 +137,8 @@
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  09:08:42
-   Duration  607ms (transform 334ms, setup 282ms, import 116ms, tests 3ms, environment 0ms)
+   Start at  10:55:52
+   Duration  498ms (transform 263ms, setup 220ms, import 96ms, tests 3ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -152,8 +152,8 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:08:43
-   Duration  488ms (transform 250ms, setup 283ms, import 12ms, tests 3ms, environment 0ms)
+   Start at  10:55:54
+   Duration  420ms (transform 199ms, setup 224ms, import 11ms, tests 3ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -165,5 +165,6 @@
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  09:08:45
-   Duration  593ms (transform 327ms, setup 282ms, import 109ms, tests 5ms, environment 0ms)
+   Start at  10:55:55
+   Duration  521ms (transform 274ms, setup 233ms, import 97ms, tests 5ms, environment 0ms)
+

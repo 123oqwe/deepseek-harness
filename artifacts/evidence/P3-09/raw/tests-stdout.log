@@ -5,13 +5,13 @@
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > rejects attestation with missing verification 0ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > verifyAttestation checks image and tenant 0ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > creates remote world with attestation 1ms
- ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > heartbeat updates lastHeartbeat 0ms
+ ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > heartbeat updates lastHeartbeat 1ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > snapshot and terminate 0ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:07:31
-   Duration  500ms (transform 231ms, setup 248ms, import 31ms, tests 5ms, environment 0ms)
+   Start at  10:54:40
+   Duration  474ms (transform 223ms, setup 251ms, import 23ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -24,8 +24,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  09:07:33
-   Duration  446ms (transform 208ms, setup 233ms, import 20ms, tests 5ms, environment 0ms)
+   Start at  10:54:41
+   Duration  434ms (transform 191ms, setup 215ms, import 19ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -39,16 +39,16 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  09:07:34
-   Duration  430ms (transform 206ms, setup 230ms, import 13ms, tests 4ms, environment 0ms)
+   Start at  10:54:43
+   Duration  425ms (transform 199ms, setup 224ms, import 11ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 3ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates exact version match 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > fails on major version mismatch 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > compareVersions orders correctly 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > formatVersion produces readable string 0ms
@@ -58,8 +58,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:07:36
-   Duration  425ms (transform 201ms, setup 224ms, import 14ms, tests 4ms, environment 0ms)
+   Start at  10:54:45
+   Duration  678ms (transform 320ms, setup 356ms, import 15ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -77,23 +77,23 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:07:37
-   Duration  418ms (transform 196ms, setup 219ms, import 14ms, tests 6ms, environment 0ms)
+   Start at  10:54:46
+   Duration  466ms (transform 202ms, setup 225ms, import 13ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 15ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 16ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves structured error data from an error response frame 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 13ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 14ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 11ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 12ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 0ms
@@ -101,12 +101,12 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error write failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > uses a fallback message for malformed JSON-RPC error responses 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 11ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  09:07:39
-   Duration  525ms (transform 217ms, setup 231ms, import 35ms, tests 74ms, environment 0ms)
+   Start at  10:54:48
+   Duration  593ms (transform 264ms, setup 275ms, import 48ms, tests 72ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -124,8 +124,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:07:40
-   Duration  449ms (transform 217ms, setup 235ms, import 17ms, tests 5ms, environment 0ms)
+   Start at  10:54:50
+   Duration  427ms (transform 205ms, setup 230ms, import 12ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -143,5 +143,6 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  09:07:42
-   Duration  486ms (transform 243ms, setup 235ms, import 61ms, tests 5ms, environment 0ms)
+   Start at  10:54:52
+   Duration  744ms (transform 395ms, setup 396ms, import 80ms, tests 6ms, environment 0ms)
+

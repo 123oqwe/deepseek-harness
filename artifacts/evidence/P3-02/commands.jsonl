@@ -1,13 +1,13 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/policy.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/escalation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/vocabulary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/roots.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/local.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/acl-grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/permission-presets.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
-{"command":"npx vitest run packages/interaction/permission-presets/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:01:28.356Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/policy.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/escalation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/vocabulary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/roots.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/local.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/acl-grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/permission-presets.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/projection.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}
+{"command":"npx vitest run packages/interaction/permission-presets/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T02:47:55.078Z"}

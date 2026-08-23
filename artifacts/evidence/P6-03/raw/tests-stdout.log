@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/memory/memory-policy/tests/lifecycle.spec.ts > P6-03 Memory Policy > creates a proposal in pending state 2ms
+ ✓ |thread-safe| packages/memory/memory-policy/tests/lifecycle.spec.ts > P6-03 Memory Policy > creates a proposal in pending state 3ms
  ✓ |thread-safe| packages/memory/memory-policy/tests/lifecycle.spec.ts > P6-03 Memory Policy > auto-accepts public with evidence 0ms
  ✓ |thread-safe| packages/memory/memory-policy/tests/lifecycle.spec.ts > P6-03 Memory Policy > rejects proposals without evidence 0ms
  ✓ |thread-safe| packages/memory/memory-policy/tests/lifecycle.spec.ts > P6-03 Memory Policy > reviews restricted sensitivity 0ms
@@ -11,25 +11,25 @@
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  09:40:46
-   Duration  489ms (transform 244ms, setup 268ms, import 28ms, tests 4ms, environment 0ms)
+   Start at  11:21:03
+   Duration  554ms (transform 271ms, setup 308ms, import 27ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > creates a record with all fields 3ms
+ ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > creates a record with all fields 5ms
  ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > isExpired checks validUntil 0ms
  ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > isExpired checks TTL 0ms
  ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > isAccessible checks scope and tenant 0ms
  ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > global scope is accessible to all 0ms
- ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > provenance relation tracks supersedes 0ms
+ ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > provenance relation tracks supersedes 1ms
  ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > provenance tracks disputes 0ms
  ✓ |thread-safe| packages/memory/memory/tests/record.spec.ts > P6-02 MemoryRecord with provenance > getRelations returns both directions 0ms
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  09:40:47
-   Duration  441ms (transform 210ms, setup 232ms, import 22ms, tests 5ms, environment 0ms)
+   Start at  11:21:04
+   Duration  575ms (transform 284ms, setup 304ms, import 63ms, tests 9ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -45,8 +45,8 @@
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  09:40:49
-   Duration  521ms (transform 257ms, setup 289ms, import 24ms, tests 5ms, environment 0ms)
+   Start at  11:21:07
+   Duration  731ms (transform 246ms, setup 279ms, import 24ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -63,21 +63,22 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  09:40:51
-   Duration  664ms (transform 338ms, setup 375ms, import 21ms, tests 5ms, environment 0ms)
+   Start at  11:21:08
+   Duration  777ms (transform 491ms, setup 564ms, import 21ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for pause-new-actions 2ms
- ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for kill-execution-world 0ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for pause-new-actions 4ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for kill-execution-world 1ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > cancel-run does not set global stop 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > resume clears global stop 0ms
- ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > stop orders are persistent 1ms
- ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates human interaction request 0ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > stop orders are persistent 2ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates human interaction request 1ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates interaction with options 1ms
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  09:40:52
-   Duration  553ms (transform 298ms, setup 342ms, import 14ms, tests 5ms, environment 0ms)
+   Start at  11:21:11
+   Duration  877ms (transform 511ms, setup 554ms, import 59ms, tests 11ms, environment 0ms)
+

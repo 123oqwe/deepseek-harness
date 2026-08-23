@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-03",
   "title": "Memory Proposal、验证、合并、遗忘与导出",
-  "audit_date": "2026-08-23T01:40:45.192Z",
-  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
+  "audit_date": "2026-08-23T03:21:01.685Z",
+  "git_sha": "0f310fd3abf3543676be20dbd18c4d18708e26b7",
   "manifest_files": [
     "packages/memory/memory-policy/src/index.ts",
     "packages/memory/memory-policy/src/proposal.ts",

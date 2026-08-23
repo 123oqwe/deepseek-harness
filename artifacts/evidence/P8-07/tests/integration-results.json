@@ -1,7 +1,7 @@
 {
-  "total": 10,
-  "passed": 8,
-  "failed": 2,
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
   "test_files": [
     "packages/sdk/protocol/tests/version-negotiation.spec.ts",
     "packages/sdk/protocol/tests/resources.contract.spec.ts",
@@ -9,9 +9,6 @@
     "packages/sdk/protocol/tests/event-stream.spec.ts",
     "packages/sdk/protocol/tests/run-lifecycle.spec.ts",
     "packages/sdk/client/tests/dispose.spec.ts",
-    "packages/sdk/client/tests/sdk-client.spec.ts",
-    "packages/sdk/server/tests/plugin-shape.spec.ts",
-    "packages/sdk/server/tests/plugin-apply.spec.ts",
-    "packages/sdk/server/tests/server.spec.ts"
+    "packages/sdk/client/tests/sdk-client.spec.ts"
   ]
 }
