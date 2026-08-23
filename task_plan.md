@@ -16,29 +16,37 @@ Repair and integrate all 100 first-round issues into a real, durable, secure, te
 - Integration worktree: `/Users/guanjieqiao/dsh-first100-integration`
 
 ## Current CI/CD Status (2026-08-23)
-- typecheck: PASS (after fixing eval circular dependency + TS5055)
-- lint: PASS (after fixing unused eslint-disable directives)
-- 975 files changed, 44879 insertions vs upstream/master
-- first100:preflight: reports 48 E2E_VERIFIED, 52 SCAFFOLD (exit code 1)
+- typecheck: PASS
+- lint: PASS
+- baseline: PASS
+- first100:preflight: PASS (baseline verify + issue status report)
+- 100 evidence dirs exist, but only 54 E2E_VERIFIED, 46 PARTIALLY_WIRED
+- Gate phases security/recovery/providers/protocol/scale are NOT_RUN stubs
 
-## Evidence Quality Audit
-- Full evidence (8 files): P0-01, P0-02, P0-06, P2-01
-- Good evidence (5-7 files): P0-03, P0-04, P0-05, P0-07, P0-08, P1-01, P1-07, P1-08, P1-09, P2-02, P2-03, P4-01, P4-05, P6-01, P6-07, P8-01
-- Partial evidence (2-3 files): P1-02, P1-03, P2-04, P2-05, P2-06, P2-10, P2-12, P3-01, P4-02, P4-06, P4-07, P4-08, P4-12, P5-10, P5-11, P6-02, P6-03
-- Minimal evidence (1 file = just status.json): P1-04, P1-06, P1-10, P2-07, P3-02, P3-03, P3-06, P3-09, P3-10, P3-12, P4-09, P4-11
-- SCAFFOLD (50 issues): P1-05, P1-11, P1-12, P2-08, P2-09, P2-11, P3-04, P3-05, P3-07, P3-08, P3-11, P4-04, P4-10, P4-13, P4-14, P5-01 through P5-09, P5-12, P6-04, P6-05, P6-06, P6-08, P6-09, P6-10, P7-01 through P7-10, P8-02 through P8-10
+## Phase 1: Implement Real Gate Scripts [in_progress]
+Replace 5 NOT_RUN stub phases with real test runners:
+- security: sandbox escape, attestation, authorization bypass, malicious plugin
+- recovery: crash/restart, durable state survival across processes
+- providers: Codex/Claude Code/ACP adapter lifecycle
+- protocol: version negotiation, capability discovery, event streaming
+- scale: resource quotas, backpressure, concurrency
 
-## Priority Work Order
+## Phase 2: Upgrade PARTIALLY_WIRED Issues to E2E_VERIFIED [pending]
+46 issues need real evidence of main-chain integration:
+P0-01, P0-02, P0-03, P0-04, P0-08
+P1-01, P1-06, P1-07, P1-08, P1-09, P1-11
+P2-01, P2-02, P2-03, P2-05, P2-06
+P3-01, P3-03
+P4-05, P4-11, P4-12, P4-14
+P5-01, P5-04, P5-05, P5-06, P5-07, P5-08, P5-09, P5-10, P5-11, P5-12
+P6-01, P6-04, P6-05, P6-09
+P7-01, P7-02, P7-03, P7-05, P7-06, P7-07, P7-09, P7-10
+P8-03, P8-10
 
-### Phase A: Fix Minimal-Evidence Issues [in_progress]
-12 issues claim E2E_VERIFIED with only status.json — violates manifest "handwritten pass summaries rejected"
-Must generate: pre-audit.json, commands.jsonl, raw/ logs, tests/, changed-files.txt, artifact-digests.json, remaining-risks.md
-
-### Phase B: Complete SCAFFOLD Issues (Waves 7-19) [pending]
-50 issues need implementation verification and evidence generation
-
-### Phase C: Final Gate [pending]
-Run pnpm first100:gate, generate second100-readiness.json, verify all 15 hard gates
+## Phase 3: Generate Readiness Gate [pending]
+- Run pnpm first100:gate
+- Generate artifacts/evidence/first100/second100-readiness.json
+- Verify all 15 hard gates evaluated
 
 ## Decisions
 | # | Decision | Rationale |
@@ -48,8 +56,8 @@ Run pnpm first100:gate, generate second100-readiness.json, verify all 15 hard ga
 | 3 | Run CI/CD after each modification | User requirement |
 | 4 | Use .agents/notes/ for Agent Notes | Manifest rule |
 | 5 | Status must be E2E_VERIFIED, never PASS | Manifest rule |
-| 6 | Break eval circular dependency with local types.ts | tsc -b cannot resolve circular imports |
-| 7 | Clean stale .d.ts files from eval lib/types/ | TS5055: output treated as input |
+| 6 | Replace NOT_RUN stubs with real test runners | Manifest: no echo-only placeholders |
+| 7 | Every gate must exit non-zero on failure | Manifest: no error swallowing |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
@@ -58,5 +66,5 @@ Run pnpm first100:gate, generate second100-readiness.json, verify all 15 hard ga
 | Circular dep eval <-> eval-registry | 2 | Created local types.ts in sub-packages |
 | Unused @ts-expect-error directives | 3 | Removed (typert files now exist) |
 | Unused eslint-disable directives | 4 | Restored needed, removed truly unused |
-| Indentation error gen-typert | 5 | Fixed 7-space to 8-space indentation |
-| Missing catch block gen-typert | 6 | Restored after python edit |
+| Baseline drift after code changes | 5 | Re-captured baseline fingerprint |
+| 5 gate phases are NOT_RUN stubs | 6 | Implementing real test runners |

@@ -2,13 +2,13 @@
  * First-100 recovery gate runner.
  *
  * Each phase gate runs real checks and reports per-issue status from evidence
- * packages. Unimplemented phases report NOT_RUN. No error swallowing, no
- * continue-on-error, no echo-only placeholders.
+ * packages. No error swallowing, no continue-on-error, no echo-only
+ * placeholders. Every phase that cannot produce evidence exits non-zero.
  *
  * Usage: tsx scripts/first100/run-gates.ts <phase>
  */
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -32,6 +32,23 @@ const phase = (process.argv[2] as Phase | undefined) ?? 'gate'
 function run(command: string, args: string[], label: string): boolean {
   console.log(`\n[gate] ${label}`)
   const result = spawnSync(command, args, {
+    cwd: repoRoot,
+    stdio: 'inherit',
+    encoding: 'utf8',
+  })
+  if (result.status !== 0) {
+    console.error(`[gate] FAIL: ${label} (exit ${result.status})`)
+    return false
+  }
+  console.log(`[gate] PASS: ${label}`)
+  return true
+}
+
+/** Run vitest on a set of test directory patterns. Exits non-zero on failure. */
+function runVitest(patterns: string[], label: string): boolean {
+  console.log(`\n[gate] ${label}`)
+  const args = ['run', '--no-coverage', '--testTimeout=30000', ...patterns]
+  const result = spawnSync('npx', ['vitest', ...args], {
     cwd: repoRoot,
     stdio: 'inherit',
     encoding: 'utf8',
@@ -97,6 +114,68 @@ function allVerified(): boolean {
   return true
 }
 
+/** Count issues by status. */
+function countByStatus(): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const id of evidenceIssues()) {
+    const s = issueStatus(id)
+    counts[s] = (counts[s] ?? 0) + 1
+  }
+  return counts
+}
+
+// Test directory patterns for each phase — these target the real test files
+// that exercise the corresponding first-100 domain. Vitest treats positional
+// args as filename substring filters.
+const securityPatterns = [
+  'packages/sandbox/',
+  'packages/attachment/attachment-security/',
+  'packages/workspace/workspace-trust/',
+  'packages/plugin/plugin-host/',
+  'packages/kernel/trust-kernel/',
+  'packages/identity/',
+  'packages/credentials/',
+  'packages/execution/local-isolation/',
+  'packages/execution/egress-proxy/',
+]
+
+const recoveryPatterns = [
+  'packages/run/run/tests/recovery.spec.ts',
+  'packages/run/message-bus/tests/crash.spec.ts',
+  'packages/workflow/workflow-journal/tests/resume.spec.ts',
+  'packages/interaction/approval-store/tests/recovery.spec.ts',
+  'packages/llm/llm-retry/tests/transport-recovery.spec.ts',
+  'packages/core/agent-loop/tests/resume.spec.ts',
+  'packages/schedule/schedule/tests/jsonl-restart.spec.ts',
+]
+
+const providerPatterns = [
+  'packages/hooks/hooks-codex/',
+  'packages/hooks/hooks-claude-code/',
+  'packages/sdk/protocol/tests/run-lifecycle.spec.ts',
+  'packages/execution/execution-world-container/',
+  'packages/execution/execution-world-remote/',
+  'packages/subagent/subagent-codex/',
+  'packages/subagent/subagent-claude-code/',
+  'packages/acp/acp/',
+]
+
+const protocolPatterns = [
+  'packages/sdk/protocol/tests/version-negotiation.spec.ts',
+  'packages/sdk/protocol/tests/resources.contract.spec.ts',
+  'packages/sdk/protocol/tests/transport.spec.ts',
+  'packages/sdk/protocol/tests/event-stream.spec.ts',
+  'packages/hooks/hook-protocol/',
+  'packages/typert/protocol/',
+]
+
+const scalePatterns = [
+  'packages/execution/resource-budget/',
+  'packages/settings/settings-file/tests/concurrency.spec.ts',
+  'packages/run/scheduler/',
+  'packages/workflow/workflow/',
+]
+
 let success = true
 
 switch (phase) {
@@ -113,22 +192,22 @@ switch (phase) {
     break
   }
   case 'security': {
-    console.log('[gate] security phase: NOT_RUN (no security tests implemented yet)')
+    success = runVitest(securityPatterns, 'security tests (sandbox, trust, identity, credentials)')
     reportStatus()
     break
   }
   case 'recovery': {
-    console.log('[gate] recovery phase: NOT_RUN (no recovery tests implemented yet)')
+    success = runVitest(recoveryPatterns, 'recovery tests (crash, resume, durable state)')
     reportStatus()
     break
   }
   case 'providers': {
-    console.log('[gate] providers phase: NOT_RUN (no provider tests implemented yet)')
+    success = runVitest(providerPatterns, 'provider tests (Codex, Claude Code, ACP, execution worlds)')
     reportStatus()
     break
   }
   case 'protocol': {
-    console.log('[gate] protocol phase: NOT_RUN (no protocol tests implemented yet)')
+    success = runVitest(protocolPatterns, 'protocol tests (version negotiation, transport, streaming)')
     reportStatus()
     break
   }
@@ -138,7 +217,7 @@ switch (phase) {
     break
   }
   case 'scale': {
-    console.log('[gate] scale phase: NOT_RUN (no scale tests implemented yet)')
+    success = runVitest(scalePatterns, 'scale tests (resource budget, scheduler, concurrency)')
     reportStatus()
     break
   }
@@ -154,25 +233,48 @@ switch (phase) {
       'capability',
       'scale',
     ]
+    const gateResults: Record<string, boolean> = {}
     for (const p of phases) {
       const result = spawnSync('pnpm', ['run', `first100:${p}`], {
         cwd: repoRoot,
         stdio: 'inherit',
         encoding: 'utf8',
       })
+      gateResults[p] = result.status === 0
       if (result.status !== 0) {
         console.error(`[gate] FAIL: first100:${p}`)
         success = false
       }
     }
-    if (success) {
-      const verified = allVerified()
-      if (!verified) success = false
+    const verified = allVerified()
+    if (!verified) success = false
+
+    // Generate readiness report
+    const readinessDir = join(evidenceRoot, 'first100')
+    mkdirSync(readinessDir, { recursive: true })
+    const counts = countByStatus()
+    const readiness = {
+      schema_version: '1.0.0',
+      generated_at: new Date().toISOString(),
+      commit_sha: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).stdout.trim(),
+      upstream_base_sha: 'b150a551b8d465e31e418e1b2eaf5e79bbb7d28e',
+      gate_results: gateResults,
+      issue_counts: counts,
+      total_issues: evidenceIssues().length,
+      all_e2e_verified: verified,
+      second_100_implementation: success ? 'GO' : 'NO_GO',
+      blocking_reasons: success ? [] : [
+        ...Object.entries(gateResults).filter(([, v]) => !v).map(([k]) => `gate first100:${k} FAILED`),
+        ...verified ? [] : [`${counts['PARTIALLY_WIRED'] ?? 0} issues still PARTIALLY_WIRED`],
+      ],
     }
+    writeFileSync(join(readinessDir, 'second100-readiness.json'), JSON.stringify(readiness, null, 2) + '\n')
+    console.log('\n[gate] Readiness report written to artifacts/evidence/first100/second100-readiness.json')
+
     if (success) {
-      console.log('\n[gate] SECOND_100_IMPLEMENTATION = NO_GO (first-100 not complete)')
+      console.log('\n[gate] SECOND_100_IMPLEMENTATION = GO')
     } else {
-      console.error('\n[gate] SECOND_100_IMPLEMENTATION = NO_GO (gates failed)')
+      console.error('\n[gate] SECOND_100_IMPLEMENTATION = NO_GO')
     }
     break
   }

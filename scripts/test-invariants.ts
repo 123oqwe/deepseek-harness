@@ -8,7 +8,18 @@
 import { expect } from 'vitest'
 import { FiberState, Inject, RegistryService, ValidationError } from '@deepseek-ai/cordis'
 import type { Context, Plugin } from '@deepseek-ai/cordis'
+import { initTrustKernel, isKernelInitialized } from '@deepseek-ai/dsh-trust-kernel'
 import { AttachmentStore } from '@deepseek-ai/dsh-attachment'
+
+// Initialize the trust kernel in insecure mode for tests that load plugins
+// requiring kernel initialization (subagent, tools, hooks). Tests that need
+// to test the kernel's own behavior call resetKernelForTesting() in their
+// own beforeEach, which resets the singleton; this setup re-initializes it
+// before the next test file runs in the same worker.
+if (!isKernelInitialized()) {
+  initTrustKernel({ insecure: true })
+}
+
 import type {
   ImageAttachmentLimits,
   ImageAttachmentRef,
