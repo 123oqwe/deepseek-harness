@@ -1,22 +1,22 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/plugin/plugin-ownership/tests/ownership.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/schema.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/scoped.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/code-mode.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/execution-signal-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/tools.spec.ts --reporter=verbose","exit_code":143,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/execution-mode.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/py-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/properties.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/json-schema.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/ts-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/core/tools/tests/gen-tool-catalog.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/composition.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/versioning.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/runner.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
-{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:47:06.903Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/plugin/plugin-ownership/tests/ownership.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/schema.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/scoped.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/code-mode.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/execution-signal-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/tools.spec.ts --reporter=verbose","exit_code":143,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/execution-mode.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/py-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/properties.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/json-schema.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/ts-types.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/core/tools/tests/gen-tool-catalog.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/composition.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/versioning.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/sandbox-context.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/extensions/cordis-host-runner/tests/runner.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:44:05.477Z"}

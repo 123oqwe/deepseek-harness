@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-06",
   "title": "Durable Inbox / Outbox 与 Exactly-Once Effect Handoff",
-  "audit_date": "2026-08-22T23:26:39.368Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T01:11:18.333Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/run/message-bus/src/index.ts",
     "packages/run/message-bus/src/inbox.ts",

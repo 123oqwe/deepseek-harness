@@ -1,78 +1,78 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > signature verification > computes digest of plugin content 5ms
- ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > signature verification > rejects unknown key id 1ms
- ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > signature verification > verifies signature with trusted root 127ms
- ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > SBOM > generates SBOM from dependencies 3ms
- ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > SBOM > verifies SBOM against installed packages 1ms
+ ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > signature verification > computes digest of plugin content 2ms
+ ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > signature verification > rejects unknown key id 0ms
+ ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > signature verification > verifies signature with trusted root 26ms
+ ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > SBOM > generates SBOM from dependencies 1ms
+ ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > SBOM > verifies SBOM against installed packages 0ms
  ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > SBOM > detects missing dependencies 1ms
  ✓ |thread-safe| packages/plugin/plugin-provenance/tests/provenance.spec.ts > P1-02 Plugin Provenance > SBOM > detects unexpected dependencies 0ms
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  06:43:17
-   Duration  1.70s (transform 736ms, setup 856ms, import 84ms, tests 141ms, environment 0ms)
+   Start at  08:41:38
+   Duration  473ms (transform 213ms, setup 235ms, import 25ms, tests 33ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 45ms
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 10ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 27ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 7ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  06:43:22
-   Duration  1.06s (transform 607ms, setup 473ms, import 233ms, tests 57ms, environment 0ms)
+   Start at  08:41:39
+   Duration  606ms (transform 336ms, setup 219ms, import 161ms, tests 34ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 11ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 7ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  06:43:24
-   Duration  774ms (transform 385ms, setup 436ms, import 19ms, tests 13ms, environment 0ms)
+   Start at  08:41:41
+   Duration  431ms (transform 208ms, setup 234ms, import 12ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > initializes before any plugin loads 5ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > forbids re-initialization 3ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > root principal has stable id and insecure flag 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > insecure mode sets principal.insecure = true 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > kernel deny is monotonic and cannot be overridden 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > initializes before any plugin loads 4ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > forbids re-initialization 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > root principal has stable id and insecure flag 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > insecure mode sets principal.insecure = true 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > kernel deny is monotonic and cannot be overridden 1ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > non-kernel capabilities are delegated to plugins 1ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is tamper-evident 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is durable: survives process restart (new kernel instance) 3ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit log file exists on disk after append 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: rejects random bytes with trusted keyId 153ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: accepts valid signature 43ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is tamper-evident 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit chain is durable: survives process restart (new kernel instance) 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > audit log file exists on disk after append 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: rejects random bytes with trusted keyId 80ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification uses real crypto: accepts valid signature 62ms
  ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification rejects untrusted key ids 1ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification rejects missing key id 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > insecure mode skips signature verification 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > tenant boundary rejects foreign principals 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > tenant boundary accepts own principal 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > sandbox attestation queries real OS environment (not hardcoded success) 4ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > sandbox attestation is skipped in insecure mode 3ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > kernel API has no model-visible text 3ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > signature verification rejects missing key id 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > insecure mode skips signature verification 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > tenant boundary rejects foreign principals 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > tenant boundary accepts own principal 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > sandbox attestation queries real OS environment (not hardcoded success) 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > sandbox attestation is skipped in insecure mode 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/boundary.spec.ts > P0-02 Trust Kernel boundary > kernel API has no model-visible text 1ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  06:43:27
-   Duration  1.07s (transform 441ms, setup 471ms, import 60ms, tests 239ms, environment 0ms)
+   Start at  08:41:42
+   Duration  590ms (transform 203ms, setup 221ms, import 29ms, tests 163ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized throws when kernel not initialized 3ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized passes after initTrustKernel 2ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel can only be initialized once 1ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > isKernelInitialized returns false after reset 1ms
- ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel initialized in test mode (insecure) allows operations 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized throws when kernel not initialized 2ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > assertKernelInitialized passes after initTrustKernel 1ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel can only be initialized once 0ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > isKernelInitialized returns false after reset 0ms
+ ✓ |thread-safe| packages/kernel/trust-kernel/tests/enforcement.spec.ts > P0-02 Trust Kernel Enforcement > kernel initialized in test mode (insecure) allows operations 0ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  06:43:30
-   Duration  839ms (transform 400ms, setup 443ms, import 51ms, tests 9ms, environment 0ms)
+   Start at  08:41:44
+   Duration  429ms (transform 207ms, setup 227ms, import 23ms, tests 6ms, environment 0ms)

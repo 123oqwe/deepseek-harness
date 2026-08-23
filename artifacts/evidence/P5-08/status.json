@@ -2,7 +2,7 @@
   "issue_id": "P5-08",
   "title": "Claude Code Adapter：结构化流、会话恢复、工具与 Artifact 映射",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "8/14 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T23:52:51.347Z",
+  "evidence_date": "2026-08-23T01:30:03.771Z",
   "runtime_reachability": {
     "issue_id": "P5-08",
     "source_files": 5,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-22T23:52:51.347Z"
+    "timestamp": "2026-08-23T01:30:03.771Z"
   },
   "remaining_risks": [
     "6 test(s) failing",

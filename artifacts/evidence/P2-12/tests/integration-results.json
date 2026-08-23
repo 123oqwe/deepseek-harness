@@ -1,7 +1,7 @@
 {
   "total": 14,
-  "passed": 13,
-  "failed": 1,
+  "passed": 14,
+  "failed": 0,
   "test_files": [
     "packages/interaction/human-channel/tests/server-request.spec.ts",
     "packages/interaction/human-channel/tests/emergency-stop.spec.ts",

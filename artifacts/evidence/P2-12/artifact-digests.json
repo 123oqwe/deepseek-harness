@@ -1,5 +1,5 @@
 {
-  "packages/interaction/human-channel/src/index.ts": "51ec594c2b6a795fea4f594ddb6ba350c1a5b5f37f0d2fe2fd5918eb5642e308",
+  "packages/interaction/human-channel/src/index.ts": "774b221f99ffad85eaa9b25d375b6a76aef45e29bb88e0c99f499f4dbe15df4c",
   "packages/interaction/human-channel/src/types.ts": "5da4896b0a883be94f9930be2d1c2732f52b1c1a6dbc4828bc58a0993bf2c612",
   "apps/cli/src/process-shutdown.ts": "30743d5ac88154b25fd2d14ac22f7ff1b8d94e915547383de1ca7e49d1bbfc66",
   "packages/core/agent/src/dispatch.ts": "0a5abc67f27ffc688c7c372359aa8564a983ff4b435076542140dddc5dd1ba15",

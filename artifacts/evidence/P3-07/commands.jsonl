@@ -1,9 +1,9 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/local.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/acl-grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox-local/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/escalation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/vocabulary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/policy.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
-{"command":"npx vitest run packages/sandbox/sandbox/tests/roots.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:20:07.807Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/local.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/acl-grants.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox-local/tests/conformance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/escalation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/vocabulary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/policy.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}
+{"command":"npx vitest run packages/sandbox/sandbox/tests/roots.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T01:07:07.436Z"}

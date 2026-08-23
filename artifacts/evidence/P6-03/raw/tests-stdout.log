@@ -11,8 +11,8 @@
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  08:00:16
-   Duration  607ms (transform 327ms, setup 368ms, import 32ms, tests 5ms, environment 0ms)
+   Start at  09:40:46
+   Duration  489ms (transform 244ms, setup 268ms, import 28ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -28,8 +28,8 @@
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  08:00:17
-   Duration  576ms (transform 298ms, setup 324ms, import 41ms, tests 7ms, environment 0ms)
+   Start at  09:40:47
+   Duration  441ms (transform 210ms, setup 232ms, import 22ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -45,13 +45,13 @@
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  08:00:19
-   Duration  546ms (transform 261ms, setup 293ms, import 27ms, tests 5ms, environment 0ms)
+   Start at  09:40:49
+   Duration  521ms (transform 257ms, setup 289ms, import 24ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > sends a request 1ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > sends a request 2ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > accepts a response 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > rejects duplicate request 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > rejects response for unknown request 0ms
@@ -63,22 +63,21 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  08:00:21
-   Duration  466ms (transform 207ms, setup 231ms, import 13ms, tests 4ms, environment 0ms)
+   Start at  09:40:51
+   Duration  664ms (transform 338ms, setup 375ms, import 21ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for pause-new-actions 2ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for kill-execution-world 0ms
- × |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > cancel-run does not set global stop 5ms
-   → expected true to be false // Object.is equality
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > cancel-run does not set global stop 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > resume clears global stop 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > stop orders are persistent 1ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates human interaction request 0ms
- ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates interaction with options 0ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates interaction with options 1ms
 
- Test Files  1 failed (1)
-      Tests  1 failed | 6 passed (7)
-   Start at  08:00:22
-   Duration  498ms (transform 238ms, setup 274ms, import 12ms, tests 9ms, environment 0ms)
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  09:40:52
+   Duration  553ms (transform 298ms, setup 342ms, import 14ms, tests 5ms, environment 0ms)

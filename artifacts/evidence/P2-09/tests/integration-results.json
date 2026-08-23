@@ -1,7 +1,7 @@
 {
   "total": 4,
-  "passed": 3,
-  "failed": 1,
+  "passed": 4,
+  "failed": 0,
   "test_files": [
     "packages/interaction/approval-quorum/tests/quorum.spec.ts",
     "packages/interaction/approval-store/tests/recovery.spec.ts",

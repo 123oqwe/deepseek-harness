@@ -1,7 +1,7 @@
 {
   "total": 9,
-  "passed": 8,
-  "failed": 1,
+  "passed": 9,
+  "failed": 0,
   "test_files": [
     "packages/policy/policy-language/tests/golden.spec.ts",
     "packages/interaction/permission-presets/tests/profile.spec.ts",

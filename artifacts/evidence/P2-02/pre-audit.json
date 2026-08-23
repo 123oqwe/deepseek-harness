@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-02",
   "title": "可衰减 Capability Token 与子 Agent 委托",
-  "audit_date": "2026-08-22T22:53:20.038Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T00:47:39.170Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/policy/capability-token/src/index.ts",
     "packages/policy/capability-token/src/types.ts",

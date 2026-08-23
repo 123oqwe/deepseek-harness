@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-09",
   "title": "多人审批与职责分离",
-  "status": "PARTIALLY_WIRED",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "status": "E2E_VERIFIED",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,21 +13,20 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "3/4 passed"
+    "tests": "4/4 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T23:07:41.610Z",
+  "evidence_date": "2026-08-23T00:58:14.378Z",
   "runtime_reachability": {
     "issue_id": "P2-09",
     "source_files": 5,
     "test_files": 4,
     "compilation": "PASS",
     "lint": "PASS",
-    "tests": "FAIL",
-    "timestamp": "2026-08-22T23:07:41.610Z"
+    "tests": "PASS",
+    "timestamp": "2026-08-23T00:58:14.378Z"
   },
   "remaining_risks": [
-    "1 test(s) failing",
     "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

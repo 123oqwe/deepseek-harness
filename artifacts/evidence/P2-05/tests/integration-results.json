@@ -1,7 +1,7 @@
 {
   "total": 39,
-  "passed": 17,
-  "failed": 22,
+  "passed": 18,
+  "failed": 21,
   "test_files": [
     "packages/policy/policy-engine/tests/policy.spec.ts",
     "packages/core/tools/tests/schema.spec.ts",

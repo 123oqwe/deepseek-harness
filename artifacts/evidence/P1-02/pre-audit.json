@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-02",
   "title": "插件签名、来源证明与 SBOM",
-  "audit_date": "2026-08-22T22:43:14.862Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T00:41:37.071Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/plugin/plugin-provenance/src/index.ts",
     "packages/plugin/plugin-provenance/src/signature.ts",

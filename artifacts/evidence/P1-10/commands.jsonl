@@ -1,7 +1,7 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
-{"command":"npx vitest run packages/plugin/plugin-migrations/tests/rollback.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
-{"command":"npx vitest run packages/storage/storage/tests/registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
-{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
-{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
-{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}
+{"command":"npx vitest run packages/plugin/plugin-migrations/tests/rollback.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}
+{"command":"npx vitest run packages/storage/storage/tests/registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}
+{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}
+{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}
+{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:45:46.424Z"}

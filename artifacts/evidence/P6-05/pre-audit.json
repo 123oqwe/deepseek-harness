@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-05",
   "title": "Per-Agent Context Topology 与稳定 Context Telemetry Contract",
-  "audit_date": "2026-08-23T00:01:19.366Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T01:41:48.882Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/context/context-topology/src/index.ts",
     "packages/context/context-topology/src/types.ts",

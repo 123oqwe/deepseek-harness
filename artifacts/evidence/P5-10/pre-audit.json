@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-10",
   "title": "Continuation、Steer、Human Input 与 Cancellation Convergence 修复",
-  "audit_date": "2026-08-22T23:54:54.891Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T01:34:29.739Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/subagent/subagent/src/control.ts",
     "packages/subagent/subagent/tests/control-race.e2e.ts",

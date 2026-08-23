@@ -1,7 +1,7 @@
 {
   "total": 5,
-  "passed": 4,
-  "failed": 1,
+  "passed": 5,
+  "failed": 0,
   "test_files": [
     "packages/memory/memory-policy/tests/lifecycle.spec.ts",
     "packages/memory/memory/tests/record.spec.ts",

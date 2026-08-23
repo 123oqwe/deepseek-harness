@@ -2,7 +2,7 @@
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > sends a request 2ms
- ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > accepts a response 1ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > accepts a response 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > rejects duplicate request 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > rejects response for unknown request 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/server-request.spec.ts > P8-04 Server→Client Requests > rejects unauthorized role 0ms
@@ -13,58 +13,57 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  07:08:30
-   Duration  800ms (transform 465ms, setup 518ms, import 22ms, tests 6ms, environment 0ms)
+   Start at  08:58:47
+   Duration  561ms (transform 297ms, setup 337ms, import 19ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for pause-new-actions 3ms
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for pause-new-actions 2ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > issues emergency stop for kill-execution-world 0ms
- × |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > cancel-run does not set global stop 8ms
-   → expected true to be false // Object.is equality
+ ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > cancel-run does not set global stop 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > resume clears global stop 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > stop orders are persistent 1ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates human interaction request 0ms
  ✓ |thread-safe| packages/interaction/human-channel/tests/emergency-stop.spec.ts > P2-12 Emergency Stop and Human Interaction Channel > creates interaction with options 0ms
 
- Test Files  1 failed (1)
-      Tests  1 failed | 6 passed (7)
-   Start at  07:08:32
-   Duration  684ms (transform 324ms, setup 367ms, import 23ms, tests 14ms, environment 0ms)
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  08:58:48
+   Duration  459ms (transform 229ms, setup 259ms, import 12ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 16ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 8ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 3ms
  ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 7ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 2ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  07:08:34
-   Duration  1.15s (transform 651ms, setup 492ms, import 290ms, tests 57ms, environment 0ms)
+   Start at  08:58:50
+   Duration  738ms (transform 420ms, setup 296ms, import 199ms, tests 49ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 2ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 1ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> waiting_tool 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> completed 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects completed -> running 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects failed -> running 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows orphaned -> starting (recovery) 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > assertTransition throws on invalid 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 1ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isTerminal identifies completed and failed 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isActive excludes terminal and orphaned 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isWaiting identifies waiting states 0ms
@@ -73,63 +72,63 @@
 
  Test Files  1 passed (1)
       Tests  13 passed (13)
-   Start at  07:08:37
-   Duration  638ms (transform 296ms, setup 339ms, import 17ms, tests 6ms, environment 0ms)
+   Start at  08:58:52
+   Duration  476ms (transform 238ms, setup 268ms, import 12ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 18ms
+ ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 15ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  07:08:39
-   Duration  903ms (transform 510ms, setup 330ms, import 277ms, tests 19ms, environment 0ms)
+   Start at  08:58:53
+   Duration  567ms (transform 312ms, setup 233ms, import 137ms, tests 16ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 9ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 7ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > normalizes splice coordinates, rejects duplicate identities, and reports missing removals 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > clears both pending lists as durable cancellations 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 17ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 11ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 13ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 4ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 4ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contains asynchronous creation rejection and every disposal-listener failure 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 5ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > injects the fused subject even when the payload carries a conflicting agent field 2ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > explicit cancellation contract > exposes the closed typed cancellation cause at the Agent seam 0ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 3ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  07:08:42
-   Duration  1.12s (transform 610ms, setup 399ms, import 388ms, tests 86ms, environment 0ms)
+   Start at  08:58:55
+   Duration  803ms (transform 425ms, setup 275ms, import 269ms, tests 67ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 8ms
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 2ms
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 2ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 1ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 1ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  07:08:45
-   Duration  662ms (transform 292ms, setup 328ms, import 29ms, tests 13ms, environment 0ms)
+   Start at  08:58:57
+   Duration  509ms (transform 244ms, setup 265ms, import 23ms, tests 12ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 13ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 9ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports the latest turn that entered a model step 1ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and was then stopped before any step 0ms
@@ -143,63 +142,63 @@
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  07:08:47
-   Duration  1.57s (transform 1.07s, setup 650ms, import 644ms, tests 17ms, environment 0ms)
+   Start at  08:58:58
+   Duration  666ms (transform 392ms, setup 265ms, import 208ms, tests 13ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 68ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 15ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 34ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 10ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 6ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 10ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 12ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 9ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 15ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 16ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 11ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 11ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 9ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 13ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 15ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 5ms
 
  Test Files  1 passed (1)
       Tests  41 passed (41)
-   Start at  07:08:50
-   Duration  1.53s (transform 513ms, setup 360ms, import 519ms, tests 346ms, environment 0ms)
+   Start at  08:59:00
+   Duration  1.11s (transform 402ms, setup 291ms, import 415ms, tests 211ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > has supported versions 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > isSupported checks version 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates exact version match 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/version-negotiation.spec.ts > P8-01 Protocol Version Negotiation > negotiates backward compatible version 0ms
@@ -212,61 +211,61 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  07:08:53
-   Duration  1.70s (transform 1.23s, setup 539ms, import 835ms, tests 5ms, environment 0ms)
+   Start at  08:59:02
+   Duration  463ms (transform 235ms, setup 263ms, import 16ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > creates and gets a resource by ID 5ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > creates and gets a resource by ID 2ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > returns undefined for cross-tenant access 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > lists resources with pagination 7ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > filters resources by field 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > lists resources with pagination 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > filters resources by field 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > updates with optimistic concurrency token 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives created events 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives updated events 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives created events 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives updated events 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives deleted events 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > delete is tenant-scoped 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > delete is tenant-scoped 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > cross-tenant ID enumeration returns 404/undefined 0ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  07:08:56
-   Duration  1.34s (transform 676ms, setup 758ms, import 48ms, tests 21ms, environment 0ms)
+   Start at  08:59:04
+   Duration  452ms (transform 228ms, setup 253ms, import 15ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 17ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 16ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves structured error data from an error response frame 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 13ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 13ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 16ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 11ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the transport closes 2ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error write failures 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the transport closes 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error write failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > uses a fallback message for malformed JSON-RPC error responses 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores responses that do not match a pending request 12ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  07:09:00
-   Duration  757ms (transform 329ms, setup 346ms, import 58ms, tests 85ms, environment 0ms)
+   Start at  08:59:05
+   Duration  535ms (transform 229ms, setup 240ms, import 40ms, tests 76ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > publishes events with increasing sequence 2ms
- ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > subscriber receives missed events on reconnect 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > subscriber receives missed events on reconnect 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > subscriber only gets events after cursor 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > ack updates cursor 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > replay returns events in range 0ms
@@ -278,8 +277,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  07:09:02
-   Duration  656ms (transform 335ms, setup 377ms, import 23ms, tests 8ms, environment 0ms)
+   Start at  08:59:07
+   Duration  468ms (transform 238ms, setup 266ms, import 15ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -293,9 +292,9 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > duplicate commandId is idempotent 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork creates new run without inheriting secrets 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork lineage is tracked 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > validateTransition checks rules 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > validateTransition checks rules 0ms
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  07:09:04
-   Duration  668ms (transform 330ms, setup 330ms, import 76ms, tests 7ms, environment 0ms)
+   Start at  08:59:08
+   Duration  537ms (transform 286ms, setup 272ms, import 78ms, tests 6ms, environment 0ms)

@@ -1,6 +1,6 @@
 {
   "packages/sdk/protocol/src/server-requests.ts": "fc72b0482578e3219dfaee5eadba3d31955530c50a92bc1a76a8dbe949b4f423",
-  "packages/interaction/human-channel/src/index.ts": "51ec594c2b6a795fea4f594ddb6ba350c1a5b5f37f0d2fe2fd5918eb5642e308",
+  "packages/interaction/human-channel/src/index.ts": "774b221f99ffad85eaa9b25d375b6a76aef45e29bb88e0c99f499f4dbe15df4c",
   "packages/interaction/human-channel/src/types.ts": "5da4896b0a883be94f9930be2d1c2732f52b1c1a6dbc4828bc58a0993bf2c612",
   "packages/sdk/protocol/src/transport.ts": "7aed4460d1bccc9bc525d2c54f2220ba5360ae529cb86711eb043ad7471c45ac",
   "packages/sdk/protocol/src/types.ts": "b9de1f85d14956fb79573d24a220e687e78efe6903e6bae820ad21a41d536878",

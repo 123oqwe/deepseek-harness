@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-06",
   "title": "Authenticated Principal、Tenant Boundary、RBAC/ABAC 与 API Scope",
-  "audit_date": "2026-08-23T00:22:39.833Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T02:02:40.701Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/identity/auth/src/index.ts",
     "packages/identity/auth/src/types.ts",

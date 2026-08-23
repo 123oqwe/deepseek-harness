@@ -1,7 +1,7 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
-{"command":"npx vitest run packages/plugin/plugin-provenance/tests/provenance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
-{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
-{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
-{"command":"npx vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
-{"command":"npx vitest run packages/kernel/trust-kernel/tests/enforcement.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:43:14.862Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}
+{"command":"npx vitest run packages/plugin/plugin-provenance/tests/provenance.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}
+{"command":"npx vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}
+{"command":"npx vitest run packages/kernel/trust-kernel/tests/enforcement.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:41:37.071Z"}

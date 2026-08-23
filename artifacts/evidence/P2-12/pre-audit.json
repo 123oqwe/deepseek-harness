@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-12",
   "title": "全局 Emergency Stop 与通用 Human Interaction Channel",
-  "audit_date": "2026-08-22T23:08:28.450Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T00:58:45.981Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/interaction/human-channel/src/index.ts",
     "packages/interaction/human-channel/src/types.ts",

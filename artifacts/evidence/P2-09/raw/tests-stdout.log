@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > initiates a quorum request 2ms
+ ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > initiates a quorum request 1ms
  ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > satisfies quorum with required roles 0ms
  ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > denies on any deny vote 0ms
  ✓ |thread-safe| packages/interaction/approval-quorum/tests/quorum.spec.ts > P2-09 Approval Quorum > rejects initiator approval 1ms
@@ -14,8 +14,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  07:07:43
-   Duration  820ms (transform 459ms, setup 508ms, import 29ms, tests 6ms, environment 0ms)
+   Start at  08:58:15
+   Duration  511ms (transform 262ms, setup 299ms, import 15ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -25,35 +25,34 @@
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > denies a request 0ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > consumes an approved request 0ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > rejects consume of non-approved 1ms
- ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > revokes an approval 0ms
+ ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > revokes an approval 1ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > getByRun returns all records for a run 1ms
  ✓ |thread-safe| packages/interaction/approval-store/tests/recovery.spec.ts > P2-07 Persistent Approval Store > getPending returns only requested 0ms
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  07:07:45
-   Duration  601ms (transform 284ms, setup 318ms, import 27ms, tests 7ms, environment 0ms)
+   Start at  08:58:17
+   Duration  449ms (transform 217ms, setup 239ms, import 25ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- × |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > kernel deny is monotonic and cannot be overridden 6ms
-   → Monotonic deny violation: rule 'p1' attempted to change a deny to allow
- ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > plugin deny blocks lower priority allow 1ms
- ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > allows when only allow rules match 1ms
+ ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > kernel deny is monotonic and cannot be overridden 2ms
+ ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > plugin deny blocks lower priority allow 0ms
+ ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > allows when only allow rules match 0ms
  ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > default deny when no rules match 0ms
- ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > condition-based rules evaluate correctly 1ms
+ ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > condition-based rules evaluate correctly 0ms
  ✓ |thread-safe| packages/policy/policy-engine/tests/policy.spec.ts > P2-05 Policy Decision Service with Monotonic Deny > wildcard rules match any capability 0ms
 
- Test Files  1 failed (1)
-      Tests  1 failed | 5 passed (6)
-   Start at  07:07:47
-   Duration  650ms (transform 313ms, setup 341ms, import 32ms, tests 11ms, environment 0ms)
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  08:58:18
+   Duration  441ms (transform 218ms, setup 240ms, import 17ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > delegation chain > creates a chain from a root principal 4ms
+ ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > delegation chain > creates a chain from a root principal 3ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > delegation chain > extends chain with same-tenant delegation 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > delegation chain > rejects cross-tenant delegation 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > delegation chain > tracks delegation depth 0ms
@@ -64,12 +63,12 @@
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > tenant boundary enforcement > same tenant check passes for same tenant 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > tenant boundary enforcement > same tenant check fails for different tenant 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > tenant boundary enforcement > assertTenant throws on cross-tenant 0ms
- ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > tenant boundary enforcement > assertTenant passes for same tenant 1ms
+ ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > tenant boundary enforcement > assertTenant passes for same tenant 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > anonymous dev principal > isAnonymousDev returns true for anon-dev 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > anonymous dev principal > isAdmin returns false for anon-dev 0ms
  ✓ |thread-safe| packages/identity/principal/tests/identity.spec.ts > P2-01 Principal/Tenant identity > full delegation chain traceability > can trace root user/tenant from any point in chain 0ms
 
  Test Files  1 passed (1)
       Tests  15 passed (15)
-   Start at  07:07:49
-   Duration  756ms (transform 398ms, setup 436ms, import 33ms, tests 9ms, environment 0ms)
+   Start at  08:58:20
+   Duration  449ms (transform 218ms, setup 239ms, import 19ms, tests 6ms, environment 0ms)

@@ -1,7 +1,7 @@
 {
   "docs/audit/baseline-b150a551.md": "53ae5eff8c21bfe5762bebdba770cdf63f03ccba86232f576cbe4a876ef7bf42",
   "scripts/release/baseline-fingerprint.mjs": "78932ae7225e62801724f3c5e6e65a7c626e877de47055b0fd261c64ea136b56",
-  ".dsh/baseline.json": "5e10120b45c285258415d556dff21ee80e1ea0d75152153ccd52d0c6ec21a03d",
+  ".dsh/baseline.json": "cb2cd96344a047df354e4fd665444537570849e178d86364df51626a0794862d",
   "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
   "pnpm-lock.yaml": "a29c04cee57b94838784be06840aeff1bc4379ddcf4c6af5c4d867e5ae31fc70",
   "packages/bundle/base/cordis.patch.yml": "9870a518274194c0e1ebd870cee2737fbc2ffc04ae36887871ffe6fcf74beac1",

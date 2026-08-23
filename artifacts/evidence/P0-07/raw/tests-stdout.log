@@ -4,10 +4,10 @@
  ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > collect-evidence.mjs script exists and is executable 2ms
  ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > verify-evidence.mjs script exists and is executable 0ms
  ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > evidence format types are exported correctly 0ms
- ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > evidence:collect and evidence:verify scripts are in package.json 1ms
- ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > EvidencePackage type is exported from package 6ms
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > evidence:collect and evidence:verify scripts are in package.json 0ms
+ ✓ |thread-safe| packages/assurance/evidence-format/tests/integration.spec.ts > P0-07 Release Evidence Package Integration > EvidencePackage type is exported from package 3ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  06:42:15
-   Duration  945ms (transform 477ms, setup 528ms, import 25ms, tests 11ms, environment 0ms)
+   Start at  08:41:17
+   Duration  461ms (transform 226ms, setup 252ms, import 15ms, tests 7ms, environment 0ms)

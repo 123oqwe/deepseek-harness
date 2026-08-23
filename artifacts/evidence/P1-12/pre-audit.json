@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-12",
   "title": "官方 Plugin Verifier 与市场信任等级",
-  "audit_date": "2026-08-22T22:50:34.682Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T00:46:10.406Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "apps/cli/src/plugin-verify.ts",
     "packages/plugin/plugin-certification/src/index.ts",

@@ -1,34 +1,34 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > creates container from valid spec 3ms
- ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects invalid image digest 1ms
+ ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > creates container from valid spec 2ms
+ ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects invalid image digest 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects Docker socket mount 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > rejects host home mount 0ms
- ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > attests container properties 1ms
+ ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > attests container properties 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > terminates container 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > cleanup removes all containers 0ms
  ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > verifies image digest format 0ms
- ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > computes reproducibility hash 2ms
+ ✓ |thread-safe| packages/execution/execution-world-container/tests/provider.spec.ts > P3-08 Container ExecutionWorld Provider > computes reproducibility hash 1ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  07:20:40
-   Duration  829ms (transform 403ms, setup 426ms, import 77ms, tests 10ms, environment 0ms)
+   Start at  09:07:25
+   Duration  457ms (transform 211ms, setup 234ms, import 23ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 5ms
- ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 1ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 3ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > rejects invalid transition 1ms
- ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroys a world 1ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroys a world 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroyed world cannot transition 0ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  07:20:43
-   Duration  1.39s (transform 628ms, setup 709ms, import 73ms, tests 9ms, environment 0ms)
+   Start at  09:07:27
+   Duration  420ms (transform 192ms, setup 213ms, import 23ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -42,5 +42,5 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  07:20:46
-   Duration  655ms (transform 334ms, setup 374ms, import 29ms, tests 5ms, environment 0ms)
+   Start at  09:07:28
+   Duration  419ms (transform 201ms, setup 224ms, import 15ms, tests 4ms, environment 0ms)

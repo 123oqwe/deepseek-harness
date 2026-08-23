@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-05",
   "title": "AcceptanceGate 与 OutcomePackage：只有被证明的结果才能完成 Run",
-  "audit_date": "2026-08-23T00:12:07.883Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T01:52:28.449Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/assurance/acceptance-gate/src/index.ts",
     "packages/assurance/acceptance-gate/src/types.ts",

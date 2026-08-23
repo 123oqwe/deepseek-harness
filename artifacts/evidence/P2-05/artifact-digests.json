@@ -1,7 +1,7 @@
 {
   "packages/policy/policy-engine/src/index.ts": "e93ab35bf7db48c39215679d9699f5d02a895cee78f3c518c1e22d82998f1b80",
   "packages/policy/policy-engine/src/types.ts": "912020f568690b5cc59e4a4a71a0c0391457c1085bf54da179f4f15dd7656a1f",
-  "packages/policy/policy-engine/src/evaluate.ts": "0901d49fee675eba07d077b07d5c7017ffbb9991a31972156c0880115e9db2fa",
+  "packages/policy/policy-engine/src/evaluate.ts": "e4f87275a81f024179164fb6161d94f9b6574f6f3f0a0dd33a0cd970e33ddf9f",
   "packages/core/tools/src/index.ts": "4ba094527a1217dc8e6ca13ebc9c8dfeb5e42267db96549260437cf06354ed7d",
   "packages/core/agent-loop/src/tool-calls.ts": "4244af95a61fe509f2849b204c13af4bb61b522c475688b20f01093a8236a754",
   "packages/extensions/cordis-host-runner/src/guard.ts": "3627aa67e89d65b8d72c8d303f2336e00a23c0f3396048387d15d2125eb9718a",

@@ -3,14 +3,14 @@
 
  ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > sets and checks budget 2ms
  ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > records usage and detects exceeded 1ms
- ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > accumulates usage 1ms
+ ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > accumulates usage 0ms
  ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > max fields track peak 0ms
- ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > network bytes accumulate 1ms
+ ✓ |thread-safe| packages/execution/resource-budget/tests/budget.spec.ts > P3-10 Resource Budget > network bytes accumulate 0ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  07:21:14
-   Duration  1.08s (transform 529ms, setup 582ms, import 36ms, tests 7ms, environment 0ms)
+   Start at  09:07:44
+   Duration  439ms (transform 206ms, setup 229ms, import 13ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -22,12 +22,12 @@
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt read-only: allow-default with every file write denied except the /dev/null literal 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write dedups a workspace root that already IS the temp dir 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 12ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 10ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > an EMPTY runnerCommand means unconfigured: the platform chain still gates the wrap 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 10ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects runner failure signatures when no custom runner consumes them 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 8ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects runner failure signatures when no custom runner consumes them 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "  " 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\ncontinued" 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\ncontinued" 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\rcontinued" 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux probes bwrap first: a passing probe wraps with the bwrap dialect at full enforcement 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux falls back to the launcher when the bwrap probe fails, speaking the landlock dialect 3ms
@@ -35,77 +35,77 @@
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a platform with no chain fails closed without a single probe: the command never runs 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > caches the verdict for the provider lifetime: one chain walk across wraps 1ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > the unavailable verdict is cached too, and the error is structured 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 604ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 554ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue chain entry throws via the probe walk's exhaustiveness guard (closed union) 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue cached runner tag throws via the exhaustiveness guard (closed union) 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 11ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 10ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > walks the real platform chain when nothing is injected (usable here or fail closed there) 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 593ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 602ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 584ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 1852ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 601ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 694ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > selects the rung when the injected probe passes, speaking the ACL dialect 4ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 4ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 198ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 549ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 537ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 2480ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 2067ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 550ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 556ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > selects the rung when the injected probe passes, speaking the ACL dialect 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 153ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > falls back to the runner source through tsx when the built entry is absent 4ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads an empty runner invocation as unusable (the probe's empty-argv guard) 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads an empty runner invocation as unusable (the probe's empty-argv guard) 1ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > prefers the built lib/runner.js entry when the resolved file exists 2ms
 
  Test Files  1 passed (1)
       Tests  38 passed (38)
-   Start at  07:21:16
-   Duration  6.67s (transform 508ms, setup 252ms, import 383ms, tests 5.82s, environment 0ms)
+   Start at  09:07:46
+   Duration  8.22s (transform 409ms, setup 229ms, import 286ms, tests 7.52s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 15ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 13ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 3ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > a fresh provider gives a resumed session a new temp path and SID, so crash residue cannot collide 5ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 5ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace grant failure disposes its SID, aggregates cleanup failure, and never creates a temp directory 3ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > rejects a workspace containing the ambient temp root before any ACL mutation 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 5ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 4ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > agentless calls pass a temp root and no capabilities; the runner owns the private child lifecycle 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > provider teardown reports grant and directory cleanup failures without aborting teardown 5ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  07:21:24
-   Duration  933ms (transform 540ms, setup 318ms, import 332ms, tests 46ms, environment 0ms)
+   Start at  09:07:55
+   Duration  819ms (transform 492ms, setup 280ms, import 306ms, tests 42ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes Linux with strict level 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes Linux with strict level 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes macOS with basic level 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > validates complete Linux config 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > rejects Linux without seccomp 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > rejects macOS without clipboard restriction 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > fail-closed when level is not none 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > attestation includes kernel version 0ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > reports unsupported features 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > reports unsupported features 0ms
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  07:21:26
-   Duration  608ms (transform 292ms, setup 333ms, import 21ms, tests 6ms, environment 0ms)
+   Start at  09:07:57
+   Duration  446ms (transform 214ms, setup 241ms, import 13ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > accepts a complete workflow and child lifecycle 7ms
- ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects invalid run identity and enclosure 5ms
- ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects malformed and unpaired child lifecycles 3ms
- ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects inconsistent terminal results 9ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > accepts a complete workflow and child lifecycle 6ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects invalid run identity and enclosure 4ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects malformed and unpaired child lifecycles 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/invariant.spec.ts > workflow invariants > rejects inconsistent terminal results 6ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  07:21:28
-   Duration  951ms (transform 487ms, setup 326ms, import 256ms, tests 26ms, environment 0ms)
+   Start at  09:07:58
+   Duration  634ms (transform 353ms, setup 257ms, import 162ms, tests 19ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -113,38 +113,38 @@
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > WorkflowRunId brands a string (identity at runtime) 2ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > WorkflowError carries code + fatal (default true) and reads as a HarnessError 0ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > isFatalWorkflowError: true only for a fatal WorkflowError 0ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > registers as ctx.workflowEngine and unregisters when its fiber is disposed (HMR safety) 13ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > registers as ctx.workflowEngine and unregisters when its fiber is disposed (HMR safety) 11ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > emitWorkflowEvent dispatches to every listener with the payload tuple 3ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains an asynchronously rejected listener without starving peers 4ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains a throwing listener PER LISTENER: later listeners still run, nothing propagates 3ms
- ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > containment is total: a listener throwing a value whose coercion throws neither propagates nor starves later listeners 4ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains an asynchronously rejected listener without starving peers 3ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > contains a throwing listener PER LISTENER: later listeners still run, nothing propagates 2ms
+ ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > containment is total: a listener throwing a value whose coercion throws neither propagates nor starves later listeners 2ms
  ✓ |thread-safe| packages/workflow/workflow/tests/workflow.spec.ts > dsh-workflow (interface) > has the expected exports (default = the abstract service class) 0ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  07:21:30
-   Duration  619ms (transform 316ms, setup 270ms, import 104ms, tests 31ms, environment 0ms)
+   Start at  09:08:00
+   Duration  521ms (transform 265ms, setup 223ms, import 89ms, tests 24ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 15ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 5ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 9ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 13ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 6ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 12ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 6ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 11ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 2ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  07:21:32
-   Duration  849ms (transform 460ms, setup 286ms, import 267ms, tests 88ms, environment 0ms)
+   Start at  09:08:01
+   Duration  635ms (transform 341ms, setup 222ms, import 188ms, tests 40ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -156,7 +156,7 @@
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects failed -> running 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows orphaned -> starting (recovery) 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > assertTransition throws on invalid 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 1ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isTerminal identifies completed and failed 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isActive excludes terminal and orphaned 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isWaiting identifies waiting states 0ms
@@ -165,125 +165,125 @@
 
  Test Files  1 passed (1)
       Tests  13 passed (13)
-   Start at  07:21:34
-   Duration  515ms (transform 252ms, setup 284ms, import 15ms, tests 5ms, environment 0ms)
+   Start at  09:08:03
+   Duration  429ms (transform 206ms, setup 231ms, import 13ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 16ms
+ ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 13ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  07:21:36
-   Duration  685ms (transform 359ms, setup 280ms, import 147ms, tests 17ms, environment 0ms)
+   Start at  09:08:05
+   Duration  584ms (transform 316ms, setup 224ms, import 151ms, tests 14ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 7ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > normalizes splice coordinates, rejects duplicate identities, and reports missing removals 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > clears both pending lists as durable cancellations 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 19ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 9ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 15ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 2ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 3ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contains asynchronous creation rejection and every disposal-listener failure 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 1ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > injects the fused subject even when the payload carries a conflicting agent field 2ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > explicit cancellation contract > exposes the closed typed cancellation cause at the Agent seam 0ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 7ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 5ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 3ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  07:21:38
-   Duration  964ms (transform 502ms, setup 289ms, import 376ms, tests 84ms, environment 0ms)
+   Start at  09:08:06
+   Duration  742ms (transform 379ms, setup 237ms, import 254ms, tests 66ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 7ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 6ms
  ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 1ms
  ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 1ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  07:21:40
-   Duration  507ms (transform 246ms, setup 269ms, import 21ms, tests 10ms, environment 0ms)
+   Start at  09:08:08
+   Duration  434ms (transform 205ms, setup 221ms, import 22ms, tests 10ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 24ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports the latest turn that entered a model step 3ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 1ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and was then stopped before any step 1ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a turn stopped, failed, or rejected without taking any input 1ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn whose claimed input a pre-step rejection discarded 1ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 8ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports the latest turn that entered a model step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and was then stopped before any step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a turn stopped, failed, or rejected without taking any input 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn whose claimed input a pre-step rejection discarded 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a claim its own turn emptied 0ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > credits a claim with no open turn to no turn at all 1ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports work cancelled out of the inbox after the last accounting turn 1ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > credits a claim with no open turn to no turn at all 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports work cancelled out of the inbox after the last accounting turn 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > keeps a replacement pending rather than counting it as dropped 0ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > lets a later accounting turn absorb an earlier drop 1ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > lets a later accounting turn absorb an earlier drop 0ms
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  07:21:42
-   Duration  1.84s (transform 1.23s, setup 1.04s, import 380ms, tests 36ms, environment 0ms)
+   Start at  09:08:10
+   Duration  593ms (transform 336ms, setup 241ms, import 161ms, tests 12ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 40ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 33ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 10ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 4ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 2ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 7ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 3ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 5ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 6ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 5ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 2ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 2ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 4ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 8ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 5ms
 
  Test Files  1 passed (1)
       Tests  41 passed (41)
-   Start at  07:21:46
-   Duration  1.28s (transform 459ms, setup 343ms, import 437ms, tests 221ms, environment 0ms)
+   Start at  09:08:11
+   Duration  1.02s (transform 367ms, setup 245ms, import 395ms, tests 194ms, environment 0ms)

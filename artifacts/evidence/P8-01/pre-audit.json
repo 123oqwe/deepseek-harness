@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-01",
   "title": "Protocol Version Negotiation 与 Capability Discovery",
-  "audit_date": "2026-08-23T00:17:59.732Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T01:58:11.495Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/sdk/protocol/src/version.ts",
     "packages/sdk/protocol/src/capabilities.ts",

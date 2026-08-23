@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-13",
   "title": "Reconciliation Engine 与 Saga Compensation",
-  "audit_date": "2026-08-22T23:42:10.427Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T01:20:44.483Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/action/reconciliation/src/index.ts",
     "packages/action/reconciliation/src/types.ts",

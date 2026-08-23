@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L0-unknown for no checks 2ms
+ ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L0-unknown for no checks 1ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L1-inspected for manifest + scan 0ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L2-signed for full passed with signature+sbom 0ms
  ✓ |thread-safe| packages/plugin/plugin-certification/tests/certification.spec.ts > P1-12 Plugin Certification > returns L3-verified with dynamic test 0ms
@@ -14,26 +14,26 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  06:50:38
-   Duration  1.00s (transform 492ms, setup 558ms, import 92ms, tests 7ms, environment 0ms)
+   Start at  08:46:11
+   Duration  447ms (transform 207ms, setup 231ms, import 22ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 57ms
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 8ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 27ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 6ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  06:50:40
-   Duration  1.14s (transform 680ms, setup 539ms, import 245ms, tests 67ms, environment 0ms)
+   Start at  08:46:12
+   Duration  566ms (transform 309ms, setup 230ms, import 122ms, tests 34ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 11ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 7ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  06:50:44
-   Duration  925ms (transform 480ms, setup 540ms, import 21ms, tests 13ms, environment 0ms)
+   Start at  08:46:14
+   Duration  430ms (transform 200ms, setup 229ms, import 10ms, tests 8ms, environment 0ms)

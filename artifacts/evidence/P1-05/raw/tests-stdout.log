@@ -1,13 +1,13 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects child_process import 4ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects child_process import 2ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects eval usage 0ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects native addon 0ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects dynamic require 0ms
- ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects postinstall script 1ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects postinstall script 0ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > passes on benign code 1ms
- ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects fs write operations 1ms
+ ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects fs write operations 0ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > detects net server creation 0ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > staticScan > flags large dependency count as informational 0ms
  ✓ |thread-safe| packages/plugin/plugin-scanner/tests/scanner.spec.ts > P1-05 Plugin Scanner > dynamicScan > detects undeclared network access 0ms
@@ -22,26 +22,26 @@
 
  Test Files  1 passed (1)
       Tests  18 passed (18)
-   Start at  06:43:43
-   Duration  921ms (transform 485ms, setup 536ms, import 41ms, tests 12ms, environment 0ms)
+   Start at  08:41:51
+   Duration  435ms (transform 206ms, setup 228ms, import 22ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 38ms
- ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 9ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > publishes one direct list method under the pluginInventory namespace 28ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/inventory.spec.ts > PluginInventoryGateway > projects current non-group Loader entries without a second cache 6ms
 
  Test Files  1 passed (1)
       Tests  2 passed (2)
-   Start at  06:43:46
-   Duration  921ms (transform 499ms, setup 381ms, import 193ms, tests 49ms, environment 0ms)
+   Start at  08:41:52
+   Duration  544ms (transform 290ms, setup 216ms, import 115ms, tests 35ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 13ms
+ ✓ |thread-safe| packages/host/plugin-inventory/tests/invariant.spec.ts > plugin-inventory invariant companion > registers the package-owned empty installer 7ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  06:43:48
-   Duration  911ms (transform 451ms, setup 513ms, import 26ms, tests 15ms, environment 0ms)
+   Start at  08:41:54
+   Duration  422ms (transform 198ms, setup 224ms, import 11ms, tests 8ms, environment 0ms)

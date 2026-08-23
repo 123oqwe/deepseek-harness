@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-10",
   "title": "插件数据迁移、升级事务与回滚",
-  "audit_date": "2026-08-22T22:49:39.887Z",
-  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
+  "audit_date": "2026-08-23T00:45:46.424Z",
+  "git_sha": "6724a6bfc1c525d3078eb3a01bf5e3c01ab3ccb5",
   "manifest_files": [
     "packages/plugin/plugin-migrations/src/index.ts",
     "packages/plugin/plugin-migrations/src/types.ts",
