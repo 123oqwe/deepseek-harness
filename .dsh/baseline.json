@@ -1,5 +1,5 @@
 {
-  "git_sha": "1fb22817f6d4fe05973cc508da767a13ad563761",
+  "git_sha": "29a1d2f3ced9a1c8c0ce921124c079e443d0947a",
   "upstream_master_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "node_version": "v24.18.0",
   "pnpm_version": "11.7.0",
@@ -13,8 +13,8 @@
     "packages/core/agent-loop/src/runtime-context.ts": "5260a01d24889872f9bc7637b6cc029f779f40322401670d9c39988300221cb8"
   },
   "manifest_hashes": {
-    "package.json": "c6bebc180860b272f19139c115e43d4f68cc1fc56285a4d144c6f6e467b8ed15",
-    "pnpm-lock.yaml": "a29c04cee57b94838784be06840aeff1bc4379ddcf4c6af5c4d867e5ae31fc70",
+    "package.json": "0b44f9e0a8df1a42b645c222c7db958bf8dd11bf008f8ffa8d35782a1af8be62",
+    "pnpm-lock.yaml": "065feea48cee0b805051d96e21b4050459ded0356d128027e0701f4b548b736d",
     "pnpm-workspace.yaml": "39d569ce64de5fcfff5db3467304d143bbc6816c03442357af854827f3718f5f"
   },
   "bundle_row_ids": [
