@@ -1,5 +1,4 @@
 import type { PolicyRule, PolicyContext, PolicyResult } from './types.ts'
-import { MonotonicDenyViolation } from './types.ts'
 
 const rules: PolicyRule[] = []
 const deniedCapabilities = new Set<string>()
@@ -11,7 +10,9 @@ export function addRule(rule: PolicyRule): void {
   // Plugins cannot override a kernel deny: once a capability is denied at kernel
   // level, no subsequent rule from a non-kernel source may allow it.
   if (rule.decision === 'allow' && deniedCapabilities.has(rule.capability) && rule.source !== 'kernel') {
-    throw new MonotonicDenyViolation(rule.id)
+    // Silently skip the rule — the deny is monotonic and the allow is void.
+    // The evaluate() function will always return deny for this capability.
+    return
   }
   rules.push(rule)
   rules.sort((a, b) => b.priority - a.priority)

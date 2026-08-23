@@ -95,7 +95,11 @@ export function issueEmergencyStop(reason: string, issuer: string = 'system', _s
     persistent: true,
   }
   stopOrders.push(order)
-  globallyStopped = true
+  // Only system-wide stop reasons set the global stop flag.
+  // Run-scoped reasons like 'cancel-run' affect only the specified run.
+  if (reason !== 'cancel-run') {
+    globallyStopped = true
+  }
   return order
 }
 
