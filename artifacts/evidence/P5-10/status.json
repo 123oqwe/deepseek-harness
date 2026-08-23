@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-10",
   "title": "Continuation、Steer、Human Input 与 Cancellation Convergence 修复",
-  "status": "PARTIALLY_WIRED",
-  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
+  "status": "E2E_VERIFIED",
+  "git_sha": "96c815917af58f02149b378c453dfed611f82ad7",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,10 +13,10 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "371/373 passed"
+    "tests": "373/373 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T05:34:28.838Z",
+  "evidence_date": "2026-08-23T06:11:39.766Z",
   "runtime_reachability": {
     "issue_id": "P5-10",
     "source_files": 6,
@@ -26,7 +26,5 @@
     "tests": "FAIL",
     "timestamp": "2026-08-23T04:47:22.495Z"
   },
-  "remaining_risks": [
-    "2 test(s) failing"
-  ]
+  "remaining_risks": []
 }

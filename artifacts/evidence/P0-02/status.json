@@ -2,7 +2,7 @@
   "issue_id": "P0-02",
   "title": "确立 Minimal Immutable Trust Kernel 边界",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
+  "git_sha": "96c815917af58f02149b378c453dfed611f82ad7",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "108/130 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T05:29:21.544Z",
+  "evidence_date": "2026-08-23T06:07:38.280Z",
   "runtime_reachability": {
     "issue_id": "P0-02",
     "source_files": 5,

@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-02",
   "title": "EvidenceCollector：内容寻址、可追溯、不可伪造的证据层",
-  "status": "PARTIALLY_WIRED",
-  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
+  "status": "E2E_VERIFIED",
+  "git_sha": "96c815917af58f02149b378c453dfed611f82ad7",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,10 +13,10 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "908/910 passed"
+    "tests": "910/910 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T05:36:05.799Z",
+  "evidence_date": "2026-08-23T06:12:42.631Z",
   "runtime_reachability": {
     "issue_id": "P7-02",
     "source_files": 11,
@@ -26,7 +26,5 @@
     "tests": "FAIL",
     "timestamp": "2026-08-23T04:59:01.684Z"
   },
-  "remaining_risks": [
-    "2 test(s) failing"
-  ]
+  "remaining_risks": []
 }

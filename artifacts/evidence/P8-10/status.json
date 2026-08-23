@@ -2,7 +2,7 @@
   "issue_id": "P8-10",
   "title": "Config Provenance、Typed Dry-Run、迁移/回滚、ABI Compatibility 与 Disaster-Recovery Release Gate",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "c156ef4407c70e98213b1e1d146e964fd9fd6750",
+  "git_sha": "96c815917af58f02149b378c453dfed611f82ad7",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "189/211 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-23T05:37:08.638Z",
+  "evidence_date": "2026-08-23T06:13:36.854Z",
   "runtime_reachability": {
     "issue_id": "P8-10",
     "source_files": 5,
