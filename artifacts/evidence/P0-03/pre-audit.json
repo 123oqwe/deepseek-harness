@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-03",
   "title": "增加 Capability Seam 架构一致性检查器",
-  "audit_date": "2026-08-22T21:02:32.856Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:39:20.853Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "architecture.layers.json",
     "scripts/architecture/check-capability-seams.mjs",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-04",
   "title": "Context Graph 与 Retrieval Planner",
-  "audit_date": "2026-08-22T22:03:39.345Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:00:24.304Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/context/context-graph/src/index.ts",
     "packages/context/context-graph/src/types.ts",

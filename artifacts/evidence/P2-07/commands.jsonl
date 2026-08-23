@@ -1,12 +1,12 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/interaction/approval-store/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/interaction/user-approval/tests/argument-binding.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/session/session-persistence/tests/persistence.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/session/session-persistence/tests/write-behind.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/session/session-persistence/tests/preparations.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/resources.contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/transport.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/event-stream.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/run-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:21.394Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/interaction/approval-store/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/interaction/user-approval/tests/argument-binding.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/session/session-persistence/tests/persistence.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/session/session-persistence/tests/write-behind.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/session/session-persistence/tests/preparations.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/resources.contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/transport.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/event-stream.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/run-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:06:50.026Z"}

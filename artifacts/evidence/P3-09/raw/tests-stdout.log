@@ -1,22 +1,22 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > creates attestation 2ms
+ ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > creates attestation 6ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > rejects attestation with missing verification 0ms
- ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > verifyAttestation checks image and tenant 0ms
+ ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > verifyAttestation checks image and tenant 1ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > creates remote world with attestation 1ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > heartbeat updates lastHeartbeat 0ms
  ✓ |thread-safe| packages/execution/execution-world-remote/tests/reconnect.spec.ts > P3-09 Remote ExecutionWorld > snapshot and terminate 0ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  05:34:34
-   Duration  569ms (transform 281ms, setup 299ms, import 45ms, tests 6ms, environment 0ms)
+   Start at  07:20:51
+   Duration  714ms (transform 351ms, setup 387ms, import 38ms, tests 10ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 4ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 3ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > rejects invalid transition 1ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroys a world 0ms
@@ -24,8 +24,8 @@
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  05:34:36
-   Duration  683ms (transform 305ms, setup 341ms, import 30ms, tests 8ms, environment 0ms)
+   Start at  07:20:53
+   Duration  698ms (transform 330ms, setup 366ms, import 30ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -39,8 +39,8 @@
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  05:34:38
-   Duration  703ms (transform 391ms, setup 443ms, import 19ms, tests 4ms, environment 0ms)
+   Start at  07:20:56
+   Duration  913ms (transform 446ms, setup 499ms, import 26ms, tests 4ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -58,17 +58,17 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  05:34:40
-   Duration  684ms (transform 356ms, setup 393ms, import 26ms, tests 6ms, environment 0ms)
+   Start at  07:20:59
+   Duration  1.06s (transform 628ms, setup 710ms, import 30ms, tests 5ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > creates and gets a resource by ID 2ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > returns undefined for cross-tenant access 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > creates and gets a resource by ID 5ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > returns undefined for cross-tenant access 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > lists resources with pagination 2ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > filters resources by field 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > updates with optimistic concurrency token 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > filters resources by field 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > updates with optimistic concurrency token 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives created events 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives updated events 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/resources.contract.spec.ts > P8-02 Remote Resources API > watch receives deleted events 0ms
@@ -77,8 +77,8 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  05:34:42
-   Duration  603ms (transform 301ms, setup 338ms, import 25ms, tests 8ms, environment 0ms)
+   Start at  07:21:02
+   Duration  558ms (transform 283ms, setup 325ms, import 18ms, tests 14ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -86,16 +86,16 @@
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > supports bidirectional requests and notifications over newline-delimited JSON-RPC 15ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports JSON-RPC request errors from the remote peer with their wire code 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects immediately on a pre-aborted signal without registering pending state 1ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 0ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > abandons a pending request on abort, stringifying a non-Error reason 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves structured error data from an error response frame 1ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > stringifies non-Error request handler failures 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports method-not-found when no request handler is installed 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > normalizes non-object request params and ignores notifications without a handler 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 12ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 13ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > ignores malformed frames and accepts notifications without params 11ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > preserves multibyte UTF-8 characters split across Buffer chunks 12ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > flush waits for all earlier output writes 12ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > reports an output callback failure from flush 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input closes 2ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the input errors 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects pending requests when the transport closes 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/transport.spec.ts > JsonRpcLineTransport > rejects a request when writing the frame throws 0ms
@@ -105,13 +105,13 @@
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  05:34:44
-   Duration  661ms (transform 294ms, setup 303ms, import 52ms, tests 70ms, environment 0ms)
+   Start at  07:21:03
+   Duration  605ms (transform 275ms, setup 291ms, import 44ms, tests 72ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > publishes events with increasing sequence 3ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > publishes events with increasing sequence 2ms
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > subscriber receives missed events on reconnect 2ms
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > subscriber only gets events after cursor 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/event-stream.spec.ts > P8-05 Resumable Event Streaming > ack updates cursor 0ms
@@ -124,17 +124,17 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  05:34:46
-   Duration  607ms (transform 301ms, setup 335ms, import 21ms, tests 8ms, environment 0ms)
+   Start at  07:21:07
+   Duration  615ms (transform 335ms, setup 382ms, import 15ms, tests 9ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > pauses a running run 4ms
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > resumes a paused run 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > pauses a running run 2ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > resumes a paused run 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > cancels a running run 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > cancel propagates to children 0ms
- ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > rejects invalid state transitions 1ms
+ ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > rejects invalid state transitions 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > rejects stale revision 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > duplicate commandId is idempotent 0ms
  ✓ |thread-safe| packages/sdk/protocol/tests/run-lifecycle.spec.ts > P8-03 Remote Lifecycle Control > fork creates new run without inheriting secrets 1ms
@@ -143,5 +143,5 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  05:34:48
-   Duration  718ms (transform 381ms, setup 366ms, import 94ms, tests 11ms, environment 0ms)
+   Start at  07:21:09
+   Duration  627ms (transform 335ms, setup 333ms, import 78ms, tests 6ms, environment 0ms)

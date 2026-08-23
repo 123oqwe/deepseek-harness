@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-02",
   "title": "EvidenceCollector：内容寻址、可追溯、不可伪造的证据层",
-  "audit_date": "2026-08-22T22:10:54.908Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:07:08.112Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/assurance/evidence/src/index.ts",
     "packages/assurance/evidence/src/types.ts",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-04",
   "title": "Provider Fallback、Hedging、Rate Limit 与一致预算",
-  "audit_date": "2026-08-22T21:53:00.723Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:48:31.270Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/router/provider-resilience/src/index.ts",
     "packages/router/provider-resilience/src/hedge.ts",

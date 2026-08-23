@@ -2,7 +2,7 @@
   "issue_id": "P8-03",
   "title": "远程生命周期控制：Pause、Resume、Cancel、Fork、Retry、Reconcile、Close",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "24/30 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T22:25:11.107Z",
+  "evidence_date": "2026-08-23T00:20:00.649Z",
   "runtime_reachability": {
     "issue_id": "P8-03",
     "source_files": 8,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-22T22:25:11.107Z"
+    "timestamp": "2026-08-23T00:20:00.649Z"
   },
   "remaining_risks": [
     "6 test(s) failing",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-07",
   "title": "本地 Sandbox 跨平台 Fail-Closed 强化",
-  "audit_date": "2026-08-22T21:34:01.507Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:20:07.807Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/sandbox/sandbox-local/src/capabilities.ts",
     "packages/sandbox/sandbox-local/src/attestation.ts",

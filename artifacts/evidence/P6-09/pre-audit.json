@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-09",
   "title": "一等公民 Artifact Store、版本、内容寻址与 Lineage",
-  "audit_date": "2026-08-22T22:07:31.287Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:03:34.997Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/artifact/artifact/src/index.ts",
     "packages/artifact/artifact/src/types.ts",

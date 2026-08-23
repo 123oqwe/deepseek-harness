@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-08",
   "title": "插件 ABI、Capability 与 Schema 兼容协商",
-  "audit_date": "2026-08-22T21:08:10.793Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:46:30.745Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/plugin/plugin-compat/src/index.ts",
     "packages/plugin/plugin-compat/src/solver.ts",

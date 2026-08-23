@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-07",
   "title": "Worker Lease、Heartbeat 与 Fencing Token",
-  "audit_date": "2026-08-22T21:38:51.692Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:27:15.901Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/run/lease/src/index.ts",
     "packages/run/lease/src/types.ts",

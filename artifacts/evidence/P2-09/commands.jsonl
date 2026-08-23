@@ -1,6 +1,6 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:22:56.166Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:22:56.166Z"}
-{"command":"npx vitest run packages/interaction/approval-quorum/tests/quorum.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:56.166Z"}
-{"command":"npx vitest run packages/interaction/approval-store/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:56.166Z"}
-{"command":"npx vitest run packages/policy/policy-engine/tests/policy.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:22:56.166Z"}
-{"command":"npx vitest run packages/identity/principal/tests/identity.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:22:56.166Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T23:07:41.610Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T23:07:41.610Z"}
+{"command":"npx vitest run packages/interaction/approval-quorum/tests/quorum.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:07:41.610Z"}
+{"command":"npx vitest run packages/interaction/approval-store/tests/recovery.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:07:41.610Z"}
+{"command":"npx vitest run packages/policy/policy-engine/tests/policy.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T23:07:41.610Z"}
+{"command":"npx vitest run packages/identity/principal/tests/identity.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:07:41.610Z"}

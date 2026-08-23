@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-07",
   "title": "Codex Adapter：结构化流、继续执行、审批与证据映射",
-  "audit_date": "2026-08-22T21:55:40.214Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:51:46.064Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/subagent/subagent-codex/src/map-events.ts",
     "packages/subagent/subagent-codex/src/continuation.ts",

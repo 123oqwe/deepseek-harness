@@ -2,7 +2,7 @@
   "issue_id": "P1-07",
   "title": "项目 Trust Boundary：未信任目录不加载项目级执行内容",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -13,21 +13,21 @@
   "test_digests": {
     "typecheck": "PASS",
     "lint": "PASS",
-    "tests": "9/11 passed"
+    "tests": "3/4 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T21:07:48.427Z",
+  "evidence_date": "2026-08-22T22:46:08.469Z",
   "runtime_reachability": {
     "issue_id": "P1-07",
     "source_files": 8,
-    "test_files": 11,
+    "test_files": 4,
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-22T21:07:48.427Z"
+    "timestamp": "2026-08-22T22:46:08.469Z"
   },
   "remaining_risks": [
-    "2 test(s) failing",
+    "1 test(s) failing",
     "Code ported from prototype branch; needs deeper integration verification"
   ]
 }

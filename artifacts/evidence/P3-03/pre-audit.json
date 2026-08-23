@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-03",
   "title": "结构化 Out-of-Band Denial 与执行错误",
-  "audit_date": "2026-08-22T21:26:44.192Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:13:05.242Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/execution/execution-world/src/errors.ts",
     "packages/execution/execution-world/src/outcome.ts",

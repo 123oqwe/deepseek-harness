@@ -1,14 +1,14 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 1ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows queued -> starting 3ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> waiting_tool 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows running -> completed 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects completed -> running 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects failed -> running 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects completed -> running 1ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > rejects failed -> running 1ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > allows orphaned -> starting (recovery) 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > assertTransition throws on invalid 0ms
- ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 0ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > assertTransition throws on invalid 1ms
+ ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > createTransition creates valid transition 1ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isTerminal identifies completed and failed 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isActive excludes terminal and orphaned 0ms
  ✓ |thread-safe| packages/core/agent/tests/state-machine.spec.ts > P4-05 Agent Lifecycle State Machine > isWaiting identifies waiting states 0ms
@@ -17,86 +17,86 @@
 
  Test Files  1 passed (1)
       Tests  13 passed (13)
-   Start at  05:37:38
-   Duration  423ms (transform 199ms, setup 223ms, import 13ms, tests 4ms, environment 0ms)
+   Start at  07:25:14
+   Duration  741ms (transform 368ms, setup 421ms, import 22ms, tests 9ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 12ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > reports an absent initiator and requires an active boundary 28ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves exact synchronous and Promise return identities across await 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > tracks a branded Promise without calling its overridable then property 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > preserves a settled branded Promise when its species blocks observer construction 5ms
  ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > isolates overlapping initiators 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 5ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores nested and explicitly cleared boundaries 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > restores the parent after synchronous throws and rejected operations 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > stops new boundaries, drains active Promises, and invalidates retained references 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > drains cross-realm Promise boundaries before disposal 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when a boundary returns service disposal 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > does not self-deadlock when nested boundaries return ancestor disposal 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent-initiator.spec.ts > AgentRegistry initiator scope > excludes an asynchronous teardown initiator while draining unrelated boundaries 4ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  05:37:39
-   Duration  639ms (transform 341ms, setup 218ms, import 187ms, tests 43ms, environment 0ms)
+   Start at  07:25:17
+   Duration  1.20s (transform 702ms, setup 469ms, import 380ms, tests 83ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 14ms
+ ✓ |thread-safe| packages/core/agent/tests/model-selection.spec.ts > installModelSelection() > snapshots prompt variables and request routing together, then disposes both listeners 21ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  05:37:41
-   Duration  565ms (transform 306ms, setup 231ms, import 130ms, tests 15ms, environment 0ms)
+   Start at  07:25:19
+   Duration  1.06s (transform 631ms, setup 504ms, import 238ms, tests 22ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > rejects an invalid durable splice during reconstruction 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > replaces a pending message by identity across both lists 10ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > normalizes splice coordinates, rejects duplicate identities, and reports missing removals 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > clears both pending lists as durable cancellations 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 13ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 8ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contains asynchronous creation rejection and every disposal-listener failure 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 2ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 1ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > injects the fused subject even when the payload carries a conflicting agent field 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > Inbox > clears both pending lists as durable cancellations 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contributes Agent lookup and scoped Context providers while Typert is live 18ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > registers exact entries, emits lifecycle events, and unregisters on owner disposal 16ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rejects an agent whose registry and session identities differ 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > tracks runtime creator ownership separately from registry order 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > rolls an entry back and pairs a partially delivered creation when a listener throws 6ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > contains asynchronous creation rejection and every disposal-listener failure 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > separates entry from announcement and stale/idempotent detach cannot remove a replacement 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry > defers detach requested by a creation listener until that dispatch unwinds 5ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > contains each synchronous throw and returned-promise rejection 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > dispatches serial listeners with the fused agent subject 2ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > agentEvents() > injects the fused subject even when the payload carries a conflicting agent field 3ms
  ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > explicit cancellation contract > exposes the closed typed cancellation cause at the Agent seam 0ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 3ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 4ms
- ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 3ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > requires a factory and delegates through the calling context 4ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > rejects a second factory and clears the slot with its owner (HMR) 8ms
+ ✓ |thread-safe| packages/core/agent/tests/agent.spec.ts > AgentRegistry factory seam > canonicalizes an already traced Service before tracing it for the caller 7ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
-   Start at  05:37:43
-   Duration  695ms (transform 344ms, setup 210ms, import 235ms, tests 66ms, environment 0ms)
+   Start at  07:25:22
+   Duration  1.46s (transform 799ms, setup 531ms, import 495ms, tests 110ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 6ms
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 1ms
- ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 1ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > accepts lifecycle transitions between idle and running 8ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > rejects a no-op transition 2ms
+ ✓ |thread-safe| packages/core/agent/tests/invariant.spec.ts > agent status invariants > tracks agents independently 2ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  05:37:44
-   Duration  451ms (transform 218ms, setup 236ms, import 19ms, tests 10ms, environment 0ms)
+   Start at  07:25:25
+   Duration  884ms (transform 426ms, setup 465ms, import 42ms, tests 16ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 8ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports nothing for a log that consumed no work 13ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports the latest turn that entered a model step 1ms
- ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 0ms
+ ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and then failed before any step 1ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn that claimed its input and was then stopped before any step 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > ignores a turn stopped, failed, or rejected without taking any input 0ms
  ✓ |thread-safe| packages/core/agent/tests/consumed-work.spec.ts > foldConsumedWork > reports a turn whose claimed input a pre-step rejection discarded 0ms
@@ -108,568 +108,568 @@
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  05:37:46
-   Duration  606ms (transform 336ms, setup 228ms, import 173ms, tests 12ms, environment 0ms)
+   Start at  07:25:28
+   Duration  1.13s (transform 685ms, setup 483ms, import 355ms, tests 18ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 33ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 9ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > limits packages without src/* exports to declarations reachable from package entrypoints 63ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > accepts a fully documented API 18ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an exported function with no JSDoc at all 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a missing @param and a missing @returns 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags an unannotated (inferred) return type 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags tags-only JSDoc with no description prose 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > flags a stale @param and a binding-pattern parameter 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > exempts a `this` receiver annotation from @param 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > waives @returns for a declarator-annotated const but not an unannotated one 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc functions and consts > requires description prose on a non-function const 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > requires description prose on interfaces, type aliases, and enums 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc type-level exports > skips `declare module` augmentation bodies (the cordis gate owns them) 8ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > resolves an `export { … }` list to the local declaration 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > does not treat a never-exported sibling declarator as API 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > unions declarators across multiple export lists over one statement 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > scopes a default-export identifier to its own declarator 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > reports a re-exported module once, at its defining file 13ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc export forms > exempts overload implementations when the signatures are documented 7ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > flags an undocumented class, method, property, and accessor 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 3ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts members declared by an extends/implements heritage type 16ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > skips private/protected/#private members and constructors 5ms
  ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > exempts plugin-protocol statics but checks other statics 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 6ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 4ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 2ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 3ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 5ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 7ms
- ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc classes > covers a set accessor by the getter's doc 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > exempts top-level plugin-protocol exports 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc plugin protocol and namespaces > recurses into namespaces with qualified names and honors the merge idiom 6ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > checks the function contract on a non-identifier default export 12ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats an inline function-type annotation as the API signature 9ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > recurses into an ambient declare namespace where members export implicitly 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > requires an export-import alias to document itself (its target may be unwalked) 11ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-import alias to a callable, class, or namespace target 16ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > classifies wrapped function initializers and default exports (parens, satisfies) 10ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > treats a single-call-signature type literal as the API signature 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses a hybrid callable type literal instead of narrowing the check 7ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc fail-closed forms > refuses an export-equals assignment instead of failing open 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > requires @param for parameters the base member never names 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > does not exempt a public override of a protected-only base member 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > treats an underscore-prefixed rename of a base parameter as the same parameter 5ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > flags a binding-pattern parameter an override adds beyond the base 4ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > revives the @returns duty when an override grows a concrete result over a void base 11ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > classifies an unannotated override return over a void base via the checker 11ms
+ ✓ |thread-safe| packages/core/agent/tests/verify-export-jsdoc.spec.ts > verify-export-jsdoc heritage refinement > keeps the full exemption when the base return already carries the @returns duty 5ms
 
  Test Files  1 passed (1)
       Tests  41 passed (41)
-   Start at  05:37:48
-   Duration  976ms (transform 339ms, setup 219ms, import 390ms, tests 182ms, environment 0ms)
+   Start at  07:25:30
+   Duration  1.72s (transform 566ms, setup 401ms, import 635ms, tests 357ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > applies launcher identities by configured id without changing unmatched entries 19ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > rejects an empty exact id before publishing an agent 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > accepts one exact fresh id and rejects it alongside a resume id 14ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > rejects duplicate exact ids before asynchronous configured startup 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > restores a materialized exact id across an AgentLoop-only reload 181ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > waits for a draining exact-id lifecycle during an overlapping reload 142ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > cancels an exact-id reload while the prior lifecycle is still draining 93ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > contains an exact-id persistence lookup failure 61ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > contains startup and observer failures whose string coercion throws 59ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > abandons an exact-id preparation that later resolve when AgentLoop disposal starts 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > abandons an exact-id preparation that later reject when AgentLoop disposal starts 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > identity-nests the deferred resume fiber under its labeled owner effect 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > config-driven create uses a fresh ${id}-session-<uuid> per run (restart-safe) 65ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > config-driven resumeSessionId continues a persisted session 98ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > applies launcher identities by configured id without changing unmatched entries 32ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > rejects an empty exact id before publishing an agent 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > accepts one exact fresh id and rejects it alongside a resume id 24ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > rejects duplicate exact ids before asynchronous configured startup 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > restores a materialized exact id across an AgentLoop-only reload 193ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > waits for a draining exact-id lifecycle during an overlapping reload 152ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > cancels an exact-id reload while the prior lifecycle is still draining 104ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > contains an exact-id persistence lookup failure 72ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > contains startup and observer failures whose string coercion throws 63ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > abandons an exact-id preparation that later resolve when AgentLoop disposal starts 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > abandons an exact-id preparation that later reject when AgentLoop disposal starts 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > identity-nests the deferred resume fiber under its labeled owner effect 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > config-driven create uses a fresh ${id}-session-<uuid> per run (restart-safe) 88ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > config-driven resumeSessionId continues a persisted session 103ms
  ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > config-driven session id > config-driven resume of a missing session is contained: logs a warning, no agent, no crash 209ms
- ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > startup reporting after factory teardown > suppresses the configured-restore failure report once the loop is disposed 29ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/config-session-id.spec.ts > startup reporting after factory teardown > suppresses the configured-restore failure report once the loop is disposed 28ms
 
  Test Files  1 passed (1)
       Tests  16 passed (16)
      Errors  6 errors
-   Start at  05:37:50
-   Duration  1.95s (transform 607ms, setup 255ms, import 475ms, tests 1.00s, environment 0ms)
+   Start at  07:25:34
+   Duration  2.70s (transform 1.05s, setup 371ms, import 928ms, tests 1.11s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > does not offer middleware failures to request recovery 21ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > lets each failed request return a retry action before its turn closes 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > lets cancellation win over a retry action 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > does not retry when the recovery listener fails before returning its action 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > does not offer middleware failures to request recovery 42ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > lets each failed request return a retry action before its turn closes 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > lets cancellation win over a retry action 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-error.spec.ts > agent/request-error > does not retry when the recovery listener fails before returning its action 5ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
      Errors  4 errors
-   Start at  05:37:53
-   Duration  881ms (transform 535ms, setup 260ms, import 386ms, tests 38ms, environment 0ms)
+   Start at  07:25:38
+   Duration  1.52s (transform 908ms, setup 445ms, import 649ms, tests 66ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > assistant replay provider and model fields > records adapter replay state with the assembled assistant content 19ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > parks context finalized after a tool-step abort until another wakeup 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > records post-tool context when a later call aborts the batch 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > closes an empty admitted batch as a turn without a step 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > parks result context finalized after disposal cancellation without opening another turn 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > limits injection deferral to the current tool batch 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > steering from late extension points is never stranded > steer() from an agent/turn-stopping listener continues the same turn 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > plugin exceptions are contained > a throwing agent/turn-stopping listener ends the turn with an error, loop survives 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal leaves the two-state status contract balanced > disposing the fiber ends the active turn and never starts its queued tail 38ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal leaves the two-state status contract balanced > a throwing agent/status listener cannot break disposal or leak the registry entry 37ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > duplicate adapter registration is rejected 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > an agent without a model fails the step with a clear error (not NO_ADAPTER for "default") 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > the agent/request waterfall can supply the model for a model-less agent 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > durable inbox splices carry exact messages and the claimed steer preserves its source 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn numbering continues across seeded sessions > a forked agent continues turn numbers after the seed log 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > assistant replay provider and model fields > records adapter replay state with the assembled assistant content 52ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > parks context finalized after a tool-step abort until another wakeup 44ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > records post-tool context when a later call aborts the batch 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > closes an empty admitted batch as a turn without a step 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > parks result context finalized after disposal cancellation without opening another turn 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > abort during tool execution ends the turn > limits injection deferral to the current tool batch 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > steering from late extension points is never stranded > steer() from an agent/turn-stopping listener continues the same turn 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > plugin exceptions are contained > a throwing agent/turn-stopping listener ends the turn with an error, loop survives 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal leaves the two-state status contract balanced > disposing the fiber ends the active turn and never starts its queued tail 39ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal leaves the two-state status contract balanced > a throwing agent/status listener cannot break disposal or leak the registry entry 49ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > duplicate adapter registration is rejected 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > an agent without a model fails the step with a clear error (not NO_ADAPTER for "default") 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > the agent/request waterfall can supply the model for a model-less agent 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > adapter registration, routing, and accepted-input ownership > durable inbox splices carry exact messages and the claimed steer preserves its source 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn numbering continues across seeded sessions > a forked agent continues turn numbers after the seed log 15ms
  ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > discriminated SessionEvent narrows without casts > narrows event.data from event.type 0ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > a finish-error stream chunk ends the turn as error, not completed > translates finish {kind:error} into a turn error with a logged error event 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > a finish-error stream chunk ends the turn as error, not completed > translates finish {kind:aborted} into a turn error coded ABORTED 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > a finish-error stream chunk ends the turn as error, not completed > handles a finish error without a code (code key omitted) 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > step boundary publication order > the step/start event is in session.events when its session/event listener fires 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing step/start observer cannot change a successful turn 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a pre-commit turn/start rejection leaves no durable turn state 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a pre-commit step/start validation failure does not invent a step boundary 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a step/end validation failure surfaces the resulting open-step invariant 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing agent/error listener during a step-error path still balances the turn, loop survives 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > disposal during a running turn ends the turn with reason disposed (balanced) 46ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > contains a pre-step throw after disposal inside a balanced no-step turn 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing turn/start observer cannot starve the loop or later turns 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing step/end observer cannot rewrite the turn outcome 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing step/end observer cannot interrupt error finalization 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing session/event listener on turn/end is contained (turn still balanced, loop survives) 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > tool result call identity > the loop records tool/result under the model call.id even when a post-execute listener replaces content 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > disposal during system-prompt assembly closes a no-step turn 57ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > cancel during system-prompt assembly closes a no-step turn 59ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > disposal during pre-step closes a no-step turn 57ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > cancel during pre-step closes a no-step turn 39ms
- ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > disposal during assembly does not leak an LLM call or append assistant/chunk 57ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > a finish-error stream chunk ends the turn as error, not completed > translates finish {kind:error} into a turn error with a logged error event 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > a finish-error stream chunk ends the turn as error, not completed > translates finish {kind:aborted} into a turn error coded ABORTED 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > a finish-error stream chunk ends the turn as error, not completed > handles a finish error without a code (code key omitted) 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > step boundary publication order > the step/start event is in session.events when its session/event listener fires 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing step/start observer cannot change a successful turn 15ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a pre-commit turn/start rejection leaves no durable turn state 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a pre-commit step/start validation failure does not invent a step boundary 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a step/end validation failure surfaces the resulting open-step invariant 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing agent/error listener during a step-error path still balances the turn, loop survives 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > disposal during a running turn ends the turn with reason disposed (balanced) 51ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > contains a pre-step throw after disposal inside a balanced no-step turn 17ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing turn/start observer cannot starve the loop or later turns 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing step/end observer cannot rewrite the turn outcome 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing step/end observer cannot interrupt error finalization 23ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > turn and step boundary recovery > a throwing session/event listener on turn/end is contained (turn still balanced, loop survives) 26ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > tool result call identity > the loop records tool/result under the model call.id even when a post-execute listener replaces content 19ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > disposal during system-prompt assembly closes a no-step turn 69ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > cancel during system-prompt assembly closes a no-step turn 65ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > disposal during pre-step closes a no-step turn 60ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > cancel during pre-step closes a no-step turn 43ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/contract-regressions.spec.ts > disposal and cancellation during pre-step assembly > disposal during assembly does not leak an LLM call or append assistant/chunk 62ms
 
  Test Files  1 passed (1)
       Tests  37 passed (37)
      Errors  43 errors
-   Start at  05:37:54
-   Duration  1.41s (transform 547ms, setup 214ms, import 449ms, tests 564ms, environment 0ms)
+   Start at  07:25:42
+   Duration  2.50s (transform 1.09s, setup 467ms, import 888ms, tests 850ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps overlapping driver continuations bound to their exact Agents 27ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps initiator identity minimal while one explicit signal spans each turn seam 14ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps child setup under the parent boundary and restores the parent while the child driver remains active 11ms
- × |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps agentless direct tools ambient-free and builds trusted transport headers internally 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps overlapping driver continuations bound to their exact Agents 50ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps initiator identity minimal while one explicit signal spans each turn seam 24ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps child setup under the parent boundary and restores the parent while the child driver remains active 16ms
+ × |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps agentless direct tools ambient-free and builds trusted transport headers internally 16ms
    → Trust Kernel not initialized: call initTrustKernel before any plugin loads
- ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > drains the old driver before disabling ALS during agent-service restart 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps ALS readable while root disposal drains sibling AgentLoop fibers 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > drains the old driver before disabling ALS during agent-service restart 17ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent-initiator.spec.ts > AgentLoop initiator scope > keeps ALS readable while root disposal drains sibling AgentLoop fibers 11ms
 
  Test Files  1 failed (1)
       Tests  1 failed | 5 passed (6)
      Errors  9 errors
-   Start at  05:37:57
-   Duration  857ms (transform 496ms, setup 215ms, import 380ms, tests 77ms, environment 0ms)
+   Start at  07:25:46
+   Duration  1.71s (transform 1.01s, setup 369ms, import 842ms, tests 137ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > tool JSON parse > passes through non-JSON arguments string without crashing 74ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > tool JSON parse > uses empty object when tool-call arguments are empty string 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > tool JSON parse > passes through non-JSON arguments string without crashing 80ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > tool JSON parse > uses empty object when tool-call arguments are empty string 12ms
  ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > thrown-value propagation > preserves non-Error throws from pre-commit dispatch validation 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > thrown-value propagation > preserves non-Error throws from the agent/request waterfall 11ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > durable error rendering > renders a coded error thrown from a plugin 11ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > disposed vs aborted branching > handles dispose during model streaming producing reason "disposed" 49ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > structured tool error propagation (the runtime-validation Agent Note, part 2) > forwards a tool HarnessError onto the tool/result session event 11ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > request-error action edges > ignores a retry action returned after the turn was aborted 11ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > request-error action edges > completed recovery does not retry when cancellation raced the waterfall 11ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > stream failure edges > rethrows a mid-stream throw that carries no adapter failure facts 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > post-turn continuation edges > whenIdle resolves for a waiter whose awaited run fails 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > thrown-value propagation > preserves non-Error throws from the agent/request waterfall 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > durable error rendering > renders a coded error thrown from a plugin 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > disposed vs aborted branching > handles dispose during model streaming producing reason "disposed" 42ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > structured tool error propagation (the runtime-validation Agent Note, part 2) > forwards a tool HarnessError onto the tool/result session event 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > request-error action edges > ignores a retry action returned after the turn was aborted 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > request-error action edges > completed recovery does not retry when cancellation raced the waterfall 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > stream failure edges > rethrows a mid-stream throw that carries no adapter failure facts 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > post-turn continuation edges > whenIdle resolves for a waiter whose awaited run fails 5ms
  ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > persistent step-close rejection > still publishes the terminal status when both step-close attempts are vetoed 8ms
  ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > tool result meta persistence > records a presentationMeta payload on the tool/result event 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > turn close failure containment > a rejected turn/end append is contained: warn + agent/error, no retry 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > recovery without a retry action > a completed recovery that returns no action leaves the failed turn terminal 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > turn close failure containment > a rejected turn/end append is contained: warn + agent/error, no retry 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > recovery without a retry action > a completed recovery that returns no action leaves the failed turn terminal 6ms
  ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > unrenderable failure settlement > drops the rendered message when the error chain cannot be rendered 5ms
  ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > driver bookkeeping edges > rejects a direct turn invocation without a driver reservation 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > driver bookkeeping edges > closes an entered turn as blocked when its next step is rejected 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > driver bookkeeping edges > closes an entered turn as blocked when its next step is rejected 6ms
  ✓ |thread-safe| packages/core/agent-loop/tests/coverage-edges.spec.ts > driver bookkeeping edges > a request failure that concludes recovery after step/end closed keeps the boundary balanced 6ms
 
  Test Files  1 passed (1)
       Tests  19 passed (19)
      Errors  16 errors
-   Start at  05:37:59
-   Duration  1.66s (transform 973ms, setup 319ms, import 835ms, tests 278ms, environment 0ms)
+   Start at  07:25:49
+   Duration  1.89s (transform 1.12s, setup 499ms, import 872ms, tests 248ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > layers the stored parallel cap over the composition entry 18ms
- ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > refuses a non-positive cap at the write 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > never offers the composed agents array to the settings document 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > keeps serving the composed agents array to its own consumers 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > falls back to the composition entry when the settings provider detaches 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > releases the namespace when the service unloads 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > layers the stored parallel cap over the composition entry 39ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > refuses a non-positive cap at the write 15ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > never offers the composed agents array to the settings document 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > keeps serving the composed agents array to its own consumers 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > falls back to the composition entry when the settings provider detaches 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/settings.spec.ts > agent-loop settings section > releases the namespace when the service unloads 6ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  05:38:02
-   Duration  999ms (transform 619ms, setup 289ms, import 455ms, tests 45ms, environment 0ms)
+   Start at  07:25:53
+   Duration  1.33s (transform 776ms, setup 361ms, import 580ms, tests 83ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resumes a pre-react-loop session including pre-identity message events 89ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > normalizes a non-Error resume publication failure for rollback and rethrows it 44ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > createAgent uses the caller-supplied sessionId (not ${id}-session) 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > createAgent rejects a duplicate identity without orphaning a session 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume cannot crash-repair a turn owned by a live agent 38ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > createAgent works without meta (no cwd) 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume of a session with no cwd carries an undefined cwd header 50ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > agent/session-start fires "startup" for createAgent and "resume" for resume() 51ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume awaits setup while unpublished, then publishes a fully composed world in order 43ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > successful resume disposal retires its caller-owned transaction effects 43ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume setup rejection publishes nothing, unwinds, and releases the identity 47ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume setup commit rejection publishes nothing and releases the identity 52ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > owner unload aborts resume setup and cannot publish after the callback settles 51ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > owner unload aborts a never-settling persistence preparation, releases the identity, and blocks late publication 50ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > AgentLoop unload aborts persistence preparation and awaits wrapper settlement 49ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume of a forked session preserves the lineage, seed boundary, and delegation depth in the header 47ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > a pending idle inject() survives persist + resume without a synthetic turn 65ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume reloads a persisted session: history + turn numbering continue, no duplicate seqs 55ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume rejects when session persistence is not configured 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > rejects create() with a pre-aborted signal, including a non-Error reason 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > a non-Error abort reason arriving during setup is wrapped for the caller 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > rejects when setup synchronously aborts its caller signal 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > resume with a pre-aborted caller signal rejects out of the load race 43ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > releases a restored preparation if the loop becomes inactive before setup 44ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > factory teardown during a hung resume preparation rejects with loop-inactive 49ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > configured-start failure edges > a non-Error mid-prepare abort reason is wrapped for the resume caller 50ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > configured-start failure edges > a failing exact-id restore over an existing artifact stays loud 104ms
- ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > configured-start failure edges > suppresses a configured-resume failure that lands after teardown 64ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resumes a pre-react-loop session including pre-identity message events 160ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > normalizes a non-Error resume publication failure for rollback and rethrows it 51ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > createAgent uses the caller-supplied sessionId (not ${id}-session) 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > createAgent rejects a duplicate identity without orphaning a session 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume cannot crash-repair a turn owned by a live agent 46ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > createAgent works without meta (no cwd) 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume of a session with no cwd carries an undefined cwd header 75ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > agent/session-start fires "startup" for createAgent and "resume" for resume() 75ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume awaits setup while unpublished, then publishes a fully composed world in order 56ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > successful resume disposal retires its caller-owned transaction effects 59ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume setup rejection publishes nothing, unwinds, and releases the identity 62ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume setup commit rejection publishes nothing and releases the identity 49ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > owner unload aborts resume setup and cannot publish after the callback settles 52ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > owner unload aborts a never-settling persistence preparation, releases the identity, and blocks late publication 51ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > AgentLoop unload aborts persistence preparation and awaits wrapper settlement 48ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume of a forked session preserves the lineage, seed boundary, and delegation depth in the header 46ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > a pending idle inject() survives persist + resume without a synthetic turn 72ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume reloads a persisted session: history + turn numbering continue, no duplicate seqs 95ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > the session-persistence Agent Note: AgentLoop factory create/resume > resume rejects when session persistence is not configured 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > rejects create() with a pre-aborted signal, including a non-Error reason 23ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > a non-Error abort reason arriving during setup is wrapped for the caller 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > rejects when setup synchronously aborts its caller signal 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > resume with a pre-aborted caller signal rejects out of the load race 47ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > releases a restored preparation if the loop becomes inactive before setup 58ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > creation and resume cancellation edges > factory teardown during a hung resume preparation rejects with loop-inactive 55ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > configured-start failure edges > a non-Error mid-prepare abort reason is wrapped for the resume caller 44ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > configured-start failure edges > a failing exact-id restore over an existing artifact stays loud 102ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/resume.spec.ts > configured-start failure edges > suppresses a configured-resume failure that lands after teardown 77ms
 
  Test Files  1 passed (1)
       Tests  28 passed (28)
      Errors  7 errors
-   Start at  05:38:04
-   Duration  2.06s (transform 580ms, setup 220ms, import 477ms, tests 1.18s, environment 0ms)
+   Start at  07:25:56
+   Duration  3.28s (transform 1.29s, setup 456ms, import 1.10s, tests 1.47s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens 0 before publication 16ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens -1 before publication 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens 1.5 before publication 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens NaN before publication 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens 9007199254740992 before publication 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > seeds a valid AgentOptions.maxTokens into the first model request 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens 0 before publication 23ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens -1 before publication 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens 1.5 before publication 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens NaN before publication 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects invalid AgentOptions.maxTokens 9007199254740992 before publication 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > seeds a valid AgentOptions.maxTokens into the first model request 13ms
  ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > cancels queued wakeup work together with an active maintenance task 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > replays a wake latched behind maintenance at convergence 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > suppresses the replay when a latched maintenance wake is removed 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > runs a simple turn: queued message → model → idle, with ordered events 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > round-trips tool calls: model requests tool → executes → result in next request 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > renders harness identity, then the persona, then tool guidance — with {{variables}} resolved 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > resolves {{cwd}} from the agent session workspace (factory create with meta.cwd) 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > contains a strict-variable render failure: the turn errors, the loop keeps serving turns 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > supports the model-via-agent/request path with a {{model}} persona: the supplier states it via the assemble waterfall 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > omits the system field when system-prompt/assemble short-circuits with an empty assembly 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > materializes changed runtime context at the history tail without rewriting the system header 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > re-emits unchanged runtime context when a surface replacement removed the retained snapshot 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > clears compacted runtime context after the active set becomes empty 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > does not clear runtime context after an unrelated replacement 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > replaces a malformed retained runtime-context message with the current complete snapshot 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > records raw chunks for replay as assistant/chunk session events 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > injects steering between steps and continues the turn 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > starts idle steering synchronously and enters later steering at the next step 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > stops after a throwing pre-step listener and retains later steering until a wakeup 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > inject() while idle durably stages context without opening a turn 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > inject() persists structured context content verbatim with durable source 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > defers inject() during tool execution until after the tool result 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects non-JSON context before it enters the active tool-batch FIFO 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/turn-stopping can steer another step (/loop pattern) 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a tool can conclude the turn despite owing a follow-up request 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > continues for steering that arrived during a concluding tool step 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/request waterfall switches models by returning a replacement config; the switch is logged 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/pre-step fires once per proposed step before the step is opened 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/pre-step fires before its step boundary opens and before the request 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a throwing agent/pre-step listener fails the proposal, not the loop 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > replays a wake latched behind maintenance at convergence 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > suppresses the replay when a latched maintenance wake is removed 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > runs a simple turn: queued message → model → idle, with ordered events 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > round-trips tool calls: model requests tool → executes → result in next request 15ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > renders harness identity, then the persona, then tool guidance — with {{variables}} resolved 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > resolves {{cwd}} from the agent session workspace (factory create with meta.cwd) 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > contains a strict-variable render failure: the turn errors, the loop keeps serving turns 23ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > supports the model-via-agent/request path with a {{model}} persona: the supplier states it via the assemble waterfall 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > omits the system field when system-prompt/assemble short-circuits with an empty assembly 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > materializes changed runtime context at the history tail without rewriting the system header 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > re-emits unchanged runtime context when a surface replacement removed the retained snapshot 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > clears compacted runtime context after the active set becomes empty 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > does not clear runtime context after an unrelated replacement 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > replaces a malformed retained runtime-context message with the current complete snapshot 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > records raw chunks for replay as assistant/chunk session events 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > injects steering between steps and continues the turn 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > starts idle steering synchronously and enters later steering at the next step 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > stops after a throwing pre-step listener and retains later steering until a wakeup 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > inject() while idle durably stages context without opening a turn 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > inject() persists structured context content verbatim with durable source 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > defers inject() during tool execution until after the tool result 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > rejects non-JSON context before it enters the active tool-batch FIFO 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/turn-stopping can steer another step (/loop pattern) 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a tool can conclude the turn despite owing a follow-up request 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > continues for steering that arrived during a concluding tool step 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/request waterfall switches models by returning a replacement config; the switch is logged 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/pre-step fires once per proposed step before the step is opened 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > agent/pre-step fires before its step boundary opens and before the request 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a throwing agent/pre-step listener fails the proposal, not the loop 7ms
  ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > cancel() mid-stream ends the turn with reason aborted 37ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > surfaces max-tokens as the turn-end reason when the last step is cut off 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a max-tokens step earlier in a turn still surfaces as max-tokens after a later completed step 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a completed step after no max-tokens keeps the turn completed (max-tokens does not leak across turns) 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > does not dispatch tool calls from a max-tokens-truncated step 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > appends an empty completion anchor for a max-tokens step with no usage 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > appends an empty completion anchor for a normal stop with no usage 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > keeps safe max-tokens assistant content while dropping truncated tool calls 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > contains a step/end observer failure without changing continuation 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > contains a reentrant send attempted during durable inbox publication 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > preserves independent turn sources across an adjacent microtask send 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > keeps a session-listener send after dequeue in the following turn 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > keeps a model-adapter callback send in the following turn 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > surfaces max-tokens as the turn-end reason when the last step is cut off 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a max-tokens step earlier in a turn still surfaces as max-tokens after a later completed step 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > a completed step after no max-tokens keeps the turn completed (max-tokens does not leak across turns) 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > does not dispatch tool calls from a max-tokens-truncated step 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > appends an empty completion anchor for a max-tokens step with no usage 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > appends an empty completion anchor for a normal stop with no usage 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > keeps safe max-tokens assistant content while dropping truncated tool calls 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > contains a step/end observer failure without changing continuation 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > contains a reentrant send attempted during durable inbox publication 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > preserves independent turn sources across an adjacent microtask send 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > keeps a session-listener send after dequeue in the following turn 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > keeps a model-adapter callback send in the following turn 8ms
  ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > records normalized model errors on the turn boundary 5ms
  ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > disposing the loop fiber mid-turn stops the loop (HMR safety) 37ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > creates agents from config on startup 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > attaches config agent cwd to the fresh session header 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > replays a session log into an identical derived history 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > creates agents from config on startup 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > attaches config agent cwd to the fresh session header 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/loop.spec.ts > agent loop > replays a session log into an identical derived history 9ms
 
  Test Files  1 passed (1)
       Tests  54 passed (54)
      Errors  61 errors
-   Start at  05:38:07
-   Duration  1.15s (transform 509ms, setup 224ms, import 387ms, tests 345ms, environment 0ms)
+   Start at  07:26:00
+   Duration  1.79s (transform 867ms, setup 402ms, import 642ms, tests 515ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rejects an already-aborted creation signal before publishing either object 19ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > joins cleanup when an abort lands reentrantly during scope preparation 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > normalizes non-Error create failures for rollback while rethrowing the original value 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > wires agent.ctx: tagged with the agent, DX field set, ctx.agent safe elsewhere 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > records agents created through an agent context as non-root runtime children 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > scoped registrations live in the agent world and die with the agent 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > agent.ctx listeners hear only their own agent (scoped dispatch end to end) 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > runs setup in the guaranteed slot: scoped world complete before session-start and the first assembly 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rejects an already-aborted creation signal before publishing either object 33ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > joins cleanup when an abort lands reentrantly during scope preparation 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > normalizes non-Error create failures for rollback while rethrowing the original value 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > wires agent.ctx: tagged with the agent, DX field set, ctx.agent safe elsewhere 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > records agents created through an agent context as non-root runtime children 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > scoped registrations live in the agent world and die with the agent 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > agent.ctx listeners hear only their own agent (scoped dispatch end to end) 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > runs setup in the guaranteed slot: scoped world complete before session-start and the first assembly 10ms
  ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps both objects unpublished until async setup completes, then announces in order 5ms
  ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > lets the final enter arbitrate unsupported concurrent same-id creation and rolls the loser back 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > uses signal only for creation: aborts pending setup but not a returned live handle 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > owner unload aborts a pending setup and publishes nothing 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > uses signal only for creation: aborts pending setup but not a returned live handle 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > owner unload aborts a pending setup and publishes nothing 7ms
  ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > an AgentLoop unload aborts pending setup, awaits cleanup, and releases both ids 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > factory unload during scope minting skips setup and awaits provisional cleanup 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > factory unload during scope minting skips setup and awaits provisional cleanup 5ms
  ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > caller unload during scope minting owns and drains the half-built child 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > synchronous create rechecks provider liveness before its first publication edge 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > synchronous create leaves no lifecycle state when session preparation fails 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > factory unload awaits provisional cleanup when scope preparation throws 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > AgentLoop unload is a structural co-owner of every live programmatic agent 14ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps AgentLoop dependencies available when the caller injects only agents 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps both entries and the scope live through a reentrant session/created teardown 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps both entries and the scope live through a reentrant agent/created teardown 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rechecks caller liveness after creation listeners before unlocking the driver 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rechecks caller liveness after session-start before starting the driver 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > a rejecting setup publishes nothing and unwinds the unpublished scope 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rejects an exotic durable seed before publishing either object 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > a throwing session/created listener disposes the scope (pre-nesting rollback window) 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > pairs session and agent announcements when agent creation aborts publication 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > the synchronous config helper rolls back when publication throws 56ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > registrations through a disposed agent ctx throw INACTIVE_EFFECT 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > agentEvents fuses carrier and subject for custom drivers 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > owner unload honors the documented teardown order: unregistration AFTER the drain, before detach 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > handle.dispose() during owner unload still awaits true quiescence (shared boundary) 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > successful handle disposal retires its caller ownership effect 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > owner unload after handle-first teardown follows the same in-flight boundary 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > reopens ids after the prior private scope finishes quiescing 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > drains a run re-entered by cancel's own idle transition before removing the scope 39ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > synchronous create rechecks provider liveness before its first publication edge 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > synchronous create leaves no lifecycle state when session preparation fails 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > factory unload awaits provisional cleanup when scope preparation throws 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > AgentLoop unload is a structural co-owner of every live programmatic agent 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps AgentLoop dependencies available when the caller injects only agents 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps both entries and the scope live through a reentrant session/created teardown 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > keeps both entries and the scope live through a reentrant agent/created teardown 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rechecks caller liveness after creation listeners before unlocking the driver 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rechecks caller liveness after session-start before starting the driver 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > a rejecting setup publishes nothing and unwinds the unpublished scope 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > rejects an exotic durable seed before publishing either object 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > a throwing session/created listener disposes the scope (pre-nesting rollback window) 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > pairs session and agent announcements when agent creation aborts publication 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > the synchronous config helper rolls back when publication throws 58ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > registrations through a disposed agent ctx throw INACTIVE_EFFECT 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > agentEvents fuses carrier and subject for custom drivers 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > owner unload honors the documented teardown order: unregistration AFTER the drain, before detach 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > handle.dispose() during owner unload still awaits true quiescence (shared boundary) 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > successful handle disposal retires its caller ownership effect 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > owner unload after handle-first teardown follows the same in-flight boundary 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > reopens ids after the prior private scope finishes quiescing 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/scope-lifecycle.spec.ts > agent scope lifecycle > drains a run re-entered by cancel's own idle transition before removing the scope 42ms
 
  Test Files  1 passed (1)
       Tests  37 passed (37)
      Errors  6 errors
-   Start at  05:38:09
-   Duration  1.11s (transform 524ms, setup 227ms, import 405ms, tests 293ms, environment 0ms)
+   Start at  07:26:04
+   Duration  1.70s (transform 858ms, setup 386ms, import 656ms, tests 377ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/runtime-context.spec.ts > RuntimeContextProjection > restores the latest visible owned snapshot and ignores other sessions 18ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/runtime-context.spec.ts > RuntimeContextProjection > restores the latest visible owned snapshot and ignores other sessions 38ms
 
  Test Files  1 passed (1)
       Tests  1 passed (1)
-   Start at  05:38:12
-   Duration  560ms (transform 308ms, setup 229ms, import 133ms, tests 19ms, environment 0ms)
+   Start at  07:26:07
+   Duration  1.03s (transform 590ms, setup 373ms, import 331ms, tests 40ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > each step request within a turn append-extends the previous, frozen end to end 33ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a later turn append-extends the previous turn (one conversation, one log) 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > logs adapter defaults, supports per-turn effort changes, and restores the effective value 17ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > logs an adapter-owned maxTokens default before dispatch 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > rematerializes the selected adapter maxTokens default after a provider switch 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > preserves an explicit agent maxTokens cap across a provider switch 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > keeps exact-model resolution, request logging, and dispatch on one adapter registration 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > aborts a blocked reasoning lookup before quiescent disposal completes 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > does not swallow a plain error from exact-model resolution 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > does not swallow a LLM error from exact-model resolution 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > lets a short-circuiting llm/stream listener own an unregistered route 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a compaction replace rewrites the resend, and the log explains it 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a real system-prompt change is a full changed-header snapshot; a stable prompt logs nothing 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > an inject() during the agent/request waterfall joins the NEXT request (the step/start boundary) 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a mutation attempt on the frozen request content throws into the step (loud, not silent) 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a fresh loop instance over a seeded log anchors with a resume snapshot and stays cache-aligned 14ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a delegating listener cannot mutate the seed through next() — the fold stays log-true 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > THEOREM: every request rebuilds byte-equal from the session log alone 9ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > records capacity once and skips it while the route is unchanged 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > records a second capacity when the route changes mid-session 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > records and deduplicates a route whose adapter advertises no capacity 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > clears a previous capacity when the next route advertises none 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > each step request within a turn append-extends the previous, frozen end to end 148ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a later turn append-extends the previous turn (one conversation, one log) 19ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > logs adapter defaults, supports per-turn effort changes, and restores the effective value 84ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > logs an adapter-owned maxTokens default before dispatch 15ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > rematerializes the selected adapter maxTokens default after a provider switch 24ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > preserves an explicit agent maxTokens cap across a provider switch 17ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > keeps exact-model resolution, request logging, and dispatch on one adapter registration 15ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > aborts a blocked reasoning lookup before quiescent disposal completes 44ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > does not swallow a plain error from exact-model resolution 22ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > does not swallow a LLM error from exact-model resolution 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > lets a short-circuiting llm/stream listener own an unregistered route 21ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a compaction replace rewrites the resend, and the log explains it 34ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a real system-prompt change is a full changed-header snapshot; a stable prompt logs nothing 39ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > an inject() during the agent/request waterfall joins the NEXT request (the step/start boundary) 22ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a mutation attempt on the frozen request content throws into the step (loud, not silent) 21ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a fresh loop instance over a seeded log anchors with a resume snapshot and stays cache-aligned 32ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > a delegating listener cannot mutate the seed through next() — the fold stays log-true 31ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request stability across the loop > THEOREM: every request rebuilds byte-equal from the session log alone 29ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > records capacity once and skips it while the route is unchanged 20ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > records a second capacity when the route changes mid-session 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > records and deduplicates a route whose adapter advertises no capacity 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/request-reconstruction.spec.ts > request/context capacity records > clears a previous capacity when the next route advertises none 18ms
 
  Test Files  1 passed (1)
       Tests  22 passed (22)
      Errors  39 errors
-   Start at  05:38:13
-   Duration  1.04s (transform 558ms, setup 222ms, import 449ms, tests 167ms, environment 0ms)
+   Start at  07:26:11
+   Duration  3.39s (transform 1.93s, setup 521ms, import 1.76s, tests 696ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > runs parallel-safe siblings concurrently (all start before any completes) 34ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > an exclusive call between two parallel-safe calls forms a barrier (3 groups) 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > reclassifies pending calls after an exclusive barrier replaces their tool 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > runs parallel-safe siblings concurrently (all start before any completes) 44ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > an exclusive call between two parallel-safe calls forms a barrier (3 groups) 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > reclassifies pending calls after an exclusive barrier replaces their tool 19ms
  ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: grouping and barriers > stops replenishing when a result observer makes the next call exclusive 16ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: model-order results despite out-of-order settlement > commits tool/result in model order even when a later call settles first 13ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: model-order results despite out-of-order settlement > derived history pairs calls in model order regardless of tool/call log interleaving 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > rejects invalid global maxParallelToolCalls config at plugin load 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > defensively rejects invalid caps when direct construction bypasses the config schema 1ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > defaults the cap when direct construction bypasses the config schema 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > starts at most the cap, replenishing as calls settle 18ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > maxParallelToolCalls: 1 is fully serial (no second start before the first settles) 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: model-order results despite out-of-order settlement > commits tool/result in model order even when a later call settles first 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: model-order results despite out-of-order settlement > derived history pairs calls in model order regardless of tool/call log interleaving 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > rejects invalid global maxParallelToolCalls config at plugin load 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > defensively rejects invalid caps when direct construction bypasses the config schema 2ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > defaults the cap when direct construction bypasses the config schema 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > starts at most the cap, replenishing as calls settle 17ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > maxParallelToolCalls: 1 is fully serial (no second start before the first settles) 16ms
  ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: rolling pool honors maxParallelToolCalls > applies the configured cap to every factory-created agent 15ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: ordered middleware and additional contexts > tools/pre-execute and tools/post-execute observe model call order 9ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: ordered middleware and additional contexts > injects additional contexts in model call order, not settlement order 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: ordered middleware and additional contexts > orders pre-execute denials and errors without dispatching them 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > starts no calls when the signal is already aborted before a parallel group 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > skips dispatch and stops starting siblings when abort fires during ordered pre-execute 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > stops replenishing after abort, commits started results, and parks accepted additional contexts 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > does not run an exclusive barrier after a parallel group aborts 9ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: failure quiescence > stops new dispatches and drains started bodies before surfacing the first failure 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > code-mode native-tool denial through the agent loop > denies a model-direct native-tool call under code mode: tool body never runs and session records UNKNOWN_TOOL 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: ordered middleware and additional contexts > tools/pre-execute and tools/post-execute observe model call order 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: ordered middleware and additional contexts > injects additional contexts in model call order, not settlement order 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: ordered middleware and additional contexts > orders pre-execute denials and errors without dispatching them 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > starts no calls when the signal is already aborted before a parallel group 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > skips dispatch and stops starting siblings when abort fires during ordered pre-execute 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > stops replenishing after abort, commits started results, and parks accepted additional contexts 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: abort handling > does not run an exclusive barrier after a parallel group aborts 12ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > tool-call scheduler: failure quiescence > stops new dispatches and drains started bodies before surfacing the first failure 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-calls.spec.ts > code-mode native-tool denial through the agent loop > denies a model-direct native-tool call under code mode: tool body never runs and session records UNKNOWN_TOOL 9ms
 
  Test Files  1 passed (1)
       Tests  21 passed (21)
      Errors  19 errors
-   Start at  05:38:15
-   Duration  1.02s (transform 524ms, setup 220ms, import 409ms, tests 212ms, environment 0ms)
+   Start at  07:26:17
+   Duration  1.70s (transform 903ms, setup 458ms, import 642ms, tests 272ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > enter (default via next) records the user/message unchanged 23ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > reports the request coordinates for initial and tool-continuation prompts 10ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > publishes frozen input without replacing its identity 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > enter with content rewrites the prompt before it is recorded 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > enter with additional messages records separately sourced context in the turn 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > does not open another step when a completed turn rewrites pending input to empty 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > reject closes the claimed prompt turn without a step or model call 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > stages inject and steer during pre-step for the entered turn 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > preserves input staged after the blocked batch was claimed 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > preserves later queued work when a step is rejected 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > preserves context-only injection staged after pre-step began 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > leaves inbox state unchanged when its durable append fails 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > a blocked prompt preserves adjacent queued prompts 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > a throwing pre-step listener reports the driver error and retains adjacent work 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/session-start > fires once with source "startup" for a fresh create, before the first turn 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/session-start > a session-start listener can inject context the first request sees 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/session-start > a throwing session-start listener does not abort agent construction 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > tool additionalContexts buffering across a step > appends each call's contexts only AFTER all tool/results, preserving adjacency 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > tool additionalContexts buffering across a step > appends multiple contexts deferred by one composite tool after its outer result 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > enter (default via next) records the user/message unchanged 30ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > reports the request coordinates for initial and tool-continuation prompts 13ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > publishes frozen input without replacing its identity 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > enter with content rewrites the prompt before it is recorded 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > enter with additional messages records separately sourced context in the turn 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > does not open another step when a completed turn rewrites pending input to empty 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > reject closes the claimed prompt turn without a step or model call 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > stages inject and steer during pre-step for the entered turn 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > preserves input staged after the blocked batch was claimed 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > preserves later queued work when a step is rejected 10ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > preserves context-only injection staged after pre-step began 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > leaves inbox state unchanged when its durable append fails 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > a blocked prompt preserves adjacent queued prompts 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/pre-step > a throwing pre-step listener reports the driver error and retains adjacent work 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/session-start > fires once with source "startup" for a fresh create, before the first turn 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/session-start > a session-start listener can inject context the first request sees 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > agent/session-start > a throwing session-start listener does not abort agent construction 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > tool additionalContexts buffering across a step > appends each call's contexts only AFTER all tool/results, preserving adjacency 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > tool additionalContexts buffering across a step > appends multiple contexts deferred by one composite tool after its outer result 10ms
  ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > tools/pre-execute gate (native-plugin permission pattern, end-to-end through the loop) > deny short-circuits dispatch into an isError result the model sees 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > worked example: a native hook plugin is just a cordis plugin on the seams > all four seams fire for a real allowed turn with a tool call 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > worked example: a native hook plugin is just a cordis plugin on the seams > the same plugin blocks a destructive prompt inside a no-step turn 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > worked example: a native hook plugin is just a cordis plugin on the seams > HMR-safety: disposing the plugin fiber removes all four listeners 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > worked example: a native hook plugin is just a cordis plugin on the seams > all four seams fire for a real allowed turn with a tool call 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > worked example: a native hook plugin is just a cordis plugin on the seams > the same plugin blocks a destructive prompt inside a no-step turn 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/interception.spec.ts > worked example: a native hook plugin is just a cordis plugin on the seams > HMR-safety: disposing the plugin fiber removes all four listeners 7ms
 
  Test Files  1 passed (1)
       Tests  23 passed (23)
      Errors  28 errors
-   Start at  05:38:17
-   Duration  901ms (transform 472ms, setup 211ms, import 358ms, tests 145ms, environment 0ms)
+   Start at  07:26:20
+   Duration  1.44s (transform 770ms, setup 333ms, import 594ms, tests 199ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > idle inject() durably stages context without opening a turn 20ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > idle inject() durably stages context without opening a turn 26ms
  ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > inject() preserves an explicitly empty plugin source 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > emits exact inserted, claimed, and discarded inbox messages 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > idle inject() rejects invalid input before enqueue 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > steer() while idle becomes a woken prompt turn 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > emits one running and idle transition for one completed turn 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > whenIdle() resolves immediately without active work 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > whenIdle() waits for active work until explicit cancellation 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > contains a throwing status listener on both transitions 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > emits exact inserted, claimed, and discarded inbox messages 11ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > idle inject() rejects invalid input before enqueue 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > steer() while idle becomes a woken prompt turn 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > emits one running and idle transition for one completed turn 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > whenIdle() resolves immediately without active work 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > whenIdle() waits for active work until explicit cancellation 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/agent.spec.ts > Agent > contains a throwing status listener on both transitions 8ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
      Errors  5 errors
-   Start at  05:38:19
-   Duration  826ms (transform 491ms, setup 219ms, import 369ms, tests 59ms, environment 0ms)
+   Start at  07:26:23
+   Duration  1.32s (transform 827ms, setup 325ms, import 667ms, tests 79ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel() on an idle agent with nothing queued is a no-op; the next prompt runs (F2 leak guard) 24ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel({ keepInbox: true }) does not restore work already claimed by a waking send 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel({ keepInbox: true }) parks queued work after an active turn aborts 39ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel({ keepInbox: true }) latches a waking send landing in the abort-to-idle window 36ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel() without keepInbox clears a latched wake alongside the inbox 36ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > removing the latched wake before convergence suppresses the replay 37ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel() on an idle agent with nothing queued is a no-op; the next prompt runs (F2 leak guard) 42ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel({ keepInbox: true }) does not restore work already claimed by a waking send 17ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel({ keepInbox: true }) parks queued work after an active turn aborts 43ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel({ keepInbox: true }) latches a waking send landing in the abort-to-idle window 38ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel() without keepInbox clears a latched wake alongside the inbox 40ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > removing the latched wake before convergence suppresses the replay 36ms
  ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > latches a wake arriving deep into a slow abort convergence 89ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > does not latch a wake landing after disposal begins 91ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > does not latch a wake landing after disposal begins 89ms
  ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel after waking send closes its synchronously opened turn without a step 36ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > disposal from the running notification drops queued work before turn start 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a whenIdle() waiter registered BEFORE a pre-step cancel resolves (F1 hang guard) 3ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > disposal from the running notification drops queued work before turn start 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a whenIdle() waiter registered BEFORE a pre-step cancel resolves (F1 hang guard) 4ms
  ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > idle-listener cancellation settles its waiter without cancelling later work 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > replacement work queued after idle-listener cancellation replays at convergence 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel() mid-step aborts the active turn and drops every queued tail item 37ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel from an assistant/message observer skips execution but balances replay 8ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a prompt sent AFTER a cancelled turn settles runs normally (marker reset) 37ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > replacement work queued after idle-listener cancellation replays at convergence 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel() mid-step aborts the active turn and drops every queued tail item 36ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel from an assistant/message observer skips execution but balances replay 9ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a prompt sent AFTER a cancelled turn settles runs normally (marker reset) 36ms
  ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel mid-stream finalizes the streamed prefix onto the surface 38ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel during reasoning-only streaming finalizes the reasoning prefix 36ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel drops a half-streamed tool call and keeps the completed text before it 37ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel during error recovery does not finalize the failed stream 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > retry discards the failed attempt; the final message cites only its own chunks 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel before any visible content finalizes nothing 37ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel during reasoning-only streaming finalizes the reasoning prefix 35ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel drops a half-streamed tool call and keeps the completed text before it 36ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel during error recovery does not finalize the failed stream 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > retry discards the failed attempt; the final message cites only its own chunks 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel before any visible content finalizes nothing 38ms
  ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel from a synchronous step/start session-event listener drops the step (post-step-start window) 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > disposal from a synchronous step/start session-event listener stops before adapter dispatch 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel during the stopping window ends the turn aborted and runs no further step 7ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel from a synchronous agent/status(running) listener drops the turn (window 2) 4ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a running-listener cancellation replays replacement work at convergence 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a prompt queued during pre-step cancellation replays at convergence 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel clears the turn's steering — it is not re-enqueued as a fresh turn 68ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > replays replacement work queued synchronously by an abort observer 60ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > keeps the first typed cause for an active turn 56ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > preserves the first user cancellation when lifecycle teardown races it 60ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative pre-step boundary settle from the explicit turn signal 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > disposal from a synchronous step/start session-event listener stops before adapter dispatch 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel during the stopping window ends the turn aborted and runs no further step 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel from a synchronous agent/status(running) listener drops the turn (window 2) 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a running-listener cancellation replays replacement work at convergence 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > a prompt queued during pre-step cancellation replays at convergence 6ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > cancel clears the turn's steering — it is not re-enqueued as a fresh turn 67ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > replays replacement work queued synchronously by an abort observer 62ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > keeps the first typed cause for an active turn 58ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > preserves the first user cancellation when lifecycle teardown races it 57ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative pre-step boundary settle from the explicit turn signal 8ms
  ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative system-prompt boundary settle from the explicit turn signal 6ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative request boundary settle from the explicit turn signal 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative stopping boundary settle from the explicit turn signal 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative tool boundary settle from the explicit turn signal 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative request boundary settle from the explicit turn signal 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative stopping boundary settle from the explicit turn signal 7ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/cancel.spec.ts > Agent.cancel() > lets a cooperative tool boundary settle from the explicit turn signal 9ms
 
  Test Files  1 passed (1)
       Tests  37 passed (37)
      Errors  54 errors
-   Start at  05:38:21
-   Duration  1.79s (transform 528ms, setup 233ms, import 402ms, tests 959ms, environment 0ms)
+   Start at  07:26:26
+   Duration  2.29s (transform 841ms, setup 400ms, import 604ms, tests 1.01s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > logs the request/header with tools in canonical order, not registration order 23ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > produces the same header order for any registration order 11ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > honors a configured toolOrder in the logged header and the dispatched request 5ms
- ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > closes a no-step turn when toolOrder names an unregistered tool 5ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > logs the request/header with tools in canonical order, not registration order 36ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > produces the same header order for any registration order 15ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > honors a configured toolOrder in the logged header and the dispatched request 8ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/tool-order.spec.ts > loop-level canonical tool order > closes a no-step turn when toolOrder names an unregistered tool 7ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
      Errors  5 errors
-   Start at  05:38:24
-   Duration  801ms (transform 479ms, setup 211ms, import 364ms, tests 45ms, environment 0ms)
+   Start at  07:26:29
+   Duration  1.46s (transform 895ms, setup 433ms, import 664ms, tests 67ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > accepts a frozen request equal to the boundary derivation and folded header 14ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > accepts a frozen request equal to the boundary derivation and folded header 21ms
  ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > includes context appended inside the open step before dispatch 2ms
- ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > requires the messages to equal the boundary derivation exactly (no unlogged prefix) 3ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > requires the messages to equal the boundary derivation exactly (no unlogged prefix) 2ms
  ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects message and header divergence 2ms
- ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects loop requests with no boundary or header 3ms
- ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects an unfrozen messages array but skips requests outside the loop contract 2ms
- ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects malformed requests carrying the loop marker 2ms
- ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > prepends ahead of a short-circuiting stream listener 2ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects loop requests with no boundary or header 4ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects an unfrozen messages array but skips requests outside the loop contract 3ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > rejects malformed requests carrying the loop marker 3ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/invariant.spec.ts > request-reconstruction invariant > prepends ahead of a short-circuiting stream listener 3ms
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  05:38:26
-   Duration  591ms (transform 303ms, setup 222ms, import 140ms, tests 30ms, environment 0ms)
+   Start at  07:26:32
+   Duration  1.16s (transform 649ms, setup 503ms, import 277ms, tests 43ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/core/agent-loop/tests/properties.spec.ts > agent loop scheduling properties > a synchronous burst gives every message its own strictly increasing turn 188ms
- ✓ |thread-safe| packages/core/agent-loop/tests/properties.spec.ts > agent loop scheduling properties > sequential sends each get their own turn with increasing numbers 123ms
- ✓ |thread-safe| packages/core/agent-loop/tests/properties.spec.ts > agent loop scheduling properties > mixed settled and same-tick sends preserve one turn per message 161ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/properties.spec.ts > agent loop scheduling properties > a synchronous burst gives every message its own strictly increasing turn 330ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/properties.spec.ts > agent loop scheduling properties > sequential sends each get their own turn with increasing numbers 237ms
+ ✓ |thread-safe| packages/core/agent-loop/tests/properties.spec.ts > agent loop scheduling properties > mixed settled and same-tick sends preserve one turn per message 304ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-     Errors  192 errors
-   Start at  05:38:27
-   Duration  1.30s (transform 510ms, setup 224ms, import 400ms, tests 473ms, environment 0ms)
+     Errors  231 errors
+   Start at  07:26:35
+   Duration  2.28s (transform 922ms, setup 372ms, import 758ms, tests 873ms, environment 0ms)

@@ -1,8 +1,8 @@
 {
   "issue_id": "P5-02",
   "title": "Model Router：成功率、成本、延迟、隐私和工具能力联合选择",
-  "audit_date": "2026-08-22T21:51:39.020Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:46:43.544Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/router/model-router/src/index.ts",
     "packages/router/model-router/src/types.ts",

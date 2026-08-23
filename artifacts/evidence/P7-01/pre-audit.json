@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-01",
   "title": "VerificationContract：在执行前冻结可验证成功标准",
-  "audit_date": "2026-08-22T22:08:59.937Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:05:07.252Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/assurance/verification-contract/src/index.ts",
     "packages/assurance/verification-contract/src/types.ts",

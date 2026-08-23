@@ -1,7 +1,7 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/policy/grant-store/tests/grants.spec.ts > P2-08 Grant Store > issues a grant with digest 2ms
+ ✓ |thread-safe| packages/policy/grant-store/tests/grants.spec.ts > P2-08 Grant Store > issues a grant with digest 3ms
  ✓ |thread-safe| packages/policy/grant-store/tests/grants.spec.ts > P2-08 Grant Store > matches a valid grant 0ms
  ✓ |thread-safe| packages/policy/grant-store/tests/grants.spec.ts > P2-08 Grant Store > rejects expired grant 0ms
  ✓ |thread-safe| packages/policy/grant-store/tests/grants.spec.ts > P2-08 Grant Store > rejects revoked grant 0ms
@@ -13,31 +13,31 @@
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  05:22:41
-   Duration  439ms (transform 212ms, setup 231ms, import 24ms, tests 5ms, environment 0ms)
+   Start at  07:07:20
+   Duration  675ms (transform 327ms, setup 359ms, import 42ms, tests 7ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > canonicalizes approval request with digest id 2ms
+ ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > canonicalizes approval request with digest id 5ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > same request produces same digest 0ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > different parameters produce different digest 1ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > verifyDigest checks integrity 0ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > isExpired checks validity 0ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > redactSensitive replaces sensitive keys 0ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > checkPreconditions passes when all satisfied 1ms
- ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > checkPreconditions fails on token invalid 0ms
+ ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > checkPreconditions fails on token invalid 1ms
  ✓ |thread-safe| packages/interaction/user-approval/tests/argument-binding.spec.ts > P2-06 Approval Argument Binding > checkPreconditions fails on policy mismatch 0ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  05:22:42
-   Duration  415ms (transform 189ms, setup 209ms, import 23ms, tests 5ms, environment 0ms)
+   Start at  07:07:23
+   Duration  634ms (transform 309ms, setup 341ms, import 41ms, tests 11ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > has 4 predefined profiles 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > has 4 predefined profiles 3ms
  ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > observe-only has no writable paths 0ms
  ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > production-controlled uses container execution 0ms
  ✓ |thread-safe| packages/interaction/permission-presets/tests/profile.spec.ts > P2-11 Policy Profile > no profile disables kernel hard deny 0ms
@@ -50,66 +50,66 @@
 
  Test Files  1 passed (1)
       Tests  10 passed (10)
-   Start at  05:22:44
-   Duration  416ms (transform 199ms, setup 219ms, import 14ms, tests 5ms, environment 0ms)
+   Start at  07:07:24
+   Duration  660ms (transform 327ms, setup 374ms, import 23ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > effectivePermissionPreset > folds to the last event, or undefined without one 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > advertises the preset table in declaration order and resolves bundles 12ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > current() derives from the effective knobs: composition defaults hit workspace-write, a switch hits its preset 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > a knob state matching no table entry derives custom — a state, not an error 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > composition defaults outside the table still derive custom when an explicit new-session default is configured 2ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > the fold breaks bundle ties; a stale fold no longer matching falls back to table order 2ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() writes through: one preset event plus both knob events 2ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() to the current preset is a no-op when the knobs already match (clicks are not switches) 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > advertises the preset table in declaration order and resolves bundles 24ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > current() derives from the effective knobs: composition defaults hit workspace-write, a switch hits its preset 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > a knob state matching no table entry derives custom — a state, not an error 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > composition defaults outside the table still derive custom when an explicit new-session default is configured 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > the fold breaks bundle ties; a stale fold no longer matching falls back to table order 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() writes through: one preset event plus both knob events 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > set() to the current preset is a no-op when the knobs already match (clicks are not switches) 4ms
  ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > re-asserting a preset from a drifted (custom) state re-records the choice and repairs the knob 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects composition over a non-confining executor at load 8ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > optionOf() presents shipped labels/descriptions, falls back to the raw key, and fixes custom 5ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects a table entry named custom (reserved for the derived state) 2ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > requires an explicit default when composition defaults match no preset 2ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > reads a schema-less approval stand-in as the ask default 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins the current setting into each new session without changing earlier sessions 5ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves a seeded legacy session instead of applying the latest user default 6ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves composition defaults when an empty stored session resumes 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins sessions that already exist when the service remounts 2ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > fills only missing legacy facts and preserves an unmatched seeded combination 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > materializes ask when a legacy seed and approval stand-in omit the policy 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > rejects a stored default outside the configured preset table 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects composition over a non-confining executor at load 12ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > optionOf() presents shipped labels/descriptions, falls back to the raw key, and fixes custom 8ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > rejects a table entry named custom (reserved for the derived state) 3ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > requires an explicit default when composition defaults match no preset 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > PermissionPresetService > reads a schema-less approval stand-in as the ask default 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins the current setting into each new session without changing earlier sessions 8ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves a seeded legacy session instead of applying the latest user default 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > preserves composition defaults when an empty stored session resumes 7ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > pins sessions that already exist when the service remounts 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > fills only missing legacy facts and preserves an unmatched seeded combination 6ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > materializes ask when a legacy seed and approval stand-in omit the policy 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/permission-presets.spec.ts > new-session default > rejects a stored default outside the configured preset table 5ms
 
  Test Files  1 passed (1)
       Tests  21 passed (21)
-   Start at  05:22:45
-   Duration  795ms (transform 406ms, setup 211ms, import 324ms, tests 79ms, environment 0ms)
+   Start at  07:07:26
+   Duration  1.29s (transform 719ms, setup 377ms, import 563ms, tests 128ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > serves the pinned new-session default select 19ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > folds the knob events and notifies the change feed per knob append 6ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > appends custom as a current-only option when the knobs match no preset 4ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > has no permissions key without the service, and drops it on unload (HMR safety) 4ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > switches through permission.set and logs the lifecycle pair 6ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > reports the current preset and the table on bare invocation 4ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > rejects an unknown preset without touching the log 4ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > serves the pinned new-session default select 27ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > folds the knob events and notifies the change feed per knob append 8ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > appends custom as a current-only option when the knobs match no preset 5ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > permissions projection unit > has no permissions key without the service, and drops it on unload (HMR safety) 9ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > switches through permission.set and logs the lifecycle pair 10ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > reports the current preset and the table on bare invocation 8ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/projection.spec.ts > /permission command > rejects an unknown preset without touching the log 9ms
 
  Test Files  1 passed (1)
       Tests  7 passed (7)
-   Start at  05:22:47
-   Duration  887ms (transform 534ms, setup 207ms, import 452ms, tests 49ms, environment 0ms)
+   Start at  07:07:29
+   Duration  1.47s (transform 909ms, setup 391ms, import 745ms, tests 78ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > accepts configured preset events and ignores other session data 7ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects a durable preset that the active table cannot resolve 3ms
- ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects an unknown preset already present on late registration 12ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > accepts configured preset events and ignores other session data 10ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects a durable preset that the active table cannot resolve 2ms
+ ✓ |thread-safe| packages/interaction/permission-presets/tests/invariant.spec.ts > permission invariants > rejects an unknown preset already present on late registration 26ms
 
  Test Files  1 passed (1)
       Tests  3 passed (3)
-   Start at  05:22:49
-   Duration  594ms (transform 326ms, setup 221ms, import 165ms, tests 23ms, environment 0ms)
+   Start at  07:07:32
+   Duration  930ms (transform 522ms, setup 333ms, import 289ms, tests 40ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -121,25 +121,25 @@
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "9lives" 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "a_b" 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "-lead" 0ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > resolves schema defaults, then composition base, then the user layer 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > refuses a write its owner could not act on, and keeps the last good value for a stored one 6ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > resolves schema defaults, then composition base, then the user layer 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > refuses a write its owner could not act on, and keeps the last good value for a stored one 9ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails the registration itself when the already-stored section is unserviceable 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > rejects a duplicate namespace loud 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails registration when the stored section is invalid for the schema 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails registration when the stored section is not an object 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > describes registered namespaces with schema JSON, value, and applies 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > describes registered namespaces with schema JSON, value, and applies 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > reads undefined for an unregistered namespace 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > hands out frozen resolved values 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > removes the namespace and its observers when the registrant fiber disposes 5ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > persists the merged user section without baking in the base layer 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > removes the namespace and its observers when the registrant fiber disposes 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > persists the merged user section without baking in the base layer 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > deep-merges nested objects and replaces arrays wholesale 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > commits, notifies watchers, and emits with source update 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an invalid patch before persisting anything 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > commits, notifies watchers, and emits with source update 5ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an invalid patch before persisting anything 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > ignores explicit undefined entries so a sparse patch cannot erase keys 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects a non-object patch 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > accepts a null-prototype patch object 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an unregistered namespace 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects on a read-only provider before reaching persist 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects on a read-only provider before reaching persist 5ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":[1,2]} vs {"a":[1,2]} as true 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":[1,2]} vs {"a":[1]} as false 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":[1]} vs {"a":{"0":1}} as false 0ms
@@ -148,43 +148,43 @@
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":null} vs {"a":null} as true 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":null} vs {"a":{}} as false 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > propagates an invariant-coded listener failure instead of containing it 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > serializes concurrent updates so neither patch is lost 26ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains a throwing settings/updated listener and keeps later commits alive 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > serializes concurrent updates so neither patch is lost 24ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains a throwing settings/updated listener and keeps later commits alive 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains an async watcher rejection 14ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > loads the provider document through the base init without provider boilerplate 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > replaces the user section wholesale so overrides can be removed 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > loads the provider document through the base init without provider boilerplate 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > replaces the user section wholesale so overrides can be removed 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > runs every settings/updated listener even when an earlier one throws 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects an update queued after the registrant fiber disposed 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > does not notify a registrant disposed while its update was in flight 46ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > drains in-flight writes at service dispose and rejects later ones 67ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > serializes invocations of one async watcher in commit order 54ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > drains in-flight writes at service dispose and rejects later ones 65ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > serializes invocations of one async watcher in commit order 55ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a function value as not JSON-compatible 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the service disposes 24ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the registrant disposes 22ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > snapshots the patch at call time so caller mutation cannot leak in 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > notifies watchers of an external change with source provider 56ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the registrant disposes 24ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > snapshots the patch at call time so caller mutation cannot leak in 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > notifies watchers of an external change with source provider 54ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > stays silent when the resolved value is deep-equal 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > keeps the last good value for an invalid section while other namespaces commit 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > recovers from a bad section once storage turns valid again 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > skips a queued watch invocation whose disposer ran before it started 15ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > waits for an in-flight watch invocation at service dispose 70ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Date at its path before anything persists 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Map that structuredClone would admit 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > recovers from a bad section once storage turns valid again 6ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > skips a queued watch invocation whose disposer ran before it started 14ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > waits for an in-flight watch invocation at service dispose 72ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Date at its path before anything persists 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Map that structuredClone would admit 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a bigint that structuredClone would admit 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a symbol that structuredClone would admit 1ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a non-finite number that structuredClone would admit 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a symbol that structuredClone would admit 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a non-finite number that structuredClone would admit 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects an undefined array entry that structuredClone would admit 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a class instance that structuredClone would admit 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a circular patch instead of storing an alias-looped document 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > accepts one object referenced twice without a cycle 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > contains an async settings/updated listener rejection and keeps other listeners running 13ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > stops after its disposer runs 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > contains an async settings/updated listener rejection and keeps other listeners running 12ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > stops after its disposer runs 3ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > contains a throwing watcher without blocking the commit or other watchers 54ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > drives the source through attach, live commits, and detach 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent when the consumer itself unloads 24ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent for a stored change that lands while the consumer unloads 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > removes one field without touching a secret the caller never saw 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > applies set and unset in one write, in order 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > drives the source through attach, live commits, and detach 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent when the consumer itself unloads 25ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent for a stored change that lands while the consumer unloads 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > removes one field without touching a secret the caller never saw 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > applies set and unset in one write, in order 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > reads the section as it stands at the front of the queue, not at call time 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > creates intermediate objects for a nested set and leaves an absent unset alone 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > edits one leaf of an existing nested object without replacing its siblings 2ms
@@ -192,53 +192,53 @@
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > refuses a non-object at the section root, leaving the stored section alone 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects ops that are not an array at all 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a malformed op before anything is queued 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a value that lossless JSON cannot represent 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a value that lossless JSON cannot represent 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > refuses a write whose expected revision is stale, leaving the winner in place 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > carries the machine code and both revisions on the refusal 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > accepts a write that carries no expectation at all 1ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > announces a raw change whose resolved value is unchanged 1ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > does not move the revision when a write stores an identical section 1ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision for an external edit the provider publishes 1ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision past a stored section that was not an object 1ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains a throwing document listener and keeps the rest of the fan-out running 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains an async document listener rejection 14ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > propagates an invariant-coded document listener failure instead of containing it 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > accepts a write that carries no expectation at all 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > announces a raw change whose resolved value is unchanged 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > does not move the revision when a write stores an identical section 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision for an external edit the provider publishes 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision past a stored section that was not an object 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains a throwing document listener and keeps the rest of the fan-out running 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains an async document listener rejection 13ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > propagates an invariant-coded document listener failure instead of containing it 3ms
 
  Test Files  1 passed (1)
       Tests  89 passed (89)
-   Start at  05:22:51
-   Duration  1.12s (transform 234ms, setup 209ms, import 75ms, tests 646ms, environment 0ms)
+   Start at  07:07:35
+   Duration  1.34s (transform 357ms, setup 340ms, import 90ms, tests 681ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > strips secrets from object, dict, and array containers and records each position 2ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > enumerates unset object-property slots without inventing containers 0ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > strips secrets from object, dict, and array containers and records each position 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > enumerates unset object-property slots without inventing containers 1ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > never mutates the input and preserves keys outside the schema 0ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > passes malformed container values through untouched 0ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > treats a secret-role container as one opaque secret leaf 0ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > drops a dict entry whose entire value is the secret 0ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > drops a dict entry whose entire value is the secret 1ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > tolerates structural nodes missing their relation maps 0ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > exposes detached base and user layers beside the resolved value 8ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > omits the layers when neither a base nor a user section exists 2ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > describes a section that became malformed after registration as having no user layer 2ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts a descriptor that has neither base nor user layer 2ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts every layer and enumerates secret slots under redactSecrets 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > exposes detached base and user layers beside the resolved value 13ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > omits the layers when neither a base nor a user section exists 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > describes a section that became malformed after registration as having no user layer 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts a descriptor that has neither base nor user layer 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts every layer and enumerates secret slots under redactSecrets 3ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  05:22:53
-   Duration  474ms (transform 217ms, setup 225ms, import 29ms, tests 21ms, environment 0ms)
+   Start at  07:07:37
+   Duration  671ms (transform 352ms, setup 367ms, import 51ms, tests 32ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a live settings service 6ms
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission for an unregistered namespace 2ms
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a resolved-value change 2ms
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission whose value diverges from the authoritative state 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a live settings service 9ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission for an unregistered namespace 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a resolved-value change 5ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission whose value diverges from the authoritative state 3ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  05:22:54
-   Duration  433ms (transform 205ms, setup 212ms, import 29ms, tests 13ms, environment 0ms)
+   Start at  07:07:39
+   Duration  760ms (transform 409ms, setup 418ms, import 56ms, tests 21ms, environment 0ms)

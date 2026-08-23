@@ -2,92 +2,92 @@
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > probes Linux capabilities 3ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > probes macOS capabilities 0ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > probes macOS capabilities 1ms
  ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > probes Windows capabilities 0ms
  ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > reports unsupported features 0ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > Linux has strict isolation level 0ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > validates complete Linux config 0ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > rejects Linux without seccomp 0ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > probeIsolation > Linux has strict isolation level 1ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > validates complete Linux config 3ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > rejects Linux without seccomp 1ms
  ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > rejects Linux without Docker socket restriction 0ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > validates macOS config 0ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > rejects macOS without clipboard restriction 0ms
- ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > attestation includes kernel version 0ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > validates macOS config 1ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > rejects macOS without clipboard restriction 3ms
+ ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > attestation includes kernel version 1ms
  ✓ |thread-safe| packages/execution/local-isolation/tests/process-isolation.spec.ts > P3-05 Process Isolation > validateIsolation > unsupported features are reported 0ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  05:32:19
-   Duration  1.37s (transform 736ms, setup 781ms, import 34ms, tests 8ms, environment 0ms)
+   Start at  07:18:57
+   Duration  757ms (transform 378ms, setup 424ms, import 31ms, tests 17ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > bwrap read-only: whole tree read-only with fresh /dev and private PID-scoped /proc, no writable mounts 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > bwrap workspace-write: adds an ephemeral /tmp and rebinds the workspace root 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > landlock read-only: readable tree plus a writable /dev/null, nothing else 1ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > bwrap workspace-write: adds an ephemeral /tmp and rebinds the workspace root 0ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > landlock read-only: readable tree plus a writable /dev/null, nothing else 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > landlock workspace-write: adds the host /tmp and the workspace root 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt read-only: allow-default with every file write denied except the /dev/null literal 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write: one more allow for the canonicalized workspace root, /tmp, and the user temp dir 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > profile dialects > seatbelt workspace-write dedups a workspace root that already IS the temp dir 1ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 14ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > an EMPTY runnerCommand means unconfigured: the platform chain still gates the wrap 5ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 13ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects runner failure signatures when no custom runner consumes them 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > a non-empty runnerCommand skips the chain: runner argv + bwrap-shaped profile + -- + caller argv, asserted full 13ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > an EMPTY runnerCommand means unconfigured: the platform chain still gates the wrap 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > requires an operator-owned failure dialect for every configured runner 11ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects runner failure signatures when no custom runner consumes them 3ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "  " 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\ncontinued" 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\rcontinued" 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux probes bwrap first: a passing probe wraps with the bwrap dialect at full enforcement 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > runnerCommand config > rejects an unusable configured-runner failure signature "fatal\rcontinued" 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux probes bwrap first: a passing probe wraps with the bwrap dialect at full enforcement 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > linux falls back to the launcher when the bwrap probe fails, speaking the landlock dialect 4ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > darwin selects its sole candidate WITHOUT probing: nothing to arbitrate 2ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a platform with no chain fails closed without a single probe: the command never runs 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > caches the verdict for the provider lifetime: one chain walk across wraps 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > the unavailable verdict is cached too, and the error is structured 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 1644ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue chain entry throws via the probe walk's exhaustiveness guard (closed union) 4ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue cached runner tag throws via the exhaustiveness guard (closed union) 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 32ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > caches the verdict for the provider lifetime: one chain walk across wraps 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > the unavailable verdict is cached too, and the error is structured 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a multi-rung chain probes a seatbelt rung like any other (the walk, not the platform table, decides) 617ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue chain entry throws via the probe walk's exhaustiveness guard (closed union) 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > a rogue cached runner tag throws via the exhaustiveness guard (closed union) 6ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > runs the real default probes on the linux chain when none are injected (usable here or fail closed there) 11ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the platform chains > walks the real platform chain when nothing is injected (usable here or fail closed there) 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 728ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 675ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 682ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 6ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 1970ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 635ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 664ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > selects the rung when the injected probe passes, speaking the ACL dialect 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 269ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > falls back to the runner source through tsx when the built entry is absent 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a fully-enforced probe report as full enforcement 677ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > parses a partially-enforced (older-ABI) probe report as partial enforcement 649ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default landlock probe (launcher CLI contract) > reads a failing launcher as unusable: the chain ends and fails closed 651ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > rejects 0 at construction: Node treats a 0 spawnSync timeout as UNBOUNDED, the opposite of the field 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > probeTimeoutMs config > bounds the default probes: a launcher slower than the configured timeout reads as unusable 4446ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > selects the rung when the executable applies the read-only profile and exits 0 667ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the default seatbelt probe (sandbox-exec contract) > reads a failing executable as unusable: the chain ends and fails closed 669ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > selects the rung when the injected probe passes, speaking the ACL dialect 10ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads a failing probe as unusable and walks to the next rung 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > runs the REAL default probe against the resolved runner invocation when none is injected 288ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > falls back to the runner source through tsx when the built entry is absent 6ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > reads an empty runner invocation as unusable (the probe's empty-argv guard) 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > prefers the built lib/runner.js entry when the resolved file exists 3ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/local.spec.ts > the windows-acl probe (runner invocation contract) > prefers the built lib/runner.js entry when the resolved file exists 5ms
 
  Test Files  1 passed (1)
       Tests  38 passed (38)
-   Start at  05:32:24
-   Duration  9.54s (transform 1.36s, setup 681ms, import 896ms, tests 7.39s, environment 0ms)
+   Start at  07:18:59
+   Duration  10.12s (transform 832ms, setup 544ms, import 471ms, tests 8.79s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 27ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 6ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > a fresh provider gives a resumed session a new temp path and SID, so crash residue cannot collide 9ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 7ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace-write materializes one standing workspace grant and one private temp capability, then reuses both 18ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > read-only materializes no capability; upgrade creates them and downgrade leaves them reusable 5ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > a fresh provider gives a resumed session a new temp path and SID, so crash residue cannot collide 6ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > forks and workspace changes receive distinct temp capabilities while each workspace grant is reused 5ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > workspace grant failure disposes its SID, aggregates cleanup failure, and never creates a temp directory 6ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > rejects a workspace containing the ambient temp root before any ACL mutation 3ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 7ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > rejects a workspace containing the ambient temp root before any ACL mutation 2ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > temp grant creation/add failures remove the random directory; cleanup failures aggregate 5ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > agentless calls pass a temp root and no capabilities; the runner owns the private child lifecycle 2ms
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > provider teardown reports grant and directory cleanup failures without aborting teardown 6ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/acl-grants.spec.ts > windows-acl write grants (LocalSandboxProvider) > provider teardown reports grant and directory cleanup failures without aborting teardown 7ms
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  05:32:37
-   Duration  1.94s (transform 1.23s, setup 552ms, import 870ms, tests 74ms, environment 0ms)
+   Start at  07:19:12
+   Duration  1.11s (transform 660ms, setup 378ms, import 417ms, tests 57ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes Linux with strict level 4ms
+ ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes Linux with strict level 3ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > probes macOS with basic level 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > validates complete Linux config 0ms
  ✓ |thread-safe| packages/sandbox/sandbox-local/tests/conformance.spec.ts > P3-07 Sandbox Fail-Closed Hardening > rejects Linux without seccomp 0ms
@@ -98,22 +98,22 @@
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  05:32:41
-   Duration  1.29s (transform 664ms, setup 721ms, import 45ms, tests 7ms, environment 0ms)
+   Start at  07:19:14
+   Duration  792ms (transform 365ms, setup 420ms, import 20ms, tests 6ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > creates a world 4ms
- ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 0ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > transitions created -> running -> frozen -> running 1ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > rejects invalid transition 1ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroys a world 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/world.spec.ts > P3-01 ExecutionWorld > destroyed world cannot transition 0ms
 
  Test Files  1 passed (1)
       Tests  5 passed (5)
-   Start at  05:32:45
-   Duration  1.06s (transform 610ms, setup 645ms, import 53ms, tests 7ms, environment 0ms)
+   Start at  07:19:16
+   Duration  544ms (transform 245ms, setup 273ms, import 29ms, tests 8ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
@@ -123,9 +123,9 @@
  ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > isRetryable identifies timeout and sandbox unavailable 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > isTerminal identifies terminal states 0ms
  ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > formatOutcome produces readable string 0ms
- ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > packageOutcome separates control from raw output 1ms
+ ✓ |thread-safe| packages/execution/execution-world/tests/denial.spec.ts > P3-03 Structured Outcome and Errors > packageOutcome separates control from raw output 0ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  05:32:48
-   Duration  1.06s (transform 596ms, setup 655ms, import 44ms, tests 6ms, environment 0ms)
+   Start at  07:19:18
+   Duration  643ms (transform 331ms, setup 368ms, import 21ms, tests 6ms, environment 0ms)

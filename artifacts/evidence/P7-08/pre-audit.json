@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-08",
   "title": "Deterministic Replay、Simulation 与 Decision Diff",
-  "audit_date": "2026-08-22T22:21:26.654Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:16:45.635Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/evaluation/replay/src/index.ts",
     "packages/evaluation/replay/src/types.ts",

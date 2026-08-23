@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-09",
   "title": "General-Purpose Capability Scenario Suite：用领域夹具验证 Harness，而非内置垂直 Agent",
-  "audit_date": "2026-08-22T22:22:25.262Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:17:38.802Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "tests/capability/README.md",
     "tests/capability/manifest.yaml",

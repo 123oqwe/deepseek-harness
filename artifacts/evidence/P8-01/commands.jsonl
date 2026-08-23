@@ -1,14 +1,14 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/resources.contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/transport.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/event-stream.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/protocol/tests/run-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/server/tests/plugin-shape.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/server/tests/plugin-apply.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/server/tests/server.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/client/tests/dispose.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/sdk/client/tests/sdk-client.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/api/gateway/tests/gateway.host.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
-{"command":"npx vitest run packages/api/gateway/tests/gateway.client.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:22:49.265Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/resources.contract.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/transport.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/event-stream.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/protocol/tests/run-lifecycle.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/server/tests/plugin-shape.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/server/tests/plugin-apply.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/server/tests/server.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/client/tests/dispose.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/sdk/client/tests/sdk-client.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/api/gateway/tests/gateway.host.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}
+{"command":"npx vitest run packages/api/gateway/tests/gateway.client.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:17:59.732Z"}

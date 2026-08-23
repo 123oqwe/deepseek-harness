@@ -85,7 +85,7 @@ function findRelatedTests(sourceFiles) {
     const dir = dirname(src)
     // Only search for tests in the same package directory (packages/xxx/yyy/)
     // This prevents finding unrelated tests from apps/cli or other broad directories
-    if (dir.includes('/src/') || dir.endsWith('/src')) {
+    if ((dir.includes('/src/') || dir.endsWith('/src')) && dir.startsWith('packages/')) {
       // Source is in packages/xxx/yyy/src/ - look for tests in packages/xxx/yyy/tests/
       const pkgDir = dir.endsWith('/src') ? dirname(dir) : dir.replace(/\/src\/.*/, '')
       const pkgTestDir = join(repoRoot, pkgDir, 'tests')

@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-08",
   "title": "可复用 Grant、范围规则、过期与撤销",
-  "audit_date": "2026-08-22T21:22:39.632Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:07:18.832Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/policy/grant-store/src/index.ts",
     "packages/policy/grant-store/src/types.ts",

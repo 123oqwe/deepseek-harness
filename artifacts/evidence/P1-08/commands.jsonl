@@ -1,13 +1,13 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/plugin/plugin-compat/tests/solver.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/boot/app-boot/tests/config-dump.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/boot/app-boot/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/boot/app-boot/tests/hmr-config.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/boot/app-boot/tests/app-boot.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/boot/app-boot/tests/config-reload.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/boot/app-boot/tests/user-patches.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/schema/schema-registry/tests/compatibility.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
-{"command":"npx vitest run packages/schema/schema-registry/tests/integration.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:08:10.793Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/plugin/plugin-compat/tests/solver.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/config-dump.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/profile.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/hmr-config.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/app-boot.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/config-reload.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/boot/app-boot/tests/user-patches.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/inventory.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/host/plugin-inventory/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/schema/schema-registry/tests/compatibility.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}
+{"command":"npx vitest run packages/schema/schema-registry/tests/integration.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:46:30.745Z"}

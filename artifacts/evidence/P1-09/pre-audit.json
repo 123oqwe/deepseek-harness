@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-09",
   "title": "Service/Tool/Event 命名空间与所有权冲突检测",
-  "audit_date": "2026-08-22T21:08:31.209Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:47:06.903Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/plugin/plugin-ownership/src/index.ts",
     "packages/plugin/plugin-ownership/src/types.ts",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-07",
   "title": "Causal Trace、Policy/Evidence/Cost Trace 与 Durable Telemetry Outbox",
-  "audit_date": "2026-08-22T22:20:08.637Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:15:34.638Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/observability/causal-trace/src/index.ts",
     "packages/observability/causal-trace/src/types.ts",

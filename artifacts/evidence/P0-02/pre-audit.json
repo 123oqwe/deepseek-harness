@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-02",
   "title": "确立 Minimal Immutable Trust Kernel 边界",
-  "audit_date": "2026-08-22T21:02:04.703Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:38:38.517Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "docs/architecture/trust-kernel-boundary.md",
     "packages/kernel/trust-kernel/src/index.ts",
@@ -26,13 +26,6 @@
   "test_files": [
     "packages/kernel/trust-kernel/tests/boundary.spec.ts",
     "packages/kernel/trust-kernel/tests/enforcement.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts",
     "packages/boot/app-boot/tests/config-dump.spec.ts",
     "packages/boot/app-boot/tests/profile.spec.ts",
     "packages/boot/app-boot/tests/hmr-config.spec.ts",
@@ -64,5 +57,5 @@
   "classification": "SECURITY_STUB_NOT_WIRED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 5 files, Tests: 15 files, Docs: 5 files"
+  "notes": "Source: 5 files, Tests: 8 files, Docs: 5 files"
 }

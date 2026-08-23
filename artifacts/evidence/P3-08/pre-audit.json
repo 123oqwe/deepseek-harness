@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-08",
   "title": "Container ExecutionWorld Provider",
-  "audit_date": "2026-08-22T21:34:25.343Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:20:38.282Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/execution/execution-world-container/src/index.ts",
     "packages/execution/execution-world-container/src/runtime.ts",

@@ -2,7 +2,7 @@
   "issue_id": "P2-06",
   "title": "审批绑定完整规范化参数、资源与前置状态",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "4/19 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T21:21:39.430Z",
+  "evidence_date": "2026-08-22T23:05:44.293Z",
   "runtime_reachability": {
     "issue_id": "P2-06",
     "source_files": 5,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-22T21:21:39.430Z"
+    "timestamp": "2026-08-22T23:05:44.293Z"
   },
   "remaining_risks": [
     "15 test(s) failing",

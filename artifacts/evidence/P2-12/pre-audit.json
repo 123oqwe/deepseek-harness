@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-12",
   "title": "全局 Emergency Stop 与通用 Human Interaction Channel",
-  "audit_date": "2026-08-22T21:23:27.426Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:08:28.450Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/interaction/human-channel/src/index.ts",
     "packages/interaction/human-channel/src/types.ts",
@@ -26,13 +26,6 @@
   "test_files": [
     "packages/interaction/human-channel/tests/server-request.spec.ts",
     "packages/interaction/human-channel/tests/emergency-stop.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts",
     "packages/core/agent/tests/agent-initiator.spec.ts",
     "packages/core/agent/tests/state-machine.spec.ts",
     "packages/core/agent/tests/model-selection.spec.ts",
@@ -60,5 +53,5 @@
   "classification": "POLICY_IDENTITY_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 7 files, Tests: 21 files, Docs: 0 files"
+  "notes": "Source: 7 files, Tests: 14 files, Docs: 0 files"
 }

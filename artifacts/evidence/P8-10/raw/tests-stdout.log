@@ -1,103 +1,103 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > composes overlay layers in order, prints !!js verbatim, and labels each section with its source and patches 20ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > composes overlay layers in order, prints !!js verbatim, and labels each section with its source and patches 11ms
  ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > groups contiguous rows with the same origin and patches under one separator 2ms
- ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > composes all layers as one flattened patch list, exactly like boot() 2ms
- ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > reports a patch whose target row is absent through warn with its layer label and keeps composing 3ms
- ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > defaults its warn sink to one stderr line per skipped patch 3ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > composes all layers as one flattened patch list, exactly like boot() 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > reports a patch whose target row is absent through warn with its layer label and keeps composing 6ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > defaults its warn sink to one stderr line per skipped patch 5ms
  ✓ |thread-safe| packages/boot/app-boot/tests/config-dump.spec.ts > renderConfigDump > fails loud on a missing, unparsable, or non-array base config 5ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  06:34:40
-   Duration  1.23s (transform 681ms, setup 508ms, import 298ms, tests 37ms, environment 0ms)
+   Start at  08:26:51
+   Duration  865ms (transform 472ms, setup 360ms, import 215ms, tests 32ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveProfileDir > joins the home and rejects traversal-shaped names 7ms
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > initProfile > creates manifest, user patch layer, and pnpm workspace once, never overwriting 3ms
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > manifest round-trip > writes and reads back, and fails loud on a broken manifest 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveProfileDir > joins the home and rejects traversal-shaped names 3ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > initProfile > creates manifest, user patch layer, and pnpm workspace once, never overwriting 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > manifest round-trip > writes and reads back, and fails loud on a broken manifest 1ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveBundleDir > prefers the installation anchor, falls back to the profile, and fails loud 4ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > resolveBundleDir > resolves a package whose exports map omits ./package.json 2ms
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > resolves each dsh.profile.bundles entry to its patch layer in order, plus the user layer 8ms
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > auto-initializes only shipped templates and fails loud otherwise 11ms
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > normalizes only the exact installation-owned headless bundle tuple 10ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > resolves each dsh.profile.bundles entry to its patch layer in order, plus the user layer 7ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > auto-initializes only shipped templates and fails loud otherwise 7ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > normalizes only the exact installation-owned headless bundle tuple 5ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > loadProfile > fails loud when a listed bundle declares no dsh.bundle 2ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > composeEntries > applies layers over an empty root and reports skipped patches 0ms
- ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > links the app and bundle dependency surface flat under profiles/node_modules 5ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > links the app and bundle dependency surface flat under profiles/node_modules 4ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > throws when a fallback entry is a real directory 1ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > replaces a wrong symlink 2ms
  ✓ |thread-safe| packages/boot/app-boot/tests/profile.spec.ts > healProfilesModuleFallback > tolerates losing the concurrent-heal race to an identical link and rejects a different one 1ms
 
  Test Files  1 passed (1)
       Tests  14 passed (14)
-   Start at  06:34:43
-   Duration  1.06s (transform 596ms, setup 493ms, import 200ms, tests 59ms, environment 0ms)
+   Start at  08:26:53
+   Duration  786ms (transform 431ms, setup 354ms, import 167ms, tests 43ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes module changes when its watch base is a filesystem alias 312ms
- ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > collapses filesystem aliases before registering an exact watch 13ms
- ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes add, change, and unlink outside its module roots 141ms
- ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes creation when the config parent did not exist at registration 48ms
- ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > serializes refreshes and waits for them during disposal 275ms
- ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > normalizes refresh failures and broadcasts them without escaping the watcher 302ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes module changes when its watch base is a filesystem alias 292ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > collapses filesystem aliases before registering an exact watch 10ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes add, change, and unlink outside its module roots 154ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > observes creation when the config parent did not exist at registration 42ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > serializes refreshes and waits for them during disposal 258ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/hmr-config.spec.ts > HMR exact config paths > normalizes refresh failures and broadcasts them without escaping the watcher 295ms
 
  Test Files  1 passed (1)
       Tests  6 passed (6)
-   Start at  06:34:46
-   Duration  1.98s (transform 487ms, setup 433ms, import 174ms, tests 1.09s, environment 0ms)
+   Start at  08:26:55
+   Duration  1.69s (transform 354ms, setup 309ms, import 127ms, tests 1.05s, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > resolves relative to the given cwd outside replay mode 7ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > swaps a cordis.yml/.yaml basename for cordis.snapshot.yml in replay mode 4ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > resolves relative to the given cwd outside replay mode 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > swaps a cordis.yml/.yaml basename for cordis.snapshot.yml in replay mode 0ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > resolveConfigPath > leaves a non-cordis basename alone in replay mode and defaults cwd to the process cwd 0ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > loads variables from .env in the given dir 3ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > stays silent when no .env exists (ambient environment wins) 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > loads variables from .env in the given dir 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > stays silent when no .env exists (ambient environment wins) 0ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > warns (labelled, single line) when .env exists but cannot be loaded 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > defaults dir to the process cwd and warn to a stderr write 3ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > layers user under project under the inherited environment 11ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a harness switch, before applying anything 5ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets the executable search path, before applying anything 3ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a module preload, before applying anything 2ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a skill root, before applying anything 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadEnv > defaults dir to the process cwd and warn to a stderr write 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > layers user under project under the inherited environment 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a harness switch, before applying anything 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets the executable search path, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a module preload, before applying anything 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a skill root, before applying anything 1ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a network proxy, before applying anything 2ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a lowercase network proxy, before applying anything 2ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a browser command, before applying anything 3ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reports each file value with its absolute path 7ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > resolves the harness home from the inherited environment, never from a file 2ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > warns and continues when a layer exists but cannot be read 10ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reports to stderr when the caller supplies no reporter 5ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > passes over an absent layer without reporting it 3ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > carries only the inherited environment when neither file exists 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reads a harness home that is also the invocation directory exactly once 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > writes one labelled line with the stack and exits 1 on an Error rejection 6ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > stringifies a non-Error rejection and an Error without a stack falls back to its message 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > returns an uninstaller that removes the handler (and defaults to the real process) 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > does not report an activation rejection shared by entries in the boot audit 5ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > awaits the release hook before exiting so the terminal owner can restore it 52ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > still exits when the release hook rejects 52ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > exits without waiting when a release hook never settles 8ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a lowercase network proxy, before applying anything 4ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > refuses to launch when a .env sets a browser command, before applying anything 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reports each file value with its absolute path 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > resolves the harness home from the inherited environment, never from a file 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > warns and continues when a layer exists but cannot be read 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reports to stderr when the caller supplies no reporter 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > passes over an absent layer without reporting it 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > carries only the inherited environment when neither file exists 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadLayeredEnv > reads a harness home that is also the invocation directory exactly once 3ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > writes one labelled line with the stack and exits 1 on an Error rejection 4ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > stringifies a non-Error rejection and an Error without a stack falls back to its message 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > returns an uninstaller that removes the handler (and defaults to the real process) 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > does not report an activation rejection shared by entries in the boot audit 2ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > awaits the release hook before exiting so the terminal owner can restore it 54ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > still exits when the release hook rejects 53ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > exits without waiting when a release hook never settles 2ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > installFailLoud > reports only the first rejection and keeps handling later ones during the release 52ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesLoaded > passes when every enabled entry has a fiber 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesLoaded > passes when every enabled entry has a fiber 0ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesLoaded > throws naming every enabled fiber-less entry 0ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > passes active entries and ignores disabled entries 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > reports the plugin name and original activation stack instead of fiber state 3 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > formats stackless and non-Error activation failures 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > reports unresolved services for pending entries 1ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > passes active entries and ignores disabled entries 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > reports the plugin name and original activation stack instead of fiber state 3 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > formats stackless and non-Error activation failures 0ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > reports unresolved services for pending entries 0ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > assertEntriesActivated > retains the numeric diagnostic for a settled unexpected state 0ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadOverlayPatches > loads expressions and rejects missing, malformed, non-array, and non-mapping overlays 9ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > boots a leaf config through the real Loader and settles the tree 62ms
- × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > can resolve bare plugins from the harness when the config project shadows their package name 9ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > loadOverlayPatches > loads expressions and rejects missing, malformed, non-array, and non-mapping overlays 4ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > boots a leaf config through the real Loader and settles the tree 25ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > can resolve bare plugins from the harness when the config project shadows their package name 5ms
    → Schema 'session-event' version v0.1 already registered
  × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > runs host preparation before the Loader tree mounts 1ms
    → Schema 'session-event' version v0.1 already registered
- × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > disposes partial host setup and labels non-Error preparation failures 7ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > disposes partial host setup and labels non-Error preparation failures 4ms
    → expected Error: Schema 'session-event' version v0.… to match object { …(2) }
  × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > exposes dshHomePath to Loader config expressions 1ms
    → Schema 'session-event' version v0.1 already registered
@@ -105,40 +105,40 @@
    → Schema 'session-event' version v0.1 already registered
  × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > rejects (never exits 0 half-empty) when a config names a plugin that cannot be imported 3ms
    → expected [Function] to throw error including 'dsh-test-bin: plugin tree failed to l…' but got 'Schema \'session-event\' version v0.1…'
- × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > labels a deferred config failure with its row and leaves the source file unchanged 2ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > labels a deferred config failure with its row and leaves the source file unchanged 1ms
    → expected [Function] to throw error including 'failed to apply loader entry invalid-…' but got 'Schema \'session-event\' version v0.1…'
- × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > appends the deepest cause with its original stack to the load failure 3ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > appends the deepest cause with its original stack to the load failure 1ms
    → expected [Function] to throw error matching /…/failing\.mjs\): pinned activation failure\nError: pinned activation failure\n {4}at failing-fixture$ but got 'Schema \'session-event\' version v0.1…'
- × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > falls back to the deepest cause message when its stack was erased 5ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > falls back to the deepest cause message when its stack was erased 2ms
    → expected [Function] to throw error including 'dsh-test-bin: host preparation failed…' but got 'Schema \'session-event\' version v0.1…'
- × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > reports a pending real Loader fiber and the service unresolved in its own context 3ms
+ × |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > boot > reports a pending real Loader fiber and the service unresolved in its own context 1ms
    → expected [Function] to throw error including 'dsh-test-bin: 1 entry did not activat…' but got 'Schema \'session-event\' version v0.1…'
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > distinguishes the source path from the current workdir between identity and persona 12ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > distinguishes the source path from the current workdir between identity and persona 4ms
  ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > is a no-op returning undefined when no systemPrompt service is mounted 1ms
- ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > disposes the section it added, so a systemPrompt reload leaves no residue 7ms
+ ✓ |process-bound| packages/boot/app-boot/tests/app-boot.spec.ts > addHarnessSourceSection > disposes the section it added, so a systemPrompt reload leaves no residue 2ms
 
  Test Files  1 failed (1)
       Tests  10 failed | 42 passed (52)
-   Start at  06:34:51
-   Duration  2.42s (transform 1.25s, setup 850ms, import 606ms, tests 388ms, environment 0ms)
+   Start at  08:26:58
+   Duration  1.00s (transform 430ms, setup 323ms, import 201ms, tests 265ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > include refresh with an invalid file > rejects while keeping the last good tree, then applies the next valid edit 51ms
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > imports a changed name before replacing the running plugin 8ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > include refresh with an invalid file > rejects while keeping the last good tree, then applies the next valid edit 40ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > imports a changed name before replacing the running plugin 7ms
    → Schema 'session-event' version v0.1 already registered
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > retains the running plugin when the replacement cannot be imported 2ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > retains the running plugin when the replacement cannot be imported 1ms
    → Schema 'session-event' version v0.1 already registered
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > restores the previous plugin after replacement application fails 1ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > restores the previous plugin after replacement application fails 3ms
    → Schema 'session-event' version v0.1 already registered
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > restores the previous config when an in-place restart fails 1ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > restores the previous config when an in-place restart fails 3ms
    → Schema 'session-event' version v0.1 already registered
  × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader entry replacement > does not persist a failed direct fiber update 1ms
    → Schema 'session-event' version v0.1 already registered
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > rolls back earlier updates and additions when a later entry fails 1ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > rolls back earlier updates and additions when a later entry fails 2ms
    → Schema 'session-event' version v0.1 already registered
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > stops and restores descendants when an ancestor group is disabled and re-enabled 1ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > stops and restores descendants when an ancestor group is disabled and re-enabled 3ms
    → Schema 'session-event' version v0.1 already registered
  × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > loader tree replacement > restores a programmatic entry move when its update fails 1ms
    → Schema 'session-event' version v0.1 already registered
@@ -146,25 +146,25 @@
    → Schema 'session-event' version v0.1 already registered
  × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > include patches layered over one base > lets a later patch configure or disable a row an earlier patch inserted 1ms
    → Schema 'session-event' version v0.1 already registered
- × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > shipped builtins > lets a booted composition share one isolate realm across a group of rows 6ms
+ × |thread-safe| packages/boot/app-boot/tests/config-reload.spec.ts > shipped builtins > lets a booted composition share one isolate realm across a group of rows 1ms
    → Schema 'session-event' version v0.1 already registered
 
  Test Files  1 failed (1)
       Tests  11 failed | 1 passed (12)
-   Start at  06:34:55
-   Duration  1.35s (transform 807ms, setup 506ms, import 408ms, tests 79ms, environment 0ms)
+   Start at  08:27:00
+   Duration  741ms (transform 370ms, setup 274ms, import 174ms, tests 66ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > returns undefined when no user patch file exists 4ms
- ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > parses a patch list and preserves !!js expressions as loader expression nodes 8ms
- ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud on an unreadable file (a present user patch layer is never skipped) 2ms
- ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud on unparsable YAML and on a !!js tag with no expression body 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > returns undefined when no user patch file exists 2ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > parses a patch list and preserves !!js expressions as loader expression nodes 4ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud on an unreadable file (a present user patch layer is never skipped) 1ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud on unparsable YAML and on a !!js tag with no expression body 1ms
  ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > loadOptionalPatches > fails loud when the file is not a top-level array or an entry is not an object 1ms
- ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader config interpolation > keeps Include's config literal — a nested row's !!js belongs to that row's fiber 30ms
- ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader config interpolation > waits for row injections before resolving !!js and resolves again after provider replacement 27ms
- × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader entry disabled interpolation > evaluates a !!js disabled expression against the loader context 9ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader config interpolation > keeps Include's config literal — a nested row's !!js belongs to that row's fiber 20ms
+ ✓ |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader config interpolation > waits for row injections before resolving !!js and resolves again after provider replacement 12ms
+ × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader entry disabled interpolation > evaluates a !!js disabled expression against the loader context 5ms
    → Schema 'session-event' version v0.1 already registered
  × |thread-safe| packages/boot/app-boot/tests/user-patches.spec.ts > Loader entry disabled interpolation > keeps the raw expression in the options so write-back preserves the !!js form 1ms
    → Schema 'session-event' version v0.1 already registered
@@ -185,136 +185,38 @@
 
  Test Files  1 failed (1)
       Tests  9 failed | 7 passed (16)
-   Start at  06:34:58
-   Duration  1.35s (transform 828ms, setup 580ms, import 390ms, tests 96ms, environment 0ms)
+   Start at  08:27:02
+   Duration  719ms (transform 370ms, setup 291ms, import 166ms, tests 56ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > parses 'memorix.cordis.yml' with the documented generic plugin fields 11ms
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > parses 'mcp-reference-memory.cordis.yml' with the documented generic plugin fields 2ms
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > parses 'engram.cordis.yml' with the documented generic plugin fields 1ms
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > loads 'memorix.cordis.yml' and discovers a keyless fixture tool 441ms
- × |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > loads 'mcp-reference-memory.cordis.yml' and discovers a keyless fixture tool 7ms
-   → Schema 'session-event' version v0.1 already registered
- × |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > loads 'engram.cordis.yml' and discovers a keyless fixture tool 1ms
-   → Schema 'session-event' version v0.1 already registered
-
- Test Files  1 failed (1)
-      Tests  2 failed | 4 passed (6)
-   Start at  06:35:01
-   Duration  2.55s (transform 1.28s, setup 468ms, import 1.34s, tests 464ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/telemetry-switch.spec.ts > resolveTelemetryPatch > preserves the configured telemetry mode when the hard-disable switch is unset or empty 2ms
- ✓ |thread-safe| apps/cli/tests/telemetry-switch.spec.ts > resolveTelemetryPatch > disables on ANY non-empty value, including falsy-looking ones 1ms
- ✓ |thread-safe| apps/cli/tests/telemetry-switch.spec.ts > resolveTelemetryPatch > is trivially satisfied by a composition without the telemetry row 1ms
-
- Test Files  1 passed (1)
-      Tests  3 passed (3)
-   Start at  06:35:05
-   Duration  1.28s (transform 822ms, setup 594ms, import 355ms, tests 5ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > routes profile boots and the web alias, handing the rest to the app 10ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > ends the launcher flags at the first token it does not own 2ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > routes the plugin pnpm forwarder 2ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > routes profile and web config dumps 2ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > rejects missing profile, removed flags, and contradictory inputs 10ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > keeps its own help for an invocation with no app to hand it to 4ms
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Start at  06:35:08
-   Duration  865ms (transform 468ms, setup 508ms, import 42ms, tests 32ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > completes naturally after disposal resolves and forces exit when it rejects 5ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > uses process.exitCode for default normal completion 1ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > forces exit when graceful disposal reaches its bound 3ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > honors a caller-supplied grace period 1ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > lets Ctrl+C force a normal shutdown already stuck in disposal 1ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > forces exit after disposal started by a signal 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > drains on the first signal and forces on the second signal 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > coalesces normal shutdown calls without treating them as escalation 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > lets a signal force exit while natural completion drains remaining handles 0ms
-
- Test Files  1 passed (1)
-      Tests  9 passed (9)
-   Start at  06:35:10
-   Duration  870ms (transform 474ms, setup 512ms, import 37ms, tests 13ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ↓ |thread-safe| apps/cli/tests/lazy-search-startup.compat.spec.ts > built CLI lazy-search startup > boots and disposes the shipped composition with full-text search off by default
-
- Test Files  1 skipped (1)
-      Tests  1 skipped (1)
-   Start at  06:35:13
-   Duration  910ms (transform 484ms, setup 515ms, import 44ms, tests 0ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > the shipped shell composition (real bundle layers) > composes the confined pwsh roster on win32 and the bash roster on POSIX from the same rows 19ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > the shipped shell composition (real bundle layers) > base-only profiles carry both stacks with the same platform gating 5ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > preset standard gates its shell tool rows by platform 3ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > preset code gates its shell tool rows by platform 3ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > preset cordis gates its shell tool rows by platform 1ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > minimal mounts no shell tool row and gates its persistent shell stack by platform 1ms
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Start at  06:35:15
-   Duration  1.03s (transform 591ms, setup 426ms, import 275ms, tests 34ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/source-launch.compat.spec.ts > dsh SOURCE launcher (node --import tsx/esm) > launches the source CLI without building 7ms
- ✓ |thread-safe| apps/cli/tests/source-launch.compat.spec.ts > dsh SOURCE launcher (node --import tsx/esm) > boots the source entry and requires a profile 860ms
-
- Test Files  1 passed (1)
-      Tests  2 passed (2)
-   Start at  06:35:18
-   Duration  1.80s (transform 447ms, setup 510ms, import 122ms, tests 869ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > provider metadata > does not advertise a local document unless the provider overrides it 36ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > provider metadata > does not advertise a local document unless the provider overrides it 11ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > brands lowercase kebab-case names 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "" 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "UI" 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "9lives" 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "a_b" 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > settingsNamespace > rejects "-lead" 0ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > resolves schema defaults, then composition base, then the user layer 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > refuses a write its owner could not act on, and keeps the last good value for a stored one 11ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails the registration itself when the already-stored section is unserviceable 5ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > rejects a duplicate namespace loud 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails registration when the stored section is invalid for the schema 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails registration when the stored section is not an object 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > describes registered namespaces with schema JSON, value, and applies 7ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > reads undefined for an unregistered namespace 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > hands out frozen resolved values 6ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > removes the namespace and its observers when the registrant fiber disposes 6ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > persists the merged user section without baking in the base layer 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > deep-merges nested objects and replaces arrays wholesale 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > commits, notifies watchers, and emits with source update 6ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an invalid patch before persisting anything 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > ignores explicit undefined entries so a sparse patch cannot erase keys 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects a non-object patch 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > accepts a null-prototype patch object 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an unregistered namespace 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects on a read-only provider before reaching persist 11ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > resolves schema defaults, then composition base, then the user layer 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > refuses a write its owner could not act on, and keeps the last good value for a stored one 4ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails the registration itself when the already-stored section is unserviceable 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > rejects a duplicate namespace loud 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails registration when the stored section is invalid for the schema 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > fails registration when the stored section is not an object 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > describes registered namespaces with schema JSON, value, and applies 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > reads undefined for an unregistered namespace 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > hands out frozen resolved values 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > registration > removes the namespace and its observers when the registrant fiber disposes 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > persists the merged user section without baking in the base layer 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > deep-merges nested objects and replaces arrays wholesale 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > commits, notifies watchers, and emits with source update 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an invalid patch before persisting anything 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > ignores explicit undefined entries so a sparse patch cannot erase keys 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects a non-object patch 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > accepts a null-prototype patch object 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects an unregistered namespace 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > update > rejects on a read-only provider before reaching persist 5ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":[1,2]} vs {"a":[1,2]} as true 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":[1,2]} vs {"a":[1]} as false 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":[1]} vs {"a":{"0":1}} as false 0ms
@@ -322,98 +224,98 @@
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":1} vs {} as false 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":null} vs {"a":null} as true 0ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > deepEqualJson > compares {"a":null} vs {"a":{}} as false 0ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > propagates an invariant-coded listener failure instead of containing it 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > serializes concurrent updates so neither patch is lost 28ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains a throwing settings/updated listener and keeps later commits alive 5ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains an async watcher rejection 16ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > loads the provider document through the base init without provider boilerplate 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > replaces the user section wholesale so overrides can be removed 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > runs every settings/updated listener even when an earlier one throws 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects an update queued after the registrant fiber disposed 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > does not notify a registrant disposed while its update was in flight 45ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > drains in-flight writes at service dispose and rejects later ones 67ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > serializes invocations of one async watcher in commit order 57ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a function value as not JSON-compatible 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the service disposes 23ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the registrant disposes 24ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > snapshots the patch at call time so caller mutation cannot leak in 5ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > notifies watchers of an external change with source provider 56ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > stays silent when the resolved value is deep-equal 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > keeps the last good value for an invalid section while other namespaces commit 5ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > recovers from a bad section once storage turns valid again 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > skips a queued watch invocation whose disposer ran before it started 15ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > propagates an invariant-coded listener failure instead of containing it 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > serializes concurrent updates so neither patch is lost 26ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains a throwing settings/updated listener and keeps later commits alive 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > contains an async watcher rejection 13ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > loads the provider document through the base init without provider boilerplate 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > review regressions > replaces the user section wholesale so overrides can be removed 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > runs every settings/updated listener even when an earlier one throws 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects an update queued after the registrant fiber disposed 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > does not notify a registrant disposed while its update was in flight 46ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > drains in-flight writes at service dispose and rejects later ones 66ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > serializes invocations of one async watcher in commit order 55ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a function value as not JSON-compatible 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the service disposes 24ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > rejects a write still queued when the registrant disposes 23ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > second review regressions > snapshots the patch at call time so caller mutation cannot leak in 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > notifies watchers of an external change with source provider 54ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > stays silent when the resolved value is deep-equal 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > keeps the last good value for an invalid section while other namespaces commit 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > publish > recovers from a bad section once storage turns valid again 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > skips a queued watch invocation whose disposer ran before it started 14ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > waits for an in-flight watch invocation at service dispose 72ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Date at its path before anything persists 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Map that structuredClone would admit 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a bigint that structuredClone would admit 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a symbol that structuredClone would admit 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a non-finite number that structuredClone would admit 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects an undefined array entry that structuredClone would admit 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a class instance that structuredClone would admit 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a circular patch instead of storing an alias-looped document 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > accepts one object referenced twice without a cycle 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > contains an async settings/updated listener rejection and keeps other listeners running 16ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > stops after its disposer runs 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > contains a throwing watcher without blocking the commit or other watchers 55ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > drives the source through attach, live commits, and detach 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent when the consumer itself unloads 25ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent for a stored change that lands while the consumer unloads 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > removes one field without touching a secret the caller never saw 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > applies set and unset in one write, in order 4ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > reads the section as it stands at the front of the queue, not at call time 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > creates intermediate objects for a nested set and leaves an absent unset alone 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > edits one leaf of an existing nested object without replacing its siblings 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > addresses the section itself through the empty path 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > refuses a non-object at the section root, leaving the stored section alone 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects ops that are not an array at all 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a malformed op before anything is queued 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a value that lossless JSON cannot represent 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > refuses a write whose expected revision is stale, leaving the winner in place 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > carries the machine code and both revisions on the refusal 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Date at its path before anything persists 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a Map that structuredClone would admit 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a bigint that structuredClone would admit 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a symbol that structuredClone would admit 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a non-finite number that structuredClone would admit 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects an undefined array entry that structuredClone would admit 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a class instance that structuredClone would admit 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > rejects a circular patch instead of storing an alias-looped document 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > accepts one object referenced twice without a cycle 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > third review regressions > contains an async settings/updated listener rejection and keeps other listeners running 14ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > stops after its disposer runs 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > watch > contains a throwing watcher without blocking the commit or other watchers 54ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > drives the source through attach, live commits, and detach 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent when the consumer itself unloads 24ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > installSettingsSection > stays silent for a stored change that lands while the consumer unloads 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > removes one field without touching a secret the caller never saw 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > applies set and unset in one write, in order 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > reads the section as it stands at the front of the queue, not at call time 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > creates intermediate objects for a nested set and leaves an absent unset alone 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > edits one leaf of an existing nested object without replacing its siblings 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > addresses the section itself through the empty path 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > refuses a non-object at the section root, leaving the stored section alone 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects ops that are not an array at all 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a malformed op before anything is queued 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > mutate (path-addressed writes) > rejects a value that lossless JSON cannot represent 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > refuses a write whose expected revision is stale, leaving the winner in place 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > carries the machine code and both revisions on the refusal 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > accepts a write that carries no expectation at all 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > announces a raw change whose resolved value is unchanged 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > does not move the revision when a write stores an identical section 2ms
  ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision for an external edit the provider publishes 2ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision past a stored section that was not an object 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains a throwing document listener and keeps the rest of the fan-out running 3ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains an async document listener rejection 16ms
- ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > propagates an invariant-coded document listener failure instead of containing it 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > moves the revision past a stored section that was not an object 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains a throwing document listener and keeps the rest of the fan-out running 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > contains an async document listener rejection 14ms
+ ✓ |thread-safe| packages/settings/settings/tests/settings.spec.ts > revision and conflict detection > propagates an invariant-coded document listener failure instead of containing it 2ms
 
  Test Files  1 passed (1)
       Tests  89 passed (89)
-   Start at  06:35:22
-   Duration  1.74s (transform 527ms, setup 478ms, import 124ms, tests 785ms, environment 0ms)
+   Start at  08:27:04
+   Duration  1.19s (transform 305ms, setup 296ms, import 62ms, tests 626ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > strips secrets from object, dict, and array containers and records each position 4ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > enumerates unset object-property slots without inventing containers 1ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > never mutates the input and preserves keys outside the schema 1ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > strips secrets from object, dict, and array containers and records each position 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > enumerates unset object-property slots without inventing containers 0ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > never mutates the input and preserves keys outside the schema 0ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > passes malformed container values through untouched 0ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > treats a secret-role container as one opaque secret leaf 0ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > drops a dict entry whose entire value is the secret 0ms
  ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > redactSecrets > tolerates structural nodes missing their relation maps 0ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > exposes detached base and user layers beside the resolved value 17ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > omits the layers when neither a base nor a user section exists 3ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > describes a section that became malformed after registration as having no user layer 5ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts a descriptor that has neither base nor user layer 3ms
- ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts every layer and enumerates secret slots under redactSecrets 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > exposes detached base and user layers beside the resolved value 12ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > omits the layers when neither a base nor a user section exists 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > describes a section that became malformed after registration as having no user layer 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts a descriptor that has neither base nor user layer 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/redact.spec.ts > describe() layers and redaction > redacts every layer and enumerates secret slots under redactSecrets 2ms
 
  Test Files  1 passed (1)
       Tests  12 passed (12)
-   Start at  06:35:25
-   Duration  778ms (transform 393ms, setup 393ms, import 60ms, tests 41ms, environment 0ms)
+   Start at  08:27:06
+   Duration  562ms (transform 279ms, setup 285ms, import 43ms, tests 25ms, environment 0ms)
 
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a live settings service 11ms
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission for an unregistered namespace 5ms
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a resolved-value change 5ms
- ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission whose value diverges from the authoritative state 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a live settings service 7ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission for an unregistered namespace 2ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission without a resolved-value change 3ms
+ ✓ |thread-safe| packages/settings/settings/tests/invariant.spec.ts > settings invariants > fails a settings/updated emission whose value diverges from the authoritative state 2ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  06:35:28
-   Duration  883ms (transform 441ms, setup 446ms, import 70ms, tests 28ms, environment 0ms)
+   Start at  08:27:08
+   Duration  542ms (transform 274ms, setup 285ms, import 46ms, tests 15ms, environment 0ms)

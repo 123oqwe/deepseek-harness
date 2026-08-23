@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-10",
   "title": "Policy-as-Code、Explain 与 Dry Run",
-  "audit_date": "2026-08-22T21:23:03.363Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:07:51.594Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/policy/policy-language/src/index.ts",
     "packages/policy/policy-language/src/parser.ts",

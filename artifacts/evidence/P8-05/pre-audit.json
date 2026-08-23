@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-05",
   "title": "Resumable Event Streaming：Cursor、ACK、Replay、Dedupe 与 Backpressure",
-  "audit_date": "2026-08-22T22:27:19.034Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:21:59.393Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/sdk/protocol/src/event-stream.ts",
     "packages/api/event-stream/src/index.ts",

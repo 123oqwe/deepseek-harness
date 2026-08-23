@@ -1,11 +1,11 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/execution/world-snapshot/tests/restore.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/compaction/compaction/tests/fidelity.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/compaction/compaction/tests/compaction.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/compaction/compaction/tests/tool-pairing.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/compaction/compaction/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/execution/execution-world/tests/world.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/execution/execution-world/tests/denial.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/workspace/workspace/tests/workspace.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
-{"command":"npx vitest run packages/workspace/workspace/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:35:22.362Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/execution/world-snapshot/tests/restore.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/compaction/compaction/tests/fidelity.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/compaction/compaction/tests/compaction.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/compaction/compaction/tests/tool-pairing.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/compaction/compaction/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/execution/execution-world/tests/world.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/execution/execution-world/tests/denial.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/workspace.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}
+{"command":"npx vitest run packages/workspace/workspace/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T23:21:48.479Z"}

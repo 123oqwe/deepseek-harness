@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-12",
   "title": "Workspace 路径、附件准入与恶意输入边界强化",
-  "audit_date": "2026-08-22T21:35:38.525Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:22:10.693Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/attachment/attachment-security/src/index.ts",
     "packages/attachment/attachment-security/src/scanner.ts",

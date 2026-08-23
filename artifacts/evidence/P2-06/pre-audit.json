@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-06",
   "title": "审批绑定完整规范化参数、资源与前置状态",
-  "audit_date": "2026-08-22T21:21:39.430Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:05:44.293Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/interaction/user-approval/src/canonical.ts",
     "packages/interaction/user-approval/src/preconditions.ts",

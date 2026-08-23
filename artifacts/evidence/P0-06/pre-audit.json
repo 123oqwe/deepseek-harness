@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-06",
   "title": "建立统一 Schema Registry 与兼容性规则",
-  "audit_date": "2026-08-22T21:03:38.223Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:41:02.497Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/schema/schema-registry/src/index.ts",
     "packages/schema/schema-registry/src/types.ts",

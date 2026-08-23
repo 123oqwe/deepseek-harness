@@ -2,7 +2,7 @@
   "issue_id": "P8-06",
   "title": "Authenticated Principal、Tenant Boundary、RBAC/ABAC 与 API Scope",
   "status": "E2E_VERIFIED",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "12/12 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T22:28:01.812Z",
+  "evidence_date": "2026-08-23T00:22:39.833Z",
   "runtime_reachability": {
     "issue_id": "P8-06",
     "source_files": 7,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "PASS",
-    "timestamp": "2026-08-22T22:28:01.812Z"
+    "timestamp": "2026-08-23T00:22:39.833Z"
   },
   "remaining_risks": [
     "Code ported from prototype branch; needs deeper integration verification"

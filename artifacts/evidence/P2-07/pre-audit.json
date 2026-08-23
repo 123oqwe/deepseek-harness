@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-07",
   "title": "持久化、可跨 Turn/进程的 Approval Queue",
-  "audit_date": "2026-08-22T21:22:21.394Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:06:50.026Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/interaction/approval-store/src/index.ts",
     "packages/interaction/approval-store/src/types.ts",

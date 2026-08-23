@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-10",
   "title": "CPU/Memory/Disk/Time/Process/Network 资源配额",
-  "audit_date": "2026-08-22T21:34:49.836Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:21:10.882Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/execution/resource-budget/src/index.ts",
     "packages/execution/resource-budget/src/types.ts",

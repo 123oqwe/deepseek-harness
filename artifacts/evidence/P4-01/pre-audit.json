@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-01",
   "title": "一等公民 Run Service 与 Run Event Log",
-  "audit_date": "2026-08-22T21:35:55.381Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:22:31.794Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/run/run/src/index.ts",
     "packages/run/run/src/types.ts",

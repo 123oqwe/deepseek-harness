@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-07",
   "title": "Session 生命周期：分页、过滤、删除、保留与 Partial Data Repair",
-  "audit_date": "2026-08-22T22:06:35.157Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:02:37.419Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/session/session-lifecycle/src/index.ts",
     "packages/session/session-lifecycle/src/retention.ts",

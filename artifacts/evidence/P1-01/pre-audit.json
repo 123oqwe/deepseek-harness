@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-01",
   "title": "Plugin Manifest v2：声明能力、权限与副作用",
-  "audit_date": "2026-08-22T21:04:21.959Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:42:19.575Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/plugin/plugin-manifest/src/index.ts",
     "packages/plugin/plugin-manifest/src/types.ts",
@@ -28,13 +28,6 @@
   "test_files": [
     "packages/plugin/plugin-manifest/tests/manifest.spec.ts",
     "packages/plugin/plugin-manifest/tests/integration.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts",
     "packages/host/plugin-inventory/tests/inventory.spec.ts",
     "packages/host/plugin-inventory/tests/invariant.spec.ts",
     "packages/boot/app-boot/tests/config-dump.spec.ts",
@@ -60,5 +53,5 @@
   "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 8 files, Tests: 17 files, Docs: 0 files"
+  "notes": "Source: 8 files, Tests: 10 files, Docs: 0 files"
 }

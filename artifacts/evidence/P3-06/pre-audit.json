@@ -1,8 +1,8 @@
 {
   "issue_id": "P3-06",
   "title": "Secrets Broker：短期、最小范围、不可回显凭证",
-  "audit_date": "2026-08-22T21:32:51.601Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:19:20.581Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/credentials/secrets-broker/src/index.ts",
     "packages/credentials/secrets-broker/src/types.ts",

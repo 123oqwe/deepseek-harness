@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-06",
   "title": "Bounded Repair/Replan Loop：验证失败后的有限修复与计划修订",
-  "audit_date": "2026-08-22T22:17:48.843Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:13:26.449Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/assurance/repair/src/index.ts",
     "packages/assurance/repair/src/types.ts",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-09",
   "title": "Organization Governance：Policy Hierarchy、Quota、Retention、Legal Hold 与 Audit Export",
-  "audit_date": "2026-08-22T22:30:57.051Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:25:29.628Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/governance/org-policy/src/index.ts",
     "packages/governance/org-policy/src/types.ts",

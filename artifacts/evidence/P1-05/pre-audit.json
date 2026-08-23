@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-05",
   "title": "插件静态/动态安全扫描器",
-  "audit_date": "2026-08-22T21:05:46.005Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:43:41.033Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/plugin/plugin-scanner/src/index.ts",
     "packages/plugin/plugin-scanner/src/static.ts",
@@ -22,13 +22,6 @@
   ],
   "test_files": [
     "packages/plugin/plugin-scanner/tests/scanner.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts",
     "packages/host/plugin-inventory/tests/inventory.spec.ts",
     "packages/host/plugin-inventory/tests/invariant.spec.ts"
   ],
@@ -46,5 +39,5 @@
   "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 6 files, Tests: 10 files, Docs: 0 files"
+  "notes": "Source: 6 files, Tests: 3 files, Docs: 0 files"
 }

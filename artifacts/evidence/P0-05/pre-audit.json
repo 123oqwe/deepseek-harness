@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-05",
   "title": "为重大能力引入 Shadow/Enforce Feature Gates",
-  "audit_date": "2026-08-22T21:03:16.416Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:40:46.290Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/migration/feature-gates/src/index.ts",
     "packages/migration/feature-gates/src/types.ts",
@@ -26,14 +26,7 @@
     "packages/migration/feature-gates/tests/integration.spec.ts",
     "packages/settings/settings/tests/settings.spec.ts",
     "packages/settings/settings/tests/redact.spec.ts",
-    "packages/settings/settings/tests/invariant.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts"
+    "packages/settings/settings/tests/invariant.spec.ts"
   ],
   "doc_files": [
     "packages/bundle/base/cordis.patch.yml"
@@ -52,5 +45,5 @@
   "classification": "SCAFFOLD_REQUIRES_INTEGRATION_PROOF",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 6 files, Tests: 12 files, Docs: 1 files"
+  "notes": "Source: 6 files, Tests: 5 files, Docs: 1 files"
 }

@@ -2,7 +2,7 @@
   "issue_id": "P4-12",
   "title": "外部副作用 Idempotency Ledger",
   "status": "PARTIALLY_WIRED",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "upstream_base_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
   "integration_branch": "integration/first-100-rebuild",
   "environment": {
@@ -16,7 +16,7 @@
     "tests": "17/35 passed"
   },
   "evidence_signer": "codex-agent",
-  "evidence_date": "2026-08-22T21:45:36.594Z",
+  "evidence_date": "2026-08-22T23:39:19.534Z",
   "runtime_reachability": {
     "issue_id": "P4-12",
     "source_files": 7,
@@ -24,7 +24,7 @@
     "compilation": "PASS",
     "lint": "PASS",
     "tests": "FAIL",
-    "timestamp": "2026-08-22T21:45:36.594Z"
+    "timestamp": "2026-08-22T23:39:19.534Z"
   },
   "remaining_risks": [
     "18 test(s) failing",

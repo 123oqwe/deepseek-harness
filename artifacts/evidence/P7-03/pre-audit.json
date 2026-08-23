@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-03",
   "title": "Independent Verifier：与执行者隔离的验证 Provider Seam",
-  "audit_date": "2026-08-22T22:14:14.976Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:10:23.751Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/assurance/verifier/src/index.ts",
     "packages/assurance/verifier/src/types.ts",

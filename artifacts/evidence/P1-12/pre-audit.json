@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-12",
   "title": "官方 Plugin Verifier 与市场信任等级",
-  "audit_date": "2026-08-22T21:10:47.419Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:50:34.682Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "apps/cli/src/plugin-verify.ts",
     "packages/plugin/plugin-certification/src/index.ts",
@@ -21,13 +21,6 @@
   ],
   "test_files": [
     "packages/plugin/plugin-certification/tests/certification.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts",
     "packages/host/plugin-inventory/tests/inventory.spec.ts",
     "packages/host/plugin-inventory/tests/invariant.spec.ts"
   ],
@@ -45,5 +38,5 @@
   "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 4 files, Tests: 10 files, Docs: 1 files"
+  "notes": "Source: 4 files, Tests: 3 files, Docs: 1 files"
 }

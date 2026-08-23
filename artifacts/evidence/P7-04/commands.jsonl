@@ -1,24 +1,24 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/assurance/claim-graph/tests/claim-graph.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/scoped.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/request-header.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/derived-cache.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/repair.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/chunk-rows.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/json.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/gen-persistence-catalog.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/typert.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/properties.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/surface.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/session.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/core/session/tests/fork.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/session-query/session-query/tests/tracing.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/session-query/session-query/tests/search-helpers.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/session-query/session-query/tests/session-query.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/attachment/attachment/tests/admission.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/attachment/attachment/tests/index.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/feedback/message-feedback/tests/loader-composition.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/feedback/message-feedback/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
-{"command":"npx vitest run packages/feedback/message-feedback/tests/message-feedback.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:15:25.948Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/assurance/claim-graph/tests/claim-graph.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/scoped.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/request-header.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/derived-cache.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/repair.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/chunk-rows.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/json.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/gen-persistence-catalog.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/typert.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/properties.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/surface.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/session.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/core/session/tests/fork.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/session-query/session-query/tests/tracing.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/session-query/session-query/tests/search-helpers.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/session-query/session-query/tests/session-query.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/attachment/attachment/tests/admission.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/attachment/attachment/tests/index.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/feedback/message-feedback/tests/loader-composition.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/feedback/message-feedback/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}
+{"command":"npx vitest run packages/feedback/message-feedback/tests/message-feedback.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-23T00:11:27.205Z"}

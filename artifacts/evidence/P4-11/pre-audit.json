@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-11",
   "title": "统一 Retry Classifier、Circuit Breaker 与 Retry Budget",
-  "audit_date": "2026-08-22T21:44:24.973Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:36:27.492Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/reliability/retry/src/index.ts",
     "packages/reliability/retry/src/classify.ts",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P8-08",
   "title": "Operator Control Plane API 与 Run/Agent/Workflow 可视化",
-  "audit_date": "2026-08-22T22:28:57.824Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:23:35.414Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/client/ui-run-control/src/index.ts",
     "packages/client/ui-run-control/src/store.ts",

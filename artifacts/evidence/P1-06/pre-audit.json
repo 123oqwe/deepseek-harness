@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-06",
   "title": "不可信插件 Out-of-Process Host",
-  "audit_date": "2026-08-22T21:06:04.864Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:43:51.099Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/plugin/plugin-host-protocol/src/types.ts",
     "packages/plugin/plugin-host/src/index.ts",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P2-04",
   "title": "通用副作用与风险分类体系",
-  "audit_date": "2026-08-22T21:17:43.140Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:00:37.716Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/policy/risk-taxonomy/src/index.ts",
     "packages/policy/risk-taxonomy/src/types.ts",

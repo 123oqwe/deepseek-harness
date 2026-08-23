@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-02",
   "title": "MemoryRecord：来源、置信度、TTL、范围、用途与冲突",
-  "audit_date": "2026-08-22T22:02:59.007Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:59:42.736Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/memory/memory/src/record.ts",
     "packages/memory/memory/src/provenance.ts",

@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-09",
   "title": "Detached、Saved、Versioned 与 Nested Workflow",
-  "audit_date": "2026-08-22T21:41:37.319Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:30:29.343Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/workflow/workflow-registry/src/index.ts",
     "packages/workflow/workflow-registry/src/types.ts",

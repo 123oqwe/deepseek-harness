@@ -1,8 +1,8 @@
 {
   "issue_id": "P0-07",
   "title": "建立 Release Evidence Package 与不可伪造完成门",
-  "audit_date": "2026-08-22T21:04:18.002Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:42:10.489Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "scripts/release/collect-evidence.mjs",
     "scripts/release/verify-evidence.mjs",

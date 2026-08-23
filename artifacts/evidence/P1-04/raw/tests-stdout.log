@@ -1,114 +1,16 @@
 
  RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
 
- ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > creates quarantine entry with scripts blocked 2ms
- ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects on failed signature 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > creates quarantine entry with scripts blocked 5ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects on failed signature 1ms
  ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects on path traversal 0ms
  ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > verifies with all checks passing 0ms
- ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > installs verified entry 0ms
+ ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > installs verified entry 1ms
  ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > rejects install of non-verified 1ms
  ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > transaction commit requires all verified 1ms
  ✓ |thread-safe| packages/plugin/plugin-installer/tests/quarantine.spec.ts > P1-04 Plugin Installer Quarantine > transaction abort rolls back 0ms
 
  Test Files  1 passed (1)
       Tests  8 passed (8)
-   Start at  05:05:32
-   Duration  459ms (transform 217ms, setup 239ms, import 27ms, tests 5ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > parses 'memorix.cordis.yml' with the documented generic plugin fields 5ms
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > parses 'mcp-reference-memory.cordis.yml' with the documented generic plugin fields 1ms
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > parses 'engram.cordis.yml' with the documented generic plugin fields 1ms
- ✓ |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > loads 'memorix.cordis.yml' and discovers a keyless fixture tool 349ms
- × |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > loads 'mcp-reference-memory.cordis.yml' and discovers a keyless fixture tool 6ms
-   → Schema 'session-event' version v0.1 already registered
- × |thread-safe| apps/cli/tests/memory-mcp-configs.spec.ts > third-party memory MCP example overlays > loads 'engram.cordis.yml' and discovers a keyless fixture tool 1ms
-   → Schema 'session-event' version v0.1 already registered
-
- Test Files  1 failed (1)
-      Tests  2 failed | 4 passed (6)
-   Start at  05:05:33
-   Duration  1.38s (transform 564ms, setup 231ms, import 590ms, tests 363ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/telemetry-switch.spec.ts > resolveTelemetryPatch > preserves the configured telemetry mode when the hard-disable switch is unset or empty 2ms
- ✓ |thread-safe| apps/cli/tests/telemetry-switch.spec.ts > resolveTelemetryPatch > disables on ANY non-empty value, including falsy-looking ones 1ms
- ✓ |thread-safe| apps/cli/tests/telemetry-switch.spec.ts > resolveTelemetryPatch > is trivially satisfied by a composition without the telemetry row 0ms
-
- Test Files  1 passed (1)
-      Tests  3 passed (3)
-   Start at  05:05:36
-   Duration  567ms (transform 310ms, setup 229ms, import 149ms, tests 4ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > routes profile boots and the web alias, handing the rest to the app 5ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > ends the launcher flags at the first token it does not own 1ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > routes the plugin pnpm forwarder 1ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > routes profile and web config dumps 1ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > rejects missing profile, removed flags, and contradictory inputs 5ms
- ✓ |thread-safe| apps/cli/tests/args.spec.ts > parseDshArgs > keeps its own help for an invocation with no app to hand it to 2ms
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Start at  05:05:37
-   Duration  459ms (transform 215ms, setup 235ms, import 24ms, tests 16ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > completes naturally after disposal resolves and forces exit when it rejects 5ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > uses process.exitCode for default normal completion 1ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > forces exit when graceful disposal reaches its bound 2ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > honors a caller-supplied grace period 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > lets Ctrl+C force a normal shutdown already stuck in disposal 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > forces exit after disposal started by a signal 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > drains on the first signal and forces on the second signal 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > coalesces normal shutdown calls without treating them as escalation 0ms
- ✓ |thread-safe| apps/cli/tests/process-shutdown.spec.ts > process shutdown > lets a signal force exit while natural completion drains remaining handles 0ms
-
- Test Files  1 passed (1)
-      Tests  9 passed (9)
-   Start at  05:05:39
-   Duration  480ms (transform 229ms, setup 250ms, import 21ms, tests 11ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ↓ |thread-safe| apps/cli/tests/lazy-search-startup.compat.spec.ts > built CLI lazy-search startup > boots and disposes the shipped composition with full-text search off by default
-
- Test Files  1 skipped (1)
-      Tests  1 skipped (1)
-   Start at  05:05:40
-   Duration  436ms (transform 204ms, setup 229ms, import 17ms, tests 0ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > the shipped shell composition (real bundle layers) > composes the confined pwsh roster on win32 and the bash roster on POSIX from the same rows 13ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > the shipped shell composition (real bundle layers) > base-only profiles carry both stacks with the same platform gating 4ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > preset standard gates its shell tool rows by platform 2ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > preset code gates its shell tool rows by platform 1ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > preset cordis gates its shell tool rows by platform 1ms
- ✓ |thread-safe| apps/cli/tests/windows-shell.spec.ts > shipped agent presets gate both shell tools by platform > minimal mounts no shell tool row and gates its persistent shell stack by platform 1ms
-
- Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Start at  05:05:42
-   Duration  601ms (transform 309ms, setup 242ms, import 136ms, tests 23ms, environment 0ms)
-
-
- RUN  v4.1.8 /Users/guanjieqiao/dsh-first100-integration
-
- ✓ |thread-safe| apps/cli/tests/source-launch.compat.spec.ts > dsh SOURCE launcher (node --import tsx/esm) > launches the source CLI without building 3ms
- ✓ |thread-safe| apps/cli/tests/source-launch.compat.spec.ts > dsh SOURCE launcher (node --import tsx/esm) > boots the source entry and requires a profile 528ms
-
- Test Files  1 passed (1)
-      Tests  2 passed (2)
-   Start at  05:05:44
-   Duration  1.02s (transform 212ms, setup 236ms, import 67ms, tests 532ms, environment 0ms)
+   Start at  06:43:38
+   Duration  1.18s (transform 684ms, setup 718ms, import 79ms, tests 11ms, environment 0ms)

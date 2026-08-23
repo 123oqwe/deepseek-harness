@@ -1,8 +1,8 @@
 {
   "issue_id": "P1-10",
   "title": "插件数据迁移、升级事务与回滚",
-  "audit_date": "2026-08-22T21:10:10.788Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T22:49:39.887Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/plugin/plugin-migrations/src/index.ts",
     "packages/plugin/plugin-migrations/src/types.ts",
@@ -24,13 +24,6 @@
   ],
   "test_files": [
     "packages/plugin/plugin-migrations/tests/rollback.spec.ts",
-    "apps/cli/tests/memory-mcp-configs.spec.ts",
-    "apps/cli/tests/telemetry-switch.spec.ts",
-    "apps/cli/tests/args.spec.ts",
-    "apps/cli/tests/process-shutdown.spec.ts",
-    "apps/cli/tests/lazy-search-startup.compat.spec.ts",
-    "apps/cli/tests/windows-shell.spec.ts",
-    "apps/cli/tests/source-launch.compat.spec.ts",
     "packages/storage/storage/tests/registry.spec.ts",
     "packages/settings/settings/tests/settings.spec.ts",
     "packages/settings/settings/tests/redact.spec.ts",
@@ -50,5 +43,5 @@
   "classification": "PLUGIN_CONTROL_SCAFFOLD_NOT_ENFORCED",
   "salvageable": true,
   "main_chain_gaps": [],
-  "notes": "Source: 7 files, Tests: 12 files, Docs: 0 files"
+  "notes": "Source: 7 files, Tests: 5 files, Docs: 0 files"
 }

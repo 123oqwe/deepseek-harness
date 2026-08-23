@@ -1,8 +1,8 @@
 {
   "issue_id": "P7-04",
   "title": "ClaimGraph：声明—证据—反证—不确定性的通用图",
-  "audit_date": "2026-08-22T22:15:25.948Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:11:27.205Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/assurance/claim-graph/src/index.ts",
     "packages/assurance/claim-graph/src/types.ts",

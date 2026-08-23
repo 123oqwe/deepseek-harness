@@ -1,8 +1,8 @@
 {
   "issue_id": "P6-10",
   "title": "Privacy Classification、Redaction、Fork/Snapshot Lineage 与导出/擦除",
-  "audit_date": "2026-08-22T22:08:15.829Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-23T00:04:20.745Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/privacy/data-classification/src/index.ts",
     "packages/privacy/data-classification/src/types.ts",

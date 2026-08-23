@@ -1,14 +1,7 @@
-{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run packages/plugin/plugin-migrations/tests/rollback.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/memory-mcp-configs.spec.ts --reporter=verbose","exit_code":1,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/telemetry-switch.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/args.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/process-shutdown.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/lazy-search-startup.compat.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/windows-shell.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run apps/cli/tests/source-launch.compat.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run packages/storage/storage/tests/registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
-{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T21:10:10.788Z"}
+{"command":"pnpm run typecheck","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"pnpm run lint","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"npx vitest run packages/plugin/plugin-migrations/tests/rollback.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"npx vitest run packages/storage/storage/tests/registry.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"npx vitest run packages/settings/settings/tests/settings.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"npx vitest run packages/settings/settings/tests/redact.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}
+{"command":"npx vitest run packages/settings/settings/tests/invariant.spec.ts --reporter=verbose","exit_code":0,"timestamp":"2026-08-22T22:49:39.887Z"}

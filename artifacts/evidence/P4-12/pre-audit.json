@@ -1,8 +1,8 @@
 {
   "issue_id": "P4-12",
   "title": "外部副作用 Idempotency Ledger",
-  "audit_date": "2026-08-22T21:45:36.594Z",
-  "git_sha": "ef8df95a08105daa6edd40477e50a30f59f007c9",
+  "audit_date": "2026-08-22T23:39:19.534Z",
+  "git_sha": "c9edbc10f7d6639deb645edfaedcd033698db883",
   "manifest_files": [
     "packages/action/action-ledger/src/index.ts",
     "packages/action/action-ledger/src/types.ts",
