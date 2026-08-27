@@ -1,0 +1,120 @@
+# R0-5 item 1 evidence workflow — task #34
+#
+# Dedicated, contained baseline CI: a REAL full-suite `pnpm test` exit on a
+# clean GitHub-hosted ubuntu-24.04 runner at the EXACT frozen baseline SHA
+# b150a551b8d465e31e418e1b2eaf5e79bbb7d28e, fail-closed verified before any
+# test runs. Triggered ONLY by a push to this exact evidence branch — never
+# on master, never on PRs, never via workflow_dispatch. Reads no secrets,
+# calls no real product API, publishes no release artifacts. The full raw
+# log plus the real exit code are uploaded as a downloadable CI artifact
+# and bound into the R0-5 ledger.
+name: R0-5 baseline CI (frozen b150a551)
+
+on:
+  push:
+    branches:
+      - codex/r0-5-baseline-ci-b150a551
+
+permissions:
+  contents: read
+
+env:
+  # CI runs must never report to the production telemetry endpoint baked
+  # into apps/cli/cordis.yml (AppCLIEntry disables the row when set).
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  baseline-full-suite:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # Explicitly check out the exact frozen SHA. Actions loads this workflow
+      # from the triggering branch; the job workspace is the pristine baseline.
+      - uses: actions/checkout@v6
+        with:
+          ref: b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      # Fail-closed baseline identity gate: refuse to run any test unless the
+      # workspace is at the exact frozen SHA on a clean tree. Records the
+      # runner, Node, pnpm, OS, CPU, memory, and start time for the ledger.
+      - name: Fail-closed baseline identity gate
+        run: |
+          set -euo pipefail
+          expected="b150a551b8d465e31e418e1b2eaf5e79bbb7d28e"
+          actual="$(git rev-parse HEAD)"
+          echo "HEAD=$actual"
+          [ "$actual" = "$expected" ] \
+            || { echo "::error::HEAD mismatch: expected $expected, got $actual"; exit 1; }
+          tree="$(git rev-parse HEAD^{tree})"
+          echo "tree=$tree"
+          porcelain="$(git status --porcelain)"
+          echo "porcelain=$porcelain"
+          [ -z "$porcelain" ] \
+            || { echo "::error::working tree is not clean"; exit 1; }
+          nodev="$(node --version)"
+          pnpmv="$(pnpm --version)"
+          cpus="$(node --input-type=module -e 'import os from "node:os"; process.stdout.write(String(os.cpus().length))')"
+          memgb="$(node --input-type=module -e 'import os from "node:os"; process.stdout.write((os.totalmem()/1073741824).toFixed(1))')"
+          osline="$(uname -a)"
+          runner="${{ runner.name }} (${{ runner.os }})"
+          started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          {
+            echo "gate=passed"
+            echo "HEAD=$actual"
+            echo "tree=$tree"
+            echo "porcelain=$porcelain"
+            echo "node=$nodev"
+            echo "pnpm=$pnpmv"
+            echo "cpus=$cpus"
+            echo "mem_gb=$memgb"
+            echo "os=$osline"
+            echo "runner=$runner"
+            echo "started_utc=$started"
+          } > r0-5-env.log
+          echo "identity-gate: passed (HEAD $actual, tree $tree)"
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      # EXACT command, unmodified semantics: `pnpm test` (vitest run). No
+      # filtered tests, no check:ci substitute, no concurrency change, no
+      # retry. The real exit code is captured directly and propagated as this
+      # job's own status; the full raw stdout+stderr plus run metadata are
+      # appended to the log and uploaded as an artifact either way.
+      - name: Full suite — exact `pnpm test`
+        env:
+          NO_COLOR: 1
+        run: |
+          set +e
+          pnpm test > r0-5-full-suite.log 2>&1
+          status=$?
+          set -e
+          {
+            echo "real-exit=$status"
+            echo "run_id=${{ github.run_id }}"
+            echo "run_attempt=${{ github.run_attempt }}"
+            echo "run_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "finished_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "HEAD=$(git rev-parse HEAD)"
+            echo "tree=$(git rev-parse HEAD^{tree})"
+            echo "porcelain=$(git status --porcelain)"
+          } | tee -a r0-5-full-suite.log
+          echo "===== tail ====="
+          tail -n 30 r0-5-full-suite.log
+          exit $status
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r0-5-baseline-b150a551-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            r0-5-full-suite.log
+            r0-5-env.log
+          if-no-files-found: error
