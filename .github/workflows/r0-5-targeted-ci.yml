@@ -66,6 +66,7 @@ jobs:
           memgb="$(node --input-type=module -e 'import os from "node:os"; process.stdout.write((os.totalmem()/1073741824).toFixed(1))')"
           osline="$(uname -a)"
           runner="${{ runner.name }} (${{ runner.os }})"
+          pwshv="$(pwsh --version 2>/dev/null || echo 'pwsh-not-found')"
           started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           {
             echo "gate=passed"
@@ -74,6 +75,7 @@ jobs:
             echo "porcelain=$porcelain"
             echo "node=$nodev"
             echo "pnpm=$pnpmv"
+            echo "pwsh=$pwshv"
             echo "cpus=$cpus"
             echo "mem_gb=$memgb"
             echo "os=$osline"
@@ -87,8 +89,10 @@ jobs:
 
       # Probe sample 1 — the 2 failing files in isolation. Faithful subset:
       # same `vitest run`, same config, same forks pool, only the file list
-      # differs (the reverse load of the failed full suite). Real exit captured.
+      # differs (the reverse load of the failed full suite). Real exit recorded
+      # into a step-output so the job can continue to sample 2 regardless.
       - name: Probe sample 1 — isolated local.spec.ts + loader-composition.spec.ts
+        id: sample1
         env:
           NO_COLOR: 1
         run: |
@@ -111,12 +115,16 @@ jobs:
           } | tee -a r0-5-probe-sample-1.log
           echo "===== tail ====="
           tail -n 15 r0-5-probe-sample-1.log
-          exit $status
+          echo "sample1_exit=$status" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      # Probe sample 2 — identical second invocation: measures whether the
-      # isolated result is stable (2/2 clean) or inconsistent. Every exit is
-      # recorded; a red sample here is a determinism signal, not hidden.
+      # Probe sample 2 — identical second invocation, ALWAYS run (even when
+      # sample 1 failed): measures whether the isolated result is stable
+      # (2/2 identical) or inconsistent. Every exit is recorded; a red sample
+      # here is a determinism signal, never hidden.
       - name: Probe sample 2 — isolated rerun (flakiness sample)
+        id: sample2
+        if: always()
         env:
           NO_COLOR: 1
         run: |
@@ -139,7 +147,22 @@ jobs:
           } | tee -a r0-5-probe-sample-2.log
           echo "===== tail ====="
           tail -n 15 r0-5-probe-sample-2.log
-          exit $status
+          echo "sample2_exit=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      # Combined verdict: the job FAILS iff either sample failed. This keeps
+      # the run conclusion honest while both sample logs are uploaded.
+      - name: Combined sample verdict
+        if: always()
+        run: |
+          s1="${{ steps.sample1.outputs.sample1_exit }}"
+          s2="${{ steps.sample2.outputs.sample2_exit }}"
+          echo "sample1_exit=$s1 sample2_exit=$s2"
+          if [ "$s1" != "0" ] || [ "$s2" != "0" ]; then
+            echo "::error::isolation classification probe FAILED (sample1=$s1 sample2=$s2)"
+            exit 1
+          fi
+          echo "isolation classification probe: 2/2 clean"
 
       - uses: actions/upload-artifact@v4
         if: always()
