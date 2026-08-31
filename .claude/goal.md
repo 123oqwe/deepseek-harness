@@ -1,0 +1,3 @@
+GOAL: 按 SONNET-EXECUTOR-START-PROMPT.txt 执行全部 109 项（100 registry + P9-01…09 扩展）：W0 六件套全绿 → W1–W19 → R10 → W20–W22；终态 = 100/100 ACCEPTED + R10 通过 + P9 九项全部 VERIFIED 或 scheduled-BLOCKED 在案。
+NOW: W0 引导 slice — BASE-ALIGN 已完成（commit 61819de2, first100-exec @ 0a53fb55）；其余 5 件（command-freeze 机制、generate-ledger.mjs、EXEC-STATE、exact-SHA CI workflow + 签名密钥迁移、本文件 + PreCompact hook）收尾中。W1 未开闸；First-100 = 0/109 ACCEPTED。
+RULES: 每次 compact/新会话先重读本文件 → spec/first100/exec/EXEC-STATE.json → decisions-approved.md → ledger 当前行 → registry 当前项，会话记忆一律不作数；不确定即 BLOCKED，禁猜；禁跳 wave；写码全在 first100-exec 分支；hook 未注册 ⇒ BLOCKED。

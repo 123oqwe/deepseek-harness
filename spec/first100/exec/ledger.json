@@ -1,0 +1,2962 @@
+{
+  "schema": {
+    "name": "first100-program-ledger",
+    "version": "1.0"
+  },
+  "generatedBy": "scripts/first100/generate-ledger.mjs",
+  "lastUpdatedUtc": "2026-08-31T15:56:49.670Z",
+  "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
+  "legend": {
+    "A": "C-stage (Contract: service definition/schema/typed error)",
+    "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
+    "C": "U-stage (Consumer/Composition: real Loader/profile wiring)",
+    "D": "F-stage (Fault/Qualification: fault, dispose, negative cases, per-item acceptance command)"
+  },
+  "rows": {
+    "P0-01": {
+      "id": "P0-01",
+      "title": "锁定可复现审计基线与仓库指纹",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [],
+      "wave": 1,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-02": {
+      "id": "P0-02",
+      "title": "确立 Minimal Immutable Trust Kernel 边界",
+      "layer": "L0_KERNEL",
+      "canonicalOwner": "P0-02",
+      "predecessors": [
+        "P0-01"
+      ],
+      "wave": 2,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-03": {
+      "id": "P0-03",
+      "title": "增加 Capability Seam 架构一致性检查器",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-01",
+        "P0-02"
+      ],
+      "wave": 3,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-04": {
+      "id": "P0-04",
+      "title": "建立分层依赖与禁止环规则",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-03"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-05": {
+      "id": "P0-05",
+      "title": "为重大能力引入 Shadow/Enforce Feature Gates",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-02"
+      ],
+      "wave": 3,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-06": {
+      "id": "P0-06",
+      "title": "建立统一 Schema Registry 与兼容性规则",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-01"
+      ],
+      "wave": 2,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-07": {
+      "id": "P0-07",
+      "title": "建立 Release Evidence Package 与不可伪造完成门",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-01",
+        "P0-06"
+      ],
+      "wave": 3,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P0-08": {
+      "id": "P0-08",
+      "title": "把 BENCHMARK.md 升级为通用 Harness 能力基准框架",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-07"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-01": {
+      "id": "P1-01",
+      "title": "Plugin Manifest v2：声明能力、权限与副作用",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P1-01",
+      "predecessors": [
+        "P0-02",
+        "P0-06"
+      ],
+      "wave": 3,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-02": {
+      "id": "P1-02",
+      "title": "插件签名、来源证明与 SBOM",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-02",
+        "P1-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-03": {
+      "id": "P1-03",
+      "title": "可复现插件锁文件与依赖解析",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-01",
+        "P1-02"
+      ],
+      "wave": 5,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-04": {
+      "id": "P1-04",
+      "title": "隔离安装与默认禁止生命周期脚本",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-02",
+        "P1-03",
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-05": {
+      "id": "P1-05",
+      "title": "插件静态/动态安全扫描器",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-01",
+        "P1-04"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-06": {
+      "id": "P1-06",
+      "title": "不可信插件 Out-of-Process Host",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-01",
+        "P2-02",
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-07": {
+      "id": "P1-07",
+      "title": "项目 Trust Boundary：未信任目录不加载项目级执行内容",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-02",
+        "P2-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-08": {
+      "id": "P1-08",
+      "title": "插件 ABI、Capability 与 Schema 兼容协商",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P1-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-09": {
+      "id": "P1-09",
+      "title": "Service/Tool/Event 命名空间与所有权冲突检测",
+      "layer": "L3_CONSUMER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-03",
+        "P1-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-10": {
+      "id": "P1-10",
+      "title": "插件数据迁移、升级事务与回滚",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-03",
+        "P4-12"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-11": {
+      "id": "P1-11",
+      "title": "把动态 Cordis 自修改改成 Extension Proposal Pipeline",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-05",
+        "P1-06",
+        "P2-06",
+        "P3-01"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P1-12": {
+      "id": "P1-12",
+      "title": "官方 Plugin Verifier 与市场信任等级",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-01",
+        "P1-02",
+        "P1-05",
+        "P1-06"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-01": {
+      "id": "P2-01",
+      "title": "统一 Principal / Tenant / Run / Actor 身份上下文",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-02",
+        "P0-06"
+      ],
+      "wave": 3,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-02": {
+      "id": "P2-02",
+      "title": "可衰减 Capability Token 与子 Agent 委托",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-03": {
+      "id": "P2-03",
+      "title": "一等公民 ActionManifest",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P2-03",
+      "predecessors": [
+        "P0-06",
+        "P2-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-04": {
+      "id": "P2-04",
+      "title": "通用副作用与风险分类体系",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-03"
+      ],
+      "wave": 5,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-05": {
+      "id": "P2-05",
+      "title": "Policy Decision Service 与单调拒绝",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-02",
+        "P2-02",
+        "P2-03",
+        "P2-04"
+      ],
+      "wave": 6,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-06": {
+      "id": "P2-06",
+      "title": "审批绑定完整规范化参数、资源与前置状态",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-03",
+        "P2-05"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-07": {
+      "id": "P2-07",
+      "title": "持久化、可跨 Turn/进程的 Approval Queue",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-06",
+        "P4-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-08": {
+      "id": "P2-08",
+      "title": "可复用 Grant、范围规则、过期与撤销",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-05",
+        "P2-07"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-09": {
+      "id": "P2-09",
+      "title": "多人审批与职责分离",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01",
+        "P2-07"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-10": {
+      "id": "P2-10",
+      "title": "Policy-as-Code、Explain 与 Dry Run",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-05",
+        "P2-05"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-11": {
+      "id": "P2-11",
+      "title": "把 Permission Preset 扩展为完整 Policy Profile",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-04",
+        "P2-05",
+        "P3-02"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P2-12": {
+      "id": "P2-12",
+      "title": "全局 Emergency Stop 与通用 Human Interaction Channel",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-05",
+        "P4-06"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-01": {
+      "id": "P3-01",
+      "title": "一等公民 ExecutionWorld Capability Seam",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-03",
+        "P2-05"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-02": {
+      "id": "P3-02",
+      "title": "扩展 Sandbox Policy 为全维度安全词汇",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-03": {
+      "id": "P3-03",
+      "title": "结构化 Out-of-Band Denial 与执行错误",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-04": {
+      "id": "P3-04",
+      "title": "统一 Network Egress Proxy 与目的地策略",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-06",
+        "P2-05",
+        "P3-02"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-05": {
+      "id": "P3-05",
+      "title": "Process、Syscall、IPC 与 Device 隔离",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-02"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-06": {
+      "id": "P3-06",
+      "title": "Secrets Broker：短期、最小范围、不可回显凭证",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-02",
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-07": {
+      "id": "P3-07",
+      "title": "本地 Sandbox 跨平台 Fail-Closed 强化",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-02",
+        "P3-05"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-08": {
+      "id": "P3-08",
+      "title": "Container ExecutionWorld Provider",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-01",
+        "P3-04",
+        "P3-06"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-09": {
+      "id": "P3-09",
+      "title": "MicroVM / Remote ExecutionWorld 与 Attestation",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01",
+        "P3-01",
+        "P4-07"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-10": {
+      "id": "P3-10",
+      "title": "CPU/Memory/Disk/Time/Process/Network 资源配额",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-11": {
+      "id": "P3-11",
+      "title": "ExecutionWorld Snapshot / Restore / Rollback",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-01",
+        "P6-09"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P3-12": {
+      "id": "P3-12",
+      "title": "Workspace 路径、附件准入与恶意输入边界强化",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01",
+        "P3-01"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-01": {
+      "id": "P4-01",
+      "title": "一等公民 Run Service 与 Run Event Log",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P2-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-02": {
+      "id": "P4-02",
+      "title": "通用 TaskProfile 编译结果",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P4-02",
+      "predecessors": [
+        "P2-04",
+        "P4-01"
+      ],
+      "wave": 6,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-03": {
+      "id": "P4-03",
+      "title": "RunPlan：模型、Agent、工具、世界、预算与验证的可执行计划",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P4-03",
+      "predecessors": [
+        "P3-01",
+        "P4-02"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-04": {
+      "id": "P4-04",
+      "title": "RunPlan Freeze、签名与 Amendment Protocol",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-05",
+        "P4-03"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-05": {
+      "id": "P4-05",
+      "title": "扩展 Agent Lifecycle 状态机",
+      "layer": "L3_CONSUMER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-01"
+      ],
+      "wave": 5,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-06": {
+      "id": "P4-06",
+      "title": "Durable Inbox / Outbox 与 Exactly-Once Effect Handoff",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01",
+        "P4-01"
+      ],
+      "wave": 5,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-07": {
+      "id": "P4-07",
+      "title": "Worker Lease、Heartbeat 与 Fencing Token",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-06"
+      ],
+      "wave": 6,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-08": {
+      "id": "P4-08",
+      "title": "Workflow Journal 与步骤级 Resume",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-01",
+        "P4-06",
+        "P4-07"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-09": {
+      "id": "P4-09",
+      "title": "Detached、Saved、Versioned 与 Nested Workflow",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-02",
+        "P4-08"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-10": {
+      "id": "P4-10",
+      "title": "Workflow 预算、Scheduler、Backpressure、公平性与资源锁",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-10",
+        "P4-07"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-11": {
+      "id": "P4-11",
+      "title": "统一 Retry Classifier、Circuit Breaker 与 Retry Budget",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-01",
+        "P4-12"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-12": {
+      "id": "P4-12",
+      "title": "外部副作用 Idempotency Ledger",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-03",
+        "P4-06",
+        "P4-07"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-13": {
+      "id": "P4-13",
+      "title": "Reconciliation Engine 与 Saga Compensation",
+      "layer": "L3_CONSUMER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-12",
+        "P7-02"
+      ],
+      "wave": 13,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P4-14": {
+      "id": "P4-14",
+      "title": "Partial-Turn Resume、Durable Schedule/Goal Trigger",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-08",
+        "P4-12",
+        "P4-13"
+      ],
+      "wave": 14,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-01": {
+      "id": "P5-01",
+      "title": "Strategy Router：Direct / ReAct / Plan / Workflow / Multi-Agent",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-05",
+        "P4-02",
+        "P4-03"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-02": {
+      "id": "P5-02",
+      "title": "Model Router：成功率、成本、延迟、隐私和工具能力联合选择",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-05",
+        "P5-01"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-03": {
+      "id": "P5-03",
+      "title": "模型能力协商与 Provider-Specific Prompt Compiler",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P5-02"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-04": {
+      "id": "P5-04",
+      "title": "Provider Fallback、Hedging、Rate Limit 与一致预算",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-11",
+        "P4-12",
+        "P5-02"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-05": {
+      "id": "P5-05",
+      "title": "扩展 Structured SubagentRequest Contract",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-02",
+        "P4-03"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-06": {
+      "id": "P5-06",
+      "title": "扩展 Structured SubagentResult 与完整证据回传",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P5-05",
+        "P6-09"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-07": {
+      "id": "P5-07",
+      "title": "Codex Adapter：结构化流、继续执行、审批与证据映射",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P5-05",
+        "P5-06",
+        "P8-04"
+      ],
+      "wave": 12,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-08": {
+      "id": "P5-08",
+      "title": "Claude Code Adapter：结构化流、会话恢复、工具与 Artifact 映射",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P5-05",
+        "P5-06",
+        "P8-04"
+      ],
+      "wave": 12,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-09": {
+      "id": "P5-09",
+      "title": "ACP Provider：远程可继续会话、Trace 枚举与安全身份",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P5-05",
+        "P8-01",
+        "P8-05"
+      ],
+      "wave": 18,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-10": {
+      "id": "P5-10",
+      "title": "Continuation、Steer、Human Input 与 Cancellation Convergence 修复",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-06",
+        "P4-07"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-11": {
+      "id": "P5-11",
+      "title": "通用 Taskboard、Mailbox 与 Blackboard 原语",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-06",
+        "P4-07"
+      ],
+      "wave": 7,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P5-12": {
+      "id": "P5-12",
+      "title": "多 Agent 协调安全、Worktree 隔离与 Router Regret 评测",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-10",
+        "P5-01",
+        "P5-11"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-01": {
+      "id": "P6-01",
+      "title": "原生 Memory Service Definition（Provider-Neutral）",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-03",
+        "P2-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-02": {
+      "id": "P6-02",
+      "title": "MemoryRecord：来源、置信度、TTL、范围、用途与冲突",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P6-01"
+      ],
+      "wave": 5,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-03": {
+      "id": "P6-03",
+      "title": "Memory Proposal、验证、合并、遗忘与导出",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-05",
+        "P2-12",
+        "P6-02"
+      ],
+      "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-04": {
+      "id": "P6-04",
+      "title": "Context Graph 与 Retrieval Planner",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P6-01",
+        "P6-09"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-05": {
+      "id": "P6-05",
+      "title": "Per-Agent Context Topology 与稳定 Context Telemetry Contract",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-02",
+        "P4-03",
+        "P6-04"
+      ],
+      "wave": 12,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-06": {
+      "id": "P6-06",
+      "title": "Compaction 保真度、来源证明与 Tool Pairing 强化",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-01",
+        "P7-01"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-07": {
+      "id": "P6-07",
+      "title": "Session 生命周期：分页、过滤、删除、保留与 Partial Data Repair",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P2-01"
+      ],
+      "wave": 4,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-08": {
+      "id": "P6-08",
+      "title": "静态加密、租户密钥、Tamper-Evident Audit 与 Data Residency",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-02",
+        "P2-01",
+        "P3-06"
+      ],
+      "wave": 9,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-09": {
+      "id": "P6-09",
+      "title": "一等公民 Artifact Store、版本、内容寻址与 Lineage",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01",
+        "P6-08"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P6-10": {
+      "id": "P6-10",
+      "title": "Privacy Classification、Redaction、Fork/Snapshot Lineage 与导出/擦除",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-06",
+        "P6-08",
+        "P6-09"
+      ],
+      "wave": 11,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-01": {
+      "id": "P7-01",
+      "title": "VerificationContract：在执行前冻结可验证成功标准",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P7-01",
+      "predecessors": [
+        "P0-06",
+        "P4-03",
+        "P4-04"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-02": {
+      "id": "P7-02",
+      "title": "EvidenceCollector：内容寻址、可追溯、不可伪造的证据层",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-03",
+        "P5-06",
+        "P6-09"
+      ],
+      "wave": 12,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-03": {
+      "id": "P7-03",
+      "title": "Independent Verifier：与执行者隔离的验证 Provider Seam",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-02",
+        "P3-01",
+        "P7-01",
+        "P7-02"
+      ],
+      "wave": 13,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-04": {
+      "id": "P7-04",
+      "title": "ClaimGraph：声明—证据—反证—不确定性的通用图",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P6-09",
+        "P7-02",
+        "P7-03"
+      ],
+      "wave": 14,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-05": {
+      "id": "P7-05",
+      "title": "AcceptanceGate 与 OutcomePackage：只有被证明的结果才能完成 Run",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P7-05",
+      "predecessors": [
+        "P4-01",
+        "P7-01",
+        "P7-03",
+        "P7-04"
+      ],
+      "wave": 15,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-06": {
+      "id": "P7-06",
+      "title": "Bounded Repair/Replan Loop：验证失败后的有限修复与计划修订",
+      "layer": "L3_CONSUMER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-11",
+        "P4-12",
+        "P4-13",
+        "P7-05"
+      ],
+      "wave": 16,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-07": {
+      "id": "P7-07",
+      "title": "Causal Trace、Policy/Evidence/Cost Trace 与 Durable Telemetry Outbox",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-05",
+        "P4-06",
+        "P6-10",
+        "P7-02"
+      ],
+      "wave": 13,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-08": {
+      "id": "P7-08",
+      "title": "Deterministic Replay、Simulation 与 Decision Diff",
+      "layer": "L3_CONSUMER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-06",
+        "P4-08",
+        "P4-12",
+        "P7-07"
+      ],
+      "wave": 14,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-09": {
+      "id": "P7-09",
+      "title": "General-Purpose Capability Scenario Suite：用领域夹具验证 Harness，而非内置垂直 Agent",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P0-08",
+        "P7-05",
+        "P7-08"
+      ],
+      "wave": 16,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P7-10": {
+      "id": "P7-10",
+      "title": "Evaluation Plane、Chaos/Security/Scale Gates 与 Champion–Challenger 受控演化",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P1-11",
+        "P7-07",
+        "P7-08",
+        "P7-09"
+      ],
+      "wave": 17,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-01": {
+      "id": "P8-01",
+      "title": "Protocol Version Negotiation 与 Capability Discovery",
+      "layer": "L1_CONTRACT",
+      "canonicalOwner": "P8-01",
+      "predecessors": [
+        "P0-06",
+        "P4-01"
+      ],
+      "wave": 5,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-02": {
+      "id": "P8-02",
+      "title": "一等公民 Remote Resources：Run、Agent、Action、Approval、Artifact、Verification、World",
+      "layer": "L5_SURFACE",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-01",
+        "P6-09",
+        "P7-05",
+        "P8-01"
+      ],
+      "wave": 16,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-03": {
+      "id": "P8-03",
+      "title": "远程生命周期控制：Pause、Resume、Cancel、Fork、Retry、Reconcile、Close",
+      "layer": "L5_SURFACE",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-05",
+        "P4-07",
+        "P4-08",
+        "P4-13",
+        "P8-02"
+      ],
+      "wave": 17,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-04": {
+      "id": "P8-04",
+      "title": "双向 Server→Client Requests：持久审批、澄清、人工接管与 Quorum",
+      "layer": "L5_SURFACE",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-06",
+        "P2-07",
+        "P2-09",
+        "P2-12",
+        "P8-01"
+      ],
+      "wave": 10,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-05": {
+      "id": "P8-05",
+      "title": "Resumable Event Streaming：Cursor、ACK、Replay、Dedupe 与 Backpressure",
+      "layer": "L5_SURFACE",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P4-06",
+        "P7-07",
+        "P8-02"
+      ],
+      "wave": 17,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-06": {
+      "id": "P8-06",
+      "title": "Authenticated Principal、Tenant Boundary、RBAC/ABAC 与 API Scope",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-01",
+        "P2-02",
+        "P8-02"
+      ],
+      "wave": 17,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-07": {
+      "id": "P8-07",
+      "title": "Schema-Generated TS/Python SDK Parity 与 Contract Test Matrix",
+      "layer": "L5_SURFACE",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P8-01",
+        "P8-02",
+        "P8-05"
+      ],
+      "wave": 18,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-08": {
+      "id": "P8-08",
+      "title": "Operator Control Plane API 与 Run/Agent/Workflow 可视化",
+      "layer": "L5_SURFACE",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P8-02",
+        "P8-03",
+        "P8-04",
+        "P8-05"
+      ],
+      "wave": 18,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-09": {
+      "id": "P8-09",
+      "title": "Organization Governance：Policy Hierarchy、Quota、Retention、Legal Hold 与 Audit Export",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P2-10",
+        "P3-10",
+        "P6-10",
+        "P8-06"
+      ],
+      "wave": 18,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    },
+    "P8-10": {
+      "id": "P8-10",
+      "title": "Config Provenance、Typed Dry-Run、迁移/回滚、ABI Compatibility 与 Disaster-Recovery Release Gate",
+      "layer": "L6_QUALIFICATION",
+      "canonicalOwner": "P8-10",
+      "predecessors": [
+        "P0-01",
+        "P0-07",
+        "P1-03",
+        "P4-08",
+        "P8-01",
+        "P8-09"
+      ],
+      "wave": 19,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN"
+    }
+  }
+}

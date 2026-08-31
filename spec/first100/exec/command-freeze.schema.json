@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepseek-ai/dsh/first100/command-freeze.schema.json",
+  "title": "first100-command-freeze",
+  "description": "Sole production command truth source for First-100 verification (maintainer decision B4). Supersedes spec/first100-command-registry.json. (epic, stage) is a unique key: first-frozen-wins, a duplicate (epic, stage) pair invalidates the whole entry. Append-only: entries are never edited or removed after freeze, only appended.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "entries"],
+  "properties": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "first100-command-freeze" },
+        "version": { "const": "1.0" }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "epic",
+        "stage",
+        "argv",
+        "expectExit",
+        "expectCases",
+        "frozenAtUtc",
+        "dryRunProof"
+      ],
+      "properties": {
+        "epic": {
+          "type": "string",
+          "pattern": "^P[0-8]-\\d{2}$",
+          "description": "Registry epic id, e.g. P0-02."
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["C", "P", "U", "F"],
+          "description": "A/B/C/D ledger stage label per 100-row-program-ledger.md §4 (A=C, B=P, C=U, D=F)."
+        },
+        "argv": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Exact argv, frozen with a verbose reporter (e.g. vitest --reporter=verbose or --reporter=json) so the verifier can grep raw logs by named case title."
+        },
+        "vitestConfig": {
+          "type": "string",
+          "description": "Explicit vitest config path when the default does not discover the target tests (e.g. vitest.e2e.config.ts). Optional; omit when the default config applies."
+        },
+        "expectExit": {
+          "type": "integer",
+          "description": "Expected process exit code for a GREEN observation on this (epic, stage)."
+        },
+        "expectCases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Named case titles, 1:1 with this epic's acceptance[] entries for this stage (never a bare count). The verifier greps the hashed raw log for each title to confirm it is present and passing; this closes the 'one always-true case lights up the whole cell' cheat path."
+        },
+        "files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Test file path(s) this argv exercises. Must fall inside the epic's registry files[] (append-only overlay additions allowed); registry fixtures{} template paths are void placeholders and never satisfy this."
+        },
+        "frozenAtUtc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "dryRunProof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["treeSha", "testsDiscovered"],
+          "properties": {
+            "treeSha": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$",
+              "description": "Tree SHA the dry-run was proven against, unmodified (pre-implementation)."
+            },
+            "testsDiscovered": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Number of tests this argv discovered on the unmodified tree at treeSha, proving the argv is not a 0-test no-op (B4(d))."
+            }
+          }
+        },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

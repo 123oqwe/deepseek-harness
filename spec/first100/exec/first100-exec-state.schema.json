@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepseek-ai/dsh/first100/first100-exec-state.schema.json",
+  "title": "first100-exec-state",
+  "description": "Anti-drift execution-state anchor for the First-100 program (maintainer decision C2). Lives at spec/first100/exec/EXEC-STATE.json on the first100-exec branch. Written ONLY by the Supervisor, ONLY at slice boundaries (never mid-slice, never by a Writer/Reviewer subagent). Read first on every session start and every post-compact resume, before trusting any chat memory. EXEC-STATE, the ledger, and command-freeze.json must never disagree; any inconsistency between them is BLOCKED, not auto-resolved.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "lastUpdatedUtc",
+    "activeWorktree",
+    "activeBranch",
+    "frozenBaselineSha",
+    "currentWave",
+    "currentSlice",
+    "registryDigest",
+    "ledgerDigest",
+    "blockedQueueRef",
+    "totals"
+  ],
+  "properties": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "first100-exec-state" },
+        "version": { "const": "1.0" }
+      }
+    },
+    "lastUpdatedUtc": { "type": "string", "format": "date-time" },
+    "activeWorktree": {
+      "type": "string",
+      "description": "Absolute realpath of the git worktree this state belongs to. Every session's first action verifies `git rev-parse --show-toplevel` equals this."
+    },
+    "activeBranch": {
+      "type": "string",
+      "const": "first100-exec",
+      "description": "The sole execution branch. No product-code write ever happens on any other branch during the program."
+    },
+    "frozenBaselineSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Must equal tests/first100/registry.json's frozenBaseline.sha. A mismatch is BLOCKED."
+    },
+    "currentWave": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 22,
+      "description": "0 = W0 bootstrap slice; 1-19 = the registry's wave range; 20-22 = P9-01..09 extension waves (gated on the Stage-0 registry extension, decision C3)."
+    },
+    "currentSlice": {
+      "description": "The slice in flight, or null between slices (no slice open).",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["epic", "stage", "step"],
+          "properties": {
+            "epic": { "type": "string", "pattern": "^P[0-8]-\\d{2}$" },
+            "stage": { "type": "string", "enum": ["C", "P", "U", "F"] },
+            "step": {
+              "type": "string",
+              "enum": ["SPEC_FREEZE", "RED", "GREEN", "REVIEW", "GREENING", "DONE"],
+              "description": "Per-slice-flow step (maintainer decision, Step 2 a-f: SPEC-FREEZE / RED / GREEN / REVIEW / greening / persisted)."
+            }
+          }
+        }
+      ]
+    },
+    "registryDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the committed tests/first100/registry.json at last EXEC-STATE write."
+    },
+    "ledgerDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "sha256 of the committed spec/first100/exec/ledger.json at last EXEC-STATE write."
+    },
+    "blockedQueueRef": {
+      "type": "string",
+      "const": "spec/first100/exec/BLOCKED-QUEUE.md",
+      "description": "Path to the parked-BLOCKED-items log (24x7 mode, decision C6 item 4)."
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["acceptedEpics", "totalEpics", "programGate"],
+      "properties": {
+        "acceptedEpics": { "type": "integer", "minimum": 0, "maximum": 109 },
+        "totalEpics": { "type": "integer", "const": 109, "description": "100 registry epics + 9 P9 extension epics." },
+        "programGate": {
+          "type": "string",
+          "enum": ["NO-GO"],
+          "description": "Fixed truth: only 100/100 registry ACCEPTED + R10 passed is GO. Never any other value while acceptedEpics < 100."
+        }
+      }
+    }
+  }
+}

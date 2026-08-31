@@ -1,0 +1,150 @@
+name: First-100 exact-SHA
+
+# Maintainer decision A4: the only new CI file. `ci.yml`'s workflow_dispatch
+# only runs the benchmark job, and its test jobs trigger on pull_request only
+# — no channel exists to run the full gate against an arbitrary candidate
+# SHA. This workflow is that channel, and per A4/B7① it is the ONLY place a
+# ledger cell may be greened from: `scripts/first100/generate-ledger.mjs`
+# only accepts a vitest --reporter=json report + this workflow's run URL; a
+# locally-signed observation is advisory only, never ledger-greening.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Exact commit SHA to check out and gate (defaults to the triggering ref's SHA)
+        required: false
+  push:
+    branches: [first100-exec]
+
+permissions:
+  contents: read
+
+env:
+  PRIMARY_NODE_VERSION: '24'
+
+jobs:
+  exact-sha-gate:
+    name: install / typecheck / test @ exact SHA
+    runs-on: ubuntu-latest
+    outputs:
+      candidate-sha: ${{ steps.resolve-sha.outputs.sha }}
+    steps:
+      - name: Resolve candidate SHA
+        id: resolve-sha
+        run: |
+          sha="${{ github.event.inputs.sha }}"
+          if [ -z "$sha" ]; then sha="${{ github.sha }}"; fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.resolve-sha.outputs.sha }}
+          persist-credentials: false
+
+      # Fail loud if the checked-out tree is not actually at the requested
+      # SHA (a moved branch ref, a typo'd short SHA) — every downstream
+      # artifact binds to this exact value.
+      - name: Verify checkout landed on the requested SHA
+        run: |
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "${{ steps.resolve-sha.outputs.sha }}" ]; then
+            echo "::error::checked out $actual, requested ${{ steps.resolve-sha.outputs.sha }}"
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Full test suite (verbose json reporter — the ledger's observation input)
+        run: |
+          mkdir -p .artifacts/first100/observations
+          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json
+        # Real exit is captured, not swallowed: a red suite must fail this
+        # job (fail-closed), while the JSON report is still uploaded below
+        # via `if: always()` so a RED observation is real, inspectable
+        # evidence rather than a silently discarded log.
+
+      - name: Upload the vitest observation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
+          path: .artifacts/first100/observations/vitest-report.json
+          if-no-files-found: error
+
+  first100-evidence:
+    name: First-100 issue-runner dry + observation verify
+    runs-on: ubuntu-latest
+    needs: exact-sha-gate
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.exact-sha-gate.outputs.candidate-sha }}
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.PRIMARY_NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      # Real, honest evidence for R0 exit gate item 4 (runnerDryReceipt):
+      # currently expected to exit 1 while command-freeze.json is still
+      # empty and the registry's fixtures{} template paths remain void
+      # placeholders (maintainer decision B4e) — that failure IS the
+      # correct, truthful state of the catalog right now, not a defect in
+      # this workflow. `continue-on-error` keeps the receipt capturable
+      # without turning it into a false-green gate.
+      - name: Issue-runner dry-validate the 100-id catalog
+        id: dry
+        continue-on-error: true
+        run: pnpm run first100:dry | tee .artifacts/first100/observations/dry-report.json
+
+      - name: Verify any committed observations
+        id: verify
+        continue-on-error: true
+        run: pnpm run first100:verify | tee .artifacts/first100/observations/verify-report.txt
+
+      - name: Sign the dry/verify evidence bundle with the GitHub-secret identity
+        if: env.DSH_FIRST100_SIGNING_KEY != ''
+        env:
+          DSH_FIRST100_SIGNING_KEY: ${{ secrets.DSH_FIRST100_SIGNING_KEY }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const bundle = {
+              schema: { name: 'first100-ci-evidence-bundle', version: 1 },
+              candidateSha: '${{ needs.exact-sha-gate.outputs.candidate-sha }}',
+              ciRunUrl: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+              dryReportExitCode: ${{ steps.dry.outcome == 'success' && 0 || 1 }},
+              verifyExitCode: ${{ steps.verify.outcome == 'success' && 0 || 1 }},
+              capturedAtUtc: new Date().toISOString(),
+            };
+            fs.writeFileSync('.artifacts/first100/observations/evidence-bundle.json', JSON.stringify(bundle, null, 2) + '\n');
+          "
+          node scripts/first100/attest.ts --sign .artifacts/first100/observations/evidence-bundle.json
+
+      - name: Upload First-100 evidence artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: first100-evidence-${{ needs.exact-sha-gate.outputs.candidate-sha }}
+          path: .artifacts/first100/observations/
+          if-no-files-found: warn
