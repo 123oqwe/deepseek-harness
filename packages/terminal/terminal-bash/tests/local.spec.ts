@@ -322,10 +322,20 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
     const previous = process.env.DSH_TEST_SECRET
     process.env.DSH_TEST_SECRET = 'must-not-leak'
     try {
+      // The pwsh-persistent-pty Agent Note documents Windows pwsh as lacking an exact stdin-wait
+      // tier, settling on the ~3s silence tier instead (no live trace confirms whether pwsh's
+      // stdin read ever surfaces as the Linux exact-probe's fd-0 blocking read/select/poll/epoll_wait
+      // — session.ts pollReadiness's acceptsStdinWait branch — but observed CI behavior is
+      // consistent with pwsh falling through to the marker + idle-silence tier on Linux too). The
+      // bash-tuned fast-tier bounds (250-300ms, correct where the exact probe fires within
+      // exactProbeAfterMs) raced inferred_idle ahead of that real settle on CI; use the shipped
+      // product defaults (config.ts idleSilenceMs/handoffGraceMs) instead, and this file's own
+      // slow-tier timeoutMs (matching the "cancels a slow-starting raw-mode foreground process"
+      // precedent below).
       const { ctx, root, agent } = await harness('danger-full-access', {
-        idleSilenceMs: 300,
-        handoffGraceMs: 300,
-        timeoutMs: 8_000,
+        idleSilenceMs: 3_000,
+        handoffGraceMs: 500,
+        timeoutMs: 15_000,
       }, 'pwsh')
       const created = await ctx.terminals.spawn(agent, { type: 'shell', name: 'main', cwd: root })
       expect(created.motd).toContain('dsh> ')
@@ -354,10 +364,13 @@ describe.skipIf(!hasPwsh)('terminal-bash pwsh real shell', () => {
   }, 30_000)
 
   it('pins UTF-8 output encoding so non-ASCII output survives the byte decode', async () => {
+    // Same slow-tier bounds as the bootstrap test above: pwsh never hits the Linux exact-probe
+    // tier, so it needs the product-default marker + idle-silence bounds, not the bash suite's
+    // fast-tier ones.
     const { ctx, root, agent } = await harness('danger-full-access', {
-      idleSilenceMs: 300,
-      handoffGraceMs: 300,
-      timeoutMs: 8_000,
+      idleSilenceMs: 3_000,
+      handoffGraceMs: 500,
+      timeoutMs: 15_000,
     }, 'pwsh')
     const created = await ctx.terminals.spawn(agent, { type: 'shell', name: 'main', cwd: root })
     // The bootstrap itself must have pinned both encodings: the session byte
