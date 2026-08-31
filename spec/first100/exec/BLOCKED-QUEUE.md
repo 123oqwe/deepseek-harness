@@ -9,6 +9,19 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-002 — how does a stage with no distinct test artifact get its own ledger cell greened?
+
+- **When:** 2026-08-31, first slice pair (P0-01.C RED/GREEN done), about to green the ledger.
+- **Epic/stage:** P0-01, stage P (Provider) — but this is a structural question affecting any epic whose P-stage (or other non-C stage) has no test file of its own.
+- **What's blocked:** `spec/first100/exec/ledger.json`'s A/B/C/D columns map 1:1 to C/P/U/F stages, and `scripts/first100/generate-ledger.mjs`'s `cmdGreen` requires a distinct `command-freeze.json` entry per (epic, stage) plus a real CI `--reporter=json` observation report. P0-01's wave-map declaration (`implementation-wave-map.md` line 114) gives C-stage its own test file (`tests/release/baseline-fingerprint.spec.ts`) but gives P-stage no test file of its own — P-stage's declared files are just the implementation (`scripts/release/baseline-fingerprint.mjs`) and `package.json`; its correctness is proven entirely by the *same* C-stage contract test passing against it. There is no way to freeze a genuinely distinct (P0-01, P) command whose observation report would differ from (P0-01, C)'s — running the identical test file again would either (a) reuse the exact same CI artifact, which `generate-ledger.mjs`'s `usedObservationDigests` check explicitly refuses (B7①: "两个 ledger 格不得引用同一份 observation 文件" — two cells must not share one observation file, an anti-cheat rule against one report lighting up multiple cells), or (b) require triggering a whole separate ~15-20 minute full-CI run whose *only* difference from the first is incidental timing noise in the JSON report bytes — which would technically dodge the digest check but does not feel like what B7① intends to prove.
+- **Why this can't be guessed past:** this is the first slice to reach the greening step, and the resolution sets precedent for every future epic with the same C-owns-the-test / P-is-implementation-only shape (a common pattern across the registry — many epics list only one contract test file spanning multiple stages). Guessing wrong here either (a) silently defeats B7①'s anti-cheat property program-wide, or (b) burns ~15-20 min of real CI per slice for a technically-vacuous "second observation," multiplied across roughly a third of the 419 slices.
+- **Options considered (Supervisor, not yet approved):**
+  1. P-stage (and any stage sharing another stage's sole test file) is marked as an explicit ledger convention distinct from both `NOT_RUN` and `GREEN` — e.g. treat it like the wave-map's existing `P=N/A` epics (a documented "covered-by" note) rather than requiring its own CI-bound observation.
+  2. Extend `command-freeze.json`/`generate-ledger.mjs` to allow one frozen command to explicitly satisfy multiple (epic, stage) cells when the wave-map itself declares them sharing one test file, with a citation instead of a second CI run.
+  3. Accept the cost: trigger one dedicated CI run per (epic, stage) pair regardless of file-sharing, treating incidental timing-noise digest divergence as sufficient (not recommended — feels like it defeats B7①'s intent, not just its letter).
+- **Current state:** P0-01's C-stage cell (column A) is genuinely GREEN with independently-verified signed CI evidence (CI run 33449096357, candidate 8d5f94d6c2). The P-stage cell (column B) stays `NOT_RUN` pending this decision — not fabricated, not skipped silently.
+- **Status:** OPEN, awaiting maintainer answer. Parking only P0-01's B-column frontier item; continuing to REVIEW on the C-stage slice and to other W1 work in the meantime (W1 has only this one epic, so this also effectively parks new-epic progress in W1 until answered or until REVIEW/U/F-stage work can proceed independently).
+
 ### BLOCKED-001 — P0-01.C target path collides with an unrelated existing artifact
 
 - **When:** 2026-08-31, first attempt at W1's only epic, step SPEC-FREEZE (C-stage).
