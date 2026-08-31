@@ -1,4 +1,26 @@
 {
   "schema": { "name": "first100-command-freeze", "version": "1.0" },
-  "entries": []
+  "entries": [
+    {
+      "epic": "P0-01",
+      "stage": "C",
+      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/baseline-fingerprint.spec.ts", "--reporter=json"],
+      "expectExit": 0,
+      "expectCases": [
+        "captures .dsh/baseline.json with the canonical field set the MUST clause requires",
+        "canonicalizes the captured output: sorted keys, LF-only, UTF-8 NFC, POSIX-relative paths, and no nondeterministic fields",
+        "writes the audit SHA into both the machine file and docs/audit/baseline-fingerprint-<sha>.md",
+        "verify exits 0 against an unmodified captured baseline",
+        "verify fails and names the minimal diff after a tracked bundle-row file drifts, and writes a rebase report",
+        "verify passes again once the drifted file is restored"
+      ],
+      "files": ["tests/release/baseline-fingerprint.spec.ts"],
+      "frozenAtUtc": "2026-08-31T22:35:48Z",
+      "dryRunProof": {
+        "treeSha": "65d47643489999a8a23888359a6ce0537821d733",
+        "testsDiscovered": 6
+      },
+      "note": "B4(d) dry-run proof captured on attempt/P0-01-C at commit 19e2afcd7b6da9c6f73ab3aa18ca7b75141a1992 (pre-GREEN: only the RED scaffold -- .dsh/baseline.json specimen, the contract test, the patched-path doc specimen, and scripts/release/baseline-fingerprint.mjs's B4(f)/B5 no-behavior stub -- committed; real capture/verify logic is a separate later GREEN slice). expectExit=0/all 6 expectCases passing is the GREEN target this freeze grades against; today's real state is 6/6 failing on genuine behavioral mismatches (see RED observation), never MODULE_NOT_FOUND/SyntaxError/is-not-defined. Deliverable path patched per BLOCKED-001 (tests/first100/adjudication.json deliverablePathPatches.entries.P0-01): the doc target is docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md, not the registry's byte-locked docs/audit/baseline-b150a551.md."
+    }
+  ]
 }

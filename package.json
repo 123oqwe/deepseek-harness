@@ -149,6 +149,8 @@
     "doc-sync": "tsx scripts/run-gates.ts doc-sync",
     "hygiene": "tsx scripts/run-gates.ts hygiene",
     "publish:npm-baseline": "tsx scripts/publish-npm-baseline.ts",
+    "baseline:capture": "node scripts/release/baseline-fingerprint.mjs capture",
+    "baseline:verify": "node scripts/release/baseline-fingerprint.mjs verify",
     "release:dsh": "tsx scripts/release/bump.ts --family dsh",
     "release:vendor": "tsx scripts/release/bump.ts --family vendor",
     "release:verify": "tsx scripts/release/verify.ts",

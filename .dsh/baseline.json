@@ -1,0 +1,37 @@
+{
+  "defaultBundleRowIds": [
+    "agent",
+    "agent-loop",
+    "commands",
+    "fs-sandbox",
+    "llm-deepseek",
+    "session",
+    "session-persistence-jsonl",
+    "skill",
+    "subagent",
+    "system-prompt",
+    "tools",
+    "typert"
+  ],
+  "formatVersion": 1,
+  "gitSha": "0a53fb55bea101816fa226bb964ae2bed71c343b",
+  "protocolSchemaHashes": {
+    "packages/core/session/src/known-event-types.ts": "235200ea8da50166713086064ac64b5c74161fd63a8ccc9034e4456bc7f678fa",
+    "packages/sdk/protocol/src/types.ts": "9a9ab6172ff2a45b7a07adf75611aa8f42ae1bb98bd4ad598d8bdc5f618053d7"
+  },
+  "toolchain": {
+    "node": "24.18.0",
+    "pnpm": "11.7.0"
+  },
+  "workspacePackages": [
+    "@deepseek-ai/dsh-agent-loop",
+    "@deepseek-ai/dsh-fs",
+    "@deepseek-ai/dsh-llm",
+    "@deepseek-ai/dsh-sdk-protocol",
+    "@deepseek-ai/dsh-session",
+    "@deepseek-ai/dsh-shell",
+    "@deepseek-ai/dsh-skill",
+    "@deepseek-ai/dsh-subagent",
+    "@deepseek-ai/dsh-typert-generator"
+  ]
+}
