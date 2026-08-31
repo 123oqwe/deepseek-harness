@@ -93,6 +93,12 @@ jobs:
     if: always()
     permissions:
       contents: read
+    env:
+      # GitHub Actions does not allow the `secrets` context inside `if:`
+      # conditionals; mirror it into a job-level env var so the signing
+      # step below can gate on presence without referencing `secrets`
+      # directly in an expression.
+      HAS_SIGNING_KEY: ${{ secrets.DSH_FIRST100_SIGNING_KEY != '' }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -130,7 +136,7 @@ jobs:
         run: pnpm run first100:verify | tee .artifacts/first100/observations/verify-report.txt
 
       - name: Sign the dry/verify evidence bundle with the GitHub-secret identity
-        if: ${{ secrets.DSH_FIRST100_SIGNING_KEY != '' }}
+        if: env.HAS_SIGNING_KEY == 'true'
         env:
           DSH_FIRST100_SIGNING_KEY: ${{ secrets.DSH_FIRST100_SIGNING_KEY }}
         run: |
