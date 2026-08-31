@@ -597,10 +597,11 @@ describe('first100 R0 gate direct evidence (directive 7)', () => {
   it('green: the committed R0-evidence manifest is schema-clean and names the honest open items directly', () => {
     expect(readR0Evidence(REPO_ROOT).violations).toEqual([])
     const issues = verifyR0Evidence(REPO_ROOT)
-    // The packaging-ledger row is terminal and passes.
+    // The packaging-ledger and (since the pwsh idle-inference race fix,
+    // commit 2b82aba798) nativeTestFullSuite rows are terminal and pass.
     expect(issues.some(i => i.startsWith('packagingLedger'))).toBe(false)
+    expect(issues.some(i => i.startsWith('nativeTestFullSuite'))).toBe(false)
     // The genuinely open items are reported BY NAME — no envelope proxy.
-    expect(issues.some(i => i.startsWith('nativeTestFullSuite') && i.includes('!= required'))).toBe(true)
     expect(issues.some(i => i.startsWith('packInstall') && i.includes('!= required'))).toBe(true)
     expect(issues.some(i => i.startsWith('runnerDryReceipt') && i.includes('ABSENT'))).toBe(true)
     expect(issues.some(i => i.startsWith('independentReviewReceipts') && i.includes('ABSENT'))).toBe(true)
