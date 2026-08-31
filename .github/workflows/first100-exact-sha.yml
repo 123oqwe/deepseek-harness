@@ -87,6 +87,10 @@ jobs:
     name: First-100 issue-runner dry + observation verify
     runs-on: ubuntu-latest
     needs: exact-sha-gate
+    # Capturing the dry/verify evidence does not depend on the native test
+    # suite passing — run it regardless of exact-sha-gate's outcome so a red
+    # nativeTestFullSuite never silently hides runnerDryReceipt evidence too.
+    if: always()
     permissions:
       contents: read
     steps:
@@ -104,6 +108,9 @@ jobs:
 
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
+
+      - name: Create the observations directory
+        run: mkdir -p .artifacts/first100/observations
 
       # Real, honest evidence for R0 exit gate item 4 (runnerDryReceipt):
       # currently expected to exit 1 while command-freeze.json is still
@@ -123,7 +130,7 @@ jobs:
         run: pnpm run first100:verify | tee .artifacts/first100/observations/verify-report.txt
 
       - name: Sign the dry/verify evidence bundle with the GitHub-secret identity
-        if: env.DSH_FIRST100_SIGNING_KEY != ''
+        if: ${{ secrets.DSH_FIRST100_SIGNING_KEY != '' }}
         env:
           DSH_FIRST100_SIGNING_KEY: ${{ secrets.DSH_FIRST100_SIGNING_KEY }}
         run: |
