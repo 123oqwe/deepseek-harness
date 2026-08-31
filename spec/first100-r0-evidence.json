@@ -32,10 +32,10 @@
       "item": "runnerDryReceipt",
       "role": "R0 exit gate item 4 — runner dry-validates all 100 ids without marking unrun as PASS (R0.4)",
       "evidence": "spec/first100-runner-receipt.json",
-      "status": "ABSENT",
+      "status": "CAPTURED",
       "required": "CAPTURED",
-      "sha256": null,
-      "note": "No committed runner dry/aggregate receipt exists yet; the gate fails closed until one is captured."
+      "sha256": "10830b775a2f490c32305780ee6d5152ab0d77ce7bebcf71ddc42559780e029e",
+      "note": "Real capture from first100-exact-sha.yml run 33421399399 (candidate 16fc79a7c7), 'Issue-runner dry-validate the 100-id catalog' step: pnpm run first100:dry piped straight to the committed file, real exit 1 (honest: 91/100 missing commands, 400 missing fixtures, accepted=0 -- unrun is never PASS, per R0.4). CAPTURED means a real dry-validation receipt exists, not that the catalog is runnable yet; command-freeze.json is still empty by design (B4)."
     },
     {
       "item": "independentReviewReceipts",
