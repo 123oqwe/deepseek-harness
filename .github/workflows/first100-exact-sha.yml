@@ -143,6 +143,26 @@ jobs:
       - name: Create the observations directory
         run: mkdir -p .artifacts/first100/observations
 
+      # B5 (decisions-approved.md): a RED (and later GREEN) per-slice observation
+      # must be a SIGNED observation artifact at the exact candidate SHA. The
+      # sibling exact-sha-gate job already produces the one artifact every
+      # future slice's command-freeze.json entry is graded against (a repo-wide
+      # `vitest --reporter=json` run — generate-ledger.mjs's cmdGreen greps this
+      # same report for a frozen entry's expectCases regardless of how many
+      # other files it also covers, so ONE signed report here services every
+      # slice touched at this candidate SHA; C5 batches CI by push, not per-slice).
+      - name: Download the vitest observation report
+        uses: actions/download-artifact@v4
+        with:
+          name: first100-vitest-report-${{ needs.exact-sha-gate.outputs.candidate-sha }}
+          path: .artifacts/first100/observations/
+
+      - name: Sign the vitest observation report with the GitHub-secret identity
+        if: env.HAS_SIGNING_KEY == 'true'
+        env:
+          DSH_FIRST100_SIGNING_KEY: ${{ secrets.DSH_FIRST100_SIGNING_KEY }}
+        run: node scripts/first100/attest.ts --sign .artifacts/first100/observations/vitest-report.json
+
       # Real, honest evidence for R0 exit gate item 4 (runnerDryReceipt):
       # currently expected to exit 1 while command-freeze.json is still
       # empty and the registry's fixtures{} template paths remain void
