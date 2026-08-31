@@ -1,0 +1,27 @@
+{
+  "schema": { "name": "first100-independent-review", "version": 1 },
+  "kind": "R0_GATE_INDEPENDENT_REVIEW_RECEIPT",
+  "role": "R0 gate — truly independent read-only review at the fixed candidate SHA with no must-fix (maintainer directive 6).",
+  "candidateSha": "1fb77b3190612b94f64d82dcfb414f6fb48e24b8",
+  "branch": "first100-exec",
+  "reviewer": {
+    "independence": "Fresh-context subagent with no prior knowledge of how this state came to be; explicitly instructed to distrust the narrative and verify every claim against committed files and real GitHub Actions run logs directly. Not the Writer/Supervisor that produced the state under review.",
+    "readOnly": "Instructed to use no Edit/Write/state-mutating git command. Verified empirically: git status --porcelain was empty both before and after the review, and HEAD stayed at the candidate SHA throughout."
+  },
+  "verdict": "APPROVED_NO_MUST_FIX",
+  "checksPerformed": [
+    "Recomputed sha256 of all 4 non-null-hash rows in spec/first100-r0-evidence.json and confirmed each matches the committed evidence file bytes.",
+    "For nativeTestFullSuite (CI run 33419862042): confirmed the run's headSha, job/step conclusions, downloaded the real uploaded vitest-report.json artifact, confirmed its sha256 and its numTotalTests/numPassedTests/numFailedTests/numPendingTests/success fields match the receipt's claims exactly.",
+    "For packInstall (CI run 33423117821): confirmed the run's headSha and overall green conclusion, pulled the raw job log, confirmed the exact tarball-count and installed-version strings the receipt quotes appear verbatim in the real log.",
+    "For runnerDryReceipt (CI run 33421399399): confirmed the run's headSha, pulled the raw log for the dry-validate step, confirmed the committed spec/first100-runner-receipt.json (including its trailing failure line) is a byte-for-byte match to the real captured output -- a genuine unmassaged RED capture, not a fabricated pass.",
+    "Confirmed the pwsh timing fix (packages/terminal/terminal-bash/tests/local.spec.ts) touched only that one test file across the entire session diff -- zero product source files changed -- and that its new timing values match config.ts's real shipped defaults exactly.",
+    "Ran actionlint on .github/workflows/first100-exact-sha.yml: clean, exit 0. Read the workflow directly and confirmed the mkdir/env-var-indirection/if:always() fixes described in commit messages are actually present as described.",
+    "Ran node scripts/first100/extract-registry.mjs --check and node scripts/first100/generate-specs.ts --check directly: both exit 0. Ran pnpm vitest run scripts/first100/generate-specs.spec.ts scripts/first100/registry-regenerate.spec.ts directly: 53/53 passed.",
+    "Independently recomputed tests/first100/trusted-identity.json's fingerprint via fingerprintOf()'s real algorithm and confirmed it matches the stored value; confirmed the public key is a structurally valid Ed25519 SPKI key.",
+    "Searched the full session diff for allowlist/skip/retry-to-green/loosened-assertion patterns: none found. Confirmed spec/first100/exec/ledger.json's 100 rows are all genuinely NOT_RUN (no fabricated greens) and EXEC-STATE.json's registryDigest/ledgerDigest match the live files.",
+    "Confirmed tests/first100/registry.json has exactly 100 epics and frozenBaseline.sha matches the real git merge-base origin/master first100-exec; confirmed no live (non-historical) file still points at the retired b150a551 baseline as an operative value."
+  ],
+  "mustFixItems": [],
+  "capturedAtUtc": "2026-08-31T18:29:00Z",
+  "note": "This closes the final open R0 exit gate row. All four R0 exit gate items (nativeTestFullSuite, packInstall, packagingLedger, runnerDryReceipt, independentReviewReceipts) are now at their required terminal status. This record does NOT itself mark any of the 100 registry epics ACCEPTED -- First-100 remains 0/109 ACCEPTED; this only means the R0 exit gate that was blocking W1 from opening is now genuinely satisfied."
+}

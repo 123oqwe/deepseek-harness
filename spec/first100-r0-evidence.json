@@ -41,10 +41,10 @@
       "item": "independentReviewReceipts",
       "role": "R0 gate — truly independent read-only review at the fixed candidate SHA with no must-fix (maintainer directive 6)",
       "evidence": "spec/first100-independent-review.json",
-      "status": "ABSENT",
+      "status": "CAPTURED",
       "required": "CAPTURED",
-      "sha256": null,
-      "note": "No independent-review receipt is committed yet; directive 6 is open and the gate fails closed until one is captured."
+      "sha256": "f517a4c241ea53b96ca94e08669785520fa95e083d19e73a5463ce1f5e3da3b3",
+      "note": "Fresh-context, structurally-verified-read-only reviewer (0 porcelain before/after) independently re-verified all prior R0 claims against real committed file hashes and real GitHub Actions run logs at candidate 1fb77b3190 -- not the narrative. Verdict: APPROVED_NO_MUST_FIX. All 4 R0 exit gate rows now at their required terminal status."
     }
   ]
 }

@@ -605,12 +605,15 @@ describe('first100 R0 gate direct evidence (directive 7)', () => {
     expect(issues.some(i => i.startsWith('nativeTestFullSuite'))).toBe(false)
     expect(issues.some(i => i.startsWith('runnerDryReceipt'))).toBe(false)
     expect(issues.some(i => i.startsWith('packInstall'))).toBe(false)
-    // The genuinely open item is reported BY NAME — no envelope proxy.
-    expect(issues.some(i => i.startsWith('independentReviewReceipts') && i.includes('ABSENT'))).toBe(true)
+    // independentReviewReceipts (fresh-context read-only reviewer, verdict
+    // APPROVED_NO_MUST_FIX at candidate 1fb77b3190) is the last row to close —
+    // all four R0 exit gate rows are now terminal.
+    expect(issues.some(i => i.startsWith('independentReviewReceipts'))).toBe(false)
+    expect(issues).toEqual([])
     // DAG + every external-evidence class is verified directly; the envelope is still its own item.
     const gate = r0GateSummary(readRegistry().reg)
     expect(gate.dagIssues).toEqual([])
-    expect(gate.evidenceIssues.length).toBeGreaterThan(0)
+    expect(gate.evidenceIssues).toEqual([])
     expect(gate.unsignedEnvelope).toBe(true)
   })
 
