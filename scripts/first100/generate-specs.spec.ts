@@ -598,13 +598,14 @@ describe('first100 R0 gate direct evidence (directive 7)', () => {
     expect(readR0Evidence(REPO_ROOT).violations).toEqual([])
     const issues = verifyR0Evidence(REPO_ROOT)
     // The packaging-ledger, nativeTestFullSuite (pwsh idle-inference race
-    // fix, commit 2b82aba798), and runnerDryReceipt (real CI dry-validate
-    // capture, run 33421399399) rows are terminal and pass.
+    // fix, commit 2b82aba798), runnerDryReceipt (real CI dry-validate
+    // capture, run 33421399399), and packInstall (real CI build+pack+verify,
+    // run 33423117821) rows are terminal and pass.
     expect(issues.some(i => i.startsWith('packagingLedger'))).toBe(false)
     expect(issues.some(i => i.startsWith('nativeTestFullSuite'))).toBe(false)
     expect(issues.some(i => i.startsWith('runnerDryReceipt'))).toBe(false)
-    // The genuinely open items are reported BY NAME — no envelope proxy.
-    expect(issues.some(i => i.startsWith('packInstall') && i.includes('!= required'))).toBe(true)
+    expect(issues.some(i => i.startsWith('packInstall'))).toBe(false)
+    // The genuinely open item is reported BY NAME — no envelope proxy.
     expect(issues.some(i => i.startsWith('independentReviewReceipts') && i.includes('ABSENT'))).toBe(true)
     // DAG + every external-evidence class is verified directly; the envelope is still its own item.
     const gate = r0GateSummary(readRegistry().reg)

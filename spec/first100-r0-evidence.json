@@ -13,11 +13,11 @@
     {
       "item": "packInstall",
       "role": "R0 exit gate item 1 — clean-branch native pack + verify-packed-install real exit 0 (R0.3A)",
-      "evidence": "docs/audit/baseline-b150a551.md",
-      "status": "OPEN",
+      "evidence": "docs/audit/packinstall-exit0-e5e9a5abf7.md",
+      "status": "EXIT_0_CAPTURED",
       "required": "EXIT_0_CAPTURED",
-      "sha256": "166c9e8be11703706b1f237ab7d7db315ca29590ba98baa546b8028ee1acf85f",
-      "note": "Per spec/first100/exec/r0-gate-baseline-transition.json, first100-exec re-baselined b150a551b8 -> 0a53fb55; the referenced receipt is now SUPERSEDED (its facts are about the retired SHA only) and OPEN carries forward unchanged: no capture has been attempted against 0a53fb55 yet, so the gate fails closed until a fresh CI/quiet-machine exit-0 is captured for the new baseline."
+      "sha256": "0b06cd9cad1aa8875b58498b7bc55bff76145717a25e4114026c8df7d3453bc8",
+      "note": "Real Linux CI capture (first100-exact-sha.yml run 33423117821, candidate e5e9a5abf7): official-profile build, pack dsh (245 tarballs) + vendor (9 tarballs) = 254, verify-packed-install real throwaway-consumer install + entry probe (@deepseek-ai/dsh reports 0.1.2-alpha.2) -- all real exit 0. The prior macOS-local receipt's two failure causes (stale npm cache, koffi darwin-arm64 optional dep dropped by --omit=optional) are both host-environment specific and confirmed, not assumed, not to apply on Linux CI."
     },
     {
       "item": "packagingLedger",

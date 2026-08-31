@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/audit/packinstall-exit0-e5e9a5abf7.md
+packinstall-exit0-e5e9a5abf7.md: d6a6f55c694b967074d140a06b31c89f4da2f93a
+packinstall-exit0-e5e9a5abf7.zh.md: dbc554afc60209e837a0e1e31c4a981892acae05
