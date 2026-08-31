@@ -7,8 +7,8 @@
       "evidence": "docs/audit/baseline-b150a551.md",
       "status": "OPEN",
       "required": "EXIT_0_CAPTURED",
-      "sha256": "a52bb243b8e1e7a32603797239954bb8c04702b4e0f222171c7a62650edac310",
-      "note": "Real full-suite exit is 1 on this shared macOS host (12 environmental failures across 8 files); R0 exit gate item 1 stays OPEN until a quiet-machine/CI exit-0 is captured (maintainer directive 8)."
+      "sha256": "166c9e8be11703706b1f237ab7d7db315ca29590ba98baa546b8028ee1acf85f",
+      "note": "Per spec/first100/exec/r0-gate-baseline-transition.json, first100-exec re-baselined b150a551b8 -> 0a53fb55; the referenced receipt is now SUPERSEDED (its facts are about the retired SHA only) and OPEN carries forward unchanged: no capture has been attempted against 0a53fb55 yet, so the gate fails closed until a fresh quiet-machine/CI exit-0 is captured for the new baseline."
     },
     {
       "item": "packInstall",
@@ -16,8 +16,8 @@
       "evidence": "docs/audit/baseline-b150a551.md",
       "status": "OPEN",
       "required": "EXIT_0_CAPTURED",
-      "sha256": "a52bb243b8e1e7a32603797239954bb8c04702b4e0f222171c7a62650edac310",
-      "note": "dsh(227)+vendor(9) tarballs pack exit 0; the official verify-packed-install script exits 1 on this host (koffi optional-deps dropped by --omit=optional); needs a CI/quiet-machine exit-0 capture."
+      "sha256": "166c9e8be11703706b1f237ab7d7db315ca29590ba98baa546b8028ee1acf85f",
+      "note": "Per spec/first100/exec/r0-gate-baseline-transition.json, first100-exec re-baselined b150a551b8 -> 0a53fb55; the referenced receipt is now SUPERSEDED (its facts are about the retired SHA only) and OPEN carries forward unchanged: no capture has been attempted against 0a53fb55 yet, so the gate fails closed until a fresh CI/quiet-machine exit-0 is captured for the new baseline."
     },
     {
       "item": "packagingLedger",

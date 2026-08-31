@@ -39,7 +39,7 @@
     "baselineSha": {
       "description": "\"unknown\" rejected",
       "type": "string",
-      "const": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+      "const": "0a53fb55bea101816fa226bb964ae2bed71c343b",
       "pattern": "^[0-9a-f]{40}$"
     },
     "command": {

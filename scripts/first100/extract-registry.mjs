@@ -51,7 +51,7 @@ const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
 const MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa'
-const WAVEMAP_SHA = '491b3484896e6a140104f934b3131523c138118de70b82e5d8245d68c6077a97'
+const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
 if (actualMatrixSha !== MATRIX_SHA) throw new Error(`matrix sha mismatch: ${actualMatrixSha}`)
@@ -298,7 +298,7 @@ if (thresholdProposals.length < 15) throw new Error(`expected >=15 threshold pro
 const EVIDENCE_SCHEMA = [
   { key: 'id', required: true, note: 'issue id; must equal ${id}.${lane}.json filename id' },
   { key: 'lane', required: true, enum: ['contract', 'provider', 'composition', 'fault'], note: 'must equal filename lane; all 4 lanes required per issue' },
-  { key: 'baselineSha', required: true, frozen: 'b150a551b8d465e31e418e1b2eaf5e79bbb7d28e', note: '"unknown" rejected' },
+  { key: 'baselineSha', required: true, frozen: '0a53fb55bea101816fa226bb964ae2bed71c343b', note: '"unknown" rejected' },
   { key: 'command', required: true, note: 'exact real command executed' },
   { key: 'exitCode', required: true, note: 'real exit code; per-issue exitSemantics enforced' },
   { key: 'rawLogPath', required: true, note: 'confined to .artifacts/first100/observations/; non-zero size; no path traversal' },
@@ -389,10 +389,10 @@ for (const e of epics) {
 const registry = {
   schema: { name: 'first100-registry', version: '1.1', kind: 'canonical-source-of-truth', generatedFrom: 'planning sources (matrix + wave-map + decision package)' },
   frozenBaseline: {
-    sha: 'b150a551b8d465e31e418e1b2eaf5e79bbb7d28e',
-    shortSha: 'b150a551',
-    label: 'baseline-b150a551',
-    note: 'All First-100 evidence binds to this exact SHA (protected master).',
+    sha: '0a53fb55bea101816fa226bb964ae2bed71c343b',
+    shortSha: '0a53fb55',
+    label: 'baseline-0a53fb55',
+    note: 'All First-100 evidence binds to this exact SHA (upstream master tip at first100-exec BASE-ALIGN, 2026-08-31; supersedes baseline-b150a551, downgraded to audit provenance per maintainer decision A1).',
   },
   layerEnum: LAYER_ENUM,
   ownerStates: ['UNASSIGNED_UNTIL_APPROVAL'],

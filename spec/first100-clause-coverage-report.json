@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.1",
   "kind": "deepseek-harness-clause-coverage-report",
-  "baselineSha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "baselineSha": "0a53fb55bea101816fa226bb964ae2bed71c343b",
   "normalization": {
     "clauseSplit": "；",
     "canonicalize": "strip all whitespace only — punctuation and wording are semantic, never normalized away",

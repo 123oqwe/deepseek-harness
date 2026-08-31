@@ -1,5 +1,19 @@
 # Clean-baseline health receipt — R0.3A
 
+> **SUPERSEDED — audit provenance only, not a live gate input.** Per maintainer
+> decision A1 (`spec/first100/exec/decisions-approved.md`, approved
+> 2026-08-31), `first100-exec` re-baselined from `b150a551b8` to the upstream
+> `master` tip at BASE-ALIGN time, `0a53fb55bea101816fa226bb964ae2bed71c343b`.
+> Every fact below (HEAD, exits, failures) is about the retired
+> `b150a551b8` SHA and does not describe `0a53fb55`. This receipt's closing
+> line — "W1 remains BLOCKED" — is retired along with it: it is neither
+> confirmed nor overturned for the new baseline, because no capture has been
+> attempted against `0a53fb55` yet. The current, correctly-scoped gate state
+> lives in `spec/first100/exec/r0-gate-baseline-transition.json`; the four
+> still-open R0 rows (`nativeTestFullSuite`, `packInstall`, `runnerDryReceipt`,
+> `independentReviewReceipts` in `spec/first100-r0-evidence.json`) must be
+> freshly captured against `0a53fb55` before any W1 slice opens.
+
 English | [中文](baseline-b150a551.zh.md)
 
 Status: EVIDENCE CAPTURED — R0 exit gate item 1 stays OPEN pending a quiet-machine/CI full-suite exit-0 confirmation

@@ -6,10 +6,10 @@
     "generatedFrom": "planning sources (matrix + wave-map + decision package)"
   },
   "frozenBaseline": {
-    "sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
-    "shortSha": "b150a551",
-    "label": "baseline-b150a551",
-    "note": "All First-100 evidence binds to this exact SHA (protected master)."
+    "sha": "0a53fb55bea101816fa226bb964ae2bed71c343b",
+    "shortSha": "0a53fb55",
+    "label": "baseline-0a53fb55",
+    "note": "All First-100 evidence binds to this exact SHA (upstream master tip at first100-exec BASE-ALIGN, 2026-08-31; supersedes baseline-b150a551, downgraded to audit provenance per maintainer decision A1)."
   },
   "layerEnum": [
     "L0_KERNEL",
@@ -49,7 +49,7 @@
       "role": "verbatim acceptance/nonGoals/files/must/validation/command source"
     },
     "implementation-wave-map.md": {
-      "sha256": "491b3484896e6a140104f934b3131523c138118de70b82e5d8245d68c6077a97",
+      "sha256": "8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41",
       "role": "wave/predecessor/stage/gate/rollback source"
     },
     "r0-decision-package.md": {
@@ -222,7 +222,7 @@
     {
       "key": "baselineSha",
       "required": true,
-      "frozen": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+      "frozen": "0a53fb55bea101816fa226bb964ae2bed71c343b",
       "note": "\"unknown\" rejected"
     },
     {
@@ -292,7 +292,7 @@
     "vendoredSources": "spec/first100/sources/",
     "sourceShas": {
       "spec/first100/sources/first100-requirements-matrix.md": "401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa",
-      "spec/first100/sources/implementation-wave-map.md": "491b3484896e6a140104f934b3131523c138118de70b82e5d8245d68c6077a97",
+      "spec/first100/sources/implementation-wave-map.md": "8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41",
       "spec/first100/sources/r0-decision-package.md": "6e119b61957c73f64c54c674b3b8439a8d430bfc1262a4272ce0dcf260650d32"
     },
     "reproducible": "node scripts/first100/extract-registry.mjs --check must exit 0 (byte-identical); enforced by scripts/first100/registry-regenerate.spec.ts"

@@ -1,5 +1,17 @@
 # Clean-baseline health receipt — R0.3A
 
+> **已作废——仅作审计出处，不再是活跃 gate 输入。** 根据 maintainer 决策 A1
+> （`spec/first100/exec/decisions-approved.md`，2026-08-31 批准），
+> `first100-exec` 已从 `b150a551b8` 重新基线到 BASE-ALIGN 时的上游 `master`
+> 最新提交 `0a53fb55bea101816fa226bb964ae2bed71c343b`。以下所有事实（HEAD、
+> 退出码、失败列表）均针对已退役的 `b150a551b8` SHA，不描述 `0a53fb55`。
+> 本 receipt 的结论行——"W1 remains BLOCKED"——随之作废：对新基线而言，
+> 它既未被确认也未被推翻，因为尚未对 `0a53fb55` 做过任何采集。当前、
+> 范围正确的 gate 状态记录在 `spec/first100/exec/r0-gate-baseline-transition.json`；
+> `spec/first100-r0-evidence.json` 中仍处于 OPEN 的四项（`nativeTestFullSuite`、
+> `packInstall`、`runnerDryReceipt`、`independentReviewReceipts`）必须针对
+> `0a53fb55` 重新采集，任何 W1 slice 才能开始。
+
 [English](baseline-b150a551.md) | 中文
 
 Status: EVIDENCE CAPTURED — R0 exit gate item 1 stays OPEN pending a quiet-machine/CI full-suite exit-0 confirmation

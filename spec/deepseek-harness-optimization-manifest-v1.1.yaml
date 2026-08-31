@@ -3,10 +3,10 @@ schema:
   version: "1.1"
   kind: "generated-from-canonical-registry-plus-adjudication"
 frozenBaseline:
-  sha: "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e"
-  shortSha: "b150a551"
-  label: "baseline-b150a551"
-  note: "All First-100 evidence binds to this exact SHA (protected master)."
+  sha: "0a53fb55bea101816fa226bb964ae2bed71c343b"
+  shortSha: "0a53fb55"
+  label: "baseline-0a53fb55"
+  note: "All First-100 evidence binds to this exact SHA (upstream master tip at first100-exec BASE-ALIGN, 2026-08-31; supersedes baseline-b150a551, downgraded to audit provenance per maintainer decision A1)."
 layerEnum: ["L0_KERNEL", "L1_CONTRACT", "L2_PROVIDER", "L3_CONSUMER", "L4_COMPOSITION", "L5_SURFACE", "L6_QUALIFICATION"]
 groupCounts:
   P0: 8

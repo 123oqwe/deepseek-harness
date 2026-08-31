@@ -16,9 +16,18 @@ This is an implementation plan, not an implementation or test report. It is deri
 
 The selected implementation base must be a clean, upstream-synchronized protected `master`, never stale fork `master`, PR #95, or the unpushed integration head. PR #95 is forensic input only; useful native work may be reimplemented or cherry-picked only after file-level review against the selected base.
 
-## 2. Wave M0 — repair and re-sign the specification before product code
+## 2. Historical M0 label — executed only through the canonical R0 checkpoints
 
-No W1 micro-PR may open until all four M0 micro-PRs merge and the M0 gate passes. These are specification changes only; each has 1–5 files.
+`M0.C/P/U/F` is an older planning label, not an additional executable phase and not four extra PRs after R0. The current contract has one legal pre-W1 sequence: `R0-1…R0-7 → verified R0-7L`. M0 is satisfied only by dereferencing the following finalized canonical R0 outputs; a Claude executor must never repeat M0, wait for separate M0 merges, or treat the table below as standing write authorization:
+
+| Historical label | Sole current satisfaction proof |
+|---|---|
+| `M0.C` | finalized `R0-1P/R0-2L` registry/source/owner projections plus finalized `R0-3P/R0-3L` DAG and writer-serialization requalification |
+| `M0.P` | finalized `R0-2P/R0-2L` generated thresholds/command/evidence projections plus the complete D1A–D1C decision-record set reverified by `R0-7P` |
+| `M0.U` | finalized `R0-2P/R0-2L` generator, human render, and wave-map equivalence evidence |
+| `M0.F` | finalized `R0-7P/R0-7L` immutable manifest, controller trust, direct R0 gate, post-commit reviews/verifiers, and canonical controller-record chain |
+
+The only W1 entry proof is the canonical `VERIFIED_LEDGER_PROJECTION_COMMIT` for `R0-7L`, whose dereferenced ancestry proves all four rows above. The following table remains historical design rationale for those R0 artifacts; it does not create another queue.
 
 | Micro-PR | Files | Required decision and merge gate | Rollback boundary |
 |---|---|---|---|
@@ -96,7 +105,7 @@ These values are the single proposal copied from `sdd-coding-plan.md` R0.2. They
 
 ## 4. Corrected recovery waves and 100-epic micro-PR ledger
 
-Every predecessor below means the predecessor's `F` micro-PR is accepted; M0 is an implicit predecessor of all rows. “Gate” names the issue-specific fact added to universal gates M/C/P/U/F.
+Every predecessor below means the predecessor's finalized `F` stage promotion is backed by a canonical verified controller record. The verified `R0-7L` ledger-projection record—whose ancestry subsumes historical M0—is the sole program bootstrap predecessor of W1; there is no separate M0 edge. “Gate” names the issue-specific fact added to universal gates M/C/P/U/F.
 
 ### W1 — immutable baseline (1 epic)
 
