@@ -97,6 +97,7 @@
     "apps/cli/tests/**/*.ts",
     "packages/*/*/tests/**/*.ts",
     "scripts/**/*.ts",
+    "tests/**/*.ts",
     "website/**/*.ts",
     "website/.vitepress/**/*.ts"
   ],
