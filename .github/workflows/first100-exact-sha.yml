@@ -83,6 +83,31 @@ jobs:
           path: .artifacts/first100/observations/vitest-report.json
           if-no-files-found: error
 
+      # R0 exit gate item 1's other half (packInstall): the exact CI-equivalent
+      # build, then pack + verify-packed-install, on Linux CI where the prior
+      # local macOS receipt's two known failure causes (stale npm cache,
+      # --omit=optional dropping koffi's darwin-arm64-only prebuilt) do not
+      # apply. Runs even if the test suite above went red — pack/install
+      # health is an independent fact from test-suite health.
+      - name: Build (official client profile, the exact env CI's build gate sets)
+        if: always()
+        env:
+          DSH_BUILD_CLIENT_PROFILE: official
+        run: pnpm run build
+
+      - name: Pack the dsh family
+        if: always()
+        run: pnpm run release:pack --family dsh
+
+      - name: Pack the vendor family
+        if: always()
+        run: pnpm run release:pack --family vendor --out dist/npm-vendor
+
+      - name: Verify packed install (throwaway consumer, real npm install + entry probe)
+        if: always()
+        id: verify-packed-install
+        run: pnpm run release:verify-packed-install --family dsh --from dist/npm --from dist/npm-vendor
+
   first100-evidence:
     name: First-100 issue-runner dry + observation verify
     runs-on: ubuntu-latest
