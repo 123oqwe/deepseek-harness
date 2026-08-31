@@ -4,11 +4,11 @@
     {
       "item": "nativeTestFullSuite",
       "role": "R0 exit gate item 1 — clean-branch native `pnpm test` real exit 0 (R0.3A)",
-      "evidence": "docs/audit/baseline-b150a551.md",
+      "evidence": "docs/audit/baseline-0a53fb55.md",
       "status": "OPEN",
       "required": "EXIT_0_CAPTURED",
-      "sha256": "166c9e8be11703706b1f237ab7d7db315ca29590ba98baa546b8028ee1acf85f",
-      "note": "Per spec/first100/exec/r0-gate-baseline-transition.json, first100-exec re-baselined b150a551b8 -> 0a53fb55; the referenced receipt is now SUPERSEDED (its facts are about the retired SHA only) and OPEN carries forward unchanged: no capture has been attempted against 0a53fb55 yet, so the gate fails closed until a fresh quiet-machine/CI exit-0 is captured for the new baseline."
+      "sha256": "10f4d024d2794cc20423a0c24111db6c48dab26f1241d5bd70c08abfc4a7ecde",
+      "note": "Real Linux CI capture (first100-exact-sha.yml run 33416915582, candidate e722878872) at the new baseline: 17436 tests, 1 real failure (packages/terminal/terminal-bash/tests/local.spec.ts, inferred_idle!=stdin_read pwsh idle-inference race), matching the already-classified real defect from the R0-5 probe. Real exit is 1, not 0, so the gate stays fail-closed OPEN; per maintainer decision A2 this must be genuinely fixed, not allowlisted/skipped/retried-to-green."
     },
     {
       "item": "packInstall",
