@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-08-31T15:56:49.670Z",
-  "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
+  "lastUpdatedUtc": "2026-08-31T23:19:49.385Z",
+  "inputDigest": "87f2977b0a5b14e454be2dbc9b033b5d4e7b22eb5f3a376fccc7749eee415071",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -22,7 +22,20 @@
       "wave": 1,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8d5f94d6c25fe01319079ea6ae6fbdad11ed64dd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33449096357",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-artifacts-green/first100-evidence-8d5f94d6c25fe01319079ea6ae6fbdad11ed64dd/vitest-report.json",
+          "observationSha256": "bb9ab2d8426217bf55c6c3ded07986147afbf5917c59bef788b44e8f35c636da",
+          "expectCasesMatched": [
+            "captures .dsh/baseline.json with the canonical field set the MUST clause requires",
+            "canonicalizes the captured output: sorted keys, LF-only, UTF-8 NFC, POSIX-relative paths, and no nondeterministic fields",
+            "writes the audit SHA into both the machine file and docs/audit/baseline-fingerprint-<sha>.md",
+            "verify exits 0 against an unmodified captured baseline",
+            "verify fails and names the minimal diff after a tracked bundle-row file drifts, and writes a rebase report",
+            "verify passes again once the drifted file is restored"
+          ],
+          "capturedAtUtc": "2026-08-31T23:19:49.384Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -34,7 +47,7 @@
           "status": "NOT_RUN"
         }
       },
-      "candidateSha": null,
+      "candidateSha": "8d5f94d6c25fe01319079ea6ae6fbdad11ed64dd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN"
