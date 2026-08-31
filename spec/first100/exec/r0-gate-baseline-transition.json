@@ -1,0 +1,35 @@
+{
+  "schema": {
+    "name": "first100-r0-gate-baseline-transition",
+    "version": 1
+  },
+  "kind": "R0_GATE_CLOSURE_OVERRIDE_RECORD",
+  "role": "Explicitly supersedes the 'W1 remains BLOCKED' verdict recorded in docs/audit/baseline-b150a551.md, per maintainer decision A1.",
+  "decisionRef": {
+    "path": "spec/first100/exec/decisions-approved.md",
+    "decision": "A1",
+    "approvedAtUtc": "2026-08-31T14:50:00Z",
+    "note": "按推荐全批 (approve-all-per-recommendation); A1 approves the upstream master tip at execution-start as the new frozen baseline, downgrading b150a551 to audit provenance."
+  },
+  "previousBaseline": {
+    "sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+    "label": "baseline-b150a551",
+    "status": "RETIRED_AUDIT_PROVENANCE_ONLY"
+  },
+  "newBaseline": {
+    "sha": "0a53fb55bea101816fa226bb964ae2bed71c343b",
+    "label": "baseline-0a53fb55",
+    "resolvedFrom": "origin/master (git ls-remote / git fetch at BASE-ALIGN time)",
+    "cutBranch": "first100-exec"
+  },
+  "effect": [
+    "docs/audit/baseline-b150a551.md and its .zh.md/.i18n.yaml siblings are marked SUPERSEDED with an in-place banner; their byte content otherwise stands unaltered as historical evidence about the retired SHA.",
+    "The 'W1 remains BLOCKED' verdict at the foot of that receipt is retired along with it: it is neither confirmed nor overturned for the new baseline, because no capture has been attempted against 0a53fb55.",
+    "spec/first100-r0-evidence.json rows nativeTestFullSuite and packInstall are updated to reference the superseded receipt's new sha256 and to state plainly that they require a fresh capture against 0a53fb55 before they can move past OPEN.",
+    "This record does NOT itself close any R0 gate row and does NOT authorize any W1 slice. R0 exit gate rows nativeTestFullSuite, packInstall, runnerDryReceipt, and independentReviewReceipts remain OPEN/ABSENT and must be freshly captured against 0a53fb55 (native CI/pack on fork Linux CI per A2, runner dry receipt per R0.4, independent review per directive 6) before any W1 slice may begin."
+  ],
+  "capturedAtUtc": "2026-08-31T15:30:00Z",
+  "capturedBy": "first100-exec Supervisor (Claude Code / Sonnet), per SONNET-EXECUTOR-START-PROMPT.txt Step 1 (W0/BASE-ALIGN)",
+  "signatureNote": "Signed with the local first100-signing.key keyring identity (ADVISORY per A4 until the signing key is migrated to a GitHub-secret-issued identity in first100-exact-sha.yml; this record is a transition/closure statement, not a ledger-greening evidence row, so it is not subject to A4's ledger-only-from-workflow rule).",
+  "signature": "27588503d670cf61148f7d2cc1f866a4952937592160151e175178866c217f1495835307f1684d1eb4c418b5a6b1cd8260177f15aa5dd388fd2a405dc9b88b0a"
+}

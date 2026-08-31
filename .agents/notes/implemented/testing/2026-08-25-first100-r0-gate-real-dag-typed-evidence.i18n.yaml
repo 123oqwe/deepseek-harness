@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/testing/2026-08-25-first100-r0-gate-real-dag-typed-evidence.md
+2026-08-25-first100-r0-gate-real-dag-typed-evidence.md: 8fdb533341a77325ce8aab3a5323b113b2a17358
+2026-08-25-first100-r0-gate-real-dag-typed-evidence.zh.md: 7f73b363d730f8ff6c5f77b4e381dc24c5439a12

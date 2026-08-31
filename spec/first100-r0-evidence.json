@@ -1,0 +1,50 @@
+{
+  "schema": { "name": "first100-r0-evidence", "version": 1 },
+  "rows": [
+    {
+      "item": "nativeTestFullSuite",
+      "role": "R0 exit gate item 1 — clean-branch native `pnpm test` real exit 0 (R0.3A)",
+      "evidence": "docs/audit/baseline-b150a551.md",
+      "status": "OPEN",
+      "required": "EXIT_0_CAPTURED",
+      "sha256": "a52bb243b8e1e7a32603797239954bb8c04702b4e0f222171c7a62650edac310",
+      "note": "Real full-suite exit is 1 on this shared macOS host (12 environmental failures across 8 files); R0 exit gate item 1 stays OPEN until a quiet-machine/CI exit-0 is captured (maintainer directive 8)."
+    },
+    {
+      "item": "packInstall",
+      "role": "R0 exit gate item 1 — clean-branch native pack + verify-packed-install real exit 0 (R0.3A)",
+      "evidence": "docs/audit/baseline-b150a551.md",
+      "status": "OPEN",
+      "required": "EXIT_0_CAPTURED",
+      "sha256": "a52bb243b8e1e7a32603797239954bb8c04702b4e0f222171c7a62650edac310",
+      "note": "dsh(227)+vendor(9) tarballs pack exit 0; the official verify-packed-install script exits 1 on this host (koffi optional-deps dropped by --omit=optional); needs a CI/quiet-machine exit-0 capture."
+    },
+    {
+      "item": "packagingLedger",
+      "role": "R0 exit gate item 3 — R0.3B packaging migration ledger with owners assigned for every wave",
+      "evidence": "docs/audit/packaging-migration-ledger.md",
+      "status": "OWNERS_ASSIGNED",
+      "required": "OWNERS_ASSIGNED",
+      "sha256": "6f14944edbe3c77215b82fdacbcf36fd9a0936ce8ccaab883500dd74e7d58216",
+      "note": "W1–W19 owners + merge-back paths assigned; the 9 PR95 pack/runtime-closure faults are registered NOT-ported."
+    },
+    {
+      "item": "runnerDryReceipt",
+      "role": "R0 exit gate item 4 — runner dry-validates all 100 ids without marking unrun as PASS (R0.4)",
+      "evidence": "spec/first100-runner-receipt.json",
+      "status": "ABSENT",
+      "required": "CAPTURED",
+      "sha256": null,
+      "note": "No committed runner dry/aggregate receipt exists yet; the gate fails closed until one is captured."
+    },
+    {
+      "item": "independentReviewReceipts",
+      "role": "R0 gate — truly independent read-only review at the fixed candidate SHA with no must-fix (maintainer directive 6)",
+      "evidence": "spec/first100-independent-review.json",
+      "status": "ABSENT",
+      "required": "CAPTURED",
+      "sha256": null,
+      "note": "No independent-review receipt is committed yet; directive 6 is open and the gate fails closed until one is captured."
+    }
+  ]
+}

@@ -1,0 +1,2218 @@
+{
+  "schemaVersion": "1.1",
+  "generatedFrom": "tests/first100/registry.json",
+  "entries": {
+    "P0-01": {
+      "epicCommand": "`pnpm baseline:capture && pnpm baseline:verify`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run tests/release/baseline-fingerprint.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P0-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/release/baseline-fingerprint.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-02": {
+      "epicCommand": "MISSING_UNTIL_W2",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "kernel is deliberately not a replaceable Cordis provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/kernel/trust-kernel/tests/boundary.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-03": {
+      "epicCommand": "`pnpm architecture:seams`；`pnpm ci:gate`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run tests/architecture/capability-seams.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "qualification rule, not a runtime provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/architecture/capability-seams.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-04": {
+      "epicCommand": "`pnpm architecture:layers`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run tests/architecture/layer-deps.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "static qualification."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/architecture/layer-deps.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-05": {
+      "epicCommand": "MISSING_UNTIL_W3",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/migration/feature-gates/tests/gates.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P0-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/migration/feature-gates/tests/gates.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-06": {
+      "epicCommand": "MISSING_UNTIL_W2",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/schema/schema-registry/tests/compatibility.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P0-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/schema/schema-registry/tests/compatibility.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-07": {
+      "epicCommand": "`pnpm evidence:collect -- pnpm test`；`pnpm evidence:verify`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run tests/release/evidence-package.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P0-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/release/evidence-package.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P0-08": {
+      "epicCommand": "`pnpm benchmark:harness --lane deterministic`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run tests/benchmark/runner.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "qualification harness, not product provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P0-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/benchmark/runner.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-01": {
+      "epicCommand": "`pnpm plugin:verify <fixture>`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-manifest/tests/manifest.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-02": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-03": {
+      "epicCommand": "MISSING_UNTIL_W5",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-lock/tests/lock.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-03 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-lock/tests/lock.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-04": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-installer/tests/quarantine.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-installer/tests/quarantine.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-05": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-scanner/tests/scanner.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-scanner/tests/scanner.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-06": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-host/tests/isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-host/tests/isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-07": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/workspace/workspace-trust/tests/trust.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/workspace/workspace-trust/tests/trust.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-08": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-compat/tests/solver.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-compat/tests/solver.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-09": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-ownership/tests/ownership.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "ownership is derived from Cordis effects; no second registry/provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-ownership/tests/ownership.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-10": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/plugin/plugin-migrations/tests/rollback.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/plugin/plugin-migrations/tests/rollback.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-11": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/extensions/extension-proposal/tests/pipeline.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-11 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-11 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/extensions/extension-proposal/tests/pipeline.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P1-12": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run tests/plugin/certification.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P1-12 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P1-12 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/plugin/certification.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-01": {
+      "epicCommand": "MISSING_UNTIL_W3",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/identity/principal/tests/identity.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/identity/principal/tests/identity.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-02": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/policy/capability-token/tests/token.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/policy/capability-token/tests/token.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-03": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/action/action-manifest/tests/manifest.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "immutable definition/canonicalizer, not an I/O provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/action/action-manifest/tests/manifest.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-04": {
+      "epicCommand": "MISSING_UNTIL_W5",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/policy/risk-taxonomy/tests/classify.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/policy/risk-taxonomy/tests/classify.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-05": {
+      "epicCommand": "MISSING_UNTIL_W6",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/policy/policy-engine/tests/monotonic.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/policy/policy-engine/tests/monotonic.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-06": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/interaction/user-approval/tests/argument-binding.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/interaction/user-approval/tests/approval.spec.ts packages/interaction/user-approval/tests/argument-binding.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-07": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/interaction/approval-store/tests/recovery.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/interaction/approval-store/tests/recovery.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-08": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/policy/grant-store/tests/grants.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/policy/grant-store/tests/grants.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-09": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/interaction/approval-quorum/tests/quorum.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/interaction/approval-quorum/tests/quorum.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-10": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/policy/policy-language/tests/golden.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/policy/policy-language/tests/golden.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-11": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/interaction/permission-presets/tests/profile.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-11 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-11 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/interaction/permission-presets/tests/profile.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P2-12": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/interaction/control-plane/tests/emergency-stop.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P2-12 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P2-12 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/interaction/control-plane/tests/emergency-stop.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-01": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/execution-world/tests/world.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/execution-world/tests/world.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-02": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sandbox/sandbox/tests/policy.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sandbox/sandbox/tests/policy.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-03": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/execution-world/tests/denial.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "canonical outcome types, no provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/execution-world/tests/denial.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-04": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/egress-proxy/tests/ssrf.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/egress-proxy/tests/ssrf.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-05": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/local-isolation/tests/process-isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/local-isolation/tests/process-isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-06": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/credentials/secrets-broker/tests/secret-leak.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/credentials/secrets-broker/tests/secret-leak.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-07": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sandbox/sandbox-local/tests/conformance.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sandbox/sandbox-local/tests/conformance.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-08": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/execution-world-container/tests/provider.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/execution-world-container/tests/provider.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-09": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/execution-world-remote/tests/reconnect.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/execution-world-remote/tests/reconnect.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-10": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/resource-budget/tests/budget.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/resource-budget/tests/budget.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-11": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/execution/world-snapshot/tests/restore.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-11 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-11 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/execution/world-snapshot/tests/restore.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P3-12": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/attachment/attachment-security/tests/malicious.e2e.ts packages/workspace/workspace/tests/path-race.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-12 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-12 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/attachment/attachment-security/tests/malicious.e2e.ts packages/workspace/workspace/tests/path-race.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-01": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/run/tests/state-machine.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/run/tests/state-machine.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-02": {
+      "epicCommand": "MISSING_UNTIL_W6",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/task-profile/tests/profile.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/task-profile/tests/profile.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-03": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/run-plan/tests/compile.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-03 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/run-plan/tests/compile.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-04": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/run-plan/tests/amendment.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/run-plan/tests/amendment.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-05": {
+      "epicCommand": "MISSING_UNTIL_W5",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/core/agent/tests/state-machine.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "state is persisted by the P4-01 Run provider; no second store."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/core/agent/tests/state-machine.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-06": {
+      "epicCommand": "MISSING_UNTIL_W5",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/message-bus/tests/crash.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/message-bus/tests/crash.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-07": {
+      "epicCommand": "MISSING_UNTIL_W6",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/lease/tests/fencing.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/lease/tests/fencing.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-08": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/workflow/workflow-journal/tests/resume.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/workflow/workflow-journal/tests/resume.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-09": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/workflow/workflow-registry/tests/nested.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/workflow/workflow-registry/tests/nested.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-10": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/scheduler/tests/scheduler.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/scheduler/tests/scheduler.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-11": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/reliability/retry/tests/retry.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-11 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-11 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/reliability/retry/tests/retry.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-12": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/action/action-ledger/tests/idempotency.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-12 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-12 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/action/action-ledger/tests/idempotency.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-13": {
+      "epicCommand": "MISSING_UNTIL_W13",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/action/reconciliation/tests/saga.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-13 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-13 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/action/reconciliation/tests/saga.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P4-14": {
+      "epicCommand": "MISSING_UNTIL_W14",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/run/trigger-service/tests/resume.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P4-14 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P4-14 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/run/trigger-service/tests/resume.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-01": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/router/strategy-router/tests/router.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/router/strategy-router/tests/router.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-02": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/router/model-router/tests/router.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/router/model-router/tests/router.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-03": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/llm/prompt-compiler/tests/golden.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-03 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/llm/prompt-compiler/tests/golden.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-04": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/router/provider-resilience/tests/fallback.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/router/provider-resilience/tests/fallback.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-05": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/subagent/subagent/tests/request-contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "canonical request type, no provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/subagent/subagent/tests/request-contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-06": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/subagent/subagent/tests/result-contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "result contract only."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/subagent/subagent/tests/result-contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-07": {
+      "epicCommand": "MISSING_UNTIL_W12",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/subagent/subagent-codex/tests/structured.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/subagent/subagent-codex/tests/structured.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-08": {
+      "epicCommand": "MISSING_UNTIL_W12",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/subagent/subagent-claude-code/tests/structured.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/subagent/subagent-claude-code/tests/structured.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-09": {
+      "epicCommand": "MISSING_UNTIL_W18",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/subagent/subagent-acp/tests/continuation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/subagent/subagent-acp/tests/continuation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-10": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/subagent/subagent/tests/control-race.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/subagent/subagent/tests/control-race.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-11": {
+      "epicCommand": "MISSING_UNTIL_W7",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/collaboration/taskboard/tests/claims.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-11 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-11 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/collaboration/taskboard/tests/claims.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P5-12": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/collaboration/coordination-guard/tests/deadlock.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P5-12 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P5-12 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/collaboration/coordination-guard/tests/deadlock.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-01": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/memory/memory/tests/conformance.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/memory/memory/tests/conformance.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-02": {
+      "epicCommand": "MISSING_UNTIL_W5",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/memory/memory/tests/record.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "record/codec only; P6-01 supplies providers."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/memory/memory/tests/record.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-03": {
+      "epicCommand": "MISSING_UNTIL_W8",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/memory/memory-policy/tests/lifecycle.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-03 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/memory/memory-policy/tests/lifecycle.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-04": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/context/retrieval-planner/tests/planner.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/context/retrieval-planner/tests/planner.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-05": {
+      "epicCommand": "MISSING_UNTIL_W12",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/context/context-telemetry/tests/isolation.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/context/context-telemetry/tests/isolation.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-06": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/compaction/compaction/tests/fidelity.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/compaction/compaction/tests/fidelity.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-07": {
+      "epicCommand": "MISSING_UNTIL_W4",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-08": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/audit/audit-ledger/tests/tamper.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/audit/audit-ledger/tests/tamper.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-09": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/artifact/artifact/tests/lineage.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/artifact/artifact/tests/lineage.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P6-10": {
+      "epicCommand": "MISSING_UNTIL_W11",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/privacy/data-lineage/tests/privacy.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P6-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P6-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/privacy/data-lineage/tests/privacy.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-01": {
+      "epicCommand": "`pnpm test --filter dsh-verification-contract`；`pnpm typecheck`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/assurance/verification-contract/tests/verification-contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/assurance/verification-contract/tests/verification-contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-02": {
+      "epicCommand": "MISSING_UNTIL_W12",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/assurance/evidence/tests/evidence.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/assurance/evidence/tests/evidence.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-03": {
+      "epicCommand": "MISSING_UNTIL_W13",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/assurance/verifier/tests/verifier-isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-03 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/assurance/verifier/tests/verifier-isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-04": {
+      "epicCommand": "MISSING_UNTIL_W14",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/assurance/claim-graph/tests/claim-graph.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/assurance/claim-graph/tests/claim-graph.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-05": {
+      "epicCommand": "MISSING_UNTIL_W15",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/assurance/acceptance-gate/tests/gate.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/assurance/acceptance-gate/tests/gate.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-06": {
+      "epicCommand": "MISSING_UNTIL_W16",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/assurance/repair/tests/repair.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/assurance/repair/tests/repair.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-07": {
+      "epicCommand": "MISSING_UNTIL_W13",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/observability/causal-trace/tests/crash-delivery.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/observability/causal-trace/tests/crash-delivery.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-08": {
+      "epicCommand": "MISSING_UNTIL_W14",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/evaluation/replay/tests/replay.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-08 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/evaluation/replay/tests/replay.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P7-09": {
+      "epicCommand": "`pnpm test:capability`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm first100:issue --id P7-09 --lane contract",
+          "status": "LANE_RUNNER"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm first100:issue --id P7-09 --lane fault",
+          "status": "LANE_RUNNER"
+        }
+      }
+    },
+    "P7-10": {
+      "epicCommand": "MISSING_UNTIL_W17",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm first100:issue --id P7-10 --lane contract",
+          "status": "LANE_RUNNER"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P7-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P7-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm first100:issue --id P7-10 --lane fault",
+          "status": "LANE_RUNNER"
+        }
+      }
+    },
+    "P8-01": {
+      "epicCommand": "MISSING_UNTIL_W5",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-01 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-01 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/version-negotiation.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-02": {
+      "epicCommand": "MISSING_UNTIL_W16",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/resources.contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-02 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-02 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/resources.contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-03": {
+      "epicCommand": "MISSING_UNTIL_W17",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/run-lifecycle.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-03 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-03 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/run-lifecycle.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-04": {
+      "epicCommand": "MISSING_UNTIL_W10",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/server-request.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-04 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-04 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sdk/protocol/tests/server-request.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-05": {
+      "epicCommand": "MISSING_UNTIL_W17",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/api/event-stream/tests/reconnect.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-05 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-05 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/api/event-stream/tests/reconnect.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-06": {
+      "epicCommand": "MISSING_UNTIL_W17",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/identity/authorization/tests/tenant-isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-06 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-06 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/identity/authorization/tests/tenant-isolation.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-07": {
+      "epicCommand": "MISSING_UNTIL_W18",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/sdk/client/tests/control-protocol.contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-07 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-07 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/sdk/client/tests/control-protocol.contract.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-08": {
+      "epicCommand": "MISSING_UNTIL_W18",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/client/ui-run-control/tests/run-control.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "N/A",
+          "status": "N/A",
+          "reason": "UI is a consumer/read projection, never canonical provider."
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-08 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/client/ui-run-control/tests/run-control.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-09": {
+      "epicCommand": "MISSING_UNTIL_W18",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/governance/org-policy/tests/hierarchy.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-09 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-09 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/governance/org-policy/tests/hierarchy.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
+    "P8-10": {
+      "epicCommand": "`pnpm general-purpose-gate`；随后 G，阶段按适用项跑 R。",
+      "epicCommandStatus": "REGISTERED",
+      "stages": {
+        "C": {
+          "command": "pnpm first100:issue --id P8-10 --lane contract",
+          "status": "LANE_RUNNER"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P8-10 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P8-10 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run tests/disaster-recovery/restore.e2e.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    }
+  }
+}

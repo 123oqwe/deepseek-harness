@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "schemaVersion": "1.1",
+  "title": "first100-evidence",
+  "description": "13-entry evidence schema; every per-issue observation must satisfy this and be covered by a verified detached attestation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "lane",
+    "baselineSha",
+    "command",
+    "exitCode",
+    "rawLogPath",
+    "rawLogSha256",
+    "testCounts",
+    "worldStateBefore",
+    "worldStateAfter",
+    "skipReason",
+    "exitSemantics",
+    "signature"
+  ],
+  "properties": {
+    "id": {
+      "description": "issue id; must equal ${id}.${lane}.json filename id",
+      "type": "string",
+      "pattern": "^P[0-8]-\\d{2}$"
+    },
+    "lane": {
+      "description": "must equal filename lane; all 4 lanes required per issue",
+      "type": "string",
+      "enum": [
+        "contract",
+        "provider",
+        "composition",
+        "fault"
+      ]
+    },
+    "baselineSha": {
+      "description": "\"unknown\" rejected",
+      "type": "string",
+      "const": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "command": {
+      "description": "exact real command executed",
+      "type": "string",
+      "minLength": 1
+    },
+    "exitCode": {
+      "description": "real exit code; per-issue exitSemantics enforced Coupled to exitSemantics by the top-level allOf: ACCEPTED -> 0, FAIL -> >= 1, NOT_RUN/BLOCKED -> null."
+    },
+    "rawLogPath": {
+      "description": "confined to .artifacts/first100/observations/; non-zero size; no path traversal",
+      "type": "string",
+      "pattern": "^\\.artifacts/first100/observations/[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$"
+    },
+    "rawLogSha256": {
+      "description": "digest of the raw log; empty-log sha rejected",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "testCounts": {
+      "description": "parsed from raw log: pass/fail/skip/total with total>0; fabrication rejected",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "total",
+        "passed",
+        "failed",
+        "skipped"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "worldStateBefore": {
+      "description": "\"unobserved\" rejected",
+      "type": "string",
+      "pattern": "^git:\\{head:[0-9a-f]{40};tree:[0-9a-f]{40};porcelainLines:[0-9]+\\}$"
+    },
+    "worldStateAfter": {
+      "description": "\"unobserved\" rejected",
+      "type": "string",
+      "pattern": "^git:\\{head:[0-9a-f]{40};tree:[0-9a-f]{40};porcelainLines:[0-9]+\\}$"
+    },
+    "skipReason": {
+      "description": "must be empty on success; non-empty skipReason rejected and never injected",
+      "type": "string",
+      "maxLength": 0
+    },
+    "exitSemantics": {
+      "description": "per-issue mapping FAIL/NOT_RUN/BLOCKED/ACCEPTED; model/executor self-report never constitutes evidence",
+      "type": "string",
+      "enum": [
+        "ACCEPTED",
+        "FAIL",
+        "NOT_RUN",
+        "BLOCKED"
+      ]
+    },
+    "signature": {
+      "description": "detached attestation over canonical serialization of all fields, verified against pinned trusted identity; ACCEPTED only on verified attestation",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64,}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "exitSemantics": {
+            "const": "ACCEPTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exitCode": {
+            "const": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "exitSemantics": {
+            "const": "FAIL"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exitCode": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "exitSemantics": {
+            "enum": [
+              "NOT_RUN",
+              "BLOCKED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "exitCode": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

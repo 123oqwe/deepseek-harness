@@ -1,0 +1,4 @@
+# Byte-for-byte vendored First-100 v1.0 planning sources (see VENDORING.md);
+# their pinned sha256 digests bind the exact bytes, trailing whitespace
+# included, so `git diff --cached --check` must not flag them.
+* -whitespace

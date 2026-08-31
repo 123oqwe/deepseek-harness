@@ -1,0 +1,987 @@
+{
+  "schema": {
+    "name": "first100-maintainer-adjudication",
+    "version": 1,
+    "kind": "approved-decisions"
+  },
+  "approvedAt": "2026-08-25",
+  "basis": "r0-maintainer-decision-package.md (reviewable package; approved via AskUserQuestion A/B/C)",
+  "layerAdjudication": {
+    "status": "ADJUDICATED",
+    "count": 33,
+    "approvedIds": [
+      "P0-05",
+      "P0-06",
+      "P1-05",
+      "P1-09",
+      "P1-10",
+      "P1-11",
+      "P1-12",
+      "P2-02",
+      "P2-05",
+      "P2-09",
+      "P2-10",
+      "P2-11",
+      "P3-01",
+      "P3-02",
+      "P3-10",
+      "P3-12",
+      "P4-01",
+      "P4-13",
+      "P4-14",
+      "P5-10",
+      "P5-12",
+      "P6-01",
+      "P6-03",
+      "P6-07",
+      "P6-09",
+      "P7-05",
+      "P7-06",
+      "P7-08",
+      "P7-10",
+      "P8-04",
+      "P8-05",
+      "P8-07",
+      "P8-10"
+    ],
+    "approvedLayers": {
+      "P0-05": "L2_PROVIDER",
+      "P0-06": "L1_CONTRACT",
+      "P1-05": "L2_PROVIDER",
+      "P1-09": "L3_CONSUMER",
+      "P1-10": "L2_PROVIDER",
+      "P1-11": "L2_PROVIDER",
+      "P1-12": "L6_QUALIFICATION",
+      "P2-02": "L2_PROVIDER",
+      "P2-05": "L2_PROVIDER",
+      "P2-09": "L2_PROVIDER",
+      "P2-10": "L2_PROVIDER",
+      "P2-11": "L2_PROVIDER",
+      "P3-01": "L1_CONTRACT",
+      "P3-02": "L2_PROVIDER",
+      "P3-10": "L2_PROVIDER",
+      "P3-12": "L2_PROVIDER",
+      "P4-01": "L2_PROVIDER",
+      "P4-13": "L3_CONSUMER",
+      "P4-14": "L2_PROVIDER",
+      "P5-10": "L2_PROVIDER",
+      "P5-12": "L2_PROVIDER",
+      "P6-01": "L1_CONTRACT",
+      "P6-03": "L2_PROVIDER",
+      "P6-07": "L2_PROVIDER",
+      "P6-09": "L1_CONTRACT",
+      "P7-05": "L1_CONTRACT",
+      "P7-06": "L3_CONSUMER",
+      "P7-08": "L3_CONSUMER",
+      "P7-10": "L6_QUALIFICATION",
+      "P8-04": "L5_SURFACE",
+      "P8-05": "L5_SURFACE",
+      "P8-07": "L5_SURFACE",
+      "P8-10": "L6_QUALIFICATION"
+    },
+    "notEnumeratedFromSources": {
+      "claimedByDecisionPackage": 2,
+      "sourceCertified": 1,
+      "gap": 1,
+      "note": "Decision package §2.3 claims 2 more ambiguous ids than the 32 it lists but does not enumerate them; the Agent A transcript UNCERTAINTIES table is the only source and is not vendored. P2-09 is source-certified via the §2.3 wave-vs-audit seam, leaving 1 id enumerable only from the missing transcript."
+    },
+    "note": "A approved all 33 source-certified ids (32 explicit + P2-09 seam). Every recommendation confirmed Agent A. The claimed 34th id is not enumerable from committed sources (transcript gap) and is NOT included."
+  },
+  "layerMapping": {
+    "status": "PROPOSED_PENDING_MAINTAINER",
+    "count": 100,
+    "basis": "r0-decision-package.md §2 \"Full mapping (100 rows)\" — committed vendored source; deterministic extraction of id→exact-primaryLayer→rationale→source.",
+    "note": "Q4(b) option 2: complete 100-ID id→exact-primaryLayer mapping submitted as a new canonical decision source for maintainer item-by-item approval. Derived deterministically from the committed §2 table (100/100 rows; 0 layer mismatches vs the byte-locked registry). The claimed-34th ambiguous id is enumerable only from the missing Agent A transcript (confirmed unrecoverable on disk). Resolving the R0 gate layer item is a genuine maintainer decision — item-by-item approval of this mapping (path 2) or recovered evidence (path 1) — recorded by the maintainer; the gate computation is unchanged and the submission does not re-scope it. This section is the reviewable decision record; checkLayerMapping (scripts/first100/generate-specs.ts) validates it fail-closed.",
+    "entries": {
+      "P0-01": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "reproducible baseline fingerprint + release preflight/verify + drift gate",
+        "source": "wave-map:105; matrix:36",
+        "row": 43
+      },
+      "P0-02": {
+        "primaryLayer": "L0_KERNEL",
+        "rationale": "minimal immutable Trust Kernel, deliberately not replaceable",
+        "source": "wave-map:111; matrix:50; audit§5:383",
+        "row": 44
+      },
+      "P0-03": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "capability-seam architecture checker (static qualification rule)",
+        "source": "wave-map:118; matrix:64",
+        "row": 45
+      },
+      "P0-04": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "layer dependency / cycle static gate",
+        "source": "wave-map:128; matrix:78",
+        "row": 46
+      },
+      "P0-05": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "shadow/enforce feature-gate canonical service/provider",
+        "source": "wave-map:119; matrix:92; audit§5:387",
+        "row": 47
+      },
+      "P0-06": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "canonical Schema Registry (schemaId/major-minor/compat/migration)",
+        "source": "wave-map:112; matrix:106; audit§5:417",
+        "row": 48
+      },
+      "P0-07": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "non-forgeable Release Evidence Package gate",
+        "source": "wave-map:120; matrix:120",
+        "row": 49
+      },
+      "P0-08": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "capability benchmark framework (qualification harness)",
+        "source": "wave-map:129; matrix:134",
+        "row": 50
+      },
+      "P1-01": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "Plugin Manifest v2 → owns `spec/capability-manifest.schema.json`",
+        "source": "wave-map:121; matrix:153; audit§5:397",
+        "row": 51
+      },
+      "P1-02": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "plugin signature/provenance/SBOM verifier provider",
+        "source": "wave-map:130; matrix:167; audit§5:400",
+        "row": 52
+      },
+      "P1-03": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "reproducible plugin lock (candidate-lock durable provider)",
+        "source": "wave-map:144; matrix:181; audit§5:396",
+        "row": 53
+      },
+      "P1-04": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "isolated transactional plugin installer",
+        "source": "wave-map:176; matrix:195; audit§5:395",
+        "row": 54
+      },
+      "P1-05": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "plugin static/dynamic scanner provider",
+        "source": "wave-map:195; matrix:209; audit§5:401",
+        "row": 55
+      },
+      "P1-06": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "out-of-process plugin host (child process, authenticated RPC)",
+        "source": "wave-map:177; matrix:223; audit§5:394",
+        "row": 56
+      },
+      "P1-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "workspace Trust Definition + durable provider",
+        "source": "wave-map:131; matrix:237; audit§5:426",
+        "row": 57
+      },
+      "P1-08": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "deterministic plugin compat/ABI/schema solver provider",
+        "source": "wave-map:132; matrix:251; audit§5:392",
+        "row": 58
+      },
+      "P1-09": {
+        "primaryLayer": "L3_CONSUMER",
+        "rationale": "registration ownership/collision enforced in host-runner consumers",
+        "source": "wave-map:133; matrix:265; audit§5:399",
+        "row": 59
+      },
+      "P1-10": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "transactional plugin migration/upgrade/rollback provider",
+        "source": "wave-map:178; matrix:279; audit§5:398",
+        "row": 60
+      },
+      "P1-11": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "governed Extension Proposal pipeline/provider",
+        "source": "wave-map:211; matrix:293; audit§5:377",
+        "row": 61
+      },
+      "P1-12": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "official Plugin Verifier / trust-level certification gate",
+        "source": "wave-map:212; matrix:307; audit§5:391",
+        "row": 62
+      },
+      "P2-01": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "Principal/tenant/actor identity context: `Identity` Service Definition",
+        "source": "wave-map:122; matrix:326; audit§5:379",
+        "row": 63
+      },
+      "P2-02": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "attenuating capability tokens (Token Definition/provider, kernel-signed)",
+        "source": "wave-map:134; matrix:340; audit§5:402",
+        "row": 64
+      },
+      "P2-03": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "canonical ActionManifest → owns `spec/action-manifest.schema.json`",
+        "source": "wave-map:135; matrix:354; audit§5:340",
+        "row": 65
+      },
+      "P2-04": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "action risk taxonomy classifier service/provider",
+        "source": "wave-map:145; matrix:368; audit§5:405",
+        "row": 66
+      },
+      "P2-05": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "monotonic Policy Decision Service",
+        "source": "wave-map:155; matrix:382; audit§5:431",
+        "row": 67
+      },
+      "P2-06": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "approval bound to exact ActionManifest digest/precondition",
+        "source": "wave-map:163; matrix:396",
+        "row": 68
+      },
+      "P2-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "durable Approval Queue (sqlite, CAS)",
+        "source": "wave-map:179; matrix:410; audit§5:381",
+        "row": 69
+      },
+      "P2-08": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "durable scoped grants/revocation (Policy durable provider)",
+        "source": "wave-map:196; matrix:424; audit§5:403",
+        "row": 70
+      },
+      "P2-09": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "quorum/separation-of-duties durable provider",
+        "source": "wave-map:197; matrix:438; audit§5:380",
+        "row": 71
+      },
+      "P2-10": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "policy-as-code compiler/provider",
+        "source": "wave-map:164; matrix:452; audit§5:404",
+        "row": 72
+      },
+      "P2-11": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "complete permission Policy Profile compiler/provider",
+        "source": "wave-map:198; matrix:466",
+        "row": 73
+      },
+      "P2-12": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "durable HumanControl / emergency epoch provider",
+        "source": "wave-map:165; matrix:480; audit§5:382",
+        "row": 74
+      },
+      "P3-01": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "ExecutionWorld Capability Seam: `ExecutionWorld` Service Definition",
+        "source": "wave-map:166; matrix:499; audit§5:373",
+        "row": 75
+      },
+      "P3-02": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "full-dimensional sandbox policy vocabulary + enforcement adapter",
+        "source": "wave-map:180; matrix:513",
+        "row": 76
+      },
+      "P3-03": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "structured OOB denial / typed outcome (canonical types)",
+        "source": "wave-map:181; matrix:527",
+        "row": 77
+      },
+      "P3-04": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "egress proxy / destination enforcement provider",
+        "source": "wave-map:199; matrix:541; audit§5:370",
+        "row": 78
+      },
+      "P3-05": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "process/syscall/IPC/device isolation — real OS providers",
+        "source": "wave-map:200; matrix:555; audit§5:374",
+        "row": 79
+      },
+      "P3-06": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Secrets Broker (Definition + KMS/reference broker provider)",
+        "source": "wave-map:182; matrix:569; audit§5:361",
+        "row": 80
+      },
+      "P3-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "local sandbox fail-closed capability probe provider",
+        "source": "wave-map:213; matrix:583",
+        "row": 81
+      },
+      "P3-08": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Container ExecutionWorld provider (real OCI)",
+        "source": "wave-map:214; matrix:597; audit§5:371",
+        "row": 82
+      },
+      "P3-09": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Remote ExecutionWorld / attestation provider",
+        "source": "wave-map:183; matrix:611; audit§5:372",
+        "row": 83
+      },
+      "P3-10": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "resource budgets/accounting (admission/runtime provider)",
+        "source": "wave-map:184; matrix:625; audit§5:375",
+        "row": 84
+      },
+      "P3-11": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "ExecutionWorld snapshot/restore provider",
+        "source": "wave-map:225; matrix:639; audit§5:376",
+        "row": 85
+      },
+      "P3-12": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "path/attachment hostile admission provider",
+        "source": "wave-map:185; matrix:653; audit§5:353",
+        "row": 86
+      },
+      "P4-01": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "canonical durable Run service/journal",
+        "source": "wave-map:136; matrix:672; audit§5:412",
+        "row": 87
+      },
+      "P4-02": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "versioned TaskProfile → owns `spec/task-profile.schema.json`",
+        "source": "wave-map:156; matrix:686; audit§5:414",
+        "row": 88
+      },
+      "P4-03": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "executable RunPlan → owns `spec/run-plan.schema.json`",
+        "source": "wave-map:186; matrix:700; audit§5:411",
+        "row": 89
+      },
+      "P4-04": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "signed frozen RunPlan / amendment protocol",
+        "source": "wave-map:201; matrix:714",
+        "row": 90
+      },
+      "P4-05": {
+        "primaryLayer": "L3_CONSUMER",
+        "rationale": "agent lifecycle projection (state persisted by P4-01)",
+        "source": "wave-map:146; matrix:728",
+        "row": 91
+      },
+      "P4-06": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "durable message bus / effective-once handoff provider",
+        "source": "wave-map:147; matrix:742; audit§5:410",
+        "row": 92
+      },
+      "P4-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "leases/heartbeat/fencing durable provider",
+        "source": "wave-map:157; matrix:756; audit§5:432",
+        "row": 93
+      },
+      "P4-08": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "workflow journal / step resume durable provider",
+        "source": "wave-map:167; matrix:770; audit§5:424",
+        "row": 94
+      },
+      "P4-09": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "detached/saved/versioned/nested workflow registry provider",
+        "source": "wave-map:187; matrix:784; audit§5:425",
+        "row": 95
+      },
+      "P4-10": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "scheduler/backpressure/fairness/locks provider",
+        "source": "wave-map:202; matrix:798; audit§5:413",
+        "row": 96
+      },
+      "P4-11": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "retry/circuit/retry-budget provider",
+        "source": "wave-map:188; matrix:812; audit§5:406",
+        "row": 97
+      },
+      "P4-12": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "durable Action Ledger / idempotency provider",
+        "source": "wave-map:168; matrix:826; audit§5:339",
+        "row": 98
+      },
+      "P4-13": {
+        "primaryLayer": "L3_CONSUMER",
+        "rationale": "reconciliation/saga compensation (audit/action consumer)",
+        "source": "wave-map:246; matrix:840; audit§5:341-342",
+        "row": 99
+      },
+      "P4-14": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "partial-turn resume + durable Trigger provider",
+        "source": "wave-map:254; matrix:854; audit§5:415-416",
+        "row": 100
+      },
+      "P5-01": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Strategy Router provider",
+        "source": "wave-map:203; matrix:873; audit§5:409",
+        "row": 101
+      },
+      "P5-02": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "outcome-aware Model Router provider",
+        "source": "wave-map:215; matrix:887; audit§5:407",
+        "row": 102
+      },
+      "P5-03": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "PromptIR / provider-specific prompt compiler provider",
+        "source": "wave-map:226; matrix:901; audit§5:384",
+        "row": 103
+      },
+      "P5-04": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "provider fallback/hedging/rate-limit provider",
+        "source": "wave-map:227; matrix:915; audit§5:408",
+        "row": 104
+      },
+      "P5-05": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "structured SubagentRequest (canonical type, no provider)",
+        "source": "wave-map:204; matrix:929",
+        "row": 105
+      },
+      "P5-06": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "structured SubagentResult (result contract only)",
+        "source": "wave-map:228; matrix:943",
+        "row": 106
+      },
+      "P5-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "native Codex adapter (Subagent Provider)",
+        "source": "wave-map:237; matrix:957; audit§5:423",
+        "row": 107
+      },
+      "P5-08": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "native Claude Code adapter (Subagent Provider)",
+        "source": "wave-map:238; matrix:971; audit§5:422",
+        "row": 108
+      },
+      "P5-09": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "native ACP provider (Subagent Provider)",
+        "source": "wave-map:285; matrix:985; audit§5:421",
+        "row": 109
+      },
+      "P5-10": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "continuation/steer/cancel convergence provider",
+        "source": "wave-map:169; matrix:999",
+        "row": 110
+      },
+      "P5-11": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Taskboard/mailbox/blackboard durable provider",
+        "source": "wave-map:170; matrix:1013; audit§5:356",
+        "row": 111
+      },
+      "P5-12": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "real git worktree provider + coordination guard",
+        "source": "wave-map:216; matrix:1027; audit§5:355,427",
+        "row": 112
+      },
+      "P6-01": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "provider-neutral Memory Service Definition",
+        "source": "wave-map:137; matrix:1046; audit§5:386",
+        "row": 113
+      },
+      "P6-02": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "canonical MemoryRecord (record/codec only)",
+        "source": "wave-map:148; matrix:1060",
+        "row": 114
+      },
+      "P6-03": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "memory proposal/verify/merge/forget/export provider",
+        "source": "wave-map:189; matrix:1074; audit§5:385",
+        "row": 115
+      },
+      "P6-04": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Context Graph + Retrieval Planner providers",
+        "source": "wave-map:229; matrix:1088; audit§5:357,360",
+        "row": 116
+      },
+      "P6-05": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "per-agent context topology + telemetry contract provider",
+        "source": "wave-map:239; matrix:1102; audit§5:359",
+        "row": 117
+      },
+      "P6-06": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "compaction fidelity/provenance/tool-pairing provider",
+        "source": "wave-map:230; matrix:1116",
+        "row": 118
+      },
+      "P6-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "session lifecycle/repair durable provider",
+        "source": "wave-map:138; matrix:1130; audit§5:419",
+        "row": 119
+      },
+      "P6-08": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "encryption, tenant keyring, tamper-evident audit, residency",
+        "source": "wave-map:205; matrix:1144; audit§5:354,362,420",
+        "row": 120
+      },
+      "P6-09": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "provider-neutral ArtifactRef + Artifact Service Definition",
+        "source": "wave-map:217; matrix:1158; audit§5:343-344",
+        "row": 121
+      },
+      "P6-10": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "privacy classification/redaction/fork-snapshot lineage",
+        "source": "wave-map:231; matrix:1172",
+        "row": 122
+      },
+      "P7-01": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "frozen VerificationContract → owns `spec/verification-contract.schema.json`",
+        "source": "wave-map:218; matrix:1191; audit§5:351",
+        "row": 123
+      },
+      "P7-02": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "raw EvidenceCollector/store (product-side `RuntimeEvidenceService`)",
+        "source": "wave-map:240; matrix:1205; audit§5:348",
+        "row": 124
+      },
+      "P7-03": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "Independent Verifier provider (`RuntimeVerifierProvider`)",
+        "source": "wave-map:247; matrix:1219; audit§5:352",
+        "row": 125
+      },
+      "P7-04": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "persistent ClaimGraph provider",
+        "source": "wave-map:255; matrix:1233; audit§5:346",
+        "row": 126
+      },
+      "P7-05": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "AcceptanceGate + OutcomePackage → owns `spec/outcome-package.schema.json`",
+        "source": "wave-map:262; matrix:1247; audit§5:345,349",
+        "row": 127
+      },
+      "P7-06": {
+        "primaryLayer": "L3_CONSUMER",
+        "rationale": "bounded repair/replan loop (verifier outcome consumer)",
+        "source": "wave-map:268; matrix:1261; audit§5:350",
+        "row": 128
+      },
+      "P7-07": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "causal trace + durable telemetry outbox provider",
+        "source": "wave-map:248; matrix:1275; audit§5:388-390",
+        "row": 129
+      },
+      "P7-08": {
+        "primaryLayer": "L3_CONSUMER",
+        "rationale": "deterministic replay/decision diff (session/eval consumer)",
+        "source": "wave-map:256; matrix:1289; audit§5:368",
+        "row": 130
+      },
+      "P7-09": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "15-world general-purpose qualification suite",
+        "source": "wave-map:269; matrix:1303",
+        "row": 131
+      },
+      "P7-10": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "evaluation/chaos/security/scale gates + champion–challenger + promotion",
+        "source": "wave-map:276; matrix:1317; audit§5:363-367",
+        "row": 132
+      },
+      "P8-01": {
+        "primaryLayer": "L1_CONTRACT",
+        "rationale": "protocol negotiation/capability discovery → owns `spec/control-protocol.schema.json`",
+        "source": "wave-map:149; matrix:1336",
+        "row": 133
+      },
+      "P8-02": {
+        "primaryLayer": "L5_SURFACE",
+        "rationale": "authorized remote resources control-plane API",
+        "source": "wave-map:270; matrix:1350",
+        "row": 134
+      },
+      "P8-03": {
+        "primaryLayer": "L5_SURFACE",
+        "rationale": "remote lifecycle commands control-plane surface",
+        "source": "wave-map:277; matrix:1364",
+        "row": 135
+      },
+      "P8-04": {
+        "primaryLayer": "L5_SURFACE",
+        "rationale": "bidirectional server→client requests / human adapter",
+        "source": "wave-map:219; matrix:1378",
+        "row": 136
+      },
+      "P8-05": {
+        "primaryLayer": "L5_SURFACE",
+        "rationale": "resumable event streaming surface",
+        "source": "wave-map:278; matrix:1392",
+        "row": 137
+      },
+      "P8-06": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "server-authenticated tenant/API scope providers",
+        "source": "wave-map:279; matrix:1406; audit§5:378",
+        "row": 138
+      },
+      "P8-07": {
+        "primaryLayer": "L5_SURFACE",
+        "rationale": "schema-generated TS/Python SDK parity + contract test matrix",
+        "source": "wave-map:286; matrix:1420; audit§5:418",
+        "row": 139
+      },
+      "P8-08": {
+        "primaryLayer": "L5_SURFACE",
+        "rationale": "operator control-plane UI",
+        "source": "wave-map:287; matrix:1434",
+        "row": 140
+      },
+      "P8-09": {
+        "primaryLayer": "L2_PROVIDER",
+        "rationale": "org governance: policy hierarchy, quota, retention, audit-export",
+        "source": "wave-map:288; matrix:1448",
+        "row": 141
+      },
+      "P8-10": {
+        "primaryLayer": "L6_QUALIFICATION",
+        "rationale": "config/ABI/DR release gate + `pnpm general-purpose-gate` + DR drill",
+        "source": "wave-map:294; matrix:1462",
+        "row": 142
+      }
+    }
+  },
+  "ownerAssignment": {
+    "status": "ADJUDICATED",
+    "canonicalOwners": {
+      "P0-01": "docs/audit",
+      "P0-02": "P0-02",
+      "P0-03": "(root) architecture.layers.json",
+      "P0-04": "scripts/architecture",
+      "P0-05": "packages/migration/feature-gates",
+      "P0-06": "packages/schema/schema-registry",
+      "P0-07": "scripts/release",
+      "P0-08": "benchmarks/harness-capability",
+      "P1-01": "P1-01",
+      "P1-02": "packages/plugin/plugin-provenance",
+      "P1-03": "packages/plugin/plugin-lock",
+      "P1-04": "packages/plugin/plugin-installer",
+      "P1-05": "packages/plugin/plugin-scanner",
+      "P1-06": "packages/plugin/plugin-host",
+      "P1-07": "packages/workspace/workspace-trust",
+      "P1-08": "packages/plugin/plugin-compat",
+      "P1-09": "packages/plugin/plugin-ownership",
+      "P1-10": "packages/plugin/plugin-migrations",
+      "P1-11": "packages/extensions/extension-proposal",
+      "P1-12": "packages/plugin/plugin-certification",
+      "P2-01": "packages/identity/principal",
+      "P2-02": "packages/policy/capability-token",
+      "P2-03": "P2-03",
+      "P2-04": "packages/policy/risk-taxonomy",
+      "P2-05": "packages/policy/policy-engine",
+      "P2-06": "packages/interaction/user-approval",
+      "P2-07": "packages/interaction/approval-store",
+      "P2-08": "packages/policy/grant-store",
+      "P2-09": "packages/interaction/approval-quorum",
+      "P2-10": "packages/policy/policy-language",
+      "P2-11": "packages/interaction/permission-presets",
+      "P2-12": "packages/interaction/human-channel",
+      "P3-01": "packages/execution/execution-world",
+      "P3-02": "packages/sandbox/sandbox",
+      "P3-03": "packages/execution/execution-world",
+      "P3-04": "packages/execution/egress-proxy",
+      "P3-05": "packages/execution/local-isolation",
+      "P3-06": "packages/credentials/secrets-broker",
+      "P3-07": "packages/sandbox/sandbox-local",
+      "P3-08": "packages/execution/execution-world-container",
+      "P3-09": "packages/execution/execution-world-remote",
+      "P3-10": "packages/execution/resource-budget",
+      "P3-11": "packages/execution/world-snapshot",
+      "P3-12": "packages/attachment/attachment-security",
+      "P4-01": "packages/run/run",
+      "P4-02": "P4-02",
+      "P4-03": "P4-03",
+      "P4-04": "packages/run/run-plan",
+      "P4-05": "packages/core/agent",
+      "P4-06": "packages/run/message-bus",
+      "P4-07": "packages/run/lease",
+      "P4-08": "packages/workflow/workflow-journal",
+      "P4-09": "packages/workflow/workflow-registry",
+      "P4-10": "packages/run/scheduler",
+      "P4-11": "packages/reliability/retry",
+      "P4-12": "packages/action/action-ledger",
+      "P4-13": "packages/action/reconciliation",
+      "P4-14": "packages/run/turn-checkpoint",
+      "P5-01": "packages/router/strategy-router",
+      "P5-02": "packages/router/model-router",
+      "P5-03": "packages/llm/prompt-compiler",
+      "P5-04": "packages/router/provider-resilience",
+      "P5-05": "packages/subagent/subagent",
+      "P5-06": "packages/subagent/subagent",
+      "P5-07": "packages/subagent/subagent-codex",
+      "P5-08": "packages/subagent/subagent-claude-code",
+      "P5-09": "packages/subagent/subagent-acp",
+      "P5-10": "packages/subagent/subagent",
+      "P5-11": "packages/collaboration/taskboard",
+      "P5-12": "packages/workspace/worktree-provider",
+      "P6-01": "packages/memory/memory",
+      "P6-02": "packages/memory/memory",
+      "P6-03": "packages/memory/memory-policy",
+      "P6-04": "packages/context/retrieval-planner",
+      "P6-05": "packages/context/context-topology",
+      "P6-06": "packages/compaction/compaction",
+      "P6-07": "packages/session/session-lifecycle",
+      "P6-08": "packages/audit/audit-ledger",
+      "P6-09": "packages/artifact/artifact",
+      "P6-10": "packages/privacy/data-classification",
+      "P7-01": "P7-01",
+      "P7-02": "packages/assurance/evidence",
+      "P7-03": "packages/assurance/verifier",
+      "P7-04": "packages/assurance/claim-graph",
+      "P7-05": "P7-05",
+      "P7-06": "packages/assurance/repair",
+      "P7-07": "packages/observability/causal-trace",
+      "P7-08": "packages/evaluation/replay",
+      "P7-09": "tests/capability",
+      "P7-10": "packages/evaluation/eval",
+      "P8-01": "P8-01",
+      "P8-02": "packages/api/remotes",
+      "P8-03": "packages/sdk/protocol",
+      "P8-04": "packages/sdk/protocol",
+      "P8-05": "packages/api/event-stream",
+      "P8-06": "packages/identity/authorization",
+      "P8-07": "packages/sdk/schema",
+      "P8-08": "packages/client/ui-run-control",
+      "P8-09": "packages/governance/org-policy",
+      "P8-10": "P8-10"
+    },
+    "humanAssignees": {
+      "P0-01": "UNASSIGNED",
+      "P0-02": "UNASSIGNED",
+      "P0-03": "UNASSIGNED",
+      "P0-04": "UNASSIGNED",
+      "P0-05": "UNASSIGNED",
+      "P0-06": "UNASSIGNED",
+      "P0-07": "UNASSIGNED",
+      "P0-08": "UNASSIGNED",
+      "P1-01": "UNASSIGNED",
+      "P1-02": "UNASSIGNED",
+      "P1-03": "UNASSIGNED",
+      "P1-04": "UNASSIGNED",
+      "P1-05": "UNASSIGNED",
+      "P1-06": "UNASSIGNED",
+      "P1-07": "UNASSIGNED",
+      "P1-08": "UNASSIGNED",
+      "P1-09": "UNASSIGNED",
+      "P1-10": "UNASSIGNED",
+      "P1-11": "UNASSIGNED",
+      "P1-12": "UNASSIGNED",
+      "P2-01": "UNASSIGNED",
+      "P2-02": "UNASSIGNED",
+      "P2-03": "UNASSIGNED",
+      "P2-04": "UNASSIGNED",
+      "P2-05": "UNASSIGNED",
+      "P2-06": "UNASSIGNED",
+      "P2-07": "UNASSIGNED",
+      "P2-08": "UNASSIGNED",
+      "P2-09": "UNASSIGNED",
+      "P2-10": "UNASSIGNED",
+      "P2-11": "UNASSIGNED",
+      "P2-12": "UNASSIGNED",
+      "P3-01": "UNASSIGNED",
+      "P3-02": "UNASSIGNED",
+      "P3-03": "UNASSIGNED",
+      "P3-04": "UNASSIGNED",
+      "P3-05": "UNASSIGNED",
+      "P3-06": "UNASSIGNED",
+      "P3-07": "UNASSIGNED",
+      "P3-08": "UNASSIGNED",
+      "P3-09": "UNASSIGNED",
+      "P3-10": "UNASSIGNED",
+      "P3-11": "UNASSIGNED",
+      "P3-12": "UNASSIGNED",
+      "P4-01": "UNASSIGNED",
+      "P4-02": "UNASSIGNED",
+      "P4-03": "UNASSIGNED",
+      "P4-04": "UNASSIGNED",
+      "P4-05": "UNASSIGNED",
+      "P4-06": "UNASSIGNED",
+      "P4-07": "UNASSIGNED",
+      "P4-08": "UNASSIGNED",
+      "P4-09": "UNASSIGNED",
+      "P4-10": "UNASSIGNED",
+      "P4-11": "UNASSIGNED",
+      "P4-12": "UNASSIGNED",
+      "P4-13": "UNASSIGNED",
+      "P4-14": "UNASSIGNED",
+      "P5-01": "UNASSIGNED",
+      "P5-02": "UNASSIGNED",
+      "P5-03": "UNASSIGNED",
+      "P5-04": "UNASSIGNED",
+      "P5-05": "UNASSIGNED",
+      "P5-06": "UNASSIGNED",
+      "P5-07": "UNASSIGNED",
+      "P5-08": "UNASSIGNED",
+      "P5-09": "UNASSIGNED",
+      "P5-10": "UNASSIGNED",
+      "P5-11": "UNASSIGNED",
+      "P5-12": "UNASSIGNED",
+      "P6-01": "UNASSIGNED",
+      "P6-02": "UNASSIGNED",
+      "P6-03": "UNASSIGNED",
+      "P6-04": "UNASSIGNED",
+      "P6-05": "UNASSIGNED",
+      "P6-06": "UNASSIGNED",
+      "P6-07": "UNASSIGNED",
+      "P6-08": "UNASSIGNED",
+      "P6-09": "UNASSIGNED",
+      "P6-10": "UNASSIGNED",
+      "P7-01": "UNASSIGNED",
+      "P7-02": "UNASSIGNED",
+      "P7-03": "UNASSIGNED",
+      "P7-04": "UNASSIGNED",
+      "P7-05": "UNASSIGNED",
+      "P7-06": "UNASSIGNED",
+      "P7-07": "UNASSIGNED",
+      "P7-08": "UNASSIGNED",
+      "P7-09": "UNASSIGNED",
+      "P7-10": "UNASSIGNED",
+      "P8-01": "UNASSIGNED",
+      "P8-02": "UNASSIGNED",
+      "P8-03": "UNASSIGNED",
+      "P8-04": "UNASSIGNED",
+      "P8-05": "UNASSIGNED",
+      "P8-06": "UNASSIGNED",
+      "P8-07": "UNASSIGNED",
+      "P8-08": "UNASSIGNED",
+      "P8-09": "UNASSIGNED",
+      "P8-10": "UNASSIGNED"
+    },
+    "note": "B approved all 100 canonical code owners (9 spec owners self-own; 91 assigned to owning package/tooling path). C: all 100 human assignees remain UNASSIGNED — no human named."
+  },
+  "thresholds": {
+    "status": "PROPOSED_PENDING_MAINTAINER",
+    "count": 17,
+    "note": "NOT approved. Values unchanged; implementers may not tune a threshold to pass a test."
+  },
+  "sameWaveConflicts": {
+    "status": "RESOLVED",
+    "count": 0,
+    "note": "Resolved by the Q4(a) writer-serialization direction below: every same-wave double-write on a canonical-owner file is now a maintainer-adjudicated write sequence with explicit predecessor edges. A same-wave double-write WITHOUT a valid serialization record stays a real CONFLICT (fail-closed)."
+  },
+  "writeSerialization": {
+    "status": "ADJUDICATED",
+    "count": 4,
+    "canonicalOwners": {
+      "packages/execution/execution-world/src/types.ts": "P3-01",
+      "packages/kernel/trust-kernel/src/types.ts": "P0-02",
+      "packages/subagent/subagent/src/request.ts": "P5-05",
+      "packages/subagent/subagent/src/result.ts": "P5-06"
+    },
+    "sequences": {
+      "packages/execution/execution-world/src/types.ts": [
+        "P3-01",
+        "P3-09",
+        "P3-04",
+        "P3-05"
+      ],
+      "packages/kernel/trust-kernel/src/types.ts": [
+        "P0-02",
+        "P1-02",
+        "P2-02"
+      ],
+      "packages/subagent/subagent/src/request.ts": [
+        "P5-05",
+        "P5-07",
+        "P5-08"
+      ],
+      "packages/subagent/subagent/src/result.ts": [
+        "P5-06",
+        "P6-09",
+        "P5-07",
+        "P5-08"
+      ]
+    },
+    "predecessorEdges": [
+      [
+        "P3-04",
+        "P3-01"
+      ],
+      [
+        "P3-05",
+        "P3-01"
+      ],
+      [
+        "P3-05",
+        "P3-04"
+      ],
+      [
+        "P2-02",
+        "P0-02"
+      ],
+      [
+        "P2-02",
+        "P1-02"
+      ],
+      [
+        "P5-08",
+        "P5-07"
+      ]
+    ],
+    "directive": "Q4(a) writer-serialization direction conditionally approved: each canonical-owner file is written by ONE epic per sub-wave in the recorded sequence; contributors must not parallel-modify canonical-owner files; any modification beyond the recorded sequence requires an explicit predecessor/sub-wave serialized in an independent micro-PR.",
+    "note": "Each sequence is a permutation of the same-wave writers with the canonical owner (the N creator) first. The result.ts sequence resolves the documented P5-06/P6-09 file-contract cycle (matrix gap note: P5-06 depends on P6-09 yet P6-09 consumes result.ts as prior_output introduced_by P5-06) by FILE-LEVEL serialization (P5-06 creates, then P6-09 modifies) — NOT a DAG edge, which would cycle. Same-wave adjacent pairs in every sequence have explicit predecessorEdges; computeDag verifies the union stays acyclic."
+  },
+  "agentBUncertainties": {
+    "status": "UNRESOLVED",
+    "count": 4,
+    "note": "Deferred by user (Q3: \"Defer all 4\")."
+  },
+  "envelopeV1_1": {
+    "status": "UNSIGNED",
+    "note": "Not signed: manifest note requires threshold approval as well; Q4 said sign after approvals above (A/B/C), thresholds remain unapproved."
+  }
+}

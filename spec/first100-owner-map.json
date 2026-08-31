@@ -1,0 +1,4772 @@
+{
+  "schemaVersion": "1.1",
+  "generatedFrom": "tests/first100/registry.json",
+  "semantics": {
+    "scope": "files each epic creates (N) or modifies (P); baseline (B) references are shared inputs, not owned",
+    "uniqueOwnerPerWave": "one writer -> SOLE; writers in strictly distinct waves -> SEQUENTIAL (allowed); two writers in the same wave -> CONFLICT, PENDING_MAINTAINER_ADJUDICATION, no writer silently dropped; a same-wave double-write on a canonical-owner file with a valid maintainer-approved write sequence (Q4(a)) -> SERIALIZED, and every same-wave adjacent pair must carry an explicit predecessor edge"
+  },
+  "writtenFiles": 441,
+  "statusCounts": {
+    "sole": 415,
+    "sequential": 22,
+    "serialized": 4,
+    "conflict": 0
+  },
+  "byFile": {
+    ".dsh/baseline.json": {
+      "owners": [
+        "P0-01"
+      ],
+      "waves": [
+        1
+      ],
+      "status": "SOLE"
+    },
+    ".dsh/plugins.lock.json": {
+      "owners": [
+        "P1-03"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    ".github/workflows/general-purpose-gate.yml": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    ".github/workflows/release-gate.yml": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "apps/cli/src/plugin-verify.ts": {
+      "owners": [
+        "P1-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "architecture.layers.json": {
+      "owners": [
+        "P0-03"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "benchmarks/harness-capability/README.md": {
+      "owners": [
+        "P0-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "benchmarks/harness-capability/manifest.yml": {
+      "owners": [
+        "P0-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "benchmarks/harness-capability/report.ts": {
+      "owners": [
+        "P0-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "benchmarks/harness-capability/runner.ts": {
+      "owners": [
+        "P0-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "benchmarks/harness-capability/scenarios/": {
+      "owners": [
+        "P0-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "docs/architecture/layering.md": {
+      "owners": [
+        "P0-04"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "docs/architecture/trust-kernel-boundary.md": {
+      "owners": [
+        "P0-02"
+      ],
+      "waves": [
+        2
+      ],
+      "status": "SOLE"
+    },
+    "docs/audit/baseline-b150a551.md": {
+      "owners": [
+        "P0-01"
+      ],
+      "waves": [
+        1
+      ],
+      "status": "SOLE"
+    },
+    "docs/plugins/manifest-v2.md": {
+      "owners": [
+        "P1-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "docs/plugins/trust-levels.md": {
+      "owners": [
+        "P1-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "docs/policy/language.md": {
+      "owners": [
+        "P2-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "docs/subsystems/control-protocol.md": {
+      "owners": [
+        "P8-01"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "docs/subsystems/execution-world.md": {
+      "owners": [
+        "P3-01"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "docs/subsystems/memory.md": {
+      "owners": [
+        "P6-01"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/action-ledger/src/index.ts": {
+      "owners": [
+        "P4-12"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/action-ledger/src/store.ts": {
+      "owners": [
+        "P4-12"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/action-ledger/src/types.ts": {
+      "owners": [
+        "P4-12",
+        "P4-13"
+      ],
+      "waves": [
+        7,
+        13
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/action/action-ledger/tests/idempotency.e2e.ts": {
+      "owners": [
+        "P4-12"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/action-manifest/src/canonicalize.ts": {
+      "owners": [
+        "P2-03"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/action-manifest/src/index.ts": {
+      "owners": [
+        "P2-03"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/action-manifest/src/types.ts": {
+      "owners": [
+        "P2-03",
+        "P2-04",
+        "P4-12"
+      ],
+      "waves": [
+        4,
+        5,
+        7
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/action/action-manifest/tests/manifest.spec.ts": {
+      "owners": [
+        "P2-03"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/compensation/src/index.ts": {
+      "owners": [
+        "P4-13"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/reconciliation/src/engine.ts": {
+      "owners": [
+        "P4-13"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/reconciliation/src/index.ts": {
+      "owners": [
+        "P4-13"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/reconciliation/src/types.ts": {
+      "owners": [
+        "P4-13"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/action/reconciliation/tests/saga.e2e.ts": {
+      "owners": [
+        "P4-13"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/auth-middleware/src/index.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/event-stream/src/index.ts": {
+      "owners": [
+        "P8-05"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/event-stream/src/store.ts": {
+      "owners": [
+        "P8-05"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/event-stream/tests/reconnect.e2e.ts": {
+      "owners": [
+        "P8-05"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/action.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/approval.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/artifact.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/human-interaction.ts": {
+      "owners": [
+        "P8-04"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/run-control.ts": {
+      "owners": [
+        "P8-03"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/run.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/verification.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/api/remotes/src/world.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/artifact/artifact-local/src/index.ts": {
+      "owners": [
+        "P6-09"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/artifact/artifact/src/index.ts": {
+      "owners": [
+        "P6-09"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/artifact/artifact/src/lineage.ts": {
+      "owners": [
+        "P6-09"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/artifact/artifact/src/types.ts": {
+      "owners": [
+        "P6-09"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/artifact/artifact/tests/lineage.spec.ts": {
+      "owners": [
+        "P6-09"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/acceptance-gate/src/evaluate.ts": {
+      "owners": [
+        "P7-05"
+      ],
+      "waves": [
+        15
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/acceptance-gate/src/index.ts": {
+      "owners": [
+        "P7-05"
+      ],
+      "waves": [
+        15
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/acceptance-gate/src/types.ts": {
+      "owners": [
+        "P7-05"
+      ],
+      "waves": [
+        15
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/acceptance-gate/tests/gate.e2e.ts": {
+      "owners": [
+        "P7-05"
+      ],
+      "waves": [
+        15
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/claim-graph/src/consistency.ts": {
+      "owners": [
+        "P7-04"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/claim-graph/src/index.ts": {
+      "owners": [
+        "P7-04"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/claim-graph/src/projector.ts": {
+      "owners": [
+        "P7-04"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/claim-graph/src/types.ts": {
+      "owners": [
+        "P7-04"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/claim-graph/tests/claim-graph.spec.ts": {
+      "owners": [
+        "P7-04"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence-format/src/types.ts": {
+      "owners": [
+        "P0-07"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence/src/collector.ts": {
+      "owners": [
+        "P7-02"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence/src/index.ts": {
+      "owners": [
+        "P7-02"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence/src/invariant.ts": {
+      "owners": [
+        "P7-02"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence/src/store.ts": {
+      "owners": [
+        "P7-02"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence/src/types.ts": {
+      "owners": [
+        "P7-02"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/evidence/tests/evidence.e2e.ts": {
+      "owners": [
+        "P7-02"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/outcome-package/src/index.ts": {
+      "owners": [
+        "P7-05"
+      ],
+      "waves": [
+        15
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/outcome-package/src/types.ts": {
+      "owners": [
+        "P7-05"
+      ],
+      "waves": [
+        15
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/repair/src/coordinator.ts": {
+      "owners": [
+        "P7-06"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/repair/src/index.ts": {
+      "owners": [
+        "P7-06"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/repair/src/policy.ts": {
+      "owners": [
+        "P7-06"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/repair/src/types.ts": {
+      "owners": [
+        "P7-06"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/repair/tests/repair.e2e.ts": {
+      "owners": [
+        "P7-06"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verification-contract/src/index.ts": {
+      "owners": [
+        "P7-01"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verification-contract/src/invariant.ts": {
+      "owners": [
+        "P7-01"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verification-contract/src/schema.ts": {
+      "owners": [
+        "P7-01"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verification-contract/src/types.ts": {
+      "owners": [
+        "P7-01"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verification-contract/tests/verification-contract.spec.ts": {
+      "owners": [
+        "P7-01"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verifier/src/coordinator.ts": {
+      "owners": [
+        "P7-03"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verifier/src/index.ts": {
+      "owners": [
+        "P7-03"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verifier/src/invariant.ts": {
+      "owners": [
+        "P7-03"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verifier/src/provider.ts": {
+      "owners": [
+        "P7-03"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verifier/src/types.ts": {
+      "owners": [
+        "P7-03"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/assurance/verifier/tests/verifier-isolation.e2e.ts": {
+      "owners": [
+        "P7-03"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/attachment/attachment-security/src/index.ts": {
+      "owners": [
+        "P3-12"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/attachment/attachment-security/src/scanner.ts": {
+      "owners": [
+        "P3-12"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/attachment/attachment-security/tests/malicious.e2e.ts": {
+      "owners": [
+        "P3-12"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/audit/audit-ledger/src/hash-chain.ts": {
+      "owners": [
+        "P6-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/audit/audit-ledger/src/index.ts": {
+      "owners": [
+        "P6-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/audit/audit-ledger/tests/tamper.e2e.ts": {
+      "owners": [
+        "P6-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/backup/disaster-recovery/src/index.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "packages/boot/config-compiler/src/diff.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "packages/boot/config-compiler/src/index.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "packages/boot/config-compiler/src/provenance.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "packages/boot/config-migration/src/index.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-governance/src/index.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/components/ActionTrace.tsx": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/components/ApprovalQueue.tsx": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/components/EvidencePanel.tsx": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/components/RunGraph.tsx": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/components/RunList.tsx": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/index.ts": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/src/store.ts": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/client/ui-run-control/tests/run-control.e2e.ts": {
+      "owners": [
+        "P8-08"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/blackboard/src/index.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/coordination-guard/src/index.ts": {
+      "owners": [
+        "P5-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/coordination-guard/tests/deadlock.e2e.ts": {
+      "owners": [
+        "P5-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/mailbox/src/index.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/taskboard/src/index.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/taskboard/src/store.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/taskboard/src/types.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/taskboard/tests/claims.e2e.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/compaction/compaction/src/coverage.ts": {
+      "owners": [
+        "P6-06"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/compaction/compaction/src/provenance.ts": {
+      "owners": [
+        "P6-06"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/compaction/compaction/tests/fidelity.e2e.ts": {
+      "owners": [
+        "P6-06"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/compatibility/abi-gate/src/index.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/context-graph/src/index.ts": {
+      "owners": [
+        "P6-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/context-graph/src/types.ts": {
+      "owners": [
+        "P6-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/context-telemetry/src/index.ts": {
+      "owners": [
+        "P6-05"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/context-telemetry/tests/isolation.spec.ts": {
+      "owners": [
+        "P6-05"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/context-topology/src/index.ts": {
+      "owners": [
+        "P6-05"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/context-topology/src/types.ts": {
+      "owners": [
+        "P6-05"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/retrieval-planner/src/budget.ts": {
+      "owners": [
+        "P6-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/retrieval-planner/src/index.ts": {
+      "owners": [
+        "P6-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/context/retrieval-planner/tests/planner.spec.ts": {
+      "owners": [
+        "P6-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/core/agent/src/state-machine.ts": {
+      "owners": [
+        "P4-05"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/core/agent/tests/state-machine.spec.ts": {
+      "owners": [
+        "P4-05"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/credentials/secrets-broker/src/index.ts": {
+      "owners": [
+        "P3-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/credentials/secrets-broker/src/lease.ts": {
+      "owners": [
+        "P3-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/credentials/secrets-broker/src/types.ts": {
+      "owners": [
+        "P3-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/credentials/secrets-broker/tests/secret-leak.e2e.ts": {
+      "owners": [
+        "P3-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/data/data-residency/src/index.ts": {
+      "owners": [
+        "P6-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/champion-challenger/src/index.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/eval-registry/src/index.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/eval-runner/src/index.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/eval/src/index.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/eval/src/types.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/evolution-proposal/src/index.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/replay/src/diff.ts": {
+      "owners": [
+        "P7-08"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/replay/src/index.ts": {
+      "owners": [
+        "P7-08"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/replay/src/normalizer.ts": {
+      "owners": [
+        "P7-08"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/replay/src/recorded-world.ts": {
+      "owners": [
+        "P7-08"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/replay/src/types.ts": {
+      "owners": [
+        "P7-08"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/replay/tests/replay.e2e.ts": {
+      "owners": [
+        "P7-08"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/evaluation/router-regret/src/index.ts": {
+      "owners": [
+        "P5-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/egress-proxy/src/dns.ts": {
+      "owners": [
+        "P3-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/egress-proxy/src/index.ts": {
+      "owners": [
+        "P3-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/egress-proxy/src/policy.ts": {
+      "owners": [
+        "P3-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/egress-proxy/tests/ssrf.e2e.ts": {
+      "owners": [
+        "P3-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-container/src/images.ts": {
+      "owners": [
+        "P3-08"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-container/src/index.ts": {
+      "owners": [
+        "P3-08"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-container/src/runtime.ts": {
+      "owners": [
+        "P3-08"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-container/tests/provider.e2e.ts": {
+      "owners": [
+        "P3-08"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-remote/src/attestation.ts": {
+      "owners": [
+        "P3-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-remote/src/client.ts": {
+      "owners": [
+        "P3-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-remote/src/index.ts": {
+      "owners": [
+        "P3-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world-remote/tests/reconnect.e2e.ts": {
+      "owners": [
+        "P3-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world/src/errors.ts": {
+      "owners": [
+        "P3-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world/src/index.ts": {
+      "owners": [
+        "P3-01",
+        "P3-08"
+      ],
+      "waves": [
+        7,
+        10
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/execution/execution-world/src/lifecycle.ts": {
+      "owners": [
+        "P3-01",
+        "P3-11"
+      ],
+      "waves": [
+        7,
+        11
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/execution/execution-world/src/outcome.ts": {
+      "owners": [
+        "P3-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world/src/types.ts": {
+      "owners": [
+        "P3-01",
+        "P3-09",
+        "P3-04",
+        "P3-05"
+      ],
+      "waves": [
+        7,
+        8,
+        9,
+        9
+      ],
+      "status": "SERIALIZED",
+      "serialization": {
+        "canonicalOwner": "P3-01",
+        "sequence": [
+          "P3-01",
+          "P3-09",
+          "P3-04",
+          "P3-05"
+        ]
+      }
+    },
+    "packages/execution/execution-world/tests/denial.spec.ts": {
+      "owners": [
+        "P3-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/execution-world/tests/world.spec.ts": {
+      "owners": [
+        "P3-01"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/local-isolation/src/linux.ts": {
+      "owners": [
+        "P3-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/local-isolation/src/macos.ts": {
+      "owners": [
+        "P3-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/local-isolation/src/windows.ts": {
+      "owners": [
+        "P3-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/local-isolation/tests/process-isolation.e2e.ts": {
+      "owners": [
+        "P3-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/resource-budget/src/accounting.ts": {
+      "owners": [
+        "P3-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/resource-budget/src/index.ts": {
+      "owners": [
+        "P3-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/resource-budget/src/types.ts": {
+      "owners": [
+        "P3-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/resource-budget/tests/budget.e2e.ts": {
+      "owners": [
+        "P3-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/world-snapshot/src/index.ts": {
+      "owners": [
+        "P3-11"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/world-snapshot/src/store.ts": {
+      "owners": [
+        "P3-11"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/world-snapshot/src/types.ts": {
+      "owners": [
+        "P3-11"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/execution/world-snapshot/tests/restore.e2e.ts": {
+      "owners": [
+        "P3-11"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/extensions/extension-proposal/src/index.ts": {
+      "owners": [
+        "P1-11"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/extensions/extension-proposal/src/pipeline.ts": {
+      "owners": [
+        "P1-11"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/extensions/extension-proposal/src/types.ts": {
+      "owners": [
+        "P1-11"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/extensions/extension-proposal/tests/pipeline.e2e.ts": {
+      "owners": [
+        "P1-11"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/governance/audit-export/src/index.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/governance/org-policy/src/index.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/governance/org-policy/src/types.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/governance/org-policy/tests/hierarchy.e2e.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/governance/quota/src/index.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/governance/retention/src/index.ts": {
+      "owners": [
+        "P8-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/auth/src/index.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/auth/src/types.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/authorization/src/index.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/authorization/src/policy.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/authorization/tests/tenant-isolation.e2e.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/principal/src/chain.ts": {
+      "owners": [
+        "P2-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/principal/src/index.ts": {
+      "owners": [
+        "P2-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/principal/src/types.ts": {
+      "owners": [
+        "P2-01",
+        "P6-02",
+        "P2-09"
+      ],
+      "waves": [
+        3,
+        5,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/identity/principal/tests/identity.spec.ts": {
+      "owners": [
+        "P2-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/identity/tenant/src/index.ts": {
+      "owners": [
+        "P8-06"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/approval-quorum/src/index.ts": {
+      "owners": [
+        "P2-09"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/approval-quorum/src/types.ts": {
+      "owners": [
+        "P2-09"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/approval-quorum/tests/quorum.spec.ts": {
+      "owners": [
+        "P2-09"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/approval-store/src/index.ts": {
+      "owners": [
+        "P2-07"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/approval-store/src/sqlite.ts": {
+      "owners": [
+        "P2-07"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/approval-store/src/types.ts": {
+      "owners": [
+        "P2-07",
+        "P2-09"
+      ],
+      "waves": [
+        8,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/interaction/approval-store/tests/recovery.e2e.ts": {
+      "owners": [
+        "P2-07"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/control-plane/src/index.ts": {
+      "owners": [
+        "P2-12"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/control-plane/tests/emergency-stop.e2e.ts": {
+      "owners": [
+        "P2-12"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/human-channel/src/index.ts": {
+      "owners": [
+        "P2-12",
+        "P8-04"
+      ],
+      "waves": [
+        7,
+        10
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/interaction/human-channel/src/types.ts": {
+      "owners": [
+        "P2-12",
+        "P6-03",
+        "P8-04"
+      ],
+      "waves": [
+        7,
+        8,
+        10
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/interaction/permission-presets/src/schema.ts": {
+      "owners": [
+        "P2-11"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/permission-presets/tests/profile.spec.ts": {
+      "owners": [
+        "P2-11"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/user-approval/src/canonical.ts": {
+      "owners": [
+        "P2-06"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/user-approval/src/preconditions.ts": {
+      "owners": [
+        "P2-06"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/interaction/user-approval/tests/argument-binding.spec.ts": {
+      "owners": [
+        "P2-06"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/kernel/trust-kernel/src/index.ts": {
+      "owners": [
+        "P0-02",
+        "P2-05",
+        "P4-04"
+      ],
+      "waves": [
+        2,
+        6,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/kernel/trust-kernel/src/invariant.ts": {
+      "owners": [
+        "P0-02"
+      ],
+      "waves": [
+        2
+      ],
+      "status": "SOLE"
+    },
+    "packages/kernel/trust-kernel/src/types.ts": {
+      "owners": [
+        "P0-02",
+        "P1-02",
+        "P2-02"
+      ],
+      "waves": [
+        2,
+        4,
+        4
+      ],
+      "status": "SERIALIZED",
+      "serialization": {
+        "canonicalOwner": "P0-02",
+        "sequence": [
+          "P0-02",
+          "P1-02",
+          "P2-02"
+        ]
+      }
+    },
+    "packages/kernel/trust-kernel/tests/boundary.spec.ts": {
+      "owners": [
+        "P0-02"
+      ],
+      "waves": [
+        2
+      ],
+      "status": "SOLE"
+    },
+    "packages/llm/prompt-compiler/src/compile.ts": {
+      "owners": [
+        "P5-03"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/llm/prompt-compiler/src/index.ts": {
+      "owners": [
+        "P5-03"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/llm/prompt-compiler/src/types.ts": {
+      "owners": [
+        "P5-03"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/llm/prompt-compiler/tests/golden.spec.ts": {
+      "owners": [
+        "P5-03"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory-policy/src/conflict.ts": {
+      "owners": [
+        "P6-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory-policy/src/index.ts": {
+      "owners": [
+        "P6-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory-policy/src/proposal.ts": {
+      "owners": [
+        "P6-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory-policy/tests/lifecycle.e2e.ts": {
+      "owners": [
+        "P6-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory/src/index.ts": {
+      "owners": [
+        "P6-01",
+        "P6-03"
+      ],
+      "waves": [
+        4,
+        8
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/memory/memory/src/invariant.ts": {
+      "owners": [
+        "P6-01"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory/src/provenance.ts": {
+      "owners": [
+        "P6-02"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory/src/record.ts": {
+      "owners": [
+        "P6-02",
+        "P6-03"
+      ],
+      "waves": [
+        5,
+        8
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/memory/memory/src/types.ts": {
+      "owners": [
+        "P6-01",
+        "P6-02"
+      ],
+      "waves": [
+        4,
+        5
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/memory/memory/tests/conformance.spec.ts": {
+      "owners": [
+        "P6-01"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/memory/memory/tests/record.spec.ts": {
+      "owners": [
+        "P6-02"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/migration/feature-gates/src/index.ts": {
+      "owners": [
+        "P0-05"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/migration/feature-gates/src/types.ts": {
+      "owners": [
+        "P0-05"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/migration/feature-gates/tests/gates.spec.ts": {
+      "owners": [
+        "P0-05"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/observability/causal-trace/src/index.ts": {
+      "owners": [
+        "P7-07"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/observability/causal-trace/src/types.ts": {
+      "owners": [
+        "P7-07"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/observability/causal-trace/tests/crash-delivery.e2e.ts": {
+      "owners": [
+        "P7-07"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/observability/otel-exporter/src/index.ts": {
+      "owners": [
+        "P7-07"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/observability/telemetry-outbox/src/index.ts": {
+      "owners": [
+        "P7-07"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/observability/telemetry-outbox/src/store.ts": {
+      "owners": [
+        "P7-07"
+      ],
+      "waves": [
+        13
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-certification/src/index.ts": {
+      "owners": [
+        "P1-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-certification/src/report.ts": {
+      "owners": [
+        "P1-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-compat/src/index.ts": {
+      "owners": [
+        "P1-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-compat/src/solver.ts": {
+      "owners": [
+        "P1-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-compat/tests/solver.spec.ts": {
+      "owners": [
+        "P1-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-host-protocol/src/types.ts": {
+      "owners": [
+        "P1-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-host/src/index.ts": {
+      "owners": [
+        "P1-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-host/src/rpc.ts": {
+      "owners": [
+        "P1-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-host/src/supervisor.ts": {
+      "owners": [
+        "P1-06",
+        "P3-04"
+      ],
+      "waves": [
+        8,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/plugin/plugin-host/tests/isolation.e2e.ts": {
+      "owners": [
+        "P1-06"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-installer/src/index.ts": {
+      "owners": [
+        "P1-04"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-installer/src/quarantine.ts": {
+      "owners": [
+        "P1-04"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-installer/src/transaction.ts": {
+      "owners": [
+        "P1-04"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-installer/tests/quarantine.e2e.ts": {
+      "owners": [
+        "P1-04"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-lock/src/index.ts": {
+      "owners": [
+        "P1-03"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-lock/src/types.ts": {
+      "owners": [
+        "P1-03"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-lock/tests/lock.spec.ts": {
+      "owners": [
+        "P1-03"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-manifest/src/index.ts": {
+      "owners": [
+        "P1-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-manifest/src/types.ts": {
+      "owners": [
+        "P1-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-manifest/src/validate.ts": {
+      "owners": [
+        "P1-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-manifest/tests/manifest.spec.ts": {
+      "owners": [
+        "P1-01"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-migrations/src/index.ts": {
+      "owners": [
+        "P1-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-migrations/src/transaction.ts": {
+      "owners": [
+        "P1-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-migrations/src/types.ts": {
+      "owners": [
+        "P1-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-migrations/tests/rollback.e2e.ts": {
+      "owners": [
+        "P1-10"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-ownership/src/index.ts": {
+      "owners": [
+        "P1-09"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-ownership/src/types.ts": {
+      "owners": [
+        "P1-09"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-ownership/tests/ownership.spec.ts": {
+      "owners": [
+        "P1-09"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-provenance/src/index.ts": {
+      "owners": [
+        "P1-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-provenance/src/sbom.ts": {
+      "owners": [
+        "P1-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-provenance/src/signature.ts": {
+      "owners": [
+        "P1-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-provenance/tests/provenance.spec.ts": {
+      "owners": [
+        "P1-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-scanner/src/dynamic.ts": {
+      "owners": [
+        "P1-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-scanner/src/index.ts": {
+      "owners": [
+        "P1-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-scanner/src/rules.ts": {
+      "owners": [
+        "P1-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-scanner/src/static.ts": {
+      "owners": [
+        "P1-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/plugin/plugin-scanner/tests/scanner.spec.ts": {
+      "owners": [
+        "P1-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/capability-token/src/attenuate.ts": {
+      "owners": [
+        "P2-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/capability-token/src/index.ts": {
+      "owners": [
+        "P2-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/capability-token/src/types.ts": {
+      "owners": [
+        "P2-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/capability-token/tests/token.spec.ts": {
+      "owners": [
+        "P2-02"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/grant-store/src/index.ts": {
+      "owners": [
+        "P2-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/grant-store/src/match.ts": {
+      "owners": [
+        "P2-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/grant-store/src/types.ts": {
+      "owners": [
+        "P2-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/grant-store/tests/grants.spec.ts": {
+      "owners": [
+        "P2-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/policy-engine/src/evaluate.ts": {
+      "owners": [
+        "P2-05"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/policy-engine/src/index.ts": {
+      "owners": [
+        "P2-05",
+        "P2-10"
+      ],
+      "waves": [
+        6,
+        7
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/policy/policy-engine/src/types.ts": {
+      "owners": [
+        "P2-05",
+        "P2-09"
+      ],
+      "waves": [
+        6,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/policy/policy-engine/tests/monotonic.spec.ts": {
+      "owners": [
+        "P2-05"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/policy-language/src/compiler.ts": {
+      "owners": [
+        "P2-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/policy-language/src/index.ts": {
+      "owners": [
+        "P2-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/policy-language/src/parser.ts": {
+      "owners": [
+        "P2-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/policy-language/tests/golden.spec.ts": {
+      "owners": [
+        "P2-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/risk-taxonomy/src/classify.ts": {
+      "owners": [
+        "P2-04"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/risk-taxonomy/src/index.ts": {
+      "owners": [
+        "P2-04"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/risk-taxonomy/src/types.ts": {
+      "owners": [
+        "P2-04"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/policy/risk-taxonomy/tests/classify.spec.ts": {
+      "owners": [
+        "P2-04"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/privacy/data-classification/src/index.ts": {
+      "owners": [
+        "P6-10"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/privacy/data-classification/src/types.ts": {
+      "owners": [
+        "P6-10"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/privacy/data-lineage/src/index.ts": {
+      "owners": [
+        "P6-10"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/privacy/data-lineage/tests/privacy.e2e.ts": {
+      "owners": [
+        "P6-10"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/privacy/redaction/src/index.ts": {
+      "owners": [
+        "P6-10"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/reliability/retry/src/budget.ts": {
+      "owners": [
+        "P4-11"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/reliability/retry/src/circuit.ts": {
+      "owners": [
+        "P4-11"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/reliability/retry/src/classify.ts": {
+      "owners": [
+        "P4-11"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/reliability/retry/src/index.ts": {
+      "owners": [
+        "P4-11"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/reliability/retry/tests/retry.spec.ts": {
+      "owners": [
+        "P4-11"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/model-router/src/index.ts": {
+      "owners": [
+        "P5-02"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/model-router/src/score.ts": {
+      "owners": [
+        "P5-02"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/model-router/src/types.ts": {
+      "owners": [
+        "P5-02"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/model-router/tests/router.spec.ts": {
+      "owners": [
+        "P5-02"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/provider-resilience/src/hedge.ts": {
+      "owners": [
+        "P5-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/provider-resilience/src/index.ts": {
+      "owners": [
+        "P5-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/provider-resilience/src/rate-limit.ts": {
+      "owners": [
+        "P5-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/provider-resilience/tests/fallback.e2e.ts": {
+      "owners": [
+        "P5-04"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/strategy-router/src/index.ts": {
+      "owners": [
+        "P5-01",
+        "P5-12"
+      ],
+      "waves": [
+        9,
+        10
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/router/strategy-router/src/rules.ts": {
+      "owners": [
+        "P5-01"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/strategy-router/src/types.ts": {
+      "owners": [
+        "P5-01"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/router/strategy-router/tests/router.spec.ts": {
+      "owners": [
+        "P5-01"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/lease/src/index.ts": {
+      "owners": [
+        "P4-07"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/lease/src/store.ts": {
+      "owners": [
+        "P4-07"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/lease/src/types.ts": {
+      "owners": [
+        "P4-07"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/lease/tests/fencing.e2e.ts": {
+      "owners": [
+        "P4-07"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/message-bus/src/inbox.ts": {
+      "owners": [
+        "P4-06"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/message-bus/src/index.ts": {
+      "owners": [
+        "P4-06"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/message-bus/src/outbox.ts": {
+      "owners": [
+        "P4-06"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/message-bus/tests/crash.e2e.ts": {
+      "owners": [
+        "P4-06"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run-plan/src/amend.ts": {
+      "owners": [
+        "P4-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run-plan/src/compile.ts": {
+      "owners": [
+        "P4-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run-plan/src/freeze.ts": {
+      "owners": [
+        "P4-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run-plan/src/index.ts": {
+      "owners": [
+        "P4-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run-plan/src/types.ts": {
+      "owners": [
+        "P4-03",
+        "P4-04",
+        "P5-02"
+      ],
+      "waves": [
+        8,
+        9,
+        10
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/run/run-plan/tests/amendment.spec.ts": {
+      "owners": [
+        "P4-04"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run-plan/tests/compile.spec.ts": {
+      "owners": [
+        "P4-03"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run/src/events.ts": {
+      "owners": [
+        "P4-01",
+        "P4-04"
+      ],
+      "waves": [
+        4,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/run/run/src/index.ts": {
+      "owners": [
+        "P4-01"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/run/src/state-machine.ts": {
+      "owners": [
+        "P4-01",
+        "P4-13"
+      ],
+      "waves": [
+        4,
+        13
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/run/run/src/types.ts": {
+      "owners": [
+        "P4-01",
+        "P4-02",
+        "P5-11",
+        "P4-03"
+      ],
+      "waves": [
+        4,
+        6,
+        7,
+        8
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/run/run/tests/state-machine.spec.ts": {
+      "owners": [
+        "P4-01"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/scheduler/src/fairness.ts": {
+      "owners": [
+        "P4-10"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/scheduler/src/index.ts": {
+      "owners": [
+        "P4-10"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/scheduler/src/locks.ts": {
+      "owners": [
+        "P4-10"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/scheduler/src/queue.ts": {
+      "owners": [
+        "P4-10"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/scheduler/tests/scheduler.e2e.ts": {
+      "owners": [
+        "P4-10"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/task-profile/src/index.ts": {
+      "owners": [
+        "P4-02"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/task-profile/src/types.ts": {
+      "owners": [
+        "P4-02",
+        "P5-01"
+      ],
+      "waves": [
+        6,
+        9
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/run/task-profile/src/validate.ts": {
+      "owners": [
+        "P4-02"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/task-profile/tests/profile.spec.ts": {
+      "owners": [
+        "P4-02"
+      ],
+      "waves": [
+        6
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/trigger-service/src/index.ts": {
+      "owners": [
+        "P4-14"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/trigger-service/tests/resume.e2e.ts": {
+      "owners": [
+        "P4-14"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/turn-checkpoint/src/index.ts": {
+      "owners": [
+        "P4-14"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/turn-checkpoint/src/types.ts": {
+      "owners": [
+        "P4-14"
+      ],
+      "waves": [
+        14
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox-local/src/attestation.ts": {
+      "owners": [
+        "P3-07"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox-local/src/capabilities.ts": {
+      "owners": [
+        "P3-07"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox-local/tests/conformance.e2e.ts": {
+      "owners": [
+        "P3-07"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox/src/network.ts": {
+      "owners": [
+        "P3-02"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox/src/policy.ts": {
+      "owners": [
+        "P3-02"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox/src/process.ts": {
+      "owners": [
+        "P3-02"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/sandbox/sandbox/tests/policy.spec.ts": {
+      "owners": [
+        "P3-02"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/schema/schema-registry/src/index.ts": {
+      "owners": [
+        "P0-06",
+        "P1-08"
+      ],
+      "waves": [
+        2,
+        4
+      ],
+      "status": "SEQUENTIAL"
+    },
+    "packages/schema/schema-registry/src/migrate.ts": {
+      "owners": [
+        "P0-06"
+      ],
+      "waves": [
+        2
+      ],
+      "status": "SOLE"
+    },
+    "packages/schema/schema-registry/src/types.ts": {
+      "owners": [
+        "P0-06"
+      ],
+      "waves": [
+        2
+      ],
+      "status": "SOLE"
+    },
+    "packages/schema/schema-registry/tests/compatibility.spec.ts": {
+      "owners": [
+        "P0-06"
+      ],
+      "waves": [
+        2
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/client/tests/control-protocol.contract.spec.ts": {
+      "owners": [
+        "P8-07"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/codegen/src/index.ts": {
+      "owners": [
+        "P8-07"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/contract-tests/src/cases.ts": {
+      "owners": [
+        "P8-07"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/capabilities.ts": {
+      "owners": [
+        "P8-01"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/commands.ts": {
+      "owners": [
+        "P8-03"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/event-stream.ts": {
+      "owners": [
+        "P8-05"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/resources.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/schema-fingerprint.ts": {
+      "owners": [
+        "P8-01"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/server-requests.ts": {
+      "owners": [
+        "P8-04"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/src/version.ts": {
+      "owners": [
+        "P8-01"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/tests/resources.contract.spec.ts": {
+      "owners": [
+        "P8-02"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/tests/run-lifecycle.e2e.ts": {
+      "owners": [
+        "P8-03"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/tests/server-request.e2e.ts": {
+      "owners": [
+        "P8-04"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/protocol/tests/version-negotiation.spec.ts": {
+      "owners": [
+        "P8-01"
+      ],
+      "waves": [
+        5
+      ],
+      "status": "SOLE"
+    },
+    "packages/sdk/schema/control-protocol.json": {
+      "owners": [
+        "P8-07"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/session/session-lifecycle/src/delete.ts": {
+      "owners": [
+        "P6-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/session/session-lifecycle/src/index.ts": {
+      "owners": [
+        "P6-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/session/session-lifecycle/src/retention.ts": {
+      "owners": [
+        "P6-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/session/session-lifecycle/tests/lifecycle.e2e.ts": {
+      "owners": [
+        "P6-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/storage/storage-encryption/src/index.ts": {
+      "owners": [
+        "P6-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/storage/storage-encryption/src/keyring.ts": {
+      "owners": [
+        "P6-08"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-acp/src/events.ts": {
+      "owners": [
+        "P5-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-acp/src/session.ts": {
+      "owners": [
+        "P5-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-acp/tests/continuation.e2e.ts": {
+      "owners": [
+        "P5-09"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-claude-code/src/continuation.ts": {
+      "owners": [
+        "P5-08"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-claude-code/src/map-events.ts": {
+      "owners": [
+        "P5-08"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-claude-code/tests/structured.e2e.ts": {
+      "owners": [
+        "P5-08"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-codex/src/continuation.ts": {
+      "owners": [
+        "P5-07"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-codex/src/map-events.ts": {
+      "owners": [
+        "P5-07"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent-codex/tests/structured.e2e.ts": {
+      "owners": [
+        "P5-07"
+      ],
+      "waves": [
+        12
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent/src/control.ts": {
+      "owners": [
+        "P5-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent/src/request.ts": {
+      "owners": [
+        "P5-05",
+        "P5-07",
+        "P5-08"
+      ],
+      "waves": [
+        9,
+        12,
+        12
+      ],
+      "status": "SERIALIZED",
+      "serialization": {
+        "canonicalOwner": "P5-05",
+        "sequence": [
+          "P5-05",
+          "P5-07",
+          "P5-08"
+        ]
+      }
+    },
+    "packages/subagent/subagent/src/result.ts": {
+      "owners": [
+        "P6-09",
+        "P5-06",
+        "P5-07",
+        "P5-08"
+      ],
+      "waves": [
+        10,
+        11,
+        12,
+        12
+      ],
+      "status": "SERIALIZED",
+      "serialization": {
+        "canonicalOwner": "P5-06",
+        "sequence": [
+          "P5-06",
+          "P6-09",
+          "P5-07",
+          "P5-08"
+        ]
+      }
+    },
+    "packages/subagent/subagent/tests/control-race.e2e.ts": {
+      "owners": [
+        "P5-10"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent/tests/request-contract.spec.ts": {
+      "owners": [
+        "P5-05"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/subagent/subagent/tests/result-contract.spec.ts": {
+      "owners": [
+        "P5-06"
+      ],
+      "waves": [
+        11
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-journal/src/index.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-journal/src/replay.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-journal/src/types.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-journal/tests/resume.e2e.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-registry/src/index.ts": {
+      "owners": [
+        "P4-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-registry/src/types.ts": {
+      "owners": [
+        "P4-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-registry/src/version.ts": {
+      "owners": [
+        "P4-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/workflow/workflow-registry/tests/nested.e2e.ts": {
+      "owners": [
+        "P4-09"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/workspace/workspace-trust/src/index.ts": {
+      "owners": [
+        "P1-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/workspace/workspace-trust/src/types.ts": {
+      "owners": [
+        "P1-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/workspace/workspace-trust/tests/trust.spec.ts": {
+      "owners": [
+        "P1-07"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "packages/workspace/workspace/tests/path-race.e2e.ts": {
+      "owners": [
+        "P3-12"
+      ],
+      "waves": [
+        8
+      ],
+      "status": "SOLE"
+    },
+    "packages/workspace/worktree-provider/src/index.ts": {
+      "owners": [
+        "P5-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "packages/workspace/worktree-provider/src/merge.ts": {
+      "owners": [
+        "P5-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "python/sdk/tests/test_control_protocol_contract.py": {
+      "owners": [
+        "P8-07"
+      ],
+      "waves": [
+        18
+      ],
+      "status": "SOLE"
+    },
+    "scripts/architecture/check-capability-seams.mjs": {
+      "owners": [
+        "P0-03"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "scripts/architecture/check-layer-deps.mjs": {
+      "owners": [
+        "P0-04"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "scripts/general-purpose-gate.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "scripts/release/baseline-fingerprint.mjs": {
+      "owners": [
+        "P0-01"
+      ],
+      "waves": [
+        1
+      ],
+      "status": "SOLE"
+    },
+    "scripts/release/collect-evidence.mjs": {
+      "owners": [
+        "P0-07"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "scripts/release/verify-evidence.mjs": {
+      "owners": [
+        "P0-07"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "tests/architecture/capability-seams.spec.ts": {
+      "owners": [
+        "P0-03"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "tests/architecture/layer-deps.spec.ts": {
+      "owners": [
+        "P0-04"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "tests/benchmark/runner.spec.ts": {
+      "owners": [
+        "P0-08"
+      ],
+      "waves": [
+        4
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/README.md": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/manifest.yaml": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/runner.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/code-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/external-write-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/high-risk-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/long-run-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/malicious-plugin-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/multi-tenant-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/research-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/capability/worlds/sdk-reconnect-world.ts": {
+      "owners": [
+        "P7-09"
+      ],
+      "waves": [
+        16
+      ],
+      "status": "SOLE"
+    },
+    "tests/chaos/runner.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "tests/disaster-recovery/restore.e2e.ts": {
+      "owners": [
+        "P8-10"
+      ],
+      "waves": [
+        19
+      ],
+      "status": "SOLE"
+    },
+    "tests/plugin/certification.e2e.ts": {
+      "owners": [
+        "P1-12"
+      ],
+      "waves": [
+        10
+      ],
+      "status": "SOLE"
+    },
+    "tests/release/baseline-fingerprint.spec.ts": {
+      "owners": [
+        "P0-01"
+      ],
+      "waves": [
+        1
+      ],
+      "status": "SOLE"
+    },
+    "tests/release/evidence-package.spec.ts": {
+      "owners": [
+        "P0-07"
+      ],
+      "waves": [
+        3
+      ],
+      "status": "SOLE"
+    },
+    "tests/scale/runner.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    },
+    "tests/security/runner.ts": {
+      "owners": [
+        "P7-10"
+      ],
+      "waves": [
+        17
+      ],
+      "status": "SOLE"
+    }
+  },
+  "specFiles": {
+    "spec/trust-kernel.md": "P0-02.C",
+    "spec/capability-manifest.schema.json": "P1-01.C",
+    "spec/action-manifest.schema.json": "P2-03.C",
+    "spec/task-profile.schema.json": "P4-02.C",
+    "spec/run-plan.schema.json": "P4-03.C",
+    "spec/verification-contract.schema.json": "P7-01.C",
+    "spec/outcome-package.schema.json": "P7-05.C",
+    "spec/control-protocol.schema.json": "P8-01.C",
+    "spec/release-gates.yaml": "P8-10.C"
+  },
+  "canonicalEpicOwners": {
+    "P0-01": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "docs/audit",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-02": {
+      "primaryLayer": "L0_KERNEL",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P0-02",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-03": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "(root) architecture.layers.json",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-04": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "scripts/architecture",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-05": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/migration/feature-gates",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-06": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/schema/schema-registry",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-07": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "scripts/release",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P0-08": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "benchmarks/harness-capability",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-01": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P1-01",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-02": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/plugin/plugin-provenance",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-03": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/plugin/plugin-lock",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-04": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/plugin/plugin-installer",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-05": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/plugin/plugin-scanner",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-06": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/plugin/plugin-host",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/workspace/workspace-trust",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-08": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/plugin/plugin-compat",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-09": {
+      "primaryLayer": "L3_CONSUMER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/plugin/plugin-ownership",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-10": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/plugin/plugin-migrations",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-11": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/extensions/extension-proposal",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P1-12": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/plugin/plugin-certification",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-01": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/identity/principal",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-02": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/policy/capability-token",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-03": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P2-03",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-04": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/policy/risk-taxonomy",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-05": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/policy/policy-engine",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-06": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/interaction/user-approval",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/interaction/approval-store",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-08": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/policy/grant-store",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-09": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/interaction/approval-quorum",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-10": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/policy/policy-language",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-11": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/interaction/permission-presets",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P2-12": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/interaction/human-channel",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-01": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/execution/execution-world",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-02": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/sandbox/sandbox",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-03": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/execution/execution-world",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-04": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/execution/egress-proxy",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-05": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/execution/local-isolation",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-06": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/credentials/secrets-broker",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/sandbox/sandbox-local",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-08": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/execution/execution-world-container",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-09": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/execution/execution-world-remote",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-10": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/execution/resource-budget",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-11": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/execution/world-snapshot",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-12": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/attachment/attachment-security",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-01": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/run/run",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-02": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P4-02",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-03": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P4-03",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-04": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/run/run-plan",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-05": {
+      "primaryLayer": "L3_CONSUMER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/core/agent",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-06": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/run/message-bus",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/run/lease",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-08": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/workflow/workflow-journal",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-09": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/workflow/workflow-registry",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-10": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/run/scheduler",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-11": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/reliability/retry",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-12": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/action/action-ledger",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-13": {
+      "primaryLayer": "L3_CONSUMER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/action/reconciliation",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P4-14": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/run/turn-checkpoint",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-01": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/router/strategy-router",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-02": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/router/model-router",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-03": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/llm/prompt-compiler",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-04": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/router/provider-resilience",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-05": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/subagent/subagent",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-06": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/subagent/subagent",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/subagent/subagent-codex",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-08": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/subagent/subagent-claude-code",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-09": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/subagent/subagent-acp",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-10": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/subagent/subagent",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-11": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/collaboration/taskboard",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P5-12": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/workspace/worktree-provider",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-01": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/memory/memory",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-02": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/memory/memory",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-03": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/memory/memory-policy",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-04": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/context/retrieval-planner",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-05": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/context/context-topology",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-06": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/compaction/compaction",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/session/session-lifecycle",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-08": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/audit/audit-ledger",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-09": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/artifact/artifact",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P6-10": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/privacy/data-classification",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-01": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P7-01",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-02": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/assurance/evidence",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-03": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/assurance/verifier",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-04": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/assurance/claim-graph",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-05": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "P7-05",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-06": {
+      "primaryLayer": "L3_CONSUMER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/assurance/repair",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-07": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/observability/causal-trace",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-08": {
+      "primaryLayer": "L3_CONSUMER",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/evaluation/replay",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-09": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "tests/capability",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P7-10": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/evaluation/eval",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-01": {
+      "primaryLayer": "L1_CONTRACT",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "P8-01",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-02": {
+      "primaryLayer": "L5_SURFACE",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/api/remotes",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-03": {
+      "primaryLayer": "L5_SURFACE",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/sdk/protocol",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-04": {
+      "primaryLayer": "L5_SURFACE",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/sdk/protocol",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-05": {
+      "primaryLayer": "L5_SURFACE",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/api/event-stream",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-06": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/identity/authorization",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-07": {
+      "primaryLayer": "L5_SURFACE",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "packages/sdk/schema",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-08": {
+      "primaryLayer": "L5_SURFACE",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/client/ui-run-control",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-09": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "AGENT_A_PROPOSED",
+      "canonicalOwner": "packages/governance/org-policy",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P8-10": {
+      "primaryLayer": "L6_QUALIFICATION",
+      "layerStatus": "ADJUDICATED",
+      "canonicalOwner": "P8-10",
+      "humanAssignee": "UNASSIGNED"
+    }
+  },
+  "writeSerialization": {
+    "status": "ADJUDICATED",
+    "canonicalOwners": {
+      "packages/execution/execution-world/src/types.ts": "P3-01",
+      "packages/kernel/trust-kernel/src/types.ts": "P0-02",
+      "packages/subagent/subagent/src/request.ts": "P5-05",
+      "packages/subagent/subagent/src/result.ts": "P5-06"
+    },
+    "sequences": {
+      "packages/execution/execution-world/src/types.ts": [
+        "P3-01",
+        "P3-09",
+        "P3-04",
+        "P3-05"
+      ],
+      "packages/kernel/trust-kernel/src/types.ts": [
+        "P0-02",
+        "P1-02",
+        "P2-02"
+      ],
+      "packages/subagent/subagent/src/request.ts": [
+        "P5-05",
+        "P5-07",
+        "P5-08"
+      ],
+      "packages/subagent/subagent/src/result.ts": [
+        "P5-06",
+        "P6-09",
+        "P5-07",
+        "P5-08"
+      ]
+    },
+    "predecessorEdges": [
+      [
+        "P3-04",
+        "P3-01"
+      ],
+      [
+        "P3-05",
+        "P3-01"
+      ],
+      [
+        "P3-05",
+        "P3-04"
+      ],
+      [
+        "P2-02",
+        "P0-02"
+      ],
+      [
+        "P2-02",
+        "P1-02"
+      ],
+      [
+        "P5-08",
+        "P5-07"
+      ]
+    ]
+  },
+  "conflicts": [],
+  "conflictStatus": "PENDING_MAINTAINER_ADJUDICATION"
+}

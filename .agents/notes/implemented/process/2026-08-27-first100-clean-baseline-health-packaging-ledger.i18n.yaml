@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-08-27-first100-clean-baseline-health-packaging-ledger.md
+2026-08-27-first100-clean-baseline-health-packaging-ledger.md: 9a9259331376f8ccb1e41f5a4ecc4416eb31c959
+2026-08-27-first100-clean-baseline-health-packaging-ledger.zh.md: 404ab28c7b21ab8a5298b5f63db211cd1ce9cdcd

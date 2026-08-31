@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-08-21T23:30:25.155525+00:00",
+  "audit_sha": "b150a551b8d465e31e418e1b2eaf5e79bbb7d28e",
+  "issues": 100,
+  "dependency_waves": 19,
+  "post_change_tests_run": false,
+  "files": {
+    "deepseek-harness-general-purpose-optimization-v1.md": {
+      "sha256": "1e6fb98b557fed2ec94cc08e8a7e9e2ac8fafc3b32e3b16d58d6ca10a73cc8bf",
+      "bytes": 628448,
+      "lines": 12425
+    },
+    "deepseek-harness-optimization-manifest-v1.yaml": {
+      "sha256": "eff0a6fbf7cae69d9e5eedce677dd7a474725ea77eec9c3c8cbc5c5fd590b72f",
+      "bytes": 518930,
+      "lines": 15439
+    },
+    "deepseek-harness-master-execution-prompt-v1.md": {
+      "sha256": "0d8eb428d5760694bd1b3cce421b276306824fa04fda5fba926ae796de29ecfd",
+      "bytes": 9574,
+      "lines": 260
+    }
+  }
+}
