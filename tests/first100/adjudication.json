@@ -983,5 +983,20 @@
   "envelopeV1_1": {
     "status": "UNSIGNED",
     "note": "Not signed: manifest note requires threshold approval as well; Q4 said sign after approvals above (A/B/C), thresholds remain unapproved."
+  },
+  "deliverablePathPatches": {
+    "status": "ADJUDICATED",
+    "count": 1,
+    "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation. The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable.",
+    "entries": {
+      "P0-01": {
+        "stage": "C",
+        "declaredPath": "docs/audit/baseline-b150a551.md",
+        "approvedPath": "docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md",
+        "reason": "BLOCKED-001: P0-01's own first100-requirements-matrix.md source names docs/audit/baseline-<sha>.md (SHA frozen at authoring time, b150a551) as the pnpm baseline:capture tool's own machine-generated fingerprint output. Decision A1 re-baselined to 0a53fb55, so a correctly-implemented baseline:capture would naturally target docs/audit/baseline-0a53fb55.md -- but that exact path already holds an unrelated artifact: the Supervisor's own R0.3A native-CI/pack health receipt (see docs/audit/baseline-0a53fb55.md), a different artifact class (test-suite-result evidence, not a Git-SHA+Node/pnpm-versions+workspace-package-list+protocol-schema-hashes fingerprint). Splitting the naming convention permanently: docs/audit/baseline-<sha>.md stays reserved for Supervisor R0.3A/governance health receipts; P0-01's baseline:capture family uses docs/audit/baseline-fingerprint-<sha>.md going forward.",
+        "approvedAt": "2026-08-31",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-001"
+      }
+    }
   }
 }

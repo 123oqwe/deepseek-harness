@@ -227,6 +227,62 @@ export interface Adjudication {
     note: string
     entries: Record<string, LayerMappingEntry>
   }
+  /**
+   * Maintainer-approved amendments to an epic's declared deliverable path
+   * (BLOCKED-001 and its class): the byte-locked registry stays unedited, and
+   * this overlay records the approved substitute on-disk path a Writer targets
+   * instead. Absent or invalid, a Writer must build at the registry's declared
+   * path unpatched.
+   */
+  deliverablePathPatches?: {
+    status: string
+    count: number
+    note: string
+    entries: Record<
+      string,
+      { stage: 'C' | 'P' | 'U' | 'F'; declaredPath: string; approvedPath: string; reason: string; approvedAt: string; basis: string }
+    >
+  }
+}
+
+export interface DeliverablePathPatchCheck {
+  valid: boolean
+  unknownIds: string[]
+  declaredPathMismatches: string[]
+  emptyApprovedPath: string[]
+  emptyReason: string[]
+}
+
+/**
+ * Validates `adj.deliverablePathPatches` against the byte-locked registry: every
+ * patched id and stage must exist in the registry, the patch's declaredPath must
+ * exactly match the registry's stage file it replaces (catching a stale or
+ * mistyped patch), and approvedPath/reason must be non-empty. Independent of the
+ * R0 gate — a patch records a maintainer-approved deliverable-path amendment, it
+ * never resolves an R0 exit-gate item.
+ */
+export function checkDeliverablePathPatches(reg: Registry, adj: Adjudication): DeliverablePathPatchCheck {
+  const entries = adj.deliverablePathPatches?.entries ?? {}
+  const regById = new Map(reg.epics.map(e => [e.id, e]))
+  const unknownIds: string[] = []
+  const declaredPathMismatches: string[] = []
+  const emptyApprovedPath: string[] = []
+  const emptyReason: string[] = []
+  for (const [id, p] of Object.entries(entries)) {
+    const epic = regById.get(id)
+    if (epic === undefined) {
+      unknownIds.push(id)
+      continue
+    }
+    const stageFiles = epic.stages[p.stage].files
+    if (!stageFiles.includes(p.declaredPath)) {
+      declaredPathMismatches.push(`${id}.${p.stage}: declaredPath ${p.declaredPath} not in registry stage files`)
+    }
+    if (p.approvedPath.trim().length === 0) emptyApprovedPath.push(id)
+    if (p.reason.trim().length === 0) emptyReason.push(id)
+  }
+  const valid = unknownIds.length === 0 && declaredPathMismatches.length === 0 && emptyApprovedPath.length === 0 && emptyReason.length === 0
+  return { valid, unknownIds, declaredPathMismatches, emptyApprovedPath, emptyReason }
 }
 
 function readRegistry(root: string): Registry {
@@ -585,6 +641,7 @@ function renderManifestYaml(reg: Registry, adj: Adjudication): string {
       agentBUncertainties: adj.agentBUncertainties,
       envelopeV1_1: adj.envelopeV1_1,
       writeSerialization: adj.writeSerialization,
+      deliverablePathPatches: adj.deliverablePathPatches,
     },
     remainingPending: {
       sameWaveConflicts: own.conflicts.length,

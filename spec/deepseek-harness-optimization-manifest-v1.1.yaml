@@ -839,6 +839,18 @@ adjudication:
         1: "P5-07"
     directive: "Q4(a) writer-serialization direction conditionally approved: each canonical-owner file is written by ONE epic per sub-wave in the recorded sequence; contributors must not parallel-modify canonical-owner files; any modification beyond the recorded sequence requires an explicit predecessor/sub-wave serialized in an independent micro-PR."
     note: "Each sequence is a permutation of the same-wave writers with the canonical owner (the N creator) first. The result.ts sequence resolves the documented P5-06/P6-09 file-contract cycle (matrix gap note: P5-06 depends on P6-09 yet P6-09 consumes result.ts as prior_output introduced_by P5-06) by FILE-LEVEL serialization (P5-06 creates, then P6-09 modifies) — NOT a DAG edge, which would cycle. Same-wave adjacent pairs in every sequence have explicit predecessorEdges; computeDag verifies the union stays acyclic."
+  deliverablePathPatches:
+    status: "ADJUDICATED"
+    count: 1
+    note: "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation. The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable."
+    entries:
+      P0-01:
+        stage: "C"
+        declaredPath: "docs/audit/baseline-b150a551.md"
+        approvedPath: "docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md"
+        reason: "BLOCKED-001: P0-01's own first100-requirements-matrix.md source names docs/audit/baseline-<sha>.md (SHA frozen at authoring time, b150a551) as the pnpm baseline:capture tool's own machine-generated fingerprint output. Decision A1 re-baselined to 0a53fb55, so a correctly-implemented baseline:capture would naturally target docs/audit/baseline-0a53fb55.md -- but that exact path already holds an unrelated artifact: the Supervisor's own R0.3A native-CI/pack health receipt (see docs/audit/baseline-0a53fb55.md), a different artifact class (test-suite-result evidence, not a Git-SHA+Node/pnpm-versions+workspace-package-list+protocol-schema-hashes fingerprint). Splitting the naming convention permanently: docs/audit/baseline-<sha>.md stays reserved for Supervisor R0.3A/governance health receipts; P0-01's baseline:capture family uses docs/audit/baseline-fingerprint-<sha>.md going forward."
+        approvedAt: "2026-08-31"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-001"
 remainingPending:
   sameWaveConflicts: 0
   unassignedOwners: 0

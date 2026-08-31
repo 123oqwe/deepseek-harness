@@ -39,6 +39,7 @@ import {
   V10_MANIFEST_YAML,
   checkArtifactManifestRecord,
   checkArtifactManifestSchema,
+  checkDeliverablePathPatches,
   checkLayerMapping,
   checkR0EvidenceRow,
   checkR0EvidenceRowSchema,
@@ -578,6 +579,52 @@ describe('layer gap resolution (Q4(b) option 2: complete 100-ID mapping)', () =>
     stale.layerMapping!.status = 'APPROVED'
     stale.layerMapping!.entries = {}
     expect(checkLayerMapping(reg, stale).valid).toBe(false)
+  })
+})
+
+describe('first100 deliverable-path patches (BLOCKED-001 manifest-patch channel)', () => {
+  const readAdj = (): Adjudication =>
+    JSON.parse(readFileSync(join(REPO_ROOT, 'tests/first100/adjudication.json'), 'utf8')) as Adjudication
+
+  it('the committed P0-01 patch is valid: known id/stage, declaredPath matches the byte-locked registry stage file, approvedPath/reason non-empty', () => {
+    const { reg } = readRegistry()
+    const adj = readAdj()
+    const check = checkDeliverablePathPatches(reg, adj)
+    expect(check.valid).toBe(true)
+    expect(check.unknownIds).toEqual([])
+    expect(check.declaredPathMismatches).toEqual([])
+    expect(check.emptyApprovedPath).toEqual([])
+    expect(check.emptyReason).toEqual([])
+    const p0_01 = adj.deliverablePathPatches?.entries['P0-01']
+    expect(p0_01?.declaredPath).toBe('docs/audit/baseline-b150a551.md')
+    expect(p0_01?.approvedPath).toBe('docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md')
+  })
+
+  it('fail-closed: an unknown id, a stale declaredPath, or an empty approvedPath/reason is a violation', () => {
+    const { reg } = readRegistry()
+    const base = readAdj()
+    const unknown = structuredClone(base)
+    unknown.deliverablePathPatches!.entries['NOT-AN-EPIC'] = { ...unknown.deliverablePathPatches!.entries['P0-01']! }
+    expect(checkDeliverablePathPatches(reg, unknown).unknownIds).toEqual(['NOT-AN-EPIC'])
+
+    const staleDeclared = structuredClone(base)
+    staleDeclared.deliverablePathPatches!.entries['P0-01']!.declaredPath = 'docs/audit/no-such-file.md'
+    const c2 = checkDeliverablePathPatches(reg, staleDeclared)
+    expect(c2.valid).toBe(false)
+    expect(c2.declaredPathMismatches).toHaveLength(1)
+
+    const emptyApproved = structuredClone(base)
+    emptyApproved.deliverablePathPatches!.entries['P0-01']!.approvedPath = '  '
+    expect(checkDeliverablePathPatches(reg, emptyApproved).emptyApprovedPath).toEqual(['P0-01'])
+
+    const emptyReason = structuredClone(base)
+    emptyReason.deliverablePathPatches!.entries['P0-01']!.reason = ''
+    expect(checkDeliverablePathPatches(reg, emptyReason).emptyReason).toEqual(['P0-01'])
+
+    // No patches at all is valid (vacuous) — a Writer then targets the
+    // registry's declared path unpatched.
+    const { deliverablePathPatches: _removed, ...withoutPatches } = base
+    expect(checkDeliverablePathPatches(reg, withoutPatches).valid).toBe(true)
   })
 })
 
