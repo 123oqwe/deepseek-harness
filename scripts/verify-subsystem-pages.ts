@@ -16,6 +16,7 @@ const root = resolve(import.meta.dirname, '..')
  */
 export const GROUPS_WITHOUT_SUBSYSTEM_PAGE: Readonly<Record<string, string>> = {
   acp: 'Protocol transport entry point; the server package README owns its interoperability contract.',
+  assurance: 'Contract-stage type surface with no constructed runtime value or Cordis registration yet; the package README owns the accepted-invariant boundary this group fixes.',
   boot: 'Shared application-bin boot library rather than a runtime subsystem.',
   bundle: 'Composition patch carriers whose mounted packages own all runtime contracts.',
   examples: 'Non-product demonstration compositions whose mounted packages own all runtime contracts.',
