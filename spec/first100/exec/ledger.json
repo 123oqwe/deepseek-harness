@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T10:36:17.729Z",
-  "inputDigest": "d7b76c52e8f2190f748e3a61a68df4db7702325e874ce1ece4b0341461d1b135",
+  "lastUpdatedUtc": "2026-09-01T10:51:28.134Z",
+  "inputDigest": "358eb8018a7941808c662366f96afa2eb7b08e5cb17dc383dbbba9cb65a67de2",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -133,7 +133,55 @@
       "wave": 2,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "cbd6031c9517dd4d71b28385b13b4037d89adddd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33498237387",
+          "observationReportPath": "/tmp/first100-ledger-inputs/p0-02-c-report.json",
+          "observationSha256": "a542ae3347412ce9d9b40f27c3758b5d4af0072afd78e262288af5c32b692af1",
+          "expectCasesMatched": [
+            "imports nothing: the kernel type surface depends on no other package",
+            "has no runtime code: every top-level statement is a type/interface declaration or an ambient declare-const symbol",
+            "declares an exported TrustKernel interface with exactly the six must[2] members, all readonly, and no methods",
+            "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+            "brands TrustKernelRootIdentity as an opaque interface, never a plain type alias",
+            "brands TrustKernelSignatureRoots as an opaque interface, never a plain type alias",
+            "brands TrustKernelSecretBrokerHandle as an opaque interface, never a plain type alias",
+            "keeps TrustKernelPolicyQuery.payload exactly `unknown` -- no business-domain field on the kernel surface",
+            "keeps TrustKernelAuditEntry.payload exactly `unknown` -- no business-domain field on the kernel surface",
+            "keeps TrustKernelSandboxAttestation.payload exactly `unknown` -- no business-domain field on the kernel surface",
+            "TrustKernelRootIdentity's brand symbol TRUST_KERNEL_ROOT_IDENTITY carries no export modifier",
+            "TrustKernelSignatureRoots's brand symbol TRUST_KERNEL_SIGNATURE_ROOTS carries no export modifier",
+            "TrustKernelSecretBrokerHandle's brand symbol TRUST_KERNEL_SECRET_BROKER carries no export modifier",
+            "gives TrustKernelRootIdentity exactly one member, a computed property keyed by TRUST_KERNEL_ROOT_IDENTITY",
+            "gives TrustKernelSignatureRoots exactly one member, a computed property keyed by TRUST_KERNEL_SIGNATURE_ROOTS",
+            "gives TrustKernelSecretBrokerHandle exactly one member, a computed property keyed by TRUST_KERNEL_SECRET_BROKER",
+            "exports none of the three branding symbols by name, per the real compiler's own module-exports list",
+            "type-checks a well-formed TrustKernel usage with zero diagnostics",
+            "rejects reassigning a TrustKernel member -- every capability is readonly",
+            "rejects constructing an opaque handle from an object literal -- no legitimate value exists outside an unsafe cast",
+            "names models among what remains a plugin",
+            "names tools among what remains a plugin",
+            "names storage providers among what remains a plugin",
+            "names workflow among what remains a plugin",
+            "names memory provider among what remains a plugin",
+            "names ui among what remains a plugin",
+            "names root identity among what is never a plugin",
+            "names deny enforcement among what is never a plugin",
+            "names audit-chain root among what is never a plugin",
+            "names signature-verification root among what is never a plugin",
+            "cross-references the TrustKernel type surface and the ctx.provide/ctx.plugin distinction",
+            "documents the auditAppend capability",
+            "documents the policyEnforcement capability",
+            "documents the rootIdentity capability",
+            "documents the sandboxAttestationVerifier capability",
+            "documents the secretBroker capability",
+            "documents the signatureRoots capability",
+            "cross-references the boundary doc and this slice's own test file"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-01T10:51:28.133Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -146,7 +194,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "cbd6031c9517dd4d71b28385b13b4037d89adddd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
