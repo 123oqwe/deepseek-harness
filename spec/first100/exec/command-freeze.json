@@ -220,5 +220,43 @@
       },
       "note": "P0-02 C-stage (2026-09-01): the TrustKernel narrow, unforgeable capability-surface type contract for @deepseek-ai/dsh-trust-kernel. Real RED at commit e95ca9e584 (stub types.ts exporting only a placeholder interface): 10/31 failed, all genuine TypeScript compiler diagnostics/structural mismatches, never module/syntax errors. Went through THREE rounds of Opus-level adversarial review (mandatory for this L0_KERNEL epic per C1): round 1 found a real gap -- the suite proved the surface was narrow and readonly but never actually tested unforgeability (2 of 5 seeded mutations, exporting a brand symbol or replacing it with an ordinary field, survived); fixed with 7 new tests (31->38), independently mutation-replayed twice before/after by two separate reviewers. Round 2 found the fix's honest package.json correction (dropping phantom main/types fields pointing at a lib/index.js this slice didn't yet produce) broke the repo-wide check-workspace-constraints.ts gate -- routed to the delegate as BLOCKED-009 (a brand-new package's C-stage-only slice structurally can't satisfy that gate without an index.ts). Delegate ruling: a pure-type-only src/index.ts (export type re-export only, zero runtime/Cordis surface) is now mandatory B4(f) scaffold for every future new-package C-stage slice, not a one-off. Round 3 found docs/module-graph (a peerDependencies-derived generated artifact) still stale on this package's own edge -- regenerated. Final ACCEPT confirmed via self-verification against the unmodified, already-reviewed gate scripts (typecheck, check-workspace-constraints.ts, verify-module-graph, publint, vitest all clean). A real, unrelated, pre-existing defect from P0-01.U's already-ACCEPTED slice was surfaced along the way (verify-cordis-config: packages/bundle/base/cordis.patch.yml references @deepseek-ai/dsh-baseline-preflight without declaring it in packages/bundle/base/package.json's dependencies) -- noted, not fixed here, out of scope for this epic."
     }
+,
+    {
+      "epic": "P0-02",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/kernel/trust-kernel/tests/boot.spec.ts",
+        "apps/cli/tests/trust-kernel-posture.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "stays opted out when the switch is unset or empty",
+        "opts in on ANY non-empty value, including falsy-looking ones",
+        "is a no-op when initialized, opt-in or not",
+        "fails closed (throws, never warns) when uninitialized without the insecure opt-in",
+        "warns and continues (never throws) when uninitialized with the insecure opt-in -- every call, a permanent warning, not a one-time notice",
+        "defaults to a stderr write when no warn sink is supplied",
+        "constructs a deep-frozen TrustKernel with all six members",
+        "denies and rejects by default -- no concrete policy/attestation provider exists yet (spec/trust-kernel.md acceptance clause 2)",
+        "constructs a fresh value on every call -- the one process-lifetime pin is the caller's discipline (a single ctx.provide), not a module-level singleton",
+        "pins the kernel before any config-tree entry mounts -- a plugin sees it already present",
+        "rejects a plugin that tries to override the pinned kernel via a second ctx.provide -- never a replaceable Cordis Service (must[3])"
+      ],
+      "files": [
+        "packages/kernel/trust-kernel/tests/boot.spec.ts",
+        "apps/cli/tests/trust-kernel-posture.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T07:35:00Z",
+      "dryRunProof": {
+        "treeSha": "aaf0f3c5132ec2b0c6567b52a59ec15d0569b0e8",
+        "testsDiscovered": 11
+      },
+      "note": "P0-02 U-stage (2026-09-01): real boot-sequence integration. createTrustKernel() (src/index.ts) replaces the C-stage pure-type stub (BLOCKED-009) with a deep-frozen TrustKernel construction. apps/cli/src/profile-boot.ts's runProfile() constructs the kernel BEFORE calling boot() at all (boot() itself creates the Cordis Context), then the existing prepare closure pins it via ctx.provide('trustKernel', kernel) -- never ctx.plugin(...). New DSH_TRUST_KERNEL_INSECURE opt-in + enforceTrustKernelPosture realize acceptance clauses 3/4 (production fail-closed / dev insecure-opt-in warning). Real RED at commit 2b2085a409 (stub createTrustKernel/posture functions): 6/17 failed genuinely (unfrozen kernel, wrong verdicts, opt-in resolver always false), never module/syntax errors. Opus-level adversarial review (mandatory for this L0_KERNEL epic): verified Cordis's real ReflectService.provide (vendor/cordis/src/reflect.ts) genuinely throws on a second provide() for the same key -- must[3]'s 'never replaceable' guarantee is proven against real, unmodified Cordis behavior, not a wrapper this package invented. 6 seeded mutations (deep-freeze removal at 2 depths, fail-closed no-op, insecure-opt-in-always-true, pin-deletion, malicious-plugin-target-neutering) all caught. Reviewer's own extra bypass probes (ctx.set() second-write, direct mutation of the frozen value, ctx.isolate() shadowing) found no exploitable bypass of the pinned value's identity, though isolation-scope shadowing is noted as worth an explicit doc sentence once real capability providers land (non-blocking). Reviewer additionally proved via mutation D1 (deleting the ctx.provide pin) that the fail-closed throw and the insecure-opt-in warning are BOTH reachable end-to-end through the real dsh subprocess boot (apps/cli/tests/profiles/headless/tests/headless.expected.e2e.ts, real DSH_TRUST_KERNEL_INSECURE env override) -- overturning the Writer's own more pessimistic self-assessment that the fail-closed branch was unreachable through real wiring. A dedicated committed e2e test for these two integration paths (today only mutation-observable) is noted as a non-blocking follow-up."
+    }
   ]
 }
