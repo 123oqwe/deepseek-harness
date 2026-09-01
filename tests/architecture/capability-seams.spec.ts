@@ -348,3 +348,60 @@ describe('isAllowlisted (acceptance[0])', () => {
     expect(isAllowlisted(violations[0] as SeamViolation, layers)).toBe(false)
   })
 })
+
+/**
+ * Epic P0-03 F-stage: `architecture.layers.json` is untyped JSON at runtime —
+ * `ArchitectureLayers` only describes the well-formed shape, so a hand-edited
+ * document missing a required array field reaches these functions with no
+ * compile-time guarantee. Before this slice, a missing `families`/`allowlist`
+ * array or a family missing `providers`/`consumers` crashed with an opaque
+ * `TypeError: ... is not iterable` instead of the same clear, path-qualified
+ * schema error every other malformed case in this file already produces
+ * (`family id is declared more than once`, `is not a workspace package`,
+ * etc.) — a real gap against AGENTS.md's "Misconfiguration fails loud" and
+ * "validate at ... file ... boundaries" conventions. These cases assert the
+ * fix: every one of these fields now reports one clear error and the
+ * function returns normally instead of throwing.
+ */
+describe('malformed architecture.layers.json shape (F-stage: fails loud with a clear error, not a crash)', () => {
+  it('reports a clear error, and does not throw, when families is not an array', () => {
+    const doc = { $schemaVersion: 1, allowlist: [] } as unknown as ArchitectureLayers
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: families must be an array',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when allowlist is not an array', () => {
+    const doc = { $schemaVersion: 1, families: [] } as unknown as ArchitectureLayers
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: allowlist must be an array',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when a family is missing providers', () => {
+    const family = { id: 'shell', definition: '@deepseek-ai/dsh-shell', consumers: [] } as unknown as CapabilityFamily
+    expect(validateCapabilityFamily(family)).toEqual(['shell: providers must be an array'])
+    expect(validateArchitectureLayers(layersOf(family), new Set(['@deepseek-ai/dsh-shell'])))
+      .toContain('shell: providers must be an array')
+  })
+
+  it('reports a clear error, and does not throw, when a family is missing consumers', () => {
+    const family = { id: 'shell', definition: '@deepseek-ai/dsh-shell', providers: [] } as unknown as CapabilityFamily
+    expect(validateCapabilityFamily(family)).toEqual(['shell: consumers must be an array'])
+    expect(validateArchitectureLayers(layersOf(family), new Set(['@deepseek-ai/dsh-shell'])))
+      .toContain('shell: consumers must be an array')
+  })
+
+  it('still validates every well-formed family when only one family in the document is malformed', () => {
+    const malformed = { id: 'broken', definition: '@deepseek-ai/dsh-shell' } as unknown as CapabilityFamily
+    const errors = validateArchitectureLayers(
+      layersOf(shellFamily, malformed),
+      new Set([shellFamily.definition, ...shellFamily.providers, ...shellFamily.consumers]),
+    )
+    expect(errors).toContain('broken: providers must be an array')
+    expect(errors).toContain('broken: consumers must be an array')
+    // shellFamily itself is well-formed and fully in the workspace set: no
+    // spurious error attributed to it just because a sibling family is broken.
+    expect(errors.some(error => error.startsWith('shell:'))).toBe(false)
+  })
+})
