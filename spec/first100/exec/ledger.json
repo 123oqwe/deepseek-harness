@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T05:50:51.449Z",
-  "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
+  "lastUpdatedUtc": "2026-09-01T10:36:17.729Z",
+  "inputDigest": "d7b76c52e8f2190f748e3a61a68df4db7702325e874ce1ece4b0341461d1b135",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -254,7 +254,34 @@
       "wave": 2,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "b1a715f52a84b9f3a59c11a9b15c311e58a313c4",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33495956332",
+          "observationReportPath": "/tmp/first100-ledger-inputs/p0-06-c-report.json",
+          "observationSha256": "7b399874e8344fbdab085d4de238f138d6d6c9abd74dd3cd8ba88509dc76124e",
+          "expectCasesMatched": [
+            "registers every known session-event payload type at 1.0",
+            "registers the named SDK protocol wire types at 1.0",
+            "exposes at least every bootstrapped schema through listSchemas()",
+            "registers a schema at its declared first version with the given migration",
+            "rejects a duplicate registration under the same schemaId, never silently replacing it",
+            "rejects an invalid first version {\"major\":0,\"minor\":0}",
+            "rejects an invalid first version {\"major\":1,\"minor\":-1}",
+            "rejects an invalid first version {\"major\":1.5,\"minor\":0}",
+            "accepts an additive-only change set that bumps only minor",
+            "rejects an additive-only change set that bumps major",
+            "accepts a breaking change set that bumps major by exactly 1 and resets minor to 0",
+            "rejects a breaking change set that bumps major but does not reset minor to 0",
+            "rejects an additive change set that does not increase minor",
+            "rejects a breaking change set that only bumps minor",
+            "rejects a breaking change set that skips a major version",
+            "rejects evolution declaring no changes",
+            "rejects evolving a schema that was never registered",
+            "reports compatible for an encountered version sharing the registered major, regardless of minor",
+            "returns a structured SchemaCompatibilityError, never a bare string, for a major mismatch",
+            "returns a structured SchemaCompatibilityError for an unregistered schemaId, never silently accepting it"
+          ],
+          "capturedAtUtc": "2026-09-01T10:36:17.728Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -267,7 +294,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "b1a715f52a84b9f3a59c11a9b15c311e58a313c4",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
