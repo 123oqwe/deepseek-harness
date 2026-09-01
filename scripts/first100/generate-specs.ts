@@ -782,6 +782,55 @@ export function computeOwnership(reg: Registry, adj?: Adjudication): Ownership {
   }
 }
 
+/** One file two or more proposed parallel-lane epics both own (kind N/P). */
+export interface ParallelLaneConflict {
+  file: string
+  epics: string[]
+}
+
+export interface ParallelLaneDisjointnessCheck {
+  /** True only when every proposed lane's owned files[] are pairwise disjoint from every other lane's. */
+  disjoint: boolean
+  conflicts: ParallelLaneConflict[]
+}
+
+/**
+ * BLOCKED-011 point 2 / delegate directive (2026-09-01): the hard prerequisite
+ * for opening genuinely parallel Writer lanes within one wave. Stricter than
+ * `computeOwnership`'s SOLE/SEQUENTIAL/SERIALIZED/CONFLICT status: a file the
+ * owner-map has validly SERIALIZED (a maintainer-approved write-order across
+ * waves) is still unsafe for TRUE parallel execution, since serialization only
+ * protects an ORDERED sequence of writes, never two lanes writing the same
+ * file concurrently. This check flags ANY file jointly owned (kind N or P) by
+ * two or more of the proposed `epicIds`, regardless of the file's overall
+ * ownership status — the only safe basis for opening parallel lanes is that no
+ * two lanes in the SAME proposed batch ever touch the same file at all.
+ * @param reg - the byte-locked registry (source of each epic's owned files[]).
+ * @param epicIds - the specific epic ids proposed to run as simultaneous parallel Writer lanes.
+ * @returns `disjoint: true` only when no file is jointly owned by two or more
+ *   of `epicIds`; otherwise every conflicting file, with the full list of
+ *   `epicIds` that own it.
+ */
+export function checkParallelLaneDisjointness(reg: Registry, epicIds: readonly string[]): ParallelLaneDisjointnessCheck {
+  const proposed = new Set(epicIds)
+  const claims: Record<string, Set<string>> = {}
+  for (const e of reg.epics) {
+    if (!proposed.has(e.id)) continue
+    for (const f of e.files) {
+      if (f.kind !== 'N' && f.kind !== 'P') continue
+      const owners = claims[f.path] ?? new Set<string>()
+      owners.add(e.id)
+      claims[f.path] = owners
+    }
+  }
+  const conflicts: ParallelLaneConflict[] = []
+  for (const [file, owners] of Object.entries(claims)) {
+    if (owners.size > 1) conflicts.push({ file, epics: [...owners].sort() })
+  }
+  conflicts.sort((a, b) => a.file.localeCompare(b.file))
+  return { disjoint: conflicts.length === 0, conflicts }
+}
+
 function renderManifestYaml(reg: Registry, adj: Adjudication): string {
   const own = computeOwnership(reg, adj)
   const eff = composeEffective(reg, adj)
