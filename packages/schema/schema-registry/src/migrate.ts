@@ -11,8 +11,6 @@
  * registry migration carries a bidirectional test or an explicit
  * irreversibility test. See `tests/migration.spec.ts`.
  *
- * STUB (RED): both migrations currently return their input unchanged.
- *
  * @module @deepseek-ai/dsh-schema-registry/migrate
  */
 
@@ -39,23 +37,31 @@ export interface AgentTimestampV2 {
 }
 
 /**
- * STUB: not yet implemented. Will be the forward half of the illustrative
- * rename migration (`firedAt` -> `occurredAt`), registered as the `migrate`
- * function for the synthetic schema's 1.0 -> 2.0 breaking evolution.
+ * Forward half of the illustrative rename migration: `firedAt` renamed to
+ * `occurredAt`, carrying the same value losslessly. Registered as the
+ * `migrate` function for the synthetic schema's 1.0 -> 2.0 breaking
+ * evolution.
  * @param payload - a payload written at the synthetic schema's version 1.0.
- * @returns the input unchanged (stub).
+ * @returns the payload with `firedAt` renamed to `occurredAt`.
  */
-export const renameFiredAtToOccurredAt: SchemaMigration = payload => payload
+export const renameFiredAtToOccurredAt: SchemaMigration = (payload) => {
+  const { firedAt, ...rest } = payload as LegacyAgentTimestampV1
+  return { ...rest, occurredAt: firedAt }
+}
 
 /**
- * STUB: not yet implemented. Will be the backward half of the illustrative
- * rename migration (`occurredAt` -> `firedAt`), demonstrating full
- * reversibility.
+ * Backward half of the illustrative rename migration, demonstrating full
+ * reversibility: `occurredAt` renamed back to `firedAt`. Not part of the
+ * registry's migration slot (`SchemaMigration` transforms only forward) --
+ * provided here only to prove, in `tests/migration.spec.ts`, that this
+ * specific migration loses no information in either direction.
  * @param payload - a payload written at the synthetic schema's version 2.0.
- * @returns the input unchanged (stub).
+ * @returns the payload with `occurredAt` renamed back to `firedAt`.
  */
-export const renameOccurredAtToFiredAt = (payload: AgentTimestampV2): LegacyAgentTimestampV1 =>
-  payload as unknown as LegacyAgentTimestampV1
+export const renameOccurredAtToFiredAt = (payload: AgentTimestampV2): LegacyAgentTimestampV1 => {
+  const { occurredAt, ...rest } = payload
+  return { ...rest, firedAt: occurredAt } as LegacyAgentTimestampV1
+}
 
 /**
  * ILLUSTRATIVE EXAMPLE, not a real historical schema. A hypothetical future
@@ -80,13 +86,18 @@ export interface ContactNameV2 {
 }
 
 /**
- * STUB: not yet implemented. Will be the forward half of the illustrative
- * merge migration (`firstName`+`lastName` -> `fullName`), registered as the
- * `migrate` function for the synthetic schema's 1.0 -> 2.0 breaking
+ * Forward half of the illustrative merge migration: combines `firstName`
+ * and `lastName` into one space-separated `fullName` field. Registered as
+ * the `migrate` function for the synthetic schema's 1.0 -> 2.0 breaking
  * evolution. Deliberately irreversible: no reverse migration is provided or
  * possible for the general case, because a merged, space-separated string
- * cannot in general be split back into the original two fields.
+ * cannot in general be split back into the original two fields -- see
+ * `tests/migration.spec.ts` for a concrete ambiguous case this loses
+ * information on.
  * @param payload - a payload written at the synthetic schema's version 1.0.
- * @returns the input unchanged (stub).
+ * @returns the payload with `firstName`/`lastName` merged into `fullName`.
  */
-export const mergeNameFields: SchemaMigration = payload => payload
+export const mergeNameFields: SchemaMigration = (payload) => {
+  const { firstName, lastName, ...rest } = payload as LegacyContactNameV1
+  return { ...rest, fullName: `${firstName} ${lastName}` }
+}

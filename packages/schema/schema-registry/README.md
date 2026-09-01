@@ -73,15 +73,21 @@ if (!result.compatible) {
 |---|---|
 | [`src/index.ts`](src/index.ts) | `registerSchema`/`evolveSchema`/`negotiateSchema`/`getSchema`/`listSchemas`, plus the bootstrap that registers every known session-event and SDK-protocol schema |
 | [`src/types.ts`](src/types.ts) | `SchemaId`, `SchemaVersion`, `FieldChange`, `RegisteredSchema`, and error-code types |
+| [`src/migrate.ts`](src/migrate.ts) | Illustrative, synthetic non-identity migration functions demonstrating the mechanism end-to-end (see below) |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion (no runtime invariant; see file) |
 
 ### Bootstrap registrations
 
 Importing this package registers, at version 1.0 with an identity migration: every type name in `KNOWN_SESSION_EVENT_TYPES` (`@deepseek-ai/dsh-session`) as `session-event:<type>`, and every named wire type `@deepseek-ai/dsh-sdk-protocol`'s `src/types.ts` documents (via its own schemaId doc comment on each interface) as `sdk-protocol:<TypeName>`. The protocol list is mirrored by hand in `src/index.ts` — protocol's package exports carry no runtime value for it — and must stay in sync when a wire type is added or removed there.
 
-### Deferred: real migration bodies
+### Non-identity migration examples
 
-Every migration registered in this C-stage slice is the identity function, because every current registration is a schema's own first version, which has no predecessor payload to transform. A real, non-identity migration body for a schema's second-and-later version is a later, P-stage concern (`migrate.ts`).
+Every schema this package bootstraps is still at its genuine first version (1.0) with an identity migration — no field in `KNOWN_SESSION_EVENT_TYPES` or the SDK-protocol wire types has ever actually been renamed, merged, or removed. `src/migrate.ts` demonstrates the registry's non-identity migration mechanism end-to-end with two synthetic, explicitly-labeled examples (never registered against a real schemaId), each exercising `evolveSchema`'s breaking-change path with a real migration function:
+
+- **`renameFiredAtToOccurredAt` / `renameOccurredAtToFiredAt`** — a lossless field rename. Both directions are provided and `tests/migration.spec.ts` proves `reverse(forward(x))` and `forward(reverse(x))` both round-trip without loss: a bidirectional migration.
+- **`mergeNameFields`** — a lossy merge of two fields (`firstName`+`lastName`) into one (`fullName`). No reverse migration is provided or possible in general (a merged, space-separated string cannot always be split back to its origin); `tests/migration.spec.ts` proves this with a concrete ambiguous input and asserts no reverse export exists: an explicit-irreversibility migration.
+
+These two examples are this package's proof that every registry migration carries a bidirectional test or an explicit-irreversibility test — not a description of a real historical schema change.
 
 ### Deferred: wiring into read paths
 
@@ -103,7 +109,7 @@ No direct effect; nothing in this package places content into a model request.
 <a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
-- **Real migration bodies are deferred** — every currently registered schema is at its own first version, so every migration function here is the identity function; a real transformation body lands with a schema's second version in the later `migrate.ts` P-stage slice.
+- **No real second-version schema exists yet** — every bootstrapped schema is still at its own first version with an identity migration; `src/migrate.ts`'s non-identity migrations are illustrative synthetic examples, never registered against a real schemaId, because no genuine field rename/merge/removal has happened yet on a bootstrapped schema.
 - **Not yet wired into a read path** — `negotiateSchema` is real and tested but no session-replay, SDK-initialize, or plugin-load call site invokes it yet; that integration is a later U-stage slice.
 - **The SDK-protocol schemaId list is hand-mirrored** — `src/index.ts`'s `PROTOCOL_WIRE_SCHEMA_IDS` must be kept in sync by hand with the schemaId doc comments in `@deepseek-ai/dsh-sdk-protocol`'s `src/types.ts`; nothing currently cross-checks them automatically.
 
