@@ -5863,6 +5863,19 @@ importers:
         specifier: workspace:^
         version: link:../../core/tools
 
+  packages/guard/baseline-preflight:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+
   packages/guard/repeat-tool-reminder:
     dependencies:
       '@deepseek-ai/schemastery':

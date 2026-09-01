@@ -1,0 +1,7 @@
+# Minimal composition proving `@deepseek-ai/dsh-baseline-preflight` has a real
+# boot-abort effect: only the plugin itself is mounted; driven by
+# P0-01.composition.spec.ts.
+- id: baseline-preflight
+  name: '@deepseek-ai/dsh-baseline-preflight'
+  config:
+    repoRoot: !!js process.env.BASELINE_PREFLIGHT_REPO_ROOT
