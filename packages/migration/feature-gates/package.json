@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-feature-gates",
-  "description": "Contract-stage type surface for Epic P0-05's Shadow/Enforce feature-gate state, per-gate lifecycle metadata, and settings-namespace interop -- no runtime registration or evaluation yet",
+  "description": "Epic P0-05's Shadow/Enforce feature gates: a pure override-chain resolver, a shadow-vs-legacy decision evaluator with redacted diff recording, and a real-version-aware release-gate expiry check",
   "version": "0.1.2-alpha.2",
   "publishConfig": {
     "access": "public"
@@ -31,6 +31,9 @@
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
+  "dependencies": {
+    "@deepseek-ai/dsh-util-values": "workspace:^"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
@@ -39,7 +42,6 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-invariants": "workspace:^",
-    "@deepseek-ai/dsh-util-values": "workspace:^"
+    "@deepseek-ai/dsh-invariants": "workspace:^"
   }
 }
