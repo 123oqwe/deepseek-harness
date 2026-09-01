@@ -9,6 +9,18 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-010 — standing rule: mandatory repo-wide-gate scan in every Reviewer's checklist (ANSWERED-BY-DELEGATE(gq-92))
+
+- **When:** 2026-09-01, after two real, independently-confirmed instances of a recurring pattern within one session: P0-02.U's review found `docs/module-graph` stale on the already-ACCEPTED-pending P0-02.C's own package edge; P0-06.P's review found 7 real `verify-export-jsdoc` violations in the already-merged P0-06.C's `src/index.ts`, missed by all of C-stage's own review rounds. No corresponding prior Open entry — a proactive delegate scheduling directive, created and answered directly (matching BLOCKED-003/007's own precedent for this).
+- **Delegate directive (verbatim, `guanjieqiao-92`, cross-session message, 2026-09-01, C7 scope ①: review-escalation choices / precedent refinement):** 「C7 委托裁决（范围①：审查升级选择/先例细化）——针对你识别的"单 stage 窄审查漏全仓扫描门"模式（两次实证：P0-02.U 抓到陈旧 module-graph、P0-06.P 抓到 C 格遗留 7 处 verify-export-jsdoc 违规），确立 standing rule：1. 候选审查新增"仓库门扫描"必查项：每个 slice 的 Reviewer 在 verdict 前，须对本 slice 触及的表面运行相关的仓库级 gate 子集（按改动面选择：docs/module-graph 一致性、verify-export-jsdoc、check-workspace-constraints、双语配对等 doc-sync 叶子；具体最小子集由你按 slice 类型定型并记入审查清单模板）。发现违规 = 本 slice 的 MUST-FIX，禁止遗赠给下一 stage。2. 原则记录：仓库门债务的清偿边界是 slice，不是 epic——"下一格会顺手修"不构成通过理由。3. 已发生的两笔遗留债已修，不追溯；本规则自下一 slice 起生效。另：P0-02.U 那次"用真实 e2e 突变反驳 Writer 自己的悲观自评、并读 vendored 源码核实 Cordis 语义"是本程序迄今最好的一次审查——把这个案例写进审查清单模板当范例。记 ANSWERED-BY-DELEGATE(gq-92)。」
+- **In-scope confirmation:** C7 scope item ① (review-escalation choices / evidence-mechanism precedent refinement); touches no reserved item.
+- **Resolution, effective immediately, for slices from this point forward (not retroactive):**
+  1. Every Reviewer dispatch (Writer-fix confirmation or fresh slice review) must, before rendering a verdict, run the repo-wide gate subset relevant to the slice's actual touched surface — at minimum considering `docs/module-graph` consistency (any package/dependency-graph change), `verify-export-jsdoc` (any new/edited exported symbol), `check-workspace-constraints.ts` (any new package or `package.json` edit), and bilingual/doc-sync leaves (any edited in-scope doc). The Supervisor selects the minimal relevant subset per slice type when writing the Reviewer's dispatch prompt, going forward.
+  2. A violation found this way is a MUST-FIX for the CURRENT slice, never deferrable to "the next stage will pick it up" — the repo-gate debt's settlement boundary is the slice, not the epic.
+  3. The two already-incurred instances (P0-02.C's module-graph staleness, P0-06.C's JSDoc violations) are NOT retroactively reopened — both were found and fixed by the very next slice's review, which satisfies the spirit of this rule even though it predates the rule's formal adoption.
+  4. The P0-02.U review (Cordis `ReflectService.provide` verified against real vendored source; the Writer's own pessimistic self-assessment of fail-closed-unreachability overturned via a real e2e mutation demonstration) is recorded as the exemplar case for future Reviewer dispatch prompts.
+- **Status:** ANSWERED-BY-DELEGATE(gq-92) — applies starting with P0-02's F-stage review onward.
+
 ### BLOCKED-009 — a brand-new [N] package's C-stage-only slice (no `src/index.ts` yet) fails the repo-wide `check-workspace-constraints.ts` root-entry-point requirement
 
 - **When:** 2026-09-01, W2's first slice (P0-02 C-stage, "Minimal Immutable Trust Kernel"), second-round adversarial re-review after fixing the first review's findings — the re-reviewer found this independently, a NEW regression the fix commit introduced while honestly correcting an earlier `main`/`types` field that pointed at a `lib/index.js` this slice cannot yet produce.
