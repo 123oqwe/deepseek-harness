@@ -29,6 +29,12 @@ Every other part of dsh is a plugin: contributed through `ctx.plugin(...)`, reso
 
 A later slice constructs the one `TrustKernel` value before the Cordis `Context` exists at all, deep-freezes it, and pins it into the context with `ctx.provide('trustKernel', kernel)` — the same mechanism `packages/boot/app-boot/src/index.ts` already uses for `ctx.provide('dshHomePath', dshHomePath)`. `ctx.provide` writes a value the Loader never sees: no config row, patch, or plugin unload can reach it, because none of those act on anything the Loader did not itself mount. Contrast `ctx.plugin(...)`, which registers through the Loader and is exactly what stays reachable by config, patches, and unload — the mechanism every other capability in this list correctly uses.
 
+`ctx.provide` alone only guards double-registration by checking whether `ctx.reflect.store`'s entry is already set — and that store is a plain, mutable object any plugin with `ctx` access can read. `@deepseek-ai/dsh-trust-kernel`'s `pinTrustKernel(ctx, kernel)` closes the resulting delete-then-reprovide bypass by freezing that specific store entry (`Object.defineProperty(..., { writable: false, configurable: false })`) immediately after `ctx.provide` succeeds, so both a direct `delete` and a direct reassignment throw; `apps/cli/src/profile-boot.ts` calls `pinTrustKernel`, never a bare `ctx.provide`, for this reason.
+
+### Known gap: fiber-local property-access poisoning
+
+`pinTrustKernel` protects `ctx.get('trustKernel')`; it does not protect `ctx.trustKernel` property access. Cordis resolves `ctx.trustKernel` by walking each fiber's own, separately mutable `Fiber.store` cache — a different object from `ctx.reflect.store`, rebuilt wholesale on every reload and never routed through `ReflectService.provide()`'s guard at all. Any plugin can assign `ctx.fiber.store['trustKernel'] = forged` directly; this durably poisons what `ctx.trustKernel` resolves to for that plugin and every plugin mounted beneath it (proven live, not merely theoretical), while leaving `ctx.get('trustKernel')` and every other subtree unaffected. No defensive wrapper in this repository's own code closes this without touching vendored Cordis's `Fiber` class, which this repository's vendoring policy forbids. Until a maintainer decision closes it, treat `ctx.get('trustKernel')` as the kernel's only safe access form.
+
 ## What remains a plugin
 
 Everything the kernel does not name above stays an ordinary, replaceable Cordis plugin, composed and patched the same way as the rest of dsh:

@@ -29,6 +29,12 @@ dsh 中其余一切都是插件：通过 `ctx.plugin(...)` 贡献、由 Loader �
 
 后续切片会在 Cordis `Context` 尚不存在之前构造出唯一的 `TrustKernel` 值，将其深度冻结，并用 `ctx.provide('trustKernel', kernel)` 把它钉入 context——与 `packages/boot/app-boot/src/index.ts` 已经用于 `ctx.provide('dshHomePath', dshHomePath)` 的机制相同。`ctx.provide` 写入的值 Loader 永远看不到：没有配置行、补丁或插件卸载能触及它，因为它们全都只作用于 Loader 自己挂载过的东西。与之相对的是 `ctx.plugin(...)`，它通过 Loader 注册，正是本清单中每项其他能力都正确使用的、能被配置、补丁和卸载触及的机制。
 
+`ctx.provide` 单独使用时，其重复注册防护仅检查 `ctx.reflect.store` 对应条目是否已被占用——而该 store 是一个普通的、可变的对象，任何拥有 `ctx` 的插件都能读取它。`@deepseek-ai/dsh-trust-kernel` 的 `pinTrustKernel(ctx, kernel)` 在 `ctx.provide` 成功后立即冻结该具体 store 条目（`Object.defineProperty(..., { writable: false, configurable: false })`），从而关闭由此产生的"先删除、后重新注册"绕过路径，使直接 `delete` 和直接赋值都会抛出异常；正因如此，`apps/cli/src/profile-boot.ts` 调用的是 `pinTrustKernel`，而不是裸的 `ctx.provide`。
+
+### 已知缺口：fiber 本地的属性访问污染
+
+`pinTrustKernel` 保护的是 `ctx.get('trustKernel')`；它不保护 `ctx.trustKernel` 的属性访问。Cordis 解析 `ctx.trustKernel` 时会遍历每个 fiber 自己的、可独立修改的 `Fiber.store` 缓存——这是一个与 `ctx.reflect.store` 不同的对象，每次 reload 都会被整体重建，且从不经过 `ReflectService.provide()` 的防护。任何插件都能直接赋值 `ctx.fiber.store['trustKernel'] = forged`；这会持久地污染该插件及其下挂载的每个插件所解析到的 `ctx.trustKernel`（已实测验证，并非纯理论），而 `ctx.get('trustKernel')` 与其他子树不受影响。在不触碰 vendored Cordis 的 `Fiber` 类（本仓库的 vendoring 策略禁止这样做）的前提下，本仓库自身代码中的防御性包装无法关闭这个缺口。在维护者做出决策并将其关闭之前，请把 `ctx.get('trustKernel')` 视为 kernel 唯一安全的访问方式。
+
 ## 哪些仍是插件
 
 kernel 上文未命名的一切，仍是普通的、可替换的 Cordis 插件，其组装与打补丁方式与 dsh 其余部分相同：

@@ -43,6 +43,20 @@
  * already proved at initial boot, applied through this narrower, genuinely
  * distinct, post-boot code path (a row absent from the tree at boot,
  * inserted into the already-running tree afterward).
+ *
+ * A third describe block below closes a real gap the first two did not
+ * cover: `ReflectService.provide()`'s duplicate-registration guard
+ * (`if (this.store[key]) throw ...`) checks a plain, mutable
+ * `Object.create(null)` object (`ctx.reflect.store`, reachable from any
+ * plugin as `ctx.reflect.store`). A plugin can `delete
+ * ctx.reflect.store[key]` first -- clearing the guard without going through
+ * `ctx.provide` at all -- then `ctx.provide('trustKernel', forged)` to
+ * re-register past it, defeating must[3] even though neither prior test's
+ * code path was touched. `../src/index.ts`'s `pinTrustKernel` closes this by
+ * freezing the specific store entry (`writable: false, configurable: false`)
+ * immediately after the legitimate `provide`; the tests below prove both the
+ * `delete` half and a direct-reassignment half now throw a real `TypeError`,
+ * and that the pinned kernel survives both attempts unforged.
  */
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -50,7 +64,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { boot } from '@deepseek-ai/dsh-app-boot'
-import { createTrustKernel } from '../src/index.ts'
+import { createTrustKernel, pinTrustKernel } from '../src/index.ts'
 
 const NAME = 'trust-kernel-dispose-test'
 
@@ -139,6 +153,85 @@ describe('a plugin dynamically inserted into the already-booted tree cannot over
       // The transactional apply rolled back: the malicious row never became
       // a live entry, and the pin never moved.
       expect(findEntry(ctx, options => options.id === 'malicious')).toBeUndefined()
+      expect(ctx.get('trustKernel')).toBe(kernel)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+})
+
+describe('a plugin cannot bypass the duplicate-registration guard by mutating the store entry directly (F-stage review finding, closed by pinTrustKernel)', () => {
+  it('rejects delete-then-reprovide against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned', async () => {
+    const dir = tmp()
+    writeFileSync(join(dir, 'cordis.yml'), '[]\n')
+    writeFileSync(join(dir, 'malicious-delete.mjs'), [
+      'export const name = "malicious-delete"',
+      'export function apply(ctx) {',
+      // Symbol.for('cordis.isolate') is the exact well-known symbol
+      // @deepseek-ai/cordis exports as `Context.isolate`
+      // (vendor/cordis/src/utils.ts: `isolate: Symbol.for('cordis.isolate')`)
+      // -- this plugin file, mounted from a directory outside the
+      // workspace, cannot import the package itself, so it reaches the
+      // identical real key through the global symbol registry instead.
+      '  const key = ctx.root[Symbol.for("cordis.isolate")]["trustKernel"]',
+      '  delete ctx.reflect.store[key]',
+      '  ctx.provide("trustKernel", { forged: true })',
+      '}',
+      '',
+    ].join('\n'))
+    const kernel = createTrustKernel()
+    const ctx = await boot(NAME, join(dir, 'cordis.yml'), undefined, (hostCtx) => {
+      pinTrustKernel(hostCtx, kernel)
+    })
+    try {
+      // Confirms the malicious plugin's Symbol.for lookup resolved to the
+      // exact same store entry pinTrustKernel froze, via the real
+      // Context.isolate export -- not a coincidentally matching guess.
+      const key = ctx.root[Context.isolate]['trustKernel']
+      expect(key).toBe(ctx.root[Symbol.for('cordis.isolate') as typeof Context.isolate]['trustKernel'])
+
+      const includeEntry = findEntry(ctx, options => options.name === 'cordis:include')
+      expect(includeEntry).toBeDefined()
+      await expect(includeEntry!.update({
+        config: {
+          ...includeEntry!.options.config as object,
+          patches: [{ insert: [{ id: 'malicious-delete', name: './malicious-delete.mjs' }] }],
+        },
+      })).rejects.toThrow(/Cannot delete property/)
+
+      expect(findEntry(ctx, options => options.id === 'malicious-delete')).toBeUndefined()
+      expect(ctx.get('trustKernel')).toBe(kernel)
+    } finally {
+      await ctx.fiber.dispose()
+    }
+  })
+
+  it('rejects a direct reassignment of the store entry (no delete) against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned', async () => {
+    const dir = tmp()
+    writeFileSync(join(dir, 'cordis.yml'), '[]\n')
+    writeFileSync(join(dir, 'malicious-assign.mjs'), [
+      'export const name = "malicious-assign"',
+      'export function apply(ctx) {',
+      '  const key = ctx.root[Symbol.for("cordis.isolate")]["trustKernel"]',
+      '  ctx.reflect.store[key] = { name: "trustKernel", value: { forged: true }, fiber: ctx.fiber }',
+      '}',
+      '',
+    ].join('\n'))
+    const kernel = createTrustKernel()
+    const ctx = await boot(NAME, join(dir, 'cordis.yml'), undefined, (hostCtx) => {
+      pinTrustKernel(hostCtx, kernel)
+    })
+    try {
+      const includeEntry = findEntry(ctx, options => options.name === 'cordis:include')
+      expect(includeEntry).toBeDefined()
+      await expect(includeEntry!.update({
+        config: {
+          ...includeEntry!.options.config as object,
+          patches: [{ insert: [{ id: 'malicious-assign', name: './malicious-assign.mjs' }] }],
+        },
+      })).rejects.toThrow(/Cannot assign to read only property/)
+
+      expect(findEntry(ctx, options => options.id === 'malicious-assign')).toBeUndefined()
       expect(ctx.get('trustKernel')).toBe(kernel)
     } finally {
       await ctx.fiber.dispose()

@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 `dsh-trust-kernel` fixes the narrow, unforgeable capability surface Epic P0-02's Trust Kernel may ever hand to the runtime: one root identity, one signature-roots handle, a policy-enforcement entrypoint, an audit-append entrypoint, a secret-broker handle, and a sandbox-attestation verifier — six members, no more. Everything else in dsh — models, tools, storage providers, workflow, memory providers, UI — stays an ordinary, replaceable Cordis plugin; see `docs/architecture/trust-kernel-boundary.md` for the full boundary and why none of the six is a Cordis Service.
 
-`src/index.ts`'s `createTrustKernel` constructs and deep-freezes the one `TrustKernel` value; `apps/cli/src/profile-boot.ts` calls it before the Cordis `Context` exists and pins the result with `ctx.provide('trustKernel', kernel)`. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work) for what still has no concrete provider behind it.
+`src/index.ts`'s `createTrustKernel` constructs and deep-freezes the one `TrustKernel` value; `apps/cli/src/profile-boot.ts` calls it before the Cordis `Context` exists and pins the result with `pinTrustKernel(ctx, kernel)`, which calls `ctx.provide('trustKernel', kernel)` and then freezes that service-store entry so no plugin can delete-then-reprovide past `ctx.provide`'s own duplicate-registration guard. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work) for what still has no concrete provider behind it.
 
 ## Table of Contents
 
@@ -43,11 +43,11 @@ function checkPolicy(kernel: TrustKernel, payload: unknown): boolean {
 There is no exported constructor for `TrustKernelRootIdentity`, `TrustKernelSignatureRoots`, or `TrustKernelSecretBrokerHandle` individually — only `createTrustKernel()` produces a complete, frozen `TrustKernel`:
 
 ```ts
-import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { createTrustKernel, pinTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 
 const kernel = createTrustKernel() // called before the Cordis Context exists
 // ...then, inside boot()'s prepare closure, once the Context does exist:
-// ctx.provide('trustKernel', kernel) -- never ctx.plugin(...)
+// pinTrustKernel(ctx, kernel) -- never ctx.plugin(...), never a bare ctx.provide()
 ```
 
 `apps/cli/src/profile-boot.ts` is the one caller: it constructs the kernel before `boot()` creates the Cordis `Context` at all, then pins it into that context from the `prepare` closure `boot()` already exposes.
@@ -74,7 +74,7 @@ This section explains the design decisions behind the package; the observable ty
 | File | Role |
 |---|---|
 | [`src/types.ts`](src/types.ts) | The `TrustKernel` type surface: its six capability members, the three opaque handle types, and the three narrow entrypoint function types |
-| [`src/index.ts`](src/index.ts) | `createTrustKernel()`: constructs and deep-freezes the one `TrustKernel` value; `policyEnforcement` denies, `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops until a later epic wires real providers |
+| [`src/index.ts`](src/index.ts) | `createTrustKernel()`: constructs and deep-freezes the one `TrustKernel` value; `policyEnforcement` denies, `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops until a later epic wires real providers. `pinTrustKernel()`: pins it into a `Context` with `ctx.provide` and freezes that service-store entry so no plugin can delete-then-reprovide past the duplicate-registration guard |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty — the single-pin identity guarantee is enforced by Cordis's own service-store semantics, not by any event or mutable data this package owns |
 
 </details>
@@ -113,6 +113,7 @@ Independent: the package registers nothing that participates in a model request.
 
 - **No concrete policy/audit/attestation provider yet** — `policyEnforcement` denies, `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops unconditionally; wiring a real policy engine, audit-chain persistence, or attestation verifier behind these entrypoints is a later epic's deliverable (`spec/trust-kernel.md` acceptance clause 2 keeps this package's own API surface free of any concrete provider implementation).
 - **Boot-time fail-closed/insecure-opt-in enforcement lives in `apps/cli`, not this package** — `apps/cli/src/profile-boot.ts`'s `enforceTrustKernelPosture` and the `DSH_TRUST_KERNEL_INSECURE` opt-in own the production-fails-closed / development-insecure-warning split (Epic P0-02 acceptance clause 3); this package only constructs and freezes the value that decision pins or omits.
+- **`pinTrustKernel` protects `ctx.get('trustKernel')`, not `ctx.trustKernel` property access** — Cordis resolves property access through each fiber's own, separately mutable `Fiber.store` cache, never through the `ctx.reflect.store` entry `pinTrustKernel` freezes. A plugin can assign `ctx.fiber.store['trustKernel'] = forged` directly, durably poisoning `ctx.trustKernel` for itself and every plugin mounted beneath it (proven live during the review that found this, not merely theoretical); `ctx.get('trustKernel')` and other subtrees stay correct. No defensive wrapper in this repository's own code closes this without touching vendored Cordis's `Fiber` class; see `docs/architecture/trust-kernel-boundary.md#known-gap-fiber-local-property-access-poisoning`. Until closed, callers must use `ctx.get('trustKernel')`, not `ctx.trustKernel`.
 
 <a id="dev-note"></a>
 ### Dev Note

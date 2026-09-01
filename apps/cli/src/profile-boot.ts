@@ -32,7 +32,7 @@ import {
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
-import { createTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 
 const NAME = 'dsh'
@@ -307,7 +307,10 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     })
     // Never ctx.plugin(...): a Trust Kernel pinned through the Loader would
     // be a replaceable Cordis Service, exactly what must[2] forbids.
-    if (kernel !== undefined) hostCtx.provide('trustKernel', kernel)
+    // pinTrustKernel (not a bare ctx.provide) also freezes the store entry
+    // so no plugin can delete-then-reprovide past the duplicate-registration
+    // guard (must[3]; @deepseek-ai/dsh-trust-kernel's own doc comment).
+    if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
     enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
   })
   app.current = ctx
