@@ -55,4 +55,8 @@ e2e 断言应重新运行命令或从外部重新读取文件；对 agent 自身
 
 ## 启动期基线预检查
 
-`pnpm baseline:capture` 把 checkout 的架构/协议指纹冻结进 `.dsh/baseline.json`；`pnpm baseline:verify` 重新推导该指纹并报告漂移（`scripts/release/baseline-fingerprint.mjs`，格式记录在生成的 `docs/audit/baseline-fingerprint-<gitSha>.md` 中，每次捕获的 commit 各生成一份）。`@deepseek-ai/dsh-baseline-preflight` 在启动时执行同一检查，一旦发生漂移即中止应用启动，而不是让执行批次针对过期指纹运行。共享 `dsh` base 组合中该插件所在行带有 `disabled: true`，按 profile 选择性启用，因为本仓库自身已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`，若该行默认启用会中止本仓库里普通的 `pnpm dsh` 使用。已捕获的字段、无基线时的 no-op 情形，以及如何启用该行，见[包 README](../packages/guard/baseline-preflight/README.zh.md)。
+`pnpm baseline:capture` 把 checkout 的架构/协议指纹冻结进 `.dsh/baseline.json`；`pnpm baseline:verify` 重新推导该指纹并报告漂移（`scripts/release/baseline-fingerprint.mjs`，格式记录在生成的 `docs/audit/baseline-fingerprint-<gitSha>.md` 中，每次捕获的 commit 各生成一份）。`@deepseek-ai/dsh-baseline-preflight` 在启动时执行同一检查，一旦发生漂移即中止应用启动。共享 `dsh` base 组合中该插件所在行带有 `disabled: true`，按 profile 选择性启用，因为本仓库自身已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`，若该行默认启用会中止本仓库里普通的 `pnpm dsh` 使用。已捕获的字段、无基线时的 no-op 情形，以及如何启用该行，见[包 README](../packages/guard/baseline-preflight/README.zh.md)。
+
+## 发布证据包
+
+`pnpm evidence:collect`/`pnpm evidence:verify` 构建并校验逐 gate 的 `EvidencePackage`（[contract](../packages/assurance/evidence-format/README.zh.md)）。
