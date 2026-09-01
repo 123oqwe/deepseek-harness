@@ -451,6 +451,60 @@
         "testsDiscovered": 28
       },
       "note": "P0-03 C-stage (2026-09-01), the Capability Seam architecture-consistency checker's Contract type surface: per-family declarations (definition/providers/consumers/allowed-dependency-edges, must[0]), an allowlist schema requiring a removal date and owner per entry (acceptance[1]), and pure detector functions for all three acceptance[2] violation kinds (deep import, missing provider, non-reversible registration) plus must[1]'s second rule (provider-app reverse dependency) -- all taking already-loaded data as parameters, zero filesystem I/O, deferring the real workspace scan to a future U-stage `.mjs` scanner per the registry's own C/U split. Real RED->GREEN: a stub returning empty/false unconditionally failed 18/27 genuinely (real AssertionErrors, never module/syntax errors); full implementation passed 27/27, later 28/28 after a fix-round addition. `architecture.layers.json`'s 29 real capability families were transcribed from `scripts/gen-doc-graphs.ts`'s already-curated SERVICE_ROLES seam entries (this repo's existing authoritative source, already used to generate docs/capability-seams.md). Round 1 independent review REJECTed on 4 real findings: (1) an undeclared C-stage file, `scripts/architecture/capability-seams.ts`, added with zero BLOCKED-012 manifest-patch; (2) that file contained a real `globSync`+`readFileSync` workspace scan -- genuine C/U-stage scope creep, since the registry reserves the real scanner for a separate U-stage `.mjs` file; (3) acceptance[0] ('existing repo passes under the allowlist') was only partially tested, missing a check of `detectMissingProviderViolations` against the real loaded data; (4) several families' `consumers[]` arrays undercounted real workspace dependency edges. Fix round: removed all filesystem I/O from the library file (moved the workspace scan into the spec file's own test-local helper), filed a real BLOCKED-012 manifest-patch (`P0-03-C-detection-logic` in tests/first100/adjudication.json#deliverablePathPatches, count 6->7), added the missing acceptance[0] test (empty-result assertion against real data, non-vacuously verified by an independent reviewer who temporarily zeroed a real family's providers and confirmed genuine failure), and reconciled all 29 families' consumers[] against real package.json dependency edges via a full sweep (not sampling). Round 2 independent review: ACCEPT, with every fix independently re-verified (fs-freedom confirmed by grep, manifest-patch format matched against the 6 existing precedents, acceptance[0] test proven non-vacuous via a live mutation, and a full independent 29-family consumer-edge sweep finding zero missing edges) -- one minor, non-blocking note left for a future U-stage slice: 2 stray consumer entries (dsh-bash-sandbox on subprocess, dsh-tool-bash on sessionPersistence) reflect devDependency-only test wiring rather than a real production/peer dependency, functionally inert since no consumer of this data exists yet."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "imports only a type-only Branded from @deepseek-ai/dsh-brand -- no other import, no runtime dependency edge",
+        "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+        "declares GateEvidence as a discriminated union of CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence",
+        "gives GateEvidenceBase (unexported) exactly the must[0] base fields, all readonly",
+        "exports CompletedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+        "exports SkippedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+        "exports MissingGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+        "types Digest as Branded<EvidenceDigest\"> -- a plain nominal string, never a unique-symbol handle",
+        "types Signature as Branded<EvidenceSignature\"> -- a plain nominal string, never a unique-symbol handle",
+        "types CommitSha as Branded<CommitSha\"> -- a plain nominal string, never a unique-symbol handle",
+        "types GateId as Branded<GateId\"> -- a plain nominal string, never a unique-symbol handle",
+        "type-checks well-formed CompletedGateEvidence, SkippedGateEvidence, and MissingGateEvidence literals with zero diagnostics",
+        "rejects a CompletedGateEvidence literal whose skipReasons is nonempty -- a completed gate carries no skip reason",
+        "rejects a SkippedGateEvidence literal whose skipReasons is empty -- a skip must name at least one real reason",
+        "rejects a MissingGateEvidence literal whose skipReasons is empty -- a missing gate must also name at least one real reason",
+        "rejects reassigning a GateEvidence member -- every field is readonly (TS2540)",
+        "rejects a plain string literal where a Digest is required -- Digest is a Branded nominal type, not a bare string",
+        "binds baselineFingerprint, gitDiff, additionalGates, and signature on EVERY EvidencePackage, before any accepted-narrowing",
+        "types BaselineFingerprintBinding.gitSha, GitDiffBinding.baseSha, and GitDiffBinding.headSha as the CommitSha brand -- distinct from GateId, not a bare string that would satisfy any brand",
+        "type-checks an AcceptedEvidencePackage literal when every required gate id is present and CompletedGateEvidence, and every required artifact path is present",
+        "rejects an AcceptedEvidencePackage literal that omits one required gate id from requiredGates",
+        "rejects an AcceptedEvidencePackage literal whose requiredGates assigns a SkippedGateEvidence to a required gate id",
+        "rejects an AcceptedEvidencePackage literal whose requiredGates assigns a MissingGateEvidence to a required gate id",
+        "rejects an AcceptedEvidencePackage literal that omits one required build artifact path from requiredBuildArtifacts -- must[2]'s \"missing artifact\" clause",
+        "type-checks an UnacceptedEvidencePackage literal whose requiredGates has a SkippedGateEvidence and whose requiredBuildArtifacts is empty -- accepted:false imposes no completeness or outcome constraint",
+        "documents the honest degraded case: with RequiredGateId/RequiredArtifactPath left at their string default, an AcceptedEvidencePackage literal with EMPTY requiredGates and requiredBuildArtifacts maps still type-checks -- completeness of a non-literal required-id SET is a P-stage runtime check (verify-evidence.mjs against the release manifest), never a static one this type surface can express",
+        "declares no unique-symbol-branded member anywhere in the module -- every field is a plain JSON-safe value, so JSON.stringify never silently drops it",
+        "is exactly one statement: `export type * from './types.ts'` -- zero runtime exports, zero Cordis registration, zero side effects",
+        "has no default export and no Config/apply plugin exports"
+      ],
+      "files": [
+        "packages/assurance/evidence-format/src/types.ts",
+        "tests/release/evidence-package.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T21:20:00Z",
+      "dryRunProof": {
+        "treeSha": "859a2d017e04aec1cf25aacf22d7003107613fdb",
+        "testsDiscovered": 29
+      },
+      "note": "P0-07 C-stage (2026-09-01), Release Evidence Package's Contract type surface: a discriminated GateEvidence union (CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence, must[0]) carrying command/timestamps/exitCode/environment/digests/testCounts/skipReasons; an EvidencePackage binding baselineFingerprint + gitDiff + build-artifact digests (must[1]); and the epic's central claim, must[2] ('any skipped blocking gate or missing artifact must never allow accepted=true') proven as a real compile-time guarantee: AcceptedEvidencePackage<RequiredGateId, RequiredArtifactPath> requires complete Record<K, CompletedGateEvidence>/Record<K, Digest> maps keyed by literal-union required-id sets, independently verified via direct tsc diagnostics (TS2741 on a missing key, TS2322 on a skipped/missing gate where completed is required) -- not merely asserted by a test, a real compiler rejection. One honest, disclosed limit: with RequiredGateId/RequiredArtifactPath left at their string default, an EMPTY requiredGates/requiredBuildArtifacts map still type-checks -- required-id-SET completeness is P-stage's runtime job (verify-evidence.mjs against the release manifest), not something this type surface can express statically; a dedicated test documents this rather than hiding it. Confirmed the registry's third declared C-stage file, spec/first100-evidence.schema.json, is a coincidental path collision (this program's own 109-epic self-tracking schema, unrelated id/lane/baselineSha vocabulary) not a real dependency -- independently re-verified by the Reviewer, not just the Writer's own claim. Real RED->GREEN: a deliberately wrong stub types.ts failed 25/29 genuinely (TS2305 missing-export errors, AST shape mismatches, zero crashes); the real implementation passed 29/29. Round 1 independent review: ACCEPT on design/tests/central claim, REJECT on one purely mechanical miss -- gen-module-graph.ts --check failed because the new packages/assurance/evidence-format package was never reflected in the generated module-graph docs. Fix round: ran gen-module-graph, committed the 3 regenerated docs, touching nothing else. Round 2 independent review: ACCEPT, with the compile-time must[2] guarantee re-proven from scratch via a standalone tsc probe (not reusing the test file) and the fix commit's diff confirmed scoped to exactly the 3 doc files."
     }
   ]
 }
