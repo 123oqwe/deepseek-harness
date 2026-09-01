@@ -1158,7 +1158,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 6,
+    "count": 7,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P0-01": {
@@ -1211,6 +1211,15 @@
         "declaredPath": "packages/kernel/trust-kernel/tests/boundary.spec.ts",
         "approvedPath": "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts",
         "reason": "BLOCKED-012 companion to P0-02-F-dispose: proves the \"覆盖 service\" (override) half of acceptance[0], and the multi-round security-hardening work from the BLOCKED-011 adversarial-review saga -- Object.freeze(impl) closing the Impl-mutation vector, the root-fiber-store key lock, the reflect.props key lock, and the documented, independently-proven residual vectors (self-fiber poisoning, ancestor-fiber poisoning, wholesale root-store replacement). Same forcing reason as P0-02-F-dispose: boundary.spec.ts is C-stage's frozen, runtime-code-free type surface and cannot host these runtime pinning/bypass proofs. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
+        "approvedAt": "2026-09-01",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
+      },
+      "P0-03-C-detection-logic": {
+        "epic": "P0-03",
+        "stage": "C",
+        "declaredPath": "tests/architecture/capability-seams.spec.ts",
+        "approvedPath": "scripts/architecture/capability-seams.ts",
+        "reason": "BLOCKED-012: C-stage's real job (must[0]'s capability-family/allowlist schema, must[1]/must[2]'s violation-detection functions) needs a home for TypeScript type declarations and pure detector logic. None of the registry's three declared C-stage files can hold it: architecture.layers.json is JSON data with no code, packages/README.md is prose documentation, and tests/architecture/capability-seams.spec.ts (chosen as declaredPath since it is the file that actually imports and exercises the detection logic) is a test file whose own frozen-test-consistency role (condition 4 of this rule) requires importing the contract from a separate module rather than defining it inline. A dedicated library file is genuinely required, distinct from the registry's already-declared U-stage scanner scripts/architecture/check-capability-seams.mjs -- that script (a later slice) will perform the real workspace package.json scan and TypeScript-import walk and import this module's pure validators/detectors to judge the resolved facts; this module itself performs zero filesystem I/O (verified: no node:fs/node:path imports remain in scripts/architecture/capability-seams.ts after the 2026-09-01 Reviewer round removed its one fs-touching function, readWorkspacePackageNames, moving that walk into the test file's own test-local helper). Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
       }

@@ -96,6 +96,8 @@ The dependency graph is generated: [docs/module-graph.md](../docs/module-graph.m
 
 **Extension plugins depend on Service Definitions, never concrete providers.** `dsh-agent-loop` is swappable; UI, hook, and tool plugins use `dsh-agent`. Composition bundles, including `dsh-agent-spine-demo`, may depend on spine plugins. Capabilities separate Service Definition / Service Provider / Consumer roles when they evolve independently; see [capability seams](../.agents/notes/implemented/architecture/2026-06-13-capability-seams.md).
 
+[`architecture.layers.json`](../architecture.layers.json) declares each capability family's Service Definition, providers, consumers, and dated/owned allowlist exceptions; its contract lives in [`scripts/architecture/capability-seams.ts`](../scripts/architecture/capability-seams.ts) and is checked by [`tests/architecture/capability-seams.spec.ts`](../tests/architecture/capability-seams.spec.ts). The CI-wired repo-wide scanner is a later slice.
+
 -----
 
 <a id="package-readme-contracts"></a>

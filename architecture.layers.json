@@ -1,0 +1,197 @@
+{
+  "$schemaVersion": 1,
+  "families": [
+    {
+      "id": "attachments",
+      "definition": "@deepseek-ai/dsh-attachment",
+      "providers": ["@deepseek-ai/dsh-attachment-local"],
+      "consumers": ["@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-tool-fs", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-llm-deepseek", "@deepseek-ai/dsh-acp", "@deepseek-ai/dsh-client-connection", "@deepseek-ai/dsh-client-test-runtime", "@deepseek-ai/dsh-client-ui-attachment", "@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation", "@deepseek-ai/dsh-client-ui-trajectory", "@deepseek-ai/dsh-commands", "@deepseek-ai/dsh-llm", "@deepseek-ai/dsh-mcp-client", "@deepseek-ai/dsh-sdk-jsonrpc-server", "@deepseek-ai/dsh-session-log-export", "@deepseek-ai/dsh-subagent"]
+    },
+    {
+      "id": "llm",
+      "definition": "@deepseek-ai/dsh-llm",
+      "providers": ["@deepseek-ai/dsh-llm-deepseek", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-llm-replay"],
+      "consumers": ["@deepseek-ai/dsh-agent-loop", "@deepseek-ai/dsh-compaction-basic", "@deepseek-ai/dsh-acp", "@deepseek-ai/dsh-agent", "@deepseek-ai/dsh-agent-default-model", "@deepseek-ai/dsh-agent-instructions", "@deepseek-ai/dsh-agent-loop-testkit", "@deepseek-ai/dsh-agent-presets", "@deepseek-ai/dsh-agent-spine-demo", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-authorization", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-client-connection", "@deepseek-ai/dsh-client-ui-approval", "@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation", "@deepseek-ai/dsh-client-ui-trajectory", "@deepseek-ai/dsh-command-compact", "@deepseek-ai/dsh-command-feedback", "@deepseek-ai/dsh-command-goal", "@deepseek-ai/dsh-commands", "@deepseek-ai/dsh-compaction", "@deepseek-ai/dsh-compaction-tool-result-pruner", "@deepseek-ai/dsh-cordis-host-runner", "@deepseek-ai/dsh-experimental-agent-team", "@deepseek-ai/dsh-fs", "@deepseek-ai/dsh-fs-local", "@deepseek-ai/dsh-fs-observation-policy", "@deepseek-ai/dsh-goal", "@deepseek-ai/dsh-goal-round-driver", "@deepseek-ai/dsh-headless", "@deepseek-ai/dsh-hooks-claude-code", "@deepseek-ai/dsh-hooks-codex", "@deepseek-ai/dsh-llm-retry", "@deepseek-ai/dsh-loader-smoke", "@deepseek-ai/dsh-lsp", "@deepseek-ai/dsh-lsp-stdio", "@deepseek-ai/dsh-mcp-client", "@deepseek-ai/dsh-message-feedback", "@deepseek-ai/dsh-plan-mode", "@deepseek-ai/dsh-repeat-tool-reminder", "@deepseek-ai/dsh-sandbox", "@deepseek-ai/dsh-sandbox-local", "@deepseek-ai/dsh-schedule", "@deepseek-ai/dsh-sdk-client", "@deepseek-ai/dsh-sdk-jsonrpc-server", "@deepseek-ai/dsh-sdk-protocol", "@deepseek-ai/dsh-session", "@deepseek-ai/dsh-session-checkpoint-policy", "@deepseek-ai/dsh-session-persistence-sqlite", "@deepseek-ai/dsh-session-query", "@deepseek-ai/dsh-session-reference", "@deepseek-ai/dsh-session-snapshot", "@deepseek-ai/dsh-session-stats", "@deepseek-ai/dsh-session-telemetry-otel", "@deepseek-ai/dsh-session-title", "@deepseek-ai/dsh-session-title-all-prompts-llm", "@deepseek-ai/dsh-session-title-first-prompt-llm", "@deepseek-ai/dsh-session-title-llm", "@deepseek-ai/dsh-shell-env", "@deepseek-ai/dsh-skill", "@deepseek-ai/dsh-spill", "@deepseek-ai/dsh-spill-local", "@deepseek-ai/dsh-spill-policy", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-subagent-acp", "@deepseek-ai/dsh-subagent-claude-code", "@deepseek-ai/dsh-subagent-codex", "@deepseek-ai/dsh-subagent-dsh-sdk", "@deepseek-ai/dsh-subagent-fork-in-process", "@deepseek-ai/dsh-subagent-in-process-driver", "@deepseek-ai/dsh-subagent-spawn-in-process", "@deepseek-ai/dsh-system-prompt", "@deepseek-ai/dsh-time-context", "@deepseek-ai/dsh-tmux-context", "@deepseek-ai/dsh-token-meter", "@deepseek-ai/dsh-tool-ask-user", "@deepseek-ai/dsh-tool-bash", "@deepseek-ai/dsh-tool-bash-persistent", "@deepseek-ai/dsh-tool-call-timeout-policy", "@deepseek-ai/dsh-tool-cordis", "@deepseek-ai/dsh-tool-fs", "@deepseek-ai/dsh-tool-fs-search", "@deepseek-ai/dsh-tool-goal", "@deepseek-ai/dsh-tool-jobs", "@deepseek-ai/dsh-tool-lsp", "@deepseek-ai/dsh-tool-pwsh", "@deepseek-ai/dsh-tool-pwsh-persistent", "@deepseek-ai/dsh-tool-ralph", "@deepseek-ai/dsh-tool-session-query", "@deepseek-ai/dsh-tool-skill", "@deepseek-ai/dsh-tool-str-replace-editor", "@deepseek-ai/dsh-tool-subagent", "@deepseek-ai/dsh-tool-subagent-control", "@deepseek-ai/dsh-tool-subagent-report", "@deepseek-ai/dsh-tool-terminal", "@deepseek-ai/dsh-tool-todo", "@deepseek-ai/dsh-tool-web", "@deepseek-ai/dsh-tool-workflow", "@deepseek-ai/dsh-tools", "@deepseek-ai/dsh-user-approval", "@deepseek-ai/dsh-user-questions", "@deepseek-ai/dsh-web", "@deepseek-ai/dsh-webhook", "@deepseek-ai/dsh-workflow", "@deepseek-ai/dsh-workflow-worker-thread"]
+    },
+    {
+      "id": "deepseekLlmApiExtensions",
+      "definition": "@deepseek-ai/dsh-deepseek-llm-api-extensions",
+      "providers": ["@deepseek-ai/dsh-session-log-deepseek", "@deepseek-ai/dsh-plugin-package-inventory-deepseek"],
+      "consumers": ["@deepseek-ai/dsh-llm-deepseek", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-llm-replay", "@deepseek-ai/dsh-sdk-minimal"]
+    },
+    {
+      "id": "sessionPersistence",
+      "definition": "@deepseek-ai/dsh-session-persistence",
+      "providers": ["@deepseek-ai/dsh-session-persistence-jsonl", "@deepseek-ai/dsh-session-persistence-sqlite"],
+      "consumers": ["@deepseek-ai/dsh-agent-loop", "@deepseek-ai/dsh-tool-bash", "@deepseek-ai/dsh-hooks-claude-code", "@deepseek-ai/dsh-hooks-codex", "@deepseek-ai/dsh-session-query", "@deepseek-ai/dsh-session-query-sqlite", "@deepseek-ai/dsh-message-feedback", "@deepseek-ai/dsh-acp", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-experimental-agent-team", "@deepseek-ai/dsh-schedule", "@deepseek-ai/dsh-session-checkpoint-policy", "@deepseek-ai/dsh-session-log-export", "@deepseek-ai/dsh-shell-env", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-tool-session-query", "@deepseek-ai/dsh-tool-subagent", "@deepseek-ai/dsh-tool-subagent-control", "@deepseek-ai/dsh-tool-subagent-report", "@deepseek-ai/dsh-workspace"]
+    },
+    {
+      "id": "settings",
+      "definition": "@deepseek-ai/dsh-settings",
+      "providers": ["@deepseek-ai/dsh-settings-file"],
+      "consumers": ["@deepseek-ai/dsh-api-settings-controller", "@deepseek-ai/dsh-llm-deepseek", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-agent-default-model", "@deepseek-ai/dsh-agent-loop", "@deepseek-ai/dsh-agent-presets", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-bash-local", "@deepseek-ai/dsh-client-connection", "@deepseek-ai/dsh-client-locale", "@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation", "@deepseek-ai/dsh-client-ui-settings", "@deepseek-ai/dsh-client-ui-settings-general", "@deepseek-ai/dsh-client-ui-theme", "@deepseek-ai/dsh-permission-presets", "@deepseek-ai/dsh-pwsh-local", "@deepseek-ai/dsh-shell", "@deepseek-ai/dsh-tool-subagent", "@deepseek-ai/dsh-web-search-deepseek"]
+    },
+    {
+      "id": "credentials",
+      "definition": "@deepseek-ai/dsh-credentials",
+      "providers": ["@deepseek-ai/dsh-credentials-local"],
+      "consumers": ["@deepseek-ai/dsh-api-settings-controller", "@deepseek-ai/dsh-llm-deepseek", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-authorization", "@deepseek-ai/dsh-client-connection", "@deepseek-ai/dsh-web-search-deepseek", "@deepseek-ai/dsh-webhook-github"]
+    },
+    {
+      "id": "authorization",
+      "definition": "@deepseek-ai/dsh-authorization",
+      "providers": [],
+      "consumers": ["@deepseek-ai/dsh-llm-pi-ai"]
+    },
+    {
+      "id": "sessionTelemetry",
+      "definition": "@deepseek-ai/dsh-session-telemetry",
+      "providers": ["@deepseek-ai/dsh-session-telemetry-otel"],
+      "consumers": ["@deepseek-ai/dsh-command-feedback"]
+    },
+    {
+      "id": "storage",
+      "definition": "@deepseek-ai/dsh-storage",
+      "providers": ["@deepseek-ai/dsh-storage-json", "@deepseek-ai/dsh-storage-sqlite"],
+      "consumers": ["@deepseek-ai/dsh-storage-domain", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-message-feedback", "@deepseek-ai/dsh-session-projection-cache", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-workspace"]
+    },
+    {
+      "id": "sessionQuery",
+      "definition": "@deepseek-ai/dsh-session-query",
+      "providers": ["@deepseek-ai/dsh-session-query-sqlite"],
+      "consumers": ["@deepseek-ai/dsh-session-reference", "@deepseek-ai/dsh-tool-session-query", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-experimental-agent-team", "@deepseek-ai/dsh-experimental-tool-agent-team", "@deepseek-ai/dsh-session-log-export", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-tool-subagent-control"]
+    },
+    {
+      "id": "fileReferences",
+      "definition": "@deepseek-ai/dsh-file-reference",
+      "providers": ["@deepseek-ai/dsh-file-reference-local"],
+      "consumers": ["@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-client-ui-input-trigger", "@deepseek-ai/dsh-client-ui-reference", "@deepseek-ai/dsh-web-app"]
+    },
+    {
+      "id": "sessionTitle",
+      "definition": "@deepseek-ai/dsh-session-title",
+      "providers": ["@deepseek-ai/dsh-session-title-first-prompt-llm", "@deepseek-ai/dsh-session-title-all-prompts-llm"],
+      "consumers": ["@deepseek-ai/dsh-agent-spine-demo", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-session-query", "@deepseek-ai/dsh-session-reference", "@deepseek-ai/dsh-session-title-llm", "@deepseek-ai/dsh-tool-session-query", "@deepseek-ai/dsh-webhook"]
+    },
+    {
+      "id": "userQuestions",
+      "definition": "@deepseek-ai/dsh-user-questions",
+      "providers": [],
+      "consumers": ["@deepseek-ai/dsh-tool-ask-user", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-client-ui-user-questions", "@deepseek-ai/dsh-plan-mode", "@deepseek-ai/dsh-session-snapshot", "@deepseek-ai/dsh-tool-todo"]
+    },
+    {
+      "id": "skills",
+      "definition": "@deepseek-ai/dsh-skill",
+      "providers": ["@deepseek-ai/dsh-skill-badge", "@deepseek-ai/dsh-skill-filesystem"],
+      "consumers": ["@deepseek-ai/dsh-tool-skill", "@deepseek-ai/dsh-agent-spine-demo", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-base"]
+    },
+    {
+      "id": "subprocess",
+      "definition": "@deepseek-ai/dsh-subprocess",
+      "providers": ["@deepseek-ai/dsh-subprocess-local", "@deepseek-ai/dsh-subprocess-e2b"],
+      "consumers": ["@deepseek-ai/dsh-bash-local", "@deepseek-ai/dsh-bash-sandbox", "@deepseek-ai/dsh-terminal-bash", "@deepseek-ai/dsh-lsp-stdio", "@deepseek-ai/dsh-subagent-acp", "@deepseek-ai/dsh-subagent-codex", "@deepseek-ai/dsh-subagent-claude-code", "@deepseek-ai/dsh-mcp-client", "@deepseek-ai/dsh-pwsh-local", "@deepseek-ai/dsh-shell", "@deepseek-ai/dsh-subagent-dsh-sdk", "@deepseek-ai/dsh-tool-fs-search", "@deepseek-ai/dsh-web-app"]
+    },
+    {
+      "id": "shell",
+      "definition": "@deepseek-ai/dsh-shell",
+      "providers": ["@deepseek-ai/dsh-bash-local", "@deepseek-ai/dsh-bash-sandbox", "@deepseek-ai/dsh-pwsh-local"],
+      "consumers": ["@deepseek-ai/dsh-tool-bash", "@deepseek-ai/dsh-tool-pwsh", "@deepseek-ai/dsh-hooks-claude-code", "@deepseek-ai/dsh-hooks-codex", "@deepseek-ai/dsh-hook-protocol", "@deepseek-ai/dsh-permission-presets", "@deepseek-ai/dsh-pwsh-sandbox", "@deepseek-ai/dsh-shell-env", "@deepseek-ai/dsh-tmux-context"]
+    },
+    {
+      "id": "terminals",
+      "definition": "@deepseek-ai/dsh-terminal",
+      "providers": ["@deepseek-ai/dsh-terminal-bash"],
+      "consumers": ["@deepseek-ai/dsh-tool-terminal", "@deepseek-ai/dsh-e2b", "@deepseek-ai/dsh-sdk-minimal", "@deepseek-ai/dsh-tool-bash-persistent", "@deepseek-ai/dsh-tool-pwsh-persistent"]
+    },
+    {
+      "id": "sandbox",
+      "definition": "@deepseek-ai/dsh-sandbox",
+      "providers": ["@deepseek-ai/dsh-sandbox-local"],
+      "consumers": ["@deepseek-ai/dsh-bash-sandbox", "@deepseek-ai/dsh-terminal-bash", "@deepseek-ai/dsh-fs", "@deepseek-ai/dsh-fs-sandbox", "@deepseek-ai/dsh-permission-presets", "@deepseek-ai/dsh-pwsh-sandbox", "@deepseek-ai/dsh-sandbox-policy", "@deepseek-ai/dsh-session-snapshot", "@deepseek-ai/dsh-shell", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-tool-bash", "@deepseek-ai/dsh-tool-bash-persistent", "@deepseek-ai/dsh-tool-fs", "@deepseek-ai/dsh-tool-pwsh", "@deepseek-ai/dsh-tool-pwsh-persistent", "@deepseek-ai/dsh-tool-str-replace-editor", "@deepseek-ai/dsh-tool-terminal"]
+    },
+    {
+      "id": "approval",
+      "definition": "@deepseek-ai/dsh-user-approval",
+      "providers": ["@deepseek-ai/dsh-user-approval"],
+      "consumers": ["@deepseek-ai/dsh-tools", "@deepseek-ai/dsh-tool-bash", "@deepseek-ai/dsh-acp", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-permission-presets", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-subagent-in-process-driver", "@deepseek-ai/dsh-tool-fs", "@deepseek-ai/dsh-tool-pwsh"]
+    },
+    {
+      "id": "codeRuntime",
+      "definition": "@deepseek-ai/dsh-code-runtime",
+      "providers": ["@deepseek-ai/dsh-code-runtime-worker-thread"],
+      "consumers": ["@deepseek-ai/dsh-tools", "@deepseek-ai/dsh-agent-tool-presentation", "@deepseek-ai/dsh-plan-mode"]
+    },
+    {
+      "id": "fs",
+      "definition": "@deepseek-ai/dsh-fs",
+      "providers": ["@deepseek-ai/dsh-fs-local", "@deepseek-ai/dsh-fs-sandbox", "@deepseek-ai/dsh-fs-e2b", "@deepseek-ai/dsh-fs-observation-policy"],
+      "consumers": ["@deepseek-ai/dsh-tool-fs", "@deepseek-ai/dsh-agent-instructions", "@deepseek-ai/dsh-llm-deepseek", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-lsp-stdio", "@deepseek-ai/dsh-skill-filesystem", "@deepseek-ai/dsh-tool-str-replace-editor"]
+    },
+    {
+      "id": "compaction",
+      "definition": "@deepseek-ai/dsh-compaction",
+      "providers": ["@deepseek-ai/dsh-compaction-basic"],
+      "consumers": ["@deepseek-ai/dsh-compaction-basic", "@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-trajectory", "@deepseek-ai/dsh-command-compact", "@deepseek-ai/dsh-compaction-tool-result-pruner", "@deepseek-ai/dsh-llm-replay", "@deepseek-ai/dsh-session-reference", "@deepseek-ai/dsh-session-snapshot", "@deepseek-ai/dsh-token-meter"]
+    },
+    {
+      "id": "subagents",
+      "definition": "@deepseek-ai/dsh-subagent",
+      "providers": ["@deepseek-ai/dsh-subagent-spawn-in-process", "@deepseek-ai/dsh-subagent-fork-in-process", "@deepseek-ai/dsh-subagent-acp", "@deepseek-ai/dsh-subagent-codex", "@deepseek-ai/dsh-subagent-claude-code", "@deepseek-ai/dsh-subagent-dsh-sdk"],
+      "consumers": ["@deepseek-ai/dsh-tool-subagent", "@deepseek-ai/dsh-tool-subagent-control", "@deepseek-ai/dsh-tool-ralph", "@deepseek-ai/dsh-api-remotes", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-base", "@deepseek-ai/dsh-client-test-runtime", "@deepseek-ai/dsh-client-ui-subagent", "@deepseek-ai/dsh-experimental-agent-team", "@deepseek-ai/dsh-experimental-tool-agent-team", "@deepseek-ai/dsh-experimental-webworker-runtime", "@deepseek-ai/dsh-hooks-claude-code", "@deepseek-ai/dsh-sdk-jsonrpc-server", "@deepseek-ai/dsh-sdk-protocol", "@deepseek-ai/dsh-session-snapshot", "@deepseek-ai/dsh-subagent-in-process-driver", "@deepseek-ai/dsh-tool-subagent-report", "@deepseek-ai/dsh-tool-workflow", "@deepseek-ai/dsh-workflow-worker-thread"]
+    },
+    {
+      "id": "jobs",
+      "definition": "@deepseek-ai/dsh-jobs",
+      "providers": ["@deepseek-ai/dsh-jobs-local"],
+      "consumers": ["@deepseek-ai/dsh-tool-bash", "@deepseek-ai/dsh-tool-terminal", "@deepseek-ai/dsh-tool-subagent", "@deepseek-ai/dsh-tool-jobs", "@deepseek-ai/dsh-agent-spine-demo", "@deepseek-ai/dsh-api-session-controller", "@deepseek-ai/dsh-subagent", "@deepseek-ai/dsh-tool-pwsh"]
+    },
+    {
+      "id": "web",
+      "definition": "@deepseek-ai/dsh-web",
+      "providers": ["@deepseek-ai/dsh-web-search-exa", "@deepseek-ai/dsh-web-search-perplexity", "@deepseek-ai/dsh-web-search-deepseek", "@deepseek-ai/dsh-web-fetch-http"],
+      "consumers": ["@deepseek-ai/dsh-tool-web", "@deepseek-ai/dsh-base"]
+    },
+    {
+      "id": "spillStore",
+      "definition": "@deepseek-ai/dsh-spill",
+      "providers": ["@deepseek-ai/dsh-spill-local"],
+      "consumers": ["@deepseek-ai/dsh-spill-policy", "@deepseek-ai/dsh-tool-fs-search"]
+    },
+    {
+      "id": "directoryPicker",
+      "definition": "@deepseek-ai/dsh-host-directory-picker",
+      "providers": ["@deepseek-ai/dsh-host-directory-picker-native", "@deepseek-ai/dsh-host-directory-picker-browse"],
+      "consumers": ["@deepseek-ai/dsh-api-workspace-controller", "@deepseek-ai/dsh-client-connection", "@deepseek-ai/dsh-host-directory-picker-auto"]
+    },
+    {
+      "id": "workflowEngine",
+      "definition": "@deepseek-ai/dsh-workflow",
+      "providers": ["@deepseek-ai/dsh-workflow-worker-thread"],
+      "consumers": ["@deepseek-ai/dsh-tool-workflow", "@deepseek-ai/dsh-tool-ralph", "@deepseek-ai/dsh-client-ui-workflow-run"]
+    },
+    {
+      "id": "lsp",
+      "definition": "@deepseek-ai/dsh-lsp",
+      "providers": ["@deepseek-ai/dsh-lsp-stdio"],
+      "consumers": ["@deepseek-ai/dsh-tool-lsp", "@deepseek-ai/dsh-e2b"]
+    }
+  ],
+  "allowlist": [
+    {
+      "kind": "missing-provider",
+      "from": "@deepseek-ai/dsh-authorization",
+      "to": "@deepseek-ai/dsh-authorization",
+      "reason": "Flows are registered by the plugin that knows how to obtain one credential (e.g. dsh-llm-pi-ai), keyed by the record it writes, rather than by a dedicated Service Provider package; the seam owns the conversation and one-attempt-per-key lifecycle, never the protocol. Revisit when the U-stage scanner can distinguish a registration-based provider from a package-based one.",
+      "owner": "harryqiao59@gmail.com",
+      "removalDate": "2026-12-01"
+    },
+    {
+      "kind": "missing-provider",
+      "from": "@deepseek-ai/dsh-user-questions",
+      "to": "@deepseek-ai/dsh-user-questions",
+      "reason": "UI front ends register the active human-answer provider directly against the seam rather than shipping a separate provider package; no dedicated Service Provider package exists today. Revisit alongside the authorization allowlist entry above once registration-based providers have their own detection rule.",
+      "owner": "harryqiao59@gmail.com",
+      "removalDate": "2026-12-01"
+    }
+  ]
+}
