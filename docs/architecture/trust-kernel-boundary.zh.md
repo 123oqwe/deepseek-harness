@@ -49,6 +49,8 @@ dsh 中其余一切都是插件：通过 `ctx.plugin(...)` 贡献、由 Loader �
 
 对本仓库真实、非测试、非 vendor 的 TypeScript 源码做穷尽 grep（`grep -rn '\.trustKernel\b' packages apps`，排除 `vendor`/`tests`），本次修复前后都是零属性读取命中——唯一真实（非测试）的消费方 `apps/cli/src/profile-boot.ts` 只使用 `ctx.get('trustKernel')`。这证明了**"本仓库中今天不存在真实的属性读取消费方"**，本次 slice 的修复落地后重新核验，该结论依然成立——但它**不能**证明底层 Cordis 机制本身在结构上是安全的，也不能单独解释为何未来的消费方不会重新引入这种读取：真正在机制层面向前维持这一点的，是上文那道门。
 
+**截至 2026-09-01 的状态（用户裁决，BLOCKED-011）：延后处理，非永久接受。** 四轮独立对抗复审各自都发现该门仍可被一种全新写法击穿（最决定性的一例：`<K extends 'trustKernel'>(c: Context, k: K) => c[k]`，一段没有任何 cast 或 `any` 的普通 TypeScript 泛型，通过类型参数读取 live 内核，该门的 AST 遍历在访问点根本看不到任何字面量）——这证明纯静态、源码层面的门无法结构性地永久关闭此类漏洞，只能收窄它。用户批准 P0-02.F 在此基础上关账，理由具体是残留*当前*不可达（不存在真实消费方）——而非该门本身滴水不漏。**在任何未来 epic 接线真正的 policy/audit/signature-verifier 强制点、消费 Trust Kernel 之前（P2-05 及同类，预计约 W6），vendored Cordis `Fiber` 结构性修复（选项 A）是硬前置条件**，须带一份真实的负例证明保住 `Fiber._unload()`/正常 fiber 生命周期。该触发 epic 的 Reviewer 必须在推进前显式核验选项 A 已落地——见 `.claude/goal.md` 的 standing rules 与 `spec/first100/exec/BLOCKED-QUEUE.md` 的 BLOCKED-011 条目。
+
 ## 哪些仍是插件
 
 kernel 上文未命名的一切，仍是普通的、可替换的 Cordis 插件，其组装与打补丁方式与 dsh 其余部分相同：

@@ -241,6 +241,11 @@ declare module '@deepseek-ai/cordis' {
      * residual unreachable in today's real source by rejecting any bare
      * read of this property; it does not change what Cordis itself does.
      * Prefer `ctx.get('trustKernel')` regardless: it has no residual at all.
+     * Deferred, not permanently accepted (user decision 2026-09-01,
+     * BLOCKED-011): the gate itself is defeatable by a cast-free generic
+     * (`<K extends 'trustKernel'>(c, k) => c[k]`), so a vendored Cordis
+     * `Fiber` fix is a hard prerequisite before any epic wires a real
+     * policy/audit/signature-verifier enforcement point (~W6).
      */
     trustKernel?: TrustKernel
   }
