@@ -1073,7 +1073,7 @@ describe('JsonlSessionPersistence: schema-registry negotiation at replay (P0-06 
       JSON.stringify({ type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 9, minor: 0 } }),
       JSON.stringify({ type: 'turn/end', seq: 1, time: 2, data: { turn: 1, reason: { kind: 'completed' } } }),
     ].join('\n') + '\n'
-    expect(() => scanner.write(Buffer.from(log))).toThrow(SchemaCompatibilityError)
+    expect(() => { scanner.write(Buffer.from(log)) }).toThrow(SchemaCompatibilityError)
   })
 
   it('accepts a session-event line whose explicit schemaVersion major matches the registered major', () => {
