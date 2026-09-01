@@ -718,6 +718,54 @@
         "testsDiscovered": 4
       },
       "note": "P0-07 U-stage (2026-09-01), wiring the collect/verify scripts into the real command surface and documentation. `package.json` gets real `evidence:collect`/`evidence:verify` pnpm scripts (no hardcoded subcommand, since collect-evidence.mjs's 3 subcommands each take release-specific required flags that a fixed entry would violate 'no hardcoded tunables' to own); `docs/testing.md` gets a new 'Release evidence package' section mirroring the existing baseline-preflight precedent; `AGENTS.md` gets a Conventions bullet, 'Evidence-gate reporting', directly restating acceptance[2] ('the Agent's final answer must cite the evidence package path and accepted status') -- independently confirmed as the correct scope: this is a documented convention for how contributors/agents report results, not a runtime enforcement point a release script could mechanically own. Both docs were already near their word-budget ceiling (AGENTS.md 2029/2030, docs/testing.md exactly 1300/1300 after this change) -- independently verified that every condensed clause survives at its linked authoritative source, nothing actually lost. Real RED->GREEN: reverting the package.json scripts alone (nothing else) makes the wiring test genuinely fail (real subprocess 'command not found' style failure); real implementation passes, 4/4. A new `tests/first100/fixtures/P0-07.composition.spec.ts` (the registry's own declared `fixtures.composition` path) runs a real end-to-end pnpm-run subprocess chain (baseline:capture -> evidence:collect init/run -> evidence:verify) against a throwaway git fixture, not mocked. Independent review confirmed the 5 pre-existing, unrelated gate failures the Writer flagged (verify-md-links/md-wrap/package-readme-model-experience/package-readme-limitations/doc-graphs) are byte-for-byte identical between this branch and its real base commit -- genuinely pre-existing, not caused or worsened by this diff. Independent review: ACCEPT."
+    },
+    {
+      "epic": "P0-05",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/feature-gate-boot.spec.ts",
+        "apps/cli/tests/dump-config-feature-gates.spec.ts",
+        "scripts/release/feature-gate-expiry.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "upper-cases the gate id and collapses non-alphanumeric runs to one underscore",
+        "contributes no override when unset or empty",
+        "accepts each of the three declared states",
+        "fails loud on any other value",
+        "resolves an empty declaration list to no resolutions",
+        "composes default -> profile -> env, matching resolveFeatureGate directly",
+        "layers the env override above default/profile, reading the deterministic env var name",
+        "never supplies a settings chain layer -- no feature-gates settings namespace exists yet",
+        "defaults declarations to FEATURE_GATE_DECLARATIONS (empty today) and env to process.env",
+        "provides the profile-resolved gates before any entry mounts -- a plugin sees them already present",
+        "rejects a plugin that tries to override the provided gates via a second ctx.provide -- Cordis's own single-owner guarantee",
+        "prints nothing when no gate is declared -- this repository's real state today",
+        "prints one comment-prefixed block naming the resolved source/value and the full override chain",
+        "stays a loadable YAML document: every printed line is a comment",
+        "renders multiple declared gates in resolution order",
+        "passes over an empty declaration list",
+        "passes when every declared gate is still active for the release version",
+        "fails, naming the gate, when a declared gate has passed its removalVersion",
+        "names every expired gate, not only the first",
+        "is empty -- no capability has migrated behind a gate yet"
+      ],
+      "files": [
+        "apps/cli/src/profile-boot.ts",
+        "apps/cli/src/dump-config.ts",
+        "packages/bundle/base/cordis.patch.yml"
+      ],
+      "frozenAtUtc": "2026-09-01T23:05:00Z",
+      "dryRunProof": {
+        "treeSha": "081dfbee8c85f968b7f1f659102705c0ee52c41b",
+        "testsDiscovered": 20
+      },
+      "note": "P0-05 U-stage (2026-09-01), wiring the P-stage runtime into the real CLI/boot sequence. `profile-boot.ts` provides `featureGates` (resolved via the real `resolveProfileFeatureGates`, default->profile->env chain) on the Cordis Context inside boot()'s prepare closure, before any config-tree entry mounts -- independently verified via the real Cordis Loader (`packages/boot/app-boot`'s `boot()`: `prepare` genuinely runs strictly before `mountRootInclude`) and the real single-provide guarantee (`vendor/cordis/src/reflect.ts`'s real duplicate-registration error text, not a wrapper). `dump-config.ts` gets `renderFeatureGateDump` (must[3]): one comment-prefixed block per declared gate naming the resolved source/value and full chain, keeping the combined dump loadable YAML -- independently re-run standalone (not just via the test harness) against a synthetic declaration with a real env override, confirmed genuine chain output. `packages/bundle/base/cordis.patch.yml`: confirmed unchanged and correctly so -- every row mounts a real Cordis plugin; feature gates, like Trust Kernel, are a non-plugin boot mechanism with nothing to mount. No production feature gate is declared anywhere yet (`FEATURE_GATE_DECLARATIONS`/`RELEASE_GATE_FEATURE_GATES` both genuinely empty, confirmed by grep) -- explicitly out of this epic's nonGoals-bounded scope; the mechanism is proven end-to-end via test-local synthetic declarations, the honest way to bridge the gap. acceptance[2] (an expired gate fails the release gate): BLOCKED-012-class deviation -- `scripts/release/feature-gate-expiry.ts` wired into the real, pre-existing `scripts/release/verify.ts` release gate (not P0-07's evidence collector, a genuine domain mismatch correctly rejected and documented in the Agent Note's alternatives-considered) -- independently re-verified by mutating a scratch expired gate into the real check and confirming `pnpm run release:verify` genuinely throws and exits nonzero, then restoring to a clean pass. Real RED->GREEN across 3 files, independently re-verified via 3 separate mutations in 3 different files, each producing genuine failures then cleanly restored. `pnpm run typecheck` (full host+client build) clean. A required Agent Note (EN/ZH/i18n triple) covers all scope decisions and alternatives considered. Independent review: ACCEPT."
     }
   ]
 }
