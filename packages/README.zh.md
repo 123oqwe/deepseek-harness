@@ -96,6 +96,8 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 
 **扩展插件依赖 Service Definition，绝不依赖具体提供方。** `dsh-agent-loop` 可替换；UI、钩子和工具插件使用 `dsh-agent`。包括 `dsh-agent-spine-demo` 在内的组合包可以依赖主干插件。能力在需要独立演进时分离 Service Definition / Service Provider / Consumer 角色；详见[能力 seam](../.agents/notes/implemented/architecture/2026-06-13-capability-seams.zh.md)。
 
+[`architecture.layers.json`](../architecture.layers.json) 为每个 capability family 声明其 Service Definition、providers、consumers，以及带日期和负责人的 allowlist 例外；其契约位于 [`scripts/architecture/capability-seams.ts`](../scripts/architecture/capability-seams.ts)，由 [`tests/architecture/capability-seams.spec.ts`](../tests/architecture/capability-seams.spec.ts) 校验。仓库级扫描器留待后续切片。
+
 -----
 
 <a id="package-readme-contracts"></a>
