@@ -84,6 +84,7 @@ const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const ACCEPTANCE_COVERAGE_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-coverage.json')
 const FLAKE_REGISTRY_PATH = join(REPO_ROOT, 'spec/first100/exec/flake-registry.json')
+const EXEC_STATE_PATH = join(REPO_ROOT, 'spec/first100/exec/EXEC-STATE.json')
 
 function loadJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
@@ -194,8 +195,32 @@ function writeLedgerHeader(rows, inputsConsumed) {
     },
   }
   const ledger = { ...header, rows }
-  writeFileSync(LEDGER_PATH, `${JSON.stringify(ledger, null, 2)}\n`, 'utf8')
+  const ledgerBytes = `${JSON.stringify(ledger, null, 2)}\n`
+  writeFileSync(LEDGER_PATH, ledgerBytes, 'utf8')
+  syncExecState(ledgerBytes)
   return ledger
+}
+
+/**
+ * Maintainer directive F2 (2026-09-01, ANSWERED-BY-DELEGATE(gq-92)): the
+ * program's own "three digests must match, otherwise BLOCKED" tripwire
+ * (`spec/first100/exec/EXEC-STATE.json`'s `ledgerDigest`/`registryDigest`)
+ * previously had no write path keeping it current -- it silently went stale
+ * for hours across three real ledger mutations, meaning a genuine ledger
+ * corruption during that window would never have tripped the safety check
+ * it exists to provide. Every ledger-mutating command routes through
+ * `writeLedgerHeader`, so syncing here in the same call closes the gap at
+ * its root rather than requiring a separate manual step per slice.
+ * `registryDigest` is recomputed fresh every call (cheap, always-correct)
+ * rather than trusted from the previous EXEC-STATE snapshot.
+ */
+function syncExecState(ledgerBytes) {
+  if (!existsSync(EXEC_STATE_PATH)) return
+  const state = loadJson(EXEC_STATE_PATH)
+  state.ledgerDigest = sha256(ledgerBytes)
+  state.registryDigest = sha256(readFileSync(REGISTRY_PATH))
+  state.lastUpdatedUtc = nowIso()
+  writeFileSync(EXEC_STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
 }
 
 function renderMarkdown(ledger) {
