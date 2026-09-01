@@ -396,6 +396,61 @@
         "testsDiscovered": 10
       },
       "note": "P0-02 F-stage (2026-09-01), acceptance[0] (\"任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier\"): closes BLOCKED-011, the multi-round Trust Kernel property-access security saga. BLOCKED-012-class deviation from the wave-map's literal F-stage file (boundary.spec.ts, already C-stage's own frozen, runtime-code-free type-surface test -- structurally cannot host a runtime unload/mount/bypass proof); manifest-patched to dispose.spec.ts + pin-hardening.spec.ts, recorded in tests/first100/adjudication.json#deliverablePathPatches (P0-02-F-dispose, P0-02-F-pin-hardening). dispose.spec.ts (commit e7d49cfa6b) proves the 'unload' half (a real Loader-driven fiber disposal, the root-pinned kernel survives and is genuinely owned by the root fiber, per ctx.reflect.store/Context.isolate) and the 'dynamic mount' half (Entry.update() on the root Include entry's config.patches, the one real post-boot insertion path this codebase supports, reduces to the same ctx.provide()-double-call rejection U-stage already proved) plus 2 direct-store-mutation bypass tests (delete-then-reprovide, direct reassignment) added during BLOCKED-011's hardening rounds. pin-hardening.spec.ts (commit bd993fa6fa and predecessors) proves the 'override' half across 4 real forgery rounds -- Object.freeze(impl) closing in-place Impl mutation, a root-fiber-store key lock, a reflect.props key lock -- plus 3 documented residual vectors (self-fiber, ancestor-fiber/vector G, wholesale root-store replacement/vector H), each independently reproduced live and proven currently unreachable by any real consumer (exhaustive grep: zero real code anywhere reads ctx.trustKernel via property access; the one real consumer, apps/cli/src/profile-boot.ts:314, uses ctx.get exclusively). Went through 4 real REJECT rounds plus a pre-committed HARD STOP before the user's final BLOCKED-011 decision (spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-011, ANSWERED-BY-USER final, 2026-09-01): P0-02.F closes at this honestly-documented state -- three property-access branches (dotted/bracket-literal/destructuring) closed to pure lexical matching with a narrow explicit allowlist, `scripts/verify-trust-kernel-property-access.ts` wired into the CI gate set -- with a new standing hard-trigger rule requiring the vendored Cordis Fiber structural fix (Option A) before any future epic wires a real policy/audit/signature-verifier enforcement point (~W6). All 6 known-limitation doc surfaces (EN/ZH boundary doc, EN/ZH package README, src/index.ts JSDoc, AGENTS.md) carry the deferred-not-permanently-accepted annotation. Coverage-completion dry run: 10/10 passing at the exact commit merging this decision (c1abf813a8, which also merge-forwards first100-exec's independent P0-06 ACCEPTED work into this branch)."
+    },
+    {
+      "epic": "P0-03",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/capability-seams.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "accepts a well-formed family with a definition, providers, and consumers",
+        "rejects a family with an empty id",
+        "rejects a family with a duplicate provider entry",
+        "rejects a family with a duplicate consumer entry",
+        "rejects two families sharing the same id",
+        "rejects a family whose definition, provider, or consumer package is absent from the workspace",
+        "derives one allowed edge from each provider to the family definition",
+        "derives one allowed edge from each consumer to the family definition",
+        "derives no edge between two providers or between two consumers",
+        "requires every allowlist entry to carry a removalDate in YYYY-MM-DD form",
+        "rejects an allowlist entry whose removalDate is not a real calendar date",
+        "requires every allowlist entry to carry a non-empty owner",
+        "rejects a duplicate allowlist entry for the same kind, from, and to",
+        "parses and validates every declared family with zero schema violations",
+        "gives every allowlist entry a removalDate and an owner",
+        "reports zero missing-provider violations under the controlled allowlist (acceptance[0])",
+        "flags a consumer import resolving into a provider package's src/* as a deep-import violation",
+        "does not flag a consumer import resolving to a provider package's published entry point",
+        "does not flag an import between packages outside any declared family",
+        "flags a provider import resolving into an app/UI package as a provider-app-dependency violation",
+        "does not flag a provider import resolving to its own family definition package",
+        "flags a family with zero providers and no matching allowlist entry",
+        "does not flag a family whose only provider is its own definition package",
+        "flags a family missing a provider fixture, consumer composition test, or unload/rollback test",
+        "does not flag a family whose test evidence covers all four must[2] artifacts",
+        "names the offending dependency edge, source file, and a remediation suggestion on every violation kind",
+        "suppresses a violation whose kind and edge match an allowlist entry",
+        "still reports a violation whose edge is not covered by any allowlist entry"
+      ],
+      "files": [
+        "architecture.layers.json",
+        "scripts/architecture/capability-seams.ts",
+        "tests/architecture/capability-seams.spec.ts",
+        "packages/README.md"
+      ],
+      "frozenAtUtc": "2026-09-01T21:15:00Z",
+      "dryRunProof": {
+        "treeSha": "259f1e9eb244c1d4ed0c8f7d03091313ab3ad26b",
+        "testsDiscovered": 28
+      },
+      "note": "P0-03 C-stage (2026-09-01), the Capability Seam architecture-consistency checker's Contract type surface: per-family declarations (definition/providers/consumers/allowed-dependency-edges, must[0]), an allowlist schema requiring a removal date and owner per entry (acceptance[1]), and pure detector functions for all three acceptance[2] violation kinds (deep import, missing provider, non-reversible registration) plus must[1]'s second rule (provider-app reverse dependency) -- all taking already-loaded data as parameters, zero filesystem I/O, deferring the real workspace scan to a future U-stage `.mjs` scanner per the registry's own C/U split. Real RED->GREEN: a stub returning empty/false unconditionally failed 18/27 genuinely (real AssertionErrors, never module/syntax errors); full implementation passed 27/27, later 28/28 after a fix-round addition. `architecture.layers.json`'s 29 real capability families were transcribed from `scripts/gen-doc-graphs.ts`'s already-curated SERVICE_ROLES seam entries (this repo's existing authoritative source, already used to generate docs/capability-seams.md). Round 1 independent review REJECTed on 4 real findings: (1) an undeclared C-stage file, `scripts/architecture/capability-seams.ts`, added with zero BLOCKED-012 manifest-patch; (2) that file contained a real `globSync`+`readFileSync` workspace scan -- genuine C/U-stage scope creep, since the registry reserves the real scanner for a separate U-stage `.mjs` file; (3) acceptance[0] ('existing repo passes under the allowlist') was only partially tested, missing a check of `detectMissingProviderViolations` against the real loaded data; (4) several families' `consumers[]` arrays undercounted real workspace dependency edges. Fix round: removed all filesystem I/O from the library file (moved the workspace scan into the spec file's own test-local helper), filed a real BLOCKED-012 manifest-patch (`P0-03-C-detection-logic` in tests/first100/adjudication.json#deliverablePathPatches, count 6->7), added the missing acceptance[0] test (empty-result assertion against real data, non-vacuously verified by an independent reviewer who temporarily zeroed a real family's providers and confirmed genuine failure), and reconciled all 29 families' consumers[] against real package.json dependency edges via a full sweep (not sampling). Round 2 independent review: ACCEPT, with every fix independently re-verified (fs-freedom confirmed by grep, manifest-patch format matched against the 6 existing precedents, acceptance[0] test proven non-vacuous via a live mutation, and a full independent 29-family consumer-edge sweep finding zero missing edges) -- one minor, non-blocking note left for a future U-stage slice: 2 stray consumer entries (dsh-bash-sandbox on subprocess, dsh-tool-bash on sessionPersistence) reflect devDependency-only test wiring rather than a real production/peer dependency, functionally inert since no consumer of this data exists yet."
     }
   ]
 }
