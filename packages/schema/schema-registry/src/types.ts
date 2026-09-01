@@ -22,10 +22,10 @@
  * `@deepseek-ai/dsh-session/types`): an additive, minor-bump change is
  * exactly the kind of change a reader may safely not recognize, the same
  * default `ignorable` already encodes for session events. This registry
- * does not import or call `ignorable` -- a leaf object's version identity
+ * does not import or call `ignorable` — a leaf object's version identity
  * and a session event's envelope marker are different mechanisms serving
- * the same default-compatibility philosophy -- and it does not build a
- * second, competing default-compatibility philosophy alongside it.
+ * the same default-compatibility philosophy — and it does not build a
+ * second, competing default-compatibility mechanism alongside it.
  *
  * @module @deepseek-ai/dsh-schema-registry/types
  */

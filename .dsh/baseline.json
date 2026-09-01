@@ -89,11 +89,11 @@
     "workflow-worker-thread"
   ],
   "formatVersion": 1,
-  "gitSha": "b89d9924c2b2579e95d8eccde0f33fbd3bc618c8",
+  "gitSha": "2abc7d0766b8789d2037e3dbb7fdfc5d4a603e80",
   "pnpmLockHash": "96f45eeb100158fac8bd27822616661b424be77612b000e1bf38acc1c3e31b3a",
   "protocolSchemaHashes": {
     "packages/core/session/src/known-event-types.ts": "235200ea8da50166713086064ac64b5c74161fd63a8ccc9034e4456bc7f678fa",
-    "packages/sdk/protocol/src/types.ts": "2847529a0575d5e42495aec5892c39b387b7b33ea32e37004571f302b3493880"
+    "packages/sdk/protocol/src/types.ts": "558e71fa855918738eaeed57115632e1a8b49aa559d58837d6a7cc1110a6828f"
   },
   "toolchain": {
     "node": "24.18.0",

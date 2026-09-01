@@ -8,9 +8,9 @@
  * Every RPC request/result and notification payload type below carries a
  * schema registry id and current version in its own doc comment;
  * `@deepseek-ai/dsh-schema-registry`'s bootstrap registers each one at load
- * time. A nested field type shared across several payloads (e.g.
+ * time. A nested field type embedded in a payload (e.g.
  * `SdkEncodedImageBlock`, embedded in `SessionPromptParams.contentBlocks`) is
- * not separately registered -- it version-negotiates as part of the
+ * not separately registered — it version-negotiates as part of the
  * top-level payload that carries it, avoiding a second, cross-cutting
  * registration for content already covered end-to-end by its container's
  * schemaId. Registration is orthogonal to the session log's own
