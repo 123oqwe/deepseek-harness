@@ -42,7 +42,9 @@ export type {
 
 /** Thrown by `registerSchema`/`evolveSchema` when a declared registration or version bump violates the registry's contract. */
 export class SchemaRegistryError extends Error {
+  /** Which contract violation this is; see the throw sites for the exhaustive set. */
   readonly code: SchemaRegistryErrorCode
+  /** Identity of the schema the violation occurred against. */
   readonly schemaId: SchemaId
 
   constructor(code: SchemaRegistryErrorCode, schemaId: SchemaId, message: string) {
@@ -55,9 +57,13 @@ export class SchemaRegistryError extends Error {
 
 /** Structured, machine-readable reason `negotiateSchema` could not confirm compatibility — never a bare string. */
 export class SchemaCompatibilityError extends Error {
+  /** Which incompatibility this is: an unregistered schema, or a major-version mismatch. */
   readonly code: SchemaCompatibilityErrorCode
+  /** Identity of the schema negotiation was attempted against. */
   readonly schemaId: SchemaId
+  /** The version the payload being read was actually written at. */
   readonly encounteredVersion: SchemaVersion
+  /** This build's registered version for the schema, or `undefined` when the schema is unregistered. */
   readonly registeredVersion: SchemaVersion | undefined
 
   constructor(
@@ -83,7 +89,11 @@ export type SchemaNegotiationResult =
 
 const registry = new Map<SchemaId, RegisteredSchema>()
 
-/** An identity migration for a schema's own first version, which has no true predecessor payload. */
+/**
+ * An identity migration for a schema's own first version, which has no true predecessor payload.
+ * @param payload - passed through unchanged.
+ * @returns `payload`, unchanged.
+ */
 export const identityMigration: SchemaMigration = payload => payload
 
 function isValidVersion(version: SchemaVersion): boolean {

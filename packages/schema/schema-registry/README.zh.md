@@ -73,15 +73,21 @@ if (!result.compatible) {
 |---|---|
 | [`src/index.ts`](src/index.ts) | `registerSchema`/`evolveSchema`/`negotiateSchema`/`getSchema`/`listSchemas`，以及注册所有已知 session-event 与 SDK-protocol schema 的启动引导 |
 | [`src/types.ts`](src/types.ts) | `SchemaId`、`SchemaVersion`、`FieldChange`、`RegisteredSchema` 及错误码类型 |
+| [`src/migrate.ts`](src/migrate.ts) | 说明性、合成的非恒等迁移函数，端到端演示该机制（见下文） |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件（无运行时不变式；详见文件） |
 
 ### 启动引导注册
 
 导入本包会以版本 1.0 与恒等迁移，注册：`KNOWN_SESSION_EVENT_TYPES`（`@deepseek-ai/dsh-session`）中的每个类型名，注册为 `session-event:<type>`；以及 `@deepseek-ai/dsh-sdk-protocol` 的 `src/types.ts` 所记录的每个具名 wire 类型（通过每个接口自身的 schemaId 文档注释），注册为 `sdk-protocol:<TypeName>`。协议列表在 `src/index.ts` 中手工镜像——协议包自身的导出不携带可供运行时使用的值——当那里新增或移除某个 wire 类型时，必须手工保持同步。
 
-### 延后事项：真实迁移函数体
+### 非恒等迁移示例
 
-本 C-stage slice 中注册的每个迁移函数都是恒等函数，因为当前每个注册都是该 schema 自身的首个版本，没有需要转换的前驱 payload。某个 schema 第二个及以后版本的真实、非恒等迁移函数体，是后续 P-stage（`migrate.ts`）关注的事项。
+本包启动引导的每个 schema 目前仍处于其真实的首个版本（1.0），使用恒等迁移——`KNOWN_SESSION_EVENT_TYPES` 或 SDK-protocol wire 类型中从未有过字段真正被重命名、合并或删除。`src/migrate.ts` 用两个合成的、明确标注的示例（从未注册到任何真实 schemaId 上）端到端演示了本 registry 的非恒等迁移机制，每个示例都真实走通了 `evolveSchema` 的 breaking-change 路径：
+
+- **`renameFiredAtToOccurredAt` / `renameOccurredAtToFiredAt`** —— 一次无损的字段重命名。两个方向都已提供，`tests/migration.spec.ts` 证明 `reverse(forward(x))` 与 `forward(reverse(x))` 均可无损往返：这是一个双向迁移。
+- **`mergeNameFields`** —— 将两个字段（`firstName`+`lastName`）有损合并为一个（`fullName`）。不提供也不可能提供通用的反向迁移（合并后以空格分隔的字符串无法总是被拆回原始字段）；`tests/migration.spec.ts` 用一个具体的歧义输入证明了这一点，并断言不存在反向导出：这是一个明确不可逆的迁移。
+
+这两个示例是本包对「所有 registry migration 具有双向或明确不可逆测试」这一验收条款的证明——而非对某次真实历史 schema 变更的描述。
 
 ### 延后事项：接入读取路径
 
@@ -103,7 +109,7 @@ if (!result.compatible) {
 <a id="known-limitations-and-deferred-work"></a>
 ## 已知限制与待办
 
-- **真实迁移函数体被延后** — 当前每个已注册的 schema 都处于其自身的首个版本，因此这里的每个迁移函数都是恒等函数；某个 schema 第二个版本的真实转换函数体，随后续 P-stage 的 `migrate.ts` slice 落地。
+- **尚不存在真实的第二版本 schema** — 每个已启动引导的 schema 仍处于其自身的首个版本、使用恒等迁移；`src/migrate.ts` 中的非恒等迁移是说明性的合成示例，从未注册到任何真实 schemaId 上，因为任何已启动引导的 schema 都尚未经历真正的字段重命名/合并/删除。
 - **尚未接入读取路径** — `negotiateSchema` 是真实且已测试的，但目前没有 session replay、SDK initialize 或 plugin load 的调用点调用它；该接入属于后续 U-stage slice。
 - **SDK-protocol 的 schemaId 列表是手工镜像的** — `src/index.ts` 中的 `PROTOCOL_WIRE_SCHEMA_IDS` 必须与 `@deepseek-ai/dsh-sdk-protocol` 的 `src/types.ts` 中各接口的 schemaId 文档注释手工保持同步；目前没有任何机制自动交叉核对二者。
 
