@@ -60,6 +60,22 @@
         "testsDiscovered": 5
       },
       "note": "U-stage (Usage/Composition): a new package @deepseek-ai/dsh-baseline-preflight (packages/guard/baseline-preflight) wires the C/F-stage-frozen scripts/release/baseline-fingerprint.mjs's verify check into a real boot-time Cordis plugin, satisfying P0-01's MUST clause (verify before any execution batch begins) via a genuine end-to-end round trip (maintainer directive B7(2): real registration + no-op provider is an explicit merge blocker) -- tests/first100/fixtures/P0-01.composition.spec.ts boots a real minimal Loader composition through @deepseek-ai/dsh-app-boot via packages/test-support/loader-smoke and asserts real process exit codes/stderr; packages/guard/baseline-preflight/tests/apply.spec.ts covers the no-baseline and no-drift branches directly. Dry-run proof captured on attempt/P0-01-U at commit cf63a52ba493e6b4771cdc947816e3a2aae2b4c7 (RED scaffold: the two new test files, the new package's scaffold, and a B4(f)/B5 no-behavior apply() stub -- real drift-check implementation and product wiring, packages/bundle/base/cordis.patch.yml and scripts/release/baseline-fingerprint.mjs's shared verifyBaseline export, are a separate later GREEN commit). Real partial RED at this tree: 3/5 pass (no-baseline no-op and clean-boot cases, trivially true against any implementation), 2/5 genuinely fail on real behavioral mismatches (boot never aborts on drift; apply never rejects on drift) -- never MODULE_NOT_FOUND/SyntaxError. Independent verification (2026-09-01) confirmed the shared-base-bundle row ships `disabled: true` (matching the existing `hmr` row's opt-in-per-profile precedent) so this does not collide with this repo's own committed .dsh/baseline.json specimen and does not abort real `pnpm dsh` boots from this checkout -- confirmed directly by running apps/cli/tests/profiles/headless/tests/headless.expected.e2e.ts (12/12 passed) with the row disabled."
+    },
+    {
+      "epic": "P0-01",
+      "stage": "P",
+      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/baseline-fingerprint.spec.ts", "--reporter=json"],
+      "expectExit": 0,
+      "expectCases": [
+        "wires baseline:capture/baseline:verify in package.json to the real script, and pnpm run actually executes it"
+      ],
+      "files": ["tests/release/baseline-fingerprint.spec.ts"],
+      "frozenAtUtc": "2026-09-01T03:17:21Z",
+      "dryRunProof": {
+        "treeSha": "dc1b03c51f7283bcafcd0423501a7508edcf8257",
+        "testsDiscovered": 11
+      },
+      "note": "BLOCKED-002 (2026-09-01, extended-trigger reading): P-stage declares two files in the wave-map (scripts/release/baseline-fingerprint.mjs, package.json), no dedicated test file of its own. scripts/release/baseline-fingerprint.mjs's coverage was already proven repeatedly by the (P0-01, C) and (P0-01, F) entries' cases (all spawn it directly). checkSharedStageCoverage() (scripts/first100/generate-specs.ts) mechanically confirmed this AND found a real gap: package.json was only ever an incidental fixture-scaffolding string in the existing tests, never exercising its actual baseline:capture/baseline:verify npm-script role. This entry's one new expectCase closes that gap with dedicated evidence (real package.json script-string assertion + a real `pnpm run baseline:capture`/`baseline:verify` invocation against an isolated fixture) -- P-stage now has genuine, direct evidence of its own, so this is an ordinary single-cell entry (no coveredStages needed): the (P0-01,P) ledger cell's greening rests on this entry's own observation, informed by (not borrowing the observation of) the already-recorded (P0-01,C)/(P0-01,F) evidence for the other declared file. Real RED at this tree (commit 1d959cd14a1147f16760178fef2125136512bc0d, package.json's two script lines temporarily removed for this commit only): 10/11 pass, 1 genuinely fails (`expected undefined to be 'node scripts/release/baseline-fingerprint.mjs capture'`), never a module/syntax error; package.json's real content is restored in the following GREEN commit."
     }
   ]
 }
