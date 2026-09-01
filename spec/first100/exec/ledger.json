@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T21:55:35.359Z",
-  "inputDigest": "39171bdbd30a3b831dd6ab5d5a808cb57b99746f968218eced2da37a0d630873",
+  "lastUpdatedUtc": "2026-09-01T23:26:43.204Z",
+  "inputDigest": "95fe440b3e449bec08a165e3b53e09548388b9f98d2fbb604323241323ffdea5",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -309,14 +309,32 @@
           "status": "NOT_RUN"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "a558e04cb8044380d1da6e95d6aaf896184b2b89",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33569804119",
+          "observationReportPath": "/tmp/ci-artifacts-w3-batch2-clean/first100-evidence-a558e04cb8044380d1da6e95d6aaf896184b2b89/vitest-report.json",
+          "observationSha256": "cb06635b634dee4d6faa2e1d2dc5001b48c6d64449bf9535b2c5cc9f4cfeff1c",
+          "expectCasesMatched": [
+            "collects a runtime import, a type-only import, an export-from, and a require specifier",
+            "resolves a real workspace package name to its real directory",
+            "classifies packages/client/* and apps/* as application/UI code, and a provider package as not",
+            "reports zero schema errors and zero unsuppressed violations under the controlled allowlist",
+            "resolves a real multi-family Consumer (packages/core/agent-loop) import without flagging a violation",
+            "fails with a deep-import violation when a real fixture consumer imports a real fixture provider's src/*",
+            "fails with a missing-provider violation when a real fixture family declares zero providers",
+            "fails with a non-reversible-registration violation when a real fixture family has no consumer composition or unload/rollback test",
+            "fails with a provider-app-dependency violation when a real fixture provider imports a real fixture app/UI package (bonus must[1] coverage)",
+            "suppresses an otherwise-failing fixture violation covered by a dated, owned allowlist entry",
+            "prints the dependency edge, source file, and remediation for a real fixture violation, and exits non-zero"
+          ],
+          "capturedAtUtc": "2026-09-01T23:25:56.920Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "d7b1931eaeec211ff1eb0a9921308732f2592a0b",
+      "candidateSha": "a558e04cb8044380d1da6e95d6aaf896184b2b89",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -405,7 +423,41 @@
           "capturedAtUtc": "2026-09-01T21:55:35.350Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "a558e04cb8044380d1da6e95d6aaf896184b2b89",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33569804119",
+          "observationReportPath": "/tmp/ci-artifacts-w3-batch2-clean/first100-vitest-report-a558e04cb8044380d1da6e95d6aaf896184b2b89/vitest-report.json",
+          "observationSha256": "27156e6bf980f5ebb2c92b0c894120c7231a88cf56cdcc9612de41e551a66972",
+          "expectCasesMatched": [
+            "resolves to the declaration default when no profile/settings/env candidate applies",
+            "adds a profile entry only when the active profile has its own explicit defaultByProfile key",
+            "never adds a duplicate profile entry when the active profile is literally \"default\"",
+            "adds a settings entry only when the namespace value carries this gate's id",
+            "reads a real, frozen SettingsScope<FeatureGateNamespaceValue>.get() shape -- packages/settings/settings/src/index.ts always deepFreezes the resolved value a scope hands back -- without attempting to mutate it",
+            "env, when provided, always wins as the highest-precedence resolved entry over default/profile/settings",
+            "chain order is always lowest-precedence first regardless of which candidates are present",
+            "off applies only legacy's value and never invokes candidate",
+            "enforce applies only candidate's value and never invokes legacy",
+            "shadow invokes BOTH legacy and candidate decision logic (must[1]: shadow executes the decision)",
+            "acceptance[0]: the same request produces the IDENTICAL applied value under off and under shadow, even though legacy and candidate disagree",
+            "shadow never returns a shadowRecord for off or enforce",
+            "records a shadowRecord with the redacted legacy/candidate summaries and the real gateId",
+            "never lets a field outside the allowlist reach legacySummary/shadowSummary -- a real redaction call, not a bare cast",
+            "differs reflects the RAW decision summaries, including a field the allowlist later strips -- shadow mode must not under-report real behavioral drift",
+            "differs is false when the raw summaries genuinely agree",
+            "keeps only allowlisted fields present in the summary",
+            "drops every field not on the allowlist",
+            "omits an allowlisted field the summary does not actually carry, rather than adding it as undefined",
+            "returns an empty object for an empty allowlist",
+            "is active for a release strictly before removalVersion",
+            "is expired for a release exactly at removalVersion (boundary)",
+            "is expired for a release strictly after removalVersion",
+            "compares multi-digit segments numerically, not lexically",
+            "a prerelease of the removal version is still active -- SemVer precedence: a prerelease sorts below its release",
+            "compares prerelease identifiers numerically, not lexically",
+            "rejects a malformed version string instead of silently comparing garbage"
+          ],
+          "capturedAtUtc": "2026-09-01T23:26:43.203Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -415,7 +467,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "92174bb7349de7fbd1908dd73c89c0f23aa576b1",
+      "candidateSha": "a558e04cb8044380d1da6e95d6aaf896184b2b89",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
