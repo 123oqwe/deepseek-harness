@@ -77,5 +77,40 @@
       },
       "note": "BLOCKED-002 (2026-09-01, extended-trigger reading): P-stage declares two files in the wave-map (scripts/release/baseline-fingerprint.mjs, package.json), no dedicated test file of its own. scripts/release/baseline-fingerprint.mjs's coverage was already proven repeatedly by the (P0-01, C) and (P0-01, F) entries' cases (all spawn it directly). checkSharedStageCoverage() (scripts/first100/generate-specs.ts) mechanically confirmed this AND found a real gap: package.json was only ever an incidental fixture-scaffolding string in the existing tests, never exercising its actual baseline:capture/baseline:verify npm-script role. This entry's one new expectCase closes that gap with dedicated evidence (real package.json script-string assertion + a real `pnpm run baseline:capture`/`baseline:verify` invocation against an isolated fixture) -- P-stage now has genuine, direct evidence of its own, so this is an ordinary single-cell entry (no coveredStages needed): the (P0-01,P) ledger cell's greening rests on this entry's own observation, informed by (not borrowing the observation of) the already-recorded (P0-01,C)/(P0-01,F) evidence for the other declared file. Real RED at this tree (commit 1d959cd14a1147f16760178fef2125136512bc0d, package.json's two script lines temporarily removed for this commit only): 10/11 pass, 1 genuinely fails (`expected undefined to be 'node scripts/release/baseline-fingerprint.mjs capture'`), never a module/syntax error; package.json's real content is restored in the following GREEN commit."
     }
+,
+    {
+      "epic": "P0-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P0-01",
+        "stage": "F"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "verify fails and names the drifted workspace package manifest"
+      ],
+      "files": [
+        "tests/release/baseline-fingerprint.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T05:20:00Z",
+      "dryRunProof": {
+        "treeSha": "098b028a224a49f6f3877d102152372e89bd0c48",
+        "testsDiscovered": 12
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) neutralized diffCapture()'s workspacePackages comparison branch in scripts/release/baseline-fingerprint.mjs (the `if (JSON.stringify(stored.workspacePackages) !== JSON.stringify(fresh.workspacePackages)) { drift.push(...) }` block), then re-ran only the new case against the fixture that renames packages/alpha/package.json's name after capture.",
+        "failureSummary": "AssertionError: expected +0 not to be +0 // Object.is equality, at tests/release/baseline-fingerprint.spec.ts:216:37 (expect(verifyResult.status).not.toBe(0)) -- verify wrongly exited 0 (no drift detected) once the covered behavior was disabled, confirming the new case is not vacuously true. Mutation reverted immediately after capturing this; git diff --stat on the script was empty before continuing. Independently reproduced by a fresh isolated Reviewer (BLOCKED-003-compliant dispatch, non-isolated worktree, branch/HEAD invariant verified unchanged before and after) with the exact same failure output, plus a SECOND, independent mutation (weakening the comparison to array-length-only, which the fixture's same-count rename would defeat under a naive implementation) -- also caught by the new case with the same genuine failure. Reviewer verdict: ACCEPT."
+      },
+      "note": "BLOCKED-005 supplement (2026-09-01): closes the real, honestly-discovered gap in P0-01's acceptance[1] coverage -- schema (F-stage) and bundle-row (C-stage) drift were already tested, but package-manifest drift (a workspace package.json's name changing, tracked via workspacePackages in diffCapture()) never had a named case, even though the implementation already handles it. Coverage-completion path (behavior already exists; genuine RED against the unmodified tree is unobtainable) -- the mandatory sensitivityProof above is the substitute per the BLOCKED-005 hardening clause. Never re-greens or invalidates the primary (P0-01, F) entry's own already-GREEN cell; only contributes this case's title into BLOCKED-004 predicate (i)'s coverage-closure union, recorded in spec/first100/exec/acceptance-coverage.json's acceptanceIndex 1 citation."
+    }
   ]
 }
