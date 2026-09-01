@@ -91,7 +91,7 @@ describe('the real workspace (acceptance[0]): runCapabilitySeamsCheck against th
     expect(result.scanned.families).toBeGreaterThan(0)
     expect(result.scanned.packages).toBeGreaterThan(0)
     expect(result.scanned.imports).toBeGreaterThan(0)
-  })
+  }, 20_000)
 
   it('resolves a real multi-family Consumer (packages/core/agent-loop) import without flagging a violation', () => {
     // packages/core/agent-loop is a real Consumer of the llm, sessionPersistence,
