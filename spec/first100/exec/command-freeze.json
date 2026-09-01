@@ -602,6 +602,58 @@
         "testsDiscovered": 39
       },
       "note": "P0-03 U-stage (2026-09-01), the real capability-seam scanner: `scripts/architecture/check-capability-seams.mjs` performs a genuine live workspace scan (real package.json dependency edges + real static TypeScript import collection across every workspace package) and feeds the results into C-stage's pure detector functions, per the registry's own C/U split. must[1]'s second rule (provider->app/UI reverse dependency) is also proven, beyond the registry's literal acceptance[2] wording. Real live-repo run: 4173 cross-package import edges across 256 workspace packages, 29 capability families, 0 unsuppressed violations (acceptance[0]) -- confirmed by both the Writer and an independent Reviewer's own from-scratch fixture construction. Two real, pre-existing gaps surfaced on the first live run (both non-reversible-registration, for the `authorization`/`userQuestions` families -- registration-based providers with no dedicated package, same reasoning as their existing missing-provider allowlist entries): closed with 2 new dated/owned allowlist entries in architecture.layers.json. acceptance[2]'s three fixture violation kinds (deep-import, missing-provider, non-reversible-registration) plus a bonus fourth (provider-app-dependency) are each proven against real on-disk temp-directory fixtures, independently reproduced by the Reviewer with their own separately-constructed fixtures (not reusing the Writer's). acceptance[3] (CI names the edge/file/remediation) verified via a real child-process CLI run against a fixture, asserting real stdout content and a non-zero exit code. BLOCKED-012-class deviations (3, all disclosed and independently confirmed defensible): a `.d.mts` companion for the plain-JS `.mjs` scanner to typecheck against (following the established `scripts/first100/generate-ledger.d.mts` precedent, not invented ad hoc), the U-stage test file itself (registry's own declared `tests/architecture/capability-seams.spec.ts` is scoped to stage F), and the 2 new `architecture.layers.json` allowlist entries (forced by real live-scan gaps, not convenience). The `packages/core/agent-loop/src/index.ts`/`agent.ts` files the registry declares at U-stage were investigated and confirmed correctly UNEDITED baseline (`[B]`) evidence -- agent-loop's real, substantial cross-family `llm` import is used as the concrete real-workspace assertion for acceptance[0], not a file this stage authors; independently re-verified by the Reviewer via a zero-diff check plus their own fresh read of the scanned edge. Real RED->GREEN: a no-op-scan stub genuinely failed 6/11 new tests (real assertion failures); the real implementation passes 39/39 (28 C-stage + 11 U-stage). Independent review: ACCEPT, with the live-scan zero-violation claim, the fixture-violation proofs, and the agent-loop non-edit claim each independently re-verified from scratch, not merely re-read."
+    },
+    {
+      "epic": "P0-05",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/migration/feature-gates/tests/",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "resolves to the declaration default when no profile/settings/env candidate applies",
+        "adds a profile entry only when the active profile has its own explicit defaultByProfile key",
+        "never adds a duplicate profile entry when the active profile is literally \"default\"",
+        "adds a settings entry only when the namespace value carries this gate's id",
+        "reads a real, frozen SettingsScope<FeatureGateNamespaceValue>.get() shape -- packages/settings/settings/src/index.ts always deepFreezes the resolved value a scope hands back -- without attempting to mutate it",
+        "env, when provided, always wins as the highest-precedence resolved entry over default/profile/settings",
+        "chain order is always lowest-precedence first regardless of which candidates are present",
+        "off applies only legacy's value and never invokes candidate",
+        "enforce applies only candidate's value and never invokes legacy",
+        "shadow invokes BOTH legacy and candidate decision logic (must[1]: shadow executes the decision)",
+        "acceptance[0]: the same request produces the IDENTICAL applied value under off and under shadow, even though legacy and candidate disagree",
+        "shadow never returns a shadowRecord for off or enforce",
+        "records a shadowRecord with the redacted legacy/candidate summaries and the real gateId",
+        "never lets a field outside the allowlist reach legacySummary/shadowSummary -- a real redaction call, not a bare cast",
+        "differs reflects the RAW decision summaries, including a field the allowlist later strips -- shadow mode must not under-report real behavioral drift",
+        "differs is false when the raw summaries genuinely agree",
+        "keeps only allowlisted fields present in the summary",
+        "drops every field not on the allowlist",
+        "omits an allowlisted field the summary does not actually carry, rather than adding it as undefined",
+        "returns an empty object for an empty allowlist",
+        "is active for a release strictly before removalVersion",
+        "is expired for a release exactly at removalVersion (boundary)",
+        "is expired for a release strictly after removalVersion",
+        "compares multi-digit segments numerically, not lexically",
+        "a prerelease of the removal version is still active -- SemVer precedence: a prerelease sorts below its release",
+        "compares prerelease identifiers numerically, not lexically",
+        "rejects a malformed version string instead of silently comparing garbage"
+      ],
+      "files": [
+        "packages/migration/feature-gates/src/index.ts",
+        "packages/settings/settings/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T22:20:00Z",
+      "dryRunProof": {
+        "treeSha": "d5ab6606915044d2d41a7118091b611386e9ef5c",
+        "testsDiscovered": 59
+      },
+      "note": "P0-05 P-stage (2026-09-01), Shadow/Enforce Feature Gates' real Provider runtime: `resolveFeatureGate` implements must[3]'s override chain (default -> profile -> settings -> env, ascending precedence, a chain entry only for a layer with a real candidate), interoperating with the real `packages/settings/settings/src/index.ts` (`SettingsScope.get()` always `deepFreeze`s its resolved value, confirmed by reading the real source). `evaluateFeatureGate` is the must[1]/acceptance[0] decision harness: `off` calls only legacy, `enforce` calls only candidate, `shadow` calls BOTH but always applies legacy's value -- independently re-verified by mutating the applied-value line to the candidate's result and confirming the acceptance[0] test genuinely catches it (RED), then restoring (GREEN). `redactDecisionSummary` is a real per-field allowlist copy (not a cosmetic `as RedactedJsonValue` cast placed after no real filtering) -- independently re-verified with a Reviewer-constructed fake secret field absent from any allowlist, confirmed genuinely absent from the stringified output; `differs` is deliberately computed from the RAW (pre-redaction) summaries so shadow mode never silently under-reports real behavioral drift hidden in a non-allowlisted field. `checkFeatureGateExpiry` is a real SemVer-2.0.0-precedence comparator (multi-digit numeric segment comparison, prerelease-identifier comparison, `removalVersion` boundary is inclusive-expired) -- independently re-verified against edge cases (0.10.0 vs 0.9.0, the exact boundary, a `>=` vs `>` mutation flipping the boundary test) by the Reviewer's own probes, not merely re-reading the Writer's tests. Real RED->GREEN: a stub implementation failed 21/59 genuinely; the real implementation passes 59/59 (32 C-stage + 27 P-stage). No BLOCKED-012 deviation -- files[] matched the registry's P-stage declaration exactly. Independent review: ACCEPT, with the shadow-mode safety property (the epic's core guarantee), the redaction call's real effect, and the expiry comparator's boundary correctness each independently re-verified from scratch via the Reviewer's own constructed test cases and mutations, not merely re-read."
     }
   ]
 }
