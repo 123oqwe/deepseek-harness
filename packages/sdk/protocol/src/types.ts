@@ -5,6 +5,18 @@
  * plugin (`@deepseek-ai/dsh-sdk-jsonrpc-server`) and SDK clients share these shapes;
  * `serverInfo.name` stays the wire-stable `deepseek-harness-sdk-runtime`.
  *
+ * Every RPC request/result and notification payload type below carries a
+ * schema registry id and current version in its own doc comment;
+ * `@deepseek-ai/dsh-schema-registry`'s bootstrap registers each one at load
+ * time. A nested field type embedded in a payload (e.g.
+ * `SdkEncodedImageBlock`, embedded in `SessionPromptParams.contentBlocks`) is
+ * not separately registered — it version-negotiates as part of the
+ * top-level payload that carries it, avoiding a second, cross-cutting
+ * registration for content already covered end-to-end by its container's
+ * schemaId. Registration is orthogonal to the session log's own
+ * `SESSION_FORMAT_VERSION` (`@deepseek-ai/dsh-session`), which this module
+ * never references (BLOCKED-008 scope split).
+ *
  * @module @deepseek-ai/dsh-sdk-protocol/types
  */
 
@@ -12,7 +24,10 @@ import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
 
-/** Parameters for the process-wide SDK handshake. */
+/**
+ * Parameters for the process-wide SDK handshake.
+ * Schema registry id `sdk-protocol:InitializeParams`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface InitializeParams {
   /** Working directory recorded on every SDK-created session's header. */
   cwd: string
@@ -26,13 +41,19 @@ export interface InitializeParams {
   maxTokens?: number
 }
 
-/** Wire-stable server identity returned by initialization. */
+/**
+ * Wire-stable server identity returned by initialization.
+ * Schema registry id `sdk-protocol:InitializeResult`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface InitializeResult {
   /** Wire-stable server identity (`deepseek-harness-sdk-runtime`) and version. */
   serverInfo: { name: string; version: string }
 }
 
-/** One user turn on one SDK session. */
+/**
+ * One user turn on one SDK session.
+ * Schema registry id `sdk-protocol:SessionPromptParams`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface SessionPromptParams {
   /** The SDK-side session id; an unknown id lazily creates the agent+session pair. */
   sessionId: string
@@ -52,7 +73,10 @@ export interface SdkEncodedImageBlock {
 /** SDK prompt input: ordinary durable blocks plus inline images awaiting admission. */
 export type SdkPromptContentBlock = ContentBlock | SdkEncodedImageBlock
 
-/** Durable enqueue receipt for one prompt. */
+/**
+ * Durable enqueue receipt for one prompt.
+ * Schema registry id `sdk-protocol:SessionPromptResult`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface SessionPromptResult {
   /** Identity of the queued user message. */
   messageId: string
@@ -61,7 +85,13 @@ export interface SessionPromptResult {
 /** Deployment-mapped SDK outcome: `ok` for an accepted result, `error` otherwise. */
 export type SdkRunStatus = 'ok' | 'error'
 
-/** `session.event` payload: one session-log event, streamed as it is recorded. */
+/**
+ * `session.event` payload: one session-log event, streamed as it is recorded.
+ * Schema registry id `sdk-protocol:SessionEventNotification`, version 1.0
+ * (`@deepseek-ai/dsh-schema-registry`'s bootstrap). The wrapped `event` field
+ * is a `SessionEvent` governed by `SESSION_FORMAT_VERSION`, not by this
+ * registry (scope split, BLOCKED-008).
+ */
 export interface SessionEventNotification {
   /** Session the event belongs to (every session in the runtime, not only SDK-created ones). */
   sessionId: string
@@ -69,7 +99,10 @@ export interface SessionEventNotification {
   event: SessionEvent
 }
 
-/** Whole-agent lifecycle state for one session. */
+/**
+ * Whole-agent lifecycle state for one session.
+ * Schema registry id `sdk-protocol:SessionStatusNotification`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface SessionStatusNotification {
   /** Session whose live agent changed status. */
   sessionId: string
@@ -77,7 +110,10 @@ export interface SessionStatusNotification {
   status: 'idle' | 'running'
 }
 
-/** `subagent.started` payload: an in-runtime child session was created. */
+/**
+ * `subagent.started` payload: an in-runtime child session was created.
+ * Schema registry id `sdk-protocol:SubagentStartedNotification`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface SubagentStartedNotification {
   /** The delegating session. */
   parentSessionId: string
@@ -85,7 +121,10 @@ export interface SubagentStartedNotification {
   childSessionId: string
 }
 
-/** `subagent.finished` payload: an in-process subagent run ended (remote runs are not reported). */
+/**
+ * `subagent.finished` payload: an in-process subagent run ended (remote runs are not reported).
+ * Schema registry id `sdk-protocol:SubagentFinishedNotification`, version 1.0 (`@deepseek-ai/dsh-schema-registry`'s bootstrap).
+ */
 export interface SubagentFinishedNotification {
   /** Subagent provider name that ran the child. */
   provider: string
