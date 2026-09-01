@@ -5,6 +5,8 @@ kind: "package-reference"
 
 # @deepseek-ai/dsh-feature-gates
 
+English | [中文](README.zh.md)
+
 ## Summary
 
 `dsh-feature-gates` fixes the Contract-stage type surface for Epic P0-05 (Shadow/Enforce feature gates for major capabilities): the unified `off | shadow | enforce` {@link FeatureGateState}, the fixed lifecycle metadata every gate records (`owner`, `introducedVersion`, `defaultByProfile`, `removalVersion`), the JSON-safe settings-namespace value shape a `feature-gates` registration would carry, the `--dump-config` override-chain shape, the sanitized shadow/legacy decision-diff record, and the release-gate expiry check signature.
