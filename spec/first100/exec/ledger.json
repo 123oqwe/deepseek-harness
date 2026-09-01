@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T19:01:01.864Z",
-  "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
+  "lastUpdatedUtc": "2026-09-01T19:32:26.409Z",
+  "inputDigest": "f289d25962bde0dc2d31d49bd63fd69f6f861f7493128d73c0dc8facff6da549",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -208,15 +208,53 @@
           "capturedAtUtc": "2026-09-01T12:06:15.871Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "74a6304ae05dfea5291936ffa68ff8bbbccfcbad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33548460030",
+          "observationReportPath": "/tmp/ci-artifacts-p02f/first100-evidence-74a6304ae05dfea5291936ffa68ff8bbbccfcbad/vitest-report.json",
+          "observationSha256": "e103b59567510759601260ffbbdc920184f06c498d7afd08486c17659116b651",
+          "expectCasesMatched": [
+            "leaves the kernel present after disposing an unrelated plugin, and shows the kernel is owned by the root fiber, not a plugin fiber",
+            "rejects a plugin row applied to the root Include entry after boot exactly as it rejects one present at initial boot",
+            "rejects delete-then-reprovide against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned",
+            "rejects a direct reassignment of the store entry (no delete) against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned",
+            "rejects `impl.value = forged` against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged",
+            "rejects a direct write to ctx.root.fiber.store['trustKernel'], and leaves both ctx.get and ctx.trustKernel property access unforged for an unrelated sibling",
+            "rejects a direct write to ctx.reflect.props['trustKernel'], and leaves ctx.trustKernel property access unforged",
+            "durably poisons ctx.trustKernel property access for the attacking plugin itself, while ctx.get('trustKernel') and an unrelated top-level sibling stay correct -- this is the known, accepted gap, not a bug in pinTrustKernel",
+            "poisons ctx.trustKernel property access for a sibling plugin mounted under the same ancestor, while ctx.get('trustKernel') and the root stay correct",
+            "poisons ctx.trustKernel property access for every non-root context (siblings and later-mounted plugins alike), silently, while ctx.get('trustKernel') and the root's own direct property read stay correct"
+          ],
+          "capturedAtUtc": "2026-09-01T19:32:21.970Z"
         }
       },
       "supplements": {},
-      "candidateSha": "46835ed9fcf72054c7ea3e6eb0d547e188c6e96d",
-      "independentVerdict": "PENDING",
+      "candidateSha": "74a6304ae05dfea5291936ffa68ff8bbbccfcbad",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-01T19:32:26.408Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33498237387",
+            "candidateSha": "cbd6031c9517dd4d71b28385b13b4037d89adddd"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33503218392",
+            "candidateSha": "46835ed9fcf72054c7ea3e6eb0d547e188c6e96d"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33548460030",
+            "candidateSha": "74a6304ae05dfea5291936ffa68ff8bbbccfcbad"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        }
+      }
     },
     "P0-03": {
       "id": "P0-03",
