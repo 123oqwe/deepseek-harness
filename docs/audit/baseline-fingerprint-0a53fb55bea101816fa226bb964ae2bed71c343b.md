@@ -1,5 +1,7 @@
 # Baseline fingerprint report format — `pnpm baseline:capture` (P0-01 C-stage specimen)
 
+English | [中文](baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.zh.md)
+
 Status: CONTRACT SPECIMEN. This is the canonical-format example for the
 report `pnpm baseline:capture` writes to
 `docs/audit/baseline-fingerprint-<gitSha>.md`, authored as part of P0-01's
