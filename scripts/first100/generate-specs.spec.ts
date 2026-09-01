@@ -628,6 +628,26 @@ describe('first100 deliverable-path patches (BLOCKED-001 manifest-patch channel)
     const { deliverablePathPatches: _removed, ...withoutPatches } = base
     expect(checkDeliverablePathPatches(reg, withoutPatches).valid).toBe(true)
   })
+
+  it('BLOCKED-012: the committed P0-06 U-stage patches are valid, and an entry-key can differ from its `epic` field for a same-epic multi-patch case', () => {
+    const { reg } = readRegistry()
+    const adj = readAdj()
+    const check = checkDeliverablePathPatches(reg, adj)
+    expect(check.valid).toBe(true)
+    const sessionReplay = adj.deliverablePathPatches?.entries['P0-06-U-session-replay']
+    expect(sessionReplay?.epic).toBe('P0-06')
+    expect(sessionReplay?.declaredPath).toBe('packages/core/session/src/types.ts')
+    expect(sessionReplay?.approvedPath).toBe('packages/session/session-persistence-jsonl/src/format.ts')
+    const settingsLoad = adj.deliverablePathPatches?.entries['P0-06-U-settings-load']
+    expect(settingsLoad?.epic).toBe('P0-06')
+    expect(settingsLoad?.declaredPath).toBe('packages/settings/settings/src/types.ts')
+
+    // fail-closed: an entry whose `epic` field names an unknown id is caught
+    // via the epic field, not the (unrelated) object key.
+    const badEpic = structuredClone(adj)
+    badEpic.deliverablePathPatches!.entries['P0-06-U-session-replay']!.epic = 'NOT-AN-EPIC'
+    expect(checkDeliverablePathPatches(reg, badEpic).unknownIds).toEqual(['NOT-AN-EPIC'])
+  })
 })
 
 describe('first100 shared-stage coverage (BLOCKED-002 answer, 2026-09-01)', () => {
