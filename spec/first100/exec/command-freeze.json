@@ -292,6 +292,47 @@
         "testsDiscovered": 10
       },
       "note": "P0-06 P-stage (2026-09-01): real, non-identity migration functions for the schema registry, proving the C-stage registry's migration-function slot works end-to-end. Two deliberately-synthetic, explicitly-labeled-as-illustrative examples (never wired into the real C-stage bootstrap): renameFiredAtToOccurredAt/renameOccurredAtToFiredAt (bidirectional/lossless rename) and mergeNameFields (irreversible/lossy merge, no reverse export). Both exercised via real registerSchema/evolveSchema calls against fresh synthetic schemaIds, never a parallel mechanism. packages/core/session/src/repair.ts deliberately left untouched -- pure crash-recovery with zero schema-version concept, on the far side of the registry's own leaf-object-only scope boundary (matching C-stage's identical known-event-types.ts precedent). Real RED at commit bea9541e91 (stub migrate.ts): 3/10 failed genuinely (wrong field names, no merge occurred), never module/syntax errors. Opus-level adversarial review (mandatory, L1_CONTRACT): 6 of 7 seeded mutations caught, including two proving the tests genuinely depend on real evolveSchema execution (bypassing the registry call, and corrupting evolveSchema's own migrate-storage) rather than testing the raw migration functions in isolation. One mutation (a renamed fake reverse-migration export evading the irreversibility guard's name-substring heuristic) survived -- noted as a non-blocking rigor gap, since the substantive information-loss test (independently verified by the reviewer via a pigeonhole counter-example proof, confirmed to generalize beyond the one shipped test input) already establishes the real acceptance-clause guarantee. Also fixed in this slice: a real, pre-existing verify-export-jsdoc escape in the already-merged P0-06.C src/index.ts (7 missing-doc violations the C-stage review missed), non-behavioral."
+    },
+    {
+      "epic": "P0-06",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/server/tests/server.spec.ts",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "packages/settings/settings/tests/settings.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "rejects an initialize handshake whose explicit schemaVersion major differs from the registered major",
+        "accepts an initialize handshake whose explicit schemaVersion major matches the registered major",
+        "defaults an absent schemaVersion to the registered version, leaving ordinary handshakes unaffected",
+        "rejects a session-event line whose explicit schemaVersion major differs from the registered major",
+        "does not swallow a schema-incompatible line into the tolerant corrupt-suffix heuristic",
+        "accepts a session-event line whose explicit schemaVersion major matches the registered major",
+        "defaults an absent schemaVersion to this build's registered version, leaving ordinary replay unaffected",
+        "does not negotiate schema for a packed chunk row tag (not a session-event payload)",
+        "rejects registration when the stored section declares an incompatible major",
+        "registers when the stored section declares a compatible major, stripping the tag before resolution",
+        "keeps the last good value (no silent field loss) when a hot-reloaded section declares an incompatible major",
+        "commits a hot-reloaded section that declares a compatible major",
+        "defaults an absent $schemaVersion to the registered version, leaving ordinary reloads unaffected"
+      ],
+      "files": [
+        "packages/sdk/server/tests/server.spec.ts",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "packages/settings/settings/tests/settings.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T15:35:00Z",
+      "dryRunProof": {
+        "treeSha": "98341625bc6049286e2a8d6fe84d81a88374861f",
+        "testsDiscovered": 286
+      },
+      "note": "P0-06 U-stage (2026-09-01): real negotiateSchema() calls wired into 3 read boundaries -- session replay (session-persistence-jsonl/src/format.ts), SDK initialize (sdk/server/src/server.ts), settings load (settings/settings/src/index.ts) -- per BLOCKED-012's manifest-patch mechanism (2 files substituted for the wave-map's literal declaration: core/session/src/types.ts -> session-persistence-jsonl/src/format.ts, forced by a real ESM circular-dependency the Reviewer proved empirically; settings/settings/src/types.ts -> src/index.ts, since the types file is projection-only). Real RED->GREEN: the Writer reverted only the production wiring and confirmed genuine on-topic test failures (not module/syntax errors), then restored. A real design bug was found and self-fixed: negotiation must not fire for a type the registry never bootstrapped (that's the ignorable/legacy-type mechanism's jurisdiction) -- the first implementation wrongly treated any unregistered type as SCHEMA_UNKNOWN. Opus-level adversarial review (mandatory, L1_CONTRACT): ACCEPT with manifest-patch needed (both BLOCKED-012 conditions verified against spec/first100-owner-map.json, zero owner conflict) and 2 real gate violations found+fixed (verify-type-equiv drift in docs/subsystems/settings.md, a new oxlint no-confusing-void-expression violation), commit 7d8354e002. Real CI observation: run 33521991413 on the initial merge commit e05df35fec FAILED with a genuine deterministic regression (a typert-generated Cordis catalog artifact, packages/extensions/tool-cordis/src/api-catalog.ts, wasn't regenerated after this slice's SettingsRegisterOptions.schemaVersion? field addition) -- diagnosed and fixed (commit 12d0a1fdd1, also closing a separate pre-existing gap: ctx.trustKernel was never registered in the catalog generator's SERVICE_WALK_EXEMPTIONS, blocking regeneration entirely). Re-run: CI run 33524811126 on the fix commit 98341625bc completed with exactly 1 failure, packages/experimental/inspector's already-registered flake (5th documented occurrence on a distinct SHA) -- failure set fully absorbed by flake-registry.json per BLOCKED-007③, valid observation. This dry-run proof (treeSha 98341625bc, the exact CI-verified commit) confirms 286/286 tests passing locally, matching the CI observation's non-flake result. BLOCKED-013 recorded and folded into the standing gate-scan checklist as a result of this slice's CI-caught regression."
     }
   ]
 }
