@@ -7259,6 +7259,10 @@ importers:
         version: link:../../core/session
 
   packages/sdk/protocol:
+    dependencies:
+      '@deepseek-ai/dsh-schema-registry':
+        specifier: workspace:^
+        version: link:../../schema/schema-registry
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -7281,6 +7285,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-schema-registry':
+        specifier: workspace:^
+        version: link:../../schema/schema-registry
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -7614,6 +7621,12 @@ importers:
 
   packages/session/session-persistence-jsonl:
     dependencies:
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-schema-registry':
+        specifier: workspace:^
+        version: link:../../schema/schema-registry
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -7978,6 +7991,9 @@ importers:
 
   packages/settings/settings:
     dependencies:
+      '@deepseek-ai/dsh-schema-registry':
+        specifier: workspace:^
+        version: link:../../schema/schema-registry
       '@deepseek-ai/dsh-util-values':
         specifier: workspace:^
         version: link:../../util/values

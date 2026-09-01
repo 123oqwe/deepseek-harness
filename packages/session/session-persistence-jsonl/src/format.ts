@@ -9,9 +9,13 @@
  */
 
 import { join } from 'node:path'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { getSchema, negotiateSchema } from '@deepseek-ai/dsh-schema-registry'
+import type { SchemaId, SchemaVersion } from '@deepseek-ai/dsh-schema-registry'
 import {
   decodeSeqRanges, decodeStorageRecord, encodeSeqRanges, packChunkRuns, SESSION_FORMAT_VERSION,
 } from '@deepseek-ai/dsh-session'
+import { isChunkRow } from '@deepseek-ai/dsh-session/chunk-rows'
 import type { SessionEvent, SessionHeader, SessionId, StorageRecord } from '@deepseek-ai/dsh-session'
 import { SessionFormatUnsupportedError, sessionFormatVersionRefusal } from '@deepseek-ai/dsh-session-persistence'
 
@@ -256,6 +260,51 @@ function expandProvenanceFromStorage(parsed: unknown): unknown {
   return { ...record, sourceEventSeqs: decodeSeqRanges(record.sourceEventSeqs, record.seq as number) }
 }
 
+/** Whether a value is a well-formed `{major, minor}` schema version pair. */
+function isSchemaVersion(value: unknown): value is SchemaVersion {
+  if (typeof value !== 'object' || value === null) return false
+  const { major, minor } = value as { major?: unknown; minor?: unknown }
+  return typeof major === 'number' && typeof minor === 'number'
+}
+
+/**
+ * Negotiate a raw parsed JSONL event record's schema before it is trusted as
+ * a {@link SessionEvent}: must[4] (session replay negotiates schema before
+ * use). A packed chunk row (`isChunkRow`) is a storage encoding, not a
+ * session-event payload, and is skipped — its expanded members carry
+ * `assistant/chunk`'s own type, negotiated once decoded elsewhere is
+ * unnecessary since chunk rows have never varied in shape. A record whose
+ * `type` has no registered `session-event:${type}` schema is ALSO skipped —
+ * an unrecognized type is the container-level `ignorable` marker's
+ * jurisdiction (an unmarked unknown type refuses the whole log; a marked one
+ * is tolerated), or a retired legacy type another check rejects by name;
+ * this registry versions only a KNOWN leaf object's payload, never decides
+ * whether a type is known at all (BLOCKED-008 scope split). An explicit
+ * `schemaVersion` tag on a record whose type IS registered
+ * (`@deepseek-ai/dsh-schema-registry`'s `session-event:${type}` convention)
+ * is negotiated verbatim and stripped so it never reaches the trusted
+ * `SessionEvent`; its absence defaults to this build's own currently
+ * registered version, since no session-event payload has ever been
+ * persisted with the tag before this mechanism existed.
+ * @param parsed - one line's `JSON.parse` result, before provenance expansion or chunk decoding.
+ * @throws {@link SchemaCompatibilityError} when an explicit encountered version's major differs
+ *   from this build's registered major for the event type.
+ */
+function negotiateEventLineSchema(parsed: unknown): void {
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return
+  const record = parsed as Record<string, unknown>
+  const type = record['type']
+  if (typeof type !== 'string' || isChunkRow(record as unknown as StorageRecord)) return
+  const schemaId = brandString<SchemaId>(`session-event:${type}`)
+  const registered = getSchema(schemaId)
+  if (registered === undefined) return
+  const rawVersion = record['schemaVersion']
+  delete record['schemaVersion']
+  const encounteredVersion = isSchemaVersion(rawVersion) ? rawVersion : registered.version
+  const result = negotiateSchema(schemaId, encounteredVersion)
+  if (!result.compatible) throw result.error
+}
+
 interface SessionLogScan {
   meta: SessionHeader
   events: SessionEvent[]
@@ -379,9 +428,20 @@ export class SessionLogScanner {
   /** Decode one complete event row and update the contiguous prefix. */
   private consumeEventLine(line: Buffer, endByte: number): void {
     this.eventLine += 1
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(line.toString('utf8'))
+    } catch {
+      this.issue ??= new Error(`corrupt session log: unparsable committed event at line ${this.eventLine}`)
+      return
+    }
+    // Schema incompatibility is a structured, machine-readable refusal, not
+    // corrupt-log recovery data: it must propagate directly, never fold into
+    // the tolerant-suffix heuristic below.
+    negotiateEventLineSchema(parsed)
     let decoded: SessionEvent[]
     try {
-      decoded = decodeStorageRecord(expandProvenanceFromStorage(JSON.parse(line.toString('utf8'))))
+      decoded = decodeStorageRecord(expandProvenanceFromStorage(parsed))
     } catch {
       this.issue ??= new Error(`corrupt session log: unparsable committed event at line ${this.eventLine}`)
       return
