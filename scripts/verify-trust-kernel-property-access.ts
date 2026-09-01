@@ -8,62 +8,57 @@
  * `docs/architecture/trust-kernel-boundary.md#known-residual-cross-plugin-property-access-poisoning`)
  * this gate keeps unreachable by construction.
  *
- * Two independent, additive detection layers run over the same AST walk:
+ * **Three access shapes are flagged by PURE NAME MATCHING, with NO type
+ * check of any kind on the base expression**: dotted access
+ * (`ctx.trustKernel`), bracket access whose key resolves to the literal
+ * string `'trustKernel'` ({@link keyNamesTrustKernel}: a literal, a
+ * `'trustKernel'`-literal-typed const, a template literal, a `+`
+ * concatenation, or a ternary between two literals -- see
+ * {@link resolvesToTrustKernelLiteral} and {@link foldStringLiterals}), and
+ * destructuring (a plain key or a computed key resolving the same way).
+ * Once the accessed/resolved name is `'trustKernel'`, the read is flagged
+ * unconditionally -- the base expression's TYPE is irrelevant. This
+ * replaces an earlier round's design (BLOCKED-QUEUE.md, "convergence-
+ * determining verdict") that still gated every branch on
+ * `hasTrustKernelNamedProperty`, a type check that returns false once the
+ * base expression's static TYPE is `any`, `unknown`, or a bare index
+ * signature -- an attacker only had to cast first (`(ctx as
+ * any).trustKernel`; `const l: any = ctx; l.trustKernel`; a cast through
+ * `Record<string, unknown>`), which is exactly what round 4's 18 new
+ * evasions did. A cast changes what the type checker reports; it never
+ * changes what property name the source text reads. Because these three
+ * branches now key on the source text alone, no cast, structural-type
+ * alias, or type-only indirection can hide the name `'trustKernel'` from
+ * them -- only not writing that literal name/key defeats them.
  *
- * 1. **Symbol/type-precise layer** -- flags a read only once the type
- *    checker confirms BOTH that the accessed object's static type resolves
- *    to Cordis `Context`'s declaration-merged `trustKernel` property
- *    ({@link resolvesToContextTrustKernel} / {@link resolvesToContextTrustKernelViaElementAccess})
- *    AND that a non-literal key's type is exactly the string-literal type
- *    `'trustKernel'` ({@link resolvesToTrustKernelLiteral}, e.g. `const K =
- *    'trustKernel' as const; ctx[K]`). Precise, but round 3's adversarial
- *    review (BLOCKED-QUEUE.md) proved this alone cannot converge: any cast,
- *    structural-type alias, or key-computation the type checker cannot
- *    narrow to a literal walks through undetected -- `(ctx as
- *    any).trustKernel`, a structural-alias interface, a runtime-concatenated
- *    or ternary-selected key, and `Reflect.get` reached through an alias or
- *    destructured binding all typecheck cleanly while genuinely reading the
- *    live kernel.
- * 2. **Name-based layer** ({@link hasTrustKernelNamedProperty},
- *    {@link foldStringLiterals}) -- flags a read whenever the accessed or
- *    resolved NAME is syntactically the string `'trustKernel'`, independent
- *    of whether the type checker's precise resolution above succeeds. A
- *    dotted access or a non-computed destructuring key is unconditional
- *    (the name is always textually explicit at the access site, so cannot
- *    be spoofed the way a type can be cast away). A bracket-shaped access
- *    (element access, a computed destructuring key, or `Reflect.get`'s
- *    target) additionally requires the base expression -- unwrapped through
- *    any `as`/`satisfies`/angle-bracket/non-null wrapping via
- *    {@link unwrapCasts}, so a cast cannot hide the true underlying value --
- *    to structurally carry SOME property literally named `trustKernel`
- *    (not merely a generic string-index signature): this is strictly looser
- *    than layer 1's exact-declaration match (so it also catches a
- *    structural-alias interface reached through bracket syntax), but still
- *    excludes `packages/kernel/trust-kernel/src/index.ts`'s own legitimate
- *    `ctx.root[Context.isolate]['trustKernel']` -- indexing the isolation
- *    map, a plain `Dict<symbol>` with no named `trustKernel` member, an
- *    entirely different real access this gate must never flag. A bracket
- *    key's own value is resolved the same way, independent of its
- *    TypeScript type: {@link foldStringLiterals} constant-folds string
- *    literals, template literals, parenthesized/cast wrapping, `+`
- *    concatenation, a ternary's two branches, and a `const` identifier's
- *    initializer, so `ctx[('trust' + 'Kernel') as keyof Context]` and `const
- *    k = cond ? 'trustKernel' : 'root'; ctx[k]` are both caught even though
- *    neither key's TYPE narrows to the literal `'trustKernel'` (a
- *    concatenation widens to `string`; a ternary between two literals widens
- *    to their union, and here is additionally hidden behind an unrelated
- *    branch value).
+ * The two legitimate accesses this would otherwise flag --
+ * `ctx.root[Context.isolate]['trustKernel']` (an isolate-key lookup) and
+ * `ctx.reflect.props['trustKernel']` (a registration-descriptor read), both
+ * in `packages/kernel/trust-kernel/src/index.ts`'s own `pinTrustKernel`,
+ * neither ever reading the `TrustKernel` value itself -- are excluded by an
+ * explicit, narrow allowlist ({@link isAllowlistedTrustKernelRegistryAccess})
+ * recognizing those two exact bracket AST shapes in that one file -- not a
+ * type-based carve-out (which a real attacker could launder past the same
+ * way the type check above was laundered past), and not a file-wide
+ * exemption: a differently-shaped `trustKernel` read anywhere else in that
+ * same file still does not match either allowlisted shape and is still
+ * flagged.
  *
- * `Reflect.get(ctx, 'trustKernel')` needs its own callee identification
- * ({@link isReflectGetCall}): resolving the callee expression's TYPE symbol
- * (not matching identifier text) recognizes the ambient `Reflect.get`
- * function through any alias, destructuring, or bracket-call indirection --
- * `const R = Reflect; R.get(...)`, `const { get: reflectGet } = Reflect;
- * reflectGet(...)`, and `Reflect['get'](...)` all resolve to the same
- * default-lib declaration this way, none needing their own spelling-specific
- * case.
+ * `Reflect.get(ctx, 'trustKernel')` is identified by a separate mechanism
+ * ({@link isReflectGetCall}, resolving the callee expression's TYPE symbol
+ * rather than matching identifier text, so it recognizes the ambient
+ * `Reflect.get` function through any alias, destructuring, or bracket-call
+ * indirection -- `const R = Reflect; R.get(...)`, `const { get: reflectGet
+ * } = Reflect; reflectGet(...)`, `Reflect['get'](...)`) and keeps its own,
+ * UNCHANGED, type-anchored target check ({@link hasTrustKernelNamedProperty}
+ * on the unwrapped target) -- out of this round's authorized scope
+ * (BLOCKED-QUEUE.md's final delegate authorization names only the
+ * dotted/bracket-literal/destructuring branches for the pure-lexical
+ * rewrite). Consequently a type-laundered `Reflect.get` target (e.g. `const
+ * l: any = ctx; Reflect.get(l, 'trustKernel')`) is NOT closed by this gate
+ * -- a known, deliberately out-of-scope residual, not an oversight.
  *
- * `ctx.get('trustKernel')` is unaffected by every layer above -- the string
+ * `ctx.get('trustKernel')` is unaffected by any of this -- the string
  * literal there is a call argument to an unrelated method, never a property
  * name or `Reflect.get` target the walk inspects.
  */
@@ -88,9 +83,11 @@ function pointer(rel: string, sf: ts.SourceFile, node: ts.Node): string {
  * `trustKernel` to Cordis's `Context` (`declare module '@deepseek-ai/cordis'
  * { interface Context { trustKernel?: TrustKernel } }`,
  * `packages/kernel/trust-kernel/src/index.ts`) -- the legitimate declaration
- * site, never itself a read. Used only for the symbol-precise layer's
- * message nuance; the name-based layer's gating condition
- * ({@link hasTrustKernelNamedProperty}) does not require this exact match.
+ * site, never itself a read. Used only by
+ * {@link resolvesToContextTrustKernelViaElementAccess}, itself now used only
+ * for the `Reflect.get` branch's message nuance; the three pure-lexical
+ * branches (dotted/bracket-literal/destructuring) gate on the accessed name
+ * alone and never consult this.
  * @param decl - a declaration of the resolved `trustKernel` symbol.
  * @returns whether `decl` is that declaration-merging property signature.
  */
@@ -104,25 +101,13 @@ function isContextTrustKernelDeclaration(decl: ts.Declaration): boolean {
 }
 
 /**
- * Resolve whether a name node's symbol is the Trust Kernel's
- * declaration-merged `Context.trustKernel` property -- i.e. the read is
- * statically off a Cordis `Context`, not an unrelated `trustKernel` name the
- * checker resolves to some other declaration. Message-nuance only; see
- * {@link isContextTrustKernelDeclaration}.
- * @param node - the name node to resolve (a property name or binding name).
- * @param checker - the program's type checker.
- * @returns whether `node`'s resolved symbol is `Context.trustKernel`.
- */
-function resolvesToContextTrustKernel(node: ts.Node, checker: ts.TypeChecker): boolean {
-  const symbol = checker.getSymbolAtLocation(node)
-  return symbol !== undefined && (symbol.declarations ?? []).some(isContextTrustKernelDeclaration)
-}
-
-/**
- * Bracket-access variant of {@link resolvesToContextTrustKernel}: the
- * checker resolves an element-access expression's property through the
- * object's type rather than a name node with its own symbol location.
- * Message-nuance only.
+ * Resolve whether an indexed object's `trustKernel` property is the Trust
+ * Kernel's declaration-merged `Context.trustKernel` property -- i.e. the
+ * read is statically off a Cordis `Context`, not an unrelated `trustKernel`
+ * name the checker resolves to some other declaration. Used only by the
+ * `Reflect.get` branch, which (unlike the three pure-lexical branches) keeps
+ * its own unchanged, type-anchored target check -- see this module's own
+ * doc comment for why that branch is out of this round's authorized scope.
  * @param objectNode - the expression (or binding pattern) being indexed.
  * @param checker - the program's type checker.
  * @returns whether the indexed object's `trustKernel` property is `Context.trustKernel`.
@@ -188,24 +173,16 @@ function unwrapCasts(node: ts.Expression): ts.Expression {
 }
 
 /**
- * The name-based layer's base-shape gate for a bracket-shaped access
- * (element access, a computed destructuring key, or `Reflect.get`'s
- * target): true when the given node's type structurally carries SOME
- * property literally named `trustKernel` -- via `Type#getProperty`, which
- * resolves an own or inherited named member but NOT a generic string-index
- * signature. Strictly looser than {@link resolvesToContextTrustKernelViaElementAccess}
- * (no requirement that the property be exactly `Context.trustKernel`'s own
- * declaration, so a structural-alias interface reached through bracket
- * syntax still matches), yet still excludes
- * `packages/kernel/trust-kernel/src/index.ts`'s own legitimate
- * `ctx.root[Context.isolate]['trustKernel']`: `Context.isolate`'s value is a
- * plain `Dict<symbol>` (`{ [key: string]: symbol }`), whose ONLY route to
- * any key is the string-index signature -- `getProperty('trustKernel')`
- * returns `undefined` for it, verified directly against that type shape,
- * because a pure index signature never synthesizes a named property symbol.
- * The caller is expected to have already unwrapped the node through
- * {@link unwrapCasts} (or, for a destructuring key, an equivalent source
- * resolution) so a cast cannot hide a genuinely Context-shaped origin.
+ * A type-anchored base-shape check: true when the given node's type
+ * structurally carries SOME property literally named `trustKernel` -- via
+ * `Type#getProperty`, which resolves an own or inherited named member but
+ * NOT a generic string-index signature. Used only by the `Reflect.get`
+ * branch's (unchanged, out-of-scope) target check -- see this module's own
+ * doc comment. The three pure-lexical branches (dotted/bracket-literal/
+ * destructuring) do NOT call this: they gate purely on the accessed/resolved
+ * name, so a base expression cast to `any` or laundered through a
+ * `Record<string, unknown>` no longer suppresses them the way it would have
+ * suppressed a call to this function.
  * @param node - the (already cast-unwrapped) base node to check.
  * @param checker - the program's type checker.
  * @returns whether the node's type has an own or inherited `trustKernel` member.
@@ -287,24 +264,6 @@ function keyNamesTrustKernel(node: ts.Expression, checker: ts.TypeChecker): bool
 }
 
 /**
- * For a destructuring pattern, the node whose (cast-unwrapped) type the
- * name-based layer's base-shape gate should inspect: the initializer of an
- * enclosing `const x = ...` / `let x = ...` variable declaration, unwrapped
- * through {@link unwrapCasts} so a cast on the destructured source cannot
- * hide a genuinely Context-shaped origin (mirroring element access); or,
- * absent an initializer (parameter destructuring), the pattern itself, whose
- * own declared/contextual type is already the real one since there is no
- * cast to peel.
- * @param pattern - the object binding pattern being destructured.
- * @returns the node to run {@link hasTrustKernelNamedProperty} against.
- */
-function bindingPatternSourceCore(pattern: ts.ObjectBindingPattern): ts.Node {
-  const parent = pattern.parent
-  if (ts.isVariableDeclaration(parent) && parent.initializer !== undefined) return unwrapCasts(parent.initializer)
-  return pattern
-}
-
-/**
  * True for the declaration of the ambient global `Reflect.get` --
  * `function get(...): any` inside TypeScript's bundled
  * `declare namespace Reflect { ... }` (`lib.es2015.reflect.d.ts`) --
@@ -348,17 +307,73 @@ function isReflectGetCall(node: ts.CallExpression, program: ts.Program, checker:
 }
 
 /**
+ * Repo-relative path of the one file containing the trust-kernel package's
+ * own two legitimate literal-`'trustKernel'` bracket reads
+ * {@link isAllowlistedTrustKernelRegistryAccess} excludes from the bracket
+ * branch -- both internal registry bookkeeping, neither a read of the
+ * `TrustKernel` value itself. Verified by running the gate against the real
+ * tree: this is the only file where the pure-lexical bracket rule fires on
+ * a legitimate access (see this module's own doc comment).
+ */
+const ALLOWLISTED_TRUST_KERNEL_REGISTRY_FILE = 'packages/kernel/trust-kernel/src/index.ts'
+
+/**
+ * True for either of the two legitimate exceptions the bracket branch's
+ * pure-lexical name match would otherwise flag, both in
+ * {@link ALLOWLISTED_TRUST_KERNEL_REGISTRY_FILE} (`pinTrustKernel`'s own
+ * internal bookkeeping, never a read of the `TrustKernel` value itself):
+ *
+ * 1. `<expr>[Context.isolate]['trustKernel']` (`ctx.root[Context.isolate]
+ *    ['trustKernel']`) -- `Context.isolate` indexes Cordis's isolate map
+ *    (`Dict<symbol>`) to recover the internal registry KEY `ctx.provide`
+ *    registered `trustKernel` under, a `symbol`.
+ * 2. `<expr>.reflect.props['trustKernel']` (`ctx.reflect.props['trustKernel']`)
+ *    -- reads the current registration-descriptor entry (`{ type: 'service'
+ *    | 'accessor', ... }`) out of Cordis's `props` dict, to re-write it
+ *    frozen via `Object.defineProperty`.
+ *
+ * Recognized by AST SHAPE, never by a type heuristic: a type-based
+ * carve-out (e.g. "exempt any base typed `Dict<symbol>`" or "...typed
+ * `Dict<PropDescriptor>`") would be exactly the kind of attacker-controlled
+ * type fact this round's fix eliminated from the other three branches, so
+ * neither shape is recognized that way here. Each check requires BOTH: (a)
+ * this exact file, by path, AND (b) the OUTER element access's own object
+ * expression matches one precise, narrow shape (an element access keyed by
+ * the property access `Context.isolate`, or a `.reflect.props` property
+ * chain). This function grants NO blanket exemption for the file -- a
+ * differently-shaped `trustKernel` read elsewhere in the same file, e.g. a
+ * hypothetical bare `ctx['trustKernel']`, matches neither shape and is
+ * still flagged -- and no exemption for either shape in a different file
+ * (an attacker cannot smuggle a real bypass through this allowlist by
+ * reproducing a shape elsewhere).
+ * @param node - the (outer) element-access node the bracket branch is considering.
+ * @param rel - the file's repo-relative path.
+ * @returns whether `node` is one of the two allowlisted registry-bookkeeping reads.
+ */
+function isAllowlistedTrustKernelRegistryAccess(node: ts.ElementAccessExpression, rel: string): boolean {
+  if (rel !== ALLOWLISTED_TRUST_KERNEL_REGISTRY_FILE) return false
+  const inner = node.expression
+  if (ts.isElementAccessExpression(inner)) {
+    const innerKey = inner.argumentExpression
+    if (ts.isPropertyAccessExpression(innerKey) && ts.isIdentifier(innerKey.expression)
+      && innerKey.expression.text === 'Context' && innerKey.name.text === 'isolate') return true
+  }
+  return ts.isPropertyAccessExpression(inner) && inner.name.text === 'props'
+    && ts.isPropertyAccessExpression(inner.expression) && inner.expression.name.text === 'reflect'
+}
+
+/**
  * Walk one source file's full AST for a bare `ctx.trustKernel` property
- * read, applying both detection layers described in this module's own doc
- * comment: dotted access (`ctx.trustKernel`, including through a cast or a
- * structural-alias variable), bracket access (`ctx['trustKernel']`,
- * including through a cast on the base and/or a non-literal, syntactically
- * or type-foldable key), destructuring (`const { trustKernel } = ctx`,
- * including a computed property name), and `Reflect.get(ctx, 'trustKernel')`
- * reached through any alias or destructuring. `ctx.get('trustKernel')` is
- * unaffected -- the string literal there is a call argument, never a
- * property name the checker or the folder resolves against `Context`.
- * @param rel - the file's repo-relative path (for violation pointers).
+ * read, per this module's own doc comment: dotted access, bracket access,
+ * and destructuring are flagged by PURE NAME MATCHING alone (no type check
+ * on the base expression), except the two allowlisted registry-bookkeeping
+ * reads ({@link isAllowlistedTrustKernelRegistryAccess}); `Reflect.get(ctx,
+ * 'trustKernel')` keeps its own separate, unchanged, type-anchored target
+ * check.
+ * `ctx.get('trustKernel')` is unaffected -- the string literal there is a
+ * call argument, never a property name the checker or the folder resolves
+ * against `Context`.
+ * @param rel - the file's repo-relative path (for violation pointers and the allowlist).
  * @param sf - the file's parsed source.
  * @param program - the program (for `isSourceFileDefaultLibrary`).
  * @param checker - the program's type checker.
@@ -369,32 +384,20 @@ function walk(rel: string, sf: ts.SourceFile, program: ts.Program, checker: ts.T
 
   const visit = (node: ts.Node): void => {
     if (ts.isPropertyAccessExpression(node) && node.name.text === 'trustKernel') {
-      const exact = resolvesToContextTrustKernel(node.name, checker)
-      if (exact || hasTrustKernelNamedProperty(unwrapCasts(node.expression), checker)) {
-        violations.push(`${pointer(rel, sf, node)}: reads 'ctx.trustKernel' by property access${exact ? '' : nameOnlyNote}; use ctx.get('trustKernel') instead.`)
-      }
+      violations.push(`${pointer(rel, sf, node)}: reads 'ctx.trustKernel' by property access; use ctx.get('trustKernel') instead.`)
     } else if (ts.isElementAccessExpression(node)) {
-      if (keyNamesTrustKernel(node.argumentExpression, checker)) {
-        const exact = resolvesToContextTrustKernelViaElementAccess(node.expression, checker)
-        if (exact || hasTrustKernelNamedProperty(unwrapCasts(node.expression), checker)) {
-          const viaType = ts.isStringLiteralLike(node.argumentExpression) ? '' : ' (key resolves to \'trustKernel\' only through type-checker narrowing or syntactic constant-folding, not a literal at the access site)'
-          violations.push(`${pointer(rel, sf, node)}: reads 'trustKernel' by bracket property access${viaType}${exact ? '' : nameOnlyNote}; use ctx.get('trustKernel') instead.`)
-        }
+      if (keyNamesTrustKernel(node.argumentExpression, checker) && !isAllowlistedTrustKernelRegistryAccess(node, rel)) {
+        const viaType = ts.isStringLiteralLike(node.argumentExpression) ? '' : ' (key resolves to \'trustKernel\' only through type-checker narrowing or syntactic constant-folding, not a literal at the access site)'
+        violations.push(`${pointer(rel, sf, node)}: reads 'trustKernel' by bracket property access${viaType}; use ctx.get('trustKernel') instead.`)
       }
     } else if (ts.isBindingElement(node) && ts.isObjectBindingPattern(node.parent)) {
       const key = node.propertyName ?? node.name
       if (ts.isComputedPropertyName(key)) {
         if (keyNamesTrustKernel(key.expression, checker)) {
-          const exact = resolvesToContextTrustKernelViaElementAccess(node.parent, checker)
-          if (exact || hasTrustKernelNamedProperty(bindingPatternSourceCore(node.parent), checker)) {
-            violations.push(`${pointer(rel, sf, node)}: destructures 'trustKernel' via a computed property name${exact ? '' : nameOnlyNote}; use ctx.get('trustKernel') instead.`)
-          }
+          violations.push(`${pointer(rel, sf, node)}: destructures 'trustKernel' via a computed property name; use ctx.get('trustKernel') instead.`)
         }
       } else if ((ts.isIdentifier(key) || ts.isStringLiteralLike(key)) && key.text === 'trustKernel') {
-        const exact = resolvesToContextTrustKernel(key, checker)
-        if (exact || hasTrustKernelNamedProperty(bindingPatternSourceCore(node.parent), checker)) {
-          violations.push(`${pointer(rel, sf, node)}: destructures 'trustKernel' by property access${exact ? '' : nameOnlyNote}; use ctx.get('trustKernel') instead.`)
-        }
+        violations.push(`${pointer(rel, sf, node)}: destructures 'trustKernel' by property access; use ctx.get('trustKernel') instead.`)
       }
     } else if (ts.isCallExpression(node) && isReflectGetCall(node, program, checker) && node.arguments.length >= 2) {
       const [target, key] = node.arguments
