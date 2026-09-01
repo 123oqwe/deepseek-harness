@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T12:11:07.600Z",
-  "inputDigest": "e00017497347618d60c93def74e11ab57cb208a273ad14ab06579264c7b72ab4",
+  "lastUpdatedUtc": "2026-09-01T15:38:03.616Z",
+  "inputDigest": "7367c3a26c2b4cbeabffe6fe0027b153de2d874ed74c899f8d35eba03fe39c15",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -373,14 +373,37 @@
           "capturedAtUtc": "2026-09-01T12:11:07.593Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "98341625bc6049286e2a8d6fe84d81a88374861f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33524811126",
+          "observationReportPath": "/tmp/ci-artifacts2/vitest-report.json",
+          "observationSha256": "4492c92159bd31a107a68ab7d082ba4a458e57b8c27ac8a6ac6649cd8f6a800d",
+          "expectCasesMatched": [
+            "rejects an initialize handshake whose explicit schemaVersion major differs from the registered major",
+            "accepts an initialize handshake whose explicit schemaVersion major matches the registered major",
+            "defaults an absent schemaVersion to the registered version, leaving ordinary handshakes unaffected",
+            "rejects a session-event line whose explicit schemaVersion major differs from the registered major",
+            "does not swallow a schema-incompatible line into the tolerant corrupt-suffix heuristic",
+            "accepts a session-event line whose explicit schemaVersion major matches the registered major",
+            "defaults an absent schemaVersion to this build's registered version, leaving ordinary replay unaffected",
+            "does not negotiate schema for a packed chunk row tag (not a session-event payload)",
+            "rejects registration when the stored section declares an incompatible major",
+            "registers when the stored section declares a compatible major, stripping the tag before resolution",
+            "keeps the last good value (no silent field loss) when a hot-reloaded section declares an incompatible major",
+            "commits a hot-reloaded section that declares a compatible major",
+            "defaults an absent $schemaVersion to the registered version, leaving ordinary reloads unaffected"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-01T15:38:03.611Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "290321cee0fa40680bc63e8da6a568fc99b70432",
+      "candidateSha": "98341625bc6049286e2a8d6fe84d81a88374861f",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
