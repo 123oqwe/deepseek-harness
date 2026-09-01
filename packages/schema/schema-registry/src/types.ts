@@ -17,12 +17,15 @@
  * "can this be safely read" signal for negotiation — major/minor serves
  * that cross-boundary compatibility question, not migration sequencing.
  *
- * `minor` bumps reuse the session log's existing per-event `ignorable`
- * envelope marker as their concrete mechanism (`SessionEvent.ignorable` in
+ * `minor` bumps conceptually align with the session log's existing per-event
+ * `ignorable` envelope marker (`SessionEvent.ignorable` in
  * `@deepseek-ai/dsh-session/types`): an additive, minor-bump change is
- * exactly the kind of change a reader may safely not recognize. This
- * registry does not build a second, competing default-compatibility
- * mechanism alongside `ignorable`.
+ * exactly the kind of change a reader may safely not recognize, the same
+ * default `ignorable` already encodes for session events. This registry
+ * does not import or call `ignorable` -- a leaf object's version identity
+ * and a session event's envelope marker are different mechanisms serving
+ * the same default-compatibility philosophy -- and it does not build a
+ * second, competing default-compatibility philosophy alongside it.
  *
  * @module @deepseek-ai/dsh-schema-registry/types
  */

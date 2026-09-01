@@ -117,6 +117,25 @@ describe('evolveSchema — must[2]/must[3] version-bump enforcement', () => {
     expect(getSchema(id)?.history).toEqual([{ major: 1, minor: 3 }, { major: 2, minor: 0 }])
   })
 
+  it('rejects a breaking change set that bumps major but does not reset minor to 0', () => {
+    const id = freshId('breaking-nonzero-minor')
+    registerSchema(id, { major: 1, minor: 3 }, identityMigration)
+    expect(() =>
+      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 2, minor: 1 }, identityMigration),
+    ).toThrowError(SchemaRegistryError)
+    expect(getSchema(id)?.version).toEqual({ major: 1, minor: 3 })
+  })
+
+  it('rejects an additive change set that does not increase minor', () => {
+    const id = freshId('additive-no-increase')
+    registerSchema(id, { major: 1, minor: 1 }, identityMigration)
+    expect(() =>
+      evolveSchema(id, [{ field: 'newField', kind: 'additive', reason: 'x' }], { major: 1, minor: 1 }, identityMigration),
+    ).toThrowError(SchemaRegistryError)
+    expect(getSchema(id)?.version).toEqual({ major: 1, minor: 1 })
+    expect(getSchema(id)?.history).toEqual([{ major: 1, minor: 1 }])
+  })
+
   it('rejects a breaking change set that only bumps minor', () => {
     const id = freshId('breaking-wrong-bump')
     registerSchema(id, { major: 1, minor: 0 }, identityMigration)
