@@ -35,7 +35,7 @@ dsh 中其余一切都是插件：通过 `ctx.plugin(...)` 贡献、由 Loader �
 
 ### 已知遗留缺口：仅限自身子树的属性访问污染
 
-`pinTrustKernel` 现在完整保护 `ctx.get('trustKernel')`，也在全局范围内保护 `ctx.trustKernel` 属性访问——针对任何其他插件、root 本身，以及跨兄弟插件均已关闭。唯一遗留的缺口是：插件仍可赋值到它自己 fiber 的 `store` 缓存（`ctx.fiber.store['trustKernel'] = forged`）——父 fiber 链的遍历会在到达 `pinTrustKernel` 锁定的 root fiber store 条目之前，先找到这次写入。这会持久污染该插件自身及其子孙所解析到的 `ctx.trustKernel`（仅限属性访问，绝不影响 `ctx.get`），范围仅限该插件自身的子树，绝不波及兄弟插件或 root（已实测验证，并非纯理论）。在不触碰 vendored Cordis 的 `Fiber` 类（本仓库的 vendoring 策略禁止这样做）的前提下，本仓库自身代码中的防御性包装无法关闭这一遗留缺口。`ctx.get('trustKernel')` 完全没有遗留缺口；无论如何都应优先使用它，而不是 `ctx.trustKernel`。
+`pinTrustKernel` 现在完整保护 `ctx.get('trustKernel')`，也在全局范围内保护 `ctx.trustKernel` 属性访问——针对任何其他插件、root 本身，以及跨兄弟插件均已关闭。唯一遗留的缺口是：插件仍可赋值到它自己 fiber 的 `store` 缓存（`ctx.fiber.store['trustKernel'] = forged`）——父 fiber 链的遍历会在到达 `pinTrustKernel` 锁定的 root fiber store 条目之前，先找到这次写入。这会持久污染该插件自身及其子孙所解析到的 `ctx.trustKernel`（仅限属性访问，绝不影响 `ctx.get`），范围仅限该插件自身的子树，绝不波及兄弟插件或 root（已实测验证，并非纯理论）。在不触碰 vendored Cordis 的 `Fiber` 类（本仓库的 vendoring 策略禁止这样做）的前提下，本仓库自身代码中的防御性包装无法关闭这一遗留缺口。`ctx.get('trustKernel')` 完全没有遗留缺口；无论如何都应优先使用它，而不是 `ctx.trustKernel`。一个 CI 强制门 `verify-trust-kernel-property-access`（接入 `doc-sync`/`ci-primary`/`ci-static`/`check-all`）现在会拒绝任何真实（非 vendor、非测试）代码读取裸 `ctx.trustKernel` 属性，强制一切消费方改走 `ctx.get('trustKernel')`——该遗留缺口从此被结构性地保持不可达，而不仅仅是今天靠 grep 证明的不可达（`spec/first100/exec/BLOCKED-QUEUE.md`，BLOCKED-011）。
 
 ## 哪些仍是插件
 

@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write docs/architecture/trust-kernel-boundary.md
-trust-kernel-boundary.md: e0a14a402b6259cff0dde3702449d1a37cf07772
-trust-kernel-boundary.zh.md: d2a5a890b8b692c6a47d0600a212555e35e4cb12
+trust-kernel-boundary.md: e568006e1b4f623ad667e91d184e86fd5a1b0ab1
+trust-kernel-boundary.zh.md: 3ff7fcc4f4919bf0afd1dae9cd2b26e4f12440be

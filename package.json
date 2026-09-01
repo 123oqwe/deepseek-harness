@@ -126,6 +126,7 @@
     "verify-cordis-inspect-catalog": "tsx scripts/gen-cordis-inspect-catalog.ts --check",
     "verify-client-catalog": "tsx scripts/gen-client-catalog.ts --check",
     "verify-export-jsdoc": "tsx scripts/verify-export-jsdoc.ts",
+    "verify-trust-kernel-property-access": "tsx scripts/verify-trust-kernel-property-access.ts",
     "first100:dry": "node scripts/first100/issue-runner.ts dry",
     "first100:run": "node scripts/first100/issue-runner.ts run",
     "first100:verify": "node scripts/first100/report.ts verify",
