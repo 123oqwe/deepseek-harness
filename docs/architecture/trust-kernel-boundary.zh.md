@@ -33,9 +33,21 @@ dsh 中其余一切都是插件：通过 `ctx.plugin(...)` 贡献、由 Loader �
 
 后续一次评审发现，仅有这一处冻结还留下三个进一步的可实际利用的绕过：被冻结条目上的 `Impl` 记录本身仍是可变对象（`impl.value = forged` 无需触碰该条目本身，就能一并伪造 `ctx.get('trustKernel')`）；`ctx.trustKernel` 的**属性**访问是通过 root fiber 自身可独立修改的 `store` 来解析的，从不经过 `ctx.reflect.store`，因此任何插件都能全局污染它；而 `ctx.reflect.props['trustKernel']` 可以被替换成一个伪造的 accessor，其优先级还在前述所有防护之前。`pinTrustKernel` 现在同时冻结该 `Impl` 记录、锁定 root fiber 的 store 条目、并锁定 `reflect.props` 的注册——每处修复对应的 vendored Cordis 依据，见 `packages/kernel/trust-kernel/src/index.ts` 中 `pinTrustKernel` 自身的文档注释；运行期证明见 `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts`。
 
-### 已知遗留缺口：仅限自身子树的属性访问污染
+### 已知遗留缺口：跨插件的属性访问污染
 
-`pinTrustKernel` 现在完整保护 `ctx.get('trustKernel')`，也在全局范围内保护 `ctx.trustKernel` 属性访问——针对任何其他插件、root 本身，以及跨兄弟插件均已关闭。唯一遗留的缺口是：插件仍可赋值到它自己 fiber 的 `store` 缓存（`ctx.fiber.store['trustKernel'] = forged`）——父 fiber 链的遍历会在到达 `pinTrustKernel` 锁定的 root fiber store 条目之前，先找到这次写入。这会持久污染该插件自身及其子孙所解析到的 `ctx.trustKernel`（仅限属性访问，绝不影响 `ctx.get`），范围仅限该插件自身的子树，绝不波及兄弟插件或 root（已实测验证，并非纯理论）。在不触碰 vendored Cordis 的 `Fiber` 类（本仓库的 vendoring 策略禁止这样做）的前提下，本仓库自身代码中的防御性包装无法关闭这一遗留缺口。`ctx.get('trustKernel')` 完全没有遗留缺口；无论如何都应优先使用它，而不是 `ctx.trustKernel`。一个 CI 强制门 `verify-trust-kernel-property-access`（接入 `doc-sync`/`ci-primary`/`ci-static`/`check-all`）现在会拒绝任何真实（非 vendor、非测试）代码读取裸 `ctx.trustKernel` 属性，强制一切消费方改走 `ctx.get('trustKernel')`——该遗留缺口从此被结构性地保持不可达，而不仅仅是今天靠 grep 证明的不可达（`spec/first100/exec/BLOCKED-QUEUE.md`，BLOCKED-011）。
+`pinTrustKernel` 在所有已测试场景（包括下述每个向量）中都完整保护 `ctx.get('trustKernel')`。`ctx.trustKernel`（属性访问，而非 `ctx.get`）仍带有一个遗留缺口，其可达范围比本评审早前一份切片所记载的要宽得多——**并非**仅限自身子树。Cordis 的代理 `get` trap 通过沿父 fiber 链向上遍历每个 fiber 自身的 `store` 缓存来解析 `ctx.trustKernel`（`vendor/cordis/src/reflect.ts:150-167`）；`pinTrustKernel` 只锁定了 ROOT fiber 的 `store` 对象（`vendor/cordis/src/fiber.ts:198,324`）内部的 `trustKernel` 键。以下三个向量都能绕过这一锁定：
+
+- **污染某个祖先（非 root）fiber 的 store**（`ctx.fiber.parent.fiber.store['trustKernel'] = forged`）——一个 `pinTrustKernel` 从未触及的普通可变对象——会污染挂在该祖先之下的每一个插件（包括无关的兄弟插件）解析到的 `ctx.trustKernel`，而不仅限于攻击者自身的子孙。
+- **整体替换 root fiber 的 `store` 对象**（`ctx.root.fiber.store = { ...forged }`）——`Fiber.store` 本身就是一个普通的、公开的、可写字段；`pinTrustKernel` 的 `Object.defineProperty` 只锁定了原 store 对象内部的 `trustKernel` 键，但任何插件都能整体替换掉这个 store 对象，不抛出任何异常，从而让这把锁对之后所有会查到 root 的读取静默失效。
+- **登记表级的批量扫描**——遍历每个 runtime 的所有 fiber 并逐一污染其 `store` 条目——可以一次性污染所有当前存活的 fiber。
+
+在以上每个向量中都始终成立的唯一不变量：`ctx.get('trustKernel')` 始终保持正确（它从不查询 `Fiber.store`），root Context 自身的**直接**属性读取（`ctx.root.trustKernel`，而非经由其他 context 引用）也始终保持正确——root fiber 的 `runtime === null` 使 Cordis 代理 `get` trap 对 root 自身直接短路到 `ReflectService.get`，从不遍历上述向量所污染的 fiber-store 链（`vendor/cordis/src/reflect.ts`）。但经由任何**其他** context 对象的读取，包括一个刚挂载的兄弟插件或稍后挂载的插件，都会被暴露。`packages/kernel/trust-kernel/tests/pin-hardening.spec.ts` 中的「vector G」与「vector H」两个测试实测复现了前两个向量；批量扫描向量与 vector G 机制相同，只是把它施加到每个 fiber 上而已。
+
+整体替换 store 对象（第二个向量）无法仅在 `pinTrustKernel` 内部简单地关闭：把 `ctx.root.fiber.store` 本身冻结成一个固定槽位会破坏真实的卸载流程（`Fiber._unload()` 会把 `this.store` 设为 `undefined`；root fiber 的卸载走的是 `restart()`）。祖先向量与批量扫描向量若要彻底关闭，需要改动 vendored Cordis 的 `Fiber` 类——本仓库的 vendoring 策略把这类改动保留为维护者层面的决定，不是本次 slice 可单方面做出的。
+
+这一遗留缺口目前由一个 CI 强制门 `verify-trust-kernel-property-access`（接入 `doc-sync`/`ci-primary`/`ci-static`/`check-all`）**在今天真实（非测试、非 vendor）的代码中维持为不可达**：它会拒绝任何真实代码读取裸 `ctx.trustKernel` 属性——点号访问、方括号访问、解构，或是一个仅通过类型检查器才能解析为 `'trustKernel'` 的 key（`const K = 'trustKernel' as const; ctx[K]`、模板字面量类型的 key、`Reflect.get(ctx, 'trustKernel')`）——强制一切真实消费方改走 `ctx.get('trustKernel')`。**这道门并不会改变 Cordis 自身的行为**：它只是防止本仓库自己的代码走上这条不安全路径；其底层机制（Cordis 的 fiber 本地属性解析）本身依然真实可被任何写出这类访问的代码利用，无论是否落在本仓库这道门所覆盖的范围内（`spec/first100/exec/BLOCKED-QUEUE.md`，BLOCKED-011）。
+
+对本仓库真实、非测试、非 vendor 的 TypeScript 源码做穷尽 grep（`grep -rn '\.trustKernel\b' packages apps`，排除 `vendor`/`tests`），本次修复前后都是零属性读取命中——唯一真实（非测试）的消费方 `apps/cli/src/profile-boot.ts` 只使用 `ctx.get('trustKernel')`。这证明了**"本仓库中今天不存在真实的属性读取消费方"**，本次 slice 的修复落地后重新核验，该结论依然成立——但它**不能**证明底层 Cordis 机制本身在结构上是安全的，也不能单独解释为何未来的消费方不会重新引入这种读取：真正在机制层面向前维持这一点的，是上文那道门。
 
 ## 哪些仍是插件
 
