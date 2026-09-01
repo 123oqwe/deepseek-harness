@@ -235,19 +235,20 @@ describe('first100 spec generation', () => {
     expect(dag.sameWavePredecessors).toContain(`${b!.id} <- ${a!.id}`)
   })
 
-  it('honesty: the R0 exit gate FAILS on the items still pending after A/B/C', () => {
+  it('honesty: the R0 exit gate FAILS on the items still pending after A/B/C + B1/B2 (2026-09-01)', () => {
     const { reg } = readRegistry()
     const gate = r0GateSummary(reg)
-    // A (33 layers), B (100 owners), and Q4(a) writer-serialization are approved
-    // via the overlay: gate counts are 0. The 4→0 conflict drop is genuine — the
-    // base registry without the overlay still reports 4 (tested separately).
+    // A (100 layers via B2), B (100 owners), Q4(a) writer-serialization, and
+    // B2's layerSourceGap closure are approved via the overlay: gate counts
+    // are 0. The 4→0 conflict drop is genuine — the base registry without the
+    // overlay still reports 4 (tested separately).
     expect(gate.conflicts).toHaveLength(0)
     expect(gate.unassignedOwners).toBe(0)
     expect(gate.pendingLayerAdjudication).toBe(0)
-    // The items A/B/C did NOT touch are reported and keep the gate red.
-    expect(gate.layerSourceGap).toBe(1)
-    // Thresholds stay PROPOSED_PENDING_MAINTAINER (never approved): still 17.
-    expect(gate.unapprovedThresholds).toBe(17)
+    expect(gate.layerSourceGap).toBe(0)
+    // Thresholds are now approved (B1): 0 unapproved.
+    expect(gate.unapprovedThresholds).toBe(0)
+    // Items B1/B2 did NOT touch are reported and keep the gate honestly red.
     expect(gate.agentBUncertainties).toBe(4)
     expect(gate.unsignedEnvelope).toBe(true)
     expect(gate.missingCommandEpics).toBe(91)
@@ -277,13 +278,17 @@ describe('first100 spec generation', () => {
     }
   })
 
-  it('adjudication: the overlay records A/B/C and the composed state resolves layers+owners', () => {
+  it('adjudication: the overlay records A/B/C + B1/B2 and the composed state resolves layers+owners', () => {
     const { reg } = readRegistry()
     const adj = JSON.parse(readFileSync(join(REPO_ROOT, 'tests/first100/adjudication.json'), 'utf8')) as Adjudication
     expect(adj.layerAdjudication.status).toBe('ADJUDICATED')
-    expect(adj.layerAdjudication.count).toBe(33)
-    expect(new Set(adj.layerAdjudication.approvedIds).size).toBe(33)
-    expect(adj.layerAdjudication.approvedIds).toEqual([...reg.adjudicationPending.layerIds].sort())
+    // B2 (2026-09-01): expanded from the original 33-id R0-era approval to
+    // the full 100-ID mapping, approved at the registry's own current values.
+    expect(adj.layerAdjudication.count).toBe(100)
+    expect(new Set(adj.layerAdjudication.approvedIds).size).toBe(100)
+    expect(adj.layerAdjudication.approvedIds.sort()).toEqual(reg.epics.map(e => e.id).sort())
+    // The original 33-id R0-era approval is preserved for history.
+    expect(adj.layerAdjudication.originalR0Approval?.approvedIds33).toEqual([...reg.adjudicationPending.layerIds].sort())
     expect(adj.ownerAssignment.status).toBe('ADJUDICATED')
     expect(Object.keys(adj.ownerAssignment.canonicalOwners)).toHaveLength(100)
     for (const e of reg.epics) {
@@ -293,9 +298,10 @@ describe('first100 spec generation', () => {
     // 9 spec owners self-own; the other 91 are assigned to an owning package/tooling path.
     const selfOwned = Object.entries(adj.ownerAssignment.canonicalOwners).filter(([id, o]) => id === o)
     expect(selfOwned).toHaveLength(9)
-    // Thresholds/conflicts/envelope stay honest in the overlay. The 4 same-wave
-    // conflicts are RESOLVED only via the Q4(a) write-serialization record.
-    expect(adj.thresholds.status).toBe('PROPOSED_PENDING_MAINTAINER')
+    // Thresholds are approved as-proposed (B1, 2026-09-01); conflicts/envelope
+    // stay honest in the overlay. The 4 same-wave conflicts are RESOLVED only
+    // via the Q4(a) write-serialization record.
+    expect(adj.thresholds.status).toBe('APPROVED')
     expect(adj.thresholds.count).toBe(17)
     expect(adj.sameWaveConflicts.status).toBe('RESOLVED')
     expect(adj.sameWaveConflicts.count).toBe(0)
@@ -457,7 +463,7 @@ describe('layer gap resolution (Q4(b) option 2: complete 100-ID mapping)', () =>
   it('overlay layerMapping covers exactly the 100 registry ids with exact layers + rationale + source', () => {
     const { reg } = readRegistry()
     const adj = readAdj()
-    expect(adj.layerMapping?.status).toBe('PROPOSED_PENDING_MAINTAINER')
+    expect(adj.layerMapping?.status).toBe('APPROVED')
     expect(adj.layerMapping?.count).toBe(100)
     const entries = adj.layerMapping?.entries ?? {}
     const ids = Object.keys(entries)
@@ -490,22 +496,22 @@ describe('layer gap resolution (Q4(b) option 2: complete 100-ID mapping)', () =>
     }
   })
 
-  it('checkLayerMapping reports the committed mapping valid but unapproved (gate stays honestly red)', () => {
+  it('checkLayerMapping reports the committed mapping valid and approved (B2, 2026-09-01)', () => {
     const { reg } = readRegistry()
     const adj = readAdj()
     const check = checkLayerMapping(reg, adj)
     expect(check.valid).toBe(true)
-    expect(check.approved).toBe(false)
+    expect(check.approved).toBe(true)
     expect(check.missingIds).toEqual([])
     expect(check.extraIds).toEqual([])
     expect(check.layerMismatches).toEqual([])
     expect(check.noRationale).toEqual([])
     expect(check.noSource).toEqual([])
     expect(layerMappingIssues(check)).toEqual([])
-    // The submission does NOT touch the R0 gate: layerSourceGap still measures
-    // the honest transcript gap and stays 1 (resolved only by a genuine
-    // maintainer decision — path-2 mapping approval or recovered evidence).
-    expect(r0GateSummary(reg, adj).layerSourceGap).toBe(1)
+    // B2 ("layerSourceGap=1 的那项按 L2_PROVIDER 定") closed the phantom
+    // transcript-only gap by maintainer decree -- no 101st id was ever
+    // enumerable, so nothing was added; the counter honestly drops to 0.
+    expect(r0GateSummary(reg, adj).layerSourceGap).toBe(0)
   })
 
   it('fail-closed: a dropped id, mutated layer, or removed section is a violation', () => {

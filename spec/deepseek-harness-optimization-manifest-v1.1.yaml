@@ -43,53 +43,123 @@ adjudicationPending:
 adjudication:
   layerAdjudication:
     status: "ADJUDICATED"
-    count: 33
-    approvedIds: ["P0-05", "P0-06", "P1-05", "P1-09", "P1-10", "P1-11", "P1-12", "P2-02", "P2-05", "P2-09", "P2-10", "P2-11", "P3-01", "P3-02", "P3-10", "P3-12", "P4-01", "P4-13", "P4-14", "P5-10", "P5-12", "P6-01", "P6-03", "P6-07", "P6-09", "P7-05", "P7-06", "P7-08", "P7-10", "P8-04", "P8-05", "P8-07", "P8-10"]
+    count: 100
+    approvedIds: ["P0-01", "P0-02", "P0-03", "P0-04", "P0-05", "P0-06", "P0-07", "P0-08", "P1-01", "P1-02", "P1-03", "P1-04", "P1-05", "P1-06", "P1-07", "P1-08", "P1-09", "P1-10", "P1-11", "P1-12", "P2-01", "P2-02", "P2-03", "P2-04", "P2-05", "P2-06", "P2-07", "P2-08", "P2-09", "P2-10", "P2-11", "P2-12", "P3-01", "P3-02", "P3-03", "P3-04", "P3-05", "P3-06", "P3-07", "P3-08", "P3-09", "P3-10", "P3-11", "P3-12", "P4-01", "P4-02", "P4-03", "P4-04", "P4-05", "P4-06", "P4-07", "P4-08", "P4-09", "P4-10", "P4-11", "P4-12", "P4-13", "P4-14", "P5-01", "P5-02", "P5-03", "P5-04", "P5-05", "P5-06", "P5-07", "P5-08", "P5-09", "P5-10", "P5-11", "P5-12", "P6-01", "P6-02", "P6-03", "P6-04", "P6-05", "P6-06", "P6-07", "P6-08", "P6-09", "P6-10", "P7-01", "P7-02", "P7-03", "P7-04", "P7-05", "P7-06", "P7-07", "P7-08", "P7-09", "P7-10", "P8-01", "P8-02", "P8-03", "P8-04", "P8-05", "P8-06", "P8-07", "P8-08", "P8-09", "P8-10"]
     approvedLayers:
+      P0-01: "L6_QUALIFICATION"
+      P0-02: "L0_KERNEL"
+      P0-03: "L6_QUALIFICATION"
+      P0-04: "L6_QUALIFICATION"
       P0-05: "L2_PROVIDER"
       P0-06: "L1_CONTRACT"
+      P0-07: "L6_QUALIFICATION"
+      P0-08: "L6_QUALIFICATION"
+      P1-01: "L1_CONTRACT"
+      P1-02: "L2_PROVIDER"
+      P1-03: "L2_PROVIDER"
+      P1-04: "L2_PROVIDER"
       P1-05: "L2_PROVIDER"
+      P1-06: "L2_PROVIDER"
+      P1-07: "L2_PROVIDER"
+      P1-08: "L2_PROVIDER"
       P1-09: "L3_CONSUMER"
       P1-10: "L2_PROVIDER"
       P1-11: "L2_PROVIDER"
       P1-12: "L6_QUALIFICATION"
+      P2-01: "L1_CONTRACT"
       P2-02: "L2_PROVIDER"
+      P2-03: "L1_CONTRACT"
+      P2-04: "L2_PROVIDER"
       P2-05: "L2_PROVIDER"
+      P2-06: "L2_PROVIDER"
+      P2-07: "L2_PROVIDER"
+      P2-08: "L2_PROVIDER"
       P2-09: "L2_PROVIDER"
       P2-10: "L2_PROVIDER"
       P2-11: "L2_PROVIDER"
+      P2-12: "L2_PROVIDER"
       P3-01: "L1_CONTRACT"
       P3-02: "L2_PROVIDER"
+      P3-03: "L1_CONTRACT"
+      P3-04: "L2_PROVIDER"
+      P3-05: "L2_PROVIDER"
+      P3-06: "L2_PROVIDER"
+      P3-07: "L2_PROVIDER"
+      P3-08: "L2_PROVIDER"
+      P3-09: "L2_PROVIDER"
       P3-10: "L2_PROVIDER"
+      P3-11: "L2_PROVIDER"
       P3-12: "L2_PROVIDER"
       P4-01: "L2_PROVIDER"
+      P4-02: "L1_CONTRACT"
+      P4-03: "L1_CONTRACT"
+      P4-04: "L1_CONTRACT"
+      P4-05: "L3_CONSUMER"
+      P4-06: "L2_PROVIDER"
+      P4-07: "L2_PROVIDER"
+      P4-08: "L2_PROVIDER"
+      P4-09: "L2_PROVIDER"
+      P4-10: "L2_PROVIDER"
+      P4-11: "L2_PROVIDER"
+      P4-12: "L2_PROVIDER"
       P4-13: "L3_CONSUMER"
       P4-14: "L2_PROVIDER"
+      P5-01: "L2_PROVIDER"
+      P5-02: "L2_PROVIDER"
+      P5-03: "L2_PROVIDER"
+      P5-04: "L2_PROVIDER"
+      P5-05: "L1_CONTRACT"
+      P5-06: "L1_CONTRACT"
+      P5-07: "L2_PROVIDER"
+      P5-08: "L2_PROVIDER"
+      P5-09: "L2_PROVIDER"
       P5-10: "L2_PROVIDER"
+      P5-11: "L2_PROVIDER"
       P5-12: "L2_PROVIDER"
       P6-01: "L1_CONTRACT"
+      P6-02: "L1_CONTRACT"
       P6-03: "L2_PROVIDER"
+      P6-04: "L2_PROVIDER"
+      P6-05: "L2_PROVIDER"
+      P6-06: "L2_PROVIDER"
       P6-07: "L2_PROVIDER"
+      P6-08: "L2_PROVIDER"
       P6-09: "L1_CONTRACT"
+      P6-10: "L2_PROVIDER"
+      P7-01: "L1_CONTRACT"
+      P7-02: "L2_PROVIDER"
+      P7-03: "L2_PROVIDER"
+      P7-04: "L2_PROVIDER"
       P7-05: "L1_CONTRACT"
       P7-06: "L3_CONSUMER"
+      P7-07: "L2_PROVIDER"
       P7-08: "L3_CONSUMER"
+      P7-09: "L6_QUALIFICATION"
       P7-10: "L6_QUALIFICATION"
+      P8-01: "L1_CONTRACT"
+      P8-02: "L5_SURFACE"
+      P8-03: "L5_SURFACE"
       P8-04: "L5_SURFACE"
       P8-05: "L5_SURFACE"
+      P8-06: "L2_PROVIDER"
       P8-07: "L5_SURFACE"
+      P8-08: "L5_SURFACE"
+      P8-09: "L2_PROVIDER"
       P8-10: "L6_QUALIFICATION"
     notEnumeratedFromSources:
       claimedByDecisionPackage: 2
       sourceCertified: 1
-      gap: 1
-      note: "Decision package §2.3 claims 2 more ambiguous ids than the 32 it lists but does not enumerate them; the Agent A transcript UNCERTAINTIES table is the only source and is not vendored. P2-09 is source-certified via the §2.3 wave-vs-audit seam, leaving 1 id enumerable only from the missing transcript."
-    note: "A approved all 33 source-certified ids (32 explicit + P2-09 seam). Every recommendation confirmed Agent A. The claimed 34th id is not enumerable from committed sources (transcript gap) and is NOT included."
+      gap: 0
+      note: "Decision package §2.3 claims 2 more ambiguous ids than the 32 it lists but does not enumerate them; the Agent A transcript UNCERTAINTIES table is the only source and is not vendored. P2-09 is source-certified via the §2.3 wave-vs-audit seam, leaving 1 id enumerable only from the missing transcript. RESOLVED per decisions-approved.md B2 (\"layerSourceGap=1 的那项按 L2_PROVIDER 定\"): the claimed 34th id was never enumerable from any committed source (only the un-vendored Agent A transcript could have named it) and no such id exists among the registry's 100 real epics -- the maintainer closed this gap by decree rather than leaving a permanently-unresolvable phantom count pending. If such an id is ever identified, it defaults to L2_PROVIDER per this decision; it does not add a 101st epic or alter any of the 100 already-registered ids."
+    note: "B2 (decisions-approved.md): approved all 100 registry ids at the registry's own current primaryLayer values (\"按 registry 现值全批\"). Supersedes the original R0-era 33-id PENDING_MAINTAINER_ADJUDICATION approval (kept below for history) -- the Q4(b) option 2 full 100-ID mapping (layerMapping, approved alongside this) independently confirmed 100/100 rows with 0 mismatches against these same registry values, so this approval and layerMapping's are the same decision recorded twice for two different consumers (this section drives composeEffective's epicLayerStatus projection; layerMapping is the human-reviewable decision record)."
+    originalR0Approval:
+      note: "Historical: the original R0-era approval before B2 superseded it with the full 100-ID mapping."
+      approvedIds33: ["P0-05", "P0-06", "P1-05", "P1-09", "P1-10", "P1-11", "P1-12", "P2-02", "P2-05", "P2-09", "P2-10", "P2-11", "P3-01", "P3-02", "P3-10", "P3-12", "P4-01", "P4-13", "P4-14", "P5-10", "P5-12", "P6-01", "P6-03", "P6-07", "P6-09", "P7-05", "P7-06", "P7-08", "P7-10", "P8-04", "P8-05", "P8-07", "P8-10"]
   layerMapping:
-    status: "PROPOSED_PENDING_MAINTAINER"
+    status: "APPROVED"
     count: 100
     basis: "r0-decision-package.md §2 \"Full mapping (100 rows)\" — committed vendored source; deterministic extraction of id→exact-primaryLayer→rationale→source."
-    note: "Q4(b) option 2: complete 100-ID id→exact-primaryLayer mapping submitted as a new canonical decision source for maintainer item-by-item approval. Derived deterministically from the committed §2 table (100/100 rows; 0 layer mismatches vs the byte-locked registry). The claimed-34th ambiguous id is enumerable only from the missing Agent A transcript (confirmed unrecoverable on disk). Resolving the R0 gate layer item is a genuine maintainer decision — item-by-item approval of this mapping (path 2) or recovered evidence (path 1) — recorded by the maintainer; the gate computation is unchanged and the submission does not re-scope it. This section is the reviewable decision record; checkLayerMapping (scripts/first100/generate-specs.ts) validates it fail-closed."
+    note: "Q4(b) option 2: complete 100-ID id→exact-primaryLayer mapping submitted as a new canonical decision source for maintainer item-by-item approval. Derived deterministically from the committed §2 table (100/100 rows; 0 layer mismatches vs the byte-locked registry). The claimed-34th ambiguous id is enumerable only from the missing Agent A transcript (confirmed unrecoverable on disk). Resolving the R0 gate layer item is a genuine maintainer decision — item-by-item approval of this mapping (path 2) or recovered evidence (path 1) — recorded by the maintainer; the gate computation is unchanged and the submission does not re-scope it. This section is the reviewable decision record; checkLayerMapping (scripts/first100/generate-specs.ts) validates it fail-closed. APPROVED per decisions-approved.md B2 (\"按 registry 现值全批，layerSourceGap=1 的那项按 L2_PROVIDER 定\") -- the full 100-ID mapping is now the adopted decision record; layerAdjudication.approvedIds/approvedLayers mirrors these same 100 values for composeEffective's projection."
     entries:
       P0-01:
         primaryLayer: "L6_QUALIFICATION"
@@ -797,9 +867,9 @@ adjudication:
       P8-10: "UNASSIGNED"
     note: "B approved all 100 canonical code owners (9 spec owners self-own; 91 assigned to owning package/tooling path). C: all 100 human assignees remain UNASSIGNED — no human named."
   thresholds:
-    status: "PROPOSED_PENDING_MAINTAINER"
+    status: "APPROVED"
     count: 17
-    note: "NOT approved. Values unchanged; implementers may not tune a threshold to pass a test."
+    note: "APPROVED per decisions-approved.md B1 (\"按提案原文全批\") -- all 17 threshold values in spec/first100-thresholds.yaml approved as proposed. Values remain unchanged from the proposal; implementers may not tune a threshold to pass a test."
   sameWaveConflicts:
     status: "RESOLVED"
     count: 0
@@ -871,7 +941,7 @@ remainingPending:
   sameWaveConflicts: 0
   unassignedOwners: 0
   pendingLayerAdjudication: 0
-  unapprovedThresholds: 17
+  unapprovedThresholds: 0
 fileOwnership:
   writtenFiles: 441
   statusCounts:
@@ -890,7 +960,7 @@ epics:
     wave: 1
     predecessors: []
     primaryLayer: "L6_QUALIFICATION"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "docs/audit"
     humanAssignee: "UNASSIGNED"
     acceptance: ["同一干净 checkout 在 Linux 与 macOS 生成相同规范化指纹。", "修改任一关键 schema、bundle 行或 package manifest 后，verify 必须失败并指出最小差异。", "恢复文件后 verify 必须重新通过。"]
@@ -944,7 +1014,7 @@ epics:
     wave: 2
     predecessors: ["P0-01"]
     primaryLayer: "L0_KERNEL"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P0-02"
     humanAssignee: "UNASSIGNED"
     acceptance: ["任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier。", "Kernel API 无模型可见文本、无业务领域逻辑、无具体 provider 实现。", "未初始化 kernel 时，生产 profile 必须 fail closed", "开发 profile 可显式启用 insecure 模式并显示永久警告。"]
@@ -1003,7 +1073,7 @@ epics:
     wave: 3
     predecessors: ["P0-01", "P0-02"]
     primaryLayer: "L6_QUALIFICATION"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "(root) architecture.layers.json"
     humanAssignee: "UNASSIGNED"
     acceptance: ["现有仓库在受控 allowlist 下通过", "allowlist 每项必须带删除日期和负责人。", "构造违规 deep import、缺 provider、不可逆注册三类夹具时门禁均失败。", "CI 输出具体依赖边、源文件和修复建议。"]
@@ -1056,7 +1126,7 @@ epics:
     wave: 4
     predecessors: ["P0-03"]
     primaryLayer: "L6_QUALIFICATION"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "scripts/architecture"
     humanAssignee: "UNASSIGNED"
     acceptance: ["生产 package graph 无未豁免环。", "任何 kernel 对 Cordis、UI、具体模型 provider 的依赖都失败。", "检查在 10 秒内完成并给出最短环路径。"]
@@ -1211,7 +1281,7 @@ epics:
     wave: 3
     predecessors: ["P0-01", "P0-06"]
     primaryLayer: "L6_QUALIFICATION"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "scripts/release"
     humanAssignee: "UNASSIGNED"
     acceptance: ["篡改任一测试日志、二进制或配置后 evidence verify 失败。", "同一次执行的 evidence 可离线验证。", "Agent 最终回答必须引用 package path 和 accepted 状态。"]
@@ -1261,7 +1331,7 @@ epics:
     wave: 4
     predecessors: ["P0-07"]
     primaryLayer: "L6_QUALIFICATION"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "benchmarks/harness-capability"
     humanAssignee: "UNASSIGNED"
     acceptance: ["不配置外部 API 时 deterministic/security/fault lanes 可完整运行。", "同一 seed 可复现相同事件投影和失败位置。", "real-model 结果与底座不变量分开评分，模型失败不能掩盖安全绕过。"]
@@ -1316,7 +1386,7 @@ epics:
     wave: 3
     predecessors: ["P0-02", "P0-06"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P1-01"
     humanAssignee: "UNASSIGNED"
     acceptance: ["缺少 manifest、声明与实际注册不一致、申请通配权限时安装失败或进入明确 quarantine。", "Plugin Inventory 能展示声明权限、实际观察权限、版本与来源。", "manifest schema 有 golden fixture 与向后兼容测试。", "Skill/MCP Provider 未声明 transport、auth、network destination 或副作用时不能进入 production profile。"]
@@ -1372,7 +1442,7 @@ epics:
     wave: 4
     predecessors: ["P0-02", "P1-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/plugin/plugin-provenance"
     humanAssignee: "UNASSIGNED"
     acceptance: ["篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝。", "同一锁定包在离线模式可验证。", "Inventory 和审计事件记录验证结果而不记录密钥。"]
@@ -1422,7 +1492,7 @@ epics:
     wave: 5
     predecessors: ["P1-01", "P1-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/plugin/plugin-lock"
     humanAssignee: "UNASSIGNED"
     acceptance: ["断网冷启动可按 lock 验证本地 cache。", "registry tag 漂移不改变已锁定 profile。", "并发两个安装进程不会产生半写 lock。"]
@@ -1472,7 +1542,7 @@ epics:
     wave: 8
     predecessors: ["P1-02", "P1-03", "P3-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/plugin/plugin-installer"
     humanAssignee: "UNASSIGNED"
     acceptance: ["preinstall/postinstall 尝试读取 `$HOME`、访问网络、写 profile 均失败。", "tar path traversal、symlink escape、zip bomb 被拒绝。", "安装失败后 profile、lock、node_modules 可恢复到字节级原状态。"]
@@ -1570,7 +1640,7 @@ epics:
     wave: 8
     predecessors: ["P1-01", "P2-02", "P3-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/plugin/plugin-host"
     humanAssignee: "UNASSIGNED"
     acceptance: ["插件尝试直接读取宿主 home、process.env、socket、其他插件内存均失败。", "插件 host 被 kill 后主 Harness 保持健康，相关工具变为明确 unavailable。", "每个 RPC 调用具有 principal、capability token、deadline、trace id。"]
@@ -1624,7 +1694,7 @@ epics:
     wave: 4
     predecessors: ["P0-02", "P2-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/workspace/workspace-trust"
     humanAssignee: "UNASSIGNED"
     acceptance: ["clone 一个含恶意配置的仓库并打开，不产生任何子进程、网络或凭证读取。", "目录被替换、symlink 改指、移动后信任不自动继承。", "降级 trust 立即撤销项目能力。"]
@@ -1678,7 +1748,7 @@ epics:
     wave: 4
     predecessors: ["P0-06", "P1-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/plugin/plugin-compat"
     humanAssignee: "UNASSIGNED"
     acceptance: ["兼容图可确定性求解，同一输入产生同一 load plan。", "缺少必需 capability 或 major schema 不匹配时不执行插件代码。", "可选 capability 缺失时只禁用对应功能并明确展示。"]
@@ -1939,7 +2009,7 @@ epics:
     wave: 3
     predecessors: ["P0-02", "P0-06"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/identity/principal"
     humanAssignee: "UNASSIGNED"
     acceptance: ["任何 action 都能追溯 root user/tenant 与完整委托链。", "跨租户 ID 混用在类型验证和 runtime policy 两层被拒绝。", "匿名开发模式有独立受限 principal，不等价管理员。"]
@@ -2047,7 +2117,7 @@ epics:
     wave: 4
     predecessors: ["P0-06", "P2-01"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P2-03"
     humanAssignee: "UNASSIGNED"
     acceptance: ["任何外部写操作在事件日志中都存在先于执行的 ActionManifest。", "参数规范化稳定，语义相同对象得到相同 hash。", "无法分类副作用的动作默认高风险并要求审批。"]
@@ -2102,7 +2172,7 @@ epics:
     wave: 5
     predecessors: ["P2-03"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/policy/risk-taxonomy"
     humanAssignee: "UNASSIGNED"
     acceptance: ["同一动作分类跨 CLI/Web/SDK 一致。", "插件不能自行把高风险动作降级。", "组织可覆盖阈值但不能关闭 kernel hard-deny 类。"]
@@ -2206,7 +2276,7 @@ epics:
     wave: 7
     predecessors: ["P2-03", "P2-05"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/interaction/user-approval"
     humanAssignee: "UNASSIGNED"
     acceptance: ["审批后替换参数、切换账户、改变文件 inode/远端对象版本均不会执行。", "敏感值可 redacted 展示，但 hash 仍覆盖真实规范化值。", "批准事件与最终 action 形成一一引用。"]
@@ -2256,7 +2326,7 @@ epics:
     wave: 8
     predecessors: ["P2-06", "P4-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/interaction/approval-store"
     humanAssignee: "UNASSIGNED"
     acceptance: ["进程在请求后、批准后、消费前任意崩溃，重启后状态正确。", "同一批准最多消费一次。", "过期/撤销批准永远不能执行。"]
@@ -2308,7 +2378,7 @@ epics:
     wave: 9
     predecessors: ["P2-05", "P2-07"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/policy/grant-store"
     humanAssignee: "UNASSIGNED"
     acceptance: ["不存在无作用域永久 grant。", "规则边界外动作回到审批或拒绝。", "撤销在分布式 worker 中有有界传播并默认 fail closed。"]
@@ -2506,7 +2576,7 @@ epics:
     wave: 7
     predecessors: ["P2-05", "P4-06"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/interaction/human-channel"
     humanAssignee: "UNASSIGNED"
     acceptance: ["触发 stop 后无新外部副作用", "在途动作按策略终止或标记 reconciliation-required。", "重启后 stop 状态保持，必须显式解除。", "所有 surface 的状态一致。"]
@@ -2670,7 +2740,7 @@ epics:
     wave: 8
     predecessors: ["P0-06", "P3-01"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/execution-world"
     humanAssignee: "UNASSIGNED"
     acceptance: ["恶意程序打印伪造 denial 文本不能改变 outcome。", "每类错误在 session/event、SDK、UI 中保持类型。", "Retry policy 能基于类型做正确决策。"]
@@ -2723,7 +2793,7 @@ epics:
     wave: 9
     predecessors: ["P1-06", "P2-05", "P3-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/egress-proxy"
     humanAssignee: "UNASSIGNED"
     acceptance: ["直接 IP、DNS rebinding、IPv6、redirect chain、proxy env 绕过均失败。", "允许列表访问成功且证据可追踪到 ActionManifest。", "browser/MCP/shell 使用同一 egress policy。"]
@@ -2775,7 +2845,7 @@ epics:
     wave: 9
     predecessors: ["P3-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/local-isolation"
     humanAssignee: "UNASSIGNED"
     acceptance: ["测试进程不可见、不可 ptrace、不可连接 Docker/SSH socket。", "设备访问与 clipboard 默认 deny。", "跨平台语义差异进入 attestation。"]
@@ -2825,7 +2895,7 @@ epics:
     wave: 8
     predecessors: ["P2-02", "P3-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/credentials/secrets-broker"
     humanAssignee: "UNASSIGNED"
     acceptance: ["子 Agent/插件只能获得明确委托的 secret。", "secret 不出现在 session log、stdout/stderr、crash dump、evidence package。", "过期 lease 无法重放。"]
@@ -2879,7 +2949,7 @@ epics:
     wave: 10
     predecessors: ["P3-02", "P3-05"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/sandbox/sandbox-local"
     humanAssignee: "UNASSIGNED"
     acceptance: ["故意移除 bwrap/权限或让 Seatbelt compile 失败时不执行命令。", "attestation 绑定 OS/kernel/provider version。", "安全 profile 在所有支持平台通过 conformance。"]
@@ -2929,7 +2999,7 @@ epics:
     wave: 10
     predecessors: ["P3-01", "P3-04", "P3-06"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/execution-world-container"
     humanAssignee: "UNASSIGNED"
     acceptance: ["相同 image digest 和 inputs 产生可重放环境。", "容器逃逸 corpus 无法访问宿主。", "cleanup 后无残留容器、volume、secret。"]
@@ -2977,7 +3047,7 @@ epics:
     wave: 8
     predecessors: ["P2-01", "P3-01", "P4-07"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/execution-world-remote"
     humanAssignee: "UNASSIGNED"
     acceptance: ["客户端断线/重启可重新 attach，不重复已完成 action。", "伪造或过期 attestation 被拒绝。", "tenant A 不可 attach tenant B world。"]
@@ -3079,7 +3149,7 @@ epics:
     wave: 11
     predecessors: ["P3-01", "P6-09"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/execution/world-snapshot"
     humanAssignee: "UNASSIGNED"
     acceptance: ["恢复后文件/依赖/数据库状态与快照 digest 匹配。", "secret lease、network connection、process PID 不被错误复用。", "rollback 事件和 artifact lineage 可追踪。"]
@@ -3239,7 +3309,7 @@ epics:
     wave: 6
     predecessors: ["P2-04", "P4-01"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P4-02"
     humanAssignee: "UNASSIGNED"
     acceptance: ["同一输入在确定性 parser fixture 下输出稳定。", "所有 hard constraint 可从 profile 追溯原始来源。", "未知 side effect 不会被标为 none。"]
@@ -3289,7 +3359,7 @@ epics:
     wave: 8
     predecessors: ["P3-01", "P4-02"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P4-03"
     humanAssignee: "UNASSIGNED"
     acceptance: ["无法满足的约束返回最小冲突集，不进入运行。", "Plan 中每个 node 能追溯 TaskProfile requirement。", "同一 normalized inputs 产生确定性 plan id。"]
@@ -3339,7 +3409,7 @@ epics:
     wave: 9
     predecessors: ["P2-05", "P4-03"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/run/run-plan"
     humanAssignee: "UNASSIGNED"
     acceptance: ["修改 plan JSON 任一字节签名失效。", "Agent 不能自行提升 maxAgents、network、budget、approval mode。", "所有 action 引用生效 plan revision。"]
@@ -3387,7 +3457,7 @@ epics:
     wave: 5
     predecessors: ["P4-01"]
     primaryLayer: "L3_CONSUMER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/core/agent"
     humanAssignee: "UNASSIGNED"
     acceptance: ["非法转换和 stale worker 更新被拒绝。", "等待状态不消耗 LLM/worker 资源。", "重启后 orphaned Agent 可被 reclaim 或安全失败。"]
@@ -3438,7 +3508,7 @@ epics:
     wave: 5
     predecessors: ["P2-01", "P4-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/run/message-bus"
     humanAssignee: "UNASSIGNED"
     acceptance: ["在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect。", "未送达消息可查询和重放。", "跨租户消息不能被消费。"]
@@ -3490,7 +3560,7 @@ epics:
     wave: 6
     predecessors: ["P4-06"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/run/lease"
     humanAssignee: "UNASSIGNED"
     acceptance: ["旧 worker 恢复后无法提交结果或执行新副作用。", "clock skew 在容忍范围内不导致双主。", "lease store 故障时停止新工作。"]
@@ -3542,7 +3612,7 @@ epics:
     wave: 7
     predecessors: ["P4-01", "P4-06", "P4-07"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/workflow/workflow-journal"
     humanAssignee: "UNASSIGNED"
     acceptance: ["在每个 agent() call 前后 kill，恢复不重复已完成 child work。", "script digest 改变时不能盲目 resume，必须 migrate/restart。", "journal 可压缩但原始证据保留。"]
@@ -3598,7 +3668,7 @@ epics:
     wave: 8
     predecessors: ["P1-02", "P4-08"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/workflow/workflow-registry"
     humanAssignee: "UNASSIGNED"
     acceptance: ["保存/加载不会执行未验证代码。", "父取消能传播", "子失败按声明策略处理。", "递归深度、总 agents、总 budget 受限。"]
@@ -3650,7 +3720,7 @@ epics:
     wave: 9
     predecessors: ["P3-10", "P4-07"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/run/scheduler"
     humanAssignee: "UNASSIGNED"
     acceptance: ["50 个并发 Agent 下无死锁、无超预算、无跨租户饥饿。", "两个写同一资源的任务被序列化或冲突检测。", "取消会释放所有 lock/permit。"]
@@ -3704,7 +3774,7 @@ epics:
     wave: 8
     predecessors: ["P4-01", "P4-12"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/reliability/retry"
     humanAssignee: "UNASSIGNED"
     acceptance: ["永久 4xx、policy deny、invalid input 不重试。", "多个插件不能使总重试超过 Run budget。", "provider 故障时 circuit 打开且可恢复。"]
@@ -3760,7 +3830,7 @@ epics:
     wave: 7
     predecessors: ["P2-03", "P4-06", "P4-07"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/action/action-ledger"
     humanAssignee: "UNASSIGNED"
     acceptance: ["10,000 次随机 crash campaign 中 duplicate external effect 为 0。", "ambiguous 状态不盲目重试，进入 reconciliation。", "同 key 不同参数被拒绝。"]
@@ -3920,7 +3990,7 @@ epics:
     wave: 9
     predecessors: ["P0-05", "P4-02", "P4-03"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/router/strategy-router"
     humanAssignee: "UNASSIGNED"
     acceptance: ["简单只读任务不创建不必要子 Agent。", "长时/高风险/多交付物任务不会落到无恢复 single turn。", "decision 被持久化并可重放。"]
@@ -3974,7 +4044,7 @@ epics:
     wave: 10
     predecessors: ["P2-05", "P5-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/router/model-router"
     humanAssignee: "UNASSIGNED"
     acceptance: ["敏感任务不会路由到不允许的数据区域。", "预算和所需工具能力不满足的模型不会被选。", "决策和实际 outcome 可用于离线 regret 计算。"]
@@ -4028,7 +4098,7 @@ epics:
     wave: 11
     predecessors: ["P0-06", "P5-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/llm/prompt-compiler"
     humanAssignee: "UNASSIGNED"
     acceptance: ["同一 PromptIR 在不同 provider 上保留所有 required clauses。", "不支持能力时在规划阶段报错或显式降级，不静默忽略。", "token estimate 与实际误差进入 telemetry。"]
@@ -4082,7 +4152,7 @@ epics:
     wave: 11
     predecessors: ["P4-11", "P4-12", "P5-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/router/provider-resilience"
     humanAssignee: "UNASSIGNED"
     acceptance: ["primary timeout 时 fallback 完成且只执行一组工具动作。", "成本不超过 RunPlan 预算。", "rate limit 不造成 thundering herd。"]
@@ -4134,7 +4204,7 @@ epics:
     wave: 9
     predecessors: ["P2-02", "P4-03"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/subagent/subagent"
     humanAssignee: "UNASSIGNED"
     acceptance: ["内部、Codex、Claude、ACP provider 都通过同一 conformance tests。", "子 Agent 无法看到未授权 context/tool/secret。", "缺少 required capability 时 spawn 前失败。"]
@@ -4185,7 +4255,7 @@ epics:
     wave: 11
     predecessors: ["P5-05", "P6-09"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/subagent/subagent"
     humanAssignee: "UNASSIGNED"
     acceptance: ["父级能独立验证 artifact，不依赖 summary。", "所有 provider 字段缺失有明确 capability flag。", "Result 与 child session/run id 一一对应。"]
@@ -4234,7 +4304,7 @@ epics:
     wave: 12
     predecessors: ["P5-05", "P5-06", "P8-04"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/subagent/subagent-codex"
     humanAssignee: "UNASSIGNED"
     acceptance: ["父取消在有界时间内中断 Codex。", "Codex 不能自行扩大 sandbox/approval。", "重连后不重复 turn。"]
@@ -4286,7 +4356,7 @@ epics:
     wave: 12
     predecessors: ["P5-05", "P5-06", "P8-04"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/subagent/subagent-claude-code"
     humanAssignee: "UNASSIGNED"
     acceptance: ["provider 崩溃可恢复或明确失败，保留 partial evidence。", "工具权限不因 Claude 自有设置绕过父 policy。", "结果符合统一 SubagentResult。"]
@@ -4338,7 +4408,7 @@ epics:
     wave: 18
     predecessors: ["P5-05", "P8-01", "P8-05"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/subagent/subagent-acp"
     humanAssignee: "UNASSIGNED"
     acceptance: ["断线重连后从 cursor 继续且不丢/重复事件。", "远程 child 无法伪造 tenant/parent identity。", "父级能列出、查询和取消 ACP child。"]
@@ -4438,7 +4508,7 @@ epics:
     wave: 7
     predecessors: ["P4-06", "P4-07"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/collaboration/taskboard"
     humanAssignee: "UNASSIGNED"
     acceptance: ["多进程并发 claim 只有一个 winner。", "模型未手动更新任务时，runtime 根据 receipts 推进状态。", "循环依赖在提交时拒绝。"]
@@ -4602,7 +4672,7 @@ epics:
     wave: 5
     predecessors: ["P0-06", "P6-01"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/memory/memory"
     humanAssignee: "UNASSIGNED"
     acceptance: ["每条记忆可追溯至少一个来源或明确标记 user-asserted。", "过期/撤销记录不进入默认检索。", "跨 scope 合并必须显式。"]
@@ -4701,7 +4771,7 @@ epics:
     wave: 11
     predecessors: ["P6-01", "P6-09"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/context/retrieval-planner"
     humanAssignee: "UNASSIGNED"
     acceptance: ["预算耗尽时确定性停止，不无限搜索。", "敏感源在计划阶段被 policy 过滤。", "同一 source 不因多个插件重复注入。", "Prompt-injection canary 不能改变 Tool allowlist、Policy、Approval 或 RunPlan", "只能作为待分析数据。"]
@@ -4757,7 +4827,7 @@ epics:
     wave: 12
     predecessors: ["P2-02", "P4-03", "P6-04"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/context/context-topology"
     humanAssignee: "UNASSIGNED"
     acceptance: ["两个 child 的 private context 互不可见。", "UI 插件卸载不影响实际 context assembly。", "敏感内容不会通过 telemetry 泄漏。"]
@@ -4809,7 +4879,7 @@ epics:
     wave: 11
     predecessors: ["P4-01", "P7-01"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/compaction/compaction"
     humanAssignee: "UNASSIGNED"
     acceptance: ["compaction 前后 VerificationContract、未完成 action、审批状态等价。", "摘要中的每个关键 claim 可回链原事件。", "多轮 compaction 不累计丢失关键事实。"]
@@ -4917,7 +4987,7 @@ epics:
     wave: 9
     predecessors: ["P0-02", "P2-01", "P3-06"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/audit/audit-ledger"
     humanAssignee: "UNASSIGNED"
     acceptance: ["磁盘拷贝无法直接读取明文。", "删除/修改/重排 audit record 100% 被检测。", "禁止区域外 provider 时没有数据出境。"]
@@ -5029,7 +5099,7 @@ epics:
     wave: 11
     predecessors: ["P3-06", "P6-08", "P6-09"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/privacy/data-classification"
     humanAssignee: "UNASSIGNED"
     acceptance: ["canary PII/secret 不出现在未授权 sink。", "导出仅含用户有权数据并保留 provenance。", "erase 能遍历 fork/snapshot/index/backup policy 并报告剩余 legal hold。"]
@@ -5085,7 +5155,7 @@ epics:
     wave: 10
     predecessors: ["P0-06", "P4-03", "P4-04"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P7-01"
     humanAssignee: "UNASSIGNED"
     acceptance: ["任何进入 executing 状态的 Run 都有不可变 VerificationContract", "缺失时 fail closed。", "执行者不能修改 required checks、evidence requirements 或 acceptance rule", "修改必须走 PlanAmendment 和重新审批。", "同一契约经 TS/Python 编解码、持久化和重放后 hash 完全一致。", "契约可表达文件、API、外部系统、人工批准、统计测试和安全策略等通用检查，不包含垂直业务逻辑。"]
@@ -5139,7 +5209,7 @@ epics:
     wave: 12
     predecessors: ["P2-03", "P5-06", "P6-09"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/assurance/evidence"
     humanAssignee: "UNASSIGNED"
     acceptance: ["所有 required evidence 都能追溯到具体 producer、ActionManifest、ExecutionWorld 和原始 hash。", "修改证据字节、元数据或引用后完整性校验 100% 检出。", "同一证据重复采集去重，但不同权限/时间上下文不会被错误合并。", "父 Agent 可以拿到结构化证据引用，不再只拿子 Agent 最终文本。"]
@@ -5199,7 +5269,7 @@ epics:
     wave: 13
     predecessors: ["P2-02", "P3-01", "P7-01", "P7-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/assurance/verifier"
     humanAssignee: "UNASSIGNED"
     acceptance: ["高风险 Run 不允许 executorId == verifierId，除非策略明确批准并标记 degraded assurance。", "Verifier 无法修改 workspace、外部系统、approval 或 evidence", "越权尝试被 kernel 拒绝并审计。", "恶意执行者伪造测试文本时，独立 verifier 仍能识别失败。", "Verifier 超时、崩溃或 abstain 不得被解释为 pass。"]
@@ -5257,7 +5327,7 @@ epics:
     wave: 14
     predecessors: ["P6-09", "P7-02", "P7-03"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/assurance/claim-graph"
     humanAssignee: "UNASSIGNED"
     acceptance: ["每个关键 final claim 可反向遍历到至少一个 EvidenceRef 或显式 `unverified`。", "引入相互矛盾证据后，状态确定性变为 conflicted，并传播到派生 claim。", "过期规则可按 evidence type 配置且不会修改原始证据。", "图重放结果与在线投影一致。"]
@@ -5425,7 +5495,7 @@ epics:
     wave: 13
     predecessors: ["P2-05", "P4-06", "P6-10", "P7-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/observability/causal-trace"
     humanAssignee: "UNASSIGNED"
     acceptance: ["任意 OutcomePackage 可遍历到产生它的全部关键 actions、policy decisions、evidence 和 cost。", "在 enqueue/flush/ack/shutdown 每个边界 kill 进程后，terminal events 最终送达且无逻辑重复。", "未挂载 redaction policy 时共享 collector 默认拒绝启动，而不是裸数据外发。", "Trace 不改变 canonical ledger 的事实语义，Telemetry 失败不使工作流状态失真。"]
@@ -5541,7 +5611,7 @@ epics:
     wave: 16
     predecessors: ["P0-08", "P7-05", "P7-08"]
     primaryLayer: "L6_QUALIFICATION"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "tests/capability"
     humanAssignee: "UNASSIGNED"
     acceptance: ["所有安全、隔离、幂等、审计和恢复 hard gates 100% 通过。", "scripted-model lane 的 deterministic capability success ≥99%，且连续 20 次无 flaky。", "real-model lane 按模型/配置分别报告成功率、95% CI、成本、时延和 human intervention，不用单一总分掩盖差异。", "核心 packages 中不存在为某个场景写死的行业关键词/业务规则。"]
@@ -5677,7 +5747,7 @@ epics:
     wave: 5
     predecessors: ["P0-06", "P4-01"]
     primaryLayer: "L1_CONTRACT"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "P8-01"
     humanAssignee: "UNASSIGNED"
     acceptance: ["新客户端连接旧服务端、旧客户端连接新服务端均有确定性协商结果，不出现静默字段丢失。", "不兼容 mandatory capability 在执行任务前被拒绝，并返回机器可读原因。", "相同构建的 schema fingerprint 稳定", "任何协议行为变更都会触发 fixture diff。", "协商结果写入每个 Run 的 provenance。"]
@@ -5735,7 +5805,7 @@ epics:
     wave: 16
     predecessors: ["P4-01", "P6-09", "P7-05", "P8-01"]
     primaryLayer: "L5_SURFACE"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/api/remotes"
     humanAssignee: "UNASSIGNED"
     acceptance: ["客户端无需解析 assistant 文本或 raw event 即可判断 Run 当前状态、待审批项、证据和产物。", "分页、过滤和 revision 在 100k Runs/1M Actions 数据集上稳定且无全表内存加载。", "资源访问经过 P2/P8 authorization，越权 ID 枚举不泄露资源存在性。", "Typert Remote、JSON-RPC SDK 与 Host API 对同一领域状态返回语义一致。"]
@@ -5799,7 +5869,7 @@ epics:
     wave: 17
     predecessors: ["P4-05", "P4-07", "P4-08", "P4-13", "P8-02"]
     primaryLayer: "L5_SURFACE"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/sdk/protocol"
     humanAssignee: "UNASSIGNED"
     acceptance: ["重复提交同一 commandId 不会重复执行动作或补偿。", "非法状态转换被拒绝且不改变 revision。", "暂停后进程重启仍可 resume", "cancel 后没有孤儿 Agent、process、world、lease 或 secret handle。", "Fork 与父 Run lineage 可追踪，权限不扩大。"]
@@ -5965,7 +6035,7 @@ epics:
     wave: 17
     predecessors: ["P2-01", "P2-02", "P8-02"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/identity/authorization"
     humanAssignee: "UNASSIGNED"
     acceptance: ["跨租户数据泄漏、resource existence leak 和 command execution 均为 0。", "token audience、expiry、revocation、key rotation 和 clock skew 有明确行为。", "管理员权限不能自动下放给子 Agent", "delegation 受 CapabilityToken depth 限制。", "匿名本地单用户模式仍可通过显式 local principal provider 使用，但不能冒充企业认证。"]
@@ -6087,7 +6157,7 @@ epics:
     wave: 18
     predecessors: ["P8-02", "P8-03", "P8-04", "P8-05"]
     primaryLayer: "L5_SURFACE"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/client/ui-run-control"
     humanAssignee: "UNASSIGNED"
     acceptance: ["用户能在 3 次交互内定位等待审批、失败 verifier、超预算 Agent 和孤立 world。", "所有危险操作显示绑定后的 ActionManifest diff 与影响范围。", "断线、重启和 1,000 并发 Run 下 UI 状态最终一致且不冻结。", "无权限用户既看不到按钮，也无法绕过 API 执行。"]
@@ -6150,7 +6220,7 @@ epics:
     wave: 18
     predecessors: ["P2-10", "P3-10", "P6-10", "P8-06"]
     primaryLayer: "L2_PROVIDER"
-    layerStatus: "AGENT_A_PROPOSED"
+    layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/governance/org-policy"
     humanAssignee: "UNASSIGNED"
     acceptance: ["项目配置无法绕过组织禁止项", "冲突时 fail closed 并展示来源。", "Quota 在调度前和运行中均执行，超额不产生未记录资源。", "retention/erase/legal hold 对 fork、snapshot、backup 和 index 一致。", "Audit export 可验证连续性和 hash chain，缺失/篡改 100% 检出。"]
