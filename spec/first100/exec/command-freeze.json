@@ -654,6 +654,40 @@
         "testsDiscovered": 59
       },
       "note": "P0-05 P-stage (2026-09-01), Shadow/Enforce Feature Gates' real Provider runtime: `resolveFeatureGate` implements must[3]'s override chain (default -> profile -> settings -> env, ascending precedence, a chain entry only for a layer with a real candidate), interoperating with the real `packages/settings/settings/src/index.ts` (`SettingsScope.get()` always `deepFreeze`s its resolved value, confirmed by reading the real source). `evaluateFeatureGate` is the must[1]/acceptance[0] decision harness: `off` calls only legacy, `enforce` calls only candidate, `shadow` calls BOTH but always applies legacy's value -- independently re-verified by mutating the applied-value line to the candidate's result and confirming the acceptance[0] test genuinely catches it (RED), then restoring (GREEN). `redactDecisionSummary` is a real per-field allowlist copy (not a cosmetic `as RedactedJsonValue` cast placed after no real filtering) -- independently re-verified with a Reviewer-constructed fake secret field absent from any allowlist, confirmed genuinely absent from the stringified output; `differs` is deliberately computed from the RAW (pre-redaction) summaries so shadow mode never silently under-reports real behavioral drift hidden in a non-allowlisted field. `checkFeatureGateExpiry` is a real SemVer-2.0.0-precedence comparator (multi-digit numeric segment comparison, prerelease-identifier comparison, `removalVersion` boundary is inclusive-expired) -- independently re-verified against edge cases (0.10.0 vs 0.9.0, the exact boundary, a `>=` vs `>` mutation flipping the boundary test) by the Reviewer's own probes, not merely re-reading the Writer's tests. Real RED->GREEN: a stub implementation failed 21/59 genuinely; the real implementation passes 59/59 (32 C-stage + 27 P-stage). No BLOCKED-012 deviation -- files[] matched the registry's P-stage declaration exactly. Independent review: ACCEPT, with the shadow-mode safety property (the epic's core guarantee), the redaction call's real effect, and the expiry comparator's boundary correctness each independently re-verified from scratch via the Reviewer's own constructed test cases and mutations, not merely re-read."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "seeds every declared required gate as a MissingGateEvidence placeholder at init, keeping accepted=false until each one actually runs",
+        "collects two real gate runs and a real build-artifact digest into accepted=true, then verifies fully offline",
+        "never sets accepted=true when a required gate genuinely completes with a nonzero exit code",
+        "records a --skip reason as SkippedGateEvidence without running any command, and keeps accepted=false",
+        "detects a mutated byte in a completed gate's captured log file",
+        "detects a mutated byte in a required build artifact after collection",
+        "detects a hand-edited evidence.json itself: recordDigest, package signature, and the re-derived must[2] check all fail",
+        "compiles with zero diagnostics when the real collected fields are branded per their declared types",
+        "every collected GateEvidence record has exactly must[0]'s real field set at runtime, matching CompletedGateEvidence's own declared members"
+      ],
+      "files": [
+        "scripts/release/collect-evidence.mjs",
+        "scripts/release/verify-evidence.mjs"
+      ],
+      "frozenAtUtc": "2026-09-01T22:30:00Z",
+      "dryRunProof": {
+        "treeSha": "a0de82823f8be4383bf367b04e27876d55988f35",
+        "testsDiscovered": 50
+      },
+      "note": "P0-07 P-stage (2026-09-01), the real Release Evidence Package collector/verifier: `collect-evidence.mjs` (init/run/build-artifact subcommands) reuses P0-01's real `baseline-fingerprint.mjs` mechanism (not reimplemented) plus a real `git diff`, seeds every declared required gate as an honest `MissingGateEvidence` placeholder, spawns real gate commands recording real exit codes/timestamps/log digests, and recomputes `accepted` from real state on every write (must[2] against real collected data, not just the C-stage compile-time proof). `verify-evidence.mjs` independently recomputes every digest from current on-disk bytes and re-derives must[2], never trusting the recorded fields. Real RED->GREEN: stubbed both scripts, all 9 new behavioral tests failed for the right reason (real `not implemented` exit codes); real implementation passes, 50/50 across tests/release/ (38 C+P in evidence-package.spec.ts + 12 in baseline-fingerprint.spec.ts). Independent review ACCEPT after real adversarial attack attempts distinct from the Writer's own tests: mutated a byte in `.dsh/baseline.json` (a file the Writer's suite never touches) -> caught; hand-tampered `accepted:false->true` on a genuinely-incomplete package -> caught by signature mismatch AND the independent must[2] re-derivation; **forged a self-consistent signature over the tampered package** (the strongest attack this design's own doc comment admits it cannot stop) -> still caught, purely by `verifyAcceptedInvariant`'s independent recomputation from real gate data, proving `accepted` is never gated by the signature alone. Offline verification (acceptance[1]) independently re-confirmed by deleting the actual gate scripts from disk after a real accepted round-trip and confirming verify still passes via pure digest recomputation. `signature` is honestly documented (JSDoc, both files) as a content-integrity digest, not a keyed cryptographic signature -- explicitly does not claim to stop an attacker who edits evidence.json and recomputes a matching digest; the forged-signature attack above confirms this stated limit is real and that must[2]'s re-derivation is what actually closes the gap. acceptance[2] (\"Agent's final answer must cite the package path and accepted status\") independently confirmed out of P-stage scope -- a calling-agent/reporting behavior no release CLI script can mechanically enforce, not a scope-dodge. No BLOCKED-012 deviation -- files[] matched the registry's P-stage declaration exactly; the extended test cases live in C-stage's already-frozen evidence-package.spec.ts file, same pattern as P0-06.F's jsonl.spec.ts extension."
     }
   ]
 }
