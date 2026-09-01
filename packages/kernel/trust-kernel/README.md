@@ -1,6 +1,6 @@
 ---
 description: "The minimal, non-replaceable Trust Kernel type surface for users and maintainers who need to know exactly what the kernel owns and what stays a plugin around it."
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-trust-kernel
@@ -102,6 +102,7 @@ Independent: the package registers nothing that participates in a model request.
 
 - **No constructed `TrustKernel` value yet** — this Contract-stage slice ships only the type surface and an explained-empty invariant companion; `src/index.ts` (construction, `ctx.provide` wiring, and the runtime-frozen deep-immutability check) is a later slice's deliverable. See [`spec/trust-kernel.md`](../../../spec/trust-kernel.md#contract-stage-slice).
 - **No boot-time enforcement yet** — the production fail-closed / development insecure-mode-warning behavior when the kernel is not initialized belongs to that same later slice and `packages/boot/app-boot`.
+- **No package root entry point yet** — `package.json` declares no `"."` export, `main`, or `types` field, because no `src/index.ts` exists in this slice to build one from; import only the `./types` and `./invariant` subpaths shown above. A root entry point is added once `src/index.ts` lands.
 
 <a id="dev-note"></a>
 ### Dev Note

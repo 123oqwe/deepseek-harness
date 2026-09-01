@@ -1,5 +1,7 @@
 # Trust Kernel Boundary
 
+English | [中文](trust-kernel-boundary.zh.md)
+
 Epic P0-02 (`确立 Minimal Immutable Trust Kernel 边界`) is the first exception to [`docs/architecture.md`](../architecture.md)'s claim that "there is no privileged core to patch" and "every part of the product is a plugin." This page names that exception precisely: what the Trust Kernel owns, why none of it is a Cordis plugin, and what stays a plugin around it. A later slice of this same epic corrects `docs/architecture.md` itself to cross-reference this page instead of repeating the unqualified claim.
 
 ## What the kernel owns
@@ -22,7 +24,7 @@ Every other part of dsh is a plugin: contributed through `ctx.plugin(...)`, reso
 `packages/kernel/trust-kernel/src/types.ts` reflects this at the type level:
 
 - It exports no `Config` schema and no `apply(ctx, config)` plugin entry — nothing in it has the shape the Loader mounts.
-- Its `TrustKernelRootIdentity`, `TrustKernelSignatureRoots`, and `TrustKernelSecretBrokerHandle` handles are branded by a symbol the module declares but never exports, so no caller — including a plugin that imports this module — can construct one without an explicit unsafe cast. This is deliberately not the `Branded<B>` string-brand idiom from `@deepseek-ai/dsh-brand`: that brand is a bare string at runtime and its `brandString()` helper casts any string to it, which fits a nominal *identifier* but not an unforgeable *capability*.
+- Its `TrustKernelRootIdentity`, `TrustKernelSignatureRoots`, and `TrustKernelSecretBrokerHandle` handles are branded by a symbol the module declares but never exports: no exported value or function in this package produces one. Forging one still requires a deliberate, greppable unsafe operation at the call site — an `as` cast, `Object.create`, or an unconstrained generic — not something this module makes convenient or accidental. This is deliberately not the `Branded<B>` string-brand idiom from `@deepseek-ai/dsh-brand`: that brand is a bare string at runtime and its `brandString()` helper casts any string to it, which fits a nominal *identifier* but not an unforgeable *capability*.
 - Every member is `readonly`; nothing in the surface is a setter.
 
 A later slice constructs the one `TrustKernel` value before the Cordis `Context` exists at all, deep-freezes it, and pins it into the context with `ctx.provide('trustKernel', kernel)` — the same mechanism `packages/boot/app-boot/src/index.ts` already uses for `ctx.provide('dshHomePath', dshHomePath)`. `ctx.provide` writes a value the Loader never sees: no config row, patch, or plugin unload can reach it, because none of those act on anything the Loader did not itself mount. Contrast `ctx.plugin(...)`, which registers through the Loader and is exactly what stays reachable by config, patches, and unload — the mechanism every other capability in this list correctly uses.

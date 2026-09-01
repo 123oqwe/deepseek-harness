@@ -1,6 +1,6 @@
 ---
 description: "面向用户与维护者的最小、不可替换 Trust Kernel 类型表面：kernel 拥有什么、周围哪些仍是插件。"
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-trust-kernel
@@ -102,6 +102,7 @@ function checkPolicy(kernel: TrustKernel, payload: unknown): boolean {
 
 - **尚无构造出的 `TrustKernel` 值** ——本 Contract 阶段切片只交付类型表面与一个已解释的空不变式伴生插件；`src/index.ts`（构造、`ctx.provide` 接线，以及运行时冻结的深度不可变性检查）是后续切片的交付物。见 [`spec/trust-kernel.md`](../../../spec/trust-kernel.md#contract-stage-slice)。
 - **尚无启动期强制执行** ——kernel 未初始化时生产 profile 必须 fail closed、开发 profile 可显式启用 insecure 模式的行为，属于同一后续切片与 `packages/boot/app-boot`。
+- **尚无包根入口** ——`package.json` 未声明 `"."` export、`main` 或 `types` 字段，因为本切片没有 `src/index.ts` 可供构建出这些内容；只导入上文所示的 `./types` 与 `./invariant` 子路径。`src/index.ts` 落地后会补上根入口。
 
 <a id="dev-note"></a>
 ### 开发备注

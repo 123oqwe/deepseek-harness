@@ -44,6 +44,24 @@ const OPAQUE_HANDLE_TYPES = [
   'TrustKernelSecretBrokerHandle',
 ]
 
+/**
+ * Each opaque handle interface, paired with the `unique symbol` identifier
+ * that must brand its sole member. A handle is unforgeable only if (a) the
+ * symbol declaration carries no `export` modifier -- otherwise any importer
+ * constructs `{ [THE_SYMBOL]: true }` with zero casts -- and (b) the
+ * interface's member key is a computed reference to that exact symbol, not
+ * an ordinary string-literal-discriminant field, which would be freely
+ * constructible without any cast at all.
+ */
+const HANDLE_BRAND_SYMBOLS: readonly (readonly [interfaceName: string, symbolName: string])[] = [
+  ['TrustKernelRootIdentity', 'TRUST_KERNEL_ROOT_IDENTITY'],
+  ['TrustKernelSignatureRoots', 'TRUST_KERNEL_SIGNATURE_ROOTS'],
+  ['TrustKernelSecretBrokerHandle', 'TRUST_KERNEL_SECRET_BROKER'],
+]
+
+/** The three branding symbol names; none may appear as an exported name. */
+const BRAND_SYMBOL_NAMES = HANDLE_BRAND_SYMBOLS.map(([, symbolName]) => symbolName)
+
 /** The three kernel-opaque payload carriers. */
 const OPAQUE_PAYLOAD_TYPES = [
   'TrustKernelPolicyQuery',
@@ -62,6 +80,50 @@ function findExportedInterface(name: string): ts.InterfaceDeclaration | undefine
   )
 }
 
+/** Find a top-level `declare const <name>: ...` statement by the name of its sole declarator. */
+function findAmbientConst(name: string): ts.VariableStatement | undefined {
+  return sourceFile.statements.find(
+    (statement): statement is ts.VariableStatement =>
+      ts.isVariableStatement(statement)
+      && (statement.modifiers?.some(m => m.kind === ts.SyntaxKind.DeclareKeyword) ?? false)
+      && statement.declarationList.declarations.some(d => ts.isIdentifier(d.name) && d.name.text === name),
+  )
+}
+
+const compilerProbeOptions: ts.CompilerOptions = {
+  target: ts.ScriptTarget.ES2022,
+  module: ts.ModuleKind.ESNext,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
+  strict: true,
+  noEmit: true,
+  skipLibCheck: true,
+  allowImportingTsExtensions: true,
+  types: [],
+}
+
+/**
+ * Type-check a virtual `import * as T from '<types.ts>'` usage file and
+ * return the real compiler's own list of `types.ts`'s exported names -- a
+ * genuine "the export list does not contain X" check, not a hand-maintained
+ * snapshot of the whole export list.
+ */
+function typesModuleExportedNames(): string[] {
+  const virtualDir = mkdtempSync(join(tmpdir(), 'trust-kernel-exports-'))
+  const virtualPath = join(virtualDir, 'usage.ts')
+  try {
+    writeFileSync(virtualPath, `import * as T from ${JSON.stringify(typesPath)}\nT satisfies object\n`, 'utf8')
+    const program = ts.createProgram([virtualPath], compilerProbeOptions)
+    const checker = program.getTypeChecker()
+    const typesSourceFile = program.getSourceFile(typesPath)
+    if (typesSourceFile === undefined) throw new Error('virtual program did not resolve src/types.ts')
+    const moduleSymbol = checker.getSymbolAtLocation(typesSourceFile)
+    if (moduleSymbol === undefined) throw new Error('src/types.ts has no resolvable module symbol')
+    return checker.getExportsOfModule(moduleSymbol).map(exported => exported.name)
+  } finally {
+    rmSync(virtualDir, { recursive: true, force: true })
+  }
+}
+
 /**
  * Type-check a small virtual usage file that imports the real `src/types.ts`
  * by absolute path, and return the compiler's own diagnostics for it.
@@ -71,17 +133,7 @@ function compileVirtualUsage(snippet: string): readonly ts.Diagnostic[] {
   const virtualPath = join(virtualDir, 'usage.ts')
   try {
     writeFileSync(virtualPath, snippet, 'utf8')
-    const options: ts.CompilerOptions = {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.Bundler,
-      strict: true,
-      noEmit: true,
-      skipLibCheck: true,
-      allowImportingTsExtensions: true,
-      types: [],
-    }
-    const program = ts.createProgram([virtualPath], options)
+    const program = ts.createProgram([virtualPath], compilerProbeOptions)
     return [...program.getSyntacticDiagnostics(), ...program.getSemanticDiagnostics()]
   } finally {
     rmSync(virtualDir, { recursive: true, force: true })
@@ -161,6 +213,45 @@ describe('TrustKernel type surface (Epic P0-02 must[2])', () => {
     )
     expect(payload, `${name}.payload member`).toBeDefined()
     expect(payload!.type?.kind).toBe(ts.SyntaxKind.UnknownKeyword)
+  })
+})
+
+describe('opaque handles are unforgeable, not just non-empty (Epic P0-02 must[2] "不可伪造 handle")', () => {
+  it.each(HANDLE_BRAND_SYMBOLS)('%s\'s brand symbol %s carries no export modifier', (_interfaceName, symbolName) => {
+    const decl = findAmbientConst(symbolName)
+    expect(decl, `declare const ${symbolName}: unique symbol`).toBeDefined()
+    expect(
+      hasExportModifier(decl!),
+      `${symbolName} must not be exported -- an exported brand symbol lets any importer write `
+      + `{ [${symbolName}]: true } and satisfy the handle type with zero casts and zero \`any\``,
+    ).toBe(false)
+  })
+
+  it.each(HANDLE_BRAND_SYMBOLS)('gives %s exactly one member, a computed property keyed by %s', (interfaceName, symbolName) => {
+    const iface = findExportedInterface(interfaceName)
+    expect(iface, `exported ${interfaceName} interface`).toBeDefined()
+    expect(iface!.members.length, `${interfaceName} must have exactly one member`).toBe(1)
+    const member = iface!.members[0]!
+    expect(ts.isPropertySignature(member), `${interfaceName}'s sole member is a property signature`).toBe(true)
+    const propertyName = (member as ts.PropertySignature).name
+    expect(
+      ts.isComputedPropertyName(propertyName),
+      `${interfaceName}'s member key must be a computed symbol key, not an ordinary identifier or string-literal `
+      + 'field -- an ordinary field (e.g. `{ readonly kind: \'root-identity\' }`) is freely constructible with no cast at all',
+    ).toBe(true)
+    const keyExpression = (propertyName as ts.ComputedPropertyName).expression
+    expect(ts.isIdentifier(keyExpression), `${interfaceName}'s computed key must reference a plain identifier`).toBe(true)
+    expect(
+      (keyExpression as ts.Identifier).text,
+      `${interfaceName}'s computed key must reference the declared ${symbolName} symbol, not some other identifier`,
+    ).toBe(symbolName)
+  })
+
+  it('exports none of the three branding symbols by name, per the real compiler\'s own module-exports list', () => {
+    const names = typesModuleExportedNames()
+    for (const symbolName of BRAND_SYMBOL_NAMES) {
+      expect(names, `src/types.ts exported names: ${names.join(', ')}`).not.toContain(symbolName)
+    }
   })
 })
 

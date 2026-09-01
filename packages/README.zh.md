@@ -78,6 +78,7 @@ harness 由 `packages/` 下的 npm 包组装而成，按能力系列分组：会
 | [`test-support/`](test-support/README.zh.md) | 支持基础设施（testkit、不变式、回放、Loader 冒烟测试） |
 | [`runtime-diagnostics/`](runtime-diagnostics/README.zh.md) | 运行时诊断：按包归属的运行时不变式检查与报告 |
 | [`util/`](util/README.zh.md) | 组间共享的低层零依赖工具（`Branded<B>`、home/路径辅助函数、超时、留存） |
+| [`kernel/`](kernel/README.zh.md) | 最小、不可替换的 Trust Kernel 边界：root identity、signature roots、policy enforcement、audit append、secret broker handle、sandbox attestation verifier |
 
 -----
 

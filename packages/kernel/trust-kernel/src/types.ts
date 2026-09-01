@@ -20,11 +20,13 @@
  *
  * Every capability handle below ({@link TrustKernelRootIdentity},
  * {@link TrustKernelSignatureRoots}, {@link TrustKernelSecretBrokerHandle})
- * is branded by a symbol this module declares but never exports. TypeScript
- * has no way to construct a value of one of these types except an explicit
- * unsafe cast (`as unknown as T`); this module exports no function that
- * performs that cast, so no ordinary caller — including a plugin that
- * imports this module — can produce one. That is deliberately not the
+ * is branded by a symbol this module declares but never exports. This module
+ * exports no value or function that produces one of these types: no ordinary
+ * caller — including a plugin that imports this module — can construct one
+ * by convenience or accident. Forging one still requires a deliberate,
+ * greppable unsafe operation at the call site (an `as` cast, `Object.create`,
+ * or an unconstrained generic), which this module does not make available.
+ * That is deliberately not the
  * `Branded<B>` string-brand idiom from `@deepseek-ai/dsh-brand`: a
  * `Branded<B>` is a bare string at runtime and `brandString()` casts any
  * string to it, which fits a nominal *identifier* (a `SessionId`) but not an
