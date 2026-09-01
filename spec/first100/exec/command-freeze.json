@@ -112,5 +112,50 @@
       },
       "note": "BLOCKED-005 supplement (2026-09-01): closes the real, honestly-discovered gap in P0-01's acceptance[1] coverage -- schema (F-stage) and bundle-row (C-stage) drift were already tested, but package-manifest drift (a workspace package.json's name changing, tracked via workspacePackages in diffCapture()) never had a named case, even though the implementation already handles it. Coverage-completion path (behavior already exists; genuine RED against the unmodified tree is unobtainable) -- the mandatory sensitivityProof above is the substitute per the BLOCKED-005 hardening clause. Never re-greens or invalidates the primary (P0-01, F) entry's own already-GREEN cell; only contributes this case's title into BLOCKED-004 predicate (i)'s coverage-closure union, recorded in spec/first100/exec/acceptance-coverage.json's acceptanceIndex 1 citation."
     }
+,
+    {
+      "epic": "P0-06",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/schema/schema-registry/tests/compatibility.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "registers every known session-event payload type at 1.0",
+        "registers the named SDK protocol wire types at 1.0",
+        "exposes at least every bootstrapped schema through listSchemas()",
+        "registers a schema at its declared first version with the given migration",
+        "rejects a duplicate registration under the same schemaId, never silently replacing it",
+        "rejects an invalid first version {\"major\":0,\"minor\":0}",
+        "rejects an invalid first version {\"major\":1,\"minor\":-1}",
+        "rejects an invalid first version {\"major\":1.5,\"minor\":0}",
+        "accepts an additive-only change set that bumps only minor",
+        "rejects an additive-only change set that bumps major",
+        "accepts a breaking change set that bumps major by exactly 1 and resets minor to 0",
+        "rejects a breaking change set that bumps major but does not reset minor to 0",
+        "rejects an additive change set that does not increase minor",
+        "rejects a breaking change set that only bumps minor",
+        "rejects a breaking change set that skips a major version",
+        "rejects evolution declaring no changes",
+        "rejects evolving a schema that was never registered",
+        "reports compatible for an encountered version sharing the registered major, regardless of minor",
+        "returns a structured SchemaCompatibilityError, never a bare string, for a major mismatch",
+        "returns a structured SchemaCompatibilityError for an unregistered schemaId, never silently accepting it"
+      ],
+      "files": [
+        "packages/schema/schema-registry/tests/compatibility.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T06:10:00Z",
+      "dryRunProof": {
+        "treeSha": "6fc6b61133abb103ad20b39326b3b7ae5b89cd38",
+        "testsDiscovered": 20
+      },
+      "note": "P0-06 C-stage (2026-09-01): real registerSchema/evolveSchema/negotiateSchema/getSchema/listSchemas for @deepseek-ai/dsh-schema-registry -- versions only individual persisted/wire-protocol leaf objects (session-event payload shapes, sdk-protocol wire types), never the session log's own container format (SESSION_FORMAT_VERSION stays untouched, zero references), per maintainer decision BLOCKED-008's scope-split ruling (reading (a)). evolveSchema enforces must[2]/must[3]: additive-only changes bump minor strictly, any breaking change bumps major by exactly 1 and resets minor to 0. negotiateSchema returns a structured SchemaCompatibilityError (never a bare string, never silent field loss) per acceptance[1]. packages/core/session/src/known-event-types.ts is left untouched (fully generated, byte-exact --check gate, zero extension point) -- the registry instead bootstraps from its real KNOWN_SESSION_EVENT_TYPES export read-only, which cannot drift from the generated catalog by construction. packages/sdk/protocol/src/types.ts gains schemaId+version doc comments on every RPC request/result/notification payload type (nested field types like SdkEncodedImageBlock ride their container's schemaId, not separately registered). Real RED at commit b89d9924c2 (stub types.ts/index.ts): 18/18 failed, all genuine on-topic assertion/compiler-diagnostic failures, never module/syntax errors. Went through two rounds of Opus-level adversarial review (mandatory for this L1_CONTRACT epic per C1): round 1 found 2 real mutation-survivor gaps in evolveSchema's version-bump enforcement (a breaking bump not resetting minor to 0, and a no-op additive bump both went undetected by the then-18-test suite) plus a doc overclaim; round 2's fix closed both gaps (independently mutation-replayed before commit) but itself introduced fresh baseline drift by editing a tracked file without recapturing -- caught by a second review pass and fixed in a third commit. Final ACCEPT confirmed via a scoped third review. P0-01's .dsh/baseline.json was re-captured (this slice edits a baseline-tracked file); pnpm baseline:verify shows zero content drift, only the structurally-unavoidable self-referential gitSha exception at the exact recapture commit (same pattern already present in P0-01's own baseline commits)."
+    }
   ]
 }
