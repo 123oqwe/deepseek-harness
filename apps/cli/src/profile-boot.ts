@@ -32,6 +32,7 @@ import {
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
+import { createTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 
 const NAME = 'dsh'
@@ -184,6 +185,51 @@ export interface RunProfileOptions {
   args: readonly string[]
 }
 
+/** Env var whose non-empty value opts a development boot into skipping Trust Kernel initialization. */
+const TRUST_KERNEL_INSECURE_ENV = 'DSH_TRUST_KERNEL_INSECURE'
+
+/**
+ * Resolve the Trust Kernel insecure-boot opt-in (Epic P0-02 acceptance
+ * clause 3). ANY non-empty value opts in, mirroring
+ * {@link resolveTelemetryPatch}'s bias -- here the deliberate value is
+ * presence, not absence, because skipping a security control must be an
+ * explicit developer choice, never an accidental empty-string default.
+ *
+ * STUB (P0-02 U-stage RED slice): always resolves to "not opted in",
+ * ignoring `raw`. The real switch lands in this same slice's GREEN commit.
+ * @param raw - the raw DSH_TRUST_KERNEL_INSECURE value.
+ * @returns whether this boot may proceed without a pinned Trust Kernel.
+ */
+export function resolveTrustKernelInsecureOptIn(raw: string | undefined): boolean {
+  void raw
+  return false
+}
+
+/**
+ * Enforce Epic P0-02's fail-closed/insecure-opt-in split (must[1],
+ * acceptance clause 3) once host preparation has had its chance to pin
+ * `trustKernel`. A production boot (no opt-in) with no pinned kernel
+ * refuses to continue; an opted-in development boot prints a permanent
+ * warning -- every boot while the opt-in is set, not once -- and proceeds.
+ *
+ * STUB (P0-02 U-stage RED slice): always a no-op, regardless of
+ * `initialized`/`insecureOptIn`. The real enforcement lands in this same
+ * slice's GREEN commit.
+ * @param initialized - whether `ctx.get('trustKernel')` returned a value after preparation.
+ * @param insecureOptIn - the resolved {@link resolveTrustKernelInsecureOptIn} value.
+ * @param warn - sink for the permanent insecure-mode warning; defaults to a stderr write.
+ * @throws when uninitialized without the insecure opt-in.
+ */
+export function enforceTrustKernelPosture(
+  initialized: boolean,
+  insecureOptIn: boolean,
+  warn: (message: string) => void = (message) => { process.stderr.write(message) },
+): void {
+  void initialized
+  void insecureOptIn
+  void warn
+}
+
 /**
  * Re-throw a watcher-setup failure unless a shutdown already owns the tree:
  * a signal aborted this invocation, or an app requested exit (`ctx.appExit`
@@ -208,6 +254,11 @@ function suppressShutdownError(ctx: Context, signal: AbortSignal, error: unknown
  */
 export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Context; shutdown: ProcessShutdown }> {
   const composed = await composeProfile(options.profile, options.patchFiles)
+  const trustKernelInsecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
+  // Constructed before boot() creates the Cordis Context at all (must[1]):
+  // createTrustKernel is pure and synchronous, so it cannot itself fail --
+  // the insecure opt-in is the only way this boot proceeds without one.
+  const kernel: TrustKernel | undefined = trustKernelInsecure ? undefined : createTrustKernel()
   const app: { current?: Context } = {}
   const appReady = createAppReady()
   const shutdown = createProcessShutdown(async () => { await app.current?.fiber.dispose() })
@@ -260,6 +311,10 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
       exit: code => void shutdown.shutdown(code),
       ready: appReady.service,
     })
+    // Never ctx.plugin(...): a Trust Kernel pinned through the Loader would
+    // be a replaceable Cordis Service, exactly what must[2] forbids.
+    if (kernel !== undefined) hostCtx.provide('trustKernel', kernel)
+    enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
   })
   app.current = ctx
   // A live-reload profile can dispose the whole tree while post-boot watcher
