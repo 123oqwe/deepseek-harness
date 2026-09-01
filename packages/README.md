@@ -78,6 +78,7 @@ Every package lives in exactly one group; new packages join existing groups, and
 | [`test-support/`](test-support/README.md) | Support infrastructure (testkits, invariants, replay, Loader smokes) |
 | [`runtime-diagnostics/`](runtime-diagnostics/README.md) | Runtime diagnostics: package-owned invariant checks and reports |
 | [`util/`](util/README.md) | Low-level zero-dependency utilities shared across groups (`Branded<B>`, home/path helpers, timeout, retention) |
+| [`kernel/`](kernel/README.md) | Minimal, non-replaceable Trust Kernel boundary: root identity, signature roots, policy enforcement, audit append, secret broker handle, sandbox attestation verifier |
 
 -----
 
