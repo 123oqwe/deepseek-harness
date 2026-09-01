@@ -157,5 +157,68 @@
       },
       "note": "P0-06 C-stage (2026-09-01): real registerSchema/evolveSchema/negotiateSchema/getSchema/listSchemas for @deepseek-ai/dsh-schema-registry -- versions only individual persisted/wire-protocol leaf objects (session-event payload shapes, sdk-protocol wire types), never the session log's own container format (SESSION_FORMAT_VERSION stays untouched, zero references), per maintainer decision BLOCKED-008's scope-split ruling (reading (a)). evolveSchema enforces must[2]/must[3]: additive-only changes bump minor strictly, any breaking change bumps major by exactly 1 and resets minor to 0. negotiateSchema returns a structured SchemaCompatibilityError (never a bare string, never silent field loss) per acceptance[1]. packages/core/session/src/known-event-types.ts is left untouched (fully generated, byte-exact --check gate, zero extension point) -- the registry instead bootstraps from its real KNOWN_SESSION_EVENT_TYPES export read-only, which cannot drift from the generated catalog by construction. packages/sdk/protocol/src/types.ts gains schemaId+version doc comments on every RPC request/result/notification payload type (nested field types like SdkEncodedImageBlock ride their container's schemaId, not separately registered). Real RED at commit b89d9924c2 (stub types.ts/index.ts): 18/18 failed, all genuine on-topic assertion/compiler-diagnostic failures, never module/syntax errors. Went through two rounds of Opus-level adversarial review (mandatory for this L1_CONTRACT epic per C1): round 1 found 2 real mutation-survivor gaps in evolveSchema's version-bump enforcement (a breaking bump not resetting minor to 0, and a no-op additive bump both went undetected by the then-18-test suite) plus a doc overclaim; round 2's fix closed both gaps (independently mutation-replayed before commit) but itself introduced fresh baseline drift by editing a tracked file without recapturing -- caught by a second review pass and fixed in a third commit. Final ACCEPT confirmed via a scoped third review. P0-01's .dsh/baseline.json was re-captured (this slice edits a baseline-tracked file); pnpm baseline:verify shows zero content drift, only the structurally-unavoidable self-referential gitSha exception at the exact recapture commit (same pattern already present in P0-01's own baseline commits)."
     }
+,
+    {
+      "epic": "P0-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "imports nothing: the kernel type surface depends on no other package",
+        "has no runtime code: every top-level statement is a type/interface declaration or an ambient declare-const symbol",
+        "declares an exported TrustKernel interface with exactly the six must[2] members, all readonly, and no methods",
+        "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+        "brands TrustKernelRootIdentity as an opaque interface, never a plain type alias",
+        "brands TrustKernelSignatureRoots as an opaque interface, never a plain type alias",
+        "brands TrustKernelSecretBrokerHandle as an opaque interface, never a plain type alias",
+        "keeps TrustKernelPolicyQuery.payload exactly `unknown` -- no business-domain field on the kernel surface",
+        "keeps TrustKernelAuditEntry.payload exactly `unknown` -- no business-domain field on the kernel surface",
+        "keeps TrustKernelSandboxAttestation.payload exactly `unknown` -- no business-domain field on the kernel surface",
+        "TrustKernelRootIdentity's brand symbol TRUST_KERNEL_ROOT_IDENTITY carries no export modifier",
+        "TrustKernelSignatureRoots's brand symbol TRUST_KERNEL_SIGNATURE_ROOTS carries no export modifier",
+        "TrustKernelSecretBrokerHandle's brand symbol TRUST_KERNEL_SECRET_BROKER carries no export modifier",
+        "gives TrustKernelRootIdentity exactly one member, a computed property keyed by TRUST_KERNEL_ROOT_IDENTITY",
+        "gives TrustKernelSignatureRoots exactly one member, a computed property keyed by TRUST_KERNEL_SIGNATURE_ROOTS",
+        "gives TrustKernelSecretBrokerHandle exactly one member, a computed property keyed by TRUST_KERNEL_SECRET_BROKER",
+        "exports none of the three branding symbols by name, per the real compiler's own module-exports list",
+        "type-checks a well-formed TrustKernel usage with zero diagnostics",
+        "rejects reassigning a TrustKernel member -- every capability is readonly",
+        "rejects constructing an opaque handle from an object literal -- no legitimate value exists outside an unsafe cast",
+        "names models among what remains a plugin",
+        "names tools among what remains a plugin",
+        "names storage providers among what remains a plugin",
+        "names workflow among what remains a plugin",
+        "names memory provider among what remains a plugin",
+        "names ui among what remains a plugin",
+        "names root identity among what is never a plugin",
+        "names deny enforcement among what is never a plugin",
+        "names audit-chain root among what is never a plugin",
+        "names signature-verification root among what is never a plugin",
+        "cross-references the TrustKernel type surface and the ctx.provide/ctx.plugin distinction",
+        "documents the auditAppend capability",
+        "documents the policyEnforcement capability",
+        "documents the rootIdentity capability",
+        "documents the sandboxAttestationVerifier capability",
+        "documents the secretBroker capability",
+        "documents the signatureRoots capability",
+        "cross-references the boundary doc and this slice's own test file"
+      ],
+      "files": [
+        "packages/kernel/trust-kernel/tests/boundary.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T06:40:00Z",
+      "dryRunProof": {
+        "treeSha": "552da8935430cd9fa1505cdf744d776c76beeb63",
+        "testsDiscovered": 38
+      },
+      "note": "P0-02 C-stage (2026-09-01): the TrustKernel narrow, unforgeable capability-surface type contract for @deepseek-ai/dsh-trust-kernel. Real RED at commit e95ca9e584 (stub types.ts exporting only a placeholder interface): 10/31 failed, all genuine TypeScript compiler diagnostics/structural mismatches, never module/syntax errors. Went through THREE rounds of Opus-level adversarial review (mandatory for this L0_KERNEL epic per C1): round 1 found a real gap -- the suite proved the surface was narrow and readonly but never actually tested unforgeability (2 of 5 seeded mutations, exporting a brand symbol or replacing it with an ordinary field, survived); fixed with 7 new tests (31->38), independently mutation-replayed twice before/after by two separate reviewers. Round 2 found the fix's honest package.json correction (dropping phantom main/types fields pointing at a lib/index.js this slice didn't yet produce) broke the repo-wide check-workspace-constraints.ts gate -- routed to the delegate as BLOCKED-009 (a brand-new package's C-stage-only slice structurally can't satisfy that gate without an index.ts). Delegate ruling: a pure-type-only src/index.ts (export type re-export only, zero runtime/Cordis surface) is now mandatory B4(f) scaffold for every future new-package C-stage slice, not a one-off. Round 3 found docs/module-graph (a peerDependencies-derived generated artifact) still stale on this package's own edge -- regenerated. Final ACCEPT confirmed via self-verification against the unmodified, already-reviewed gate scripts (typecheck, check-workspace-constraints.ts, verify-module-graph, publint, vitest all clean). A real, unrelated, pre-existing defect from P0-01.U's already-ACCEPTED slice was surfaced along the way (verify-cordis-config: packages/bundle/base/cordis.patch.yml references @deepseek-ai/dsh-baseline-preflight without declaring it in packages/bundle/base/package.json's dependencies) -- noted, not fixed here, out of scope for this epic."
+    }
   ]
 }
