@@ -430,16 +430,24 @@ export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
  * satisfies this trivially. A genuinely evolving epic (each stage's slice
  * landing at its own, later commit as the epic's implementation grew) is
  * legitimate too, but only when the distinct SHAs form one real, linear git
- * ancestry chain -- checked directly against this repository's actual commit
- * graph via `git merge-base --is-ancestor` (every pair totally ordered),
- * never a free-text "trust me, it evolved" claim. Two genuinely divergent
- * SHAs (neither an ancestor of the other -- a real fork, not an evolution)
- * fail closed.
+ * ancestry chain -- checked directly against a real git repository's actual
+ * commit graph via `git merge-base --is-ancestor` (every pair totally
+ * ordered), never a free-text "trust me, it evolved" claim. Two genuinely
+ * divergent SHAs (neither an ancestor of the other -- a real fork, not an
+ * evolution) fail closed.
+ *
+ * `gitRoot` defaults to this repository's own root (the real usage: `--accept`
+ * always runs locally against the Supervisor's full-history clone, never
+ * inside a CI job's shallow (`fetch-depth: 1`) checkout, which would lack the
+ * historical objects `merge-base` needs). Tests pass a throwaway fixture repo
+ * instead of depending on this repository's own commit graph, which is not
+ * guaranteed to be a full clone wherever the test itself runs.
+ * @param {string} [gitRoot] - repository root `merge-base` runs against.
  */
-export function checkCandidateChainConsistency(row, applicableStages) {
+export function checkCandidateChainConsistency(row, applicableStages, gitRoot = REPO_ROOT) {
   const shas = [...new Set(applicableStages.map((stage) => row.cells[stage]?.candidateSha).filter((sha) => sha !== undefined))]
   if (shas.length <= 1) return { valid: true, candidateShas: shas, divergentPairs: [] }
-  const isAncestor = (a, b) => spawnSync('git', ['merge-base', '--is-ancestor', a, b], { cwd: REPO_ROOT }).status === 0
+  const isAncestor = (a, b) => spawnSync('git', ['merge-base', '--is-ancestor', a, b], { cwd: gitRoot }).status === 0
   const divergentPairs = []
   for (let i = 0; i < shas.length; i += 1) {
     for (let j = i + 1; j < shas.length; j += 1) {

@@ -35,6 +35,6 @@ export function checkCoverageClosure(
   row: unknown,
 ): CoverageClosureResult
 
-export function checkCandidateChainConsistency(row: unknown, applicableStages: string[]): CandidateChainResult
+export function checkCandidateChainConsistency(row: unknown, applicableStages: string[], gitRoot?: string): CandidateChainResult
 
 export function checkObservationDistinctness(row: unknown, applicableStages: string[]): ObservationDistinctnessResult

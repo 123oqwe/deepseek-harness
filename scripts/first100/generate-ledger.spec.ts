@@ -18,17 +18,44 @@
  *     supplements.
  */
 import { execFileSync } from 'node:child_process'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 
 import { checkCandidateChainConsistency, checkCoverageClosure, checkObservationDistinctness } from './generate-ledger.mjs'
 
-const here = dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = join(here, '..', '..')
+// checkCandidateChainConsistency's real usage always runs locally against
+// the Supervisor's own full-history clone -- never inside a CI job's shallow
+// (fetch-depth: 1) checkout, which lacks the historical objects
+// `git merge-base --is-ancestor` needs. So these tests build their own
+// throwaway, real git repository with real commits, rather than depending on
+// this repository's own commit graph being fully present wherever the test
+// itself happens to run.
+const fixtureRoots: string[] = []
+afterEach(() => {
+  for (const root of fixtureRoots.splice(0)) rmSync(root, { recursive: true, force: true })
+})
 
-function head(ref: string): string {
-  return execFileSync('git', ['rev-parse', ref], { cwd: REPO_ROOT, encoding: 'utf8' }).trim()
+function git(cwd: string, args: string[]): string {
+  return execFileSync('git', args, { cwd, encoding: 'utf8', env: { ...process.env, LANG: 'C', LC_ALL: 'C' } }).trim()
+}
+
+function makeGitFixture(): string {
+  const root = mkdtempSync(join(tmpdir(), 'dsh-candidate-chain-'))
+  fixtureRoots.push(root)
+  git(root, ['init', '--initial-branch=main'])
+  git(root, ['config', 'user.email', 'fixture@example.com'])
+  git(root, ['config', 'user.name', 'Fixture'])
+  git(root, ['config', 'commit.gpgsign', 'false'])
+  return root
+}
+
+function commit(root: string, message: string, fileContent: string): string {
+  writeFileSync(join(root, 'file.txt'), fileContent)
+  git(root, ['add', '-A'])
+  git(root, ['commit', '-m', message])
+  return git(root, ['rev-parse', 'HEAD'])
 }
 
 const registry = {
@@ -111,32 +138,28 @@ describe('checkCandidateChainConsistency', () => {
     expect(checkCandidateChainConsistency(row, ['C', 'F'])).toEqual({ valid: true, candidateShas: ['a'.repeat(40)], divergentPairs: [] })
   })
 
-  it('green: distinct SHAs that form a real linear git ancestry chain (this repo\'s own history) are valid', () => {
-    const older = head('a8378e81ec~1')
-    const newer = head('a8378e81ec')
+  it('green: distinct SHAs that form a real linear git ancestry chain are valid', () => {
+    const root = makeGitFixture()
+    const older = commit(root, 'first', 'a')
+    const newer = commit(root, 'second', 'b')
     const row = { cells: { C: { candidateSha: older }, F: { candidateSha: newer } } }
-    const result = checkCandidateChainConsistency(row, ['C', 'F'])
+    const result = checkCandidateChainConsistency(row, ['C', 'F'], root)
     expect(result.valid).toBe(true)
     expect(result.divergentPairs).toEqual([])
   })
 
-  it('red: two commits with no ancestry relationship (genuinely divergent) are rejected', () => {
-    // the repo's very first commit and a random later commit on an unrelated
-    // lineage are not ancestor-related in either direction is not guaranteed
-    // in a real repo (everything descends from init) -- so instead construct
-    // two real, unrelated root-ish points is unreliable; use two commits we
-    // know are NOT ancestor-related by picking one commit and a sibling from
-    // a different, non-overlapping branch tip is out of scope for a unit
-    // test without a fixture repo. Exercise the negative path directly
-    // against the pure function's own ancestry check with fabricated (but
-    // real, unrelated) SHA-shaped strings that git will report as "not an
-    // ancestor" (spawnSync exits non-zero for unknown objects too, which the
-    // implementation treats the same as "not an ancestor" -- documented,
-    // conservative fail-closed behavior).
-    const row = { cells: { C: { candidateSha: '1'.repeat(40) }, F: { candidateSha: '2'.repeat(40) } } }
-    const result = checkCandidateChainConsistency(row, ['C', 'F'])
+  it('red: two commits with no ancestry relationship (a real fork, not an evolution) are rejected', () => {
+    const root = makeGitFixture()
+    const base = commit(root, 'base', 'a')
+    git(root, ['checkout', '-b', 'branch-a'])
+    const tipA = commit(root, 'branch a tip', 'b')
+    git(root, ['checkout', base])
+    git(root, ['checkout', '-b', 'branch-b'])
+    const tipB = commit(root, 'branch b tip', 'c')
+    const row = { cells: { C: { candidateSha: tipA }, F: { candidateSha: tipB } } }
+    const result = checkCandidateChainConsistency(row, ['C', 'F'], root)
     expect(result.valid).toBe(false)
-    expect(result.divergentPairs).toEqual([['1'.repeat(40), '2'.repeat(40)]])
+    expect(result.divergentPairs).toEqual([[tipA, tipB]])
   })
 
   it('no applicable stage carries a candidateSha yet: vacuously valid (nothing to check)', () => {
