@@ -9,9 +9,11 @@
  * checks, the real `packages/settings/settings/src/types.ts`) by absolute
  * path and asserts on the compiler's own diagnostics -- a genuine,
  * on-topic, runtime-executed proof of a compile-time guarantee, matching
- * what this Contract-stage slice can honestly test. Runtime evaluation
- * logic (Provider stage) and CLI/profile wiring (`--dump-config`, Usage
- * stage) are later slices' acceptance cases.
+ * what a types-only module can honestly test. `src/index.ts` has since grown
+ * a real Provider-stage runtime surface alongside its unchanged type
+ * re-export; see `tests/gates.provider.spec.ts` for that surface's own
+ * acceptance cases. CLI/profile wiring (`--dump-config`, Usage stage)
+ * remains a later slice's deliverable.
  */
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -529,11 +531,11 @@ describe('src/types.ts hygiene (Epic P0-05 Contract stage: types-only, no plugin
   })
 })
 
-describe('src/index.ts is a pure type-only re-export (mandatory B4(f) scaffold, not the epic\'s deliverable)', () => {
-  it('has exactly one statement: a type-only `export type * from \'./types.ts\'`', () => {
-    expect(indexSourceFile.statements).toHaveLength(1)
-    const statement = indexSourceFile.statements[0]!
-    expect(ts.isExportDeclaration(statement), 'sole statement must be an export declaration').toBe(true)
+describe('src/index.ts still re-exports every Contract-stage type (Provider stage added real runtime exports alongside it, see tests/gates.provider.spec.ts)', () => {
+  it('keeps `export type * from \'./types.ts\'` as its first statement, so every Contract-stage type stays reachable unchanged', () => {
+    const statement = indexSourceFile.statements[0]
+    expect(statement, 'src/index.ts must have at least one statement').toBeDefined()
+    expect(ts.isExportDeclaration(statement!), 'first statement must be an export declaration').toBe(true)
     const exportDecl = statement as ts.ExportDeclaration
     expect(exportDecl.isTypeOnly, 'export declaration must be `export type *`').toBe(true)
     expect(exportDecl.exportClause, 'a wildcard re-export has no export clause').toBeUndefined()
