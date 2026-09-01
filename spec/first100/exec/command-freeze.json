@@ -688,6 +688,36 @@
         "testsDiscovered": 50
       },
       "note": "P0-07 P-stage (2026-09-01), the real Release Evidence Package collector/verifier: `collect-evidence.mjs` (init/run/build-artifact subcommands) reuses P0-01's real `baseline-fingerprint.mjs` mechanism (not reimplemented) plus a real `git diff`, seeds every declared required gate as an honest `MissingGateEvidence` placeholder, spawns real gate commands recording real exit codes/timestamps/log digests, and recomputes `accepted` from real state on every write (must[2] against real collected data, not just the C-stage compile-time proof). `verify-evidence.mjs` independently recomputes every digest from current on-disk bytes and re-derives must[2], never trusting the recorded fields. Real RED->GREEN: stubbed both scripts, all 9 new behavioral tests failed for the right reason (real `not implemented` exit codes); real implementation passes, 50/50 across tests/release/ (38 C+P in evidence-package.spec.ts + 12 in baseline-fingerprint.spec.ts). Independent review ACCEPT after real adversarial attack attempts distinct from the Writer's own tests: mutated a byte in `.dsh/baseline.json` (a file the Writer's suite never touches) -> caught; hand-tampered `accepted:false->true` on a genuinely-incomplete package -> caught by signature mismatch AND the independent must[2] re-derivation; **forged a self-consistent signature over the tampered package** (the strongest attack this design's own doc comment admits it cannot stop) -> still caught, purely by `verifyAcceptedInvariant`'s independent recomputation from real gate data, proving `accepted` is never gated by the signature alone. Offline verification (acceptance[1]) independently re-confirmed by deleting the actual gate scripts from disk after a real accepted round-trip and confirming verify still passes via pure digest recomputation. `signature` is honestly documented (JSDoc, both files) as a content-integrity digest, not a keyed cryptographic signature -- explicitly does not claim to stop an attacker who edits evidence.json and recomputes a matching digest; the forged-signature attack above confirms this stated limit is real and that must[2]'s re-derivation is what actually closes the gap. acceptance[2] (\"Agent's final answer must cite the package path and accepted status\") independently confirmed out of P-stage scope -- a calling-agent/reporting behavior no release CLI script can mechanically enforce, not a scope-dodge. No BLOCKED-012 deviation -- files[] matched the registry's P-stage declaration exactly; the extended test cases live in C-stage's already-frozen evidence-package.spec.ts file, same pattern as P0-06.F's jsonl.spec.ts extension."
+    },
+    {
+      "epic": "P0-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "wires evidence:collect/evidence:verify in the real package.json to the real P-stage scripts",
+        "pnpm run evidence:collect/evidence:verify actually execute the real scripts end-to-end against a throwaway fixture",
+        "docs/testing.md documents the pnpm evidence:collect/evidence:verify commands",
+        "AGENTS.md states the evidence-gate reporting convention (acceptance[2]: cite package path and accepted status)"
+      ],
+      "files": [
+        "package.json",
+        "docs/testing.md",
+        "AGENTS.md"
+      ],
+      "frozenAtUtc": "2026-09-01T22:55:00Z",
+      "dryRunProof": {
+        "treeSha": "9577887ffc4f2a34ebfe8e1916e95acbca49a19b",
+        "testsDiscovered": 4
+      },
+      "note": "P0-07 U-stage (2026-09-01), wiring the collect/verify scripts into the real command surface and documentation. `package.json` gets real `evidence:collect`/`evidence:verify` pnpm scripts (no hardcoded subcommand, since collect-evidence.mjs's 3 subcommands each take release-specific required flags that a fixed entry would violate 'no hardcoded tunables' to own); `docs/testing.md` gets a new 'Release evidence package' section mirroring the existing baseline-preflight precedent; `AGENTS.md` gets a Conventions bullet, 'Evidence-gate reporting', directly restating acceptance[2] ('the Agent's final answer must cite the evidence package path and accepted status') -- independently confirmed as the correct scope: this is a documented convention for how contributors/agents report results, not a runtime enforcement point a release script could mechanically own. Both docs were already near their word-budget ceiling (AGENTS.md 2029/2030, docs/testing.md exactly 1300/1300 after this change) -- independently verified that every condensed clause survives at its linked authoritative source, nothing actually lost. Real RED->GREEN: reverting the package.json scripts alone (nothing else) makes the wiring test genuinely fail (real subprocess 'command not found' style failure); real implementation passes, 4/4. A new `tests/first100/fixtures/P0-07.composition.spec.ts` (the registry's own declared `fixtures.composition` path) runs a real end-to-end pnpm-run subprocess chain (baseline:capture -> evidence:collect init/run -> evidence:verify) against a throwaway git fixture, not mocked. Independent review confirmed the 5 pre-existing, unrelated gate failures the Writer flagged (verify-md-links/md-wrap/package-readme-model-experience/package-readme-limitations/doc-graphs) are byte-for-byte identical between this branch and its real base commit -- genuinely pre-existing, not caused or worsened by this diff. Independent review: ACCEPT."
     }
   ]
 }
