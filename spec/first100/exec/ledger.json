@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T00:52:18.242Z",
-  "inputDigest": "f90beb8b5cdd336e0c1593127fd366b3e8512bc6fb05786a9963f2f389ce00da",
+  "lastUpdatedUtc": "2026-09-01T03:23:52.920Z",
+  "inputDigest": "1d34cfe40e75eefc61d6c8ff17c6c06a111f8514a9d4310ad796fe16e602d92a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -41,7 +41,19 @@
           "status": "NOT_RUN"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "b0ac88f5732a2ae3303c829027048eec68b4d572",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33463612783",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-artifacts-u-green/first100-evidence-b0ac88f5732a2ae3303c829027048eec68b4d572/vitest-report.json",
+          "observationSha256": "5265c6c5b88a616c4848ee67bd7900f23019be97c2a257cdc39550fc010abb41",
+          "expectCasesMatched": [
+            "boots a clean fixture normally through the real Loader composition",
+            "aborts startup with the drifted path when the fixture is tampered after capture",
+            "no-ops when the checkout has no captured baseline",
+            "resolves without throwing against an unmodified captured baseline",
+            "throws naming the drifted path when the fixture is tampered after capture"
+          ],
+          "capturedAtUtc": "2026-09-01T03:23:52.913Z"
         },
         "F": {
           "status": "GREEN",
@@ -58,7 +70,7 @@
           "capturedAtUtc": "2026-09-01T00:52:18.241Z"
         }
       },
-      "candidateSha": "926b72a2febad5002841aa2bb1f6dd6b9a55f977",
+      "candidateSha": "b0ac88f5732a2ae3303c829027048eec68b4d572",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN"
