@@ -240,3 +240,38 @@ describe('release/baseline-fingerprint fault/tamper contract (P0-01 F-stage)', (
     }
   })
 })
+
+describe('release/baseline-fingerprint npm-script contract (P0-01 P-stage)', () => {
+  it('wires baseline:capture/baseline:verify in package.json to the real script, and pnpm run actually executes it', () => {
+    const rootPackageJson = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
+      scripts?: Record<string, string>
+    }
+    expect(rootPackageJson.scripts?.['baseline:capture']).toBe('node scripts/release/baseline-fingerprint.mjs capture')
+    expect(rootPackageJson.scripts?.['baseline:verify']).toBe('node scripts/release/baseline-fingerprint.mjs verify')
+
+    const { root } = makeFixture()
+    const fixturePackageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as Record<string, unknown>
+    write(
+      root,
+      'package.json',
+      `${JSON.stringify(
+        {
+          ...fixturePackageJson,
+          scripts: {
+            'baseline:capture': `node ${scriptPath} capture`,
+            'baseline:verify': `node ${scriptPath} verify`,
+          },
+        },
+        null,
+        2,
+      )}\n`,
+    )
+
+    const captureResult = spawnSync('pnpm', ['run', 'baseline:capture'], { cwd: root, encoding: 'utf8' })
+    expect(captureResult.status, `pnpm run baseline:capture stderr: ${captureResult.stderr}`).toBe(0)
+    expect(existsSync(join(root, '.dsh/baseline.json')), 'pnpm run baseline:capture must write .dsh/baseline.json').toBe(true)
+
+    const verifyResult = spawnSync('pnpm', ['run', 'baseline:verify'], { cwd: root, encoding: 'utf8' })
+    expect(verifyResult.status, `pnpm run baseline:verify stderr: ${verifyResult.stderr}`).toBe(0)
+  })
+})
