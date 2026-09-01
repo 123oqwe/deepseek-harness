@@ -4,7 +4,7 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T05:10:25.227Z",
+  "lastUpdatedUtc": "2026-09-01T05:50:51.449Z",
   "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
@@ -78,12 +78,49 @@
           "capturedAtUtc": "2026-09-01T00:52:18.241Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "F.1": {
+          "status": "GREEN",
+          "candidateSha": "af01a06bc96041757cc5ac58c6f0cd5ba6708092",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33473101218",
+          "observationReportPath": "/tmp/first100-ledger-inputs/supplement-vitest-report.json",
+          "observationSha256": "f7ec8159487f68b8a45bd7c377a51a3a84369fb06737a037708098e0fa857102",
+          "expectCasesMatched": [
+            "verify fails and names the drifted workspace package manifest"
+          ],
+          "capturedAtUtc": "2026-09-01T05:50:37.084Z"
+        }
+      },
       "candidateSha": "23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-01T05:50:41.009Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33449096357",
+            "candidateSha": "8d5f94d6c25fe01319079ea6ae6fbdad11ed64dd"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33469268880",
+            "candidateSha": "23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33463612783",
+            "candidateSha": "b0ac88f5732a2ae3303c829027048eec68b4d572"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33455153044",
+            "candidateSha": "926b72a2febad5002841aa2bb1f6dd6b9a55f977"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        }
+      }
     },
     "P0-02": {
       "id": "P0-02",
