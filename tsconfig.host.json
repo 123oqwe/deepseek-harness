@@ -266,6 +266,7 @@
     { "path": "./packages/guard/baseline-preflight" },
     { "path": "./packages/runtime-diagnostics/invariants" },
     { "path": "./packages/kernel/trust-kernel" },
+    { "path": "./packages/assurance/evidence-format" },
     { "path": "./packages/test-support/agent-loop-testkit" },
     { "path": "./packages/acp/acp" },
     { "path": "./packages/bundle/acp-app" },
