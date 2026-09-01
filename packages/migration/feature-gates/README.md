@@ -17,6 +17,7 @@ This package currently has no runtime code: `src/index.ts` is a pure `export typ
 - [Understand the implementation](#understand-the-implementation)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
 
 -----
 
@@ -44,7 +45,7 @@ const state: FeatureGateState = 'shadow'
 
 | File | Role |
 |---|---|
-| [`src/types.ts`](src/types.ts) | The full Contract-stage type surface: `FeatureGateState`, `FeatureGateDeclaration`, `FeatureGateNamespaceValue` (settings interop), `FeatureGateOverrideSource`/`FeatureGateResolution` (override chain), `FeatureGateShadowDecisionRecord` (sanitized diff), `FeatureGateExpiryStatus`/`FeatureGateExpiryCheck` |
+| [`src/types.ts`](src/types.ts) | The full Contract-stage type surface: `FeatureGateState`, `FeatureGateDeclaration`, `FeatureGateNamespaceValue` (settings interop), `FeatureGateOverrideSource`/`FeatureGateResolution` (override chain), `RedactedJsonValue`/`FeatureGateShadowDecisionRecord` (nominally-branded diff), `FeatureGateExpiryStatus`/`FeatureGateExpiryCheck` |
 | [`src/index.ts`](src/index.ts) | Pure `export type *` re-export -- zero runtime surface |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty -- no gate registry or decision event stream exists yet to check a relation over |
 
@@ -74,3 +75,13 @@ Independent: the package registers nothing that participates in a model request.
 
 - **No runtime gate registry, evaluation, or `--dump-config` wiring yet** -- this is a Contract-stage-only slice (Epic P0-05); a Provider-stage slice must add real registration/evaluation against `packages/settings/settings/src/index.ts`'s `SettingsProvider`, and a Usage-stage slice must wire `--dump-config` (`apps/cli/src/dump-config.ts`) to render `FeatureGateResolution`'s override chain and `apps/cli/src/profile-boot.ts`/`packages/bundle/base/cordis.patch.yml` to carry `defaultByProfile`.
 - **No release-gate check implementation** -- `FeatureGateExpiryCheck` fixes the check's signature only; the actual comparison against a release version, and wiring it into the repository's release gate, is a later slice's deliverable (Epic P0-05 acceptance[2]).
+
+<a id="dev-note"></a>
+### Dev Note
+
+<details>
+<summary>Working context for maintainers -- click to expand</summary>
+
+`@deepseek-ai/dsh-brand` sits in both `peerDependencies` and `devDependencies`, matching `dsh-trust-kernel`/`dsh-settings`'s own classification. `@deepseek-ai/dsh-util-values` sits in `devDependencies` only, even though both are `import type`-only here: `dsh-util-values` never appears in any workspace package's `peerDependencies` (checked across every consumer in `packages/`), and `devDependencies`-only is specifically what every OTHER type-only consumer of it uses too (`dsh-client-connection`, `dsh-client-ui-settings`, `dsh-client-ui-settings-models`, `dsh-cordis-client-runner` -- each imports only `JsonValue` via `import type`, same as this package). The ~35 remaining workspace consumers that put it in real `dependencies` all call one of its runtime exports (`isJsonValue`, `snapshotJsonValue`, `deepEqualJson`, `assertNever`, `deepFreeze`); this package calls none of them.
+
+</details>

@@ -116,24 +116,57 @@ export interface FeatureGateResolution {
   readonly chain: readonly FeatureGateOverrideEntry[]
 }
 
+declare const REDACTED_JSON_VALUE: unique symbol
+
 /**
- * The complete, sanitized difference between one gate's shadow decision and
- * the legacy decision it ran alongside (Epic P0-05 acceptance[1]).
- * `legacySummary` and `shadowSummary` are `JsonValue`, not `unknown`: unlike
- * `TrustKernelPolicyQuery`'s deliberately opaque `unknown` payload
- * (`@deepseek-ai/dsh-trust-kernel/types`), a shadow record is written to a
- * comparable event a later analysis reads, so a caller must construct an
- * already-redacted, JSON-safe summary before this type will accept it --
- * there is no raw-parameter field to leak sensitive data through by
- * accident.
+ * A `JsonValue` a caller has explicitly cast through, marking it as already
+ * redacted before it reaches {@link FeatureGateShadowDecisionRecord}. Brands
+ * a `JsonValue` with an unexported `unique symbol` (declared above, never
+ * exported from this module) -- the same opaque-handle idiom
+ * `@deepseek-ai/dsh-trust-kernel/types` uses for `TrustKernelRootIdentity`:
+ * this module exports no value or function that produces one, so an
+ * ordinary `JsonValue` -- including one built by spreading raw, unredacted
+ * decision parameters -- does not satisfy this type implicitly; the caller
+ * must write a deliberate, greppable cast: `as RedactedJsonValue` for a
+ * value already typed `JsonValue`, or `as unknown as RedactedJsonValue` for
+ * a fresh object literal TypeScript has not yet widened to `JsonValue` --
+ * the checker's own union-overlap rule (TS2352) rejects the single-step
+ * form there.
+ *
+ * What this narrows, precisely: only the ACCIDENTAL path -- a bare
+ * `JsonValue` or object literal assigned where a redacted summary is
+ * required -- stops type-checking. What it does not and cannot narrow:
+ * TypeScript has no way to decide whether the cast content is actually free
+ * of secrets, so a caller who casts unredacted data through still compiles
+ * clean. Verifying that a value's content has actually been stripped of
+ * secrets is a runtime, schema-driven check --
+ * `packages/settings/settings/src/redact.ts`'s `redactSecrets` is this
+ * repo's one real redaction implementation, and it returns `unknown`, not a
+ * branded type, because the actual guarantee lives in what the function
+ * does at runtime, not in its return type. The equivalent real check for
+ * shadow/legacy summaries is a later Provider-stage slice's runtime
+ * obligation, not a guarantee this Contract-stage type makes on its own.
+ */
+export type RedactedJsonValue = JsonValue & { readonly [REDACTED_JSON_VALUE]: true }
+
+/**
+ * The complete difference between one gate's shadow decision and the legacy
+ * decision it ran alongside (Epic P0-05 acceptance[1]). `legacySummary` and
+ * `shadowSummary` are {@link RedactedJsonValue}, not `JsonValue` and not
+ * `unknown`: unlike `TrustKernelPolicyQuery`'s deliberately opaque `unknown`
+ * payload (`@deepseek-ai/dsh-trust-kernel/types`), a shadow record is
+ * written to a comparable event a later analysis reads, so its fields stay
+ * JSON-shaped and legible -- but a bare `JsonValue` no longer satisfies them
+ * implicitly. See {@link RedactedJsonValue}'s own doc comment for exactly
+ * what that brand does and does not prove.
  */
 export interface FeatureGateShadowDecisionRecord {
   /** The gate this record compares. */
   readonly gateId: FeatureGateId
-  /** Pre-redacted summary of the legacy (actually-applied) decision. */
-  readonly legacySummary: JsonValue
-  /** Pre-redacted summary of the shadow (evaluated-only) decision. */
-  readonly shadowSummary: JsonValue
+  /** Legacy (actually-applied) decision summary, cast through {@link RedactedJsonValue}. */
+  readonly legacySummary: RedactedJsonValue
+  /** Shadow (evaluated-only) decision summary, cast through {@link RedactedJsonValue}. */
+  readonly shadowSummary: RedactedJsonValue
   /** Whether the two summaries disagree. */
   readonly differs: boolean
 }

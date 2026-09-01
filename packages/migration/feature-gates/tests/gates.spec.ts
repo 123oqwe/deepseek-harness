@@ -129,6 +129,39 @@ function diagnosticMessages(diagnostics: readonly ts.Diagnostic[]): string {
   return diagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')).join('\n')
 }
 
+/** Find a top-level `declare const <name>: ...` statement by the name of its sole declarator. */
+function findAmbientConst(name: string): ts.VariableStatement | undefined {
+  return typesSourceFile.statements.find(
+    (statement): statement is ts.VariableStatement =>
+      ts.isVariableStatement(statement)
+      && (statement.modifiers?.some(m => m.kind === ts.SyntaxKind.DeclareKeyword) ?? false)
+      && statement.declarationList.declarations.some(d => ts.isIdentifier(d.name) && d.name.text === name),
+  )
+}
+
+/**
+ * Type-check a virtual `import * as T from '<types.ts>'` usage file and return the real
+ * compiler's own list of `types.ts`'s exported names -- matching
+ * `packages/kernel/trust-kernel/tests/boundary.spec.ts`'s own `typesModuleExportedNames`, a
+ * genuine "the export list does not contain X" check, not a hand-maintained snapshot.
+ */
+function typesModuleExportedNames(): string[] {
+  const virtualDir = mkdtempSync(join(tmpdir(), 'feature-gates-exports-'))
+  const virtualPath = join(virtualDir, 'usage.ts')
+  try {
+    writeFileSync(virtualPath, `import * as T from ${JSON.stringify(typesPath)}\nT satisfies object\n`, 'utf8')
+    const program = ts.createProgram([virtualPath], compilerProbeOptions)
+    const checker = program.getTypeChecker()
+    const virtualTypesSourceFile = program.getSourceFile(typesPath)
+    if (virtualTypesSourceFile === undefined) throw new Error('virtual program did not resolve src/types.ts')
+    const moduleSymbol = checker.getSymbolAtLocation(virtualTypesSourceFile)
+    if (moduleSymbol === undefined) throw new Error('src/types.ts has no resolvable module symbol')
+    return checker.getExportsOfModule(moduleSymbol).map(exported => exported.name)
+  } finally {
+    rmSync(virtualDir, { recursive: true, force: true })
+  }
+}
+
 describe('FeatureGateState (Epic P0-05 must[0]: unified off|shadow|enforce)', () => {
   it('declares exactly three states: off, shadow, enforce -- no more, no fewer', () => {
     const alias = findExportedTypeAlias('FeatureGateState')
@@ -294,7 +327,7 @@ const resolution: FeatureGateResolution = {
   })
 })
 
-describe('shadow/legacy decision diff (Epic P0-05 acceptance[1]: complete diff, no sensitive leak)', () => {
+describe('shadow/legacy decision diff (Epic P0-05 acceptance[1]: complete diff)', () => {
   it('declares an exported FeatureGateShadowDecisionRecord with exactly gateId/legacySummary/shadowSummary/differs', () => {
     const decl = findExportedInterface('FeatureGateShadowDecisionRecord')
     expect(decl, 'exported FeatureGateShadowDecisionRecord interface').toBeDefined()
@@ -306,7 +339,7 @@ describe('shadow/legacy decision diff (Epic P0-05 acceptance[1]: complete diff, 
   })
 
   it.each(['legacySummary', 'shadowSummary'])(
-    'types %s as JsonValue, never unknown or any -- a caller must hand a pre-redacted summary',
+    'types %s as RedactedJsonValue, never a bare JsonValue, unknown, or any',
     (fieldName) => {
       const decl = findExportedInterface('FeatureGateShadowDecisionRecord')
       const member = decl!.members.find(
@@ -315,36 +348,105 @@ describe('shadow/legacy decision diff (Epic P0-05 acceptance[1]: complete diff, 
       expect(member, `FeatureGateShadowDecisionRecord.${fieldName}`).toBeDefined()
       expect(member!.type?.kind).not.toBe(ts.SyntaxKind.UnknownKeyword)
       expect(member!.type?.kind).not.toBe(ts.SyntaxKind.AnyKeyword)
-      expect(ts.isTypeReferenceNode(member!.type!), `${fieldName} must be a type reference (JsonValue)`).toBe(true)
+      expect(ts.isTypeReferenceNode(member!.type!), `${fieldName} must be a type reference (RedactedJsonValue)`).toBe(true)
       const typeName = (member!.type as ts.TypeReferenceNode).typeName
-      expect(ts.isIdentifier(typeName) && typeName.text).toBe('JsonValue')
+      expect(ts.isIdentifier(typeName) && typeName.text).toBe('RedactedJsonValue')
     },
   )
 
   it('rejects a raw unknown-typed payload field standing in for a summary', () => {
     const diagnostics = compileVirtualUsage(`
-import type { FeatureGateShadowDecisionRecord } from ${JSON.stringify(typesPath)}
+import type { FeatureGateShadowDecisionRecord, RedactedJsonValue } from ${JSON.stringify(typesPath)}
 declare const raw: unknown
 const record: FeatureGateShadowDecisionRecord = {
   gateId: 'permission-gate' as never,
   legacySummary: raw,
-  shadowSummary: { outcome: 'allow' },
+  shadowSummary: { outcome: 'allow' } as RedactedJsonValue,
   differs: true,
 }
 `)
     expect(diagnostics.length, diagnosticMessages(diagnostics)).toBeGreaterThan(0)
   })
 
-  it('type-checks a well-formed sanitized diff record with zero diagnostics', () => {
+  it('type-checks a well-formed diff record with zero diagnostics once both summaries are typed JsonValue, then cast through RedactedJsonValue', () => {
     const diagnostics = compileVirtualUsage(`
-import type { FeatureGateShadowDecisionRecord } from ${JSON.stringify(typesPath)}
+import type { FeatureGateShadowDecisionRecord, RedactedJsonValue } from ${JSON.stringify(typesPath)}
+import type { JsonValue } from ${JSON.stringify(utilValuesIndexPath)}
+const legacy: JsonValue = { outcome: 'allow' }
+const shadow: JsonValue = { outcome: 'deny' }
 const record: FeatureGateShadowDecisionRecord = {
   gateId: 'permission-gate' as never,
-  legacySummary: { outcome: 'allow' },
-  shadowSummary: { outcome: 'deny' },
+  legacySummary: legacy as RedactedJsonValue,
+  shadowSummary: shadow as RedactedJsonValue,
   differs: true,
 }
 record satisfies FeatureGateShadowDecisionRecord
+`)
+    expect(diagnostics, diagnosticMessages(diagnostics)).toHaveLength(0)
+  })
+})
+
+describe('RedactedJsonValue (Epic P0-05 acceptance[1] "no sensitive-parameter leak": nominal brand over JsonValue)', () => {
+  it('brands RedactedJsonValue with an unexported unique symbol -- an exported symbol would let any importer forge one with zero casts', () => {
+    const decl = findAmbientConst('REDACTED_JSON_VALUE')
+    expect(decl, 'declare const REDACTED_JSON_VALUE: unique symbol').toBeDefined()
+    expect(
+      hasExportModifier(decl!),
+      'REDACTED_JSON_VALUE must not be exported -- an exported brand symbol lets any importer write '
+      + '{ [REDACTED_JSON_VALUE]: true, ...anything } and satisfy RedactedJsonValue with zero casts',
+    ).toBe(false)
+  })
+
+  it('exports RedactedJsonValue itself but never its brand symbol, per the real compiler\'s own module-exports list', () => {
+    const names = typesModuleExportedNames()
+    expect(names, `src/types.ts exported names: ${names.join(', ')}`).toContain('RedactedJsonValue')
+    expect(names, `src/types.ts exported names: ${names.join(', ')}`).not.toContain('REDACTED_JSON_VALUE')
+  })
+
+  it('rejects a bare JsonValue assigned directly where RedactedJsonValue is required -- the accidental, un-cast leak path does not type-check', () => {
+    const diagnostics = compileVirtualUsage(`
+import type { RedactedJsonValue } from ${JSON.stringify(typesPath)}
+import type { JsonValue } from ${JSON.stringify(utilValuesIndexPath)}
+declare const rawDecisionParams: JsonValue
+const value: RedactedJsonValue = rawDecisionParams
+`)
+    expect(diagnostics.length, diagnosticMessages(diagnostics)).toBeGreaterThan(0)
+  })
+
+  it('rejects an object literal assigned directly where RedactedJsonValue is required, same as a bare JsonValue', () => {
+    const diagnostics = compileVirtualUsage(`
+import type { RedactedJsonValue } from ${JSON.stringify(typesPath)}
+const value: RedactedJsonValue = { apiKey: 'sk-not-redacted' }
+`)
+    expect(diagnostics.length, diagnosticMessages(diagnostics)).toBeGreaterThan(0)
+  })
+
+  it('accepts a JsonValue explicitly cast through RedactedJsonValue -- the deliberate, greppable escape hatch', () => {
+    const diagnostics = compileVirtualUsage(`
+import type { RedactedJsonValue } from ${JSON.stringify(typesPath)}
+import type { JsonValue } from ${JSON.stringify(utilValuesIndexPath)}
+declare const alreadyRedacted: JsonValue
+const value: RedactedJsonValue = alreadyRedacted as RedactedJsonValue
+`)
+    expect(diagnostics, diagnosticMessages(diagnostics)).toHaveLength(0)
+  })
+
+  it('does NOT verify cast content -- a value that still looks unredacted type-checks once cast, the documented, honest limit of this brand', () => {
+    const diagnostics = compileVirtualUsage(`
+import type { RedactedJsonValue } from ${JSON.stringify(typesPath)}
+import type { JsonValue } from ${JSON.stringify(utilValuesIndexPath)}
+const stillHoldsASecret: JsonValue = { apiKey: 'sk-not-actually-redacted' }
+const value: RedactedJsonValue = stillHoldsASecret as RedactedJsonValue
+`)
+    expect(diagnostics, diagnosticMessages(diagnostics)).toHaveLength(0)
+  })
+
+  it('stays assignable back to JsonValue -- a later analysis can read a RedactedJsonValue as ordinary JSON with zero diagnostics', () => {
+    const diagnostics = compileVirtualUsage(`
+import type { RedactedJsonValue } from ${JSON.stringify(typesPath)}
+import type { JsonValue } from ${JSON.stringify(utilValuesIndexPath)}
+declare const redacted: RedactedJsonValue
+const value: JsonValue = redacted
 `)
     expect(diagnostics, diagnosticMessages(diagnostics)).toHaveLength(0)
   })
@@ -391,14 +493,19 @@ describe('src/types.ts hygiene (Epic P0-05 Contract stage: types-only, no plugin
     }
   })
 
-  it('has no runtime code: every top-level statement is a type-only import, interface, or type alias', () => {
+  it('has no runtime code: every top-level statement is a type-only import, interface, type alias, or an ambient declare-const symbol', () => {
     for (const statement of typesSourceFile.statements) {
       const isTypeOnlyImport = ts.isImportDeclaration(statement)
         && statement.importClause !== undefined
         && ts.isTypeOnlyImportDeclaration(statement.importClause)
       const isTypeDecl = ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)
+      // Matches packages/kernel/trust-kernel/tests/boundary.spec.ts's own hygiene check: an
+      // ambient `declare const X: unique symbol` emits no runtime code (it is erased entirely),
+      // the same opaque-brand idiom RedactedJsonValue uses below.
+      const isAmbientConst = ts.isVariableStatement(statement)
+        && (statement.modifiers?.some(m => m.kind === ts.SyntaxKind.DeclareKeyword) ?? false)
       const preview = statement.getText(typesSourceFile).split('\n')[0]?.slice(0, 80)
-      expect(isTypeOnlyImport || isTypeDecl, `unexpected runtime statement: ${preview}`).toBe(true)
+      expect(isTypeOnlyImport || isTypeDecl || isAmbientConst, `unexpected runtime statement: ${preview}`).toBe(true)
     }
   })
 
