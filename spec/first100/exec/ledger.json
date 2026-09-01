@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T12:06:15.872Z",
-  "inputDigest": "933bd6e4c1ba5febe9d53167be1d9ce94bba59656553deca8a3e26634e65867e",
+  "lastUpdatedUtc": "2026-09-01T12:11:07.600Z",
+  "inputDigest": "e00017497347618d60c93def74e11ab57cb208a273ad14ab06579264c7b72ab4",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -350,7 +350,27 @@
           "capturedAtUtc": "2026-09-01T10:36:17.728Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "290321cee0fa40680bc63e8da6a568fc99b70432",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33505003270",
+          "observationReportPath": "/tmp/first100-ledger-inputs/p0-06-p-report.json",
+          "observationSha256": "1a1fb2474aa861dfcb45cb024d3bf83877eaab7744ac5d390e757af1e3614d50",
+          "expectCasesMatched": [
+            "exercises the real registry: evolveSchema accepts the breaking rename and stores the forward migration",
+            "renames firedAt to occurredAt, carrying the value across unchanged",
+            "round-trips forward then backward without loss: {\"firedAt\":\"2026-01-01T00:00:00.000Z\"}",
+            "round-trips forward then backward without loss: {\"firedAt\":\"2026-08-31T12:34:56.789Z\",\"turn\":3,\"step\":1}",
+            "round-trips backward then forward without loss: {\"occurredAt\":\"2026-01-01T00:00:00.000Z\"}",
+            "round-trips backward then forward without loss: {\"occurredAt\":\"2026-08-31T12:34:56.789Z\",\"turn\":3,\"step\":1}",
+            "exercises the real registry: evolveSchema accepts the breaking merge and stores the forward migration",
+            "merges firstName and lastName into a single space-separated fullName",
+            "a naive reverse (splitting fullName on the first space) does not recover the original data for an ambiguous name -- proof of genuine information loss",
+            "exports no reverse migration function for the name merge -- explicit acknowledgment of irreversibility, not a silent absence"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-01T12:11:07.593Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -360,7 +380,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "b1a715f52a84b9f3a59c11a9b15c311e58a313c4",
+      "candidateSha": "290321cee0fa40680bc63e8da6a568fc99b70432",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
