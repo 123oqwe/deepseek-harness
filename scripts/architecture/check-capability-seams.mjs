@@ -212,19 +212,29 @@ export function readCapabilityTestEvidence(root, packages, family) {
   return { familyId: family.id, hasProviderFixture, hasConsumerCompositionTest, hasUnloadRollbackTest }
 }
 
+/** Whether `value` is a non-null, non-array object — the runtime shape a `families[i]`/`allowlist[i]` element must have before this scanner reads any of its fields. */
+function isPlainObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /**
- * Whether `layers.families` and `layers.allowlist` are arrays, and every
- * family's `providers`/`consumers` are arrays — the minimum real shape the
- * detector functions below assume when they iterate or index into a family.
+ * Whether `layers.families` and `layers.allowlist` are arrays, every element
+ * of each array is itself a well-formed object (not `null`, a string, a
+ * number, ...), and every family's `providers`/`consumers` are arrays — the
+ * minimum real shape the detector functions below (and `isAllowlisted`)
+ * assume when they iterate or index into a family or allowlist entry.
  * `validateArchitectureLayers` already reports a clear schema error for each
- * missing array; this only decides whether it is safe to keep scanning.
+ * malformed field or element; this only decides whether it is safe to keep
+ * scanning.
  * @param layers - the parsed `architecture.layers.json` document.
- * @returns whether every array field the scan iterates is actually an array.
+ * @returns whether every array field and element the scan reads is actually well-formed.
  */
 function hasScannableShape(layers) {
   return Array.isArray(layers.families)
     && Array.isArray(layers.allowlist)
-    && layers.families.every(family => Array.isArray(family.providers) && Array.isArray(family.consumers))
+    && layers.families.every(family =>
+      isPlainObject(family) && Array.isArray(family.providers) && Array.isArray(family.consumers))
+    && layers.allowlist.every(entry => isPlainObject(entry))
 }
 
 /**
@@ -232,7 +242,8 @@ function hasScannableShape(layers) {
  * repository root: load `architecture.layers.json`, scan the real workspace,
  * and feed the resolved facts into `./capability-seams.ts`'s pure detectors.
  * A document whose `families`/`allowlist`/per-family `providers`/`consumers`
- * are not arrays fails closed: `schemaErrors` names the malformed field and
+ * are not arrays, or whose `families`/`allowlist` hold a non-object element,
+ * fails closed: `schemaErrors` names the malformed field or element and
  * `violations` stays empty rather than scanning against an unsafe shape.
  * @param root - repository (or fixture) root.
  * @returns document schema errors and unsuppressed seam violations.

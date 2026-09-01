@@ -109,6 +109,17 @@ function familyLabel(family: CapabilityFamily): string {
   return family.id === '' ? '(missing id)' : family.id
 }
 
+/**
+ * Whether `value` is a non-null, non-array object — the runtime shape an
+ * array element (a `families[i]` or `allowlist[i]` entry) must have before
+ * any of its own fields are read. `architecture.layers.json` is untyped JSON
+ * at runtime, so a hand-edited array can hold `null`, a string, a number, or
+ * any other JSON value in place of a well-formed entry.
+ */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /** `kind from -> to`, the stable label an allowlist entry and a matching violation share. */
 function allowlistLabel(entry: Pick<AllowlistEntry, 'kind' | 'from' | 'to'>): string {
   return `${entry.kind} ${entry.from} -> ${entry.to}`
@@ -117,14 +128,18 @@ function allowlistLabel(entry: Pick<AllowlistEntry, 'kind' | 'from' | 'to'>): st
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 /**
- * Validate one capability family's internal shape: a non-empty id, a
- * `providers`/`consumers` array (each reported as its own error when the
- * untyped JSON value is not an array), and no repeated provider or consumer
- * entry.
+ * Validate one capability family's internal shape: the element itself must
+ * be a non-null object (not `null`, an array, or a primitive JSON value); a
+ * non-empty id; a `providers`/`consumers` array (each reported as its own
+ * error when the untyped JSON value is not an array); and no repeated
+ * provider or consumer entry.
  * @param family - the family to check.
  * @returns path-qualified violation strings, empty when the family is well-formed.
  */
 export function validateCapabilityFamily(family: CapabilityFamily): string[] {
+  if (!isPlainObject(family)) {
+    return [`architecture.layers.json: a capability family must be an object, got ${JSON.stringify(family)}`]
+  }
   const errors: string[] = []
   if (family.id === '') errors.push('capability family id must not be empty')
   const label = familyLabel(family)
@@ -142,18 +157,26 @@ export function validateCapabilityFamily(family: CapabilityFamily): string[] {
 }
 
 /**
- * Validate one allowlist entry: a real ISO calendar `removalDate` and a
- * non-empty `owner` (acceptance[1]).
+ * Validate one allowlist entry: the element itself must be a non-null object
+ * (not `null`, an array, or a primitive JSON value); a real ISO calendar
+ * `removalDate`; and a non-empty, string `owner` (acceptance[1]).
  * @param entry - the allowlist entry to check.
  * @returns violation strings, empty when the entry is well-formed.
  */
 export function validateAllowlistEntry(entry: AllowlistEntry): string[] {
+  if (!isPlainObject(entry)) {
+    return [`architecture.layers.json: an allowlist entry must be an object, got ${JSON.stringify(entry)}`]
+  }
   const errors: string[] = []
   const label = allowlistLabel(entry)
   if (!ISO_DATE.test(entry.removalDate) || Number.isNaN(Date.parse(entry.removalDate))) {
     errors.push(`${label}: removalDate must be an ISO calendar date (YYYY-MM-DD), got ${JSON.stringify(entry.removalDate)}`)
   }
-  if (entry.owner.trim() === '') errors.push(`${label}: owner must not be empty`)
+  if (typeof entry.owner !== 'string') {
+    errors.push(`${label}: owner must be a string, got ${JSON.stringify(entry.owner)}`)
+  } else if (entry.owner.trim() === '') {
+    errors.push(`${label}: owner must not be empty`)
+  }
   return errors
 }
 
@@ -168,6 +191,10 @@ function validateFamilies(families: readonly CapabilityFamily[], workspacePackag
   const seenFamilyIds = new Set<string>()
   for (const family of families) {
     errors.push(...validateCapabilityFamily(family))
+    // A malformed element (not an object) already reported its own error
+    // above; nothing below can safely read an id/definition/providers/
+    // consumers field off of it.
+    if (!isPlainObject(family)) continue
     if (seenFamilyIds.has(family.id)) errors.push(`family id ${family.id} is declared more than once`)
     seenFamilyIds.add(family.id)
     const label = familyLabel(family)
@@ -186,6 +213,9 @@ function validateAllowlist(allowlist: readonly AllowlistEntry[]): string[] {
   const seenAllowlistEdges = new Set<string>()
   for (const entry of allowlist) {
     errors.push(...validateAllowlistEntry(entry))
+    // A malformed element (not an object) already reported its own error
+    // above; nothing below can safely read a kind/from/to field off of it.
+    if (!isPlainObject(entry)) continue
     const label = allowlistLabel(entry)
     if (seenAllowlistEdges.has(label)) errors.push(`allowlist entry ${label} is declared more than once`)
     seenAllowlistEdges.add(label)
@@ -198,9 +228,10 @@ function validateAllowlist(allowlist: readonly AllowlistEntry[]): string[] {
  * (id uniqueness, internal shape, and workspace-package membership for its
  * definition/providers/consumers) and every allowlist entry (shape and
  * edge uniqueness). `doc` is untyped JSON at runtime; a `families` or
- * `allowlist` field that is not an array (or a family whose `providers`/
- * `consumers` is not an array) reports one clear error instead of crashing,
- * and skips the checks that require iterating the malformed field.
+ * `allowlist` field that is not an array, an element of either array that is
+ * not an object (`null`, a string, a number, ...), or a family whose
+ * `providers`/`consumers` is not an array all report one clear error instead
+ * of crashing, and skip the checks that require reading the malformed value.
  * @param doc - the parsed document.
  * @param workspacePackageNames - real npm package names currently in the workspace.
  * @returns violation strings, empty when the document is fully well-formed.

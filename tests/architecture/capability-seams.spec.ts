@@ -21,6 +21,7 @@ import {
   validateAllowlistEntry,
   validateArchitectureLayers,
   validateCapabilityFamily,
+  type AllowlistEntry,
   type ArchitectureLayers,
   type CapabilityFamily,
   type ResolvedImport,
@@ -403,5 +404,63 @@ describe('malformed architecture.layers.json shape (F-stage: fails loud with a c
     // shellFamily itself is well-formed and fully in the workspace set: no
     // spurious error attributed to it just because a sibling family is broken.
     expect(errors.some(error => error.startsWith('shell:'))).toBe(false)
+  })
+
+  it('reports a clear error, and does not throw, when a families element is null', () => {
+    const family = null as unknown as CapabilityFamily
+    expect(validateCapabilityFamily(family)).toEqual([
+      'architecture.layers.json: a capability family must be an object, got null',
+    ])
+    expect(validateArchitectureLayers(layersOf(family), new Set())).toEqual([
+      'architecture.layers.json: a capability family must be an object, got null',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when an allowlist element is null', () => {
+    const doc = {
+      $schemaVersion: 1,
+      families: [],
+      allowlist: [null],
+    } as unknown as ArchitectureLayers
+    expect(validateAllowlistEntry(null as unknown as AllowlistEntry)).toEqual([
+      'architecture.layers.json: an allowlist entry must be an object, got null',
+    ])
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: an allowlist entry must be an object, got null',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when an allowlist entry is missing its owner field', () => {
+    const entry = {
+      kind: 'missing-provider',
+      from: '@deepseek-ai/dsh-authorization',
+      to: '@deepseek-ai/dsh-authorization',
+      reason: 'hand-edited allowlist entry',
+      removalDate: '2026-12-01',
+      // owner intentionally omitted — a plausible hand-edit slip.
+    } as unknown as AllowlistEntry
+    expect(validateAllowlistEntry(entry)).toEqual([
+      'missing-provider @deepseek-ai/dsh-authorization -> @deepseek-ai/dsh-authorization: owner must be a string, got undefined',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when a families element is a string or a number instead of an object', () => {
+    expect(validateCapabilityFamily('shell' as unknown as CapabilityFamily)).toEqual([
+      'architecture.layers.json: a capability family must be an object, got "shell"',
+    ])
+    expect(validateCapabilityFamily(42 as unknown as CapabilityFamily)).toEqual([
+      'architecture.layers.json: a capability family must be an object, got 42',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when families holds undefined (a sparse-array-shaped hole)', () => {
+    const doc = {
+      $schemaVersion: 1,
+      families: [undefined],
+      allowlist: [],
+    } as unknown as ArchitectureLayers
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: a capability family must be an object, got undefined',
+    ])
   })
 })

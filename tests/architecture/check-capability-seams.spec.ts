@@ -381,6 +381,83 @@ describe('malformed architecture.layers.json (F-stage): the real scanner fails c
     const result = runCapabilitySeamsCheck(fixture)
     expect(result.schemaErrors).toEqual(['family id fixture is declared more than once'])
   })
+
+  // The three cases below are array-ELEMENT malformations, not array-type
+  // malformations: `families`/`allowlist` are real arrays (the cases above
+  // already cover the array-typed field itself being missing/wrong-typed),
+  // but one element of the array is not a well-formed object. Before this
+  // fix, each crashed with an opaque TypeError reading a field off `null`/
+  // `undefined` instead of reporting a schema error.
+
+  it('reports a clear error and zero violations, without throwing, when a real fixture families element is null', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, { $schemaVersion: 1, families: [null], allowlist: [] })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'architecture.layers.json: a capability family must be an object, got null',
+    ])
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error and zero violations, without throwing, when a real fixture allowlist element is null', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: [] }],
+      allowlist: [null],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'architecture.layers.json: an allowlist entry must be an object, got null',
+    ])
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error, without throwing, when a real fixture allowlist entry is missing its owner field', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeManifest(fixture, 'packages/fixture/consumer', 'fixture-consumer')
+    writeSource(fixture, 'packages/fixture/def', 'tests/def.spec.ts', "import { it } from 'vitest'\nit('disposes cleanly on unload', () => {})\n")
+    writeSource(fixture, 'packages/fixture/consumer', 'tests/consumer.spec.ts', "import 'fixture-def'\nimport { it } from 'vitest'\nit('consumes', () => {})\n")
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: ['fixture-consumer'] }],
+      allowlist: [{
+        kind: 'missing-provider',
+        from: 'fixture-def',
+        to: 'fixture-def',
+        reason: 'hand-edited allowlist entry',
+        removalDate: '2026-12-01',
+        // owner intentionally omitted -- a plausible hand-edit slip.
+      }],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'missing-provider fixture-def -> fixture-def: owner must be a string, got undefined',
+    ])
+    // owner is not part of hasScannableShape's gate (unlike a malformed
+    // families/allowlist element), so the scan still runs; the fixture
+    // supplies full must[2] evidence so there is no real violation, which
+    // isolates the owner-type schema error from unrelated violations.
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error, without throwing, when a real fixture families element is a string instead of an object', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, { $schemaVersion: 1, families: ['fixture'], allowlist: [] })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'architecture.layers.json: a capability family must be an object, got "fixture"',
+    ])
+    expect(result.violations).toEqual([])
+  })
 })
 
 describe('the real `pnpm run architecture:seams` command (F-stage): CI-blocking exit code end-to-end, not just a function\'s return value', () => {
