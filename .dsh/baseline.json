@@ -15,6 +15,7 @@
   ],
   "formatVersion": 1,
   "gitSha": "0a53fb55bea101816fa226bb964ae2bed71c343b",
+  "pnpmLockHash": "6cc109a574218f51762474455c8d72e5f7c2625aedf25e85569dba1af7adcef0",
   "protocolSchemaHashes": {
     "packages/core/session/src/known-event-types.ts": "235200ea8da50166713086064ac64b5c74161fd63a8ccc9034e4456bc7f678fa",
     "packages/sdk/protocol/src/types.ts": "9a9ab6172ff2a45b7a07adf75611aa8f42ae1bb98bd4ad598d8bdc5f618053d7"

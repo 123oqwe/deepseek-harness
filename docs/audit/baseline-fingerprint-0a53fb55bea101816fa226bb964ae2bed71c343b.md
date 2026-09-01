@@ -44,6 +44,7 @@ must always agree; `pnpm baseline:verify` treats a mismatch as drift.
 | `workspacePackages` | sorted array of every workspace `package.json`'s `name` (from `pnpm-workspace.yaml`'s patterns) | yes |
 | `defaultBundleRowIds` | sorted array of every row `id` in `packages/bundle/base/cordis.patch.yml` | yes |
 | `protocolSchemaHashes` | map of POSIX-relative path to SHA-256 hex digest, one entry per key protocol/event schema file (at minimum `packages/sdk/protocol/src/types.ts` and `packages/core/session/src/known-event-types.ts`) | yes |
+| `pnpmLockHash` | SHA-256 hex digest of `pnpm-lock.yaml`'s content | yes |
 
 Build artifacts (`lib/`, `dist/`), timestamps, hostnames, OS name, and
 absolute or backslash-spelled paths are excluded from both the file and the
@@ -69,8 +70,8 @@ be reproducible byte-for-byte from the same commit on Linux and macOS:
 
 Run before any execution batch begins. On a clean checkout it re-derives
 the same fields from the working tree and exits `0` when they match the
-last capture. On drift — any tracked schema, bundle-row, or package
-manifest file changed since capture — it exits nonzero, names the minimal
+last capture. On drift — any tracked schema, bundle-row, package
+manifest, or lockfile changed since capture — it exits nonzero, names the minimal
 diff (the specific changed path(s), not a generic "mismatch"), and writes a
 rebase report to `.dsh/rebase-report.json` so the run stops instead of
 optimizing against a moved target. Restoring the drifted file(s) makes
