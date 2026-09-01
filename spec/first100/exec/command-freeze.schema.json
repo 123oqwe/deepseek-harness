@@ -91,7 +91,21 @@
             }
           }
         },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "coveredStages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["epic", "stage"],
+            "properties": {
+              "epic": { "type": "string", "pattern": "^P[0-8]-\\d{2}$" },
+              "stage": { "type": "string", "enum": ["C", "P", "U", "F"] }
+            }
+          },
+          "minItems": 1,
+          "description": "Maintainer decision BLOCKED-002 (2026-09-01): additional (epic, stage) ledger cells this one entry's observation also greens, beyond the entry's own primary epic/stage. Every extra cell must be in the SAME epic, must have no dedicated test file among its own wave-map-declared files[] (tests/first100/registry.json's stages[stage].files), and every one of its declared files must appear as a literal path-string reference inside this entry's frozen argv test file(s) -- enforced by scripts/first100/generate-specs.ts's checkSharedStageCoverage(), never a free-text/Writer-supplied claim. Absent, this entry covers only its own epic/stage (the original B7(1) one-cell-one-observation behavior, unchanged)."
+        }
       }
     }
   }

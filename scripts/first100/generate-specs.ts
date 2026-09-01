@@ -285,6 +285,79 @@ export function checkDeliverablePathPatches(reg: Registry, adj: Adjudication): D
   return { valid, unknownIds, declaredPathMismatches, emptyApprovedPath, emptyReason }
 }
 
+/** One `command-freeze.json` entry, the fields `checkSharedStageCoverage` reads. */
+export interface CommandFreezeEntry {
+  epic: string
+  stage: 'C' | 'P' | 'U' | 'F'
+  files?: string[]
+  coveredStages?: { epic: string; stage: 'C' | 'P' | 'U' | 'F' }[]
+}
+
+export interface SharedStageCoverageCheck {
+  valid: boolean
+  /** Extra covered cell is a different epic than the entry's own primary epic. */
+  crossEpic: string[]
+  /** Extra covered stage owns a test file of its own in the registry — it does not need to share. */
+  ownsTestFile: string[]
+  /** Extra covered stage has a declared file this entry's frozen test file source never references. */
+  unreferencedFiles: { stage: string; file: string }[]
+}
+
+const TEST_FILE_PATTERN = /\.(spec|e2e)\.tsx?$/
+
+/**
+ * Maintainer decision BLOCKED-002 (2026-09-01): validates a command-freeze
+ * entry's `coveredStages` against the byte-locked registry and the entry's own
+ * frozen test file source — never a free-text or Writer-supplied claim. Every
+ * extra covered (epic, stage) beyond the entry's own primary pair must be (a)
+ * the same epic, (b) a stage with no test file among its own wave-map-declared
+ * `stages[stage].files` (registry.json), and (c) every one of that stage's
+ * declared files present as a literal path-string inside the entry's frozen
+ * test file(s) real source content. A stage that owns its own test file, or
+ * whose files are never mentioned anywhere in the shared test's source, never
+ * qualifies: it stays subject to B7①'s original one-cell-one-observation rule.
+ *
+ * This is a real but limited proxy: a bare substring match catches a file
+ * the shared test never mentions at all (the main gaming vector — claiming
+ * coverage for something wholly unaddressed), but a common/generic filename
+ * (e.g. `package.json`) can appear for an unrelated reason (fixture
+ * scaffolding) without the test actually exercising that stage's specific
+ * requirement. A fresh Reviewer must still confirm each reference reflects
+ * genuine behavioral coverage, not incidental mention, same as any other
+ * slice's review.
+ */
+export function checkSharedStageCoverage(reg: Registry, entry: CommandFreezeEntry, repoRoot: string): SharedStageCoverageCheck {
+  const byId = new Map(reg.epics.map(e => [e.id, e]))
+  const crossEpic: string[] = []
+  const ownsTestFile: string[] = []
+  const unreferencedFiles: { stage: string; file: string }[] = []
+  const extras = (entry.coveredStages ?? []).filter(c => !(c.epic === entry.epic && c.stage === entry.stage))
+  if (extras.length === 0) return { valid: true, crossEpic, ownsTestFile, unreferencedFiles }
+  const sources = (entry.files ?? []).map(f => readFileSync(join(repoRoot, f), 'utf8')).join('\n')
+  for (const extra of extras) {
+    const label = `${extra.epic}.${extra.stage}`
+    if (extra.epic !== entry.epic) {
+      crossEpic.push(label)
+      continue
+    }
+    const epic = byId.get(extra.epic)
+    if (epic === undefined) {
+      crossEpic.push(label)
+      continue
+    }
+    const extraFiles = epic.stages[extra.stage].files
+    if (extraFiles.some(f => TEST_FILE_PATTERN.test(f))) {
+      ownsTestFile.push(label)
+      continue
+    }
+    for (const f of extraFiles) {
+      if (!sources.includes(f)) unreferencedFiles.push({ stage: label, file: f })
+    }
+  }
+  const valid = crossEpic.length === 0 && ownsTestFile.length === 0 && unreferencedFiles.length === 0
+  return { valid, crossEpic, ownsTestFile, unreferencedFiles }
+}
+
 function readRegistry(root: string): Registry {
   const text = readFileSync(join(root, REGISTRY_PATH), 'utf8')
   return JSON.parse(text) as Registry

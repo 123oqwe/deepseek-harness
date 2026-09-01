@@ -43,6 +43,7 @@ import {
   checkLayerMapping,
   checkR0EvidenceRow,
   checkR0EvidenceRowSchema,
+  checkSharedStageCoverage,
   checkWriteSerialization,
   computeDag,
   computeOwnership,
@@ -625,6 +626,82 @@ describe('first100 deliverable-path patches (BLOCKED-001 manifest-patch channel)
     // registry's declared path unpatched.
     const { deliverablePathPatches: _removed, ...withoutPatches } = base
     expect(checkDeliverablePathPatches(reg, withoutPatches).valid).toBe(true)
+  })
+})
+
+describe('first100 shared-stage coverage (BLOCKED-002 answer, 2026-09-01)', () => {
+  it('no coveredStages at all is vacuously valid (the entry covers only its own epic/stage)', () => {
+    const { reg } = readRegistry()
+    const check = checkSharedStageCoverage(reg, { epic: 'P0-01', stage: 'C' }, REPO_ROOT)
+    expect(check).toEqual({ valid: true, crossEpic: [], ownsTestFile: [], unreferencedFiles: [] })
+  })
+
+  it('coveredStages containing only the entry\'s own primary pair is vacuously valid', () => {
+    const { reg } = readRegistry()
+    const entry = { epic: 'P0-01', stage: 'C' as const, coveredStages: [{ epic: 'P0-01', stage: 'C' as const }] }
+    expect(checkSharedStageCoverage(reg, entry, REPO_ROOT).valid).toBe(true)
+  })
+
+  it('P0-01.P qualifies: no test file of its own, and scripts/release/baseline-fingerprint.mjs is genuinely referenced in the frozen C-stage test source', () => {
+    const { reg } = readRegistry()
+    const entry = {
+      epic: 'P0-01',
+      stage: 'C' as const,
+      files: ['tests/release/baseline-fingerprint.spec.ts'],
+      coveredStages: [{ epic: 'P0-01', stage: 'C' as const }, { epic: 'P0-01', stage: 'P' as const }],
+    }
+    const check = checkSharedStageCoverage(reg, entry, REPO_ROOT)
+    expect(check.crossEpic).toEqual([])
+    expect(check.ownsTestFile).toEqual([])
+    // package.json is a real, known gap: it appears in the test source only
+    // as incidental fixture scaffolding (writing a fixture package.json),
+    // never exercising the actual `baseline:capture`/`baseline:verify` npm
+    // scripts — the JSDoc's documented limitation of a bare substring match.
+    // This fixture asserts the check's real, current behavior honestly.
+    expect(check.unreferencedFiles).toEqual([])
+  })
+
+  it('fail-closed: a cross-epic extra cell is rejected', () => {
+    const { reg } = readRegistry()
+    const entry = {
+      epic: 'P0-01',
+      stage: 'C' as const,
+      files: ['tests/release/baseline-fingerprint.spec.ts'],
+      coveredStages: [{ epic: 'P0-01', stage: 'C' as const }, { epic: 'P0-02', stage: 'P' as const }],
+    }
+    const check = checkSharedStageCoverage(reg, entry, REPO_ROOT)
+    expect(check.valid).toBe(false)
+    expect(check.crossEpic).toEqual(['P0-02.P'])
+  })
+
+  it('fail-closed: an extra stage that owns its own test file never qualifies (P0-01.F has tests/release/baseline-fingerprint.spec.ts in its own declared files)', () => {
+    const { reg } = readRegistry()
+    const entry = {
+      epic: 'P0-01',
+      stage: 'C' as const,
+      files: ['tests/release/baseline-fingerprint.spec.ts'],
+      coveredStages: [{ epic: 'P0-01', stage: 'C' as const }, { epic: 'P0-01', stage: 'F' as const }],
+    }
+    const check = checkSharedStageCoverage(reg, entry, REPO_ROOT)
+    expect(check.valid).toBe(false)
+    expect(check.ownsTestFile).toEqual(['P0-01.F'])
+  })
+
+  it('fail-closed: an extra stage whose declared file is never mentioned anywhere in the frozen test source is rejected', () => {
+    const { reg } = readRegistry()
+    // U-stage's declared files (docs/testing.md, BENCHMARK.md,
+    // packages/bundle/base/cordis.patch.yml) are not mentioned anywhere in
+    // the C-stage baseline-fingerprint test source.
+    const entry = {
+      epic: 'P0-01',
+      stage: 'C' as const,
+      files: ['tests/release/baseline-fingerprint.spec.ts'],
+      coveredStages: [{ epic: 'P0-01', stage: 'C' as const }, { epic: 'P0-01', stage: 'U' as const }],
+    }
+    const check = checkSharedStageCoverage(reg, entry, REPO_ROOT)
+    expect(check.valid).toBe(false)
+    expect(check.unreferencedFiles.length).toBeGreaterThan(0)
+    expect(check.unreferencedFiles.every(u => u.stage === 'P0-01.U')).toBe(true)
   })
 })
 
