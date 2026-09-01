@@ -184,6 +184,12 @@ export interface Adjudication {
       note: string
     }
     note: string
+    /**
+     * B2 (2026-09-01): historical record of the original R0-era approval
+     * (33 ids) before B2 expanded `approvedIds`/`approvedLayers` to the
+     * full 100-ID registry, preserved for audit trail.
+     */
+    originalR0Approval?: { note: string; approvedIds33: string[] }
   }
   ownerAssignment: {
     status: string
