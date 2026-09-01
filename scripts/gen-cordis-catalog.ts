@@ -173,6 +173,7 @@ export const SERVICE_WALK_EXEMPTIONS: Record<string, string> = {
   slots: 'client-side interface-typed browser service — packages/client/ui-renderer/README.md owns the API',
   theme: 'client-side interface-typed browser service — packages/client/ui-theme/README.md owns the API',
   workspaces: 'client-side interface-typed browser service — packages/api/workspace-controller/README.md owns the API',
+  trustKernel: 'not a service: unforgeable capability handle pinned via pinTrustKernel() before any plugin mounts, never a Cordis Service (no Config schema, no apply(ctx, config) entry) — packages/kernel/trust-kernel/README.md owns the API',
 }
 
 /**
