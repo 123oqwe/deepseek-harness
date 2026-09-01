@@ -7,7 +7,7 @@
 ## 层级
 
 - **单元测试**（`pnpm run test`）：vitest 运行包和示例各自的 `tests/**` 目录下的测试，以及匹配 `scripts/**/*.spec.ts` 的仓库脚本测试；测试文件与其所覆盖的代码区域放在一起。每个注册表都有一个 HMR（热模块替换）安全测试（对向该注册表贡献内容的 fiber 执行 dispose（资源释放），并断言清理完成）。优先覆盖边界情况、错误路径、事件顺序、并发竞态，以及针对约定回归的永久测试（见 `packages/core/agent-loop/tests/contract-regressions.spec.ts`）。
-- **覆盖率门禁**（`pnpm run test:coverage`）：门禁级运行，对 `packages/*/*/src` 按文件 100% 覆盖。未覆盖的行往往是门禁正确标记出的死代码（应删除），而非需要补写的测试。行覆盖率是必要条件，但永远不是充分条件：它证明行被执行过，不证明功能按交付预期工作。`packages/shell/pwsh-local/src` 的按文件 100% 覆盖需要真实的 `pwsh`：缺少它时其执行器套件会自动跳过，`vitest.config.ts` 会豁免该文件以使无 pwsh 的主机保持绿色，而 CI runner 自带 pwsh，仍按完整标准执行门禁。
+- **覆盖率门禁**（`pnpm run test:coverage`）：门禁级运行，对 `packages/*/*/src` 按文件 100% 覆盖。未覆盖的行往往是门禁正确标记出的死代码（应删除），而非需要补写的测试。`packages/shell/pwsh-local/src` 的按文件 100% 覆盖需要真实的 `pwsh`：缺少它时其执行器套件会自动跳过，`vitest.config.ts` 会豁免该文件以使无 pwsh 的主机保持绿色，而 CI runner 自带 pwsh，仍按完整标准执行门禁。
 - **真实 API e2e**（`pnpm run test:e2e`）：带密钥测试调用真实提供方 API，包括 DeepSeek 模型以及各提供方特有的冒烟测试；这些测试各自由自己的密钥控制（`EXA_API_KEY`、`PERPLEXITY_API_KEY` 等），缺少密钥时套件会自动跳过，使 keyless CI 保持绿色（[真实 API e2e Agent Note](../.agents/notes/implemented/testing/2026-06-19-real-api-e2e-ci.zh.md)）。
 - **所属位置的预期输出**（`pnpm run test:expected`）：无录制会话往返的无密钥组装 CLI/进程预期。驱动使用 `*.expected.e2e.ts`，并与 `tests/expected/` 同属一处；CI 针对构建产物运行。包/脚本预期使用 `test`，浏览器预期使用 `test:web`。
 - **快照**（`pnpm run test:snapshot`）：顶层场景的录制 `session.jsonl` 同时提供用户输入和模型回放，并作为持久化结果的预期值。进程级场景都通过 `dsh` 启动：headless 负责一次性行为，SDK 负责持久控制，ACP 负责自动化协议行为，Web 在同一会话旁保留浏览器与 ARIA 证据。`snapshot.yml` 声明 profile、组合与请求头类别、录制策略、例外回放或输入元数据以及工作区事实。带类型的 token 保留父子身份关系；只有请求头 pin 拥有提示词/schema sidecar。变更工作区的场景会独立比较完整的 `workspace.expected/` 目录，record 与 refresh 绝不改写该目录。当模型 transcript（文本记录）变化时使用 `test:snapshot:record`，回放输入仍有效时使用 `test:snapshot:refresh`；请审查所有结果差异。
@@ -17,17 +17,17 @@
 
 ## spec 如何被执行
 
-fork 出的 worker 会同时运行多个 spec 文件，coverage gate 会拆成并发的 partition，与同一个 job 中的其它 gate 并排运行，而自托管 runner 共用同一台宿主机和同一个卷。被隔离的只有进程：端口、可预测路径、外部命名空间和继承而来的子进程都不隔离。为每个占用的资源负责到它的 teardown，并把「只有单独运行时才通过」的 spec 读作该 spec 的缺陷，而不是 runner 不稳定。[dsh-ci-test-reliability](../.agents/skills/dsh-ci-test-reliability/SKILL.md) 负责资源分配、状态恢复、同步、超时预算、平台差异与 teardown 规则；它的 [flake 诊断流程](../.agents/skills/dsh-ci-test-reliability/references/ci-flake-diagnosis.md)用于归类已经存在的概率性失败。
+fork 出的 worker 会同时运行多个 spec 文件，coverage gate 会拆成并发的 partition，与同一个 job 中的其它 gate 并排运行，而自托管 runner 共用同一台宿主机和同一个卷。被隔离的只有进程：端口、可预测路径、外部命名空间和继承而来的子进程都不隔离。为每个占用的资源负责到它的 teardown；只有单独运行时才通过的 spec 是该 spec 的缺陷，而非 runner 的缺陷。[dsh-ci-test-reliability](../.agents/skills/dsh-ci-test-reliability/SKILL.md) 负责资源分配、状态恢复、同步、超时预算、平台差异与 teardown 规则；它的 [flake 诊断流程](../.agents/skills/dsh-ci-test-reliability/references/ci-flake-diagnosis.md)用于归类已经存在的概率性失败。
 
 ## 带密钥策略：推理（inference）在这里很便宜
 
-我们是 DeepSeek，不要吝惜真实 API 测试。无密钥测试只能证明底层通路；只有带密钥运行才能证明 agent（智能体）能对接真实模型正常工作。覆盖文件写入提示词、包含多个轮次的对话、工具使用和流中取消。价值最高的是**冒烟测试**：启动已交付的 `dsh` profile、发送一条提示词，并检查外部世界；它们能捕获「单元测试全绿、产品却坏了」这一类 mock 无法发现的问题（[事故复盘 0001](postmortem/0001-acp-default-export-drops-inject.zh.md)）。自动跳过让无密钥 CI 和无密钥贡献者不受阻塞；它不是成本信号。Profile 级集成测试位于 `apps/cli/tests/profiles/`；包专属组合留在对应包的测试目录中。
+我们是 DeepSeek，不要吝惜真实 API 测试。无密钥测试只能证明底层通路；只有带密钥运行才能证明 agent（智能体）能对接真实模型正常工作。覆盖文件写入提示词、包含多个轮次的对话、工具使用和流中取消。价值最高的是**冒烟测试**：启动已交付的 `dsh` profile、发送一条提示词，并检查外部世界；它们能捕获「单元测试全绿、产品却坏了」这一类 mock 无法发现的问题（[事故复盘 0001](postmortem/0001-acp-default-export-drops-inject.zh.md)）。自动跳过让无密钥 CI 和无密钥贡献者不受阻塞，而非成本信号。Profile 级集成测试位于 `apps/cli/tests/profiles/`；包专属组合留在对应包的测试目录中。
 
 ## 优先使用真实实现而非 mock
 
-只 mock 开销高或不确定的边界（LLM（大语言模型）适配器、网络、时钟）；下游一切保持真实。手写替身只能证明桥接层在搬运字节，不能证明交付的工具行为符合断言。桥接工具调用测试把真实的工具注册表与执行管线保留在脚本化 mock 模型下游：`makeBridgeHarness()`（packages/acp/acp/tests/harness.ts）挂载 agent loop、会话存储、工具注册表与 JSONL 持久化，唯一 mock 是脚本化 `MockAdapter`。
+只 mock 开销高或不确定的边界（LLM（大语言模型）适配器、网络、时钟）；下游一切保持真实。桥接工具调用测试把真实的工具注册表与执行管线保留在脚本化 mock 模型下游：`makeBridgeHarness()`（packages/acp/acp/tests/harness.ts）挂载 agent loop、会话存储、工具注册表与 JSONL 持久化，唯一 mock 是脚本化 `MockAdapter`。
 
-恢复测试按步骤区分分片前与分片后的失败，并证明失败分片不会派生出消息或工具副作用。覆盖耗尽、取消、策略组合、持久化、状态、协议计数、会关闭传输的空闲超时，以及交付的 Loader 组合。
+恢复测试区分分片前与分片后的失败，并证明失败分片不会派生出消息或工具副作用。覆盖耗尽、取消、策略组合、持久化、状态、协议计数、会关闭传输的空闲超时，以及交付的 Loader 组合。
 
 ## 验证外部世界，而非自我报告
 
@@ -55,4 +55,4 @@ e2e 断言应重新运行命令或从外部重新读取文件；对 agent 自身
 
 ## 启动期基线预检查
 
-`pnpm baseline:capture` 把 checkout 的架构/协议指纹（Git SHA、工具链、workspace package 名称、默认 bundle 行 ID、协议/事件 schema 哈希、pnpm lockfile 哈希）冻结进 `.dsh/baseline.json`；`pnpm baseline:verify` 重新推导同一组字段并报告漂移（`scripts/release/baseline-fingerprint.mjs`，格式记录在生成的 `docs/audit/baseline-fingerprint-<gitSha>.md` 中，每次捕获的 commit 各生成一份——例如 `docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md`）。`@deepseek-ai/dsh-baseline-preflight` 在启动时执行同一检查：有已捕获基线且发生漂移的 checkout 会中止应用启动，而不是让执行批次针对过期指纹运行；没有已捕获基线的 checkout（终端用户项目、多数测试 fixture）没有可供校验的对象，启动不受影响。共享 `dsh` base 组合中该插件所在行带有 `disabled: true`（按 profile 选择性启用，与 `hmr` 行同一模式）——本仓库自身已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`，若该行默认启用，会中止本仓库里普通的 `pnpm dsh` 使用；需要该门禁的 profile 显式启用这一行。确切的漂移检测约定（与 CLI 共享）以及如何启用该行，见[包 README](../packages/guard/baseline-preflight/README.zh.md)。
+`pnpm baseline:capture` 把 checkout 的架构/协议指纹冻结进 `.dsh/baseline.json`；`pnpm baseline:verify` 重新推导该指纹并报告漂移（`scripts/release/baseline-fingerprint.mjs`，格式记录在生成的 `docs/audit/baseline-fingerprint-<gitSha>.md` 中，每次捕获的 commit 各生成一份）。`@deepseek-ai/dsh-baseline-preflight` 在启动时执行同一检查，一旦发生漂移即中止应用启动，而不是让执行批次针对过期指纹运行。共享 `dsh` base 组合中该插件所在行带有 `disabled: true`，按 profile 选择性启用，因为本仓库自身已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`，若该行默认启用会中止本仓库里普通的 `pnpm dsh` 使用。已捕获的字段、无基线时的 no-op 情形，以及如何启用该行，见[包 README](../packages/guard/baseline-preflight/README.zh.md)。

@@ -1,5 +1,7 @@
 # Baseline fingerprint report — `pnpm baseline:capture`
 
+English | [中文](baseline-fingerprint-2abc7d0766b8789d2037e3dbb7fdfc5d4a603e80.zh.md)
+
 ## 1. Identity
 
 - Git SHA: `2abc7d0766b8789d2037e3dbb7fdfc5d4a603e80`
