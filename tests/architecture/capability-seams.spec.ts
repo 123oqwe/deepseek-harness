@@ -8,7 +8,7 @@
  * `architecture.layers.json` committed at the repository root.
  */
 
-import { readFileSync } from 'node:fs'
+import { globSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
@@ -18,7 +18,6 @@ import {
   detectNonReversibleRegistrationViolation,
   detectProviderAppDependencyViolation,
   isAllowlisted,
-  readWorkspacePackageNames,
   validateAllowlistEntry,
   validateArchitectureLayers,
   validateCapabilityFamily,
@@ -29,6 +28,21 @@ import {
 } from '../../scripts/architecture/capability-seams.ts'
 
 const root = resolve(import.meta.dirname, '../..')
+
+/**
+ * Read every real npm package name published by a workspace manifest under
+ * `packages/`. This walk is test-local: the C-stage library under test stays
+ * filesystem-free (its functions take already-loaded data as parameters),
+ * and the real fs walk that will back the U-stage scanner is not built yet.
+ */
+function readWorkspacePackageNames(root: string): ReadonlySet<string> {
+  const names = new Set<string>()
+  for (const manifestPath of globSync('packages/*/*/package.json', { cwd: root })) {
+    const manifest = JSON.parse(readFileSync(resolve(root, manifestPath), 'utf8')) as { name?: string }
+    if (manifest.name !== undefined) names.add(manifest.name)
+  }
+  return names
+}
 
 const shellFamily: CapabilityFamily = {
   id: 'shell',
@@ -155,6 +169,11 @@ describe('the real architecture.layers.json (acceptance[0], acceptance[1])', () 
   it('gives every allowlist entry a removalDate and an owner', () => {
     expect(doc.allowlist.length).toBeGreaterThan(0)
     for (const entry of doc.allowlist) expect(validateAllowlistEntry(entry)).toEqual([])
+  })
+
+  it('reports zero missing-provider violations under the controlled allowlist (acceptance[0])', () => {
+    const unsuppressed = detectMissingProviderViolations(doc).filter(violation => !isAllowlisted(violation, doc))
+    expect(unsuppressed).toEqual([])
   })
 })
 

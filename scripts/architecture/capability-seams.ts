@@ -5,17 +5,17 @@
  * pure violation-detection functions a repo-wide scanner calls with
  * already-resolved package and import facts.
  *
- * This module owns no filesystem walk of TypeScript imports and no `ts.Program`
- * construction — {@link ResolvedImport} and {@link CapabilityTestEvidence} are
- * supplied by the caller. Reading `architecture.layers.json` and resolving
- * real workspace imports into those facts is the scanner script's job
- * (`scripts/architecture/check-capability-seams.mjs`, a later slice); this
- * module only owns readable and stable knowledge of when a resolved edge
- * violates the seam rules must[0]/must[1]/must[2] declare.
+ * This module performs no filesystem I/O at all — no workspace `package.json`
+ * scan, no TypeScript-import walk, no `ts.Program` construction. Every
+ * function here takes already-loaded data as parameters: workspace package
+ * names, the parsed `architecture.layers.json` document, and
+ * {@link ResolvedImport}/{@link CapabilityTestEvidence} facts. Reading
+ * `architecture.layers.json`, scanning workspace `package.json` files, and
+ * resolving real TypeScript imports into those facts is the scanner script's
+ * job (`scripts/architecture/check-capability-seams.mjs`, a later slice);
+ * this module only owns readable and stable knowledge of when a resolved
+ * edge violates the seam rules must[0]/must[1]/must[2] declare.
  */
-
-import { globSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 
 /** One capability family: a Service Definition package, its providers, and its consumers (must[0]). */
 export interface CapabilityFamily {
@@ -291,19 +291,4 @@ export function detectNonReversibleRegistrationViolation(
 export function isAllowlisted(violation: SeamViolation, layers: ArchitectureLayers): boolean {
   return layers.allowlist.some(entry =>
     entry.kind === violation.kind && entry.from === violation.edge.from && entry.to === violation.edge.to)
-}
-
-/**
- * Read every real npm package name published by a workspace manifest under
- * `packages/`.
- * @param root - the repository root.
- * @returns the set of real workspace package names.
- */
-export function readWorkspacePackageNames(root: string): ReadonlySet<string> {
-  const names = new Set<string>()
-  for (const manifestPath of globSync('packages/*/*/package.json', { cwd: root })) {
-    const manifest = JSON.parse(readFileSync(resolve(root, manifestPath), 'utf8')) as { name?: string }
-    if (manifest.name !== undefined) names.add(manifest.name)
-  }
-  return names
 }
