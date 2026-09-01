@@ -75,6 +75,8 @@ pnpm dsh web
 
 请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
 
+[Trust Kernel](docs/architecture/trust-kernel-boundary.zh.md) 是"一切皆插件"的唯一例外：一个最小化、不可替换的边界，负责根身份、签名根、策略执行、审计追加，以及 secret broker 与沙箱证明句柄。除此之外的一切——模型、工具、存储 provider、workflow、memory provider 与 UI——都仍是普通的 Cordis 插件。
+
 面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
 
 ## 许可证

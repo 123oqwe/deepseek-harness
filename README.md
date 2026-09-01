@@ -54,6 +54,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
 
+The [Trust Kernel](docs/architecture/trust-kernel-boundary.md) is the one exception to "everything is a plugin": a minimal, non-replaceable boundary for root identity, signature roots, policy enforcement, audit append, and the secret-broker and sandbox-attestation handles. Everything else — models, tools, storage providers, workflow, memory providers, and the UI — stays an ordinary Cordis plugin.
+
 For agents, follow [AGENTS.md](AGENTS.md).
 
 ## License
