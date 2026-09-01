@@ -69,7 +69,7 @@ describe('registerSchema', () => {
     { major: 1.5, minor: 0 },
   ])('rejects an invalid first version %j', (version) => {
     const id = freshId('invalid-version')
-    expect(() => registerSchema(id, version, identityMigration)).toThrowError(SchemaRegistryError)
+    expect(() => { registerSchema(id, version, identityMigration) }).toThrow(SchemaRegistryError)
     expect(getSchema(id)).toBeUndefined()
   })
 })
@@ -120,18 +120,18 @@ describe('evolveSchema — must[2]/must[3] version-bump enforcement', () => {
   it('rejects a breaking change set that bumps major but does not reset minor to 0', () => {
     const id = freshId('breaking-nonzero-minor')
     registerSchema(id, { major: 1, minor: 3 }, identityMigration)
-    expect(() =>
-      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 2, minor: 1 }, identityMigration),
-    ).toThrowError(SchemaRegistryError)
+    expect(() => {
+      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 2, minor: 1 }, identityMigration)
+    }).toThrow(SchemaRegistryError)
     expect(getSchema(id)?.version).toEqual({ major: 1, minor: 3 })
   })
 
   it('rejects an additive change set that does not increase minor', () => {
     const id = freshId('additive-no-increase')
     registerSchema(id, { major: 1, minor: 1 }, identityMigration)
-    expect(() =>
-      evolveSchema(id, [{ field: 'newField', kind: 'additive', reason: 'x' }], { major: 1, minor: 1 }, identityMigration),
-    ).toThrowError(SchemaRegistryError)
+    expect(() => {
+      evolveSchema(id, [{ field: 'newField', kind: 'additive', reason: 'x' }], { major: 1, minor: 1 }, identityMigration)
+    }).toThrow(SchemaRegistryError)
     expect(getSchema(id)?.version).toEqual({ major: 1, minor: 1 })
     expect(getSchema(id)?.history).toEqual([{ major: 1, minor: 1 }])
   })
@@ -139,17 +139,17 @@ describe('evolveSchema — must[2]/must[3] version-bump enforcement', () => {
   it('rejects a breaking change set that only bumps minor', () => {
     const id = freshId('breaking-wrong-bump')
     registerSchema(id, { major: 1, minor: 0 }, identityMigration)
-    expect(() =>
-      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 1, minor: 1 }, identityMigration),
-    ).toThrowError(SchemaRegistryError)
+    expect(() => {
+      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 1, minor: 1 }, identityMigration)
+    }).toThrow(SchemaRegistryError)
   })
 
   it('rejects a breaking change set that skips a major version', () => {
     const id = freshId('breaking-skip')
     registerSchema(id, { major: 1, minor: 0 }, identityMigration)
-    expect(() =>
-      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 3, minor: 0 }, identityMigration),
-    ).toThrowError(SchemaRegistryError)
+    expect(() => {
+      evolveSchema(id, [{ field: 'oldField', kind: 'breaking', reason: 'removed' }], { major: 3, minor: 0 }, identityMigration)
+    }).toThrow(SchemaRegistryError)
   })
 
   it('rejects evolution declaring no changes', () => {
