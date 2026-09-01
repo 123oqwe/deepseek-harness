@@ -33,6 +33,8 @@ import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
+import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 
 const NAME = 'dsh'
@@ -225,6 +227,72 @@ export function enforceTrustKernelPosture(
 }
 
 /**
+ * Declared feature gates for this installation (Epic P0-05 must[2]/must[3]).
+ * Empty: no major capability in this repository has migrated behind a gate
+ * yet -- {@link resolveProfileFeatureGates} and its `--dump-config` and
+ * boot-time wiring below are the real, tested mechanism a future epic
+ * appends its {@link FeatureGateDeclaration} to; declaring an illustrative
+ * production gate here would be vertical business logic unrelated to this
+ * epic (Epic P0-05 nonGoals). See `@deepseek-ai/dsh-feature-gates`'s own
+ * Known Limitations for the same deferral.
+ */
+export const FEATURE_GATE_DECLARATIONS: readonly FeatureGateDeclaration[] = []
+
+const FEATURE_GATE_STATES: readonly FeatureGateState[] = ['off', 'shadow', 'enforce']
+
+/**
+ * The environment variable name one gate's highest-precedence override reads
+ * from: `DSH_FEATURE_GATE_<GATE_ID>`, upper-cased with every run of
+ * non-alphanumeric characters collapsed to a single underscore.
+ * @param gateId - the declared gate's id.
+ * @returns the deterministic env var name for that gate's override.
+ */
+export function featureGateEnvVarName(gateId: string): string {
+  return `DSH_FEATURE_GATE_${gateId.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}`
+}
+
+/**
+ * Parse one gate's env override (Epic P0-05 must[3]'s highest-precedence
+ * `'env'` chain layer). Unset or empty contributes no override, matching
+ * {@link resolveTelemetryPatch}/{@link resolveTrustKernelInsecureOptIn}'s own
+ * empty-string convention; any other value must be exactly one of the three
+ * declared states -- misconfiguration fails loud rather than silently
+ * resolving to an unintended state.
+ * @param raw - the raw environment variable value.
+ * @returns the override state, or `undefined` when none was supplied.
+ * @throws {TypeError} when `raw` is non-empty and not a valid {@link FeatureGateState}.
+ */
+export function resolveFeatureGateEnvOverride(raw: string | undefined): FeatureGateState | undefined {
+  if (raw === undefined || raw === '') return undefined
+  if ((FEATURE_GATE_STATES as readonly string[]).includes(raw)) return raw as FeatureGateState
+  throw new TypeError(`${NAME}: feature gate env override must be one of ${FEATURE_GATE_STATES.join('|')}, got ${JSON.stringify(raw)}`)
+}
+
+/**
+ * Resolve every declared feature gate for one profile (Epic P0-05 must[3]):
+ * the same computation `--dump-config` renders and boot provides on
+ * `ctx.get('featureGates')`, so both surfaces agree for an identical
+ * profile/environment. No `settings` chain layer is supplied: this
+ * repository registers no `feature-gates` settings namespace yet (a later
+ * Composition-stage slice's deliverable, once a real gate exists), so that
+ * layer's absence is correct today, not a gap in this function.
+ * @param profile - the active `dsh --profile` name.
+ * @param declarations - the declared gates to resolve; defaults to {@link FEATURE_GATE_DECLARATIONS}.
+ * @param env - the environment to read each gate's override from; defaults to `process.env`.
+ * @returns each declaration's {@link FeatureGateResolution}, in `declarations` order.
+ */
+export function resolveProfileFeatureGates(
+  profile: string,
+  declarations: readonly FeatureGateDeclaration[] = FEATURE_GATE_DECLARATIONS,
+  env: NodeJS.ProcessEnv = process.env,
+): readonly FeatureGateResolution[] {
+  return declarations.map((declaration) => {
+    const envOverride = resolveFeatureGateEnvOverride(env[featureGateEnvVarName(declaration.id)])
+    return resolveFeatureGate(declaration, profile, envOverride === undefined ? {} : { env: envOverride })
+  })
+}
+
+/**
  * Re-throw a watcher-setup failure unless a shutdown already owns the tree:
  * a signal aborted this invocation, or an app requested exit (`ctx.appExit`
  * from a fast one-shot) and the root's disposal rejected the in-flight setup
@@ -312,6 +380,14 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     // guard (must[3]; @deepseek-ai/dsh-trust-kernel's own doc comment).
     if (kernel !== undefined) pinTrustKernel(hostCtx, kernel)
     enforceTrustKernelPosture(hostCtx.get('trustKernel') !== undefined, trustKernelInsecure)
+    // Feature gates (Epic P0-05 must[3]): resolved once per boot, before any
+    // config-tree entry mounts, so a future gated plugin reads exactly the
+    // resolution `--dump-config` shows for this same profile/environment.
+    // Provided under a bare service name -- no capability yet injects
+    // `featureGates`, so the typed `declare module '@deepseek-ai/cordis'`
+    // augmentation belongs with `@deepseek-ai/dsh-feature-gates` once a real
+    // consumer exists, matching that package's own Known Limitations.
+    hostCtx.provide('featureGates', resolveProfileFeatureGates(options.profile))
   })
   app.current = ctx
   // A live-reload profile can dispose the whole tree while post-boot watcher

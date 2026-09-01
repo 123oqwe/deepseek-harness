@@ -57,6 +57,9 @@
       "path": "../../packages/kernel/trust-kernel"
     },
     {
+      "path": "../../packages/migration/feature-gates"
+    },
+    {
       "path": "../../packages/mcp/mcp-client"
     },
     {

@@ -9,6 +9,7 @@
 
 import { parseArgs } from 'node:util'
 import { isEntry } from './process.ts'
+import { assertNoExpiredFeatureGates, RELEASE_GATE_FEATURE_GATES } from './feature-gate-expiry.ts'
 import { releaseFamily, type PublishPlan, type ReleaseFamily, type ReleaseMember } from './families.ts'
 
 /**
@@ -81,6 +82,12 @@ function main(): void {
   const family = releaseFamily(values.family)
   const members = family.members(process.cwd())
   family.verifyVersions(members)
+  // dsh only: verifyVersions above guarantees one shared version across every
+  // member, exactly the harness version FeatureGateDeclaration.removalVersion
+  // is defined against (Epic P0-05 acceptance[2]); vendor packages keep
+  // independent version lines unrelated to a feature gate's lifecycle.
+  const dshVersion = family.id === 'dsh' ? members[0]?.version : undefined
+  if (dshVersion !== undefined) assertNoExpiredFeatureGates(RELEASE_GATE_FEATURE_GATES, dshVersion)
   // Resolve the publish order here, before the build: an install-edge cycle
   // makes the order unrepresentable, and that has to surface at the first gate
   // rather than when pack is already writing tarballs.
