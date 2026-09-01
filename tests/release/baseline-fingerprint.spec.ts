@@ -78,6 +78,7 @@ function makeFixture(): Fixture {
   write(root, 'packages/bundle/base/cordis.patch.yml', 'rows:\n  - id: row-alpha\n  - id: row-beta\n')
   write(root, 'packages/sdk/protocol/src/types.ts', 'export interface Envelope {\n  kind: string\n}\n')
   write(root, 'packages/core/session/src/known-event-types.ts', "export type KnownEventType = 'session.start'\n")
+  write(root, 'pnpm-lock.yaml', "lockfileVersion: '9.0'\npackages: {}\n")
   git(root, ['add', '-A'])
   git(root, ['commit', '-m', 'fixture baseline'])
   const gitSha = git(root, ['rev-parse', 'HEAD'])
@@ -169,5 +170,73 @@ describe('release/baseline-fingerprint contract (P0-01 C-stage)', () => {
     write(root, bundlePath, original)
     const restored = verify(root)
     expect(restored.status, `verify stderr: ${restored.stderr}`).toBe(0)
+  })
+})
+
+describe('release/baseline-fingerprint fault/tamper contract (P0-01 F-stage)', () => {
+  it('verify fails and names the tampered SDK protocol types file', () => {
+    const { root } = makeFixture()
+    const captureResult = capture(root)
+    expect(captureResult.status, `capture stderr: ${captureResult.stderr}`).toBe(0)
+    write(root, 'packages/sdk/protocol/src/types.ts', 'export interface Envelope {\n  kind: string\n  tampered: true\n}\n')
+    const verifyResult = verify(root)
+    expect(verifyResult.status).not.toBe(0)
+    const output = `${verifyResult.stdout}${verifyResult.stderr}`
+    expect(output).toContain('packages/sdk/protocol/src/types.ts')
+  })
+
+  it('verify fails and names the tampered known-event-types file', () => {
+    const { root } = makeFixture()
+    const captureResult = capture(root)
+    expect(captureResult.status, `capture stderr: ${captureResult.stderr}`).toBe(0)
+    write(root, 'packages/core/session/src/known-event-types.ts', "export type KnownEventType = 'session.start' | 'session.tampered'\n")
+    const verifyResult = verify(root)
+    expect(verifyResult.status).not.toBe(0)
+    const output = `${verifyResult.stdout}${verifyResult.stderr}`
+    expect(output).toContain('packages/core/session/src/known-event-types.ts')
+  })
+
+  it('verify fails and names the tampered pnpm-lock.yaml', () => {
+    const { root } = makeFixture()
+    const captureResult = capture(root)
+    expect(captureResult.status, `capture stderr: ${captureResult.stderr}`).toBe(0)
+    write(root, 'pnpm-lock.yaml', "lockfileVersion: '9.0'\npackages:\n  tampered: true\n")
+    const verifyResult = verify(root)
+    expect(verifyResult.status).not.toBe(0)
+    const output = `${verifyResult.stdout}${verifyResult.stderr}`
+    expect(output).toContain('pnpm-lock.yaml')
+  })
+
+  it('captures a fingerprint that never leaks the fixture checkout\'s absolute path or backslash-spelled paths anywhere in its content', () => {
+    const { root } = makeFixture()
+    const result = capture(root)
+    expect(result.status, `capture stderr: ${result.stderr}`).toBe(0)
+    const captured = JSON.parse(readFileSync(join(root, '.dsh/baseline.json'), 'utf8')) as Record<string, unknown>
+    const serialized = JSON.stringify(captured)
+    expect(serialized.includes(root), 'no field may embed the fixture checkout\'s absolute root path').toBe(false)
+
+    const stringValues: string[] = []
+    function collectStrings(value: unknown): void {
+      if (typeof value === 'string') {
+        stringValues.push(value)
+        return
+      }
+      if (Array.isArray(value)) {
+        for (const item of value) collectStrings(item)
+        return
+      }
+      if (value !== null && typeof value === 'object') {
+        for (const nested of Object.values(value)) collectStrings(nested)
+      }
+    }
+    collectStrings(captured)
+    for (const value of stringValues) {
+      expect(value.includes('\\'), `no captured string value may contain a backslash: ${value}`).toBe(false)
+      expect(/^[A-Za-z]:/.test(value), `no captured string value may be a Windows drive-letter path: ${value}`).toBe(false)
+    }
+
+    for (const path of Object.keys(captured.protocolSchemaHashes as Record<string, unknown>)) {
+      expect(path.startsWith('/'), `protocolSchemaHashes keys must be repo-relative, not absolute: ${path}`).toBe(false)
+    }
   })
 })
