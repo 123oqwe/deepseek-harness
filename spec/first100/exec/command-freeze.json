@@ -258,5 +258,40 @@
       },
       "note": "P0-02 U-stage (2026-09-01): real boot-sequence integration. createTrustKernel() (src/index.ts) replaces the C-stage pure-type stub (BLOCKED-009) with a deep-frozen TrustKernel construction. apps/cli/src/profile-boot.ts's runProfile() constructs the kernel BEFORE calling boot() at all (boot() itself creates the Cordis Context), then the existing prepare closure pins it via ctx.provide('trustKernel', kernel) -- never ctx.plugin(...). New DSH_TRUST_KERNEL_INSECURE opt-in + enforceTrustKernelPosture realize acceptance clauses 3/4 (production fail-closed / dev insecure-opt-in warning). Real RED at commit 2b2085a409 (stub createTrustKernel/posture functions): 6/17 failed genuinely (unfrozen kernel, wrong verdicts, opt-in resolver always false), never module/syntax errors. Opus-level adversarial review (mandatory for this L0_KERNEL epic): verified Cordis's real ReflectService.provide (vendor/cordis/src/reflect.ts) genuinely throws on a second provide() for the same key -- must[3]'s 'never replaceable' guarantee is proven against real, unmodified Cordis behavior, not a wrapper this package invented. 6 seeded mutations (deep-freeze removal at 2 depths, fail-closed no-op, insecure-opt-in-always-true, pin-deletion, malicious-plugin-target-neutering) all caught. Reviewer's own extra bypass probes (ctx.set() second-write, direct mutation of the frozen value, ctx.isolate() shadowing) found no exploitable bypass of the pinned value's identity, though isolation-scope shadowing is noted as worth an explicit doc sentence once real capability providers land (non-blocking). Reviewer additionally proved via mutation D1 (deleting the ctx.provide pin) that the fail-closed throw and the insecure-opt-in warning are BOTH reachable end-to-end through the real dsh subprocess boot (apps/cli/tests/profiles/headless/tests/headless.expected.e2e.ts, real DSH_TRUST_KERNEL_INSECURE env override) -- overturning the Writer's own more pessimistic self-assessment that the fail-closed branch was unreachable through real wiring. A dedicated committed e2e test for these two integration paths (today only mutation-observable) is noted as a non-blocking follow-up."
     }
+,
+    {
+      "epic": "P0-06",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/schema/schema-registry/tests/migration.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "exercises the real registry: evolveSchema accepts the breaking rename and stores the forward migration",
+        "renames firedAt to occurredAt, carrying the value across unchanged",
+        "round-trips forward then backward without loss: {\"firedAt\":\"2026-01-01T00:00:00.000Z\"}",
+        "round-trips forward then backward without loss: {\"firedAt\":\"2026-08-31T12:34:56.789Z\",\"turn\":3,\"step\":1}",
+        "round-trips backward then forward without loss: {\"occurredAt\":\"2026-01-01T00:00:00.000Z\"}",
+        "round-trips backward then forward without loss: {\"occurredAt\":\"2026-08-31T12:34:56.789Z\",\"turn\":3,\"step\":1}",
+        "exercises the real registry: evolveSchema accepts the breaking merge and stores the forward migration",
+        "merges firstName and lastName into a single space-separated fullName",
+        "a naive reverse (splitting fullName on the first space) does not recover the original data for an ambiguous name -- proof of genuine information loss",
+        "exports no reverse migration function for the name merge -- explicit acknowledgment of irreversibility, not a silent absence"
+      ],
+      "files": [
+        "packages/schema/schema-registry/tests/migration.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T07:56:00Z",
+      "dryRunProof": {
+        "treeSha": "db8f7fce66ba6076ae716187cfe1964c3632fc0f",
+        "testsDiscovered": 10
+      },
+      "note": "P0-06 P-stage (2026-09-01): real, non-identity migration functions for the schema registry, proving the C-stage registry's migration-function slot works end-to-end. Two deliberately-synthetic, explicitly-labeled-as-illustrative examples (never wired into the real C-stage bootstrap): renameFiredAtToOccurredAt/renameOccurredAtToFiredAt (bidirectional/lossless rename) and mergeNameFields (irreversible/lossy merge, no reverse export). Both exercised via real registerSchema/evolveSchema calls against fresh synthetic schemaIds, never a parallel mechanism. packages/core/session/src/repair.ts deliberately left untouched -- pure crash-recovery with zero schema-version concept, on the far side of the registry's own leaf-object-only scope boundary (matching C-stage's identical known-event-types.ts precedent). Real RED at commit bea9541e91 (stub migrate.ts): 3/10 failed genuinely (wrong field names, no merge occurred), never module/syntax errors. Opus-level adversarial review (mandatory, L1_CONTRACT): 6 of 7 seeded mutations caught, including two proving the tests genuinely depend on real evolveSchema execution (bypassing the registry call, and corrupting evolveSchema's own migrate-storage) rather than testing the raw migration functions in isolation. One mutation (a renamed fake reverse-migration export evading the irreversibility guard's name-substring heuristic) survived -- noted as a non-blocking rigor gap, since the substantive information-loss test (independently verified by the reviewer via a pigeonhole counter-example proof, confirmed to generalize beyond the one shipped test input) already establishes the real acceptance-clause guarantee. Also fixed in this slice: a real, pre-existing verify-export-jsdoc escape in the already-merged P0-06.C src/index.ts (7 missing-doc violations the C-stage review missed), non-behavioral."
+    }
   ]
 }
