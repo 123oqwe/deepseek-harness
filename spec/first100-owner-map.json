@@ -4109,25 +4109,25 @@
   "canonicalEpicOwners": {
     "P0-01": {
       "primaryLayer": "L6_QUALIFICATION",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "docs/audit",
       "humanAssignee": "UNASSIGNED"
     },
     "P0-02": {
       "primaryLayer": "L0_KERNEL",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P0-02",
       "humanAssignee": "UNASSIGNED"
     },
     "P0-03": {
       "primaryLayer": "L6_QUALIFICATION",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "(root) architecture.layers.json",
       "humanAssignee": "UNASSIGNED"
     },
     "P0-04": {
       "primaryLayer": "L6_QUALIFICATION",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "scripts/architecture",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4145,37 +4145,37 @@
     },
     "P0-07": {
       "primaryLayer": "L6_QUALIFICATION",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "scripts/release",
       "humanAssignee": "UNASSIGNED"
     },
     "P0-08": {
       "primaryLayer": "L6_QUALIFICATION",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "benchmarks/harness-capability",
       "humanAssignee": "UNASSIGNED"
     },
     "P1-01": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P1-01",
       "humanAssignee": "UNASSIGNED"
     },
     "P1-02": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/plugin/plugin-provenance",
       "humanAssignee": "UNASSIGNED"
     },
     "P1-03": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/plugin/plugin-lock",
       "humanAssignee": "UNASSIGNED"
     },
     "P1-04": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/plugin/plugin-installer",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4187,19 +4187,19 @@
     },
     "P1-06": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/plugin/plugin-host",
       "humanAssignee": "UNASSIGNED"
     },
     "P1-07": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/workspace/workspace-trust",
       "humanAssignee": "UNASSIGNED"
     },
     "P1-08": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/plugin/plugin-compat",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4229,7 +4229,7 @@
     },
     "P2-01": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/identity/principal",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4241,13 +4241,13 @@
     },
     "P2-03": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P2-03",
       "humanAssignee": "UNASSIGNED"
     },
     "P2-04": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/policy/risk-taxonomy",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4259,19 +4259,19 @@
     },
     "P2-06": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/interaction/user-approval",
       "humanAssignee": "UNASSIGNED"
     },
     "P2-07": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/interaction/approval-store",
       "humanAssignee": "UNASSIGNED"
     },
     "P2-08": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/policy/grant-store",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4295,7 +4295,7 @@
     },
     "P2-12": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/interaction/human-channel",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4313,43 +4313,43 @@
     },
     "P3-03": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/execution/execution-world",
       "humanAssignee": "UNASSIGNED"
     },
     "P3-04": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/execution/egress-proxy",
       "humanAssignee": "UNASSIGNED"
     },
     "P3-05": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/execution/local-isolation",
       "humanAssignee": "UNASSIGNED"
     },
     "P3-06": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/credentials/secrets-broker",
       "humanAssignee": "UNASSIGNED"
     },
     "P3-07": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/sandbox/sandbox-local",
       "humanAssignee": "UNASSIGNED"
     },
     "P3-08": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/execution/execution-world-container",
       "humanAssignee": "UNASSIGNED"
     },
     "P3-09": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/execution/execution-world-remote",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4361,7 +4361,7 @@
     },
     "P3-11": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/execution/world-snapshot",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4379,67 +4379,67 @@
     },
     "P4-02": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P4-02",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-03": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P4-03",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-04": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/run/run-plan",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-05": {
       "primaryLayer": "L3_CONSUMER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/core/agent",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-06": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/run/message-bus",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-07": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/run/lease",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-08": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/workflow/workflow-journal",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-09": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/workflow/workflow-registry",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-10": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/run/scheduler",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-11": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/reliability/retry",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-12": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/action/action-ledger",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4457,55 +4457,55 @@
     },
     "P5-01": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/router/strategy-router",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-02": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/router/model-router",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-03": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/llm/prompt-compiler",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-04": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/router/provider-resilience",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-05": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/subagent/subagent",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-06": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/subagent/subagent",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-07": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/subagent/subagent-codex",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-08": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/subagent/subagent-claude-code",
       "humanAssignee": "UNASSIGNED"
     },
     "P5-09": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/subagent/subagent-acp",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4517,7 +4517,7 @@
     },
     "P5-11": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/collaboration/taskboard",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4535,7 +4535,7 @@
     },
     "P6-02": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/memory/memory",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4547,19 +4547,19 @@
     },
     "P6-04": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/context/retrieval-planner",
       "humanAssignee": "UNASSIGNED"
     },
     "P6-05": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/context/context-topology",
       "humanAssignee": "UNASSIGNED"
     },
     "P6-06": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/compaction/compaction",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4571,7 +4571,7 @@
     },
     "P6-08": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/audit/audit-ledger",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4583,31 +4583,31 @@
     },
     "P6-10": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/privacy/data-classification",
       "humanAssignee": "UNASSIGNED"
     },
     "P7-01": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P7-01",
       "humanAssignee": "UNASSIGNED"
     },
     "P7-02": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/assurance/evidence",
       "humanAssignee": "UNASSIGNED"
     },
     "P7-03": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/assurance/verifier",
       "humanAssignee": "UNASSIGNED"
     },
     "P7-04": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/assurance/claim-graph",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4625,7 +4625,7 @@
     },
     "P7-07": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/observability/causal-trace",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4637,7 +4637,7 @@
     },
     "P7-09": {
       "primaryLayer": "L6_QUALIFICATION",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "tests/capability",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4649,19 +4649,19 @@
     },
     "P8-01": {
       "primaryLayer": "L1_CONTRACT",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "P8-01",
       "humanAssignee": "UNASSIGNED"
     },
     "P8-02": {
       "primaryLayer": "L5_SURFACE",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/api/remotes",
       "humanAssignee": "UNASSIGNED"
     },
     "P8-03": {
       "primaryLayer": "L5_SURFACE",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/sdk/protocol",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4679,7 +4679,7 @@
     },
     "P8-06": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/identity/authorization",
       "humanAssignee": "UNASSIGNED"
     },
@@ -4691,13 +4691,13 @@
     },
     "P8-08": {
       "primaryLayer": "L5_SURFACE",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/client/ui-run-control",
       "humanAssignee": "UNASSIGNED"
     },
     "P8-09": {
       "primaryLayer": "L2_PROVIDER",
-      "layerStatus": "AGENT_A_PROPOSED",
+      "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/governance/org-policy",
       "humanAssignee": "UNASSIGNED"
     },
