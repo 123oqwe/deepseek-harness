@@ -505,6 +505,64 @@
         "testsDiscovered": 29
       },
       "note": "P0-07 C-stage (2026-09-01), Release Evidence Package's Contract type surface: a discriminated GateEvidence union (CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence, must[0]) carrying command/timestamps/exitCode/environment/digests/testCounts/skipReasons; an EvidencePackage binding baselineFingerprint + gitDiff + build-artifact digests (must[1]); and the epic's central claim, must[2] ('any skipped blocking gate or missing artifact must never allow accepted=true') proven as a real compile-time guarantee: AcceptedEvidencePackage<RequiredGateId, RequiredArtifactPath> requires complete Record<K, CompletedGateEvidence>/Record<K, Digest> maps keyed by literal-union required-id sets, independently verified via direct tsc diagnostics (TS2741 on a missing key, TS2322 on a skipped/missing gate where completed is required) -- not merely asserted by a test, a real compiler rejection. One honest, disclosed limit: with RequiredGateId/RequiredArtifactPath left at their string default, an EMPTY requiredGates/requiredBuildArtifacts map still type-checks -- required-id-SET completeness is P-stage's runtime job (verify-evidence.mjs against the release manifest), not something this type surface can express statically; a dedicated test documents this rather than hiding it. Confirmed the registry's third declared C-stage file, spec/first100-evidence.schema.json, is a coincidental path collision (this program's own 109-epic self-tracking schema, unrelated id/lane/baselineSha vocabulary) not a real dependency -- independently re-verified by the Reviewer, not just the Writer's own claim. Real RED->GREEN: a deliberately wrong stub types.ts failed 25/29 genuinely (TS2305 missing-export errors, AST shape mismatches, zero crashes); the real implementation passed 29/29. Round 1 independent review: ACCEPT on design/tests/central claim, REJECT on one purely mechanical miss -- gen-module-graph.ts --check failed because the new packages/assurance/evidence-format package was never reflected in the generated module-graph docs. Fix round: ran gen-module-graph, committed the 3 regenerated docs, touching nothing else. Round 2 independent review: ACCEPT, with the compile-time must[2] guarantee re-proven from scratch via a standalone tsc probe (not reusing the test file) and the fix commit's diff confirmed scoped to exactly the 3 doc files."
+    },
+    {
+      "epic": "P0-05",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/migration/feature-gates/tests/gates.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "declares exactly three states: off, shadow, enforce -- no more, no fewer",
+        "rejects a fourth state at compile time",
+        "type-checks each of the three real states with zero diagnostics",
+        "declares an exported FeatureGateDeclaration interface with exactly the required fields, all readonly",
+        "rejects a well-formed declaration missing removalVersion at compile time",
+        "requires FeatureGateProfileDefaults to carry a \"default\" fallback entry",
+        "type-checks a well-formed declaration with per-profile overrides and zero diagnostics",
+        "reads the real SettingsNamespaceView.value field type: JsonValue, from @deepseek-ai/dsh-util-values",
+        "keeps FeatureGateNamespaceValue JSON-safe: assignable to the real JsonValue that carries SettingsNamespaceView.value",
+        "rejects a non-state value inside FeatureGateNamespaceValue at compile time",
+        "declares FeatureGateOverrideSource with exactly default, profile, settings, env",
+        "declares an exported FeatureGateResolution interface carrying gateId, resolved, and an ordered chain",
+        "type-checks a well-formed resolution with its chain and rejects an unknown source",
+        "declares an exported FeatureGateShadowDecisionRecord with exactly gateId/legacySummary/shadowSummary/differs",
+        "types legacySummary as RedactedJsonValue, never a bare JsonValue, unknown, or any",
+        "types shadowSummary as RedactedJsonValue, never a bare JsonValue, unknown, or any",
+        "rejects a raw unknown-typed payload field standing in for a summary",
+        "type-checks a well-formed diff record with zero diagnostics once both summaries are typed JsonValue, then cast through RedactedJsonValue",
+        "brands RedactedJsonValue with an unexported unique symbol -- an exported symbol would let any importer forge one with zero casts",
+        "exports RedactedJsonValue itself but never its brand symbol, per the real compiler's own module-exports list",
+        "rejects a bare JsonValue assigned directly where RedactedJsonValue is required -- the accidental, un-cast leak path does not type-check",
+        "rejects an object literal assigned directly where RedactedJsonValue is required, same as a bare JsonValue",
+        "accepts a JsonValue explicitly cast through RedactedJsonValue -- the deliberate, greppable escape hatch",
+        "does NOT verify cast content -- a value that still looks unredacted type-checks once cast, the documented, honest limit of this brand",
+        "stays assignable back to JsonValue -- a later analysis can read a RedactedJsonValue as ordinary JSON with zero diagnostics",
+        "declares FeatureGateExpiryStatus as exactly active|expired",
+        "declares FeatureGateExpiryCheck as (gate: FeatureGateDeclaration, releaseVersion: string) => FeatureGateExpiryStatus",
+        "rejects a FeatureGateExpiryCheck implementation that returns something other than active/expired",
+        "imports only via `import type`, never a runtime import",
+        "has no runtime code: every top-level statement is a type-only import, interface, type alias, or an ambient declare-const symbol",
+        "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+        "has exactly one statement: a type-only `export type * from './types.ts'`"
+      ],
+      "files": [
+        "packages/migration/feature-gates/src/types.ts",
+        "packages/migration/feature-gates/tests/gates.spec.ts",
+        "packages/settings/settings/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T21:45:00Z",
+      "dryRunProof": {
+        "treeSha": "438683df389c260705963d6942a3522b6dff07e7",
+        "testsDiscovered": 32
+      },
+      "note": "P0-05 C-stage (2026-09-01), Shadow/Enforce Feature Gates' Contract type surface: the 3-state FeatureGateState union (must[0]), a FeatureGateDeclaration carrying owner/introducedVersion/defaultByProfile/removalVersion (must[2]), a settings-namespace-interoperable value type verified against the real packages/settings/settings/src/types.ts, an override-chain FeatureGateResolution shape proving --dump-config's source-and-chain requirement (must[3]), and a FeatureGateExpiryCheck contract (acceptance[2]). Real RED->GREEN: a 2-state stub union with missing exports failed 14/25 genuinely (missing-export/wrong-union-member errors); full implementation passed 25/25, later 32/32 after fix rounds. Round 1 independent review REJECTed on 3 findings: (1) must[1]/acceptance[1]'s 'no sensitive-parameter leak' guarantee was comment-only -- legacySummary/shadowSummary were typed as bare JsonValue, a fully generic type that structurally accepts a raw secret; (2) an unexplained devDependencies-vs-peerDependencies classification inconsistency between @deepseek-ai/dsh-brand and @deepseek-ai/dsh-util-values; (3) gen-module-graph.ts --check failed, never regenerated after adding the new package. Fix round: genuinely strengthened the type -- a branded RedactedJsonValue (JsonValue & unexported-unique-symbol tag, mirroring TrustKernelRootIdentity's opaque-handle idiom) now makes a bare JsonValue or object literal fail to type-check where a summary is required, forcing an explicit cast through RedactedJsonValue; the doc comment and tests are honest that this proves only structural non-assignability of a raw JSON literal, never that cast content is actually secret-free (that remains a P-stage runtime job, same precedent as settings/redact.ts's own real redactSecrets). The dependency classification was independently re-verified as already matching real repo-wide precedent (dsh-util-values is devDependencies-only in every genuine type-only consumer repo-wide, never peerDependencies anywhere) -- no change needed, documented in a new README Dev Note. module-graph regenerated. Round 2 independent review: the RedactedJsonValue claim independently re-proven via a standalone tsc probe (not reusing the Writer's test file) -- a bare JsonValue/object literal genuinely fails, a single-step cast from an already-JsonValue-typed value succeeds, a fresh literal needs the documented as-unknown-as escape hatch (a real TS2352 quirk). REJECTed only on one new, mechanical finding: no bilingual README.zh.md/README.i18n.yaml pair (verify-translation-pairing). Fix round: added the missing language-switcher line plus a faithful Chinese translation matching the trust-kernel README's structure exactly. Round 3 independent review: ACCEPT, with the bilingual pair's recorded blob hashes independently recomputed via git hash-object and confirmed matching."
     }
   ]
 }
