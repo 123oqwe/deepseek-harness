@@ -360,6 +360,42 @@
         "testsDiscovered": 161
       },
       "note": "P0-06 F-stage (2026-09-01), acceptance[0] (\"至少能够读取审计基线产生的旧 session fixture\"): proves U-stage's session-replay negotiation wiring doesn't break reading real OLD session data. Three real, pre-existing, already-committed fixtures from this repo's own keyless recorded-session snapshot corpus (snapshots/*/session.jsonl), all predating schema-registry's existence (no schemaVersion tag on any event). Real subtlety found and handled: committed fixtures are envelope-scrubbed (seq/time stripped by scrubSessionSnapshot for stable re-recording diffs), so reconstructRealSessionLog() rebuilds a real on-disk envelope using the identical seq-reassignment rule the codebase's own repackSessionSnapshot already applies in the reverse direction -- every event's real type/data payload stays byte-identical to the fixture, only seq/time are deterministically re-assigned. BLOCKED-012-class deviation from the wave-map's literal F-stage files (schema-registry/tests/compatibility.spec.ts, core/session/src/repair.ts): repair.ts confirmed out of scope and untouched (2 prior independent reviews plus this slice's own re-confirmation -- pure crash-recovery, zero schema-version concept, downstream of any negotiation); compatibility.spec.ts has zero visibility into the real wired boundary (SessionLogScanner.consumeEventLine's private negotiateEventLineSchema, reachable only via session-persistence-jsonl's own exports) -- extended jsonl.spec.ts's existing U-stage describe block instead, itself already P0-06's own frozen U-stage test file. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): jsonl.spec.ts absent -- zero conflict. Coverage-completion slice, not a bug fix: all 3 cases pass cleanly against current U-stage wiring with no code changes. Real sensitivity proof: temporarily mutated format.ts's absent-schemaVersion default to an incompatible major, confirmed all 3 new tests genuinely fail with SchemaCompatibilityError/SCHEMA_MAJOR_MISMATCH, reverted (git diff on format.ts empty). Full session-persistence-jsonl + schema-registry suites: 280/280 passing."
+    },
+    {
+      "epic": "P0-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/kernel/trust-kernel/tests/dispose.spec.ts",
+        "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "leaves the kernel present after disposing an unrelated plugin, and shows the kernel is owned by the root fiber, not a plugin fiber",
+        "rejects a plugin row applied to the root Include entry after boot exactly as it rejects one present at initial boot",
+        "rejects delete-then-reprovide against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned",
+        "rejects a direct reassignment of the store entry (no delete) against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned",
+        "rejects impl.value = forged against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged",
+        "rejects a direct write to ctx.root.fiber.store['trustKernel'], and leaves both ctx.get and ctx.trustKernel property access unforged for an unrelated sibling",
+        "rejects a direct write to ctx.reflect.props['trustKernel'], and leaves ctx.trustKernel property access unforged",
+        "durably poisons ctx.trustKernel property access for the attacking plugin itself, while ctx.get('trustKernel') and an unrelated top-level sibling stay correct -- the known, accepted residual, not a bug in pinTrustKernel",
+        "poisons ctx.trustKernel property access for a sibling plugin mounted under the same ancestor (vector G), while ctx.get('trustKernel') and the root stay correct",
+        "poisons ctx.trustKernel property access for every non-root context silently (vector H, wholesale root-store replacement), while ctx.get('trustKernel') and the root's own direct property read stay correct"
+      ],
+      "files": [
+        "packages/kernel/trust-kernel/tests/dispose.spec.ts",
+        "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T19:30:00Z",
+      "dryRunProof": {
+        "treeSha": "c1abf813a834153d51814990ac7f9e516c2b3a68",
+        "testsDiscovered": 10
+      },
+      "note": "P0-02 F-stage (2026-09-01), acceptance[0] (\"任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier\"): closes BLOCKED-011, the multi-round Trust Kernel property-access security saga. BLOCKED-012-class deviation from the wave-map's literal F-stage file (boundary.spec.ts, already C-stage's own frozen, runtime-code-free type-surface test -- structurally cannot host a runtime unload/mount/bypass proof); manifest-patched to dispose.spec.ts + pin-hardening.spec.ts, recorded in tests/first100/adjudication.json#deliverablePathPatches (P0-02-F-dispose, P0-02-F-pin-hardening). dispose.spec.ts (commit e7d49cfa6b) proves the 'unload' half (a real Loader-driven fiber disposal, the root-pinned kernel survives and is genuinely owned by the root fiber, per ctx.reflect.store/Context.isolate) and the 'dynamic mount' half (Entry.update() on the root Include entry's config.patches, the one real post-boot insertion path this codebase supports, reduces to the same ctx.provide()-double-call rejection U-stage already proved) plus 2 direct-store-mutation bypass tests (delete-then-reprovide, direct reassignment) added during BLOCKED-011's hardening rounds. pin-hardening.spec.ts (commit bd993fa6fa and predecessors) proves the 'override' half across 4 real forgery rounds -- Object.freeze(impl) closing in-place Impl mutation, a root-fiber-store key lock, a reflect.props key lock -- plus 3 documented residual vectors (self-fiber, ancestor-fiber/vector G, wholesale root-store replacement/vector H), each independently reproduced live and proven currently unreachable by any real consumer (exhaustive grep: zero real code anywhere reads ctx.trustKernel via property access; the one real consumer, apps/cli/src/profile-boot.ts:314, uses ctx.get exclusively). Went through 4 real REJECT rounds plus a pre-committed HARD STOP before the user's final BLOCKED-011 decision (spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-011, ANSWERED-BY-USER final, 2026-09-01): P0-02.F closes at this honestly-documented state -- three property-access branches (dotted/bracket-literal/destructuring) closed to pure lexical matching with a narrow explicit allowlist, `scripts/verify-trust-kernel-property-access.ts` wired into the CI gate set -- with a new standing hard-trigger rule requiring the vendored Cordis Fiber structural fix (Option A) before any future epic wires a real policy/audit/signature-verifier enforcement point (~W6). All 6 known-limitation doc surfaces (EN/ZH boundary doc, EN/ZH package README, src/index.ts JSDoc, AGENTS.md) carry the deferred-not-permanently-accepted annotation. Coverage-completion dry run: 10/10 passing at the exact commit merging this decision (c1abf813a8, which also merge-forwards first100-exec's independent P0-06 ACCEPTED work into this branch)."
     }
   ]
 }

@@ -1158,7 +1158,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 4,
+    "count": 6,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P0-01": {
@@ -1193,6 +1193,24 @@
         "declaredPath": "packages/schema/schema-registry/tests/compatibility.spec.ts",
         "approvedPath": "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
         "reason": "BLOCKED-012: F-stage's real job (acceptance[0], proving U-stage's session-replay negotiation wiring doesn't break reading real old session data) has zero visibility from compatibility.spec.ts -- the real wired boundary (SessionLogScanner.consumeEventLine's private negotiateEventLineSchema) is reachable only via session-persistence-jsonl's own exports, not via the schema-registry package's own test file. The wave-map's other declared F-stage file, packages/core/session/src/repair.ts, is confirmed genuinely out of scope and left untouched by this slice (pure crash-recovery, zero schema-version concept, downstream of any negotiation -- independently confirmed by two prior C/P-stage reviews plus this slice's own re-confirmation); it required no patch since nothing points to it needing one. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- shared infrastructure (already P0-06's own frozen U-stage test file), zero owner conflict.",
+        "approvedAt": "2026-09-01",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
+      },
+      "P0-02-F-dispose": {
+        "epic": "P0-02",
+        "stage": "F",
+        "declaredPath": "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+        "approvedPath": "packages/kernel/trust-kernel/tests/dispose.spec.ts",
+        "reason": "BLOCKED-012: F-stage's real job is proving acceptance[0] (\"任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier\" -- no plugin unload, service override, or dynamic mount can replace the kernel's policy/audit/signature verifier). boundary.spec.ts has zero visibility into this: it is C-stage's own frozen, pure type-surface test (its own acceptance case reads \"has no runtime code: every top-level statement is a type/interface declaration\"), so it structurally cannot host a runtime unload/dynamic-mount proof. dispose.spec.ts proves the \"unload\" half (disposing an unrelated plugin's fiber via the Loader, showing the root-pinned kernel survives and is genuinely owned by the root fiber) and the \"dynamic mount\" half (Entry.update() applied to the root Include entry's config.patches, the one real post-boot insertion path this codebase supports, reduces to the same ctx.provide()-double-call rejection U-stage already proved) plus 2 direct-store-mutation bypass tests added during the BLOCKED-011 hardening rounds. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
+        "approvedAt": "2026-09-01",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
+      },
+      "P0-02-F-pin-hardening": {
+        "epic": "P0-02",
+        "stage": "F",
+        "declaredPath": "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+        "approvedPath": "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts",
+        "reason": "BLOCKED-012 companion to P0-02-F-dispose: proves the \"覆盖 service\" (override) half of acceptance[0], and the multi-round security-hardening work from the BLOCKED-011 adversarial-review saga -- Object.freeze(impl) closing the Impl-mutation vector, the root-fiber-store key lock, the reflect.props key lock, and the documented, independently-proven residual vectors (self-fiber poisoning, ancestor-fiber poisoning, wholesale root-store replacement). Same forcing reason as P0-02-F-dispose: boundary.spec.ts is C-stage's frozen, runtime-code-free type surface and cannot host these runtime pinning/bypass proofs. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is absent -- a new file, zero owner conflict.",
         "approvedAt": "2026-09-01",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
       }

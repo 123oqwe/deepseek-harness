@@ -122,6 +122,106 @@
         }
       ],
       "note": "acceptance[2]: 'all registry migrations have bidirectional or explicit-irreversible tests.' Two illustrative migration examples cover both classes: renameFiredAtToOccurredAt/renameOccurredAtToFiredAt is proven bidirectional (real round-trip, both directions, no loss); mergeNameFields is proven explicitly irreversible (a real pigeonhole information-loss counter-example, independently verified by the P-stage Opus reviewer to generalize, plus no reverse export -- an honest acknowledgment, not a silent gap)."
+    },
+    {
+      "epic": "P0-02",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "rejects a plugin that tries to override the pinned kernel via a second ctx.provide -- never a replaceable Cordis Service (must[3])"
+        },
+        {
+          "stage": "F",
+          "title": "leaves the kernel present after disposing an unrelated plugin, and shows the kernel is owned by the root fiber, not a plugin fiber"
+        },
+        {
+          "stage": "F",
+          "title": "rejects a plugin row applied to the root Include entry after boot exactly as it rejects one present at initial boot"
+        },
+        {
+          "stage": "F",
+          "title": "rejects delete-then-reprovide against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned"
+        },
+        {
+          "stage": "F",
+          "title": "rejects a direct reassignment of the store entry (no delete) against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned"
+        },
+        {
+          "stage": "F",
+          "title": "rejects impl.value = forged against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged"
+        },
+        {
+          "stage": "F",
+          "title": "rejects a direct write to ctx.root.fiber.store['trustKernel'], and leaves both ctx.get and ctx.trustKernel property access unforged for an unrelated sibling"
+        },
+        {
+          "stage": "F",
+          "title": "rejects a direct write to ctx.reflect.props['trustKernel'], and leaves ctx.trustKernel property access unforged"
+        }
+      ],
+      "note": "acceptance[0]: '任意插件卸载、覆盖 service 或动态 mount 都不能替换 kernel policy/audit/signature verifier' (no plugin unload, service override, or dynamic mount can replace the kernel's policy/audit/signature verifier). Covered for ctx.get('trustKernel') and the root context's own direct property read in every tested vector (delete-then-reprovide, direct store reassignment, Impl mutation, root-fiber-store key, reflect.props key, unload, dynamic mount). Per spec/first100/exec/BLOCKED-QUEUE.md's BLOCKED-011 final resolution (ANSWERED-BY-USER, 2026-09-01): 3 further property-access-only residual vectors (self-fiber poisoning, ancestor-fiber poisoning/vector G, wholesale root-store replacement/vector H, all in pin-hardening.spec.ts) are independently proven currently unreachable by any real consumer (exhaustive grep: zero real code anywhere reads ctx.trustKernel via property access; the sole real consumer, apps/cli/src/profile-boot.ts:314, uses ctx.get exclusively) and are closed to real code by the CI-enforced scripts/verify-trust-kernel-property-access.ts gate, not eliminated at the Cordis mechanism level. Clause 0's real security intent (no enforcement-point-reachable bypass -- there is currently no real enforcement point to bypass at all) is accepted as satisfied on this basis, with a new standing hard-trigger rule requiring the vendored Cordis Fiber structural fix (Option A) before any future epic wires a real enforcement point (~W6)."
+    },
+    {
+      "epic": "P0-02",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "keeps TrustKernelPolicyQuery.payload exactly `unknown` -- no business-domain field on the kernel surface"
+        },
+        {
+          "stage": "C",
+          "title": "keeps TrustKernelAuditEntry.payload exactly `unknown` -- no business-domain field on the kernel surface"
+        },
+        {
+          "stage": "C",
+          "title": "keeps TrustKernelSandboxAttestation.payload exactly `unknown` -- no business-domain field on the kernel surface"
+        },
+        {
+          "stage": "C",
+          "title": "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export"
+        },
+        {
+          "stage": "U",
+          "title": "denies and rejects by default -- no concrete policy/attestation provider exists yet (spec/trust-kernel.md acceptance clause 2)"
+        }
+      ],
+      "note": "acceptance[1]: 'Kernel API 无模型可见文本、无业务领域逻辑、无具体 provider 实现' (the kernel API carries no model-visible text, no business-domain logic, no concrete provider implementation). No-business-domain-field proven at the 3 opaque-payload members (C-stage); no-concrete-provider proven by the deny/reject/no-op defaults (U-stage, createTrustKernel); no-model-visible-text is structural (the 6 capability members carry no prompt/schema text at all, per spec/trust-kernel.md acceptance clause 2, and the package's own README Model Experience section states zero direct token/KV-cache effect)."
+    },
+    {
+      "epic": "P0-02",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "fails closed (throws, never warns) when uninitialized without the insecure opt-in"
+        }
+      ],
+      "note": "acceptance[2]: '未初始化 kernel 时，生产 profile 必须 fail closed' (an uninitialized kernel must fail closed in a production profile)."
+    },
+    {
+      "epic": "P0-02",
+      "acceptanceIndex": 3,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "warns and continues (never throws) when uninitialized with the insecure opt-in -- every call, a permanent warning, not a one-time notice"
+        },
+        {
+          "stage": "U",
+          "title": "stays opted out when the switch is unset or empty"
+        },
+        {
+          "stage": "U",
+          "title": "opts in on ANY non-empty value, including falsy-looking ones"
+        },
+        {
+          "stage": "U",
+          "title": "defaults to a stderr write when no warn sink is supplied"
+        }
+      ],
+      "note": "acceptance[3]: '开发 profile 可显式启用 insecure 模式并显示永久警告' (a development profile may explicitly enable an insecure mode, displaying a permanent warning). The DSH_TRUST_KERNEL_INSECURE opt-in resolver (stays opted out by default, opts in on any non-empty value) plus the permanent (not one-time) warning behavior are both proven directly."
     }
   ]
 }
