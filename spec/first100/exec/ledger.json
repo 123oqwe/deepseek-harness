@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T19:50:34.117Z",
-  "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
+  "lastUpdatedUtc": "2026-09-01T21:32:53.040Z",
+  "inputDigest": "5f4e1f05bac203b3071523c791740035318850a93c8f79aa0ce1b116538664b1",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -268,7 +268,42 @@
       "wave": 3,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d7b1931eaeec211ff1eb0a9921308732f2592a0b",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33560054567",
+          "observationReportPath": "/tmp/ci-artifacts-w3-batch1/first100-evidence-d21e75068d56f3150e1e32d9ceab68636b66df82/vitest-report.json",
+          "observationSha256": "b4a654a26da4b7bce7b0d8a767dd1398f2e765a2c04d8e41bcadd0863d5b4682",
+          "expectCasesMatched": [
+            "accepts a well-formed family with a definition, providers, and consumers",
+            "rejects a family with an empty id",
+            "rejects a family with a duplicate provider entry",
+            "rejects a family with a duplicate consumer entry",
+            "rejects two families sharing the same id",
+            "rejects a family whose definition, provider, or consumer package is absent from the workspace",
+            "derives one allowed edge from each provider to the family definition",
+            "derives one allowed edge from each consumer to the family definition",
+            "derives no edge between two providers or between two consumers",
+            "requires every allowlist entry to carry a removalDate in YYYY-MM-DD form",
+            "rejects an allowlist entry whose removalDate is not a real calendar date",
+            "requires every allowlist entry to carry a non-empty owner",
+            "rejects a duplicate allowlist entry for the same kind, from, and to",
+            "parses and validates every declared family with zero schema violations",
+            "gives every allowlist entry a removalDate and an owner",
+            "reports zero missing-provider violations under the controlled allowlist (acceptance[0])",
+            "flags a consumer import resolving into a provider package's src/* as a deep-import violation",
+            "does not flag a consumer import resolving to a provider package's published entry point",
+            "does not flag an import between packages outside any declared family",
+            "flags a provider import resolving into an app/UI package as a provider-app-dependency violation",
+            "does not flag a provider import resolving to its own family definition package",
+            "flags a family with zero providers and no matching allowlist entry",
+            "does not flag a family whose only provider is its own definition package",
+            "flags a family missing a provider fixture, consumer composition test, or unload/rollback test",
+            "does not flag a family whose test evidence covers all four must[2] artifacts",
+            "names the offending dependency edge, source file, and a remediation suggestion on every violation kind",
+            "suppresses a violation whose kind and edge match an allowlist entry",
+            "still reports a violation whose edge is not covered by any allowlist entry"
+          ],
+          "capturedAtUtc": "2026-09-01T21:32:14.705Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -281,7 +316,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "d7b1931eaeec211ff1eb0a9921308732f2592a0b",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -494,7 +529,43 @@
       "wave": 3,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d21e75068d56f3150e1e32d9ceab68636b66df82",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33560054567",
+          "observationReportPath": "/tmp/ci-artifacts-w3-batch1/first100-vitest-report-d21e75068d56f3150e1e32d9ceab68636b66df82/vitest-report.json",
+          "observationSha256": "d2926c925c3b982c989b90df95a476e442cbb722debac59dfc5975d20878c3f4",
+          "expectCasesMatched": [
+            "imports only a type-only Branded from @deepseek-ai/dsh-brand -- no other import, no runtime dependency edge",
+            "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+            "declares GateEvidence as a discriminated union of CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence",
+            "gives GateEvidenceBase (unexported) exactly the must[0] base fields, all readonly",
+            "exports CompletedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+            "exports SkippedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+            "exports MissingGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+            "types Digest as Branded<EvidenceDigest\"> -- a plain nominal string, never a unique-symbol handle",
+            "types Signature as Branded<EvidenceSignature\"> -- a plain nominal string, never a unique-symbol handle",
+            "types CommitSha as Branded<CommitSha\"> -- a plain nominal string, never a unique-symbol handle",
+            "types GateId as Branded<GateId\"> -- a plain nominal string, never a unique-symbol handle",
+            "type-checks well-formed CompletedGateEvidence, SkippedGateEvidence, and MissingGateEvidence literals with zero diagnostics",
+            "rejects a CompletedGateEvidence literal whose skipReasons is nonempty -- a completed gate carries no skip reason",
+            "rejects a SkippedGateEvidence literal whose skipReasons is empty -- a skip must name at least one real reason",
+            "rejects a MissingGateEvidence literal whose skipReasons is empty -- a missing gate must also name at least one real reason",
+            "rejects reassigning a GateEvidence member -- every field is readonly (TS2540)",
+            "rejects a plain string literal where a Digest is required -- Digest is a Branded nominal type, not a bare string",
+            "binds baselineFingerprint, gitDiff, additionalGates, and signature on EVERY EvidencePackage, before any accepted-narrowing",
+            "types BaselineFingerprintBinding.gitSha, GitDiffBinding.baseSha, and GitDiffBinding.headSha as the CommitSha brand -- distinct from GateId, not a bare string that would satisfy any brand",
+            "type-checks an AcceptedEvidencePackage literal when every required gate id is present and CompletedGateEvidence, and every required artifact path is present",
+            "rejects an AcceptedEvidencePackage literal that omits one required gate id from requiredGates",
+            "rejects an AcceptedEvidencePackage literal whose requiredGates assigns a SkippedGateEvidence to a required gate id",
+            "rejects an AcceptedEvidencePackage literal whose requiredGates assigns a MissingGateEvidence to a required gate id",
+            "rejects an AcceptedEvidencePackage literal that omits one required build artifact path from requiredBuildArtifacts -- must[2]'s \"missing artifact\" clause",
+            "type-checks an UnacceptedEvidencePackage literal whose requiredGates has a SkippedGateEvidence and whose requiredBuildArtifacts is empty -- accepted:false imposes no completeness or outcome constraint",
+            "documents the honest degraded case: with RequiredGateId/RequiredArtifactPath left at their string default, an AcceptedEvidencePackage literal with EMPTY requiredGates and requiredBuildArtifacts maps still type-checks -- completeness of a non-literal required-id SET is a P-stage runtime check (verify-evidence.mjs against the release manifest), never a static one this type surface can express",
+            "declares no unique-symbol-branded member anywhere in the module -- every field is a plain JSON-safe value, so JSON.stringify never silently drops it",
+            "is exactly one statement: `export type * from './types.ts'` -- zero runtime exports, zero Cordis registration, zero side effects",
+            "has no default export and no Config/apply plugin exports"
+          ],
+          "capturedAtUtc": "2026-09-01T21:32:53.039Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -507,7 +578,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "d21e75068d56f3150e1e32d9ceab68636b66df82",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
