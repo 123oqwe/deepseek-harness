@@ -8,11 +8,13 @@
  * TypeScript compiler run against a small virtual usage file that imports
  * the real `src/types.ts` and asserts on the compiler's own diagnostics --
  * a genuine, on-topic, runtime-executed proof of a compile-time guarantee,
- * matching what this Contract-stage slice can honestly test. Actual
- * evidence collection and verification (`scripts/release/collect-
- * evidence.mjs`/`verify-evidence.mjs`, constructing and checking real
- * `EvidencePackage` values against a real release run) is a later P-stage
- * slice's acceptance case.
+ * matching what this Contract-stage slice can honestly test.
+ *
+ * The P-stage section below (`scripts/release/collect-evidence.mjs`/
+ * `verify-evidence.mjs`) constructs and checks real `EvidencePackage`
+ * values against real subprocess-driven gate runs and a real git fixture --
+ * runtime proof for must[0]/must[1]/must[2] and acceptance[0]/[1], where
+ * the Contract-stage checks above prove only the compile-time shape.
  *
  * `spec/first100-evidence.schema.json` is NOT exercised here. It is
  * pre-existing infrastructure of this same first100 program's own 109-item
@@ -28,10 +30,11 @@
  * epic's Writer report for the full analysis.
  */
 
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { execFileSync, spawnSync, type SpawnSyncReturns } from 'node:child_process'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { dirname, join, resolve } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 import ts from 'typescript'
 
 const packageRoot = resolve(import.meta.dirname, '../../packages/assurance/evidence-format')
@@ -468,5 +471,336 @@ describe('src/index.ts (Epic P0-07 C-stage B4(f) scaffold)', () => {
       return false
     })
     expect(hasApplyExport, 'exported apply plugin entry').toBe(false)
+  })
+})
+
+describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () => {
+  const baselineScriptPath = resolve(import.meta.dirname, '../../scripts/release/baseline-fingerprint.mjs')
+  const collectScriptPath = resolve(import.meta.dirname, '../../scripts/release/collect-evidence.mjs')
+  const verifyScriptPath = resolve(import.meta.dirname, '../../scripts/release/verify-evidence.mjs')
+
+  const fixtureRoots: string[] = []
+  afterEach(() => {
+    for (const root of fixtureRoots.splice(0)) rmSync(root, { recursive: true, force: true })
+  })
+
+  function git(root: string, args: string[]): string {
+    return execFileSync('git', args, { cwd: root, encoding: 'utf8', env: { ...process.env, LANG: 'C', LC_ALL: 'C' } }).trim()
+  }
+
+  function write(root: string, relPath: string, content: string): void {
+    const full = join(root, relPath)
+    mkdirSync(dirname(full), { recursive: true })
+    writeFileSync(full, content)
+  }
+
+  /** A minimal but structurally realistic checkout `scripts/release/baseline-fingerprint.mjs capture` can succeed against, mirroring `tests/release/baseline-fingerprint.spec.ts`'s own fixture shape. */
+  function makeEvidenceFixture(): { root: string, baseSha: string } {
+    const root = mkdtempSync(join(tmpdir(), 'dsh-evidence-'))
+    fixtureRoots.push(root)
+    git(root, ['init', '--initial-branch=main'])
+    git(root, ['config', 'user.email', 'evidence-fixture@example.com'])
+    git(root, ['config', 'user.name', 'Evidence Fixture'])
+    git(root, ['config', 'commit.gpgsign', 'false'])
+    write(root, 'package.json', `${JSON.stringify({ name: '@fixture/root', private: true, packageManager: 'pnpm@11.7.0' }, null, 2)}\n`)
+    write(root, 'pnpm-workspace.yaml', 'packages:\n  - packages/*\n')
+    write(root, 'packages/bundle/base/cordis.patch.yml', 'rows:\n  - id: row-alpha\n')
+    write(root, 'packages/sdk/protocol/src/types.ts', 'export interface Envelope {\n  kind: string\n}\n')
+    write(root, 'packages/core/session/src/known-event-types.ts', "export type KnownEventType = 'session.start'\n")
+    write(root, 'pnpm-lock.yaml', "lockfileVersion: '9.0'\npackages: {}\n")
+    git(root, ['add', '-A'])
+    git(root, ['commit', '-m', 'fixture baseline'])
+    const baseSha = git(root, ['rev-parse', 'HEAD'])
+    // `collect-evidence init` requires a real build-artifact-capable checkout
+    // and, via `verifyBaseline`, a captured baseline whose gitSha equals the
+    // CURRENT HEAD -- so a real second commit (simulating the release's own
+    // work) must land, and `baseline:capture` must run, before `init`.
+    write(root, 'lib/index.js', "console.log('build output')\n")
+    git(root, ['add', '-A'])
+    git(root, ['commit', '-m', 'add build output'])
+    return { root, baseSha }
+  }
+
+  function captureBaseline(root: string): void {
+    const result = spawnSync(process.execPath, [baselineScriptPath, 'capture', '--repo-root', root], { encoding: 'utf8' })
+    expect(result.status, `baseline capture stderr: ${result.stderr}`).toBe(0)
+  }
+
+  function collectInit(root: string, baseSha: string, requiredGates: readonly string[], requiredArtifacts: readonly string[]): SpawnSyncReturns<string> {
+    return spawnSync(process.execPath, [
+      collectScriptPath, 'init', '--repo-root', root, '--base-sha', baseSha,
+      ...requiredGates.flatMap(id => ['--required-gate', id]),
+      ...requiredArtifacts.flatMap(path => ['--required-artifact', path]),
+    ], { encoding: 'utf8' })
+  }
+
+  function collectRun(root: string, gateId: string, extraFlags: readonly string[], command: readonly string[]): SpawnSyncReturns<string> {
+    return spawnSync(process.execPath, [collectScriptPath, 'run', '--repo-root', root, '--gate-id', gateId, ...extraFlags, '--', ...command], { encoding: 'utf8' })
+  }
+
+  function collectBuildArtifact(root: string, path: string): SpawnSyncReturns<string> {
+    return spawnSync(process.execPath, [collectScriptPath, 'build-artifact', '--repo-root', root, '--path', path], { encoding: 'utf8' })
+  }
+
+  function verifyEvidence(root: string, evidenceRelPath = '.dsh/evidence/evidence.json'): SpawnSyncReturns<string> {
+    return spawnSync(process.execPath, [verifyScriptPath, '--repo-root', root, '--evidence', evidenceRelPath], { encoding: 'utf8' })
+  }
+
+  /** The real runtime shape this test suite inspects -- deliberately plain `string`/`number` leaves, never the branded C-stage types: a `Digest`/`GateId`/`CommitSha` brand is compile-time-only and can never be recovered from parsed JSON (see the type-checking `describe` block below for how this suite instead proves the real collected structure against the branded types). */
+  interface CollectedGateEvidence {
+    readonly gateId: string
+    readonly command: string
+    readonly startedAt: string
+    readonly endedAt: string
+    readonly environment: unknown
+    readonly outcome: 'completed' | 'skipped' | 'missing'
+    readonly exitCode: number | null
+    readonly logDigest: string | null
+    readonly artifacts: readonly unknown[]
+    readonly testCounts: { total: number, passed: number, failed: number, skipped: number } | null
+    readonly skipReasons: readonly string[]
+  }
+
+  interface CollectedEvidencePackage {
+    readonly accepted: boolean
+    readonly baselineFingerprint: { readonly gitSha: string, readonly digest: string }
+    readonly gitDiff: { readonly baseSha: string, readonly headSha: string, readonly digest: string }
+    readonly requiredGates: Record<string, CollectedGateEvidence>
+    readonly requiredBuildArtifacts: Record<string, string>
+  }
+
+  function readEvidence(root: string): CollectedEvidencePackage {
+    return JSON.parse(readFileSync(join(root, '.dsh/evidence/evidence.json'), 'utf8')) as CollectedEvidencePackage
+  }
+
+  /** A trivial cross-platform "gate": a Node script invoked as `node <path>`, never a shell script (no POSIX-shell/chmod dependency, so this runs on Windows too). */
+  function writeGateScript(root: string, relPath: string, body: string): string {
+    const full = join(root, relPath)
+    write(root, relPath, body)
+    return full
+  }
+
+  describe('round-trip: real collect-then-verify produces a genuinely accepted, offline-verifiable EvidencePackage', () => {
+    it('seeds every declared required gate as a MissingGateEvidence placeholder at init, keeping accepted=false until each one actually runs', () => {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['typecheck', 'test'], ['lib/index.js'])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+
+      const pkg = readEvidence(root)
+      expect(pkg.accepted).toBe(false)
+      const typecheckGate = pkg.requiredGates.typecheck!
+      const testGate = pkg.requiredGates.test!
+      expect(typecheckGate.outcome).toBe('missing')
+      expect(typecheckGate.skipReasons).toEqual(['not yet attempted'])
+      expect(testGate.outcome).toBe('missing')
+      expect(pkg.baselineFingerprint.gitSha).toBe(git(root, ['rev-parse', 'HEAD']))
+      expect(pkg.gitDiff.baseSha).toBe(baseSha)
+
+      const verifyResult = verifyEvidence(root)
+      expect(verifyResult.status, `an honestly-incomplete package must still verify clean: ${verifyResult.stdout}`).toBe(0)
+    })
+
+    it('collects two real gate runs and a real build-artifact digest into accepted=true, then verifies fully offline', () => {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['typecheck', 'test'], ['lib/index.js'])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+
+      const typecheckScript = writeGateScript(root, 'typecheck-gate.mjs', "console.log('typecheck ok'); process.exit(0)")
+      const typecheckResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, typecheckScript])
+      expect(typecheckResult.status, `typecheck run stderr: ${typecheckResult.stderr}`).toBe(0)
+
+      write(root, 'test-counts.json', JSON.stringify({ total: 3, passed: 3, failed: 0, skipped: 0 }))
+      const testScript = writeGateScript(root, 'test-gate.mjs', "console.log('test ok'); process.exit(0)")
+      const testResult = collectRun(root, 'test', ['--required', '--test-counts', 'test-counts.json'], [process.execPath, testScript])
+      expect(testResult.status, `test run stderr: ${testResult.stderr}`).toBe(0)
+
+      expect(readEvidence(root).accepted, 'still incomplete: the required build artifact has not been recorded yet').toBe(false)
+
+      const buildResult = collectBuildArtifact(root, 'lib/index.js')
+      expect(buildResult.status, `build-artifact stderr: ${buildResult.stderr}`).toBe(0)
+
+      const pkg = readEvidence(root)
+      expect(pkg.accepted).toBe(true)
+      expect(pkg.requiredGates.typecheck!.outcome).toBe('completed')
+      expect(pkg.requiredGates.typecheck!.exitCode).toBe(0)
+      expect(pkg.requiredGates.test!.testCounts).toEqual({ total: 3, passed: 3, failed: 0, skipped: 0 })
+      expect(pkg.requiredBuildArtifacts['lib/index.js']).toMatch(/^[0-9a-f]{64}$/)
+
+      // acceptance[1]: fully offline -- delete the gate scripts collect-evidence
+      // just ran; a verifier that re-ran them would now fail (ENOENT/module-not-found).
+      unlinkSync(typecheckScript)
+      unlinkSync(testScript)
+      const verifyResult = verifyEvidence(root)
+      expect(verifyResult.status, `offline verify stderr/stdout: ${verifyResult.stdout}${verifyResult.stderr}`).toBe(0)
+      expect(verifyResult.stdout).toContain('no mismatches')
+    })
+  })
+
+  describe('must[2] holds for real collected evidence, not only a compile-time literal', () => {
+    it('never sets accepted=true when a required gate genuinely completes with a nonzero exit code', () => {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['lint'], [])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+
+      const lintScript = writeGateScript(root, 'lint-gate.mjs', "console.error('lint violations found'); process.exit(1)")
+      const lintResult = collectRun(root, 'lint', ['--required'], [process.execPath, lintScript])
+      expect(lintResult.status, 'collect run must propagate the real, failing exit code').toBe(1)
+
+      const pkg = readEvidence(root)
+      expect(pkg.requiredGates.lint!.outcome, 'a gate that ran to completion, even failing, is CompletedGateEvidence, not skipped/missing').toBe('completed')
+      expect(pkg.requiredGates.lint!.exitCode).toBe(1)
+      expect(pkg.accepted, 'a failing required gate must never yield accepted=true').toBe(false)
+
+      const verifyResult = verifyEvidence(root)
+      expect(verifyResult.status, 'an honestly-unaccepted package with no tampering must still verify clean').toBe(0)
+    })
+
+    it('records a --skip reason as SkippedGateEvidence without running any command, and keeps accepted=false', () => {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['e2e'], [])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+
+      const skipResult = collectRun(root, 'e2e', ['--required', '--skip', 'no DEEPSEEK_API_KEY'], [])
+      expect(skipResult.status).toBe(0)
+
+      const pkg = readEvidence(root)
+      const e2eGate = pkg.requiredGates.e2e!
+      expect(e2eGate.outcome).toBe('skipped')
+      expect(e2eGate.skipReasons).toEqual(['no DEEPSEEK_API_KEY'])
+      expect(e2eGate.exitCode).toBeNull()
+      expect(e2eGate.logDigest).toBeNull()
+      expect(pkg.accepted).toBe(false)
+    })
+  })
+
+  describe('acceptance[0]: tampering with any referenced file after collection makes verify fail', () => {
+    function collectOneAcceptedGate(): { root: string } {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['typecheck'], ['lib/index.js'])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+      const gatePath = writeGateScript(root, 'gate.mjs', "console.log('ok'); process.exit(0)")
+      const runResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, gatePath])
+      expect(runResult.status, `run stderr: ${runResult.stderr}`).toBe(0)
+      const buildResult = collectBuildArtifact(root, 'lib/index.js')
+      expect(buildResult.status, `build-artifact stderr: ${buildResult.stderr}`).toBe(0)
+      expect(readEvidence(root).accepted).toBe(true)
+      const clean = verifyEvidence(root)
+      expect(clean.status, `precondition: must verify clean before tampering: ${clean.stdout}`).toBe(0)
+      return { root }
+    }
+
+    it('detects a mutated byte in a completed gate\'s captured log file', () => {
+      const { root } = collectOneAcceptedGate()
+      const logPath = join(root, '.dsh/evidence/evidence.d/logs/typecheck.log')
+      write(root, '.dsh/evidence/evidence.d/logs/typecheck.log', `${readFileSync(logPath, 'utf8')}TAMPERED\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status).toBe(1)
+      expect(result.stdout).toContain('logDigest mismatch')
+    })
+
+    it('detects a mutated byte in a required build artifact after collection', () => {
+      const { root } = collectOneAcceptedGate()
+      write(root, 'lib/index.js', "console.log('TAMPERED')\n")
+
+      const result = verifyEvidence(root)
+      expect(result.status).toBe(1)
+      expect(result.stdout).toContain('lib/index.js digest mismatch')
+    })
+
+    it('detects a hand-edited evidence.json itself: recordDigest, package signature, and the re-derived must[2] check all fail', () => {
+      const { root } = collectOneAcceptedGate()
+      const outPath = join(root, '.dsh/evidence/evidence.json')
+      // A mutable local shape (unlike `CollectedEvidencePackage`'s `readonly`
+      // fields) for the one thing this test deliberately corrupts.
+      const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredGates: { typecheck: { exitCode: number } } }
+      pkg.requiredGates.typecheck.exitCode = 1
+      writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+      const result = verifyEvidence(root)
+      expect(result.status).toBe(1)
+      expect(result.stdout).toContain('recordDigest mismatch')
+      expect(result.stdout).toContain('package signature mismatch')
+      expect(result.stdout).toContain('not a passing CompletedGateEvidence')
+    })
+  })
+
+  describe('the written evidence.json genuinely type-checks as EvidencePackage/AcceptedEvidencePackage -- real TypeScript types, not merely JSON-shaped-alike', () => {
+    it('compiles with zero diagnostics when the real collected fields are branded per their declared types', () => {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['typecheck'], ['lib/index.js'])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+      const gatePath = writeGateScript(root, 'gate.mjs', "console.log('ok'); process.exit(0)")
+      const runResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, gatePath])
+      expect(runResult.status, `run stderr: ${runResult.stderr}`).toBe(0)
+      const buildResult = collectBuildArtifact(root, 'lib/index.js')
+      expect(buildResult.status, `build-artifact stderr: ${buildResult.stderr}`).toBe(0)
+
+      const pkg = readEvidence(root)
+      expect(pkg.accepted).toBe(true)
+      const gate = pkg.requiredGates.typecheck!
+
+      // Real string leaves (command/timestamps/environment/artifact path) are
+      // spliced in verbatim from the actual collected record; identifier and
+      // digest leaves are branded via `declare const`, matching the C-stage
+      // FIXTURE_PREAMBLE's own established pattern above -- JSON.stringify's
+      // structural shape can never carry a compile-time-only phantom brand, so
+      // this is the honest way to prove the real STRUCTURE (field names,
+      // nesting, discriminant literals) compiles as the real type, without
+      // pretending a parsed JSON literal can satisfy a branded field on its own.
+      const diagnostics = compileVirtualUsage(`
+import type { AcceptedEvidencePackage, CommitSha, Digest, GateEnvironment, GateId, Signature } from ${JSON.stringify(typesPath)}
+declare const digest: Digest
+declare const gitSha: CommitSha
+declare const gateId: GateId
+declare const signature: Signature
+const pkg: AcceptedEvidencePackage = {
+  formatVersion: 1,
+  baselineFingerprint: { gitSha, digest },
+  gitDiff: { baseSha: gitSha, headSha: gitSha, digest },
+  additionalGates: [],
+  requiredGates: {
+    typecheck: {
+      gateId,
+      command: ${JSON.stringify(gate.command)},
+      startedAt: ${JSON.stringify(gate.startedAt)},
+      endedAt: ${JSON.stringify(gate.endedAt)},
+      environment: ${JSON.stringify(gate.environment)} satisfies GateEnvironment,
+      outcome: 'completed',
+      exitCode: ${JSON.stringify(gate.exitCode)},
+      logDigest: digest,
+      artifacts: [],
+      testCounts: null,
+      skipReasons: [],
+      recordDigest: digest,
+    },
+  },
+  requiredBuildArtifacts: { ${JSON.stringify('lib/index.js')}: digest },
+  accepted: true,
+  signature,
+}
+`)
+      expect(diagnostics, diagnosticMessages(diagnostics)).toHaveLength(0)
+    })
+
+    it('every collected GateEvidence record has exactly must[0]\'s real field set at runtime, matching CompletedGateEvidence\'s own declared members', () => {
+      const { root, baseSha } = makeEvidenceFixture()
+      captureBaseline(root)
+      const initResult = collectInit(root, baseSha, ['typecheck'], [])
+      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+      const gatePath = writeGateScript(root, 'gate.mjs', "process.exit(0)")
+      const runResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, gatePath])
+      expect(runResult.status, `run stderr: ${runResult.stderr}`).toBe(0)
+
+      const gate = readEvidence(root).requiredGates.typecheck!
+      const [, completedOwnMembers] = GATE_EVIDENCE_VARIANTS.find(([name]) => name === 'CompletedGateEvidence')!
+      expect(Object.keys(gate).toSorted()).toEqual([...GATE_EVIDENCE_BASE_MEMBERS, ...completedOwnMembers].toSorted())
+    })
   })
 })
