@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T03:23:52.920Z",
-  "inputDigest": "1d34cfe40e75eefc61d6c8ff17c6c06a111f8514a9d4310ad796fe16e602d92a",
+  "lastUpdatedUtc": "2026-09-01T04:32:53.872Z",
+  "inputDigest": "228b60e4ce3cc16f8ff4e70cce743d5a7ba881242139abed3f9b2ab4dda01702",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -38,7 +38,15 @@
           "capturedAtUtc": "2026-08-31T23:19:49.384Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33469268880",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-artifacts-p-green-v3/first100-evidence-23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f/vitest-report.json",
+          "observationSha256": "ce521b62302949c198af81d028e9f72219bfb725a1b273987e2ada601ac9d874",
+          "expectCasesMatched": [
+            "wires baseline:capture/baseline:verify in package.json to the real script, and pnpm run actually executes it"
+          ],
+          "capturedAtUtc": "2026-09-01T04:32:53.862Z"
         },
         "U": {
           "status": "GREEN",
@@ -70,7 +78,7 @@
           "capturedAtUtc": "2026-09-01T00:52:18.241Z"
         }
       },
-      "candidateSha": "b0ac88f5732a2ae3303c829027048eec68b4d572",
+      "candidateSha": "23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN"
