@@ -194,15 +194,11 @@ const TRUST_KERNEL_INSECURE_ENV = 'DSH_TRUST_KERNEL_INSECURE'
  * {@link resolveTelemetryPatch}'s bias -- here the deliberate value is
  * presence, not absence, because skipping a security control must be an
  * explicit developer choice, never an accidental empty-string default.
- *
- * STUB (P0-02 U-stage RED slice): always resolves to "not opted in",
- * ignoring `raw`. The real switch lands in this same slice's GREEN commit.
  * @param raw - the raw DSH_TRUST_KERNEL_INSECURE value.
  * @returns whether this boot may proceed without a pinned Trust Kernel.
  */
 export function resolveTrustKernelInsecureOptIn(raw: string | undefined): boolean {
-  void raw
-  return false
+  return (raw ?? '') !== ''
 }
 
 /**
@@ -211,10 +207,6 @@ export function resolveTrustKernelInsecureOptIn(raw: string | undefined): boolea
  * `trustKernel`. A production boot (no opt-in) with no pinned kernel
  * refuses to continue; an opted-in development boot prints a permanent
  * warning -- every boot while the opt-in is set, not once -- and proceeds.
- *
- * STUB (P0-02 U-stage RED slice): always a no-op, regardless of
- * `initialized`/`insecureOptIn`. The real enforcement lands in this same
- * slice's GREEN commit.
  * @param initialized - whether `ctx.get('trustKernel')` returned a value after preparation.
  * @param insecureOptIn - the resolved {@link resolveTrustKernelInsecureOptIn} value.
  * @param warn - sink for the permanent insecure-mode warning; defaults to a stderr write.
@@ -225,9 +217,11 @@ export function enforceTrustKernelPosture(
   insecureOptIn: boolean,
   warn: (message: string) => void = (message) => { process.stderr.write(message) },
 ): void {
-  void initialized
-  void insecureOptIn
-  void warn
+  if (initialized) return
+  if (!insecureOptIn) {
+    throw new Error(`${NAME}: Trust Kernel not initialized -- refusing to boot (set ${TRUST_KERNEL_INSECURE_ENV} to explicitly opt into an insecure development boot)`)
+  }
+  warn(`${NAME}: WARNING: booting with no Trust Kernel (${TRUST_KERNEL_INSECURE_ENV} set) -- root identity, signature roots, policy enforcement, audit append, secret broker, and sandbox attestation are all unavailable; never use in production.\n`)
 }
 
 /**

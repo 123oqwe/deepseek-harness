@@ -8,9 +8,11 @@ We recommend using an agent to explore the codebase and understand its architect
 
 ## Cordis
 
-[Cordis](cordis-primer.md) is the framework under dsh: plugins contribute services, typed events, and reversible effects to a shared context. Every part of the product is a plugin, including the model adapter, the tool registry, the session log, and the agent loop itself, so each is replaceable from configuration.
+[Cordis](cordis-primer.md) is the framework under dsh: plugins contribute services, typed events, and reversible effects to a shared context. With one exception below, every part of the product is a plugin, including the model adapter, the tool registry, the session log, and the agent loop itself, so each is replaceable from configuration.
 
-There is no privileged core to patch: you extend dsh by mounting a plugin beside the others, and registrations are effects that unwind when their plugin unloads.
+Outside that exception, there is no privileged core to patch: you extend dsh by mounting a plugin beside the others, and registrations are effects that unwind when their plugin unloads.
+
+The exception is the **Trust Kernel** (`packages/kernel/trust-kernel`): root identity, signature roots, policy enforcement, audit append, the secret-broker handle, and the sandbox-attestation verifier. `apps/cli/src/profile-boot.ts` constructs it before the Cordis `Context` exists and pins it with `ctx.provide('trustKernel', kernel)`, never `ctx.plugin(...)` — no config row, patch, or plugin unload can reach it. See [`docs/architecture/trust-kernel-boundary.md`](architecture/trust-kernel-boundary.md) for what the kernel owns and why.
 
 ## Profiles and bundles
 

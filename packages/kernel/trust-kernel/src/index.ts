@@ -36,26 +36,31 @@ import type {
 export type * from './types.ts'
 
 /**
- * Construct the process's one `TrustKernel` value. Pure and synchronous: no
- * I/O, no environment reads, so it cannot itself fail -- the only way a
- * `dsh` boot proceeds without a pinned kernel is `apps/cli/src/profile-boot.ts`'s
- * explicit `DSH_TRUST_KERNEL_INSECURE` opt-in, which skips calling this at
- * all.
- *
- * STUB (P0-02 U-stage RED slice): returns an unfrozen placeholder and an
- * always-`'allow'`/always-permissive verdict set. The real, deny-by-default,
- * deep-frozen construction lands in this same slice's GREEN commit.
- * @returns a `TrustKernel` value.
+ * Construct and deep-freeze the process's one `TrustKernel` value. Pure and
+ * synchronous: no I/O, no environment reads, so it cannot itself fail -- the
+ * only way a `dsh` boot proceeds without a pinned kernel is
+ * `apps/cli/src/profile-boot.ts`'s explicit `DSH_TRUST_KERNEL_INSECURE`
+ * opt-in, which skips calling this at all. `policyEnforcement` denies,
+ * `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops: no
+ * concrete policy, audit-chain, or attestation provider exists behind these
+ * entrypoints yet (see this module's own doc comment above).
+ * @returns a frozen `TrustKernel`; every opaque handle member is likewise frozen.
  */
 export function createTrustKernel(): TrustKernel {
-  return {
-    rootIdentity: {} as TrustKernelRootIdentity,
-    signatureRoots: {} as TrustKernelSignatureRoots,
-    secretBroker: {} as TrustKernelSecretBrokerHandle,
-    policyEnforcement: (_query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict => 'allow',
-    auditAppend: (_entry: TrustKernelAuditEntry): void => {},
-    sandboxAttestationVerifier: (_attestation: TrustKernelSandboxAttestation): boolean => true,
-  }
+  const rootIdentity = Object.freeze({}) as TrustKernelRootIdentity
+  const signatureRoots = Object.freeze({}) as TrustKernelSignatureRoots
+  const secretBroker = Object.freeze({}) as TrustKernelSecretBrokerHandle
+  const policyEnforcement = (_query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict => 'deny'
+  const auditAppend = (_entry: TrustKernelAuditEntry): void => {}
+  const sandboxAttestationVerifier = (_attestation: TrustKernelSandboxAttestation): boolean => false
+  return Object.freeze({
+    rootIdentity,
+    signatureRoots,
+    policyEnforcement,
+    auditAppend,
+    secretBroker,
+    sandboxAttestationVerifier,
+  })
 }
 
 declare module '@deepseek-ai/cordis' {

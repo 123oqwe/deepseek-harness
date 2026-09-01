@@ -14,14 +14,21 @@ export const name = 'trust-kernel-invariant'
 export const inject = ['invariants']
 
 /**
- * No runtime invariant: this Contract-stage slice ships only the frozen
- * `TrustKernel` type surface (`src/types.ts`) — no construction path, no
- * `ctx.provide('trustKernel', ...)` wiring, and so no live session-event or
- * mutable-data relationship exists yet to check. Epic P0-02 must[3]'s owned
- * runtime relationship — a constructed `TrustKernel`'s six capability
- * members never change reference identity for the process lifetime — is
- * checkable only once a later slice adds `src/index.ts` and actually
- * constructs one; that slice's companion owns this installer's live check.
+ * No runtime invariant: `src/index.ts`'s `createTrustKernel` now constructs
+ * and pins the one `TrustKernel` value, but the identity guarantee this
+ * comment used to defer — its six capability members never change
+ * reference identity for the process lifetime — is enforced structurally,
+ * not by any event this package emits or mutable data it owns.
+ * `ctx.provide('trustKernel', kernel)` runs exactly once, from
+ * `apps/cli/src/profile-boot.ts`'s `prepare` closure, before any
+ * config-tree entry mounts; Cordis's own `ReflectService.provide`
+ * (`vendor/cordis/src/reflect.ts`) throws on a second call for the same
+ * name, and this package's code never calls `ctx.set('trustKernel', ...)`
+ * to reassign the pinned value. There is no recurring event stream or
+ * mutable data this package owns to check the identity against — the
+ * guarantee holds because of code this package does not write, which a
+ * runtime check cannot positively verify without inventing an event
+ * unrelated to any real relationship this package owns.
  */
 const install: InvariantInstaller = () => {}
 

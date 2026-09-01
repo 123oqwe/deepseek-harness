@@ -759,7 +759,10 @@ export async function assertEntriesActivated(ctx: Context, binName: string): Pro
  * (see {@link resolveConfigPath}).
  * @param patches - optional overlay patches applied over the included tree
  * (see {@link loadOptionalPatches}); an empty list mounts none.
- * @param prepare - optional host setup run after Loader installation and before any config-tree entry mounts.
+ * @param prepare - optional host setup run after Loader installation and before any config-tree entry mounts;
+ * this is where a caller pins an unconditional, never-`ctx.plugin`-mounted service -- the pattern
+ * `ctx.provide('dshHomePath', dshHomePath)` above already uses, and Epic P0-02's Trust Kernel
+ * follows from `apps/cli/src/profile-boot.ts` (see `docs/architecture/trust-kernel-boundary.md`).
  * @param bareModuleBaseUrl - optional installed-host base for bare package
  * names; use it when the host, rather than the configuration project, owns the
  * complete plugin set.
