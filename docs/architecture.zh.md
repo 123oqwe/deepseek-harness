@@ -8,9 +8,11 @@
 
 ## Cordis
 
-[Cordis](cordis-primer.zh.md) 是 dsh 底层的框架：插件向共享上下文贡献服务、类型化事件和可逆的副作用。产品的每一部分都是插件，包括模型适配器、工具注册表、会话日志，以及 agent loop（智能体循环）本身，因此每个都可以从配置替换。
+[Cordis](cordis-primer.zh.md) 是 dsh 底层的框架：插件向共享上下文贡献服务、类型化事件和可逆的副作用。除下述一项例外，产品的每一部分都是插件，包括模型适配器、工具注册表、会话日志，以及 agent loop（智能体循环）本身，因此每个都可以从配置替换。
 
-不存在需要打补丁的特权内核：扩展 dsh 的方式是把插件挂载到其他插件旁边，而各项注册都是副作用，会在其插件卸载时撤销。
+在该例外之外，不存在需要打补丁的特权内核：扩展 dsh 的方式是把插件挂载到其他插件旁边，而各项注册都是副作用，会在其插件卸载时撤销。
+
+这一例外是 **Trust Kernel**（`packages/kernel/trust-kernel`）：根身份、签名根、policy enforcement（策略执行）、审计追加、secret broker（密钥代理）handle，以及 sandbox attestation（沙箱证明）验证器。`apps/cli/src/profile-boot.ts` 在 Cordis `Context` 存在之前构造它，并用 `ctx.provide('trustKernel', kernel)` 固定它，绝不使用 `ctx.plugin(...)`——任何配置行、patch 或插件卸载都无法触及它。kernel 拥有什么、为什么，见 [`docs/architecture/trust-kernel-boundary.md`](architecture/trust-kernel-boundary.zh.md)。
 
 ## Profile 与组合包
 

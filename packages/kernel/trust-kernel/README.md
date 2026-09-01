@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 `dsh-trust-kernel` fixes the narrow, unforgeable capability surface Epic P0-02's Trust Kernel may ever hand to the runtime: one root identity, one signature-roots handle, a policy-enforcement entrypoint, an audit-append entrypoint, a secret-broker handle, and a sandbox-attestation verifier — six members, no more. Everything else in dsh — models, tools, storage providers, workflow, memory providers, UI — stays an ordinary, replaceable Cordis plugin; see `docs/architecture/trust-kernel-boundary.md` for the full boundary and why none of the six is a Cordis Service.
 
-This package currently ships its Contract-stage slice only: the `TrustKernel` type surface (`src/types.ts`) and its invariant companion (`src/invariant.ts`). It has no `src/index.ts` yet — no constructed `TrustKernel` value and no `ctx.provide` wiring exist in this slice. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
+`src/index.ts`'s `createTrustKernel` constructs and deep-freezes the one `TrustKernel` value; `apps/cli/src/profile-boot.ts` calls it before the Cordis `Context` exists and pins the result with `ctx.provide('trustKernel', kernel)`. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work) for what still has no concrete provider behind it.
 
 ## Table of Contents
 
@@ -40,7 +40,17 @@ function checkPolicy(kernel: TrustKernel, payload: unknown): boolean {
 }
 ```
 
-There is no exported constructor for `TrustKernel` or for its three opaque handle members (`TrustKernelRootIdentity`, `TrustKernelSignatureRoots`, `TrustKernelSecretBrokerHandle`) in this package. A later slice's `src/index.ts` is the one place that constructs a `TrustKernel` value and pins it into a Cordis `Context` with `ctx.provide('trustKernel', kernel)`, before that context otherwise exists.
+There is no exported constructor for `TrustKernelRootIdentity`, `TrustKernelSignatureRoots`, or `TrustKernelSecretBrokerHandle` individually — only `createTrustKernel()` produces a complete, frozen `TrustKernel`:
+
+```ts
+import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+
+const kernel = createTrustKernel() // called before the Cordis Context exists
+// ...then, inside boot()'s prepare closure, once the Context does exist:
+// ctx.provide('trustKernel', kernel) -- never ctx.plugin(...)
+```
+
+`apps/cli/src/profile-boot.ts` is the one caller: it constructs the kernel before `boot()` creates the Cordis `Context` at all, then pins it into that context from the `prepare` closure `boot()` already exposes.
 
 -----
 
@@ -64,7 +74,8 @@ This section explains the design decisions behind the package; the observable ty
 | File | Role |
 |---|---|
 | [`src/types.ts`](src/types.ts) | The `TrustKernel` type surface: its six capability members, the three opaque handle types, and the three narrow entrypoint function types |
-| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty at this Contract-stage slice — no constructed `TrustKernel` value exists yet to check |
+| [`src/index.ts`](src/index.ts) | `createTrustKernel()`: constructs and deep-freezes the one `TrustKernel` value; `policyEnforcement` denies, `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops until a later epic wires real providers |
+| [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty — the single-pin identity guarantee is enforced by Cordis's own service-store semantics, not by any event or mutable data this package owns |
 
 </details>
 
@@ -75,7 +86,7 @@ This section explains the design decisions behind the package; the observable ty
 
 - `docs/architecture/trust-kernel-boundary.md` — what the kernel owns, why none of it is a Cordis Service, and the plugin/never-plugin split around it.
 - [`spec/trust-kernel.md`](../../../spec/trust-kernel.md) — the normative capability surface and Epic P0-02's must/acceptance clauses.
-- [`packages/boot/app-boot`](../../boot/app-boot/README.md) — owns `ctx.provide('dshHomePath', ...)`, the precedent for how a later slice pins a constructed `TrustKernel` into a Cordis `Context`.
+- [`packages/boot/app-boot`](../../boot/app-boot/README.md) — owns `ctx.provide('dshHomePath', ...)`, the pattern `apps/cli/src/profile-boot.ts` follows to pin the constructed `TrustKernel` into a Cordis `Context`.
 
 -----
 
@@ -86,7 +97,7 @@ This section explains the design decisions behind the package; the observable ty
 
 #### What the model sees
 
-Nothing. This Contract-stage slice exports types only — `src/types.ts` contributes no runtime value, so nothing in this package can render into a model request, system prompt, or tool schema.
+Nothing. `createTrustKernel()`'s six members carry no model-visible text (per `spec/trust-kernel.md` acceptance clause 2), so nothing in this package can render into a model request, system prompt, or tool schema.
 
 #### Token effect
 
@@ -100,9 +111,8 @@ Independent: the package registers nothing that participates in a model request.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **No constructed `TrustKernel` value yet** — this Contract-stage slice ships only the type surface and an explained-empty invariant companion; `src/index.ts` (construction, `ctx.provide` wiring, and the runtime-frozen deep-immutability check) is a later slice's deliverable. See [`spec/trust-kernel.md`](../../../spec/trust-kernel.md#contract-stage-slice).
-- **No boot-time enforcement yet** — the production fail-closed / development insecure-mode-warning behavior when the kernel is not initialized belongs to that same later slice and `packages/boot/app-boot`.
-- **No package root entry point yet** — `package.json` declares no `"."` export, `main`, or `types` field, because no `src/index.ts` exists in this slice to build one from; import only the `./types` and `./invariant` subpaths shown above. A root entry point is added once `src/index.ts` lands.
+- **No concrete policy/audit/attestation provider yet** — `policyEnforcement` denies, `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops unconditionally; wiring a real policy engine, audit-chain persistence, or attestation verifier behind these entrypoints is a later epic's deliverable (`spec/trust-kernel.md` acceptance clause 2 keeps this package's own API surface free of any concrete provider implementation).
+- **Boot-time fail-closed/insecure-opt-in enforcement lives in `apps/cli`, not this package** — `apps/cli/src/profile-boot.ts`'s `enforceTrustKernelPosture` and the `DSH_TRUST_KERNEL_INSECURE` opt-in own the production-fails-closed / development-insecure-warning split (Epic P0-02 acceptance clause 3); this package only constructs and freezes the value that decision pins or omits.
 
 <a id="dev-note"></a>
 ### Dev Note

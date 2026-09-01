@@ -54,6 +54,9 @@
       "path": "../../packages/util/home-paths"
     },
     {
+      "path": "../../packages/kernel/trust-kernel"
+    },
+    {
       "path": "../../packages/mcp/mcp-client"
     },
     {
