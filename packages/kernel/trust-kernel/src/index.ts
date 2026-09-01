@@ -32,6 +32,19 @@
  * these same entrypoints -- their signatures, not their bodies, are this
  * slice's deliverable.
  *
+ * A later review found the store-entry freeze above left three further live
+ * bypasses open, all closed in the same `pinTrustKernel` call: the frozen
+ * slot's `Impl` record was itself still a mutable object (`impl.value =
+ * forged`); `ctx.trustKernel` PROPERTY access resolves through the ROOT
+ * fiber's own mutable `store`, never through `ctx.reflect.store`, and was
+ * globally poisonable from any plugin; and `ctx.reflect.props['trustKernel']`
+ * could be overwritten with a substitute accessor that intercepts that same
+ * property access ahead of everything else. See `pinTrustKernel`'s own doc
+ * comment for the fix and vendored-source citations for each, and
+ * `tests/pin-hardening.spec.ts` for the runtime proof, including the one
+ * residual this pin cannot close (a plugin poisoning its own fiber's
+ * `store`, self-subtree-scoped only).
+ *
  * @module @deepseek-ai/dsh-trust-kernel
  */
 import { Context } from '@deepseek-ai/cordis'
@@ -77,12 +90,41 @@ export function createTrustKernel(): TrustKernel {
 }
 
 /**
- * Pin `kernel` into `ctx` as the process's one `trustKernel`, then freeze its
- * store entry so no later plugin can clear the registration and re-provide a
- * forged value (Epic P0-02 must[3]; see this module's own doc comment for
- * the bypass this closes). One atomic operation: the freeze runs
- * immediately after `ctx.provide` succeeds, so `ctx.get('trustKernel')`
- * never observes the pin unprotected.
+ * Pin `kernel` into `ctx` as the process's one `trustKernel`, then close
+ * every live bypass found against the naive `ctx.provide` + single-freeze
+ * pin (Epic P0-02 must[3]; see this module's own doc comment for the
+ * originally-found bypass). Four writes run immediately after `ctx.provide`
+ * succeeds, so no window exists where the pin is observably unprotected:
+ *
+ * 1. `Object.defineProperty` on `ctx.reflect.store[key]` -- the original
+ *    fix: no plugin can `delete` or reassign the store slot to clear the
+ *    duplicate-registration guard and re-provide.
+ * 2. `Object.freeze` on the `Impl` record living at that slot -- the slot
+ *    freeze above does not stop a plugin mutating the record's own `.value`
+ *    property in place (`ctx.reflect.store[key].value = forged`), which
+ *    would forge `ctx.get('trustKernel')` without touching the slot at all.
+ * 3. `Object.defineProperty` on `ctx.root.fiber.store['trustKernel']` --
+ *    `ctx.trustKernel` PROPERTY access (as opposed to `ctx.get`) never
+ *    consults `ctx.reflect.store`; it walks each fiber's own `store` cache
+ *    by name up to the root (`vendor/cordis/src/reflect.ts:150-167`), and
+ *    the ROOT fiber's `store` (`vendor/cordis/src/fiber.ts:198,324`) is a
+ *    plain, directly-mutable object reachable from any plugin. Locking this
+ *    key closes global, cross-subtree poisoning of `ctx.trustKernel`.
+ * 4. `Object.defineProperty` on `ctx.reflect.props['trustKernel']` -- the
+ *    same proxy trap checks `ctx.reflect.props[prop]` for an `accessor`
+ *    entry BEFORE the fiber-store walk (`reflect.ts:147-150`); locking this
+ *    slot to the `service` declaration `ctx.provide` wrote prevents a
+ *    plugin substituting an accessor that would intercept `ctx.trustKernel`
+ *    globally, ahead of fix 3 above.
+ *
+ * One residual survives all four: a plugin assigning into ITS OWN fiber's
+ * `store` (not the root's) durably poisons `ctx.trustKernel` PROPERTY access
+ * for itself and its own descendants only -- the parent-chain walk finds
+ * that entry before ever reaching the root fiber this function locks.
+ * `ctx.get('trustKernel')` stays correct even there. Closing this residual
+ * needs a vendored Cordis `Fiber` change, out of scope here; see
+ * `Context.trustKernel`'s property doc and
+ * `docs/architecture/trust-kernel-boundary.md#known-residual-self-subtree-property-access-poisoning`.
  *
  * Call this from `boot()`'s `prepare` closure, against the root `Context`,
  * before any config-tree entry mounts -- never from inside `ctx.plugin(...)`,
@@ -99,8 +141,59 @@ export function pinTrustKernel(ctx: Context, kernel: TrustKernel): void {
      isolate map's index signature is optional only because it types every
      conceivable service name, not because this particular lookup can miss. */
   if (key === undefined) throw new Error('unreachable: ctx.provide did not register the trustKernel isolate key')
+  const impl = ctx.reflect.store[key]
+  // The store slot's `Impl` record is itself a plain, unfrozen object: freeze
+  // it so `impl.value = forged` (mutating the registration in place, rather
+  // than replacing the slot) cannot forge what `ctx.get('trustKernel')`
+  // returns. `ctx.provide` writes this same object into both
+  // `ctx.reflect.store` and the providing fiber's own `Fiber.store`
+  // (`vendor/cordis/src/reflect.ts`'s `provide()`: `this.store[key] = impl;
+  // this.ctx.fiber.store![name] = impl`), so one freeze protects both.
+  Object.freeze(impl)
   Object.defineProperty(ctx.reflect.store, key, {
-    value: ctx.reflect.store[key],
+    value: impl,
+    writable: false,
+    configurable: false,
+    enumerable: true,
+  })
+  // `ctx.trustKernel` (property access, not `ctx.get`) never consults
+  // `ctx.reflect.store` above -- the proxy `get` trap
+  // (`vendor/cordis/src/reflect.ts:150-167`) instead walks `fiber.store?.[prop]`
+  // by NAME up the parent-fiber chain, starting from the calling context's
+  // own fiber. The chain always terminates at the ROOT fiber, whose `store`
+  // (`vendor/cordis/src/fiber.ts:198,324`, `ctx.root.fiber.store`, a plain
+  // `Object.create(null)`) is directly reachable and mutable from any plugin.
+  // Locking this key closes global, cross-subtree poisoning
+  // (`ctx.root.fiber.store['trustKernel'] = forged`); it cannot close a
+  // plugin assigning into ITS OWN fiber's `store`, which the parent-chain walk
+  // finds before ever reaching the root -- that residual needs a vendored
+  // `Fiber` change and is out of scope here (see the `Context.trustKernel`
+  // property doc below).
+  const rootFiberStore = ctx.root.fiber.store
+  /* v8 ignore next -- the root fiber initializes `store` unconditionally in
+     its own constructor branch (`runtime === null`, `vendor/cordis/src/fiber.ts:324`);
+     it is typed optional only because ordinary, non-root fibers may be
+     unloaded. This function's own contract requires the root `Context`. */
+  if (rootFiberStore === undefined) throw new Error('unreachable: the root fiber has no store')
+  Object.defineProperty(rootFiberStore, 'trustKernel', {
+    value: impl,
+    writable: false,
+    configurable: false,
+    enumerable: true,
+  })
+  // The proxy `get` trap checks `ctx.reflect.props[prop]` FIRST, before the
+  // fiber-store walk above (`vendor/cordis/src/reflect.ts:147-150`): an
+  // `{ type: 'accessor', get: ... }` entry there intercepts every read of
+  // `ctx.trustKernel`, root and subtree alike, unconditionally. `provide()`
+  // already declared `props['trustKernel'] = { type: 'service' }`
+  // (`reflect.ts`'s own `provide()`), so `ctx.reflect.accessor('trustKernel',
+  // ...)` already throws ("already declared as service") -- but `props` is a
+  // plain, mutable `Dict` (`reflect.ts`'s own `public props`), so a plugin can
+  // still assign `ctx.reflect.props['trustKernel'] = { type: 'accessor', ... }`
+  // directly, bypassing that method entirely. Lock the slot to the `service`
+  // declaration `provide()` just wrote.
+  Object.defineProperty(ctx.reflect.props, 'trustKernel', {
+    value: ctx.reflect.props['trustKernel'],
     writable: false,
     configurable: false,
     enumerable: true,
@@ -111,12 +204,14 @@ declare module '@deepseek-ai/cordis' {
   interface Context {
     /**
      * The pinned `TrustKernel`; absent only in an explicit
-     * `DSH_TRUST_KERNEL_INSECURE` development boot. Prefer
-     * `ctx.get('trustKernel')` over this property: `pinTrustKernel`'s freeze
-     * protects only `ctx.reflect.store`, not the separate, per-fiber
-     * `Fiber.store` cache Cordis resolves property access through, so an
-     * untrusted plugin can still locally poison what this property resolves
-     * to within its own subtree (`docs/architecture/trust-kernel-boundary.md#known-gap-fiber-local-property-access-poisoning`).
+     * `DSH_TRUST_KERNEL_INSECURE` development boot. `pinTrustKernel` protects
+     * this property globally, the same as `ctx.get('trustKernel')`, against
+     * every plugin except one it owns: a plugin can still assign into ITS
+     * OWN fiber's `store` cache, which locally poisons what this property
+     * (not `ctx.get`) resolves to within that plugin's own subtree only --
+     * never for siblings or the root
+     * (`docs/architecture/trust-kernel-boundary.md#known-residual-self-subtree-property-access-poisoning`).
+     * Prefer `ctx.get('trustKernel')` regardless: it has no residual at all.
      */
     trustKernel?: TrustKernel
   }

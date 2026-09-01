@@ -31,9 +31,11 @@ dsh 中其余一切都是插件：通过 `ctx.plugin(...)` 贡献、由 Loader �
 
 `ctx.provide` 单独使用时，其重复注册防护仅检查 `ctx.reflect.store` 对应条目是否已被占用——而该 store 是一个普通的、可变的对象，任何拥有 `ctx` 的插件都能读取它。`@deepseek-ai/dsh-trust-kernel` 的 `pinTrustKernel(ctx, kernel)` 在 `ctx.provide` 成功后立即冻结该具体 store 条目（`Object.defineProperty(..., { writable: false, configurable: false })`），从而关闭由此产生的"先删除、后重新注册"绕过路径，使直接 `delete` 和直接赋值都会抛出异常；正因如此，`apps/cli/src/profile-boot.ts` 调用的是 `pinTrustKernel`，而不是裸的 `ctx.provide`。
 
-### 已知缺口：fiber 本地的属性访问污染
+后续一次评审发现，仅有这一处冻结还留下三个进一步的可实际利用的绕过：被冻结条目上的 `Impl` 记录本身仍是可变对象（`impl.value = forged` 无需触碰该条目本身，就能一并伪造 `ctx.get('trustKernel')`）；`ctx.trustKernel` 的**属性**访问是通过 root fiber 自身可独立修改的 `store` 来解析的，从不经过 `ctx.reflect.store`，因此任何插件都能全局污染它；而 `ctx.reflect.props['trustKernel']` 可以被替换成一个伪造的 accessor，其优先级还在前述所有防护之前。`pinTrustKernel` 现在同时冻结该 `Impl` 记录、锁定 root fiber 的 store 条目、并锁定 `reflect.props` 的注册——每处修复对应的 vendored Cordis 依据，见 `packages/kernel/trust-kernel/src/index.ts` 中 `pinTrustKernel` 自身的文档注释；运行期证明见 `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts`。
 
-`pinTrustKernel` 保护的是 `ctx.get('trustKernel')`；它不保护 `ctx.trustKernel` 的属性访问。Cordis 解析 `ctx.trustKernel` 时会遍历每个 fiber 自己的、可独立修改的 `Fiber.store` 缓存——这是一个与 `ctx.reflect.store` 不同的对象，每次 reload 都会被整体重建，且从不经过 `ReflectService.provide()` 的防护。任何插件都能直接赋值 `ctx.fiber.store['trustKernel'] = forged`；这会持久地污染该插件及其下挂载的每个插件所解析到的 `ctx.trustKernel`（已实测验证，并非纯理论），而 `ctx.get('trustKernel')` 与其他子树不受影响。在不触碰 vendored Cordis 的 `Fiber` 类（本仓库的 vendoring 策略禁止这样做）的前提下，本仓库自身代码中的防御性包装无法关闭这个缺口。在维护者做出决策并将其关闭之前，请把 `ctx.get('trustKernel')` 视为 kernel 唯一安全的访问方式。
+### 已知遗留缺口：仅限自身子树的属性访问污染
+
+`pinTrustKernel` 现在完整保护 `ctx.get('trustKernel')`，也在全局范围内保护 `ctx.trustKernel` 属性访问——针对任何其他插件、root 本身，以及跨兄弟插件均已关闭。唯一遗留的缺口是：插件仍可赋值到它自己 fiber 的 `store` 缓存（`ctx.fiber.store['trustKernel'] = forged`）——父 fiber 链的遍历会在到达 `pinTrustKernel` 锁定的 root fiber store 条目之前，先找到这次写入。这会持久污染该插件自身及其子孙所解析到的 `ctx.trustKernel`（仅限属性访问，绝不影响 `ctx.get`），范围仅限该插件自身的子树，绝不波及兄弟插件或 root（已实测验证，并非纯理论）。在不触碰 vendored Cordis 的 `Fiber` 类（本仓库的 vendoring 策略禁止这样做）的前提下，本仓库自身代码中的防御性包装无法关闭这一遗留缺口。`ctx.get('trustKernel')` 完全没有遗留缺口；无论如何都应优先使用它，而不是 `ctx.trustKernel`。
 
 ## 哪些仍是插件
 

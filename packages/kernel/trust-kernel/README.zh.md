@@ -11,7 +11,7 @@ kind: "package-reference"
 
 `dsh-trust-kernel` 固化了 Epic P0-02 的 Trust Kernel 可能发放给运行时的窄、不可伪造能力表面：一个 root identity、一个 signature-roots handle、一个 policy enforcement entrypoint、一个 audit append entrypoint、一个 secret broker handle，以及一个 sandbox attestation verifier——恰好六项，不多不少。dsh 中其余一切——模型、工具、存储 provider、workflow、memory provider、UI——仍是普通的、可替换的 Cordis 插件；完整边界与六项为何都不是 Cordis Service，见 `docs/architecture/trust-kernel-boundary.md`。
 
-`src/index.ts` 的 `createTrustKernel` 构造并深度冻结唯一的 `TrustKernel` 值；`apps/cli/src/profile-boot.ts` 在 Cordis `Context` 存在之前调用它，并用 `pinTrustKernel(ctx, kernel)` 把结果钉入 context——该函数先调用 `ctx.provide('trustKernel', kernel)`，随后冻结那个 service-store 条目，使任何插件都无法先删除再重新注册以绕过 `ctx.provide` 自身的重复注册防护。哪些能力背后仍无具体 provider，见[已知限制与延期工作](#known-limitations-and-deferred-work)。
+`src/index.ts` 的 `createTrustKernel` 构造并深度冻结唯一的 `TrustKernel` 值；`apps/cli/src/profile-boot.ts` 在 Cordis `Context` 存在之前调用它，并用 `pinTrustKernel(ctx, kernel)` 把结果钉入 context。除了 `ctx.provide('trustKernel', kernel)` 之外，`pinTrustKernel` 还锁定了插件可能用来伪造或替换该钉入的每条可达路径：service-store 条目本身、位于该条目的 `Impl` 记录、`ctx.trustKernel` 属性访问所经过的 root fiber 自身的 store 条目，以及插件本可用来替换成伪造 accessor 的 `reflect.props` 注册。`ctx.get('trustKernel')` 与 `ctx.trustKernel` 现在全局都得到完整保护，唯一遗留的窄缺口是：插件仍可通过写入自己 fiber 的 store，污染其自身子树内 `ctx.trustKernel`（仅限属性访问，不影响 `ctx.get`）解析到的值——见[已知限制与延期工作](#known-limitations-and-deferred-work)。
 
 ## 目录
 
@@ -74,7 +74,7 @@ const kernel = createTrustKernel() // called before the Cordis Context exists
 | 文件 | 职责 |
 |---|---|
 | [`src/types.ts`](src/types.ts) | `TrustKernel` 类型表面：其六个能力成员、三个不透明 handle 类型，以及三个窄 entrypoint 函数类型 |
-| [`src/index.ts`](src/index.ts) | `createTrustKernel()`：构造并深度冻结唯一的 `TrustKernel` 值；`policyEnforcement` 拒绝、`sandboxAttestationVerifier` 拒绝、`auditAppend` 空操作，直到后续 epic 接入真正的 provider。`pinTrustKernel()`：用 `ctx.provide` 把它钉入 `Context`，并冻结该 service-store 条目，使任何插件都无法先删除再重新注册以绕过重复注册防护 |
+| [`src/index.ts`](src/index.ts) | `createTrustKernel()`：构造并深度冻结唯一的 `TrustKernel` 值；`policyEnforcement` 拒绝、`sandboxAttestationVerifier` 拒绝、`auditAppend` 空操作，直到后续 epic 接入真正的 provider。`pinTrustKernel()`：用 `ctx.provide` 把它钉入 `Context`，再锁定 service-store 条目、其 `Impl` 记录、root fiber 的 store 条目，以及 `reflect.props` 注册，使任何插件都无法伪造、先删除再重新注册，或用替代 accessor 顶替这次钉入 |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件：已解释的空实现——唯一钉入的身份保证由 Cordis 自身的 service-store 语义强制，而非本包拥有的任何事件流或可变数据 |
 
 </details>
@@ -113,7 +113,7 @@ const kernel = createTrustKernel() // called before the Cordis Context exists
 
 - **尚无具体的 policy/audit/attestation provider** ——`policyEnforcement` 无条件拒绝、`sandboxAttestationVerifier` 无条件拒绝、`auditAppend` 无条件空操作；把真正的 policy 引擎、audit 链持久化或 attestation 验证器接到这些 entrypoint 背后是后续 epic 的交付物（`spec/trust-kernel.md` acceptance 条款 2 要求本包自身的 API 表面不带任何具体 provider 实现）。
 - **启动期 fail-closed/insecure 选择进入的强制执行归属 `apps/cli`，不在本包**——`apps/cli/src/profile-boot.ts` 的 `enforceTrustKernelPosture` 与 `DSH_TRUST_KERNEL_INSECURE` 选择进入项拥有"生产环境必须 fail closed／开发环境可显式启用 insecure 警告"这一划分（Epic P0-02 acceptance 条款 3）；本包只负责构造并冻结那个决策会钉入或省略的值。
-- **`pinTrustKernel` 保护的是 `ctx.get('trustKernel')`，不是 `ctx.trustKernel` 属性访问**——Cordis 通过每个 fiber 自己的、可独立修改的 `Fiber.store` 缓存来解析属性访问，从不经过 `pinTrustKernel` 所冻结的 `ctx.reflect.store` 条目。任何插件都能直接赋值 `ctx.fiber.store['trustKernel'] = forged`，从而持久地污染该插件及其下挂载的每个插件所解析到的 `ctx.trustKernel`（已在发现此问题的评审中实测验证，并非纯理论）；`ctx.get('trustKernel')` 与其他子树不受影响。在不触碰 vendored Cordis 的 `Fiber` 类的前提下，本仓库自身代码中的防御性包装无法关闭这个缺口；见 `docs/architecture/trust-kernel-boundary.md#known-gap-fiber-local-property-access-poisoning`。在此问题关闭之前，调用方必须使用 `ctx.get('trustKernel')`，而不是 `ctx.trustKernel`。
+- **`pinTrustKernel` 全局保护 `ctx.get('trustKernel')` 与 `ctx.trustKernel`，唯一例外是插件污染自身子树的属性访问视图**——`ctx.trustKernel`（属性访问，不是 `ctx.get`）通过遍历每个 fiber 自己的 `Fiber.store` 缓存、一路向上直到 root fiber 的 store 来解析，而 `pinTrustKernel` 已锁定 root fiber 的那个条目；这就关闭了来自任何其他插件、root 本身，以及跨兄弟插件的污染。插件仍可赋值 `ctx.fiber.store['trustKernel'] = forged` 到它自己的 fiber store 中——父 fiber 链的遍历会在到达被锁定的 root 条目之前先找到这个写入——从而持久污染该插件自身及其子孙所解析到的 `ctx.trustKernel`，但仅限于该插件自身的子树（已在发现此问题的评审中实测验证，并非纯理论）；即便对该插件而言，`ctx.get('trustKernel')` 仍保持正确。在不触碰 vendored Cordis 的 `Fiber` 类的前提下，本仓库自身代码中的防御性包装无法关闭这一遗留缺口；见 `docs/architecture/trust-kernel-boundary.md#known-residual-self-subtree-property-access-poisoning`。无论如何都应优先使用 `ctx.get('trustKernel')`——它完全没有遗留缺口。
 
 <a id="dev-note"></a>
 ### 开发备注
