@@ -207,6 +207,17 @@ describe('release/baseline-fingerprint fault/tamper contract (P0-01 F-stage)', (
     expect(output).toContain('pnpm-lock.yaml')
   })
 
+  it('verify fails and names the drifted workspace package manifest', () => {
+    const { root } = makeFixture()
+    const captureResult = capture(root)
+    expect(captureResult.status, `capture stderr: ${captureResult.stderr}`).toBe(0)
+    write(root, 'packages/alpha/package.json', `${JSON.stringify({ name: '@fixture/alpha-renamed', version: '0.0.0', private: true }, null, 2)}\n`)
+    const verifyResult = verify(root)
+    expect(verifyResult.status).not.toBe(0)
+    const output = `${verifyResult.stdout}${verifyResult.stderr}`
+    expect(output).toContain('pnpm-workspace.yaml')
+  })
+
   it('captures a fingerprint that never leaks the fixture checkout\'s absolute path or backslash-spelled paths anywhere in its content', () => {
     const { root } = makeFixture()
     const result = capture(root)
