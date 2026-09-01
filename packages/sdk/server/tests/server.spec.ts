@@ -7,6 +7,7 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import { SchemaCompatibilityError } from '@deepseek-ai/dsh-schema-registry'
 import AgentRegistry, { type Agent, type AgentHandle } from '@deepseek-ai/dsh-agent'
 
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -960,6 +961,71 @@ describe('HarnessSdkJsonRpcServer', () => {
     } finally {
       await ctx.fiber.dispose()
     }
+  })
+
+  describe('schema-registry negotiation at SDK initialize (P0-06 must[4])', () => {
+    it('rejects an initialize handshake whose explicit schemaVersion major differs from the registered major', async () => {
+      const ctx = new Context()
+      const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+      try {
+        let thrown: unknown
+        try {
+          await server.initialize({
+            cwd: '.',
+            provider: 'deepseek-official',
+            model: 'model',
+            schemaVersion: { major: 3, minor: 0 },
+          })
+        } catch (error) {
+          thrown = error
+        }
+        expect(thrown).toBeInstanceOf(SchemaCompatibilityError)
+        const error = thrown as SchemaCompatibilityError
+        expect(error.code).toBe('SCHEMA_MAJOR_MISMATCH')
+        expect(error.schemaId).toBe('sdk-protocol:InitializeParams')
+        expect(error.encounteredVersion).toEqual({ major: 3, minor: 0 })
+        expect(error.registeredVersion).toEqual({ major: 1, minor: 0 })
+      } finally {
+        await ctx.fiber.dispose()
+      }
+    })
+
+    it('accepts an initialize handshake whose explicit schemaVersion major matches the registered major', async () => {
+      const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-schema-match-'))
+      const ctx = await makeHarness(storageDir)
+      try {
+        const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+        const init = await server.initialize({
+          cwd: storageDir,
+          provider: 'deepseek-official',
+          model: 'schema-match-model',
+          schemaVersion: { major: 1, minor: 0 },
+        })
+        expect(init.serverInfo.name).toBe('deepseek-harness-sdk-runtime')
+        await server.shutdown()
+      } finally {
+        await ctx.fiber.dispose()
+        await rm(storageDir, { recursive: true, force: true })
+      }
+    })
+
+    it('defaults an absent schemaVersion to the registered version, leaving ordinary handshakes unaffected', async () => {
+      const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-schema-default-'))
+      const ctx = await makeHarness(storageDir)
+      try {
+        const server = new HarnessSdkJsonRpcServer(ctx, new FakeTransport())
+        const init = await server.initialize({
+          cwd: storageDir,
+          provider: 'deepseek-official',
+          model: 'schema-default-model',
+        })
+        expect(init.serverInfo.name).toBe('deepseek-harness-sdk-runtime')
+        await server.shutdown()
+      } finally {
+        await ctx.fiber.dispose()
+        await rm(storageDir, { recursive: true, force: true })
+      }
+    })
   })
 
   it('rejects an unavailable exact model during initialize', async () => {

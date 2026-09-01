@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-01-schema-registry-negotiation-at-real-read-boundaries.md
+2026-09-01-schema-registry-negotiation-at-real-read-boundaries.md: fc9c347826875acb7093e44c937be473f97663f4
+2026-09-01-schema-registry-negotiation-at-real-read-boundaries.zh.md: a9b8b87ccf27a3d4537d05ed2c2d4cf71d8ce782

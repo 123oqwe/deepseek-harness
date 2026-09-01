@@ -11,6 +11,8 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
 import { admitEncodedImages, type EncodedImageAttachment, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import { createUserMessage, ReasoningEffortId, type ContentBlock, type LlmRuntime } from '@deepseek-ai/dsh-llm'
+import { getSchema, negotiateSchema } from '@deepseek-ai/dsh-schema-registry'
+import type { SchemaId } from '@deepseek-ai/dsh-schema-registry'
 import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import type SubagentRuntime from '@deepseek-ai/dsh-subagent'
@@ -133,6 +135,13 @@ export class HarnessSdkJsonRpcServer {
    * @returns server identity for the handshake.
    */
   async initialize(params: InitializeParams): Promise<InitializeResult> {
+    // must[4]: negotiate schema before use. A real SDK client has never sent
+    // `schemaVersion` before this mechanism existed, so its absence defaults
+    // to this build's own registered version for the wire type.
+    const schemaId = brandString<SchemaId>('sdk-protocol:InitializeParams')
+    const encounteredVersion = params.schemaVersion ?? getSchema(schemaId)?.version ?? { major: 1, minor: 0 }
+    const negotiation = negotiateSchema(schemaId, encounteredVersion)
+    if (!negotiation.compatible) throw negotiation.error
     if (params.reasoningEffort !== undefined
       && (typeof params.reasoningEffort !== 'string' || params.reasoningEffort.length === 0)) {
       throw new TypeError('initialize reasoningEffort must be a non-empty string')

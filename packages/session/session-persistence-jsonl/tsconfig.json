@@ -21,6 +21,12 @@
       "path": "../../core/session"
     },
     {
+      "path": "../../schema/schema-registry"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
       "path": "../session-persistence"
     },
     {

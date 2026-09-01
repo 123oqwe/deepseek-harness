@@ -21,6 +21,9 @@
       "path": "../../core/session"
     },
     {
+      "path": "../../schema/schema-registry"
+    },
+    {
       "path": "../../subagent/subagent"
     },
     {

@@ -4,6 +4,7 @@ import { Context } from '@deepseek-ai/cordis'
 import { appendFile, mkdtemp, mkdir, rm, readFile, writeFile, readdir, stat, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { SchemaCompatibilityError } from '@deepseek-ai/dsh-schema-registry'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import type { Session, SessionEvent, SessionHeader } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
@@ -1036,6 +1037,75 @@ describe('JsonlSessionPersistence: scanLog unit', () => {
     ].join('\n') + '\n'
     const { events } = scanLog(Buffer.from(log))
     expect(events.map(e => e.seq)).toEqual([0, 1]) // tail dropped
+  })
+})
+
+describe('JsonlSessionPersistence: schema-registry negotiation at replay (P0-06 must[4])', () => {
+  it('rejects a session-event line whose explicit schemaVersion major differs from the registered major', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-mismatch')))}\n`)
+    const scanner = new SessionLogScanner(header)
+    const line = JSON.stringify({
+      type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 2, minor: 0 },
+    })
+    let thrown: unknown
+    try {
+      scanner.write(Buffer.from(`${line}\n`))
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(SchemaCompatibilityError)
+    const error = thrown as SchemaCompatibilityError
+    expect(error.code).toBe('SCHEMA_MAJOR_MISMATCH')
+    expect(error.schemaId).toBe('session-event:turn/start')
+    expect(error.encounteredVersion).toEqual({ major: 2, minor: 0 })
+    expect(error.registeredVersion).toEqual({ major: 1, minor: 0 })
+  })
+
+  it('does not swallow a schema-incompatible line into the tolerant corrupt-suffix heuristic', () => {
+    // The pre-existing corrupt-log path silently tolerates a bad line until a
+    // later `turn/end` commits past it (see the "tolerable corrupt suffix"
+    // test above) -- a schema incompatibility must throw immediately instead,
+    // never falling back to that silent-recovery behavior (acceptance[1]: no
+    // silent field loss).
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-mismatch-no-swallow')))}\n`)
+    const scanner = new SessionLogScanner(header)
+    const log = [
+      JSON.stringify({ type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 9, minor: 0 } }),
+      JSON.stringify({ type: 'turn/end', seq: 1, time: 2, data: { turn: 1, reason: { kind: 'completed' } } }),
+    ].join('\n') + '\n'
+    expect(() => { scanner.write(Buffer.from(log)) }).toThrow(SchemaCompatibilityError)
+  })
+
+  it('accepts a session-event line whose explicit schemaVersion major matches the registered major', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-match')))}\n`)
+    const scanner = new SessionLogScanner(header)
+    const line = JSON.stringify({
+      type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 1, minor: 0 },
+    })
+    scanner.write(Buffer.from(`${line}\n`))
+    // The registered version's negotiation succeeds; the tag itself is not
+    // part of the trusted SessionEvent shape and does not appear in `data`.
+    expect(scanner.finish().events).toEqual([{ type: 'turn/start', seq: 0, time: 1, data: { turn: 1 } }])
+  })
+
+  it('defaults an absent schemaVersion to this build\'s registered version, leaving ordinary replay unaffected', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-default')))}\n`)
+    const body = Buffer.from(`${oneTurnLog().map(event => JSON.stringify(event)).join('\n')}\n`)
+    expect(scanLog(Buffer.concat([header, body])).events).toEqual(oneTurnLog())
+  })
+
+  it('does not negotiate schema for a packed chunk row tag (not a session-event payload)', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-chunk-row')))}\n`)
+    // A tag from KNOWN_SESSION_EVENT_TYPES could never collide with these
+    // literal storage tags, so a real chunk row must not be misread as an
+    // unregistered "session-event:text-chunks" and rejected.
+    const line = JSON.stringify({
+      type: 'text-chunks',
+      seq0: 0,
+      time0: 1,
+      data: { turn: 1, step: 1, index: 0, dt: [1, 1], texts: ['a', 'b', 'c'] },
+    })
+    expect(() => scanLog(Buffer.concat([header, Buffer.from(`${line}\n`)]))).not.toThrow()
   })
 })
 
