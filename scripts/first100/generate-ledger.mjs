@@ -83,6 +83,7 @@ const LEDGER_MD_PATH = LEDGER_PATH.replace(/\.json$/, '.md')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const ACCEPTANCE_COVERAGE_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-coverage.json')
+const FLAKE_REGISTRY_PATH = join(REPO_ROOT, 'spec/first100/exec/flake-registry.json')
 
 function loadJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
@@ -144,18 +145,39 @@ function parseVitestJsonReport(reportPath) {
   const raw = readFileSync(reportPath, 'utf8')
   const report = JSON.parse(raw)
   const titles = new Set()
+  const failedFullNames = new Set()
   for (const file of report.testResults ?? []) {
     for (const assertion of file.assertionResults ?? []) {
-      if (assertion.status !== 'passed') continue
-      titles.add(assertion.title)
-      // vitest's real `--reporter=json` shape: `fullName` is
-      // `ancestorTitles.join(' ') + ' ' + title` (space-separated, no
-      // delimiter) — match on it directly rather than reconstructing it.
-      if (typeof assertion.fullName === 'string') titles.add(assertion.fullName)
+      if (assertion.status === 'passed') {
+        titles.add(assertion.title)
+        // vitest's real `--reporter=json` shape: `fullName` is
+        // `ancestorTitles.join(' ') + ' ' + title` (space-separated, no
+        // delimiter) — match on it directly rather than reconstructing it.
+        if (typeof assertion.fullName === 'string') titles.add(assertion.fullName)
+      } else if (assertion.status === 'failed' && typeof assertion.fullName === 'string') {
+        failedFullNames.add(assertion.fullName)
+      }
     }
   }
   const exit = report.success === true ? 0 : 1
-  return { raw, report, titles, exit }
+  return { raw, report, titles, failedFullNames, exit }
+}
+
+/**
+ * Maintainer decision BLOCKED-007 item 3 (2026-09-01): checks a CI
+ * observation's real failing-test set against the flake registry
+ * (`spec/first100/exec/flake-registry.json`). When every failing test's
+ * `fullName` is a registered entry, the observation is a VALID observation
+ * for every other (non-failing) test in it — the registry never exempts a
+ * registered test from the suite itself, only from blocking an otherwise
+ * clean greening. A failure whose `fullName` is not registered fails closed,
+ * exactly as before this mechanism existed.
+ */
+export function checkFailureSetAgainstFlakeRegistry(failedFullNames, registry) {
+  const registered = new Set((registry?.entries ?? []).map((e) => e.testFullName))
+  const unregisteredFailures = [...failedFullNames].filter((name) => !registered.has(name))
+  const absorbedFlakes = [...failedFullNames].filter((name) => registered.has(name))
+  return { valid: unregisteredFailures.length === 0 && failedFullNames.size > 0, unregisteredFailures, absorbedFlakes }
 }
 
 function writeLedgerHeader(rows, inputsConsumed) {
@@ -234,7 +256,7 @@ function cmdGreen() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, titles, exit } = parseVitestJsonReport(reportPath)
+  const { raw, titles, failedFullNames, exit } = parseVitestJsonReport(reportPath)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -252,9 +274,18 @@ function cmdGreen() {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
   }
+  let absorbedFlakes = []
   if (exit !== frozen.expectExit) {
-    console.error(`RED: report exit ${exit} != frozen expectExit ${frozen.expectExit}`)
-    process.exit(1)
+    const flakeCheck = checkFailureSetAgainstFlakeRegistry(failedFullNames, existsSync(FLAKE_REGISTRY_PATH) ? loadJson(FLAKE_REGISTRY_PATH) : null)
+    if (!flakeCheck.valid) {
+      console.error(`RED: report exit ${exit} != frozen expectExit ${frozen.expectExit}`)
+      if (flakeCheck.unregisteredFailures.length > 0) {
+        console.error(`  unregistered failure(s) (not in flake-registry.json): ${flakeCheck.unregisteredFailures.join(', ')}`)
+      }
+      process.exit(1)
+    }
+    absorbedFlakes = flakeCheck.absorbedFlakes
+    console.log(`BLOCKED-007③: report exit ${exit} absorbed — every failing test is a registered flake: ${absorbedFlakes.join(', ')}`)
   }
 
   if (!rows[epic]) {
@@ -268,6 +299,7 @@ function cmdGreen() {
     observationReportPath: reportPath,
     observationSha256,
     expectCasesMatched: frozen.expectCases,
+    ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
     capturedAtUtc: nowIso(),
   }
   rows[epic].candidateSha = candidateSha
@@ -326,7 +358,7 @@ function cmdGreenSupplement() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, titles, exit } = parseVitestJsonReport(reportPath)
+  const { raw, titles, failedFullNames, exit } = parseVitestJsonReport(reportPath)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -349,9 +381,18 @@ function cmdGreenSupplement() {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
   }
+  let absorbedFlakes = []
   if (exit !== frozen.expectExit) {
-    console.error(`RED: report exit ${exit} != frozen expectExit ${frozen.expectExit}`)
-    process.exit(1)
+    const flakeCheck = checkFailureSetAgainstFlakeRegistry(failedFullNames, existsSync(FLAKE_REGISTRY_PATH) ? loadJson(FLAKE_REGISTRY_PATH) : null)
+    if (!flakeCheck.valid) {
+      console.error(`RED: report exit ${exit} != frozen expectExit ${frozen.expectExit}`)
+      if (flakeCheck.unregisteredFailures.length > 0) {
+        console.error(`  unregistered failure(s) (not in flake-registry.json): ${flakeCheck.unregisteredFailures.join(', ')}`)
+      }
+      process.exit(1)
+    }
+    absorbedFlakes = flakeCheck.absorbedFlakes
+    console.log(`BLOCKED-007③: report exit ${exit} absorbed — every failing test is a registered flake: ${absorbedFlakes.join(', ')}`)
   }
 
   rows[epic].supplements[key] = {
@@ -361,6 +402,7 @@ function cmdGreenSupplement() {
     observationReportPath: reportPath,
     observationSha256,
     expectCasesMatched: frozen.expectCases,
+    ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
     capturedAtUtc: nowIso(),
   }
 

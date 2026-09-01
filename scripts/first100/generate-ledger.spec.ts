@@ -23,7 +23,12 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { checkCandidateChainConsistency, checkCoverageClosure, checkObservationDistinctness } from './generate-ledger.mjs'
+import {
+  checkCandidateChainConsistency,
+  checkCoverageClosure,
+  checkFailureSetAgainstFlakeRegistry,
+  checkObservationDistinctness,
+} from './generate-ledger.mjs'
 
 // checkCandidateChainConsistency's real usage always runs locally against
 // the Supervisor's own full-history clone -- never inside a CI job's shallow
@@ -185,5 +190,53 @@ describe('checkObservationDistinctness', () => {
     const result = checkObservationDistinctness(row, ['C', 'F'])
     expect(result.valid).toBe(false)
     expect(result.conflicts).toEqual([['C', 'F.1']])
+  })
+})
+
+describe('checkFailureSetAgainstFlakeRegistry (BLOCKED-007 item 3, 2026-09-01)', () => {
+  const registry = {
+    entries: [{ testFullName: 'suite known flake test' }, { testFullName: 'other suite another flake' }],
+  }
+
+  it('no failures at all: not an absorption case (the ordinary exit===expectExit path handles this, never reaches this check)', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(), registry)
+    expect(result.valid).toBe(false)
+    expect(result.unregisteredFailures).toEqual([])
+    expect(result.absorbedFlakes).toEqual([])
+  })
+
+  it('every failure is a registered flake: absorbed', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test']), registry)
+    expect(result.valid).toBe(true)
+    expect(result.absorbedFlakes).toEqual(['suite known flake test'])
+    expect(result.unregisteredFailures).toEqual([])
+  })
+
+  it('multiple failures, all registered: absorbed', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test', 'other suite another flake']), registry)
+    expect(result.valid).toBe(true)
+    expect(result.absorbedFlakes.sort()).toEqual(['other suite another flake', 'suite known flake test'])
+  })
+
+  it('fail-closed: one failure genuinely unrelated to the registry is rejected, even alongside a registered one', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test', 'a real regression this slice caused']), registry)
+    expect(result.valid).toBe(false)
+    expect(result.unregisteredFailures).toEqual(['a real regression this slice caused'])
+  })
+
+  it('fail-closed: no registry file present (null) rejects every failure', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test']), null)
+    expect(result.valid).toBe(false)
+    expect(result.unregisteredFailures).toEqual(['suite known flake test'])
+  })
+
+  it('fail-closed: an empty registry (no entries yet) rejects every failure', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test']), { entries: [] })
+    expect(result.valid).toBe(false)
+  })
+
+  it('never exempts the test itself -- absorption only changes greening eligibility, the failure still shows up in absorbedFlakes', () => {
+    const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test']), registry)
+    expect(result.absorbedFlakes).toContain('suite known flake test')
   })
 })

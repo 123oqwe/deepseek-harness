@@ -1,0 +1,34 @@
+{
+  "schema": { "name": "first100-flake-registry", "version": "1.0" },
+  "entries": [
+    {
+      "testFile": "packages/experimental/inspector/tests/integration.host.spec.ts",
+      "testFullName": "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions",
+      "occurrences": [
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33450993715",
+          "candidateSha": "03a7321e23dec254ae4c54498a0e942047c18637",
+          "observedAtUtc": "2026-08-31T23:30:52Z"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33453957148",
+          "candidateSha": "c60c0f3a4f3963579d68963aeda2b2db26d261b6",
+          "observedAtUtc": "2026-09-01T00:14:36Z"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33473101218",
+          "candidateSha": "af01a06bc96041757cc5ac58c6f0cd5ba6708092",
+          "observedAtUtc": "2026-09-01T05:18:38Z"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33481139517",
+          "candidateSha": "6decdacb89c082742866fbaaa53e6892c04099e8",
+          "observedAtUtc": "2026-09-01T07:13:55Z"
+        }
+      ],
+      "unrelatedNote": "Four occurrences across four distinct candidate SHAs, none touching packages/experimental/inspector or its dependencies. Two of the four (03a7321e23 and 6decdacb89) are First-100 process-only commits (BLOCKED-QUEUE.md/decisions-approved.md/goal.md/EXEC-STATE.json edits) touching zero product code at all -- the strongest possible unrelatedness evidence, since no source change of any kind was present when the failure occurred. The other two (c60c0f3a4f, af01a06bc96) touch only tests/release/baseline-fingerprint.spec.ts and scripts/release/baseline-fingerprint.mjs (P0-01 slice work), an unrelated package with no dependency relationship to packages/experimental/inspector. Every occurrence reruns clean with zero code changes (confirmed for af01a06bc96 via a same-SHA CI rerun, run 33473101218's second attempt, success). Failure mode each time: a single real-Worker isolated-realm-session test, consistent with a timing-sensitive worker-thread integration test, matching this repo's own history of similar fixes elsewhere (e.g. 'bind fixture servers to OS-assigned ports').",
+      "registeredAtUtc": "2026-09-01T06:15:00Z",
+      "registeredBy": "ANSWERED-BY-DELEGATE(gq-92)"
+    }
+  ]
+}

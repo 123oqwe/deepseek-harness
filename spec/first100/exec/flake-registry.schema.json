@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepseek-ai/dsh/first100/flake-registry.schema.json",
+  "title": "first100-flake-registry",
+  "description": "Maintainer decision BLOCKED-007 item 3 (2026-09-01): an append-only registry of tests confirmed flaky in this CI environment, independent of any First-100 slice's own changes. When a CI run's failing-test set is a subset of this registry's entries, that run's observation is a VALID observation for every other test in it -- no rerun needed for that reason alone (generate-ledger.mjs's checkObservationAgainstFlakeRegistry()). The registry never exempts a registered test from the suite itself: it still runs, still appears in the failure set, and a failure genuinely caused by the change under observation is never absorbed by this mechanism. Every entry requires >=2 occurrences on distinct candidate SHAs plus a note establishing non-association with the observed slice. A new entry is C7 flake-classification scope -- routed to the delegate, never self-classified by the Supervisor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "entries"],
+  "properties": {
+    "schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "const": "first100-flake-registry" },
+        "version": { "const": "1.0" }
+      }
+    },
+    "entries": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["testFile", "testFullName", "occurrences", "unrelatedNote", "registeredAtUtc", "registeredBy"],
+      "properties": {
+        "testFile": {
+          "type": "string",
+          "description": "Repo-relative test file path, matching the vitest JSON report's testResults[].name suffix."
+        },
+        "testFullName": {
+          "type": "string",
+          "description": "The failing assertion's full name (vitest's assertionResults[].fullName), the same identity generate-ledger.mjs's expectCases matching already uses."
+        },
+        "occurrences": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["ciRunUrl", "candidateSha", "observedAtUtc"],
+            "properties": {
+              "ciRunUrl": { "type": "string" },
+              "candidateSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+              "observedAtUtc": { "type": "string", "format": "date-time" }
+            }
+          },
+          "description": "Every occurrence must be on a distinct candidateSha (checked mechanically, not just by count)."
+        },
+        "unrelatedNote": {
+          "type": "string",
+          "description": "Why this failure is not associated with the slices these CI runs actually observed -- e.g. distinct unrelated commits, or a commit touching zero product code."
+        },
+        "registeredAtUtc": { "type": "string", "format": "date-time" },
+        "registeredBy": {
+          "type": "string",
+          "description": "Attribution for the classification decision, e.g. 'ANSWERED-BY-DELEGATE(gq-92)'."
+        }
+      }
+    }
+  }
+}

@@ -38,3 +38,11 @@ export function checkCoverageClosure(
 export function checkCandidateChainConsistency(row: unknown, applicableStages: string[], gitRoot?: string): CandidateChainResult
 
 export function checkObservationDistinctness(row: unknown, applicableStages: string[]): ObservationDistinctnessResult
+
+export interface FlakeRegistryCheckResult {
+  valid: boolean
+  unregisteredFailures: string[]
+  absorbedFlakes: string[]
+}
+
+export function checkFailureSetAgainstFlakeRegistry(failedFullNames: Set<string>, registry: unknown): FlakeRegistryCheckResult
