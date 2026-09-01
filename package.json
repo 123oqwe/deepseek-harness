@@ -148,6 +148,7 @@
     "gen-scoped-events": "tsx scripts/gen-scoped-events.ts",
     "verify-scoped-events": "tsx scripts/gen-scoped-events.ts --check",
     "verify-module-graph": "tsx scripts/gen-module-graph.ts --check",
+    "architecture:seams": "tsx scripts/architecture/check-capability-seams.mjs",
     "constraints": "tsx scripts/check-workspace-constraints.ts",
     "doc-sync": "tsx scripts/run-gates.ts doc-sync",
     "hygiene": "tsx scripts/run-gates.ts hygiene",

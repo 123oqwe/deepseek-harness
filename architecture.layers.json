@@ -192,6 +192,22 @@
       "reason": "UI front ends register the active human-answer provider directly against the seam rather than shipping a separate provider package; no dedicated Service Provider package exists today. Revisit alongside the authorization allowlist entry above once registration-based providers have their own detection rule.",
       "owner": "harryqiao59@gmail.com",
       "removalDate": "2026-12-01"
+    },
+    {
+      "kind": "non-reversible-registration",
+      "from": "@deepseek-ai/dsh-authorization",
+      "to": "@deepseek-ai/dsh-authorization",
+      "reason": "must[2]'s provider fixture is a test on a dedicated Service Provider package; the registration-based provider pattern documented in this family's missing-provider entry above has no such package for the real scanner to find a fixture in. Revisit together with that entry once registration-based providers have their own detection rule.",
+      "owner": "harryqiao59@gmail.com",
+      "removalDate": "2026-12-01"
+    },
+    {
+      "kind": "non-reversible-registration",
+      "from": "@deepseek-ai/dsh-user-questions",
+      "to": "@deepseek-ai/dsh-user-questions",
+      "reason": "must[2]'s provider fixture is a test on a dedicated Service Provider package; the registration-based provider pattern documented in this family's missing-provider entry above has no such package for the real scanner to find a fixture in. Revisit together with that entry once registration-based providers have their own detection rule.",
+      "owner": "harryqiao59@gmail.com",
+      "removalDate": "2026-12-01"
     }
   ]
 }
