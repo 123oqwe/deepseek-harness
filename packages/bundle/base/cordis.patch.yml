@@ -387,6 +387,23 @@
     - id: timeout-policy
       name: '@deepseek-ai/dsh-tool-call-timeout-policy'
 
+    # Boot-time preflight (P0-01 MUST clause): aborts startup when the
+    # checkout has drifted from its captured `pnpm baseline:capture`
+    # fingerprint. A checkout with no captured baseline (an end-user project,
+    # most test fixtures) has nothing to verify and boots unaffected.
+    #
+    # Disabled by default, matching `hmr` above: opt-in per profile, not a
+    # shared-base default. This repo's own committed `.dsh/baseline.json`
+    # (the C-stage specimen, pinned to an early gitSha) permanently trails
+    # real HEAD, so an unconditional row here would abort every `pnpm dsh`
+    # invocation from this checkout's own root — contradicting P0-01's own
+    # non-goal ("不冻结上游开发" — this does not freeze upstream development).
+    # A profile that wants the gate enables this row and supplies
+    # `config.repoRoot` explicitly.
+    - id: baseline-preflight
+      name: '@deepseek-ai/dsh-baseline-preflight'
+      disabled: true
+
     - id: spill-local
       name: '@deepseek-ai/dsh-spill-local'
 

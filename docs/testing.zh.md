@@ -52,3 +52,7 @@ e2e 断言应重新运行命令或从外部重新读取文件；对 agent 自身
 ## 何时需要快照测试
 
 每项非平凡的模型可见、协议可见或人类可见变更，都在同一 PR 中添加或更新无密钥录制会话场景；包级、e2e、仅 mock 和 PR 理由证据不能取代组装后的 transcript。Headless、SDK、ACP 和 Web 录制分别位于 `snapshots/session/`、`snapshots/sdk/`、`snapshots/acp/` 和 `snapshots/web/`；Web 渲染可以显式借用另一个场景的规范会话。不由录制会话驱动的预期输出保留在所属应用、包或脚本的 `tests/expected/` 下，并且不使用 `*.snapshot.ts` 后缀。[`dsh-session-snapshot`](../packages/test-support/session-snapshot/README.zh.md) 拥有共享存储规则和 profile 适配器。Agent loop、会话生命周期和 `SessionEventMap` 变更应更新两个 SDK 投影：`snapshots/sdk/` 拥有 TypeScript，必需的 Python 运行时 CI 拥有 `scripts/snapshots/python-sdk-single-exe/`。新增 capability seam、生命周期或 transcript 变体应在计划阶段列出每个必需层级。
+
+## 启动期基线预检查
+
+`pnpm baseline:capture` 把 checkout 的架构/协议指纹（Git SHA、工具链、workspace package 名称、默认 bundle 行 ID、协议/事件 schema 哈希、pnpm lockfile 哈希）冻结进 `.dsh/baseline.json`；`pnpm baseline:verify` 重新推导同一组字段并报告漂移（`scripts/release/baseline-fingerprint.mjs`，格式记录在生成的 `docs/audit/baseline-fingerprint-<gitSha>.md` 中，每次捕获的 commit 各生成一份——例如 `docs/audit/baseline-fingerprint-0a53fb55bea101816fa226bb964ae2bed71c343b.md`）。`@deepseek-ai/dsh-baseline-preflight` 在启动时执行同一检查：有已捕获基线且发生漂移的 checkout 会中止应用启动，而不是让执行批次针对过期指纹运行；没有已捕获基线的 checkout（终端用户项目、多数测试 fixture）没有可供校验的对象，启动不受影响。共享 `dsh` base 组合中该插件所在行带有 `disabled: true`（按 profile 选择性启用，与 `hmr` 行同一模式）——本仓库自身已提交的 `.dsh/baseline.json` 会持续落后于真实 `HEAD`，若该行默认启用，会中止本仓库里普通的 `pnpm dsh` 使用；需要该门禁的 profile 显式启用这一行。确切的漂移检测约定（与 CLI 共享）以及如何启用该行，见[包 README](../packages/guard/baseline-preflight/README.zh.md)。

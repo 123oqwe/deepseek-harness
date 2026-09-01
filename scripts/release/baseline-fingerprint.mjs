@@ -232,26 +232,48 @@ function diffCapture(stored, fresh) {
   return drift
 }
 
-function verify(repoRoot) {
+/**
+ * Diff the current working tree's fields against `<repoRoot>/.dsh/baseline.json`,
+ * writing `.dsh/rebase-report.json` when drift is found. Shared by `pnpm
+ * baseline:verify` (this CLI) and the boot-time `dsh-baseline-preflight` guard
+ * plugin — one source of truth for the drift check the P0-01 MUST clause
+ * requires before every execution batch.
+ * @param {string} repoRoot - checkout root to verify (matches `capture`'s `--repo-root`).
+ * @returns {{ ok: boolean, drift: { path: string, field: string, expected: unknown, actual: unknown }[] }}
+ * @throws when no baseline has been captured at `<repoRoot>/.dsh/baseline.json`.
+ */
+export function verifyBaseline(repoRoot) {
   const baselinePath = join(repoRoot, '.dsh/baseline.json')
   if (!existsSync(baselinePath)) {
-    process.stderr.write(`baseline-fingerprint verify: no captured baseline at ${baselinePath}; run \`pnpm baseline:capture\` first\n`)
-    return 1
+    throw new Error(`baseline-fingerprint verify: no captured baseline at ${baselinePath}; run \`pnpm baseline:capture\` first`)
   }
   const stored = JSON.parse(readFileSync(baselinePath, 'utf8'))
   const fresh = captureFields(repoRoot)
   const drift = diffCapture(stored, fresh)
-  if (drift.length === 0) {
+  if (drift.length > 0) {
+    mkdirSync(join(repoRoot, '.dsh'), { recursive: true })
+    writeFileSync(join(repoRoot, '.dsh/rebase-report.json'), `${JSON.stringify({ drift }, null, 2)}\n`)
+  }
+  return { ok: drift.length === 0, drift }
+}
+
+function verify(repoRoot) {
+  let result
+  try {
+    result = verifyBaseline(repoRoot)
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`)
+    return 1
+  }
+  if (result.ok) {
     process.stdout.write('baseline-fingerprint verify: no drift detected\n')
     return 0
   }
   const lines = ['baseline-fingerprint verify: drift detected against the captured baseline:']
-  for (const entry of drift) {
+  for (const entry of result.drift) {
     lines.push(`  ${entry.path} (${entry.field}): expected ${JSON.stringify(entry.expected)}, found ${JSON.stringify(entry.actual)}`)
   }
   process.stdout.write(`${lines.join('\n')}\n`)
-  mkdirSync(join(repoRoot, '.dsh'), { recursive: true })
-  writeFileSync(join(repoRoot, '.dsh/rebase-report.json'), `${JSON.stringify({ drift }, null, 2)}\n`)
   return 1
 }
 
@@ -263,4 +285,7 @@ function main() {
   throw new Error(`baseline-fingerprint: unknown subcommand ${JSON.stringify(subcommand)}`)
 }
 
-main()
+// Guarded so `verifyBaseline` can be imported as a module (the
+// `dsh-baseline-preflight` boot-time gate does exactly this) without also
+// running the CLI against the importer's own argv.
+if (import.meta.main) main()
