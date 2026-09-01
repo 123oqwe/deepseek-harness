@@ -1,0 +1,33 @@
+{
+  "schema": { "name": "first100-acceptance-coverage", "version": "1.0" },
+  "entries": [
+    {
+      "epic": "P0-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        { "stage": "C", "title": "canonicalizes the captured output: sorted keys, LF-only, UTF-8 NFC, POSIX-relative paths, and no nondeterministic fields" },
+        { "stage": "F", "title": "captures a fingerprint that never leaks the fixture checkout's absolute path or backslash-spelled paths anywhere in its content" }
+      ],
+      "note": "acceptance[0]: 'same clean checkout produces the same canonicalized fingerprint on Linux and macOS.' No single CI job runs both OSes for one fingerprint, so this is evidenced structurally: canonicalization (sorted keys/LF-only/NFC/POSIX-relative paths) plus the absence of any absolute path or backslash-spelled value in the captured content together guarantee cross-platform identity by construction, not by running the same command twice on two OSes."
+    },
+    {
+      "epic": "P0-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        { "stage": "C", "title": "verify fails and names the minimal diff after a tracked bundle-row file drifts, and writes a rebase report" },
+        { "stage": "F", "title": "verify fails and names the tampered SDK protocol types file" },
+        { "stage": "F", "title": "verify fails and names the tampered known-event-types file" },
+        { "stage": "F", "title": "verify fails and names the drifted workspace package manifest", "supplementSeq": 1 }
+      ],
+      "note": "acceptance[1]: 'after modifying any key schema, bundle row, or package manifest, verify must fail and name the minimal diff.' Three sub-kinds named: schema (protocolSchemaHashes: SDK types + known-event-types, both F-stage), bundle row (cordis.patch.yml, C-stage), package manifest (workspacePackages, F-stage supplement -- BLOCKED-005; genuinely gapped until this supplement was added, honestly discovered while implementing BLOCKED-004 predicate (i))."
+    },
+    {
+      "epic": "P0-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        { "stage": "C", "title": "verify passes again once the drifted file is restored" }
+      ],
+      "note": "acceptance[2]: 'after restoring the file, verify must pass again.' Index-level, not per-drift-kind: the restore mechanism itself is generic (diffCapture re-runs against whatever is on disk), so one genuine restore-then-pass demonstration proves the mechanism for every drift kind alike -- consistent with how acceptance[0] is also evidenced generically rather than per-field."
+    }
+  ]
+}

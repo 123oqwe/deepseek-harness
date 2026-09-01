@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T04:32:53.872Z",
-  "inputDigest": "228b60e4ce3cc16f8ff4e70cce743d5a7ba881242139abed3f9b2ab4dda01702",
+  "lastUpdatedUtc": "2026-09-01T05:10:25.227Z",
+  "inputDigest": "2dfe69516190f0cf921ae609448651ebcc433646fb7ad9db162e0be5256ae459",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -78,10 +78,12 @@
           "capturedAtUtc": "2026-09-01T00:52:18.241Z"
         }
       },
+      "supplements": {},
       "candidateSha": "23c8b0fb2e43e68ca43a3de60e7ad26dcb20815f",
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-02": {
       "id": "P0-02",
@@ -106,10 +108,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-03": {
       "id": "P0-03",
@@ -135,10 +139,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-04": {
       "id": "P0-04",
@@ -163,10 +169,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-05": {
       "id": "P0-05",
@@ -191,10 +199,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-06": {
       "id": "P0-06",
@@ -219,10 +229,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-07": {
       "id": "P0-07",
@@ -248,10 +260,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P0-08": {
       "id": "P0-08",
@@ -276,10 +290,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-01": {
       "id": "P1-01",
@@ -305,10 +321,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-02": {
       "id": "P1-02",
@@ -334,10 +352,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-03": {
       "id": "P1-03",
@@ -363,10 +383,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-04": {
       "id": "P1-04",
@@ -393,10 +415,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-05": {
       "id": "P1-05",
@@ -422,10 +446,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-06": {
       "id": "P1-06",
@@ -452,10 +478,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-07": {
       "id": "P1-07",
@@ -481,10 +509,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-08": {
       "id": "P1-08",
@@ -510,10 +540,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-09": {
       "id": "P1-09",
@@ -539,10 +571,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-10": {
       "id": "P1-10",
@@ -568,10 +602,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-11": {
       "id": "P1-11",
@@ -599,10 +635,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P1-12": {
       "id": "P1-12",
@@ -630,10 +668,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-01": {
       "id": "P2-01",
@@ -659,10 +699,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-02": {
       "id": "P2-02",
@@ -687,10 +729,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-03": {
       "id": "P2-03",
@@ -716,10 +760,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-04": {
       "id": "P2-04",
@@ -744,10 +790,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-05": {
       "id": "P2-05",
@@ -775,10 +823,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-06": {
       "id": "P2-06",
@@ -804,10 +854,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-07": {
       "id": "P2-07",
@@ -833,10 +885,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-08": {
       "id": "P2-08",
@@ -862,10 +916,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-09": {
       "id": "P2-09",
@@ -891,10 +947,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-10": {
       "id": "P2-10",
@@ -920,10 +978,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-11": {
       "id": "P2-11",
@@ -950,10 +1010,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P2-12": {
       "id": "P2-12",
@@ -979,10 +1041,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-01": {
       "id": "P3-01",
@@ -1008,10 +1072,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-02": {
       "id": "P3-02",
@@ -1036,10 +1102,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-03": {
       "id": "P3-03",
@@ -1065,10 +1133,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-04": {
       "id": "P3-04",
@@ -1095,10 +1165,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-05": {
       "id": "P3-05",
@@ -1123,10 +1195,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-06": {
       "id": "P3-06",
@@ -1152,10 +1226,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-07": {
       "id": "P3-07",
@@ -1181,10 +1257,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-08": {
       "id": "P3-08",
@@ -1211,10 +1289,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-09": {
       "id": "P3-09",
@@ -1241,10 +1321,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-10": {
       "id": "P3-10",
@@ -1269,10 +1351,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-11": {
       "id": "P3-11",
@@ -1298,10 +1382,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P3-12": {
       "id": "P3-12",
@@ -1327,10 +1413,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-01": {
       "id": "P4-01",
@@ -1356,10 +1444,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-02": {
       "id": "P4-02",
@@ -1385,10 +1475,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-03": {
       "id": "P4-03",
@@ -1414,10 +1506,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-04": {
       "id": "P4-04",
@@ -1443,10 +1537,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-05": {
       "id": "P4-05",
@@ -1471,10 +1567,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-06": {
       "id": "P4-06",
@@ -1500,10 +1598,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-07": {
       "id": "P4-07",
@@ -1528,10 +1628,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-08": {
       "id": "P4-08",
@@ -1558,10 +1660,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-09": {
       "id": "P4-09",
@@ -1587,10 +1691,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-10": {
       "id": "P4-10",
@@ -1616,10 +1722,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-11": {
       "id": "P4-11",
@@ -1645,10 +1753,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-12": {
       "id": "P4-12",
@@ -1675,10 +1785,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-13": {
       "id": "P4-13",
@@ -1704,10 +1816,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P4-14": {
       "id": "P4-14",
@@ -1734,10 +1848,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-01": {
       "id": "P5-01",
@@ -1764,10 +1880,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-02": {
       "id": "P5-02",
@@ -1793,10 +1911,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-03": {
       "id": "P5-03",
@@ -1822,10 +1942,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-04": {
       "id": "P5-04",
@@ -1852,10 +1974,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-05": {
       "id": "P5-05",
@@ -1881,10 +2005,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-06": {
       "id": "P5-06",
@@ -1910,10 +2036,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-07": {
       "id": "P5-07",
@@ -1940,10 +2068,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-08": {
       "id": "P5-08",
@@ -1970,10 +2100,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-09": {
       "id": "P5-09",
@@ -2000,10 +2132,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-10": {
       "id": "P5-10",
@@ -2029,10 +2163,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-11": {
       "id": "P5-11",
@@ -2058,10 +2194,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P5-12": {
       "id": "P5-12",
@@ -2088,10 +2226,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-01": {
       "id": "P6-01",
@@ -2117,10 +2257,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-02": {
       "id": "P6-02",
@@ -2146,10 +2288,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-03": {
       "id": "P6-03",
@@ -2176,10 +2320,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-04": {
       "id": "P6-04",
@@ -2205,10 +2351,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-05": {
       "id": "P6-05",
@@ -2235,10 +2383,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-06": {
       "id": "P6-06",
@@ -2264,10 +2414,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-07": {
       "id": "P6-07",
@@ -2293,10 +2445,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-08": {
       "id": "P6-08",
@@ -2323,10 +2477,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-09": {
       "id": "P6-09",
@@ -2352,10 +2508,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P6-10": {
       "id": "P6-10",
@@ -2382,10 +2540,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-01": {
       "id": "P7-01",
@@ -2412,10 +2572,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-02": {
       "id": "P7-02",
@@ -2442,10 +2604,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-03": {
       "id": "P7-03",
@@ -2473,10 +2637,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-04": {
       "id": "P7-04",
@@ -2503,10 +2669,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-05": {
       "id": "P7-05",
@@ -2534,10 +2702,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-06": {
       "id": "P7-06",
@@ -2565,10 +2735,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-07": {
       "id": "P7-07",
@@ -2596,10 +2768,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-08": {
       "id": "P7-08",
@@ -2627,10 +2801,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-09": {
       "id": "P7-09",
@@ -2657,10 +2833,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P7-10": {
       "id": "P7-10",
@@ -2688,10 +2866,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-01": {
       "id": "P8-01",
@@ -2717,10 +2897,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-02": {
       "id": "P8-02",
@@ -2748,10 +2930,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-03": {
       "id": "P8-03",
@@ -2780,10 +2964,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-04": {
       "id": "P8-04",
@@ -2812,10 +2998,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-05": {
       "id": "P8-05",
@@ -2842,10 +3030,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-06": {
       "id": "P8-06",
@@ -2872,10 +3062,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-07": {
       "id": "P8-07",
@@ -2902,10 +3094,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-08": {
       "id": "P8-08",
@@ -2933,10 +3127,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-09": {
       "id": "P8-09",
@@ -2964,10 +3160,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     },
     "P8-10": {
       "id": "P8-10",
@@ -2997,10 +3195,12 @@
           "status": "NOT_RUN"
         }
       },
+      "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN"
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
     }
   }
 }
