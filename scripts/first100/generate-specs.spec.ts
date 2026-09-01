@@ -44,6 +44,7 @@ import {
   checkR0EvidenceRow,
   checkR0EvidenceRowSchema,
   checkSharedStageCoverage,
+  checkSupplementalEntry,
   checkWriteSerialization,
   computeDag,
   computeOwnership,
@@ -702,6 +703,89 @@ describe('first100 shared-stage coverage (BLOCKED-002 answer, 2026-09-01)', () =
     expect(check.valid).toBe(false)
     expect(check.unreferencedFiles.length).toBeGreaterThan(0)
     expect(check.unreferencedFiles.every(u => u.stage === 'P0-01.U')).toBe(true)
+  })
+})
+
+describe('first100 supplemental command-freeze entries (BLOCKED-005 answer, 2026-09-01)', () => {
+  const primary = { epic: 'P0-01', stage: 'F' as const, expectCases: ['verify fails and names the tampered pnpm-lock.yaml'] }
+
+  it('no supplements field at all is vacuously valid (an ordinary primary entry)', () => {
+    expect(checkSupplementalEntry(primary, [primary])).toEqual({
+      valid: true,
+      mismatchedTarget: false,
+      missingSeq: false,
+      noPrimaryEntry: false,
+      duplicateSeq: false,
+      incompleteSensitivityProof: false,
+    })
+  })
+
+  it('a well-formed supplement pointing at an existing primary is valid', () => {
+    const supplement = {
+      epic: 'P0-01',
+      stage: 'F' as const,
+      supplements: { epic: 'P0-01', stage: 'F' as const },
+      supplementSeq: 1,
+      expectCases: ['verify fails and names the drifted workspace package manifest'],
+      sensitivityProof: { mutationDescription: 'commented out the workspacePackages diff branch', failureSummary: 'expected drift.length to be 1, got 0' },
+    }
+    const check = checkSupplementalEntry(supplement, [primary, supplement])
+    expect(check.valid).toBe(true)
+  })
+
+  it('a supplement whose case obtained genuine RED may omit sensitivityProof', () => {
+    const supplement = {
+      epic: 'P0-01',
+      stage: 'F' as const,
+      supplements: { epic: 'P0-01', stage: 'F' as const },
+      supplementSeq: 1,
+      expectCases: ['verify fails and names the drifted workspace package manifest'],
+    }
+    expect(checkSupplementalEntry(supplement, [primary, supplement]).valid).toBe(true)
+  })
+
+  it('fail-closed: supplements.epic/stage disagreeing with the entry\'s own epic/stage is rejected', () => {
+    const supplement = { epic: 'P0-01', stage: 'F' as const, supplements: { epic: 'P0-01', stage: 'C' as const }, supplementSeq: 1 }
+    const check = checkSupplementalEntry(supplement, [primary, supplement])
+    expect(check.valid).toBe(false)
+    expect(check.mismatchedTarget).toBe(true)
+  })
+
+  it('fail-closed: a missing or non-positive supplementSeq is rejected', () => {
+    const supplement = { epic: 'P0-01', stage: 'F' as const, supplements: { epic: 'P0-01', stage: 'F' as const } }
+    expect(checkSupplementalEntry(supplement, [primary, supplement]).missingSeq).toBe(true)
+    const zeroSeq = { ...supplement, supplementSeq: 0 }
+    expect(checkSupplementalEntry(zeroSeq, [primary, zeroSeq]).missingSeq).toBe(true)
+  })
+
+  it('fail-closed: a supplement pointing at an (epic, stage) with no primary entry is rejected', () => {
+    const supplement = { epic: 'P0-01', stage: 'U' as const, supplements: { epic: 'P0-01', stage: 'U' as const }, supplementSeq: 1 }
+    expect(checkSupplementalEntry(supplement, [primary, supplement]).noPrimaryEntry).toBe(true)
+  })
+
+  it('fail-closed: a supplement cannot point at another supplement as if it were the primary', () => {
+    const firstSupplement = { epic: 'P0-01', stage: 'F' as const, supplements: { epic: 'P0-01', stage: 'F' as const }, supplementSeq: 1 }
+    // no real primary in this entries list, only firstSupplement -- so a
+    // second supplement finds no non-supplement entry to attach to.
+    const secondSupplement = { epic: 'P0-01', stage: 'F' as const, supplements: { epic: 'P0-01', stage: 'F' as const }, supplementSeq: 2 }
+    expect(checkSupplementalEntry(secondSupplement, [firstSupplement, secondSupplement]).noPrimaryEntry).toBe(true)
+  })
+
+  it('fail-closed: two supplements of the same (epic, stage) cannot share a supplementSeq', () => {
+    const a = { epic: 'P0-01', stage: 'F' as const, supplements: { epic: 'P0-01', stage: 'F' as const }, supplementSeq: 1 }
+    const b = { epic: 'P0-01', stage: 'F' as const, supplements: { epic: 'P0-01', stage: 'F' as const }, supplementSeq: 1 }
+    expect(checkSupplementalEntry(a, [primary, a, b]).duplicateSeq).toBe(true)
+  })
+
+  it('fail-closed: a present sensitivityProof with an empty prose field is rejected', () => {
+    const supplement = {
+      epic: 'P0-01',
+      stage: 'F' as const,
+      supplements: { epic: 'P0-01', stage: 'F' as const },
+      supplementSeq: 1,
+      sensitivityProof: { mutationDescription: '', failureSummary: 'expected drift.length to be 1, got 0' },
+    }
+    expect(checkSupplementalEntry(supplement, [primary, supplement]).incompleteSensitivityProof).toBe(true)
   })
 })
 

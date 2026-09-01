@@ -105,6 +105,37 @@
           },
           "minItems": 1,
           "description": "Maintainer decision BLOCKED-002 (2026-09-01): additional (epic, stage) ledger cells this one entry's observation also greens, beyond the entry's own primary epic/stage. Every extra cell must be in the SAME epic, must have no dedicated test file among its own wave-map-declared files[] (tests/first100/registry.json's stages[stage].files), and every one of its declared files must appear as a literal path-string reference inside this entry's frozen argv test file(s) -- enforced by scripts/first100/generate-specs.ts's checkSharedStageCoverage(), never a free-text/Writer-supplied claim. Absent, this entry covers only its own epic/stage (the original B7(1) one-cell-one-observation behavior, unchanged)."
+        },
+        "supplements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["epic", "stage"],
+          "properties": {
+            "epic": { "type": "string", "pattern": "^P[0-8]-\\d{2}$" },
+            "stage": { "type": "string", "enum": ["C", "P", "U", "F"] }
+          },
+          "description": "Maintainer decision BLOCKED-005 (2026-09-01): marks this entry as a SUPPLEMENT that adds new named expectCases into a later-discovered acceptance-coverage gap, without re-freezing (or invalidating) the already-frozen (epic, stage) pair it supplements. supplements.epic/supplements.stage must equal this entry's own epic/stage (the pair being supplemented); supplementSeq then disambiguates the entry's unique key from the primary entry's plain (epic, stage) key and from any other supplement of the same pair. Never edits or greens the pointed-to cell's own state -- only contributes expectCases titles to predicate (i)'s (coverage-closure) union. Mechanically validated by scripts/first100/generate-specs.ts's checkSupplementalEntry()."
+        },
+        "supplementSeq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Required when supplements is present: 1-based sequence number making this entry's unique key (epic, stage, supplementSeq) distinct from the primary (epic, stage) entry it supplements. Absent on a primary (non-supplement) entry."
+        },
+        "sensitivityProof": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mutationDescription", "failureSummary"],
+          "properties": {
+            "mutationDescription": {
+              "type": "string",
+              "description": "What was locally, never-committed mutated in the covered behavior to prove this supplement's new case is not vacuously true."
+            },
+            "failureSummary": {
+              "type": "string",
+              "description": "The new case's real failure output observed against the mutated behavior, before the mutation was reverted."
+            }
+          },
+          "description": "Maintainer decision BLOCKED-005 hardening clause (2026-09-01): mandatory on any supplement entry whose case follows the 'coverage completion' path (the covered behavior already exists, so genuine RED against the unmodified tree is unobtainable) -- proves the new case actually detects a broken version of the behavior it claims to cover, closing the 'one always-true case vacuously completes any acceptance index' gap. A supplement that instead obtains genuine RED (dryRunProof's tree already fails the new case pre-implementation) is exempt; this field is then omitted."
         }
       }
     }

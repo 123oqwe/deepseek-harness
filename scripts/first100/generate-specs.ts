@@ -285,12 +285,16 @@ export function checkDeliverablePathPatches(reg: Registry, adj: Adjudication): D
   return { valid, unknownIds, declaredPathMismatches, emptyApprovedPath, emptyReason }
 }
 
-/** One `command-freeze.json` entry, the fields `checkSharedStageCoverage` reads. */
+/** One `command-freeze.json` entry, the fields `checkSharedStageCoverage`/`checkSupplementalEntry` read. */
 export interface CommandFreezeEntry {
   epic: string
   stage: 'C' | 'P' | 'U' | 'F'
+  expectCases?: string[]
   files?: string[]
   coveredStages?: { epic: string; stage: 'C' | 'P' | 'U' | 'F' }[]
+  supplements?: { epic: string; stage: 'C' | 'P' | 'U' | 'F' }
+  supplementSeq?: number
+  sensitivityProof?: { mutationDescription: string; failureSummary: string }
 }
 
 export interface SharedStageCoverageCheck {
@@ -356,6 +360,68 @@ export function checkSharedStageCoverage(reg: Registry, entry: CommandFreezeEntr
   }
   const valid = crossEpic.length === 0 && ownsTestFile.length === 0 && unreferencedFiles.length === 0
   return { valid, crossEpic, ownsTestFile, unreferencedFiles }
+}
+
+export interface SupplementalEntryCheck {
+  valid: boolean
+  /** `supplements.epic`/`supplements.stage` disagrees with the entry's own top-level `epic`/`stage`. */
+  mismatchedTarget: boolean
+  /** `supplementSeq` is missing or not a positive integer. */
+  missingSeq: boolean
+  /** No primary (non-supplement) entry exists for the pointed-to `(epic, stage)` among `allEntries`. */
+  noPrimaryEntry: boolean
+  /** Another entry in `allEntries` already uses this same `(epic, stage, supplementSeq)` tuple. */
+  duplicateSeq: boolean
+  /**
+   * `sensitivityProof`, when present, is missing one of its two required
+   * prose fields (schema also enforces this; re-checked here for callers
+   * reading parsed JSON before schema validation).
+   */
+  incompleteSensitivityProof: boolean
+}
+
+/**
+ * Maintainer decision BLOCKED-005 (2026-09-01): validates a command-freeze
+ * entry's `supplements` structure against the freeze file's own entries --
+ * never a free-text or Writer-supplied claim. A supplement entry must (a)
+ * name the same `(epic, stage)` in `supplements` as its own top-level
+ * `epic`/`stage`, (b) carry a `supplementSeq` distinguishing it from the
+ * primary entry, (c) point at a primary entry that actually exists and is
+ * itself not a supplement, and (d) not collide with another entry's
+ * `(epic, stage, supplementSeq)` tuple.
+ *
+ * This does NOT (and structurally cannot, from bytes alone) determine
+ * whether the supplement's case obtained genuine RED versus following the
+ * "coverage completion" path -- that determination, and the hardening
+ * clause's resulting `sensitivityProof` requirement, remains a Supervisor
+ * + fresh-Reviewer honesty obligation recorded in the entry's own `note`
+ * and `dryRunProof`, exactly as RED/GREEN authenticity is verified
+ * throughout this program (never a bytes-only check). When present, this
+ * function does confirm `sensitivityProof` carries both required fields.
+ */
+export function checkSupplementalEntry(entry: CommandFreezeEntry, allEntries: CommandFreezeEntry[]): SupplementalEntryCheck {
+  const supplements = entry.supplements
+  if (supplements === undefined) {
+    return {
+      valid: true,
+      mismatchedTarget: false,
+      missingSeq: false,
+      noPrimaryEntry: false,
+      duplicateSeq: false,
+      incompleteSensitivityProof: false,
+    }
+  }
+  const mismatchedTarget = supplements.epic !== entry.epic || supplements.stage !== entry.stage
+  const missingSeq = !Number.isInteger(entry.supplementSeq) || (entry.supplementSeq as number) < 1
+  const noPrimaryEntry = !allEntries.some(e => e.epic === supplements.epic && e.stage === supplements.stage && e.supplements === undefined)
+  const duplicateSeq = allEntries.some(
+    e => e !== entry && e.epic === entry.epic && e.stage === entry.stage && e.supplementSeq === entry.supplementSeq,
+  )
+  const incompleteSensitivityProof =
+    entry.sensitivityProof !== undefined &&
+    (entry.sensitivityProof.mutationDescription.trim().length === 0 || entry.sensitivityProof.failureSummary.trim().length === 0)
+  const valid = !mismatchedTarget && !missingSeq && !noPrimaryEntry && !duplicateSeq && !incompleteSensitivityProof
+  return { valid, mismatchedTarget, missingSeq, noPrimaryEntry, duplicateSeq, incompleteSensitivityProof }
 }
 
 function readRegistry(root: string): Registry {
