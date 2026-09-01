@@ -1,0 +1,5 @@
+# Byte-for-byte vendored BASE-ALIGN-v2 gap-analysis source (23-epic
+# rescope spec); its content is pinned verbatim from the external
+# analysis output, trailing whitespace included, so
+# `git diff --cached --check` must not flag it.
+* -whitespace
