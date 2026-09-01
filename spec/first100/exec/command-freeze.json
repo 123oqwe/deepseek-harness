@@ -379,12 +379,12 @@
         "rejects a plugin row applied to the root Include entry after boot exactly as it rejects one present at initial boot",
         "rejects delete-then-reprovide against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned",
         "rejects a direct reassignment of the store entry (no delete) against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned",
-        "rejects impl.value = forged against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged",
+        "rejects `impl.value = forged` against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged",
         "rejects a direct write to ctx.root.fiber.store['trustKernel'], and leaves both ctx.get and ctx.trustKernel property access unforged for an unrelated sibling",
         "rejects a direct write to ctx.reflect.props['trustKernel'], and leaves ctx.trustKernel property access unforged",
-        "durably poisons ctx.trustKernel property access for the attacking plugin itself, while ctx.get('trustKernel') and an unrelated top-level sibling stay correct -- the known, accepted residual, not a bug in pinTrustKernel",
-        "poisons ctx.trustKernel property access for a sibling plugin mounted under the same ancestor (vector G), while ctx.get('trustKernel') and the root stay correct",
-        "poisons ctx.trustKernel property access for every non-root context silently (vector H, wholesale root-store replacement), while ctx.get('trustKernel') and the root's own direct property read stay correct"
+        "durably poisons ctx.trustKernel property access for the attacking plugin itself, while ctx.get('trustKernel') and an unrelated top-level sibling stay correct -- this is the known, accepted gap, not a bug in pinTrustKernel",
+        "poisons ctx.trustKernel property access for a sibling plugin mounted under the same ancestor, while ctx.get('trustKernel') and the root stay correct",
+        "poisons ctx.trustKernel property access for every non-root context (siblings and later-mounted plugins alike), silently, while ctx.get('trustKernel') and the root's own direct property read stay correct"
       ],
       "files": [
         "packages/kernel/trust-kernel/tests/dispose.spec.ts",

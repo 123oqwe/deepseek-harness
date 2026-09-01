@@ -149,7 +149,7 @@
         },
         {
           "stage": "F",
-          "title": "rejects impl.value = forged against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged"
+          "title": "rejects `impl.value = forged` against a kernel pinned via pinTrustKernel, and leaves ctx.get('trustKernel') unforged"
         },
         {
           "stage": "F",
