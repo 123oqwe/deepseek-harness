@@ -60,7 +60,7 @@ export const renameFiredAtToOccurredAt: SchemaMigration = (payload) => {
  */
 export const renameOccurredAtToFiredAt = (payload: AgentTimestampV2): LegacyAgentTimestampV1 => {
   const { occurredAt, ...rest } = payload
-  return { ...rest, firedAt: occurredAt } as LegacyAgentTimestampV1
+  return { ...rest, firedAt: occurredAt }
 }
 
 /**

@@ -89,11 +89,11 @@
     "workflow-worker-thread"
   ],
   "formatVersion": 1,
-  "gitSha": "2abc7d0766b8789d2037e3dbb7fdfc5d4a603e80",
-  "pnpmLockHash": "96f45eeb100158fac8bd27822616661b424be77612b000e1bf38acc1c3e31b3a",
+  "gitSha": "7d8354e0023a750e0d57c06630e0c12f42733b64",
+  "pnpmLockHash": "1c0283a36d7161c8d5834b5e5cacea3bb13c0dc593883bcb8fa57453edc6f36b",
   "protocolSchemaHashes": {
     "packages/core/session/src/known-event-types.ts": "235200ea8da50166713086064ac64b5c74161fd63a8ccc9034e4456bc7f678fa",
-    "packages/sdk/protocol/src/types.ts": "558e71fa855918738eaeed57115632e1a8b49aa559d58837d6a7cc1110a6828f"
+    "packages/sdk/protocol/src/types.ts": "0b44d5d47d5eb474fa824d43f9170092d2f79511ed5566e319fb13e2ccb57ac6"
   },
   "toolchain": {
     "node": "24.18.0",
@@ -340,6 +340,7 @@
     "@deepseek-ai/dsh-tool-web",
     "@deepseek-ai/dsh-tool-workflow",
     "@deepseek-ai/dsh-tools",
+    "@deepseek-ai/dsh-trust-kernel",
     "@deepseek-ai/dsh-typert-generator",
     "@deepseek-ai/dsh-typert-loader",
     "@deepseek-ai/dsh-typert-protocol",

@@ -21,6 +21,7 @@
  */
 
 import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import type { SchemaVersion } from '@deepseek-ai/dsh-schema-registry'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
 
@@ -39,6 +40,13 @@ export interface InitializeParams {
   reasoningEffort?: ReasoningEffortId
   /** Optional positive output-token cap inherited by SDK-created agents and their in-process descendants. */
   maxTokens?: number
+  /**
+   * Optional explicit version this client negotiates `sdk-protocol:InitializeParams` against
+   * (`@deepseek-ai/dsh-schema-registry`'s `negotiateSchema`). Absent defaults to this build's
+   * own registered version — no real client has ever sent this field before must[4]'s
+   * SDK-initialize negotiation existed.
+   */
+  schemaVersion?: SchemaVersion
 }
 
 /**

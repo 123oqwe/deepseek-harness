@@ -4772,6 +4772,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ScheduledToolPreparation = {\n    kind: \'dispatch\';\n    exec: ToolRunContext;\n} | {\n    kind: \'post-result\';\n    exec: ToolRunContext;\n    result: ToolExecutionResult;\n} | {\n    kind: \'final-result\';\n    exec: ToolRunContext;\n    result: ToolExecutionResult;\n};',
   },
   {
+    name: 'SchemaVersion',
+    declaration: 'export interface SchemaVersion {\n    readonly major: number;\n    readonly minor: number;\n}',
+  },
+  {
     name: 'Scoped',
     declaration: 'export type Scoped<T extends object> = object & {\n    readonly [ScopedBrand]: T;\n};',
   },
@@ -5261,7 +5265,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SettingsRegisterOptions',
-    declaration: 'export interface SettingsRegisterOptions<T> {\n    base?: Partial<T>;\n    applies?: SettingsApplies;\n    validate?: (value: T) => void;\n}',
+    declaration: 'export interface SettingsRegisterOptions<T> {\n    base?: Partial<T>;\n    applies?: SettingsApplies;\n    schemaVersion?: SchemaVersion;\n    validate?: (value: T) => void;\n}',
   },
   {
     name: 'SettingsSecretView',

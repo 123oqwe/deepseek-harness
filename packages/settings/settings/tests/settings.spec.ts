@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
+import { SchemaCompatibilityError } from '@deepseek-ai/dsh-schema-registry'
 import z from '@deepseek-ai/schemastery'
 import { SettingsProvider, SettingsConflictError, type SettingsNamespace, type SettingsScope, type SettingsUpdateSource } from '../src/index.ts'
 import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
@@ -573,6 +574,65 @@ describe('publish', () => {
     expect(scope.get()).toEqual({ theme: 'dark', fontSize: 14 })
     provider.pushExternal({ 'ui-theme': { fontSize: 18 } })
     expect(scope.get()).toEqual({ theme: 'dark', fontSize: 18 })
+  })
+})
+
+describe('schema-registry negotiation at settings-load (P0-06 must[4])', () => {
+  it('rejects registration when the stored section declares an incompatible major', async () => {
+    const { ctx } = await boot({
+      doc: { 'p0-06-register-mismatch': { theme: 'light', $schemaVersion: { major: 7, minor: 0 } } },
+    })
+    let thrown: unknown
+    try {
+      ctx.settings.register('p0-06-register-mismatch', ThemeSchema, { schemaVersion: { major: 1, minor: 0 } })
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(SchemaCompatibilityError)
+    const error = thrown as SchemaCompatibilityError
+    expect(error.code).toBe('SCHEMA_MAJOR_MISMATCH')
+    expect(error.schemaId).toBe('settings:p0-06-register-mismatch')
+    expect(error.encounteredVersion).toEqual({ major: 7, minor: 0 })
+  })
+
+  it('registers when the stored section declares a compatible major, stripping the tag before resolution', async () => {
+    const { ctx } = await boot({
+      doc: { 'p0-06-register-match': { theme: 'light', $schemaVersion: { major: 1, minor: 0 } } },
+    })
+    const scope = ctx.settings.register('p0-06-register-match', ThemeSchema, { schemaVersion: { major: 1, minor: 0 } })
+    // $schemaVersion never reaches the owner's resolved value as ordinary data.
+    expect(scope.get()).toEqual({ theme: 'light', fontSize: 14 })
+  })
+
+  it('keeps the last good value (no silent field loss) when a hot-reloaded section declares an incompatible major', async () => {
+    const { ctx, provider } = await boot()
+    const events = recordUpdates(ctx)
+    const scope = ctx.settings.register('p0-06-publish-mismatch', ThemeSchema)
+    provider.pushExternal({
+      'p0-06-publish-mismatch': { theme: 'light', $schemaVersion: { major: 9, minor: 0 } },
+    })
+    // Structured, not silently accepted: the namespace stays on its last good
+    // value and no commit event fires for it, exactly as an owner-unserviceable
+    // stored section already behaves ("keeps the last good value for an
+    // invalid section while other namespaces commit", above).
+    expect(scope.get()).toEqual({ theme: 'dark', fontSize: 14 })
+    expect(events).toEqual([])
+  })
+
+  it('commits a hot-reloaded section that declares a compatible major', async () => {
+    const { ctx, provider } = await boot()
+    const scope = ctx.settings.register('p0-06-publish-match', ThemeSchema)
+    provider.pushExternal({
+      'p0-06-publish-match': { theme: 'light', $schemaVersion: { major: 1, minor: 0 } },
+    })
+    expect(scope.get()).toEqual({ theme: 'light', fontSize: 14 })
+  })
+
+  it('defaults an absent $schemaVersion to the registered version, leaving ordinary reloads unaffected', async () => {
+    const { ctx, provider } = await boot()
+    const scope = ctx.settings.register('p0-06-publish-default', ThemeSchema)
+    provider.pushExternal({ 'p0-06-publish-default': { theme: 'light' } })
+    expect(scope.get()).toEqual({ theme: 'light', fontSize: 14 })
   })
 })
 

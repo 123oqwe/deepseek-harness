@@ -33,7 +33,7 @@ responds; append-only.
      - **Frozen-test consistency unaffected**: the slice's frozen command-freeze test(s) must still land inside the (original or deviation-recorded substitute) `files[]` — B4(e)/B7① stay unrelaxed by the deviation.
   2. For P0-06.U specifically: the Opus Reviewer already dispatched must check the circular-dependency deviation against all four conditions above; PASS → accept + record a manifest patch; any condition unmet → MUST-FIX.
   3. Applies to every epic from today forward, not just P0-06.
-- **Status:** ANSWERED-BY-DELEGATE(gq-92) — relayed to the in-flight P0-06.U Reviewer to fold into their verdict; will record the resulting manifest-patch entry (or MUST-FIX) once their report lands.
+- **Status:** ANSWERED-BY-DELEGATE(gq-92) — this entry was recorded on `attempt/P0-02-F` at the time but never reached `first100-exec` until now (2026-09-01, discovered by P0-06.F's independent Reviewer: the `basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"` field on 4 manifest-patch entries in `tests/first100/adjudication.json` — 2 from P0-06.U, 1 from P0-06.F, referencing this section — was a dangling anchor on `first100-exec` until this commit backfilled it; the standing rule itself was already in effect and folded into `.claude/goal.md`'s RULES line, and every Reviewer that applied it did so correctly against that copy).
 
 ### BLOCKED-011 — P0-02.F: a second Trust Kernel bypass found while fixing the first (ANSWERED-BY-USER, final)
 

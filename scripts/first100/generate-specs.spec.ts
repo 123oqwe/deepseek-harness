@@ -41,6 +41,7 @@ import {
   checkArtifactManifestSchema,
   checkDeliverablePathPatches,
   checkLayerMapping,
+  checkParallelLaneDisjointness,
   checkR0EvidenceRow,
   checkR0EvidenceRowSchema,
   checkSharedStageCoverage,
@@ -587,6 +588,47 @@ describe('layer gap resolution (Q4(b) option 2: complete 100-ID mapping)', () =>
     stale.layerMapping!.status = 'APPROVED'
     stale.layerMapping!.entries = {}
     expect(checkLayerMapping(reg, stale).valid).toBe(false)
+  })
+})
+
+describe('first100 parallel-lane file disjointness (delegate directive, 2026-09-01: hard prerequisite for opening parallel Writer lanes)', () => {
+  it('CONFLICT direction: a real pair (P0-02, P1-02) that jointly own packages/kernel/trust-kernel/src/types.ts is reported, even though the owner-map already SERIALIZES that file across waves', () => {
+    const { reg } = readRegistry()
+    const check = checkParallelLaneDisjointness(reg, ['P0-02', 'P1-02'])
+    expect(check.disjoint).toBe(false)
+    expect(check.conflicts).toEqual([
+      { file: 'packages/kernel/trust-kernel/src/types.ts', epics: ['P0-02', 'P1-02'] },
+    ])
+  })
+
+  it('CONFLICT direction: all three real writers of the same file (P0-02, P1-02, P2-02) are named together', () => {
+    const { reg } = readRegistry()
+    const check = checkParallelLaneDisjointness(reg, ['P0-02', 'P1-02', 'P2-02'])
+    expect(check.disjoint).toBe(false)
+    expect(check.conflicts).toHaveLength(1)
+    expect(check.conflicts[0]?.epics).toEqual(['P0-02', 'P1-02', 'P2-02'])
+  })
+
+  it('PASS direction: two real, unrelated, already-ACCEPTED epics (P0-01, P0-06) with no file overlap report disjoint', () => {
+    const { reg } = readRegistry()
+    const check = checkParallelLaneDisjointness(reg, ['P0-01', 'P0-06'])
+    expect(check.disjoint).toBe(true)
+    expect(check.conflicts).toEqual([])
+  })
+
+  it('PASS direction: a single-epic batch is always disjoint (nothing to conflict with)', () => {
+    const { reg } = readRegistry()
+    expect(checkParallelLaneDisjointness(reg, ['P0-02']).disjoint).toBe(true)
+  })
+
+  it('a shared [B]-class baseline input (e.g. package.json, referenced by many epics) never counts as a conflict -- only kind N/P owned files do', () => {
+    const { reg } = readRegistry()
+    // Sanity: package.json is a [B] baseline reference for essentially every
+    // epic (dependency bookkeeping), never an [N]/[P] owned deliverable --
+    // if it were miscounted as owned, nearly every real epic pair would
+    // falsely conflict.
+    const check = checkParallelLaneDisjointness(reg, ['P0-01', 'P0-02', 'P0-06'])
+    expect(check.conflicts.some(c => c.file === 'package.json')).toBe(false)
   })
 })
 

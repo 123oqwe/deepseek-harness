@@ -333,6 +333,33 @@
         "testsDiscovered": 286
       },
       "note": "P0-06 U-stage (2026-09-01): real negotiateSchema() calls wired into 3 read boundaries -- session replay (session-persistence-jsonl/src/format.ts), SDK initialize (sdk/server/src/server.ts), settings load (settings/settings/src/index.ts) -- per BLOCKED-012's manifest-patch mechanism (2 files substituted for the wave-map's literal declaration: core/session/src/types.ts -> session-persistence-jsonl/src/format.ts, forced by a real ESM circular-dependency the Reviewer proved empirically; settings/settings/src/types.ts -> src/index.ts, since the types file is projection-only). Real RED->GREEN: the Writer reverted only the production wiring and confirmed genuine on-topic test failures (not module/syntax errors), then restored. A real design bug was found and self-fixed: negotiation must not fire for a type the registry never bootstrapped (that's the ignorable/legacy-type mechanism's jurisdiction) -- the first implementation wrongly treated any unregistered type as SCHEMA_UNKNOWN. Opus-level adversarial review (mandatory, L1_CONTRACT): ACCEPT with manifest-patch needed (both BLOCKED-012 conditions verified against spec/first100-owner-map.json, zero owner conflict) and 2 real gate violations found+fixed (verify-type-equiv drift in docs/subsystems/settings.md, a new oxlint no-confusing-void-expression violation), commit 7d8354e002. Real CI observation: run 33521991413 on the initial merge commit e05df35fec FAILED with a genuine deterministic regression (a typert-generated Cordis catalog artifact, packages/extensions/tool-cordis/src/api-catalog.ts, wasn't regenerated after this slice's SettingsRegisterOptions.schemaVersion? field addition) -- diagnosed and fixed (commit 12d0a1fdd1, also closing a separate pre-existing gap: ctx.trustKernel was never registered in the catalog generator's SERVICE_WALK_EXEMPTIONS, blocking regeneration entirely). Re-run: CI run 33524811126 on the fix commit 98341625bc completed with exactly 1 failure, packages/experimental/inspector's already-registered flake (5th documented occurrence on a distinct SHA) -- failure set fully absorbed by flake-registry.json per BLOCKED-007③, valid observation. This dry-run proof (treeSha 98341625bc, the exact CI-verified commit) confirms 286/286 tests passing locally, matching the CI observation's non-flake result. BLOCKED-013 recorded and folded into the standing gate-scan checklist as a result of this slice's CI-caught regression."
+    },
+    {
+      "epic": "P0-06",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "replays snapshots/web/fresh-round-trip/session.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+        "replays snapshots/sdk/text-turn/session.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss",
+        "replays snapshots/session/skill-load/session.jsonl (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss"
+      ],
+      "files": [
+        "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T16:15:00Z",
+      "dryRunProof": {
+        "treeSha": "e8240da70ea31d834c9d8d51e89e0c4e1fe8bb1c",
+        "testsDiscovered": 161
+      },
+      "note": "P0-06 F-stage (2026-09-01), acceptance[0] (\"至少能够读取审计基线产生的旧 session fixture\"): proves U-stage's session-replay negotiation wiring doesn't break reading real OLD session data. Three real, pre-existing, already-committed fixtures from this repo's own keyless recorded-session snapshot corpus (snapshots/*/session.jsonl), all predating schema-registry's existence (no schemaVersion tag on any event). Real subtlety found and handled: committed fixtures are envelope-scrubbed (seq/time stripped by scrubSessionSnapshot for stable re-recording diffs), so reconstructRealSessionLog() rebuilds a real on-disk envelope using the identical seq-reassignment rule the codebase's own repackSessionSnapshot already applies in the reverse direction -- every event's real type/data payload stays byte-identical to the fixture, only seq/time are deterministically re-assigned. BLOCKED-012-class deviation from the wave-map's literal F-stage files (schema-registry/tests/compatibility.spec.ts, core/session/src/repair.ts): repair.ts confirmed out of scope and untouched (2 prior independent reviews plus this slice's own re-confirmation -- pure crash-recovery, zero schema-version concept, downstream of any negotiation); compatibility.spec.ts has zero visibility into the real wired boundary (SessionLogScanner.consumeEventLine's private negotiateEventLineSchema, reachable only via session-persistence-jsonl's own exports) -- extended jsonl.spec.ts's existing U-stage describe block instead, itself already P0-06's own frozen U-stage test file. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): jsonl.spec.ts absent -- zero conflict. Coverage-completion slice, not a bug fix: all 3 cases pass cleanly against current U-stage wiring with no code changes. Real sensitivity proof: temporarily mutated format.ts's absent-schemaVersion default to an incompatible major, confirmed all 3 new tests genuinely fail with SchemaCompatibilityError/SCHEMA_MAJOR_MISMATCH, reverted (git diff on format.ts empty). Full session-persistence-jsonl + schema-registry suites: 280/280 passing."
     }
   ]
 }

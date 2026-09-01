@@ -4,8 +4,10 @@ import { Context } from '@deepseek-ai/cordis'
 import { appendFile, mkdtemp, mkdir, rm, readFile, writeFile, readdir, stat, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import type { Session, SessionEvent, SessionHeader } from '@deepseek-ai/dsh-session'
+import { SchemaCompatibilityError } from '@deepseek-ai/dsh-schema-registry'
+import SessionStore, { decodeStorageRecord, SessionId } from '@deepseek-ai/dsh-session'
+import { isChunkRow } from '@deepseek-ai/dsh-session/chunk-rows'
+import type { Session, SessionEvent, SessionHeader, StorageRecord } from '@deepseek-ai/dsh-session'
 import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import {
   encodeSegment, eventLines, logPath, projectDir, projectKey, scanLog, sessionDir, SessionLogScanner, toHeaderLine,
@@ -1037,6 +1039,155 @@ describe('JsonlSessionPersistence: scanLog unit', () => {
     const { events } = scanLog(Buffer.from(log))
     expect(events.map(e => e.seq)).toEqual([0, 1]) // tail dropped
   })
+})
+
+describe('JsonlSessionPersistence: schema-registry negotiation at replay (P0-06 must[4])', () => {
+  it('rejects a session-event line whose explicit schemaVersion major differs from the registered major', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-mismatch')))}\n`)
+    const scanner = new SessionLogScanner(header)
+    const line = JSON.stringify({
+      type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 2, minor: 0 },
+    })
+    let thrown: unknown
+    try {
+      scanner.write(Buffer.from(`${line}\n`))
+    } catch (error) {
+      thrown = error
+    }
+    expect(thrown).toBeInstanceOf(SchemaCompatibilityError)
+    const error = thrown as SchemaCompatibilityError
+    expect(error.code).toBe('SCHEMA_MAJOR_MISMATCH')
+    expect(error.schemaId).toBe('session-event:turn/start')
+    expect(error.encounteredVersion).toEqual({ major: 2, minor: 0 })
+    expect(error.registeredVersion).toEqual({ major: 1, minor: 0 })
+  })
+
+  it('does not swallow a schema-incompatible line into the tolerant corrupt-suffix heuristic', () => {
+    // The pre-existing corrupt-log path silently tolerates a bad line until a
+    // later `turn/end` commits past it (see the "tolerable corrupt suffix"
+    // test above) -- a schema incompatibility must throw immediately instead,
+    // never falling back to that silent-recovery behavior (acceptance[1]: no
+    // silent field loss).
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-mismatch-no-swallow')))}\n`)
+    const scanner = new SessionLogScanner(header)
+    const log = [
+      JSON.stringify({ type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 9, minor: 0 } }),
+      JSON.stringify({ type: 'turn/end', seq: 1, time: 2, data: { turn: 1, reason: { kind: 'completed' } } }),
+    ].join('\n') + '\n'
+    expect(() => { scanner.write(Buffer.from(log)) }).toThrow(SchemaCompatibilityError)
+  })
+
+  it('accepts a session-event line whose explicit schemaVersion major matches the registered major', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-match')))}\n`)
+    const scanner = new SessionLogScanner(header)
+    const line = JSON.stringify({
+      type: 'turn/start', seq: 0, time: 1, data: { turn: 1 }, schemaVersion: { major: 1, minor: 0 },
+    })
+    scanner.write(Buffer.from(`${line}\n`))
+    // The registered version's negotiation succeeds; the tag itself is not
+    // part of the trusted SessionEvent shape and does not appear in `data`.
+    expect(scanner.finish().events).toEqual([{ type: 'turn/start', seq: 0, time: 1, data: { turn: 1 } }])
+  })
+
+  it('defaults an absent schemaVersion to this build\'s registered version, leaving ordinary replay unaffected', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-default')))}\n`)
+    const body = Buffer.from(`${oneTurnLog().map(event => JSON.stringify(event)).join('\n')}\n`)
+    expect(scanLog(Buffer.concat([header, body])).events).toEqual(oneTurnLog())
+  })
+
+  it('does not negotiate schema for a packed chunk row tag (not a session-event payload)', () => {
+    const header = Buffer.from(`${JSON.stringify(toHeaderLine(meta('schema-chunk-row')))}\n`)
+    // A tag from KNOWN_SESSION_EVENT_TYPES could never collide with these
+    // literal storage tags, so a real chunk row must not be misread as an
+    // unregistered "session-event:text-chunks" and rejected.
+    const line = JSON.stringify({
+      type: 'text-chunks',
+      seq0: 0,
+      time0: 1,
+      data: { turn: 1, step: 1, index: 0, dt: [1, 1], texts: ['a', 'b', 'c'] },
+    })
+    expect(() => scanLog(Buffer.concat([header, Buffer.from(`${line}\n`)]))).not.toThrow()
+  })
+
+  // P0-06 F-stage acceptance[0] ("至少能够读取审计基线产生的旧 session fixture"): the
+  // negotiation wired above must not break reading real OLD session data, not
+  // just the synthetic payloads used by the tests above. These are real,
+  // pre-existing, already-committed fixtures from this repo's own keyless
+  // recorded-session snapshot corpus (snapshots/*/session.jsonl) -- every one
+  // predates schema-registry's existence, so none carries a schemaVersion tag
+  // on any event; that is exactly what makes them "old" in the acceptance
+  // clause's sense. Picked from three different snapshot groups for event-shape
+  // variety: packed reasoning-chunks/tool-call-chunks rows plus a foreign
+  // plugin event type (session-log-deepseek/delivery-accepted), a different
+  // packed-row combination (text-chunks/reasoning-chunks), and fully unpacked
+  // per-delta rows (reasoning-delta/text-delta/tool-call-delta, no packed rows
+  // at all).
+  //
+  // A committed fixture is a scrubbed comparison artifact, not a literal
+  // on-disk log: `scrubSessionSnapshot`/`omitFixtureEnvelope`
+  // (@deepseek-ai/dsh-session-snapshot, packages/test-support/session-snapshot/
+  // src/normalize.ts) deliberately deletes every event's `seq`/`time`
+  // (`seq0`/`time0` on a packed row) before a fixture is committed, so the file
+  // stays stable across re-recordings. `SessionLogScanner` requires
+  // seq-contiguous events (the real on-disk invariant `core/session/src/
+  // index.ts`'s `seq: this.log.length` also upholds), so reading a fixture's
+  // bytes verbatim always fails on the envelope, before negotiation is even
+  // exercised meaningfully. `repackSessionSnapshot` (same module, private)
+  // reconstructs a real envelope for its OWN reverse direction (comparing a
+  // freshly-replayed log back against a fixture) by re-assigning `seq`
+  // sequentially from 0 and a fixed `time`, expanding packed rows via the same
+  // `decodeStorageRecord` used at real replay. `reconstructRealSessionLog`
+  // below applies that identical, already-established rule to rebuild each
+  // fixture's real on-disk bytes: every event's real `type`/`data` payload
+  // stays byte-identical to the committed fixture; only the envelope
+  // (`seq`/`time`) is deterministically re-assigned, exactly as the codebase's
+  // own normalization already does in the other direction.
+  function reconstructRealSessionLog(fixtureLog: string): Buffer {
+    const lines = fixtureLog.split('\n').filter(line => line.trim().length > 0)
+    const headerLine = lines.shift()
+    if (headerLine === undefined) throw new Error('fixture has no header line')
+    const header = JSON.parse(headerLine) as Record<string, unknown>
+    // toHeaderLine() itself defaults an absent delegationDepth to 0 for every
+    // real write; this fixture's header predates that field, so the same
+    // default reconstructs what a real write would have produced.
+    header.delegationDepth ??= 0
+
+    let nextSeq = 0
+    const events = lines.flatMap((line): SessionEvent[] => {
+      const record = JSON.parse(line) as Record<string, unknown>
+      if (isChunkRow(record as unknown as StorageRecord)) {
+        const decoded = decodeStorageRecord({ ...record, seq0: nextSeq, time0: nextSeq })
+        nextSeq += decoded.length
+        return decoded
+      }
+      const event = { ...record, seq: nextSeq, time: nextSeq } as unknown as SessionEvent
+      nextSeq += 1
+      return [event]
+    })
+    return Buffer.from(`${JSON.stringify(header)}\n${eventLines(events, false)}\n`)
+  }
+
+  const repoRoot = process.cwd() // `pnpm run test*`/`vitest run` invocations in this repo run from the repository root
+  const realOldFixtures = [
+    'snapshots/web/fresh-round-trip/session.jsonl',
+    'snapshots/sdk/text-turn/session.jsonl',
+    'snapshots/session/skill-load/session.jsonl',
+  ]
+
+  it.each(realOldFixtures)(
+    'replays %s (a real pre-schema-registry session fixture) with no negotiation failure and no silent event loss',
+    async (relativePath) => {
+      const fixtureLog = await readFile(resolve(repoRoot, relativePath), 'utf8')
+      const buffer = reconstructRealSessionLog(fixtureLog)
+      const scan = scanLog(buffer)
+      // committedBytes reaching the buffer's full length is scanLog's own
+      // signal that every line committed cleanly: no corrupt-suffix
+      // tolerance, no seq gap, and no schema-incompatibility throw silently
+      // swallowed a line.
+      expect(scan.committedBytes).toBe(buffer.length)
+      expect(scan.events.length).toBeGreaterThan(0)
+    },
+  )
 })
 
 describe('JsonlSessionPersistence: default packed chunk rows', () => {

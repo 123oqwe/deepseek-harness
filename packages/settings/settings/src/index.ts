@@ -7,6 +7,9 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { getSchema, identityMigration, negotiateSchema, registerSchema } from '@deepseek-ai/dsh-schema-registry'
+import type { SchemaId, SchemaVersion } from '@deepseek-ai/dsh-schema-registry'
 import type z from '@deepseek-ai/schemastery'
 import { deepEqualJson, deepFreeze } from '@deepseek-ai/dsh-util-values'
 import { redactSecrets } from './redact.ts'
@@ -51,6 +54,15 @@ export interface SettingsRegisterOptions<T> {
   base?: Partial<T>
   /** Owner's effect timing, surfaced to configuration UIs; defaults to `live`. */
   applies?: SettingsApplies
+  /**
+   * This namespace's schema registry version (`@deepseek-ai/dsh-schema-registry`,
+   * schemaId `settings:${ns}`); defaults to `{major: 1, minor: 0}`. The first
+   * registration of a namespace in this process registers the schema at this
+   * version; a later registration of the same namespace (a hot reload, or a
+   * second test) reuses whatever version is already registered rather than
+   * re-registering, since the registry never replaces a live registration.
+   */
+  schemaVersion?: SchemaVersion
   /**
    * Reject a resolved section the owner could not act on, for constraints its
    * schema cannot express — a cross-field requirement, or one field's validity
@@ -177,6 +189,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
   const proto: unknown = Object.getPrototypeOf(value)
   return proto === Object.prototype || proto === null
+}
+
+/** Whether a value is a well-formed `{major, minor}` schema version pair. */
+function isSchemaVersion(value: unknown): value is SchemaVersion {
+  if (typeof value !== 'object' || value === null) return false
+  const { major, minor } = value as { major?: unknown; minor?: unknown }
+  return typeof major === 'number' && typeof minor === 'number'
 }
 
 /**
@@ -425,6 +444,16 @@ export abstract class SettingsProvider extends Service {
     if (this.registrations.has(parsedNs)) {
       throw new Error(`settings namespace "${parsedNs}" is already registered`)
     }
+    // Settings namespaces register and dispose dynamically across a process's
+    // lifetime (plugin unload/reload, or repeated test registration of the
+    // same namespace) — unlike the fixed compile-time bootstrap lists this
+    // registry uses for session-events/sdk-protocol. The registry itself
+    // never replaces a live registration, so a namespace already registered
+    // (by an earlier mount) keeps its existing schema version here.
+    const settingsSchemaId = brandString<SchemaId>(`settings:${parsedNs}`)
+    if (getSchema(settingsSchemaId) === undefined) {
+      registerSchema(settingsSchemaId, options?.schemaVersion ?? { major: 1, minor: 0 }, identityMigration)
+    }
     const registration: SettingsRegistration = {
       ns: parsedNs,
       schema: schema as z<unknown>,
@@ -433,7 +462,7 @@ export abstract class SettingsProvider extends Service {
       ...options?.validate === undefined
         ? {}
         : { validate: options.validate as (value: unknown) => void },
-      resolved: deepFreeze(this.resolve(schema, options?.base, this.section(parsedNs), options?.validate)),
+      resolved: deepFreeze(this.resolve(schema, options?.base, this.negotiatedSection(parsedNs), options?.validate)),
       revision: 0,
       watchers: new Set(),
     }
@@ -715,7 +744,8 @@ export abstract class SettingsProvider extends Service {
     for (const registration of this.registrations.values()) {
       let next: unknown
       try {
-        next = deepFreeze(this.resolve(registration.schema, registration.base, this.section(registration.ns), registration.validate))
+        const section = this.negotiatedSection(registration.ns)
+        next = deepFreeze(this.resolve(registration.schema, registration.base, section, registration.validate))
       } catch (error) {
         this.ctx.logger.warn('settings: keeping last good "%s" after invalid stored section', registration.ns)
         this.ctx.logger.warn(error)
@@ -734,6 +764,32 @@ export abstract class SettingsProvider extends Service {
       throw new TypeError(`settings section "${ns}" must be an object of keys`)
     }
     return section
+  }
+
+  /**
+   * Read one namespace's raw section (via {@link section}) and negotiate must[4]'s
+   * schema check before it reaches the owner's schemastery schema: a stored
+   * document may declare the version it was written at with a reserved
+   * `$schemaVersion` key, negotiated against this namespace's registered
+   * schema (`settings:${ns}` in `@deepseek-ai/dsh-schema-registry`) and
+   * stripped from the returned section so it never reaches the owner as
+   * ordinary data. Absence of the key defaults to this namespace's currently
+   * registered version — no real stored document has ever carried the key
+   * before this mechanism existed.
+   * @param ns - the namespace whose raw section to read and negotiate.
+   * @returns the section with any `$schemaVersion` tag removed.
+   * @throws {@link SchemaCompatibilityError} when an explicit or defaulted encountered
+   *   version's major differs from this namespace's registered major.
+   */
+  private negotiatedSection(ns: SettingsNamespace): Record<string, unknown> | undefined {
+    const section = this.section(ns)
+    if (section === undefined || !Object.hasOwn(section, '$schemaVersion')) return section
+    const { $schemaVersion, ...rest } = section
+    const schemaId = brandString<SchemaId>(`settings:${ns}`)
+    const encounteredVersion = isSchemaVersion($schemaVersion) ? $schemaVersion : getSchema(schemaId)?.version ?? { major: 1, minor: 0 }
+    const result = negotiateSchema(schemaId, encounteredVersion)
+    if (!result.compatible) throw result.error
+    return rest
   }
 
   /** Resolve one namespace value: schema defaults, then `base`, then the user layer. */

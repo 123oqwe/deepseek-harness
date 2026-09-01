@@ -27,6 +27,15 @@ interface SettingsRegisterOptions<T> {
   /** Owner's effect timing, surfaced to configuration UIs; defaults to `live`. */
   applies?: SettingsApplies
   /**
+   * This namespace's schema registry version (`@deepseek-ai/dsh-schema-registry`,
+   * schemaId `settings:${ns}`); defaults to `{major: 1, minor: 0}`. The first
+   * registration of a namespace in this process registers the schema at this
+   * version; a later registration of the same namespace (a hot reload, or a
+   * second test) reuses whatever version is already registered rather than
+   * re-registering, since the registry never replaces a live registration.
+   */
+  schemaVersion?: SchemaVersion
+  /**
    * Reject a resolved section the owner could not act on, for constraints its
    * schema cannot express — a cross-field requirement, or one field's validity
    * depending on another's. Throwing here refuses the *write* that produced the
