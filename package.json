@@ -155,6 +155,8 @@
     "publish:npm-baseline": "tsx scripts/publish-npm-baseline.ts",
     "baseline:capture": "node scripts/release/baseline-fingerprint.mjs capture",
     "baseline:verify": "node scripts/release/baseline-fingerprint.mjs verify",
+    "evidence:collect": "node scripts/release/collect-evidence.mjs",
+    "evidence:verify": "node scripts/release/verify-evidence.mjs",
     "release:dsh": "tsx scripts/release/bump.ts --family dsh",
     "release:vendor": "tsx scripts/release/bump.ts --family vendor",
     "release:verify": "tsx scripts/release/verify.ts",
