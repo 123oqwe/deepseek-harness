@@ -19,8 +19,10 @@ export const inject = ['invariants']
  * data exists yet for an event/data relation to check. A later
  * Provider-stage slice that registers a live shadow/enforce decision stream
  * must replace this explanation with a check over that stream (for example:
- * a `'shadow'`-state gate's recorded decision never differs from the legacy
- * outcome the same request actually produced -- must[1]/acceptance[0]).
+ * a `'shadow'`-state gate's ACTUAL APPLIED result always matches the legacy
+ * outcome the same request would have produced -- never the shadow-only
+ * decision -- even when its recorded `FeatureGateShadowDecisionRecord` shows
+ * the two disagree; must[1]/acceptance[0]).
  */
 const install: InvariantInstaller = () => {}
 
