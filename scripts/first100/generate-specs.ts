@@ -246,7 +246,23 @@ export interface Adjudication {
     note: string
     entries: Record<
       string,
-      { stage: 'C' | 'P' | 'U' | 'F'; declaredPath: string; approvedPath: string; reason: string; approvedAt: string; basis: string }
+      {
+        /**
+         * Epic id this patch applies to. Optional: when absent, the entry's own
+         * object key is the epic id (BLOCKED-001's original one-patch-per-epic
+         * shape). Set explicitly when an epic needs more than one patch in the
+         * same stage (BLOCKED-012's class of same-stage, multi-file deviation) --
+         * each patch then gets its own unique object key (never reused across
+         * patches) while `epic` names the real, possibly-repeated, epic id.
+         */
+        epic?: string
+        stage: 'C' | 'P' | 'U' | 'F'
+        declaredPath: string
+        approvedPath: string
+        reason: string
+        approvedAt: string
+        basis: string
+      }
     >
   }
 }
@@ -261,7 +277,8 @@ export interface DeliverablePathPatchCheck {
 
 /**
  * Validates `adj.deliverablePathPatches` against the byte-locked registry: every
- * patched id and stage must exist in the registry, the patch's declaredPath must
+ * patch's epic (its `epic` field, falling back to its own object key when
+ * absent) and stage must exist in the registry, the patch's declaredPath must
  * exactly match the registry's stage file it replaces (catching a stale or
  * mistyped patch), and approvedPath/reason must be non-empty. Independent of the
  * R0 gate — a patch records a maintainer-approved deliverable-path amendment, it
@@ -274,18 +291,19 @@ export function checkDeliverablePathPatches(reg: Registry, adj: Adjudication): D
   const declaredPathMismatches: string[] = []
   const emptyApprovedPath: string[] = []
   const emptyReason: string[] = []
-  for (const [id, p] of Object.entries(entries)) {
-    const epic = regById.get(id)
+  for (const [key, p] of Object.entries(entries)) {
+    const epicId = p.epic ?? key
+    const epic = regById.get(epicId)
     if (epic === undefined) {
-      unknownIds.push(id)
+      unknownIds.push(epicId)
       continue
     }
     const stageFiles = epic.stages[p.stage].files
     if (!stageFiles.includes(p.declaredPath)) {
-      declaredPathMismatches.push(`${id}.${p.stage}: declaredPath ${p.declaredPath} not in registry stage files`)
+      declaredPathMismatches.push(`${key} (${epicId}.${p.stage}): declaredPath ${p.declaredPath} not in registry stage files`)
     }
-    if (p.approvedPath.trim().length === 0) emptyApprovedPath.push(id)
-    if (p.reason.trim().length === 0) emptyReason.push(id)
+    if (p.approvedPath.trim().length === 0) emptyApprovedPath.push(key)
+    if (p.reason.trim().length === 0) emptyReason.push(key)
   }
   const valid = unknownIds.length === 0 && declaredPathMismatches.length === 0 && emptyApprovedPath.length === 0 && emptyReason.length === 0
   return { valid, unknownIds, declaredPathMismatches, emptyApprovedPath, emptyReason }

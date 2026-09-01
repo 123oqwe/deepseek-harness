@@ -1158,8 +1158,8 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 1,
-    "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation. The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable.",
+    "count": 3,
+    "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P0-01": {
         "stage": "C",
@@ -1168,6 +1168,24 @@
         "reason": "BLOCKED-001: P0-01's own first100-requirements-matrix.md source names docs/audit/baseline-<sha>.md (SHA frozen at authoring time, b150a551) as the pnpm baseline:capture tool's own machine-generated fingerprint output. Decision A1 re-baselined to 0a53fb55, so a correctly-implemented baseline:capture would naturally target docs/audit/baseline-0a53fb55.md -- but that exact path already holds an unrelated artifact: the Supervisor's own R0.3A native-CI/pack health receipt (see docs/audit/baseline-0a53fb55.md), a different artifact class (test-suite-result evidence, not a Git-SHA+Node/pnpm-versions+workspace-package-list+protocol-schema-hashes fingerprint). Splitting the naming convention permanently: docs/audit/baseline-<sha>.md stays reserved for Supervisor R0.3A/governance health receipts; P0-01's baseline:capture family uses docs/audit/baseline-fingerprint-<sha>.md going forward.",
         "approvedAt": "2026-08-31",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-001"
+      },
+      "P0-06-U-session-replay": {
+        "epic": "P0-06",
+        "stage": "U",
+        "declaredPath": "packages/core/session/src/types.ts",
+        "approvedPath": "packages/session/session-persistence-jsonl/src/format.ts",
+        "reason": "BLOCKED-012: @deepseek-ai/dsh-schema-registry already depends on @deepseek-ai/dsh-session (package.json peerDependencies + devDependencies) via a real VALUE import -- src/index.ts:20 imports KNOWN_SESSION_EVENT_TYPES and consumes it at line 241 inside bootstrapSessionEventSchemas(), invoked at module-evaluation time (line 270). Wiring negotiateSchema() into core/session therefore forms an ESM cycle. Independently verified by the Reviewer: adding the reverse dependency plus a real value import to packages/core/session/src/index.ts fails at import time with 'TypeError: KNOWN_SESSION_EVENT_TYPES is not iterable' at schema-registry/src/index.ts:241, making dsh-session entirely unloadable (packages/core/session/tests/session.spec.ts: 1 failed suite, no tests run; counterfactual fully reverted afterward). Second independent forcing reason: core/session/src/types.ts is a types-only module and the session-replay read boundary (SessionLogScanner.consumeEventLine) does not exist in core/session at all. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is not present -- shared/common infrastructure, not owned by any single epic, zero conflict.",
+        "approvedAt": "2026-09-01",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
+      },
+      "P0-06-U-settings-load": {
+        "epic": "P0-06",
+        "stage": "U",
+        "declaredPath": "packages/settings/settings/src/types.ts",
+        "approvedPath": "packages/settings/settings/src/index.ts",
+        "reason": "BLOCKED-012 companion: packages/settings/settings/src/types.ts declares wire-view/projection types only, not the settings-load read boundary. must[4]'s negotiate-before-use point is SettingsProvider.register()/publish() in src/index.ts, where a stored section is read and resolved against the owner's schemastery schema before use. Owner-map check (spec/first100-owner-map.json byFile, 441 entries): the substitute path is not present -- shared/common infrastructure (also referenced by P0-05/P2-08/P2-10/P1-10/P8-10/P8-09's own wave-map text at other stages, none of which own it exclusively per the mechanical owner-map), zero conflict.",
+        "approvedAt": "2026-09-01",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
       }
     }
   }
