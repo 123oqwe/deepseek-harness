@@ -1224,6 +1224,71 @@
         "testsDiscovered": 107
       },
       "note": "P1-01 U-stage (2026-09-02/03), real enforcement wiring closing acceptance[0]/[1]/[3]: pre-mount admission (evaluatePreMountAdmission in plugin-manifest, called from partitionProfileLayersByAdmission in app-boot/profile.ts, wired into apps/cli/src/profile-boot.ts's composeProfile so a denied bundle layer's Loader-entry patches never reach boot() -- the denied module is never imported at all) and post-mount quarantine (buildObservedPluginCapabilities in plugin-inventory walks a live Cordis Fiber/ReflectService store keyed by Fiber.uid -- Entry.fiber is Object.create(rawFiber), a thenable wrapper, while a service's Impl.fiber is the raw fiber, not reference-equal but sharing uid via the prototype chain, independently reproduced from vendored Cordis source -- feeding buildPluginPermissionStates -> applyPostMountPluginEnforcement, which disposes a quarantined plugin's live fiber after boot). Gated behind DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce, off by default (no shipped bundle has a real manifest v2 yet). New plugin-verify CLI command + pnpm plugin:verify <fixture>, with malicious fixtures for schema-spoof / mcp-elicitation (structural, not semantic) / skill-secret-request. BLOCKED-027 closed: no live registration (ToolDefinition, Cordis service Impl, MCP-client config, SkillDefinition) structurally carries sideEffectClass/authAudience/allowedDestinations/dataClassification, verified by reading every type -- identity-only comparison is the real design, not a deferred gap. Companion: ToolRuntime.register/Skills.register effect labels now embed the registered name, the only way to attribute a registration to its owning fiber for the quarantine walk -- zero regression confirmed across both packages' full suites and no test elsewhere asserting on the old label format. Independent Reviewer: ACCEPT, including independent reproduction of the Fiber-identity claim and the typert @Remote build failure justifying the acceptance[1] RPC-exposure gap (TypertEmitError on PluginManifestV2's tuple fields). Three non-blocking disclosure gaps closed in a same-slice fast-follow (commit a1e9327f71, matching the P1-01.P precedent): malicious-mcp-elicitation.json's test framing corrected (denied via an unrelated missing-transport field on its second server, not semantic detection of the suspicious prompt name -- a new companion fixture mcp-suspicious-prompt-name-admitted.json now proves the narrower true claim); two undisclosed enforcement-scope boundaries (experimental/webworker-runtime's boot() bypass -- in-scope-as-designed, excluded from official releases; cordis.patch.yml/--patch overlays bypassing admission entirely -- accepted, a pre-existing code-execution-equivalent trust boundary) recorded in packages/boot/app-boot's README Known Limitations; the enforce-off-by-default asymmetry with P0-02's Trust Kernel default-on posture noted with a roadmap pointer. expectCases here are the 48 new U-stage-specific titles across the 5 touched/new spec files, cross-checked byte-exact present-and-passing against a real vitest --reporter=json dry run (107 total in the same argv, superset from directory-adjacent pre-existing C/P-stage tests in the same files, which does not affect their own cells' greening per the present-and-passing subset semantics established by BLOCKED-018's mechanization)."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/identity/principal/tests/identity.spec.ts",
+        "packages/core/agent-loop/tests/runtime-context.spec.ts",
+        "packages/core/agent-loop/tests/agent.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "a fresh session with a supplied identity attaches it and durably logs it exactly once",
+        "a session with no supplied identity attaches nothing and logs nothing",
+        "a session seeded with an already-recorded identity re-supplied at the same tenant attaches it without re-logging",
+        "a session seeded with an already-recorded identity rejects a re-supplied cross-tenant identity via the runtime-policy layer (registry P2-01 gate: request tenant equals authenticated tenant)",
+        "returns undefined for a session with no identity/attached event",
+        "returns the last identity/attached event's identity, ignoring earlier ones",
+        "never derives identity from user/message content -- only identity/attached events are consulted",
+        "carries the recorded identity forward and logs nothing when this run supplies none",
+        "returns undefined and logs nothing when neither a recorded nor a supplied identity exists",
+        "accepts and logs a first-ever supplied identity when nothing was recorded yet",
+        "accepts a same-tenant re-supplied identity without a TenantMismatchError, and reports it as already logged",
+        "rejects a cross-tenant re-supplied identity via the runtime-policy layer (assertRuntimeTenantPolicy), distinct from extendChain's construction-time check",
+        "logs a same-tenant resupply when the actually-attached principal genuinely differs from what is recorded (a real principal swap, not just \"something was already recorded\")",
+        "does not log a same-tenant resupply when the actually-attached principal is the same identity as recorded, even as a distinct object",
+        "logs a same-terminal-principal resupply when the chain shape differs -- a different root/depth/provenance underneath an identical terminal principal",
+        "does not log a resupply when recorded and supplied share the same chain shape (same root, same depth, same terminal), even as distinct chain objects",
+        "logs a resupply when chain shape and every kind/id/tenantId match but the terminal agent principal's delegatedBy differs (Reviewer round-3 finding, closed in fix4)",
+        "does not log a resupply when the chain is genuinely identical, including delegatedBy on the terminal agent entry",
+        "reports two independently-constructed chains with the same root/depth/terminal as the same shape",
+        "reports two single-entry chains rooted at the same principal as the same shape",
+        "reports a different shape when the terminal principal matches but the root/depth differ (Reviewer round-3 finding)",
+        "reports a different shape when chain lengths differ",
+        "reports a different shape when an equal-length, same-root, same-terminal chain differs at an interior hop",
+        "reports a different shape when the terminal agent principal's delegatedBy differs, even with identical kind/id/tenantId throughout (Reviewer round-3 finding, closed in fix4)",
+        "reports the same shape when delegatedBy matches on every agent entry, even across independently-constructed chains",
+        "rejects mutating an admin user principal's tenantId in place: the assignment throws (ESM strict mode) and the field is unchanged",
+        "rejects mutating an admin user principal's id in place",
+        "rejects mutating an admin service principal's tenantId in place",
+        "rejects mutating a non-admin user principal's fields in place",
+        "rejects mutating a non-admin service principal's fields in place",
+        "rejects mutating an agent principal's fields in place",
+        "rejects mutating an anonymous-dev principal's fields in place",
+        "rejects attaching a fresh adminGrant to an already-minted non-admin principal in place -- Object.freeze blocks adding a new own property, not only rewriting an existing one",
+        "confirms every constructor's output is frozen (Object.isFrozen), not merely readonly at the type level",
+        "freezes the AdminGrant token itself, not only the principal object wrapping it",
+        "freezes the AdminGrant token for an admin service principal too",
+        "rejects mutating an admin user principal's adminGrant token in place: adding an own property throws (ESM strict mode) and the token is left structurally unchanged"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/runtime-context.ts",
+        "packages/core/session/src/types.ts",
+        "packages/sdk/protocol/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T04:45:00Z",
+      "dryRunProof": {
+        "treeSha": "3ef8df76b391414fc64b320523f0172b5d4c2322",
+        "testsDiscovered": 93
+      },
+      "note": "P2-01 U-stage (2026-09-02/03), real identity/tenant enforcement wiring into agent-loop, closing acceptance[0]/[1]'s runtime-policy half for real: Agent.identity made real (ReactLoopAgent's constructor populates it from resolveSessionIdentity/lastAttachedIdentity, durably anchored via a new identity/attached SessionEventMap entry using the documented ignorable-marker-free ordinary-event-addition exemption, not a SESSION_FORMAT_VERSION bump). ToolExecutionInput.agent / SubagentStartRequest.parent (the real correspondents of must[1]'s non-existent ToolExecutionContext/SubagentRequest names -- BLOCKED-021 resolved against real tip types, 4 new deliverablePathPatches entries, count 8->12) carry it structurally with zero further edit. assertRuntimeTenantPolicy gets its first real caller in resolveSessionIdentity. BLOCKED-025: identity crosses sdk/protocol's wire server-to-client only (SessionPromptResult.identity, sourced from the server's own live Agent.identity); client-to-server params deliberately carry none -- verified by exhaustive grep of every params/.identity access, stays correctly PARKED. This stage went through 4 review rounds, each finding a real, narrowing instance of the same bug class (an identity/authority-relevant change happens but isn't durably logged): round 1 REJECT (AdminGrant token not frozen -- BLOCKED-026's literal principal+grant text only half-satisfied by a principal-only freeze; a resumed session's identity could silently swap to a different same-tenant principal without being logged); round 2 fix (froze AdminGrant at mint time before WeakMap registration, added samePrincipalIdentity-gated logging) -- Reviewer verified both airtight with independent attacks but found the terminal-only check misses a same-principal-different-chain-shape swap; round 3 fix (added sameChainShape over the full entries[].kind/id/tenantId sequence) -- Reviewer found AgentPrincipal.delegatedBy still invisible to both checks; round 4 fix (delegatedByOf(principal) added to sameChainShape's per-entry comparison, safely short-circuited by the existing kind check -- proven via an instrumented delegatedBy-getter probe showing zero reads on a kind-mismatch pair) explicitly investigated and declined to compare UserPrincipal/ServicePrincipal.adminGrant: proven empirically that raw object-identity comparison would false-positive on every ordinary resupply, and that resolveSessionIdentity's real production caller (fed from session-restore's persistence path) genuinely sees deserialized identities on session resume, so a derived-boolean comparison would spuriously log gained-admin on every resumed admin session. Round 4 re-review: ACCEPT -- independently re-traced the real call chain (ReactLoopAgent's constructor, session-persistence-sqlite/jsonl's restore path) to confirm the adminGrant deferral holds for production not just in the abstract, confirmed interior (non-terminal) chain-shape mismatches are also caught not just the terminal case the tests happen to cover, confirmed zero regression across all four rounds. Per BLOCKED-022 (P2-01 treated as kernel-level security foundation, same tier as P0-02): this merge/freeze is normal per-stage flow; the epic's final --accept still requires delegate ruling plus explicit user confirmation, not performed here. expectCases here are the 37 new U-stage-specific titles across the 3 touched spec files (identity.spec.ts/runtime-context.spec.ts/agent.spec.ts), cross-checked byte-exact present-and-passing against a real vitest --reporter=json dry run (93/93 total in the same argv -- the remaining 56 are pre-existing C/P-stage tests in the same files, a superset that doesn't affect their own cells' greening per BLOCKED-018's present-and-passing subset semantics)."
     }
 
   ]
