@@ -103,6 +103,8 @@ if (result.valid) {
 - **没有 Cordis 注册表比对**——acceptance[0] 的"声明与实际注册不一致"(比对 manifest 与已启动 profile 的 Cordis 注册表实际内容)需要一个真实的 `Context`,而本纯函数包从不构造它。该比对是 P/U 阶段的运行时职责。
 - **`detectWildcardPermissions` 只识别精确的 `'*'`、`'**'` 与 `'/'` 模式**——一个实质上过宽但并非字面等于这三种字符串之一的模式(例如一个不必要地宽泛但非最大化的 glob)不会被标记。更细粒度的过度授权启发式是后续阶段(如果有)的工作。
 - **`sideEffectClass` 是单一声明标签,而非集合**——一个具有多种副作用(例如同时有 `'write'` 与 `'network'`)的 capability 只声明适用的单个最高影响等级;本 schema 不进一步拆解复合副作用。
+- **`assertJsonSerializable` 只在校验那一刻检查取值,不证明不可变性**——一个字段由 getter 支撑的 manifest,可以在一次读取时通过校验,而后续读取同一个 `result.manifest` 引用(未做克隆)时返回不同内容。文档约定的调用方式(`JSON.parse` 的输出,结构上不可能产出 getter)在实践中规避了这一点,但在公开 API 接受 `unknown` 的地方,这一约定并未被类型系统强制。
+- **JSON Schema 并未像 `validate.ts` 那样把每个对象都关闭到禁止未知属性**——一个携带额外未声明属性的对象,目前会让 `spec/capability-manifest.schema.json` 的 `ajv` 校验失败,却能通过 `validatePluginManifestV2`;上文"与 TS 类型逐字段镜像"的说法,对已声明字段成立,对两个校验器一致拒绝未声明字段这一点尚不成立。
 
 <a id="dev-note"></a>
 ### 开发备注
