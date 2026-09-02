@@ -29,6 +29,7 @@ import {
   TenantId,
   TenantMismatchError,
   type AgentPrincipal,
+  type DelegationChain,
   type Principal,
   type ServicePrincipal,
   type UserPrincipal,
