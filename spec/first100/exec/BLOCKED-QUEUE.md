@@ -9,6 +9,16 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-027 — HARD GATE for P1-01.U's Reviewer checklist: real enforcement must re-judge whether field-content drift (not just capability identity) needs to be caught, before this known limitation is allowed to stand (ANSWERED-BY-DELEGATE(gq-92))
+
+- **When:** 2026-09-02/03. P1-01.P's independent Reviewer found, and the package README now discloses as a non-blocking Known Limitation, that `compareDeclaredToObserved` matches by capability identity (name) only, never by field content, and never descends into nested `McpServerDeclaration.resources`/`prompts` -- a tool declared and observed under the same name but with a drifted `sideEffectClass`/`authAudience`/`allowedDestinations`/`dataClassification` currently produces zero mismatch.
+- **Delegate directive (verbatim, `guanjieqiao-92`, cross-session message, 2026-09-02/03, C7① scope):** 「那 2 处已知局限里，'比对只按能力身份、不比字段内容 + MCP 嵌套 resources/prompts 不参与比对'——P 格（观察）非阻塞对，但挂到 P1-01.U 的 Reviewer 清单：U 格把'声明 vs 实际'接进真实 enforcement 时要重新判——插件声明了某能力但字段内容不同能不能被抓住；若 enforcement 依赖字段级一致，这就是真洞，那时必须补，别让它停在 known-limitation。」
+- **Resolution, effective immediately:**
+  1. P1-01.P's identity-only comparison scope is RATIFIED as-is for the pure decision-function stage -- nothing reopens for the already-merged/frozen P1-01.P.
+  2. P1-01.U's independent Reviewer MUST explicitly re-judge this question against the real enforcement design that stage builds: does the real installer/boot-time enforcement path rely on (or plausibly need) field-level consistency between a declared capability and its observed registration, not just identity/name matching? If yes, the identity-only comparison is a real gap that must be closed at U-stage, not left as a standing Known Limitation. If the real enforcement design genuinely never needs field-level comparison (e.g., it only ever gates on presence/absence of a named capability), the Reviewer must say so explicitly with reasoning, not silently accept the C/P-stage disclosure as sufficient without re-examining it against U-stage's actual design.
+  3. This is a required checklist item for that Reviewer, not optional context.
+- **Status:** ANSWERED-BY-DELEGATE(gq-92) -- binds P1-01.U's Reviewer specifically; does not reopen P1-01.P.
+
 ### BLOCKED-026 — HARD GATE for P2-01.U's Reviewer checklist: admin-carrying principals must be `Object.freeze`d at mint time, with a test proving in-place mutation is rejected, before P2-01 wires any real authorization consumer (ANSWERED-BY-DELEGATE(gq-92) — upgraded from the P2-01.C third Reviewer's non-blocking recommendation)
 
 - **When:** 2026-09-02. P2-01.C's third independent Reviewer found, and explicitly marked non-blocking for C-stage, that `UserPrincipal`/`ServicePrincipal` fields are `readonly` only at the TypeScript type level with zero runtime enforcement (no `Object.freeze`): `(admin as { tenantId: unknown }).tenantId = TENANT_B` succeeds, and `isAdminPrincipal(admin)` still returns `true` afterward, since the `===` object-identity check never re-validates the bound object's own fields are unchanged since mint.
