@@ -259,7 +259,7 @@ function writeLedgerHeader(rows, inputsConsumed) {
   const ledger = { ...header, rows }
   const ledgerBytes = `${JSON.stringify(ledger, null, 2)}\n`
   writeFileSync(LEDGER_PATH, ledgerBytes, 'utf8')
-  syncExecState(ledgerBytes)
+  syncExecState(ledgerBytes, rows)
   return ledger
 }
 
@@ -276,12 +276,26 @@ function writeLedgerHeader(rows, inputsConsumed) {
  * `registryDigest` is recomputed fresh every call (cheap, always-correct)
  * rather than trusted from the previous EXEC-STATE snapshot.
  */
-function syncExecState(ledgerBytes) {
+/**
+ * `totals.acceptedEpics` was a hand-maintained field with no write path: it
+ * silently drifted stale (observed stuck at 3 while the ledger already held
+ * 5 ACCEPTED rows) exactly like the digests once did before this function's
+ * own BLOCKED-002 fix. Deriving it here, in the same write every
+ * ledger-mutating command already routes through, makes the count follow
+ * the ledger's own ACCEPTED rows mechanically rather than depending on
+ * anyone remembering to update it (delegate suggestion, 2026-09-02).
+ * `totals.totalEpics` (109) intentionally stays untouched: it counts the
+ * full program including the 9 P9 extension items, which are tracked as
+ * VERIFIED/scheduled-BLOCKED outside this 100-row registry ledger, not as
+ * ACCEPTED ledger rows.
+ */
+function syncExecState(ledgerBytes, rows) {
   if (!existsSync(EXEC_STATE_PATH)) return
   const state = loadJson(EXEC_STATE_PATH)
   state.ledgerDigest = sha256(ledgerBytes)
   state.registryDigest = sha256(readFileSync(REGISTRY_PATH))
   state.lastUpdatedUtc = nowIso()
+  if (state.totals) state.totals.acceptedEpics = Object.values(rows).filter((row) => row.status === 'ACCEPTED').length
   writeFileSync(EXEC_STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
 }
 
