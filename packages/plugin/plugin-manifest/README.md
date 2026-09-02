@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface and pure validation logic for Plugin Manifest v2, for users and maintainers who need to know exactly what a plugin must declare and how the schema/wildcard checks work."
+description: "The type surface, pure validation logic, and declared-vs-observed comparison for Plugin Manifest v2, for users and maintainers who need to know exactly what a plugin must declare, how the schema/wildcard checks work, and how a quarantine decision is derived."
 kind: "package-library"
 ---
 
@@ -11,7 +11,7 @@ English | [中文](README.zh.md)
 
 `dsh-plugin-manifest` fixes the type surface and pure validation logic of Epic P1-01's Plugin Manifest v2: the `dsh.manifestVersion=2` shape a plugin package carries under `package.json`'s `dsh` field (must[0]) — services, tools, skills, MCP servers/resources/prompts, events, filesystem, network, process, secrets, UI surfaces, data stores, migrations, execution mode, and compatibility. Every Tool/MCP capability and every remote Skill/MCP Provider declares a side-effect class, an auth audience, allowed destinations, and a data classification (must[1]/acceptance[3]). The package also reads the pre-existing `dsh.bundle` format for compatibility, always tagged `legacy-untrusted` (must[3]), and detects wildcard-permission requests (acceptance[0]).
 
-This package currently ships its Contract-stage slice only: `src/types.ts`'s type surface, `src/validate.ts`'s pure schema/wildcard/legacy-read functions, and `src/invariant.ts`'s explained-empty companion. It has no real reader wired into `dsh plugin`/profile boot yet — no CLI, no Cordis registry comparison, no installer decision. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
+`src/index.ts` re-exports every Contract-stage runtime function alongside the types, and adds this package's Provider-stage logic: `compareDeclaredToObserved` diffs a validated manifest's declared capabilities against what a plugin actually registered into a live Cordis `Context`, and `decidePluginTrust` turns that comparison into acceptance[0]'s quarantine decision. Both are pure functions over already-computed data — this package still has no reader wired into `dsh plugin`/profile boot: no CLI, no code that walks a live `Context` to build the `observed` value these functions compare against, no installer decision. See [Known Limitations and Deferred Work](#known-limitations-and-deferred-work).
 
 ## Table of Contents
 
@@ -27,10 +27,10 @@ This package currently ships its Contract-stage slice only: `src/types.ts`'s typ
 <a id="use-this-package"></a>
 ## Use this package
 
-Classify a `package.json` `dsh` field and validate a manifest against the schema:
+Classify a `package.json` `dsh` field and validate a manifest against the schema — from the package root or the documented `/validate` subpath, interchangeably:
 
 ```ts
-import { classifyPluginDeclaration, validatePluginManifestV2, detectWildcardPermissions } from '@deepseek-ai/dsh-plugin-manifest/validate'
+import { classifyPluginDeclaration, validatePluginManifestV2, detectWildcardPermissions } from '@deepseek-ai/dsh-plugin-manifest'
 
 declare const dshField: unknown // package.json's parsed "dsh" field
 
@@ -44,7 +44,23 @@ if (result.valid) {
 }
 ```
 
-Every export is a pure function over already-parsed `unknown` JSON data — none reads a file, spawns a process, or imports the plugin package it validates. There is no exported constructor for `PluginManifestV2` itself: a plugin author writes the manifest as literal JSON in their own `package.json`, and this package only reads and checks it.
+Compare a validated manifest's declarations against what a plugin actually registered, and derive a quarantine decision from the result:
+
+```ts
+import { compareDeclaredToObserved, decidePluginTrust, type ObservedPluginCapabilities } from '@deepseek-ai/dsh-plugin-manifest'
+
+declare const observed: ObservedPluginCapabilities // built by a later stage from a live Cordis Context
+
+if (result.valid) {
+  const comparison = compareDeclaredToObserved(result.manifest, observed)
+  // comparison.mismatches: capability names declared but never registered, or registered but never declared
+  // comparison.wildcardFindings: same wildcard findings detectWildcardPermissions already reports
+  const trust = decidePluginTrust(comparison)
+  // trust is 'active' when comparison has neither, 'quarantined' otherwise
+}
+```
+
+Every export is a pure function over already-computed data — none reads a file, spawns a process, imports the plugin package it validates, or constructs a Cordis `Context`. There is no exported constructor for `PluginManifestV2` itself: a plugin author writes the manifest as literal JSON in their own `package.json`, and this package only reads, checks, and compares it.
 
 -----
 
@@ -69,7 +85,7 @@ This section explains the design decisions behind the package; the observable ty
 |---|---|
 | [`src/types.ts`](src/types.ts) | The `PluginManifestV2` type surface: every must[0] field, must[1]'s Tool/MCP effect fields, and the `PluginDeclaration`/`LegacyBundleDeclaration` classification types |
 | [`src/validate.ts`](src/validate.ts) | Pure schema validation (`validatePluginManifestV2`), the static-data check (`assertJsonSerializable`), wildcard-permission detection (`detectWildcardPermissions`), and the legacy `dsh.bundle` compatibility read (`parseLegacyBundleDeclaration`, `classifyPluginDeclaration`) |
-| [`src/index.ts`](src/index.ts) | Pure type re-export of `./types.ts` — zero runtime exports, zero Cordis registration (this Contract-stage slice's mandatory B4(f) scaffold) |
+| [`src/index.ts`](src/index.ts) | The package's real runtime entry: re-exports every `./types.ts` type and `./validate.ts` function, and adds `ObservedPluginCapabilities`, `compareDeclaredToObserved`, and `decidePluginTrust` — the declared-vs-observed comparison and quarantine decision |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion: explained-empty — no constructed manifest value or installer exists yet in this slice |
 
 </details>
@@ -82,6 +98,7 @@ This section explains the design decisions behind the package; the observable ty
 - [`docs/plugins/manifest-v2.md`](../../../docs/plugins/manifest-v2.md) — the manifest format's user-facing documentation.
 - [`spec/capability-manifest.schema.json`](../../../spec/capability-manifest.schema.json) — the JSON Schema (draft 2020-12) mirroring this package's type surface field-for-field.
 - [`tests/manifest.spec.ts`](tests/manifest.spec.ts) — the Contract-stage proof, including golden-fixture agreement between this package's TypeScript validator and the JSON Schema document (ajv).
+- [`tests/manifest.provider.spec.ts`](tests/manifest.provider.spec.ts) — the Provider-stage proof for `compareDeclaredToObserved`/`decidePluginTrust`.
 - [`docs/architecture.md#profiles-and-bundles`](../../../docs/architecture.md#profiles-and-bundles) — the pre-existing `dsh.bundle`/`dsh.profile` vocabulary this package's manifest is additive to.
 
 -----
@@ -99,8 +116,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **No real reader or CLI yet** — this Contract-stage slice ships only the type surface and pure validation functions; a later P/U-stage slice wires `apps/cli/src/plugin.ts` (`pnpm plugin:verify <fixture>`), `apps/cli/src/profile-boot.ts`, and `packages/host/plugin-inventory` to call `classifyPluginDeclaration` for real installs and profile boots.
-- **No Cordis registry comparison** — acceptance[0]'s "declaration/actual-registration mismatch" (comparing a manifest against what a booted profile's Cordis registry actually contains) needs a live `Context`, which this pure-function package never constructs. That comparison is a P/U-stage runtime concern.
+- **No real reader or CLI yet** — this package still ships only pure functions over already-computed data; a later Usage-stage slice wires `apps/cli/src/plugin.ts` (`pnpm plugin:verify <fixture>`), `apps/cli/src/profile-boot.ts`, and `packages/host/plugin-inventory` to call `classifyPluginDeclaration`/`compareDeclaredToObserved`/`decidePluginTrust` for real installs and profile boots.
+- **`compareDeclaredToObserved` never builds its own `observed` value** — acceptance[0]'s "declaration/actual-registration mismatch" needs a live `Context` walked for its real registrations, which this pure-function package never constructs. Building `ObservedPluginCapabilities` from a booted profile's actual Cordis registry is a later Usage-stage concern (typically `packages/host/plugin-inventory`'s `PluginPermissionState`).
+- **`decidePluginTrust` never enforces quarantine** — it is a pure decision only (`'active' | 'quarantined'`); blocking new tool calls, isolating a plugin's `ctx` surface, or surfacing the decision in an installer UI needs a real boot sequence and is a later stage's job. It also never sees a `'missing'` or `'legacy-untrusted'` declaration — Contract-stage's `isDeniedInProductionByDefault` already answers that separate, production-default-deny axis.
 - **`detectWildcardPermissions` only recognizes exact `'*'`, `'**'`, and `'/'` patterns** — a pattern that is broad in effect but not literally one of these three strings (for example a needlessly wide but non-maximal glob) is not flagged. Finer-grained overprivilege heuristics are a later stage's job, if ever added.
 - **`sideEffectClass` is a single declared tag, not a set** — a capability with several kinds of effect (for example both `'write'` and `'network'`) declares the single highest-impact class that applies; this schema does not decompose composite effects further.
 - **`assertJsonSerializable` inspects values at check-time only, never proves immutability** — a manifest whose fields are backed by getters can pass validation on one read and return different content on a later read of the same `result.manifest` reference (which is not cloned). The documented calling convention (`JSON.parse` output, which structurally cannot produce getters) avoids this in practice, but is not type-enforced anywhere the public API accepts `unknown`.
