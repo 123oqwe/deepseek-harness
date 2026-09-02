@@ -811,6 +811,51 @@
         "testsDiscovered": 61
       },
       "note": "P0-03 F-stage (2026-09-01), fault/qualification hardening of the capability-seam scanner across both the pure detector (`capability-seams.ts`, exercised via `capability-seams.spec.ts`) and the real workspace scanner (`check-capability-seams.mjs`, exercised via `check-capability-seams.spec.ts`). First submission (0bc2dfb18b) added malformed-input guards checking whether `families`/`allowlist`/`providers`/`consumers` were arrays, but not whether individual array elements were well-formed objects before reading fields off them -- a first independent Reviewer REJECTed with 3 real reproduced crashes (`families: [null]`, `allowlist: [null]`, an allowlist entry missing `owner` crashing inside `.trim()`). Fix round (a2597627ae) replaced the narrow guards with a general `isPlainObject(value)` check (duplicated identically in both the `.ts` detector and the `.mjs` scanner, which do not share a runtime) applied before any array-element field read, plus a `typeof entry.owner !== 'string'` guard; `hasScannableShape` in the `.mjs` scanner got the same treatment so the real scan fails closed on an unsafe shape rather than attempting to read it. A second independent Reviewer re-read the full slice from scratch (not just the fix-round delta), re-ran every claimed check personally (61/61 vitest, typecheck, first100:slice-gate, the real `pnpm run architecture:seams` against the live repo matching the claimed 0-violations/29-families/4175-edges numbers, oxlint), fuzz-tested the detector directly with 15 synthetic malformed shapes beyond the reviewed cases (0 crashes), and drove the real CLI against 3 hand-built fixtures (0 crashes) before verdict: ACCEPT, with two explicitly non-blocking observations (a test-symmetry gap between the two unsynchronized implementations, and a pre-existing non-string-`id` gap out of this round's scope) neither of which reproduces a crash or gate failure. Merging attempt/P0-03-F into first100-exec (bb741eba2e) produced a real conflict in AGENTS.md against an unrelated intervening commit (e08d9dc0af, P0-07.U) that had already condensed a neighboring bullet to stay inside the file's frozen word-budget ceiling; `tests/architecture/check-capability-seams.spec.ts` auto-merged cleanly (non-overlapping hunks). BLOCKED-012-class deviation (disclosed, recorded in tests/first100/adjudication.json#deliverablePathPatches as P0-03-F-agents-md-relocation, count 7->8): the registry's declared F-stage AGENTS.md doc-note deliverable was relocated to the unbudgeted docs/glossary.md#capability-seam entry (with its docs/glossary.zh.md pair translated and docs/glossary.i18n.yaml re-recorded) per docs/AGENTS.md's own relocate-before-condense-before-raise remediation order, since no further genuine slop remained to condense and the ceiling is frozen above target. Post-merge: first100:slice-gate and the full tests/architecture/ suite (61/61) re-verified clean."
+    },
+    {
+      "epic": "P0-05",
+      "stage": "F",
+      "argv": ["pnpm", "exec", "vitest", "run", "packages/migration/feature-gates/tests/", "--reporter=json"],
+      "expectExit": 0,
+      "expectCases": [
+        "applies a settings override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true",
+        "applies an env override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true",
+        "applies legacy's value when candidate throws during shadow evaluation, matching what off mode returns for the same legacy",
+        "lets a per-profile default declare a state below the repo-wide default with no authority required -- that is authored policy, not a hot override",
+        "names the gate id and rejected source in the thrown error message",
+        "never leaks the thrown candidate error's message into the recorded shadowRecord",
+        "never lets a \"__proto__\" allowlist entry hijack the returned object's prototype, even when summary carries its own JSON-parsed __proto__ property",
+        "never lets a thrown candidate error propagate out of shadow evaluation",
+        "never resolves an undeclared \"__proto__\" gate id through the settings namespace's inherited Object.prototype accessor",
+        "never resolves an undeclared \"__proto__\" profile through the inherited Object.prototype accessor",
+        "never resolves an undeclared \"hasOwnProperty\" gate id through the settings namespace's inherited Object.prototype function property",
+        "never resolves an undeclared \"toString\" profile through Object.prototype's own inherited function property",
+        "never restricts a settings override that holds or raises an enforce-floor gate, even without authority",
+        "never restricts a settings/env override when the default/profile floor itself is off or shadow",
+        "never shares a chain array reference across repeated resolveFeatureGate calls -- mutating one call's chain leaves a later call's untouched",
+        "never treats Object.prototype's inherited __proto__ accessor as a present field when summary genuinely lacks its own __proto__ property",
+        "records differs true and an empty shadowSummary when candidate throws during shadow evaluation",
+        "redacts independently per call -- a keepFields allowlist from one call never leaks into a later call over the same raw summary",
+        "refuses a settings override that would move an enforce-floor gate to off without kernel administrative authority",
+        "refuses a settings override that would move an enforce-floor gate to shadow without kernel administrative authority",
+        "refuses an env override that would move an enforce-floor gate to off without kernel administrative authority",
+        "resolves a genuinely declared profile literally named \"constructor\" via Object.hasOwn, not confused with Object.prototype.constructor",
+        "resolves a structurally identical FeatureGateResolution across repeated calls with the same inputs, simulating a dispose+re-provide reload cycle",
+        "still checks a later env override against the ORIGINAL default/profile floor, even after an authorized settings override already lowered the gate",
+        "still lets a throwing candidate propagate out of enforce evaluation -- exception isolation is scoped to shadow mode only",
+        "still lets a throwing legacy propagate out of shadow evaluation, matching what off mode does for the same legacy"
+      ],
+      "files": [
+        "packages/migration/feature-gates/tests/gates.spec.ts",
+        "packages/migration/feature-gates/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-01T23:50:00Z",
+      "dryRunProof": {
+        "treeSha": "8618a6f5d35da46f1e70986e4b44703a0d61803c",
+        "testsDiscovered": 85
+      },
+      "note": "P0-05 F-stage (2026-09-01), fault/qualification hardening of the Shadow/Enforce Feature Gates mechanism. 4 real bugs found and fixed, each personally reproduced pre-fix and confirmed closed post-fix by an independent Reviewer using their own adversarial repro (not just re-reading the Writer's tests): (1) a hot-reload downgrade-authority gap -- resolveFeatureGate/evaluateFeatureGate had zero authority check, letting a settings or env override silently move a gate from its authored enforce floor to off/shadow; fixed with a hasKernelAdministrativeAuthority guard computed from the default/profile floor alone, deliberately left ctx-free per the standing BLOCKED-011 hard-stop (no epic may wire a real Trust Kernel enforcement point before the vendored Cordis Fiber fix lands; verified against docs/architecture/trust-kernel-boundary.md and .claude/goal.md verbatim). (2) A prototype-key lookup hazard -- declaration.defaultByProfile[profile] and overrides.settings[declaration.id] resolved '__proto__'/'toString'/'constructor' through the inherited Object.prototype instead of returning undefined; fixed with Object.hasOwn guards. (3) A redaction prototype hijack -- redactDecisionSummary's plain {} accumulator let a JSON-parsed summary's own __proto__ property silently swap the returned object's actual prototype when a caller allowlisted that name; fixed with Object.create(null), matching this repo's already-established dsh-util-values convention for JSON values with a null prototype. (4) A shadow-mode exception asymmetry -- a throwing candidate() under shadow mode crashed the whole evaluation even though off mode (never calling candidate) would have succeeded, violating must[1]'s 'shadow never changes the result'; fixed by scoping the try/catch to shadow mode only, independently confirmed NOT over-broad (a throwing candidate under enforce, and a throwing legacy under shadow, both still propagate). The shadow-vs-off authority-scoping question the Writer flagged (whether the authority gate should also guard a shadow->off transition, not just leaving enforce) was resolved by the Reviewer against the verbatim registry validation clause and an empirical proof that off/shadow apply an identical value -- escalated to the delegate for ratification per standing C7(1) interpretive-ruling practice rather than left as the Reviewer's unilateral call, despite the Reviewer's own confident resolution. index.ts is genuinely touched at F-stage though only declared at P-stage in the registry's stages.F.files; the Reviewer found direct, already-accepted precedent (P0-02.F's BLOCKED-011 chain modified trust-kernel/src/index.ts, declared at U-stage, with zero deliverablePathPatches entry filed) and concluded this is not a BLOCKED-012 violation -- an F-stage fixing a real bug in an already-declared, already-accepted earlier-stage file is not 'substituting one declared path for another'. All 26 new cases independently spot-checked via a RED-phase revert: exactly 13 failed pre-fix (26 new + 32 pre-existing = 58 total in gates.spec.ts at that point), matching the Writer's own claim exactly. Real full pnpm run typecheck (tsc -b tsconfig.host.json + tsdown + tsc -b tsconfig.client.json, not the Writer's ad-hoc project file) confirmed clean by the Reviewer. Independent review: ACCEPT."
     }
+
   ]
 }
