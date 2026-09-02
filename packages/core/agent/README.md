@@ -40,7 +40,7 @@ const handle = await ctx.agents.create({
 await handle.dispose()   // stops the loop, unregisters, removes the session, unwinds the scope
 ```
 
-`AgentOptions` supplies the initial provider/model route, optional adapter-owned `reasoningEffort`, and optional positive `maxTokens` output cap. The loop validates exact-model reasoning support, resolves adapter defaults, records the effective values in the request header, and applies them to each conversation request. An optional `setup(agentCtx)` callback composes the agent's scoped world before it is published — scoped tools, prompt sections, and listeners exist before any creation announcement. Setup is composition-only: drive the agent only after creation resolves.
+`AgentOptions` supplies the initial provider/model route, optional adapter-owned `reasoningEffort`, and optional positive `maxTokens` output cap. The loop validates exact-model reasoning support, resolves adapter defaults, records the effective values in the request header, and applies them to each conversation request. An optional `setup(agentCtx)` callback composes the agent's scoped world before it is published — scoped tools, prompt sections, and listeners exist before any creation announcement. Setup is composition-only: drive the agent only after creation resolves. `AgentOptions` also carries an optional `identity` (`IdentityContext` from `@deepseek-ai/dsh-principal`), the only type-level path to supply `Agent.identity` at creation time since that field is `readonly`; it is still type-only — no factory reads this option and attaches it to a live agent yet (first100 registry P2-01).
 
 ### Drive an agent's conversation
 
