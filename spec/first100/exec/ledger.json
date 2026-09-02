@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-02T06:20:02.608Z",
-  "inputDigest": "dac1197087280f0637e569a4300ec8a95bb85d0ab577ca4aa6474d724fbf4c55",
+  "lastUpdatedUtc": "2026-09-02T12:53:52.138Z",
+  "inputDigest": "84ff2c55e7e06c4dd74a61f2672a5bc3dd0971d4e697cee30d78dfe6f39ba4da",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -860,10 +860,35 @@
         }
       },
       "candidateSha": "00169c8ec501f30adcd1439a01b6bb5da3929437",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-02T12:53:52.137Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33560054567",
+            "candidateSha": "d21e75068d56f3150e1e32d9ceab68636b66df82"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+            "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+            "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33587853573",
+            "candidateSha": "00169c8ec501f30adcd1439a01b6bb5da3929437"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        }
+      }
     },
     "P0-08": {
       "id": "P0-08",
