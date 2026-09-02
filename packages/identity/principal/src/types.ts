@@ -87,6 +87,26 @@ export function PrincipalId(id: string): PrincipalId {
 /** Discriminant of {@link Principal}: which of the four identity kinds an actor is. */
 export type PrincipalKind = 'user' | 'service' | 'agent' | 'anonymous-dev'
 
+declare const ADMIN_GRANT: unique symbol
+
+/**
+ * Unforgeable proof that a principal was constructed through
+ * {@link ../chain.ts}'s `createAdminUserPrincipal`/`createAdminServicePrincipal`.
+ *
+ * `ADMIN_GRANT` is a module-private, compile-time-only `unique symbol`
+ * (mirrors {@link Branded}), so no plain object literal can satisfy this
+ * type without an explicit `as` cast — closing the gap a plain
+ * `isAdmin: boolean` field left open (a literal `isAdmin: true` needed no
+ * cast at all). That alone is still compile-time-only and, like every brand
+ * in this module, defeatable by a cast (see this module's top-of-file
+ * note); the real enforcement is `./chain.ts`'s private `adminGrants`
+ * `WeakSet`, which `isAdminPrincipal` checks by object identity — a check no
+ * `as` cast and no JSON-deserialized object can pass, because membership
+ * requires a reference `createAdminUserPrincipal`/`createAdminServicePrincipal`
+ * itself minted and registered.
+ */
+export type AdminGrant = { readonly [ADMIN_GRANT]: true }
+
 /** A real human user. Admin is an explicit, separately-constructed capability — see {@link ../chain.ts}'s `createAdminUserPrincipal`. */
 export interface UserPrincipal {
   readonly kind: 'user'
@@ -94,8 +114,12 @@ export interface UserPrincipal {
   readonly id: PrincipalId
   /** The tenant this principal belongs to and may act within. */
   readonly tenantId: TenantId
-  /** Explicit administrative capability grant; never derived from any other field. */
-  readonly isAdmin: boolean
+  /**
+   * Unforgeable proof of explicit administrative capability; absent for a
+   * non-admin principal. Only {@link ../chain.ts}'s `createAdminUserPrincipal`
+   * produces a value `isAdminPrincipal` accepts — see {@link AdminGrant}.
+   */
+  readonly adminGrant?: AdminGrant
 }
 
 /**
@@ -108,8 +132,12 @@ export interface ServicePrincipal {
   readonly id: PrincipalId
   /** The tenant this principal belongs to and may act within. */
   readonly tenantId: TenantId
-  /** Explicit administrative capability grant; never derived from any other field. */
-  readonly isAdmin: boolean
+  /**
+   * Unforgeable proof of explicit administrative capability; absent for a
+   * non-admin principal. Only {@link ../chain.ts}'s `createAdminServicePrincipal`
+   * produces a value `isAdminPrincipal` accepts — see {@link AdminGrant}.
+   */
+  readonly adminGrant?: AdminGrant
 }
 
 /**
@@ -123,7 +151,12 @@ export interface AgentPrincipal {
   readonly id: PrincipalId
   /** The tenant this principal belongs to and may act within. */
   readonly tenantId: TenantId
-  /** The principal id that authorized this agent's delegation (its immediate parent, not necessarily the chain root). */
+  /**
+   * The principal id that authorized this agent's delegation.
+   * `assertAgentDelegationValid` (`./chain.ts`) only requires this id to
+   * appear somewhere earlier in the delegation chain — not necessarily as
+   * the immediate parent hop, and not necessarily the chain root.
+   */
   readonly delegatedBy: PrincipalId
 }
 

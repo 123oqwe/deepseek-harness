@@ -18,13 +18,17 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
     "./types": {
       "types": "./lib/types/types.d.ts",
-      "default": "./lib/types.js"
+      "default": "./lib/types/types.js"
     },
     "./chain": {
       "types": "./lib/types/chain.d.ts",
-      "default": "./lib/chain.js"
+      "default": "./lib/types/chain.js"
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
@@ -32,17 +36,20 @@
   "files": [
     "lib/index.js",
     "lib/invariant.js",
+    "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-util-values": "workspace:^",
+    "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-util-values": "workspace:^",
+    "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
   }
 }

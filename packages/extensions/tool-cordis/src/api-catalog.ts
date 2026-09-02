@@ -3416,6 +3416,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface AdapterRegistrationHandle {\n    (): void;\n    replace(providers: string[]): void;\n}',
   },
   {
+    name: 'AdminGrant',
+    declaration: 'export type AdminGrant = {\n    readonly [ADMIN_GRANT]: true;\n};',
+  },
+  {
     name: 'Agent',
     declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n}',
   },
@@ -4845,7 +4849,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ServicePrincipal',
-    declaration: 'export interface ServicePrincipal {\n    readonly kind: \'service\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly isAdmin: boolean;\n}',
+    declaration: 'export interface ServicePrincipal {\n    readonly kind: \'service\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly adminGrant?: AdminGrant;\n}',
   },
   {
     name: 'Session',
@@ -5997,7 +6001,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'UserPrincipal',
-    declaration: 'export interface UserPrincipal {\n    readonly kind: \'user\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly isAdmin: boolean;\n}',
+    declaration: 'export interface UserPrincipal {\n    readonly kind: \'user\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly adminGrant?: AdminGrant;\n}',
   },
   {
     name: 'VerifiedWebhookDelivery',

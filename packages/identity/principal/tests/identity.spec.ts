@@ -29,6 +29,7 @@ import {
   TenantMismatchError,
   type AgentPrincipal,
   type Principal,
+  type UserPrincipal,
 } from '../src/types.ts'
 
 const TENANT_A = TenantId('tenant-a')
@@ -49,36 +50,46 @@ describe('TenantId / RunId / PrincipalId branding', () => {
 })
 
 describe('principal construction', () => {
-  it('creates a non-admin user principal', () => {
+  it('creates a non-admin user principal with no adminGrant field', () => {
     const user = createUserPrincipal(PrincipalId('u1'), TENANT_A)
-    expect(user).toEqual({ kind: 'user', id: PrincipalId('u1'), tenantId: TENANT_A, isAdmin: false })
+    expect(user).toEqual({ kind: 'user', id: PrincipalId('u1'), tenantId: TENANT_A })
+    expect('adminGrant' in user).toBe(false)
   })
 
   it('creates an admin user principal through a separate constructor', () => {
     const admin = createAdminUserPrincipal(PrincipalId('u1'), TENANT_A)
-    expect(admin).toEqual({ kind: 'user', id: PrincipalId('u1'), tenantId: TENANT_A, isAdmin: true })
+    expect(admin.kind).toBe('user')
+    expect(admin.id).toBe(PrincipalId('u1'))
+    expect(admin.tenantId).toBe(TENANT_A)
+    expect(admin.adminGrant).toBeDefined()
+    expect(isAdminPrincipal(admin)).toBe(true)
   })
 
-  it('creates a non-admin service principal', () => {
+  it('creates a non-admin service principal with no adminGrant field', () => {
     const service = createServicePrincipal(PrincipalId('svc1'), TENANT_A)
-    expect(service).toEqual({ kind: 'service', id: PrincipalId('svc1'), tenantId: TENANT_A, isAdmin: false })
+    expect(service).toEqual({ kind: 'service', id: PrincipalId('svc1'), tenantId: TENANT_A })
+    expect('adminGrant' in service).toBe(false)
   })
 
   it('creates an admin service principal through a separate constructor', () => {
     const admin = createAdminServicePrincipal(PrincipalId('svc1'), TENANT_A)
-    expect(admin).toEqual({ kind: 'service', id: PrincipalId('svc1'), tenantId: TENANT_A, isAdmin: true })
+    expect(admin.kind).toBe('service')
+    expect(admin.id).toBe(PrincipalId('svc1'))
+    expect(admin.tenantId).toBe(TENANT_A)
+    expect(admin.adminGrant).toBeDefined()
+    expect(isAdminPrincipal(admin)).toBe(true)
   })
 
-  it('creates an agent principal with no isAdmin field', () => {
+  it('creates an agent principal with no adminGrant field', () => {
     const agent = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, PrincipalId('u1'))
     expect(agent).toEqual({ kind: 'agent', id: PrincipalId('agent1'), tenantId: TENANT_A, delegatedBy: PrincipalId('u1') })
-    expect('isAdmin' in agent).toBe(false)
+    expect('adminGrant' in agent).toBe(false)
   })
 
-  it('creates an anonymous-dev principal with no isAdmin field', () => {
+  it('creates an anonymous-dev principal with no adminGrant field', () => {
     const dev = createAnonymousDevPrincipal(PrincipalId('dev1'), TENANT_A)
     expect(dev).toEqual({ kind: 'anonymous-dev', id: PrincipalId('dev1'), tenantId: TENANT_A })
-    expect('isAdmin' in dev).toBe(false)
+    expect('adminGrant' in dev).toBe(false)
   })
 })
 
@@ -133,7 +144,7 @@ describe('extendChain', () => {
     const chain = createChain(root, 1000)
     const agent = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id)
     const extended = extendChain(chain, agent, 2000, 'spawned to handle subtask')
-    expect(extended.entries[1].reason).toBe('spawned to handle subtask')
+    expect(extended.entries[1]?.reason).toBe('spawned to handle subtask')
   })
 })
 
@@ -256,12 +267,12 @@ describe('isAnonymousDev / isAdminPrincipal', () => {
     expect(isAdminPrincipal(agent)).toBe(false)
   })
 
-  it('treats a user principal as admin only when isAdmin is true', () => {
+  it('treats a user principal as admin only when it carries a genuine adminGrant', () => {
     expect(isAdminPrincipal(createUserPrincipal(PrincipalId('u1'), TENANT_A))).toBe(false)
     expect(isAdminPrincipal(createAdminUserPrincipal(PrincipalId('u1'), TENANT_A))).toBe(true)
   })
 
-  it('treats a service principal as admin only when isAdmin is true', () => {
+  it('treats a service principal as admin only when it carries a genuine adminGrant', () => {
     expect(isAdminPrincipal(createServicePrincipal(PrincipalId('svc1'), TENANT_A))).toBe(false)
     expect(isAdminPrincipal(createAdminServicePrincipal(PrincipalId('svc1'), TENANT_A))).toBe(true)
   })
@@ -275,6 +286,37 @@ describe('isAnonymousDev / isAdminPrincipal', () => {
   it('throws when a value outside the closed PrincipalKind union escapes to isAdminPrincipal', () => {
     const rogue = { kind: 'rogue-kind', id: PrincipalId('x'), tenantId: TENANT_A } as unknown as Principal
     expect(() => isAdminPrincipal(rogue)).toThrow('unreachable variant in isAdminPrincipal')
+  })
+
+  it('rejects the exact reviewer bypass shape: a plain UserPrincipal object literal with isAdmin: true set directly, no createAdminUserPrincipal import, is never treated as admin', () => {
+    // The original Finding 1 repro: `isAdmin` no longer exists on UserPrincipal
+    // at all, so this shape only reaches isAdminPrincipal by routing around
+    // the type system (as a real forged/deserialized value would) — the cast
+    // is the point of the test, not an oversight.
+    const forged = {
+      kind: 'user',
+      id: PrincipalId('attacker'),
+      tenantId: TENANT_A,
+      isAdmin: true,
+    } as unknown as UserPrincipal
+    expect(isAdminPrincipal(forged)).toBe(false)
+  })
+
+  it('rejects a hand-built UserPrincipal whose adminGrant is a plain object literal, not a token minted by createAdminUserPrincipal', () => {
+    const forged = {
+      kind: 'user',
+      id: PrincipalId('attacker'),
+      tenantId: TENANT_A,
+      adminGrant: {},
+    } as unknown as UserPrincipal
+    expect(isAdminPrincipal(forged)).toBe(false)
+  })
+
+  it('rejects an admin claim reconstructed from JSON.parse: a deserialized object can never be a member of the real admin-grant registry', () => {
+    const parsed = JSON.parse(
+      '{"kind":"user","id":"attacker","tenantId":"tenant-a","adminGrant":{}}',
+    ) as unknown as UserPrincipal
+    expect(isAdminPrincipal(parsed)).toBe(false)
   })
 })
 

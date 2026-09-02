@@ -12,6 +12,7 @@
 
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import {
+  type AdminGrant,
   type AgentPrincipal,
   type AnonymousDevPrincipal,
   type DelegationChain,
@@ -26,49 +27,69 @@ import {
 } from './types.ts'
 
 /**
+ * Every {@link AdminGrant} `createAdminUserPrincipal`/`createAdminServicePrincipal`
+ * have minted. Membership is by object identity: unlike `AdminGrant`'s
+ * compile-time-only brand (`./types.ts`), this check survives an explicit
+ * `as` cast or a JSON-deserialized object claiming the field, because
+ * nothing outside this module can ever obtain a reference already in this
+ * set (registry P2-01 gate: "Admin is explicit capability").
+ */
+const adminGrants = new WeakSet<AdminGrant>()
+
+/**
+ * Mint one fresh, registered {@link AdminGrant} token.
+ * @returns a token only `isAdminPrincipal` (via `adminGrants`) recognizes as genuine.
+ */
+function mintAdminGrant(): AdminGrant {
+  const grant = {} as AdminGrant
+  adminGrants.add(grant)
+  return grant
+}
+
+/**
  * Construct an ordinary, non-admin user principal.
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} with `isAdmin: false`.
+ * @returns a {@link UserPrincipal} with no {@link AdminGrant}.
  */
 export function createUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
-  return { kind: 'user', id, tenantId, isAdmin: false }
+  return { kind: 'user', id, tenantId }
 }
 
 /**
  * Construct an admin user principal. Kept as a separate, distinctly-named
- * export (never an `isAdmin` parameter on {@link createUserPrincipal}) so a
- * static scan can forbid this specific import from tool-provider code
+ * export (never an `isAdmin`/`adminGrant` parameter on {@link createUserPrincipal})
+ * so a static scan can forbid this specific import from tool-provider code
  * (registry P2-01 validation[2]).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} with `isAdmin: true`.
+ * @returns a {@link UserPrincipal} carrying a freshly minted {@link AdminGrant}.
  */
 export function createAdminUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
-  return { kind: 'user', id, tenantId, isAdmin: true }
+  return { kind: 'user', id, tenantId, adminGrant: mintAdminGrant() }
 }
 
 /**
  * Construct an ordinary, non-admin service principal.
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} with `isAdmin: false`.
+ * @returns a {@link ServicePrincipal} with no {@link AdminGrant}.
  */
 export function createServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
-  return { kind: 'service', id, tenantId, isAdmin: false }
+  return { kind: 'service', id, tenantId }
 }
 
 /**
  * Construct an admin service principal. Kept as a separate, distinctly-named
- * export (never an `isAdmin` parameter on {@link createServicePrincipal}) so a
- * static scan can forbid this specific import from tool-provider code
+ * export (never an `isAdmin`/`adminGrant` parameter on {@link createServicePrincipal})
+ * so a static scan can forbid this specific import from tool-provider code
  * (registry P2-01 validation[2]).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} with `isAdmin: true`.
+ * @returns a {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant}.
  */
 export function createAdminServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
-  return { kind: 'service', id, tenantId, isAdmin: true }
+  return { kind: 'service', id, tenantId, adminGrant: mintAdminGrant() }
 }
 
 /**
@@ -267,16 +288,20 @@ export function isAnonymousDev(principal: Principal): boolean {
 /**
  * Whether a principal holds the explicit admin capability. Never derived by
  * negation (e.g. "not anonymous-dev") — only `user`/`service` principals can
- * carry `isAdmin`, and it must be literally `true` (registry P2-01 gate:
- * "Admin is explicit capability").
+ * carry an {@link AdminGrant}, and it must be a genuine token registered by
+ * `createAdminUserPrincipal`/`createAdminServicePrincipal` (registry P2-01
+ * gate: "Admin is explicit capability"). The `adminGrants` `WeakSet` check
+ * verifies this by object identity, so a hand-built object literal, an
+ * explicit `as` cast, or a JSON-deserialized object can never pass — only a
+ * reference those two constructors themselves minted can.
  * @param principal - the principal to check.
- * @returns `true` only for a `user`/`service` principal with `isAdmin: true`.
+ * @returns `true` only for a `user`/`service` principal carrying a genuine, registered {@link AdminGrant}.
  */
 export function isAdminPrincipal(principal: Principal): boolean {
   switch (principal.kind) {
     case 'user':
     case 'service':
-      return principal.isAdmin
+      return principal.adminGrant !== undefined && adminGrants.has(principal.adminGrant)
     case 'agent':
     case 'anonymous-dev':
       return false
