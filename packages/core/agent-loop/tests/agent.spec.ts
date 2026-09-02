@@ -7,7 +7,7 @@ import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId, TenantM
 import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import LlmRuntime from '@deepseek-ai/dsh-llm'
-import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
+import SessionStore, { SessionId, SessionSeq } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
@@ -45,7 +45,7 @@ describe('Agent', () => {
 
     agent.inject(createUserMessage({ content: [{ type: 'text', text: 'context' }], source: { kind: 'plugin', plugin: 'p' } }))
 
-    expect(agent.session.events.map(event => event.type)).toEqual(['agent/inbox/spliced'])
+    expect(agent.session.snapshotEvents().map(event => event.type)).toEqual(['agent/inbox/spliced'])
     expect(agent.status).toBe('idle')
     expect(adapter.requests).toHaveLength(0)
     await agent.whenIdle()
@@ -57,7 +57,7 @@ describe('Agent', () => {
 
     agent.inject(createUserMessage({ content: [{ type: 'text', text: 'empty plugin source' }], source: { kind: 'plugin', plugin: '' } }))
 
-    const injected = agent.session.events.at(-1)
+    const injected = agent.session.snapshotEvents().at(-1)
     expect(injected?.type === 'agent/inbox/spliced' && injected.data.inserted[0]?.source)
       .toEqual({ kind: 'plugin', plugin: '' })
   })
@@ -107,7 +107,7 @@ describe('Agent', () => {
     expect(() => {
       agent.inject(createUserMessage({ content: [{ type: 'text', text: 'x', bad: 1n } as never], source: { kind: 'plugin', plugin: 'p' } }))
     }).toThrow(/non-JSON-serializable/)
-    expect(agent.session.events).toHaveLength(0)
+    expect(agent.session.snapshotEvents()).toHaveLength(0)
   })
 
   it('steer() while idle becomes a woken prompt turn', async () => {
@@ -118,7 +118,7 @@ describe('Agent', () => {
     agent.steer(createUserMessage({ content: [{ type: 'text', text: 'steer idle' }], source: { kind: 'plugin', plugin: 'test' } }))
     await agent.whenIdle()
 
-    expect(agent.session.events.some(event => event.type === 'user/message')).toBe(true)
+    expect(agent.session.snapshotEvents().some(event => event.type === 'user/message')).toBe(true)
     expect(adapter.requests).toHaveLength(1)
   })
 
@@ -189,7 +189,7 @@ describe('Agent.identity (first100 P2-01)', () => {
     const agent = ctx.agentLoop.create(SessionId('identity-fresh'), { provider: 'mock', model: 'mock', identity })
 
     expect(agent.identity).toEqual(identity)
-    const attached = agent.session.events.filter(event => event.type === 'identity/attached')
+    const attached = agent.session.snapshotEvents().filter(event => event.type === 'identity/attached')
     expect(attached).toHaveLength(1)
     expect(attached[0]?.data).toEqual({ identity })
   })
@@ -199,7 +199,7 @@ describe('Agent.identity (first100 P2-01)', () => {
     const agent = ctx.agentLoop.create(SessionId('identity-none'), { provider: 'mock', model: 'mock' })
 
     expect(agent.identity).toBeUndefined()
-    expect(agent.session.events.some(event => event.type === 'identity/attached')).toBe(false)
+    expect(agent.session.snapshotEvents().some(event => event.type === 'identity/attached')).toBe(false)
   })
 
   it('a session seeded with an already-recorded identity re-supplied at the same tenant attaches it without re-logging', async () => {
@@ -208,12 +208,12 @@ describe('Agent.identity (first100 P2-01)', () => {
     const resupplied = identityFor(TENANT_A)
     const { agent } = await ctx.agents.create({
       sessionId: SessionId('identity-seeded-same-tenant'),
-      seed: [{ type: 'identity/attached', seq: 0, time: 1, data: { identity: recorded } }],
+      seed: [{ type: 'identity/attached', seq: SessionSeq(0), time: 1, data: { identity: recorded } }],
       agentOptions: { provider: 'mock', model: 'mock', identity: resupplied },
     })
 
     expect(agent.identity).toEqual(resupplied)
-    const attached = agent.session.events.filter(event => event.type === 'identity/attached')
+    const attached = agent.session.snapshotEvents().filter(event => event.type === 'identity/attached')
     expect(attached).toHaveLength(1)
     expect(attached[0]?.data).toEqual({ identity: recorded })
   })
@@ -225,7 +225,7 @@ describe('Agent.identity (first100 P2-01)', () => {
 
     await expect(ctx.agents.create({
       sessionId: SessionId('identity-seeded-cross-tenant'),
-      seed: [{ type: 'identity/attached', seq: 0, time: 1, data: { identity: recorded } }],
+      seed: [{ type: 'identity/attached', seq: SessionSeq(0), time: 1, data: { identity: recorded } }],
       agentOptions: { provider: 'mock', model: 'mock', identity: attacker },
     })).rejects.toThrow(TenantMismatchError)
   })

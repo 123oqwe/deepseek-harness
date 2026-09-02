@@ -19,7 +19,6 @@ export const GROUPS_WITHOUT_SUBSYSTEM_PAGE: Readonly<Record<string, string>> = {
   assurance: 'Contract-stage type surface with no constructed runtime value or Cordis registration yet; the package README owns the accepted-invariant boundary this group fixes.',
   boot: 'Shared application-bin boot library rather than a runtime subsystem.',
   bundle: 'Composition patch carriers whose mounted packages own all runtime contracts.',
-  examples: 'Non-product demonstration compositions whose mounted packages own all runtime contracts.',
   hooks: 'External hook-protocol bridges over existing interception points, not a new Harness service.',
   kernel: 'Contract-stage type surface with no constructed runtime value or Cordis registration yet; see docs/architecture/trust-kernel-boundary.md for the boundary this group fixes.',
   plugin: 'Contract-stage type surface and pure validation logic with no constructed runtime value or Cordis registration yet; docs/plugins/manifest-v2.md owns the manifest format this group fixes.',

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-evidence-format",
   "description": "Contract-stage type surface for the Release Evidence Package (Epic P0-07): per-gate evidence records, the aggregate package binding baseline fingerprint/Git diff/build-artifact digests, and the accepted=true structural invariant",
-  "version": "0.1.2-alpha.2",
+  "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-principal",
   "description": "Unified Principal/Tenant/Run identity type contract and delegation-chain logic for the DeepSeek Harness",
-  "version": "0.1.2-alpha.2",
+  "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
   },

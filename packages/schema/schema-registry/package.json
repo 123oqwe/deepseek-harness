@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-schema-registry",
   "description": "Unified schema registry for persisted and wire-protocol leaf objects: schemaId identity, major/minor versioning, compatibility-rule enforcement, and read-time negotiation",
-  "version": "0.1.2-alpha.2",
+  "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
   },

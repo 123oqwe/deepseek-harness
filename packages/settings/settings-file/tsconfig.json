@@ -27,9 +27,6 @@
       "path": "../settings"
     },
     {
-      "path": "../../runtime-diagnostics/invariants"
-    },
-    {
       "path": "../../schema/schema-registry"
     }
   ]
