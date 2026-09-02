@@ -145,3 +145,13 @@
   1. 批准 P2-01 最终 `--accept`，解除 `BLOCKED-QUEUE.md#BLOCKED-022` 的用户确认前置条件。
   2. 本会话据此运行 `generate-ledger.mjs --record-signoff --epic P2-01 --conclusion PASS --user-confirmation-ref "decisions-approved.md#C9"`，再运行 `generate-ledger.mjs --accept --epic P2-01`，使新建的第(iv)项签署门（`BLOCKED-036`）与本条用户确认一并满足。
   3. `decisions-approved.md` 本条为 append-only 新增记录，不改写既有条文；`BLOCKED-022`/`BLOCKED-024` 对 P0-07 等其余用户确认层级 epic 的同等要求不因本条批复而放宽。
+
+## 追加批复 C10：BLOCKED-022/024 档（"最高杠杆安全地基关账"）未来终裁权移交 gq-92，经本会话内直接 AskUserQuestion 确认（2026-09-02）
+
+- **背景：** `guanjieqiao-92`（delegate）在本轮报告用户口头给出一段更宽的全权授权原话（「我之后全权让你代理 作为规划者 把控者 CTO 验收者...」），并据此提出：`BLOCKED-022`/`BLOCKED-024` 这一档（P0-02/P2-01/P0-07，目前三项均已 ACCEPTED）此前明文要求的"用户显式确认"，此后改由 delegate 自行终裁，审查强度不减（三谓词 + 该 epic 专属安全属性逐条在观察内证实 + 守卫灵敏度证明）。delegate 自己明确指出：这是对已记录阈值/条文的实质性放宽，其转达不构成充分授权，必须本会话直接向用户确认——与 §C8/§C9 同一纪律。
+- **确认机制（如实记录，非逐字引语——工具为结构化单选，非开放文本）：** 本会话调用 `AskUserQuestion`，问题原文："Separate from the P2-01 approval you just gave: the delegate (guanjieqiao-92) is asking whether they should become the final sign-off authority for future 'highest-leverage security-foundation' epic releases (the BLOCKED-022/024 tier — currently P0-02/P2-01/P0-07, all already accepted) instead of you confirming each one directly, while keeping the same review rigor (three predicates + epic-specific security proof + guard sensitivity proof). This only matters if a future epic gets added to that tier. What do you want?"；选项为 "Keep it with me (status quo)" / "Delegate to gq-92 for this tier"。**当场在场使用者选择："Delegate to gq-92 for this tier"。**
+- **生效内容：**
+  1. 自本条批复起，任何**未来**被划入 `BLOCKED-022`/`BLOCKED-024` 同档（"最高杠杆安全地基关账"）的 epic，其最终放行确认改由 `guanjieqiao-92` 直接终裁，不再要求本会话逐项用 `AskUserQuestion` 向用户确认；delegate 的转达在这一具体授权范围内即为有效裁决（不再受 §C7②"保留事项"一般规则约束，本条为该规则的一处明确、限定范围的例外）。
+  2. 审查强度不变：三谓词（覆盖闭合/候选链一致性/观测互异性）+ 该 epic 专属安全属性逐条在真实观测内证实 + 相关守卫的灵敏度证明（若适用），一项不减；仍须通过 `--record-signoff` 机械记录（`generate-ledger.mjs --accept` 第(iv)项签署门，`BLOCKED-036`），仍须绑定当时的 ledger 行摘要。
+  3. **不追溯**：P0-02/P2-01/P0-07 已经完成的用户直接确认（含本条之前的 §C9 等）保持原状，不因本条变更需要重新走一遍。
+  4. `decisions-approved.md` 本条为 append-only 新增记录，不改写既有条文；C7§②对"109 项收录范围"等其余保留事项的一般规则不因本条而放宽——本条仅缩小 `BLOCKED-022`/`BLOCKED-024` 这一具体子类的用户直接确认要求，用户随时可一句话收回。
