@@ -76,9 +76,17 @@ describe('runPluginVerify', () => {
 
   // Registry validation item: "新增恶意 MCP server 与 Skill 脚本夹具，验证 schema
   // 欺骗、tool-name collision、elicitation 和 secret 请求被拦截" — three malicious
-  // fixtures proving schema spoofing, an MCP server missing declared
-  // transport/auth (acceptance[3]'s elicitation-surface guard), and an
-  // unjustified secret request are all denied through the real CLI path.
+  // fixtures proving schema spoofing, a structurally incomplete MCP server
+  // declaration, and an unjustified secret request are all denied through the
+  // real CLI path. `malicious-mcp-elicitation.json` does NOT prove elicitation
+  // detection: its first server — the one carrying the suspiciously-named
+  // `elicit-confidential-data` prompt — is fully schema-compliant on its own
+  // and would be ADMITTED if submitted alone (proved below by
+  // `mcp-suspicious-prompt-name-admitted.json`, the same server in isolation).
+  // The combined fixture is denied only because its second, unrelated server
+  // is missing `transport`/`authMechanism`, an ordinary acceptance[3]
+  // structural-completeness check. Nothing in this system does semantic or
+  // content-based detection of a malicious prompt name.
   // Tool-name collision is separately proved live at
   // `apps/cli/tests/plugin-enforcement.spec.ts` (citing the existing
   // `dsh-core-tools` coverage this epic did not need to duplicate).
@@ -88,10 +96,16 @@ describe('runPluginVerify', () => {
     expect(output.stdout.join('')).toContain('DENIED (missing-manifest)')
   })
 
-  it('denies an MCP server manifest with an undeclared transport/auth server (acceptance[3])', () => {
+  it('denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness — not elicitation detection)', () => {
     const output = capture()
     expect(runPluginVerify(join(FIXTURES_DIR, 'malicious-mcp-elicitation.json'))).toBe(1)
     expect(output.stdout.join('')).toContain('DENIED (missing-manifest)')
+  })
+
+  it('admits a well-formed MCP server whose only red flag is a suspicious prompt name (no semantic elicitation detection, by disclosed design)', () => {
+    const output = capture()
+    expect(runPluginVerify(join(FIXTURES_DIR, 'mcp-suspicious-prompt-name-admitted.json'))).toBe(0)
+    expect(output.stdout.join('')).toContain('ADMITTED')
   })
 
   it('denies a skill manifest requesting a secret with no declared justification', () => {
