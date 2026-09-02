@@ -94,6 +94,7 @@
     "resolve-translation-pairing-conflicts": "tsx scripts/merge-translation-pairing.ts --resolve",
     "gen-translation-brief": "tsx scripts/gen-translation-brief.ts",
     "verify-doc-budgets": "tsx scripts/verify-doc-budgets.ts",
+    "first100:verify-flake-registry": "tsx scripts/first100/verify-flake-registry.ts",
     "docs:dev": "pnpm --filter @deepseek-ai/website run dev",
     "docs:build": "tsx website/build.ts && pnpm run verify-doc-site-fragments",
     "docs:build:mpa": "tsx website/build.ts --mpa && pnpm run verify-doc-site-fragments",

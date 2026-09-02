@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://deepseek-ai/dsh/first100/flake-registry.schema.json",
   "title": "first100-flake-registry",
-  "description": "Maintainer decision BLOCKED-007 item 3 (2026-09-01): an append-only registry of tests confirmed flaky in this CI environment, independent of any First-100 slice's own changes. When a CI run's failing-test set is a subset of this registry's entries, that run's observation is a VALID observation for every other test in it -- no rerun needed for that reason alone (generate-ledger.mjs's checkObservationAgainstFlakeRegistry()). The registry never exempts a registered test from the suite itself: it still runs, still appears in the failure set, and a failure genuinely caused by the change under observation is never absorbed by this mechanism. Every entry requires >=2 occurrences on distinct candidate SHAs plus a note establishing non-association with the observed slice. A new entry is C7 flake-classification scope -- routed to the delegate, never self-classified by the Supervisor.",
+  "description": "Maintainer decision BLOCKED-007 item 3 (2026-09-01), evidence standard extended by BLOCKED-023 (2026-09-02): an append-only registry of tests confirmed flaky in this CI environment, independent of any First-100 slice's own changes. When a CI run's failing-test set is a subset of this registry's entries, that run's observation is a VALID observation for every other test in it -- no rerun needed for that reason alone (generate-ledger.mjs's checkObservationAgainstFlakeRegistry()). The registry never exempts a registered test from the suite itself: it still runs, still appears in the failure set, and a failure genuinely caused by the change under observation is never absorbed by this mechanism. Every entry must satisfy one of two evidence standards, mechanically verified by scripts/first100/verify-flake-registry.ts (not just asserted in the note): (a) >=2 occurrences on >=2 distinct candidateSha values (cross-SHA reproduction), or (b) >=2 occurrences on the SAME candidateSha with genuine outcome divergence -- at least one occurrence recorded 'failed' and at least one recorded 'passed' for that SHA (same-SHA attempt-level non-determinism, direct proof rather than a proxy: a deterministic failure cannot flip to passing on a byte-identical retry). Standard (b) never accepts same-SHA occurrences that are all 'failed' -- that is a deterministic failure and must never be registered. Plus a note establishing non-association with the observed slice. A new entry is C7 flake-classification scope -- routed to the delegate, never self-classified by the Supervisor.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema", "entries"],
@@ -41,14 +41,19 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["ciRunUrl", "candidateSha", "observedAtUtc"],
+            "required": ["ciRunUrl", "candidateSha", "observedAtUtc", "outcome"],
             "properties": {
               "ciRunUrl": { "type": "string" },
               "candidateSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-              "observedAtUtc": { "type": "string", "format": "date-time" }
+              "observedAtUtc": { "type": "string", "format": "date-time" },
+              "outcome": {
+                "type": "string",
+                "enum": ["failed", "passed"],
+                "description": "Whether this specific CI attempt observed this test failing or passing. Required so scripts/first100/verify-flake-registry.ts can mechanically check the BLOCKED-023 same-SHA divergence standard (a 'passed' outcome is only ever recorded to prove non-determinism against a sibling 'failed' occurrence on the identical candidateSha -- never to pad the occurrence count)."
+              }
             }
           },
-          "description": "Every occurrence must be on a distinct candidateSha (checked mechanically, not just by count)."
+          "description": "Structural shape only (>=2 items) -- the real evidence-standard check (cross-SHA reproduction, or same-SHA outcome divergence) is BLOCKED-023, enforced by scripts/first100/verify-flake-registry.ts, not expressible as a pure JSON Schema constraint over this array."
         },
         "unrelatedNote": {
           "type": "string",
