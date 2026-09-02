@@ -223,5 +223,138 @@
       ],
       "note": "acceptance[3]: '开发 profile 可显式启用 insecure 模式并显示永久警告' (a development profile may explicitly enable an insecure mode, displaying a permanent warning). The DSH_TRUST_KERNEL_INSECURE opt-in resolver (stays opted out by default, opts in on any non-empty value) plus the permanent (not one-time) warning behavior are both proven directly."
     }
+    ,
+    {
+      "epic": "P0-03",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "reports zero schema errors and zero unsuppressed violations under the controlled allowlist"
+       },
+       {
+        "stage": "C",
+        "title": "reports zero missing-provider violations under the controlled allowlist (acceptance[0])"
+       }
+      ],
+      "note": "acceptance[0]: '现有仓库在受控 allowlist 下通过' (the existing repo passes under the controlled allowlist). U-stage's real live workspace scan is the authoritative proof (4175 real cross-package import edges, 0 unsuppressed violations); C-stage's pure-detector test independently proves the same zero-violations property against the same real architecture.layers.json content, one layer down the stack."
+    }
+    ,
+    {
+      "epic": "P0-03",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+       {
+        "stage": "C",
+        "title": "requires every allowlist entry to carry a removalDate in YYYY-MM-DD form"
+       },
+       {
+        "stage": "C",
+        "title": "requires every allowlist entry to carry a non-empty owner"
+       },
+       {
+        "stage": "C",
+        "title": "gives every allowlist entry a removalDate and an owner"
+       }
+      ],
+      "note": "acceptance[1]: 'allowlist 每项必须带删除日期和负责人' (every allowlist entry must carry a removal date and an owner). The first two cases prove the schema validator genuinely rejects an entry missing either field; the third proves the real, committed architecture.layers.json allowlist entries actually comply, not just that a hypothetical violator would be rejected."
+    }
+    ,
+    {
+      "epic": "P0-03",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "fails with a deep-import violation when a real fixture consumer imports a real fixture provider's src/*"
+       },
+       {
+        "stage": "U",
+        "title": "fails with a missing-provider violation when a real fixture family declares zero providers"
+       },
+       {
+        "stage": "U",
+        "title": "fails with a non-reversible-registration violation when a real fixture family has no consumer composition or unload/rollback test"
+       }
+      ],
+      "note": "acceptance[2]: '构造违规 deep import、缺 provider、不可逆注册三类夹具时门禁均失败' (constructing deep-import, missing-provider, and non-reversible-registration fixtures each fails the gate) -- the registry names exactly these three violation kinds; each is an independently necessary sub-fact (AND), proven against a real, independently-constructed fixture at the U-stage real-workspace-scan level, not the pure detector alone."
+    }
+    ,
+    {
+      "epic": "P0-03",
+      "acceptanceIndex": 3,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "prints the dependency edge, source file, and remediation for a real fixture violation, and exits non-zero"
+       },
+       {
+        "stage": "C",
+        "title": "names the offending dependency edge, source file, and a remediation suggestion on every violation kind"
+       }
+      ],
+      "note": "acceptance[3]: 'CI 输出具体依赖边、源文件和修复建议' (CI output names the specific dependency edge, source file, and remediation). U-stage proves this through the real pnpm-script CLI subprocess path (the one this session's flake investigation independently re-verified genuinely flakes only in the reported acceptance[3] sense, never silently); C-stage's detector-level test proves the same naming guarantee holds for every violation kind, not only the one U-stage's fixture exercises."
+    }
+    ,
+    {
+      "epic": "P0-05",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+       {
+        "stage": "P",
+        "title": "acceptance[0]: the same request produces the IDENTICAL applied value under off and under shadow, even though legacy and candidate disagree"
+       },
+       {
+        "stage": "F",
+        "title": "applies legacy's value when candidate throws during shadow evaluation, matching what off mode returns for the same legacy"
+       }
+      ],
+      "note": "acceptance[0]: '同一请求在 legacy 与 shadow 模式得到相同用户可见结果' (the same request gets the same user-visible result under legacy vs. shadow mode). P-stage's case (which literally cites acceptance[0] in its own title) proves the general case; F-stage's fault-hardening case proves the same result-equivalence invariant survives even when the candidate decision path throws -- an edge case the original P-stage submission did not cover, closed by the independently-reviewed fix round."
+    }
+    ,
+    {
+      "epic": "P0-05",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+       {
+        "stage": "P",
+        "title": "records a shadowRecord with the redacted legacy/candidate summaries and the real gateId"
+       },
+       {
+        "stage": "P",
+        "title": "differs reflects the RAW decision summaries, including a field the allowlist later strips -- shadow mode must not under-report real behavioral drift"
+       },
+       {
+        "stage": "P",
+        "title": "never lets a field outside the allowlist reach legacySummary/shadowSummary -- a real redaction call, not a bare cast"
+       },
+       {
+        "stage": "F",
+        "title": "never lets a \"__proto__\" allowlist entry hijack the returned object's prototype, even when summary carries its own JSON-parsed __proto__ property"
+       }
+      ],
+      "note": "acceptance[1]: 'shadow 决策与 legacy 决策差异被完整记录且不泄露敏感参数' (the shadow/legacy decision diff is fully recorded and never leaks sensitive parameters). P-stage's three cases prove the diff is recorded against the real gateId, that 'differs' reflects genuine drift rather than an allowlist-narrowed view, and that redaction is a real per-field filter rather than a cosmetic cast; F-stage's case independently closes a redaction bypass an adversarial JSON-sourced summary could otherwise exploit (prototype hijack), proving the no-leak guarantee holds under adversarial input, not only well-formed input."
+    }
+    ,
+    {
+      "epic": "P0-05",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "fails, naming the gate, when a declared gate has passed its removalVersion"
+       },
+       {
+        "stage": "P",
+        "title": "is expired for a release exactly at removalVersion (boundary)"
+       },
+       {
+        "stage": "P",
+        "title": "is expired for a release strictly after removalVersion"
+       }
+      ],
+      "note": "acceptance[2]: '过期 gate 在 release gate 中失败' (an expired gate fails the release gate) -- a BLOCKED-012-class deviation (scripts/release/feature-gate-expiry.ts wired into the real, pre-existing scripts/release/verify.ts release gate, independently re-verified by a live mutation of a scratch expired gate). U-stage's case proves the real release-gate wiring genuinely fails and names the gate; P-stage's two boundary cases prove the underlying SemVer expiry determination itself is correct exactly at and after the removal version, not merely 'eventually expires'."
+    }
+
   ]
 }

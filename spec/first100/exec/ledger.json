@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-01T23:26:43.204Z",
-  "inputDigest": "95fe440b3e449bec08a165e3b53e09548388b9f98d2fbb604323241323ffdea5",
+  "lastUpdatedUtc": "2026-09-02T01:49:44.069Z",
+  "inputDigest": "a279d9cccdb60692cca714a5fc8082b1f42ac466b62311420781af3862da43aa",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -330,11 +330,40 @@
           "capturedAtUtc": "2026-09-01T23:25:56.920Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+          "observationReportPath": "/tmp/ci-run-33578193549/attempt2/first100-evidence-e4390a90a29e71dea1c2d32f3943b4692b5fd933/vitest-report.json",
+          "observationSha256": "b9b9d060bbccd73188942e2fbfd212e64d026baa9ca50eefce293660069dc4f8",
+          "expectCasesMatched": [
+            "reports a clear error, and does not throw, when families is not an array",
+            "reports a clear error, and does not throw, when allowlist is not an array",
+            "reports a clear error, and does not throw, when a family is missing providers",
+            "reports a clear error, and does not throw, when a family is missing consumers",
+            "still validates every well-formed family when only one family in the document is malformed",
+            "reports a clear error, and does not throw, when a families element is null",
+            "reports a clear error, and does not throw, when an allowlist element is null",
+            "reports a clear error, and does not throw, when an allowlist entry is missing its owner field",
+            "reports a clear error, and does not throw, when a families element is a string or a number instead of an object",
+            "reports a clear error, and does not throw, when families holds undefined (a sparse-array-shaped hole)",
+            "reports a deep-import, a provider-app-dependency, and a missing-provider violation together from one real fixture",
+            "reports a clear error and zero violations, without throwing, when families is missing from the real fixture file",
+            "reports a clear error and zero violations, without throwing, when a family in the real fixture file is missing providers",
+            "still reports a clear schema error (and keeps scanning) when a real fixture family references a package absent from the workspace",
+            "still reports a clear schema error (and keeps scanning) when the real fixture file declares a family id twice",
+            "reports a clear error and zero violations, without throwing, when a real fixture families element is null",
+            "reports a clear error and zero violations, without throwing, when a real fixture allowlist element is null",
+            "reports a clear error, without throwing, when a real fixture allowlist entry is missing its owner field",
+            "reports a clear error, without throwing, when a real fixture families element is a string instead of an object",
+            "matches the declared package.json script this suite's other cases assume",
+            "exits 0 for a real clean fixture when invoked as the real pnpm script (not the underlying function directly)",
+            "exits non-zero for a real fixture violation when invoked as the real pnpm script, naming the edge, file, and remediation"
+          ],
+          "capturedAtUtc": "2026-09-02T01:44:27.886Z"
         }
       },
       "supplements": {},
-      "candidateSha": "a558e04cb8044380d1da6e95d6aaf896184b2b89",
+      "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -460,14 +489,74 @@
           "capturedAtUtc": "2026-09-01T23:26:43.203Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+          "observationReportPath": "/tmp/ci-run-33578193549/attempt2/first100-evidence-e4390a90a29e71dea1c2d32f3943b4692b5fd933/vitest-report.json",
+          "observationSha256": "b9b9d060bbccd73188942e2fbfd212e64d026baa9ca50eefce293660069dc4f8",
+          "expectCasesMatched": [
+            "upper-cases the gate id and collapses non-alphanumeric runs to one underscore",
+            "contributes no override when unset or empty",
+            "accepts each of the three declared states",
+            "fails loud on any other value",
+            "resolves an empty declaration list to no resolutions",
+            "composes default -> profile -> env, matching resolveFeatureGate directly",
+            "layers the env override above default/profile, reading the deterministic env var name",
+            "never supplies a settings chain layer -- no feature-gates settings namespace exists yet",
+            "defaults declarations to FEATURE_GATE_DECLARATIONS (empty today) and env to process.env",
+            "provides the profile-resolved gates before any entry mounts -- a plugin sees them already present",
+            "rejects a plugin that tries to override the provided gates via a second ctx.provide -- Cordis's own single-owner guarantee",
+            "prints nothing when no gate is declared -- this repository's real state today",
+            "prints one comment-prefixed block naming the resolved source/value and the full override chain",
+            "stays a loadable YAML document: every printed line is a comment",
+            "renders multiple declared gates in resolution order",
+            "passes over an empty declaration list",
+            "passes when every declared gate is still active for the release version",
+            "fails, naming the gate, when a declared gate has passed its removalVersion",
+            "names every expired gate, not only the first",
+            "is empty -- no capability has migrated behind a gate yet"
+          ],
+          "capturedAtUtc": "2026-09-02T01:49:43.340Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+          "observationReportPath": "/tmp/ci-run-33578193549/attempt2/first100-evidence-e4390a90a29e71dea1c2d32f3943b4692b5fd933/vitest-report.json",
+          "observationSha256": "b9b9d060bbccd73188942e2fbfd212e64d026baa9ca50eefce293660069dc4f8",
+          "expectCasesMatched": [
+            "applies a settings override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true",
+            "applies an env override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true",
+            "applies legacy's value when candidate throws during shadow evaluation, matching what off mode returns for the same legacy",
+            "lets a per-profile default declare a state below the repo-wide default with no authority required -- that is authored policy, not a hot override",
+            "names the gate id and rejected source in the thrown error message",
+            "never leaks the thrown candidate error's message into the recorded shadowRecord",
+            "never lets a \"__proto__\" allowlist entry hijack the returned object's prototype, even when summary carries its own JSON-parsed __proto__ property",
+            "never lets a thrown candidate error propagate out of shadow evaluation",
+            "never resolves an undeclared \"__proto__\" gate id through the settings namespace's inherited Object.prototype accessor",
+            "never resolves an undeclared \"__proto__\" profile through the inherited Object.prototype accessor",
+            "never resolves an undeclared \"hasOwnProperty\" gate id through the settings namespace's inherited Object.prototype function property",
+            "never resolves an undeclared \"toString\" profile through Object.prototype's own inherited function property",
+            "never restricts a settings override that holds or raises an enforce-floor gate, even without authority",
+            "never restricts a settings/env override when the default/profile floor itself is off or shadow",
+            "never shares a chain array reference across repeated resolveFeatureGate calls -- mutating one call's chain leaves a later call's untouched",
+            "never treats Object.prototype's inherited __proto__ accessor as a present field when summary genuinely lacks its own __proto__ property",
+            "records differs true and an empty shadowSummary when candidate throws during shadow evaluation",
+            "redacts independently per call -- a keepFields allowlist from one call never leaks into a later call over the same raw summary",
+            "refuses a settings override that would move an enforce-floor gate to off without kernel administrative authority",
+            "refuses a settings override that would move an enforce-floor gate to shadow without kernel administrative authority",
+            "refuses an env override that would move an enforce-floor gate to off without kernel administrative authority",
+            "resolves a genuinely declared profile literally named \"constructor\" via Object.hasOwn, not confused with Object.prototype.constructor",
+            "resolves a structurally identical FeatureGateResolution across repeated calls with the same inputs, simulating a dispose+re-provide reload cycle",
+            "still checks a later env override against the ORIGINAL default/profile floor, even after an authorized settings override already lowered the gate",
+            "still lets a throwing candidate propagate out of enforce evaluation -- exception isolation is scoped to shadow mode only",
+            "still lets a throwing legacy propagate out of shadow evaluation, matching what off mode does for the same legacy"
+          ],
+          "capturedAtUtc": "2026-09-02T01:49:43.594Z"
         }
       },
       "supplements": {},
-      "candidateSha": "a558e04cb8044380d1da6e95d6aaf896184b2b89",
+      "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -659,17 +748,44 @@
           "capturedAtUtc": "2026-09-01T21:32:53.039Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+          "observationReportPath": "/tmp/ci-run-33578193549/attempt2/first100-evidence-e4390a90a29e71dea1c2d32f3943b4692b5fd933/vitest-report.json",
+          "observationSha256": "b9b9d060bbccd73188942e2fbfd212e64d026baa9ca50eefce293660069dc4f8",
+          "expectCasesMatched": [
+            "seeds every declared required gate as a MissingGateEvidence placeholder at init, keeping accepted=false until each one actually runs",
+            "collects two real gate runs and a real build-artifact digest into accepted=true, then verifies fully offline",
+            "never sets accepted=true when a required gate genuinely completes with a nonzero exit code",
+            "records a --skip reason as SkippedGateEvidence without running any command, and keeps accepted=false",
+            "detects a mutated byte in a completed gate's captured log file",
+            "detects a mutated byte in a required build artifact after collection",
+            "detects a hand-edited evidence.json itself: recordDigest, package signature, and the re-derived must[2] check all fail",
+            "compiles with zero diagnostics when the real collected fields are branded per their declared types",
+            "every collected GateEvidence record has exactly must[0]'s real field set at runtime, matching CompletedGateEvidence's own declared members"
+          ],
+          "capturedAtUtc": "2026-09-02T01:49:43.814Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33578193549",
+          "observationReportPath": "/tmp/ci-run-33578193549/attempt2/first100-evidence-e4390a90a29e71dea1c2d32f3943b4692b5fd933/vitest-report.json",
+          "observationSha256": "b9b9d060bbccd73188942e2fbfd212e64d026baa9ca50eefce293660069dc4f8",
+          "expectCasesMatched": [
+            "wires evidence:collect/evidence:verify in the real package.json to the real P-stage scripts",
+            "pnpm run evidence:collect/evidence:verify actually execute the real scripts end-to-end against a throwaway fixture",
+            "docs/testing.md documents the pnpm evidence:collect/evidence:verify commands",
+            "AGENTS.md states the evidence-gate reporting convention (acceptance[2]: cite package path and accepted status)"
+          ],
+          "capturedAtUtc": "2026-09-02T01:49:44.068Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "d21e75068d56f3150e1e32d9ceab68636b66df82",
+      "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
