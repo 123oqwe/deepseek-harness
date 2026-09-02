@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
+import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId, TenantMismatchError } from '@deepseek-ai/dsh-principal'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import LlmRuntime from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -25,6 +27,14 @@ async function harness(adapter: MockAdapter): Promise<Context> {
 
 function send(agent: Agent, text: string): void {
   agent.followup(createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } }))
+}
+
+const TENANT_A = TenantId('tenant-a')
+const TENANT_B = TenantId('tenant-b')
+
+function identityFor(tenantId: TenantId, principalId = 'u1'): IdentityContext {
+  const principal = createUserPrincipal(PrincipalId(principalId), tenantId)
+  return { principal, runId: RunId('run-1'), chain: createChain(principal, 0) }
 }
 
 describe('Agent', () => {
@@ -165,5 +175,58 @@ describe('Agent', () => {
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('agent event "agent/status" listener threw'),
     )
+  })
+})
+
+// first100 registry P2-01 acceptance[0]/[1]: real Agent.identity attachment
+// and the runtime-policy layer's real call site, wired through
+// ReactLoopAgent's constructor (resolveSessionIdentity/lastAttachedIdentity,
+// `../src/runtime-context.ts`).
+describe('Agent.identity (first100 P2-01)', () => {
+  it('a fresh session with a supplied identity attaches it and durably logs it exactly once', async () => {
+    const ctx = await harness(new MockAdapter([textResponse('ok')]))
+    const identity = identityFor(TENANT_A)
+    const agent = ctx.agentLoop.create(SessionId('identity-fresh'), { provider: 'mock', model: 'mock', identity })
+
+    expect(agent.identity).toEqual(identity)
+    const attached = agent.session.events.filter(event => event.type === 'identity/attached')
+    expect(attached).toHaveLength(1)
+    expect(attached[0]?.data).toEqual({ identity })
+  })
+
+  it('a session with no supplied identity attaches nothing and logs nothing', async () => {
+    const ctx = await harness(new MockAdapter([textResponse('ok')]))
+    const agent = ctx.agentLoop.create(SessionId('identity-none'), { provider: 'mock', model: 'mock' })
+
+    expect(agent.identity).toBeUndefined()
+    expect(agent.session.events.some(event => event.type === 'identity/attached')).toBe(false)
+  })
+
+  it('a session seeded with an already-recorded identity re-supplied at the same tenant attaches it without re-logging', async () => {
+    const ctx = await harness(new MockAdapter([]))
+    const recorded = identityFor(TENANT_A)
+    const resupplied = identityFor(TENANT_A)
+    const { agent } = await ctx.agents.create({
+      sessionId: SessionId('identity-seeded-same-tenant'),
+      seed: [{ type: 'identity/attached', seq: 0, time: 1, data: { identity: recorded } }],
+      agentOptions: { provider: 'mock', model: 'mock', identity: resupplied },
+    })
+
+    expect(agent.identity).toEqual(resupplied)
+    const attached = agent.session.events.filter(event => event.type === 'identity/attached')
+    expect(attached).toHaveLength(1)
+    expect(attached[0]?.data).toEqual({ identity: recorded })
+  })
+
+  it('a session seeded with an already-recorded identity rejects a re-supplied cross-tenant identity via the runtime-policy layer (registry P2-01 gate: request tenant equals authenticated tenant)', async () => {
+    const ctx = await harness(new MockAdapter([]))
+    const recorded = identityFor(TENANT_A)
+    const attacker = identityFor(TENANT_B)
+
+    await expect(ctx.agents.create({
+      sessionId: SessionId('identity-seeded-cross-tenant'),
+      seed: [{ type: 'identity/attached', seq: 0, time: 1, data: { identity: recorded } }],
+      agentOptions: { provider: 'mock', model: 'mock', identity: attacker },
+    })).rejects.toThrow(TenantMismatchError)
   })
 })

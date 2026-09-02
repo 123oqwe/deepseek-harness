@@ -27,6 +27,9 @@
       "path": "../../core/scope"
     },
     {
+      "path": "../../identity/principal"
+    },
+    {
       "path": "../../runtime-diagnostics/invariants"
     },
     {

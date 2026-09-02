@@ -11,6 +11,7 @@ import type {
   ToolSchema,
   UserMessage,
 } from '@deepseek-ai/dsh-llm'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 
 /** Identifies one session in the store (and its persistence artifacts). */
@@ -294,6 +295,20 @@ export interface SessionEventMap {
    * changes. It does not participate in request reconstruction or header equality.
    */
   'request/context': RequestContext
+  /**
+   * Durably anchors the {@link IdentityContext} (principal, run, and full
+   * delegation chain back to root) a live agent attached to this session
+   * (first100 registry P2-01 acceptance[0]: "any action traceable to its
+   * root user/tenant and full delegation chain"). Log-only, like
+   * `request/header`/`request/context`: it does not participate in message
+   * reconstruction, and the log's LAST occurrence is this session's current
+   * identity. Appended at most once per session unless a later run
+   * legitimately re-establishes identity after the runtime-policy layer
+   * (`assertRuntimeTenantPolicy`, `@deepseek-ai/dsh-principal`) accepts it —
+   * never derived from `user/message`/prompt content (must[2]: identity is
+   * never inferred from editable text).
+   */
+  'identity/attached': { readonly identity: IdentityContext }
   /**
    * Marks the end of a constructor seed. Events before it have smaller seq
    * values and came from the seed (resume, fork, or replay); this lifecycle

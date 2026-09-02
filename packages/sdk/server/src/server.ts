@@ -198,7 +198,12 @@ export class HarnessSdkJsonRpcServer {
       source: { kind: 'user' },
     })
     rec.handle.agent.followup(message)
-    return { messageId: message.id }
+    // The agent's own already-established identity, reported outward for
+    // traceability (first100 registry P2-01 must[1]/acceptance[0]) -- never a
+    // value this server reads back from a client-supplied field; see
+    // SdkIdentityReference's doc (`@deepseek-ai/dsh-sdk-protocol`) for why.
+    const { identity } = rec.handle.agent
+    return { messageId: message.id, ...identity === undefined ? {} : { identity } }
   }
 
   private assertLiveAgent(rec: SessionRecord, sessionId: string): void {

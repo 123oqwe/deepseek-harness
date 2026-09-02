@@ -68,12 +68,24 @@ function mintAdminGrant(): AdminGrant {
 
 /**
  * Construct an ordinary, non-admin user principal.
+ *
+ * Frozen before return (registry P2-01 BLOCKED-026, hard gate for U-stage
+ * enforcement wiring): `isAdminPrincipal` binds by object identity, so a
+ * legitimate holder of a real principal reference mutating a field in place
+ * (`principal.tenantId = attackerTenantId`) would otherwise still pass the
+ * identity check under its new, attacker-chosen field value — a
+ * confused-deputy vector distinct from the forged-object-literal class
+ * `adminGrantOwners` already closes. `Object.freeze` makes every in-place
+ * field mutation a no-op in sloppy mode and a thrown `TypeError` in strict
+ * mode (this package's ESM modules are always strict), closing that gap for
+ * every downstream consumer that trusts `principal.id`/`principal.tenantId`
+ * once obtained.
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} with no {@link AdminGrant}.
+ * @returns a frozen {@link UserPrincipal} with no {@link AdminGrant}.
  */
 export function createUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
-  return { kind: 'user', id, tenantId }
+  return Object.freeze({ kind: 'user', id, tenantId })
 }
 
 /**
@@ -81,25 +93,32 @@ export function createUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPr
  * export (never an `isAdmin`/`adminGrant` parameter on {@link createUserPrincipal})
  * so a static scan can forbid this specific import from tool-provider code
  * (registry P2-01 validation[2]).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026): an admin principal is exactly the object an
+ * in-place field mutation would be most valuable to forge against.
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
+ * @returns a frozen {@link UserPrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
  */
 export function createAdminUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
   const adminGrant = mintAdminGrant()
   const principal: UserPrincipal = { kind: 'user', id, tenantId, adminGrant }
   adminGrantOwners.set(adminGrant, principal)
-  return principal
+  return Object.freeze(principal)
 }
 
 /**
  * Construct an ordinary, non-admin service principal.
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} with no {@link AdminGrant}.
+ * @returns a frozen {@link ServicePrincipal} with no {@link AdminGrant}.
  */
 export function createServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
-  return { kind: 'service', id, tenantId }
+  return Object.freeze({ kind: 'service', id, tenantId })
 }
 
 /**
@@ -107,38 +126,47 @@ export function createServicePrincipal(id: PrincipalId, tenantId: TenantId): Ser
  * export (never an `isAdmin`/`adminGrant` parameter on {@link createServicePrincipal})
  * so a static scan can forbid this specific import from tool-provider code
  * (registry P2-01 validation[2]).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
+ * @returns a frozen {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
  */
 export function createAdminServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
   const adminGrant = mintAdminGrant()
   const principal: ServicePrincipal = { kind: 'service', id, tenantId, adminGrant }
   adminGrantOwners.set(adminGrant, principal)
-  return principal
+  return Object.freeze(principal)
 }
 
 /**
  * Construct a delegated agent principal. Carries no admin flag: an agent's
  * authority is never self-declared (see `./types.ts`'s {@link AgentPrincipal} doc).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
  * @param delegatedBy - the principal id that authorized this agent's delegation.
- * @returns an {@link AgentPrincipal}.
+ * @returns a frozen {@link AgentPrincipal}.
  */
 export function createAgentPrincipal(id: PrincipalId, tenantId: TenantId, delegatedBy: PrincipalId): AgentPrincipal {
-  return { kind: 'agent', id, tenantId, delegatedBy }
+  return Object.freeze({ kind: 'agent', id, tenantId, delegatedBy })
 }
 
 /**
  * Construct an anonymous development-mode principal. Structurally distinct
  * from every admin-capable kind (registry P2-01 acceptance[2]).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns an {@link AnonymousDevPrincipal}.
+ * @returns a frozen {@link AnonymousDevPrincipal}.
  */
 export function createAnonymousDevPrincipal(id: PrincipalId, tenantId: TenantId): AnonymousDevPrincipal {
-  return { kind: 'anonymous-dev', id, tenantId }
+  return Object.freeze({ kind: 'anonymous-dev', id, tenantId })
 }
 
 /**

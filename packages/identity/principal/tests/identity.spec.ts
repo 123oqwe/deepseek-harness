@@ -388,6 +388,101 @@ describe('isAnonymousDev / isAdminPrincipal', () => {
     expect(rehydrated).not.toBe(admin)
     expect(isAdminPrincipal(rehydrated)).toBe(false)
   })
+
+  // BLOCKED-026 (spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-026), hard gate
+  // for P2-01.U: isAdminPrincipal binds by object identity, never re-checking
+  // a bound object's own fields against what they were at mint time. Without
+  // Object.freeze, legitimate code holding a real admin principal reference
+  // could mutate `.id`/`.tenantId` in place and isAdminPrincipal would still
+  // return true for the mutated object -- a confused-deputy vector distinct
+  // from the forged-object-literal class adminGrantOwners already closes.
+  // These tests prove every principal constructor's output rejects in-place
+  // mutation, closing that gap before any real authorization consumer is wired.
+  describe('BLOCKED-026: every principal constructor freezes its output against in-place mutation', () => {
+    it('rejects mutating an admin user principal\'s tenantId in place: the assignment throws (ESM strict mode) and the field is unchanged', () => {
+      const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+      const attackerTenantId = TENANT_B
+      expect(() => {
+        (admin as { tenantId: TenantId }).tenantId = attackerTenantId
+      }).toThrow(TypeError)
+      expect(admin.tenantId).toBe(TENANT_A)
+      // The mutation attempt failed outright, so the identity check never even
+      // has to run against a mutated object -- but confirm it still recognizes
+      // the untouched original as admin.
+      expect(isAdminPrincipal(admin)).toBe(true)
+    })
+
+    it('rejects mutating an admin user principal\'s id in place', () => {
+      const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+      expect(() => {
+        (admin as { id: PrincipalId }).id = PrincipalId('victim-id')
+      }).toThrow(TypeError)
+      expect(admin.id).toBe(PrincipalId('real-admin'))
+    })
+
+    it('rejects mutating an admin service principal\'s tenantId in place', () => {
+      const admin = createAdminServicePrincipal(PrincipalId('svc-admin'), TENANT_A)
+      expect(() => {
+        (admin as { tenantId: TenantId }).tenantId = TENANT_B
+      }).toThrow(TypeError)
+      expect(admin.tenantId).toBe(TENANT_A)
+      expect(isAdminPrincipal(admin)).toBe(true)
+    })
+
+    it('rejects mutating a non-admin user principal\'s fields in place', () => {
+      const user = createUserPrincipal(PrincipalId('u1'), TENANT_A)
+      expect(() => {
+        (user as { tenantId: TenantId }).tenantId = TENANT_B
+      }).toThrow(TypeError)
+      expect(user.tenantId).toBe(TENANT_A)
+    })
+
+    it('rejects mutating a non-admin service principal\'s fields in place', () => {
+      const svc = createServicePrincipal(PrincipalId('svc1'), TENANT_A)
+      expect(() => {
+        (svc as { tenantId: TenantId }).tenantId = TENANT_B
+      }).toThrow(TypeError)
+      expect(svc.tenantId).toBe(TENANT_A)
+    })
+
+    it('rejects mutating an agent principal\'s fields in place', () => {
+      const agent = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, PrincipalId('u1'))
+      expect(() => {
+        (agent as { tenantId: TenantId }).tenantId = TENANT_B
+      }).toThrow(TypeError)
+      expect(agent.tenantId).toBe(TENANT_A)
+      expect(() => {
+        (agent as { delegatedBy: PrincipalId }).delegatedBy = PrincipalId('attacker')
+      }).toThrow(TypeError)
+      expect(agent.delegatedBy).toBe(PrincipalId('u1'))
+    })
+
+    it('rejects mutating an anonymous-dev principal\'s fields in place', () => {
+      const dev = createAnonymousDevPrincipal(PrincipalId('dev1'), TENANT_A)
+      expect(() => {
+        (dev as { tenantId: TenantId }).tenantId = TENANT_B
+      }).toThrow(TypeError)
+      expect(dev.tenantId).toBe(TENANT_A)
+    })
+
+    it('rejects attaching a fresh adminGrant to an already-minted non-admin principal in place -- Object.freeze blocks adding a new own property, not only rewriting an existing one', () => {
+      const user = createUserPrincipal(PrincipalId('u1'), TENANT_A)
+      expect(Object.isFrozen(user)).toBe(true)
+      expect(() => {
+        (user as { adminGrant: unknown }).adminGrant = {}
+      }).toThrow(TypeError)
+      expect(isAdminPrincipal(user)).toBe(false)
+    })
+
+    it('confirms every constructor\'s output is frozen (Object.isFrozen), not merely readonly at the type level', () => {
+      expect(Object.isFrozen(createUserPrincipal(PrincipalId('u1'), TENANT_A))).toBe(true)
+      expect(Object.isFrozen(createAdminUserPrincipal(PrincipalId('u2'), TENANT_A))).toBe(true)
+      expect(Object.isFrozen(createServicePrincipal(PrincipalId('s1'), TENANT_A))).toBe(true)
+      expect(Object.isFrozen(createAdminServicePrincipal(PrincipalId('s2'), TENANT_A))).toBe(true)
+      expect(Object.isFrozen(createAgentPrincipal(PrincipalId('a1'), TENANT_A, PrincipalId('u1')))).toBe(true)
+      expect(Object.isFrozen(createAnonymousDevPrincipal(PrincipalId('d1'), TENANT_A))).toBe(true)
+    })
+  })
 })
 
 describe('TenantMismatchError / ForgedPrincipalError', () => {
