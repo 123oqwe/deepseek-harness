@@ -423,6 +423,135 @@
        }
       ],
       "note": "acceptance[2]: 'Agent 最终回答必须引用 package path 和 accepted 状态' (the agent's final answer must cite the package path and accepted status) -- a documented reporting convention, not runtime/agent-loop code, per this epic's own U-stage note. Wired into AGENTS.md's Conventions section."
+    },
+    {
+      "epic": "P1-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "denies a missing declaration in production as missing-manifest"
+       },
+       {
+        "stage": "U",
+        "title": "quarantines a plugin that registered a tool its manifest never declared"
+       },
+       {
+        "stage": "U",
+        "title": "denies the overprivileged fixture with the real wildcard findings (acceptance[0])"
+       }
+      ],
+      "note": "acceptance[0]: 缺少 manifest、声明与实际注册不一致、申请通配权限时安装失败或进入明确 quarantine (missing manifest / declared-vs-observed mismatch / wildcard permission request -> install fails or explicit quarantine) decomposes into 3 independently-required sub-facts, each proven by a real U-stage enforcement test (not the pure P-stage decision function alone): missing manifest -> real profile-boot denial ('denies a missing declaration in production as missing-manifest'); declared/observed mismatch -> real post-mount quarantine disposal of the plugin's live Cordis fiber ('quarantines a plugin that registered a tool its manifest never declared'); wildcard permission request -> real pre-mount denial with the actual wildcard findings surfaced ('denies the overprivileged fixture with the real wildcard findings (acceptance[0])', the U-stage Writer's own explicit acceptance[0] citation in the test title). All three are gated behind DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce (off by default, disclosed) -- the U-stage tests exercise the enforce path directly, not the default-off no-op path."
+    },
+    {
+      "epic": "P1-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "builds an active permission state for a manifest-v2 plugin whose registrations exactly match"
+       },
+       {
+        "stage": "U",
+        "title": "marks bundle provenance for a module named in bundlePackageNames"
+       },
+       {
+        "stage": "U",
+        "title": "falls back to the module name and version 0.0.0 when package.json omits them"
+       }
+      ],
+      "note": "acceptance[1]: Plugin Inventory 能展示声明权限、实际观察权限、版本与来源 (Plugin Inventory can show declared permissions, actually-observed permissions, version, and provenance) decomposes into the 4 named PluginPermissionState fields. 'builds an active permission state for a manifest-v2 plugin whose registrations exactly match' proves the declared+observed pairing is built from real, live Cordis registrations (not a mocked comparison). 'marks bundle provenance for a module named in bundlePackageNames' proves the provenance field is populated from a real bundle-membership check. 'falls back to the module name and version 0.0.0 when package.json omits them' proves the version field is read from real on-disk package.json data (with a defined fallback, not silently absent). Declared/observed permissions themselves are additionally covered end-to-end by acceptance[0]'s citations above (the same permission-state construction path), not re-cited here to avoid double-counting the identical underlying fact."
+    },
+    {
+      "epic": "P1-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+       {
+        "stage": "C",
+        "title": "agrees with the hand-written TypeScript validator on every fixture"
+       },
+       {
+        "stage": "C",
+        "title": "classifies a legacy dsh.bundle field as legacy-untrusted"
+       }
+      ],
+      "note": "acceptance[2]: manifest schema 有 golden fixture 与向后兼容测试 (the manifest schema has golden fixtures and backward-compatibility tests) decomposes into 2 sub-facts: golden-fixture agreement between the JSON Schema document and the hand-written TypeScript validator ('agrees with the hand-written TypeScript validator on every fixture', which cross-checks all 4 golden fixtures -- benign/overprivileged/undeclared-tool/undeclared-network -- against both validators in one case), and backward-compatibility with the pre-existing legacy dsh.bundle format ('classifies a legacy dsh.bundle field as legacy-untrusted', proving the old format is still readable and correctly classified, not silently broken by the new manifest-v2 schema)."
+    },
+    {
+      "epic": "P1-01",
+      "acceptanceIndex": 3,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness — not elicitation detection)"
+       },
+       {
+        "stage": "U",
+        "title": "denies the undeclared-network fixture (acceptance[3]: a remote provider with no declared destination fails schema)"
+       },
+       {
+        "stage": "C",
+        "title": "rejects a tool capability missing must[1] effect fields"
+       }
+      ],
+      "note": "acceptance[3]: Skill/MCP Provider 未声明 transport、auth、network destination 或副作用时不能进入 production profile (a Skill/MCP Provider missing transport, auth, network destination, or side-effect declarations cannot enter a production profile) decomposes into the 4 named missing-declaration kinds, proven at the real U-stage enforcement point (not just C-stage's pure schema validation): transport/auth -> 'denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness -- not elicitation detection)', the U-stage Writer's own explicit acceptance[3] citation, honestly reframed by the F-stage fast-follow to state precisely what it proves; network destination -> 'denies the undeclared-network fixture (acceptance[3]: a remote provider with no declared destination fails schema)', also an explicit acceptance[3] citation; side-effect declaration -> C-stage's 'rejects a tool capability missing must[1] effect fields' (must[1] is exactly the side-effect/auth-audience/destination/data-classification declaration set), carried through to production denial via the same schema-validation-failure -> missing-manifest -> real profile-boot-denial path acceptance[0]'s citations already prove."
+    },
+    {
+      "epic": "P2-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+       {
+        "stage": "C",
+        "title": "keeps rootPrincipal fixed across every extension"
+       },
+       {
+        "stage": "U",
+        "title": "a fresh session with a supplied identity attaches it and durably logs it exactly once"
+       },
+       {
+        "stage": "U",
+        "title": "logs a same-tenant resupply when the actually-attached principal genuinely differs from what is recorded (a real principal swap, not just \"something was already recorded\")"
+       },
+       {
+        "stage": "U",
+        "title": "logs a same-terminal-principal resupply when the chain shape differs -- a different root/depth/provenance underneath an identical terminal principal"
+       },
+       {
+        "stage": "U",
+        "title": "logs a resupply when chain shape and every kind/id/tenantId match but the terminal agent principal's delegatedBy differs (Reviewer round-3 finding, closed in fix4)"
+       }
+      ],
+      "note": "acceptance[0]: 任何 action 都能追溯 root user/tenant 与完整委托链 (any action traceable to root user/tenant and the FULL delegation chain) decomposes into: a stable root anchor ('keeps rootPrincipal fixed across every extension', C-stage -- the root never drifts as a chain is built) and real, durable session-log traceability of every genuine authority-relevant change, proven incrementally across 4 U-stage review rounds each closing a narrower gap in what 'full chain' actually requires: first-attachment logging (basic traceability), a terminal-principal swap being logged (not just 'something changed'), a same-terminal-but-different-chain-shape swap being logged (root/depth/provenance, not just the endpoint), and a same-shape-but-different-delegatedBy swap being logged (who authorized the delegation, not just who is acting). Each citation represents a distinct authority-relevant fact this epic's own review process proved was NOT caught by the weaker checks that preceded it -- omitting any one would silently re-open a gap 3 independent Reviewers each specifically found and required closed."
+    },
+    {
+      "epic": "P2-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+       {
+        "stage": "C",
+        "title": "rejects a cross-tenant principal with TenantMismatchError"
+       },
+       {
+        "stage": "U",
+        "title": "rejects a cross-tenant re-supplied identity via the runtime-policy layer (assertRuntimeTenantPolicy), distinct from extendChain's construction-time check"
+       }
+      ],
+      "note": "acceptance[1]: 跨租户 ID 混用在类型验证和 runtime policy 两层被拒绝 (cross-tenant ID confusion rejected at BOTH the type-validation AND runtime-policy layers) decomposes cleanly 1:1 into the 2 named layers: type-validation layer -> 'rejects a cross-tenant principal with TenantMismatchError' (C-stage's extendChain, construction-time); runtime-policy layer -> 'rejects a cross-tenant re-supplied identity via the runtime-policy layer (assertRuntimeTenantPolicy), distinct from extendChain's construction-time check' (U-stage's real resolveSessionIdentity caller, whose own test title explicitly names this as a genuinely distinct check from the type-validation layer, not a duplicate assertion of the same fact)."
+    },
+    {
+      "epic": "P2-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+       {
+        "stage": "C",
+        "title": "creates an anonymous-dev principal with no adminGrant field"
+       },
+       {
+        "stage": "C",
+        "title": "never treats an anonymous-dev principal as admin"
+       }
+      ],
+      "note": "acceptance[2]: 匿名开发模式有独立受限 principal，不等价于管理员 (anonymous-dev mode has its own independent, restricted principal, never equivalent to admin) decomposes into 2 sub-facts: an independent, structurally-restricted construction path exists ('creates an anonymous-dev principal with no adminGrant field' -- the type itself carries no admin-capable field, not merely a runtime flag left unset) and that path is never treated as admin-equivalent by the real admin check ('never treats an anonymous-dev principal as admin' -- isAdminPrincipal's switch routes this kind to false unconditionally, before ever reading any adminGrant-shaped field, independently re-verified via adversarial bypass attempts during F-stage fault-testing, all defeated)."
     }
 
   ]
