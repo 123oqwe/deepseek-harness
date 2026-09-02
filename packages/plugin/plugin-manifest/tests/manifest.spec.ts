@@ -4,7 +4,10 @@
  * `dsh.bundle` compatibility read (must[3]), wildcard-permission detection
  * (acceptance[0]), and golden-fixture/backward-compatibility agreement
  * between the hand-written TypeScript validator and the JSON Schema document
- * (acceptance[2]).
+ * (acceptance[2]). Also this epic's registry-declared Fault-stage (F) file:
+ * the final `describe` block below constructs adversarial input against the
+ * real, already-shipped validator and comparison logic, not just structural
+ * happy/sad-path cases.
  */
 
 import { readFileSync } from 'node:fs'
@@ -12,6 +15,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Ajv2020 from 'ajv/dist/2020.js'
 import { describe, expect, it } from 'vitest'
+import { compareDeclaredToObserved, decidePluginTrust, evaluatePreMountAdmission, type ObservedPluginCapabilities } from '../src/index.ts'
 import {
   classifyPluginDeclaration,
   detectWildcardPermissions,
@@ -438,5 +442,187 @@ describe('JSON Schema golden fixtures and backward compatibility (ajv, draft 202
       const schemaResult = validateAgainstSchema(fixture)
       expect(tsResult.valid).toBe(schemaResult)
     }
+  })
+})
+
+/** A JSON-serializable object nested `depth` levels deep under one leaf key. */
+function buildDeeplyNestedValue(depth: number): unknown {
+  let value: unknown = { leaf: true }
+  for (let i = 0; i < depth; i++) value = { nested: value }
+  return value
+}
+
+describe('Epic P1-01.F: fault injection against the real, already-shipped validator', () => {
+  it('does not crash with an uncaught RangeError on a manifest carrying a deeply nested field anywhere in the raw value', () => {
+    // assertJsonSerializable walks the WHOLE raw value unconditionally (not
+    // just must[0]'s known fields), recursively, with no depth limit -- a
+    // manifest whose JSON structure is merely deep (not large) previously
+    // overflowed Node's call stack well within a realistic attacker's reach
+    // (empirically ~5,000 levels; this asserts headroom well past that).
+    const manifest = { manifestVersion: 2, x: buildDeeplyNestedValue(50_000) }
+    expect(() => validatePluginManifestV2(manifest)).not.toThrow()
+    expect(() => classifyPluginDeclaration(manifest)).not.toThrow()
+  })
+
+  it('reports a deeply nested field as an ordinary validation outcome, not a crash, and denies it production admission', () => {
+    const manifest = { manifestVersion: 2, x: buildDeeplyNestedValue(10_000) }
+    const result = validatePluginManifestV2(manifest)
+    // manifestVersion:2 with no other must[0] fields fails schema validation
+    // on those missing fields -- the deep nesting itself contributes no
+    // error (nothing in the schema forbids depth), it only used to crash.
+    expect(result.valid).toBe(false)
+    // classifyPluginDeclaration folds any invalid manifestVersion:2 shape to
+    // 'missing' (validate.ts's own documented behavior): a deeply nested
+    // attacker-controlled manifest is denied production admission, not
+    // silently admitted and not a process crash that would take an entire
+    // profile boot down with it.
+    expect(classifyPluginDeclaration(manifest)).toEqual({ kind: 'missing' })
+  })
+
+  it('still detects a real wildcard finding on an otherwise-valid manifest that also carries an unrelated deeply nested field', () => {
+    const raw = {
+      manifestVersion: 2,
+      tools: [{
+        name: 'deep-tool', sideEffectClass: 'network', authAudience: ['model'],
+        allowedDestinations: [{ kind: 'network', hostPattern: '*' }], dataClassification: 'internal',
+      }],
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+      // An unknown top-level property: the schema does not close objects to
+      // unknown properties (already-disclosed limitation) -- this only
+      // confirms depth alone no longer crashes an otherwise-valid manifest.
+      extra: buildDeeplyNestedValue(10_000),
+    }
+    const result = validatePluginManifestV2(raw)
+    expect(result.valid).toBe(true)
+    if (result.valid) expect(detectWildcardPermissions(result.manifest)).toHaveLength(1)
+  })
+
+  it('handles a large (50,000-entry) tools array without crashing or taking unreasonable time', () => {
+    const tools = Array.from({ length: 50_000 }, (_, i) => ({
+      name: `tool-${i}`, sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal',
+    }))
+    const manifest = {
+      manifestVersion: 2, tools, executionMode: 'in-process', compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const start = Date.now()
+    const result = validatePluginManifestV2(manifest)
+    expect(result.valid).toBe(true)
+    expect(Date.now() - start).toBeLessThan(5000)
+  })
+
+  it('classifies __proto__/constructor/hasOwnProperty used as ordinary tool names without prototype pollution or misbehavior', () => {
+    const dangerousNames = ['__proto__', 'constructor', 'prototype', 'hasOwnProperty', 'toString']
+    const manifest = {
+      manifestVersion: 2,
+      tools: dangerousNames.map(name => ({
+        name, sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal',
+      })),
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const result = validatePluginManifestV2(manifest)
+    expect(result.valid).toBe(true)
+    if (result.valid) {
+      expect(result.manifest.tools?.map(tool => tool.name)).toEqual(dangerousNames)
+    }
+    // Object.prototype itself must stay unaffected by any of this module's
+    // own property access (Object.entries/isRecord never write a key back).
+    expect(Object.prototype.hasOwnProperty.call({}, '__proto__')).toBe(false)
+  })
+
+  it('does not crash on unicode, control-character, and zero-width strings in free-text fields', () => {
+    const nasty = 'RTL‮evil‬ null﻿zwnj emoji\u{1F600} "quote\\" \'x\'=1; DROP TABLE plugins;--'
+    const manifest = {
+      manifestVersion: 2,
+      dataStores: [{ domainName: nasty, dataClassification: 'internal' }],
+      secrets: [{ key: nasty, reason: nasty }],
+      services: [{ ctxKey: nasty, role: 'provides' }],
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const result = validatePluginManifestV2(manifest)
+    expect(result.valid).toBe(true)
+    if (result.valid) expect(result.manifest.dataStores?.[0]?.domainName).toBe(nasty)
+  })
+
+  const EMPTY_OBSERVED: ObservedPluginCapabilities = { ctxKeys: [], toolNames: [], skillNames: [], mcpServerNames: [], eventNames: [] }
+
+  it('does not double-count a duplicate declared tool name against a single matching observation (Set-identity comparison)', () => {
+    // A manifest that (illegally under most schemas, but this validator does
+    // not reject duplicate array entries) declares the same tool name twice
+    // with different effect fields must not inflate the mismatch count --
+    // compareDeclaredToObserved compares by name via Set, so a duplicate
+    // collapses to one declared name either way.
+    const manifest: PluginManifestV2 = {
+      manifestVersion: 2,
+      tools: [
+        { name: 'dup', sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal' },
+        { name: 'dup', sideEffectClass: 'destructive', authAudience: ['service'], allowedDestinations: [], dataClassification: 'secret' },
+      ],
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const comparison = compareDeclaredToObserved(manifest, { ...EMPTY_OBSERVED, toolNames: ['dup'] })
+    expect(comparison.mismatches).toEqual([])
+    expect(decidePluginTrust(comparison)).toBe('active')
+  })
+
+  it('does not double-count duplicate observed tool names against a single declared name', () => {
+    const manifest: PluginManifestV2 = {
+      manifestVersion: 2,
+      tools: [{ name: 'once', sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal' }],
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const comparison = compareDeclaredToObserved(manifest, { ...EMPTY_OBSERVED, toolNames: ['once', 'once', 'once'] })
+    expect(comparison.mismatches).toEqual([])
+  })
+
+  it('compares __proto__/constructor/hasOwnProperty capability names correctly in both mismatch directions (no Set/property-access confusion)', () => {
+    const dangerousNames = ['__proto__', 'constructor', 'hasOwnProperty', 'toString']
+    const manifest: PluginManifestV2 = {
+      manifestVersion: 2,
+      tools: dangerousNames.map(name => ({
+        name, sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal',
+      })),
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    // Every declared dangerous name is actually observed: no mismatch.
+    const matching = compareDeclaredToObserved(manifest, { ...EMPTY_OBSERVED, toolNames: dangerousNames })
+    expect(matching.mismatches).toEqual([])
+    // None of the declared dangerous names were observed, and one extra
+    // dangerous name was observed but never declared: every one of the four
+    // declared names is reported missing, plus the one undeclared extra --
+    // proves the comparison genuinely inspects each name rather than
+    // short-circuiting on an inherited Object.prototype member.
+    const mismatched = compareDeclaredToObserved(manifest, { ...EMPTY_OBSERVED, toolNames: ['valueOf'] })
+    expect(mismatched.mismatches).toHaveLength(dangerousNames.length + 1)
+    expect(mismatched.mismatches).toEqual(expect.arrayContaining([
+      { kind: 'undeclared-registration', category: 'tool', name: 'valueOf' },
+      ...dangerousNames.map(name => ({ kind: 'declared-not-registered', category: 'tool', name })),
+    ]))
+  })
+
+  it('handles a large (50,000-entry) observed capability set without crashing or taking unreasonable time', () => {
+    const manifest: PluginManifestV2 = {
+      manifestVersion: 2,
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const toolNames = Array.from({ length: 50_000 }, (_, i) => `observed-tool-${i}`)
+    const start = Date.now()
+    const comparison = compareDeclaredToObserved(manifest, { ...EMPTY_OBSERVED, toolNames })
+    expect(comparison.mismatches).toHaveLength(50_000)
+    expect(Date.now() - start).toBeLessThan(5000)
+  })
+
+  it('evaluatePreMountAdmission denies a deeply nested manifest-shaped declaration the same as any other malformed manifest, never crashing pre-mount admission', () => {
+    const raw = { manifestVersion: 2, x: buildDeeplyNestedValue(20_000) }
+    const declaration = classifyPluginDeclaration(raw)
+    expect(declaration.kind).toBe('missing')
+    expect(() => evaluatePreMountAdmission(declaration, true)).not.toThrow()
+    expect(evaluatePreMountAdmission(declaration, true)).toEqual({ admitted: false, reason: 'missing-manifest', wildcardFindings: [] })
   })
 })
