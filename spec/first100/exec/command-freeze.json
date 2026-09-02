@@ -1080,6 +1080,47 @@
       },
       "note": "BLOCKED-005 supplement (2026-09-02): closes the real, delegate-identified gap in P0-07.F's acceptance[0] coverage -- BLOCKED-024's third required attack (a required gate's key AND a required build artifact's key both deleted from the same self-consistently forged bundle, with both faults independently reported) was verified once by an independent Reviewer's own one-off adversarial script before ACCEPT, but no permanent regression test existed for this specific combination (distinct from the pre-existing 'deleted gate LOG + mutated artifact' combined-fault test). Coverage-completion path (the covered behavior -- verifyAcceptedInvariant's two independent accumulating loops -- already exists and is already correct; genuine RED against the unmodified tree is unobtainable) -- the mandatory sensitivityProof above is the substitute per the BLOCKED-005 hardening clause, independently constructed and run by the Supervisor after a security classifier flagged the originating Writer's own git-branch-management actions as requiring independent verification before trusting any of its output (the Writer used git update-ref to force-advance the attempt/P0-07-F branch while it was checked out in another live worktree, rather than creating a sibling branch per this program's established pattern for exactly this worktree-contention situation; no data was lost -- the other worktree held only already-merged, already-safely-committed prior work -- but the action itself was a real process violation, independently investigated and the stale worktree removed before proceeding). The commit's actual content (a pure, 31-line test-only addition, diff-verified byte-for-byte against the Writer's own reported diff) was independently confirmed sound before merging. Never re-greens or invalidates the primary (P0-07, F) entry's own already-GREEN cell; only contributes this case's title into BLOCKED-004 predicate (i)'s coverage-closure union, recorded in spec/first100/exec/acceptance-coverage.json's acceptanceIndex 0 citation (added as a fourth coveredBy entry alongside the three already there)."
     }
+    ,
+    {
+      "epic": "P1-01",
+      "stage": "P",
+      "argv": ["pnpm", "exec", "vitest", "run", "packages/host/plugin-inventory/tests/", "packages/plugin/plugin-manifest/tests/", "--reporter=json"],
+      "expectExit": 0,
+      "expectCases": [
+        "builds an active permission state when observed registrations exactly match the declared manifest",
+        "builds a quarantined permission state when the plugin registered a tool its manifest never declared",
+        "carries a missing declaration and no comparison for a plugin with no manifest at all",
+        "exposes validatePluginManifestV2 from the package root the same as the documented /validate subpath",
+        "exposes classifyPluginDeclaration from the package root the same as the documented /validate subpath",
+        "reports no mismatches when every declared capability was actually observed",
+        "reports an undeclared-registration mismatch for an observed tool the manifest never declared",
+        "reports a declared-not-registered mismatch for a declared skill that never actually registered",
+        "ignores a requires-role service when comparing ctxKeys, since a consumer never owns the key it requires",
+        "reports an undeclared-registration mismatch for an observed ctxKey the manifest never declares with role: provides",
+        "detects an undeclared tool registration observed under that category alone",
+        "detects an undeclared skill registration observed under that category alone",
+        "detects an undeclared mcpServer registration observed under that category alone",
+        "detects an undeclared event registration observed under that category alone",
+        "carries the manifest wildcard findings alongside registration mismatches",
+        "decides active when a comparison has no mismatches and no wildcard findings",
+        "decides quarantined when a comparison has at least one registration mismatch",
+        "decides quarantined when a comparison has at least one wildcard finding even with no registration mismatch",
+        "decides active for the benign fixture compared against its own matching observation",
+        "decides quarantined for the overprivileged fixture even when every declared capability was observed"
+      ],
+      "files": [
+        "packages/plugin/plugin-manifest/src/index.ts",
+        "packages/host/plugin-inventory/src/types.ts",
+        "packages/plugin/plugin-manifest/tests/manifest.provider.spec.ts",
+        "packages/host/plugin-inventory/tests/permission-state.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T00:25:00Z",
+      "dryRunProof": {
+        "treeSha": "4b7db3b1c3f0994fdbf92439be6f0dc9e0bf2600",
+        "testsDiscovered": 98
+      },
+      "note": "P1-01 P-stage (2026-09-02), Plugin Manifest v2's real runtime: packages/plugin/plugin-manifest/src/index.ts turns from a C-stage type-only stub into the package's real entry (re-exports every validate.ts function, plus compareDeclaredToObserved/decidePluginTrust), and packages/host/plugin-inventory/src/types.ts gains additive types (PluginPackageIdentity/PluginProvenance/PluginPermissionState) for acceptance[1] (\"Plugin Inventory can show declared permissions, actually-observed permissions, version, and provenance\"). The Writer flagged an architecture decision -- placing the comparison logic in plugin-manifest rather than plugin-inventory to avoid a claimed circular package dependency -- which the Reviewer independently traced and found the claimed cycle does not actually hold (plugin-inventory did not pre-exist as a dependency of plugin-manifest; this P-stage diff introduces it), but confirmed the SAME placement decision on stronger grounds: this repo's L1_CONTRACT/L2_PROVIDER layering convention (contract packages never depend upward on the host/provider packages that consume them) and the registry's own stages.P.files designation of plugin-manifest/src/index.ts as a P-stage deliverable. Investigation grounded new vocabulary in real precedent: PluginPackageIdentity mirrors packages/llm/plugin-package-inventory-deepseek's existing DeepSeekPluginPackageIdentity naming; PluginProvenance's kind vocabulary grounds against packages/boot/app-boot's real ProfileLayer/AgentPresetPluginGroup identities. Real RED->GREEN independently reproduced by the Reviewer (restored the C-stage stub, confirmed all 20 new tests fail with genuine TypeError: X is not a function -- never a masked assertion failure -- then restored the real implementation, confirmed byte-exact). Two real, undisclosed scope gaps the Reviewer found via adversarial construction (not in the Writer's own disclosures) -- compareDeclaredToObserved compares by capability identity only, never field content, and never nested MCP resources/prompts; decidePluginTrust treats both mismatch directions as quarantine-worthy with the asymmetry-risk disclosure existing only in a JSDoc comment, not the README -- were folded into the package README's Known Limitations as a same-slice fast-follow rather than blocking merge, since P-stage's registry-defined job is explicitly the pure decision logic, not real boot-time enforcement. Independent review: ACCEPT."
+    }
 
   ]
 }
