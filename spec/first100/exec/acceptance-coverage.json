@@ -355,6 +355,70 @@
       ],
       "note": "acceptance[2]: '过期 gate 在 release gate 中失败' (an expired gate fails the release gate) -- a BLOCKED-012-class deviation (scripts/release/feature-gate-expiry.ts wired into the real, pre-existing scripts/release/verify.ts release gate, independently re-verified by a live mutation of a scratch expired gate). U-stage's case proves the real release-gate wiring genuinely fails and names the gate; P-stage's two boundary cases prove the underlying SemVer expiry determination itself is correct exactly at and after the removal version, not merely 'eventually expires'."
     }
+    ,
+    {
+      "epic": "P0-07",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+       {
+        "stage": "P",
+        "title": "detects a mutated byte in a completed gate's captured log file"
+       },
+       {
+        "stage": "P",
+        "title": "detects a mutated byte in a required build artifact after collection"
+       },
+       {
+        "stage": "P",
+        "title": "detects a hand-edited evidence.json itself: recordDigest, package signature, and the re-derived must[2] check all fail"
+       },
+       {
+        "stage": "F",
+        "title": "detects a completed gate's captured log file deleted entirely, distinct from a merely mutated log"
+       },
+       {
+        "stage": "F",
+        "title": "detects a required build artifact's file deleted entirely, distinct from a merely mutated one"
+       },
+       {
+        "stage": "F",
+        "title": "detects the manifest sidecar deleted entirely -- must[2] cannot be re-derived without its required-gate-id and required-artifact-path lists"
+       },
+       {
+        "stage": "F",
+        "title": "detects a required gate silently deleted from requiredGates entirely, self-consistently forged so only the manifest cross-check catches it"
+       },
+       {
+        "stage": "F",
+        "title": "detects and reports multiple independent fault types together in one bundle: a deleted gate log and a separately mutated build artifact"
+       }
+      ],
+      "note": "acceptance[0]: '篡改任一测试日志、二进制或配置后 evidence verify 失败' (tampering any test log, binary, or config makes evidence verify fail). P-stage's three cases prove byte-level mutation detection (log, artifact, and the evidence.json/recordDigest/signature triple itself). F-stage's cases prove the stronger deletion-class tampering (not just corrupted, but entirely absent) across every required-entry kind: gate log, artifact file, the manifest sidecar itself, and -- BLOCKED-024's specific elevated-bar requirement -- a required GATE's key deleted entirely from requiredGates with a forged self-consistent signature ('detects a required gate silently deleted...'), independently reproduced by the Reviewer via their own adversarial script (not just re-running this test) before ACCEPT. BLOCKED-024's other two required attacks map as follows, not all 1:1 to a single dedicated title: the artifact-key-deletion-plus-missing-manifest regression the Reviewer re-verified is covered jointly by the manifest-sidecar-deleted and artifact-file-deleted titles above (both real, both already covered here); the Reviewer's third attack (gate-key deletion AND artifact-key deletion combined in one bundle) was verified via the Reviewer's own standalone adversarial script confirming both faults are independently reported, not against a single dedicated frozen regression test -- the closest permanently-shipped combined-fault-type test is 'detects and reports multiple independent fault types together in one bundle', which combines a deleted gate LOG with a mutated (not deleted) artifact, a related but not identical combination. This distinction is stated explicitly, not glossed over, per the delegate's request to verify the three attacks are genuinely reflected in this epic's own green cells' expectCasesMatched, not merely asserted by the Reviewer's report."
+    }
+    ,
+    {
+      "epic": "P0-07",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "pnpm run evidence:collect/evidence:verify actually execute the real scripts end-to-end against a throwaway fixture"
+       }
+      ],
+      "note": "acceptance[1]: '同一次执行的 evidence 可离线验证' (evidence from one execution can be verified offline). Proven via a real subprocess round-trip against a throwaway fixture -- the real collect script's output is verified by the real verify script with no network/live dependency, the concrete meaning of 'offline' this acceptance clause names."
+    }
+    ,
+    {
+      "epic": "P0-07",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+       {
+        "stage": "U",
+        "title": "AGENTS.md states the evidence-gate reporting convention (acceptance[2]: cite package path and accepted status)"
+       }
+      ],
+      "note": "acceptance[2]: 'Agent 最终回答必须引用 package path 和 accepted 状态' (the agent's final answer must cite the package path and accepted status) -- a documented reporting convention, not runtime/agent-loop code, per this epic's own U-stage note. Wired into AGENTS.md's Conventions section."
+    }
 
   ]
 }
