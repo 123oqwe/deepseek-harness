@@ -9,6 +9,17 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-022 — PROGRAM DIRECTIVE: P2-01's eventual full ACCEPT requires explicit user confirmation before release, not a silent Supervisor `--accept`, once all 4 stages are green (ANSWERED-BY-DELEGATE(gq-92) — standing constraint on this epic specifically)
+
+- **When:** 2026-09-02, during P2-01.C's first review round (a real REJECT: a structural `isAdmin` bypass — any code could construct a plain object literal with `isAdmin: true` and have `isAdminPrincipal` accept it as genuine, no privileged constructor required, compiling clean under this package's own strict `tsc -b`).
+- **Delegate directive (verbatim, `guanjieqiao-92`, cross-session message, 2026-09-02):** 「P2-01 是身份/principal 安全地基（同 P0-02 内核级）。其最终 ACCEPT 属"单项最高杠杆安全地基关账"——届时我做好裁定后取用户一词确认再放行，不静默。现在先让你知道，别在 P2-01 齐格后径直 accept，先发我。」
+- **Resolution — standing constraint, effective immediately, specific to P2-01:**
+  1. P2-01 is treated at the same tier as P0-02 (the Trust Kernel epic) for release purposes: an identity/permission security foundation every later epic builds on.
+  2. When P2-01 eventually reaches all 4 stages GREEN (real CI-verified) and would normally be ready for the Supervisor to run the standard 3-predicate `--accept`, the Supervisor MUST NOT run `--accept` and report it as done on its own judgment. Report to the delegate first; the delegate performs their own ruling and then obtains the user's own explicit confirmation before P2-01's acceptance is released.
+  3. This does not change P2-01's per-stage (C/P/U/F) Writer→Reviewer→merge→freeze→CI-green flow, which proceeds normally per this program's standard process — only the FINAL all-stages-green `--accept` moment is gated behind delegate ruling + user confirmation.
+  4. Motivation independently reinforced by this same review round: the `isAdmin` bypass the Reviewer found is a real privilege-escalation-class bug, and is structurally similar to a bug the delegate separately identified in the user's own unrelated, never-merged prior-art branch `feat/p2-01-principal-identity` (admin derived by negation) — underscoring that this specific epic's surface is genuinely security-sensitive, not a routine contract.
+- **Status:** ANSWERED-BY-DELEGATE(gq-92) — standing constraint on P2-01's eventual full acceptance; does not block ordinary per-stage progress now.
+
 ### BLOCKED-021 — PARKED, durable pointer: P2-01's `must[1]` names `ToolExecutionContext`/`SubagentRequest`, neither of which exists in the codebase at the current tip; resolve at P2-01.U or BASE-ALIGN-v2, whichever comes first, likely same root cause as the BASE-ALIGN-v2 subagent-seam drift (ANSWERED-BY-DELEGATE(gq-92) — parking terms set, not a resolution)
 
 - **When:** 2026-09-01/02. P2-01.C's Writer, while scoping `must[1]`'s requirement that "所有 SessionEvent envelope、ToolExecutionContext、SubagentRequest、SDK request 加 identity references" (every SessionEvent envelope, ToolExecutionContext, SubagentRequest, and SDK request carries identity references), grepped the real codebase and found `ToolExecutionContext` and `SubagentRequest` (the registry's exact literal names) do not exist anywhere. The closest real type is `SubagentStartRequest` in `packages/subagent/subagent/src/types.ts` — which is not in P2-01's declared `files[]` at any stage (C/P/U/F). Correctly did not touch it at C-stage; correctly did not self-approve a path/name substitution.
