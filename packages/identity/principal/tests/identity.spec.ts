@@ -482,6 +482,39 @@ describe('isAnonymousDev / isAdminPrincipal', () => {
       expect(Object.isFrozen(createAgentPrincipal(PrincipalId('a1'), TENANT_A, PrincipalId('u1')))).toBe(true)
       expect(Object.isFrozen(createAnonymousDevPrincipal(PrincipalId('d1'), TENANT_A))).toBe(true)
     })
+
+    // Reviewer follow-up on BLOCKED-026 (fix round attempt/P2-01-U-fix2-030724):
+    // the delegate's original directive read "铸造出的 principal + grant 必须
+    // Object.freeze" -- principal AND grant, both. The tests above only ever
+    // froze the principal object wrapping the grant; the AdminGrant token
+    // itself (`mintAdminGrant`'s return value) stayed extensible, so a caller
+    // holding a real admin principal reference could add an arbitrary own
+    // property to `principal.adminGrant` in place with no error. These tests
+    // prove the token itself is now frozen too.
+    it('freezes the AdminGrant token itself, not only the principal object wrapping it', () => {
+      const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+      expect(admin.adminGrant).toBeDefined()
+      expect(Object.isFrozen(admin.adminGrant)).toBe(true)
+    })
+
+    it('freezes the AdminGrant token for an admin service principal too', () => {
+      const admin = createAdminServicePrincipal(PrincipalId('svc-admin'), TENANT_A)
+      expect(admin.adminGrant).toBeDefined()
+      expect(Object.isFrozen(admin.adminGrant)).toBe(true)
+    })
+
+    it('rejects mutating an admin user principal\'s adminGrant token in place: adding an own property throws (ESM strict mode) and the token is left structurally unchanged', () => {
+      const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+      const grant = admin.adminGrant as unknown as Record<string, unknown>
+      expect(() => {
+        grant.forged = true
+      }).toThrow(TypeError)
+      expect(Object.keys(grant)).toEqual([])
+      expect(Object.getOwnPropertyNames(grant)).toEqual([])
+      // The forged mutation attempt failed outright, so the token that
+      // isAdminPrincipal checks is still the untouched original.
+      expect(isAdminPrincipal(admin)).toBe(true)
+    })
   })
 })
 

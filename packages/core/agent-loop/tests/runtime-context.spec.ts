@@ -110,4 +110,28 @@ describe('resolveSessionIdentity', () => {
     const supplied = identityFor(TENANT_B)
     expect(() => resolveSessionIdentity(recorded, supplied)).toThrow(TenantMismatchError)
   })
+
+  // Reviewer follow-up (fix round attempt/P2-01-U-fix2-030724): a resumed
+  // session accepting a genuinely different same-tenant principal must log
+  // that swap, or a later reader of the session log never learns the new
+  // principal actually acted. The prior round's tests all used
+  // `identityFor(TENANT_A)`'s default 'u1' on both sides, which are
+  // `.toEqual`-indistinguishable, so `recorded === undefined` was the only
+  // signal `shouldLog` ever needed to be correct against those fixtures --
+  // exactly why this gap went uncaught. These use two explicitly different
+  // principal ids at the SAME tenant.
+  it('logs a same-tenant resupply when the actually-attached principal genuinely differs from what is recorded (a real principal swap, not just "something was already recorded")', () => {
+    const recorded = identityFor(TENANT_A, 'user-a')
+    const supplied = identityFor(TENANT_A, 'user-b')
+    const result = resolveSessionIdentity(recorded, supplied)
+    expect(result).toEqual({ identity: supplied, shouldLog: true })
+  })
+
+  it('does not log a same-tenant resupply when the actually-attached principal is the same identity as recorded, even as a distinct object', () => {
+    const recorded = identityFor(TENANT_A, 'user-a')
+    const supplied = identityFor(TENANT_A, 'user-a')
+    expect(recorded).not.toBe(supplied)
+    const result = resolveSessionIdentity(recorded, supplied)
+    expect(result).toEqual({ identity: supplied, shouldLog: false })
+  })
 })

@@ -60,10 +60,21 @@ const adminGrantOwners = new WeakMap<AdminGrant, UserPrincipal | ServicePrincipa
  * register it in {@link adminGrantOwners} against the exact principal object
  * it ends up attached to — the object cannot exist before its own token
  * does, so binding happens as a second step in each constructor below.
- * @returns a token `isAdminPrincipal` recognizes only once bound to its owner.
+ *
+ * Frozen before return (registry P2-01 BLOCKED-026, hard gate for U-stage
+ * enforcement wiring, applied to the grant token itself and not only the
+ * principal wrapping it): `adminGrantOwners` binds by object identity, so a
+ * legitimate holder of the token could otherwise add an arbitrary own
+ * property to it in place — the token itself stays `===` its recorded owner
+ * key, so `isAdminPrincipal` would keep recognizing it, but any downstream
+ * code that trusts the token's shape as an opaque marker would see a
+ * silently mutated value. `Object.freeze` makes that a no-op in sloppy mode
+ * and a thrown `TypeError` in strict mode (this package's ESM modules are
+ * always strict).
+ * @returns a frozen token `isAdminPrincipal` recognizes only once bound to its owner.
  */
 function mintAdminGrant(): AdminGrant {
-  return {} as AdminGrant
+  return Object.freeze({} as AdminGrant)
 }
 
 /**

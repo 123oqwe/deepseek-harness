@@ -5,8 +5,8 @@
 
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContextSnapshotSection } from '@deepseek-ai/dsh-llm'
-import { assertRuntimeTenantPolicy, currentTenantId } from '@deepseek-ai/dsh-principal'
-import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
+import { assertRuntimeTenantPolicy, currentPrincipal, currentTenantId } from '@deepseek-ai/dsh-principal'
+import type { IdentityContext, Principal } from '@deepseek-ai/dsh-principal/types'
 import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
 import { isReplacementSurfaceEvent } from '@deepseek-ai/dsh-session'
 import type { Context } from '@deepseek-ai/cordis'
@@ -96,6 +96,22 @@ export function lastAttachedIdentity(session: Session): IdentityContext | undefi
 }
 
 /**
+ * Whether two principals are the same identity: same `kind`, `id`, and
+ * `tenantId`. Structural equality, not object identity — a principal
+ * re-hydrated from a durable `identity/attached` event and one freshly
+ * constructed for a new run are never the same object even when they name
+ * the same real-world actor, so `===` is the wrong check here (unlike
+ * `./chain.ts`'s `adminGrantOwners`, which deliberately does want object
+ * identity for its own, different reason).
+ * @param a - first principal.
+ * @param b - second principal.
+ * @returns `true` when `a` and `b` share `kind`, `id`, and `tenantId`.
+ */
+function samePrincipalIdentity(a: Principal, b: Principal): boolean {
+  return a.kind === b.kind && a.id === b.id && a.tenantId === b.tenantId
+}
+
+/**
  * Resolve which {@link IdentityContext} a live agent should attach for this
  * run, and whether that resolution must be durably logged (first100 registry
  * P2-01 acceptance[0]/[1]).
@@ -109,8 +125,20 @@ export function lastAttachedIdentity(session: Session): IdentityContext | undefi
  * `dsh-principal`): it rejects a resumed session whose caller now claims a
  * different tenant than the one this exact session was already established
  * for (registry P2-01 gate: "request tenant equals authenticated tenant").
- * A first-ever attachment (no prior recording) has nothing to validate
- * against and is accepted, then logged once.
+ * A same-tenant resupply is not itself rejected — `dsh-principal` has no
+ * precedent anywhere for treating a same-tenant, different-principal resupply
+ * as an anomaly (`assertRuntimeTenantPolicy` only ever compares tenant ids,
+ * never principal identity), and a resumed session legitimately continuing
+ * under a different same-tenant principal — an operator taking over from an
+ * automated service account, for instance — is an ordinary case this module
+ * must still make traceable, not a forgery to reject. So it is logged
+ * instead: `shouldLog` is `true` whenever the principal this run actually
+ * attaches (`kind`/`id`/`tenantId`, via {@link samePrincipalIdentity}) differs
+ * from what is currently recorded, not only on the session's first-ever
+ * attachment — otherwise a later reader of the session log would see only
+ * the original principal and never learn a different one actually acted,
+ * undermining acceptance[0]'s "any action traceable to root user/tenant and
+ * full delegation chain".
  * @param recorded - the identity a prior run already attached to this session, from {@link lastAttachedIdentity}.
  * @param supplied - this run's own `AgentOptions.identity`, if any.
  * @throws {@link TenantMismatchError} (`@deepseek-ai/dsh-principal/types`) when `supplied` claims a tenant that differs from `recorded`'s.
@@ -124,5 +152,7 @@ export function resolveSessionIdentity(
   if (recorded !== undefined) {
     assertRuntimeTenantPolicy(recorded, currentTenantId(supplied.chain))
   }
-  return { identity: supplied, shouldLog: recorded === undefined }
+  const shouldLog = recorded === undefined
+    || !samePrincipalIdentity(currentPrincipal(recorded.chain), currentPrincipal(supplied.chain))
+  return { identity: supplied, shouldLog }
 }

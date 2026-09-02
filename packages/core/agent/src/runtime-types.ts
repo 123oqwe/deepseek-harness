@@ -36,11 +36,12 @@ export interface AgentOptions {
    * The principal acting as this agent and its delegation chain back to
    * root, to attach as `Agent.identity` (`./types.ts`, first100 registry
    * P2-01 acceptance[0]). `Agent.identity` is `readonly`, so a constructor
-   * option is the only type-level path a caller has to supply it; still
-   * type-only for now, since no `Agent` implementation reads this option and
-   * attaches it yet -- that wiring is a later first100 stage's job (see
-   * `@deepseek-ai/dsh-principal/types`'s module doc for why this package's
-   * own runtime module is not built yet).
+   * option is the only type-level path a caller has to supply it.
+   * `ReactLoopAgent` (`@deepseek-ai/dsh-agent-loop`) is the real reader: its
+   * constructor resolves this option against the session's already-recorded
+   * identity via `resolveSessionIdentity`
+   * (`@deepseek-ai/dsh-agent-loop/runtime-context`) and attaches the result
+   * as `Agent.identity`.
    */
   identity?: IdentityContext
 }
