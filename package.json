@@ -134,6 +134,8 @@
     "first100:generate-identity": "node scripts/first100/attest.ts --generate-identity",
     "first100:slice-gate": "npm run verify-module-graph && npm run verify-export-jsdoc && npm run verify-doc-budgets && npm run verify-translation-pairing && npm run constraints",
     "first100:slice-gate-cordis": "npm run first100:slice-gate && npm run verify-cordis-catalog && npm run verify-cordis-api && npm run verify-cordis-inspect-catalog",
+    "first100:verify-specs": "node scripts/first100/generate-specs.ts --check",
+    "first100:slice-gate-registry": "npm run first100:slice-gate && npm run first100:verify-specs",
     "gen-tool-catalog": "tsx scripts/gen-tool-catalog.ts",
     "verify-tool-catalog": "tsx scripts/gen-tool-catalog.ts --check",
     "gen-config-catalog": "tsx scripts/gen-config-catalog.ts",
