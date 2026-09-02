@@ -46,3 +46,29 @@ export interface FlakeRegistryCheckResult {
 }
 
 export function checkFailureSetAgainstFlakeRegistry(failedFullNames: Set<string>, registry: unknown): FlakeRegistryCheckResult
+
+export interface DelegateSignoffEntry {
+  epic: string
+  rowDigestSha256: string
+  conclusion: string
+  delegateSession?: string
+  signedAtUtc?: string
+  userConfirmationRef?: string
+  note?: string
+}
+
+export interface DelegateSignoffResult {
+  valid: boolean
+  reason: 'missing' | 'stale' | 'missing-user-confirmation-ref' | null
+  currentRowDigest: string
+  matchedEntry?: DelegateSignoffEntry
+}
+
+export function rowDigest(row: unknown): string
+
+export function checkDelegateSignoff(
+  epicId: string,
+  row: unknown,
+  signoffRegistry: unknown,
+  userConfirmationTierEpics?: Set<string>,
+): DelegateSignoffResult

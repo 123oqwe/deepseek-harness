@@ -31,14 +31,28 @@
  *
  * Maintainer decision BLOCKED-004/BLOCKED-005 (2026-09-01): a row transitions
  * to `independentVerdict: 'APPROVED'`/`status: 'ACCEPTED'` only via
- * `--accept`, once every applicable (non-N/A) stage is GREEN and three
+ * `--accept`, once every applicable (non-N/A) stage is GREEN and four
  * hardening predicates all pass: (i) coverage closure (every registry
  * `acceptance[]` index has a CI-observed-passing covering case, per
  * `spec/first100/exec/acceptance-coverage.json`), (ii) candidate-chain
- * consistency, (iii) observation mutual-distinctness (row-level B7① recheck).
- * `--supplement` records a real observation for a later-discovered
- * acceptance-coverage gap's `supplements`-tagged command-freeze entry,
- * without touching the primary entry's own already-GREEN cell.
+ * consistency, (iii) observation mutual-distinctness (row-level B7① recheck),
+ * (iv) delegate sign-off (BLOCKED-036, 2026-09-02). `--supplement` records a
+ * real observation for a later-discovered acceptance-coverage gap's
+ * `supplements`-tagged command-freeze entry, without touching the primary
+ * entry's own already-GREEN cell.
+ *
+ * Predicate (iv), BLOCKED-036: `--accept` is a Supervisor-run command (the
+ * delegate `guanjieqiao-92` never executes anything directly, per the C7
+ * role-boundary correction recorded in BLOCKED-036) -- without a mechanical
+ * check, nothing stops the Supervisor from running `--accept` before the
+ * delegate's own three-predicate deep-verify actually happens, the exact
+ * "constraint held by discipline alone" shape BLOCKED-034 exists to catch.
+ * `spec/first100/exec/delegate-signoff.json` (append-only) records each real
+ * sign-off, written only via `--record-signoff` (below) after the delegate
+ * states their conclusion verbatim, and bound to a sha256 digest of the
+ * epic's own ledger row at sign-off time -- any later change to that row
+ * (a new cell greened, coverage re-cited, etc.) silently invalidates the
+ * sign-off, forcing a fresh one rather than accepting a stale approval.
  *
  * CLI:
  *   node scripts/first100/generate-ledger.mjs --init
@@ -52,9 +66,15 @@
  *     --stage <C|P|U|F> --supplement-seq <n> --report <path> \
  *     --ci-run-url <url> --candidate-sha <sha>
  *     record a real observation for a supplement entry (BLOCKED-005).
+ *   node scripts/first100/generate-ledger.mjs --record-signoff --epic <id> \
+ *     --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>] \
+ *     [--delegate-session <name>]
+ *     record the delegate's real three-predicate deep-verify sign-off for
+ *     the epic's CURRENT ledger row state (BLOCKED-036). `--user-confirmation-ref`
+ *     is required for an epic in `USER_CONFIRMATION_TIER_EPICS`.
  *   node scripts/first100/generate-ledger.mjs --accept --epic <id>
  *     transition the row to ACCEPTED once all applicable cells are GREEN and
- *     all three hardening predicates pass (BLOCKED-004).
+ *     all four hardening predicates pass (BLOCKED-004, BLOCKED-036).
  *   node scripts/first100/generate-ledger.mjs --check
  *     verify the committed ledger.json's generatedBy/inputDigest header is
  *     consistent with its own recorded cell inputs (detects hand-editing).
@@ -89,6 +109,18 @@ const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.j
 const ACCEPTANCE_COVERAGE_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-coverage.json')
 const FLAKE_REGISTRY_PATH = join(REPO_ROOT, 'spec/first100/exec/flake-registry.json')
 const EXEC_STATE_PATH = join(REPO_ROOT, 'spec/first100/exec/EXEC-STATE.json')
+const SIGNOFF_PATH = join(REPO_ROOT, 'spec/first100/exec/delegate-signoff.json')
+
+/**
+ * Epics whose eventual `--accept` requires explicit user confirmation before
+ * release, not a silent Supervisor accept, per standing program directives:
+ * P0-02 (Trust Kernel, BLOCKED-011 final ruling), P2-01 (identity, BLOCKED-022),
+ * P0-07 (completion-gate mechanism, BLOCKED-024, elevated to the same tier as
+ * the other two). Fixed here (not a config file) because it is a security
+ * invariant this program depends on, not a deployment-varying choice -- a
+ * silently-editable list would defeat predicate (iv)'s own purpose.
+ */
+const USER_CONFIRMATION_TIER_EPICS = new Set(['P0-02', 'P2-01', 'P0-07'])
 
 function loadJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'))
@@ -633,6 +665,97 @@ export function checkObservationDistinctness(row, applicableStages, freeze, epic
 }
 
 /**
+ * Deterministic digest of a ledger row's own state -- the value a sign-off
+ * entry binds to, and the value re-checked at `--accept` time. Computed from
+ * the row object exactly as loaded from `ledger.json` (stable key order
+ * across a load/store round-trip through the same JSON.parse/JSON.stringify
+ * pair), so an unrelated ledger write (a different epic's cell greening)
+ * never perturbs it, but any change to THIS row (a new cell, a re-cited
+ * coverage entry, etc.) does.
+ * @param {object} row - a `ledger.json` `rows[epicId]` entry.
+ * @returns {string} sha256 hex digest of the row's canonical JSON.
+ */
+export function rowDigest(row) {
+  return sha256(JSON.stringify(row))
+}
+
+/**
+ * BLOCKED-036 (2026-09-02) predicate (iv): delegate sign-off. `--accept` is
+ * Supervisor-run (the delegate never executes commands directly, per the C7
+ * role-boundary correction) -- without this check, nothing mechanical stops
+ * an accept from running before the delegate's own three-predicate deep-verify
+ * actually happened. Requires a `spec/first100/exec/delegate-signoff.json`
+ * entry for this exact epic whose `rowDigestSha256` matches the row's CURRENT
+ * digest (a stale sign-off, from before the row last changed, does not
+ * count). An epic in `userConfirmationTierEpics` additionally requires that
+ * entry to carry a non-empty `userConfirmationRef`.
+ * @param {string} epicId - registry epic id.
+ * @param {object} row - the epic's current `ledger.json` row.
+ * @param {{entries?: Array<{epic: string, rowDigestSha256: string, conclusion: string, userConfirmationRef?: string}>}} signoffRegistry - loaded `delegate-signoff.json`.
+ * @param {Set<string>} [userConfirmationTierEpics] - defaults to `USER_CONFIRMATION_TIER_EPICS`.
+ */
+export function checkDelegateSignoff(epicId, row, signoffRegistry, userConfirmationTierEpics = USER_CONFIRMATION_TIER_EPICS) {
+  const currentDigest = rowDigest(row)
+  const entries = (signoffRegistry?.entries ?? []).filter((e) => e.epic === epicId && e.conclusion === 'PASS')
+  const matching = entries.find((e) => e.rowDigestSha256 === currentDigest)
+  if (!matching) {
+    return {
+      valid: false,
+      reason: entries.length > 0 ? 'stale' : 'missing',
+      currentRowDigest: currentDigest,
+    }
+  }
+  if (userConfirmationTierEpics.has(epicId) && !matching.userConfirmationRef) {
+    return { valid: false, reason: 'missing-user-confirmation-ref', currentRowDigest: currentDigest }
+  }
+  return { valid: true, reason: null, currentRowDigest: currentDigest, matchedEntry: matching }
+}
+
+function cmdRecordSignoff() {
+  const epic = opt('epic')
+  const conclusion = opt('conclusion')
+  const userConfirmationRef = opt('user-confirmation-ref')
+  const note = opt('note')
+  const delegateSession = opt('delegate-session', 'guanjieqiao-92')
+  if (!epic || conclusion !== 'PASS') {
+    console.error('usage: generate-ledger.mjs --record-signoff --epic <id> --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>] [--delegate-session <name>]')
+    process.exit(1)
+  }
+  const registry = loadJson(REGISTRY_PATH)
+  if (!registry.epics.some((e) => e.id === epic)) {
+    console.error(`unknown epic ${epic} (not in tests/first100/registry.json)`)
+    process.exit(1)
+  }
+  if (!existsSync(LEDGER_PATH)) {
+    console.error(`no ledger at ${LEDGER_PATH} — run --init first`)
+    process.exit(1)
+  }
+  const ledger = loadJson(LEDGER_PATH)
+  const row = ledger.rows[epic]
+  if (!row) {
+    console.error(`no ledger row for ${epic}`)
+    process.exit(1)
+  }
+  if (USER_CONFIRMATION_TIER_EPICS.has(epic) && !userConfirmationRef) {
+    console.error(`BLOCKED: ${epic} is in the user-confirmation release tier (BLOCKED-011/022/024) — pass --user-confirmation-ref pointing at the decisions-approved.md entry`)
+    process.exit(1)
+  }
+
+  const signoffRegistry = existsSync(SIGNOFF_PATH) ? loadJson(SIGNOFF_PATH) : { schema: { name: 'first100-delegate-signoff', version: '1.0' }, entries: [] }
+  signoffRegistry.entries.push({
+    epic,
+    rowDigestSha256: rowDigest(row),
+    conclusion,
+    delegateSession,
+    signedAtUtc: nowIso(),
+    ...(userConfirmationRef ? { userConfirmationRef } : {}),
+    ...(note ? { note } : {}),
+  })
+  writeFileSync(SIGNOFF_PATH, `${JSON.stringify(signoffRegistry, null, 2)}\n`, 'utf8')
+  console.log(`recorded sign-off for ${epic} (row digest ${rowDigest(row)}) — ${signoffRegistry.entries.length} total entries`)
+}
+
+/**
  * Maintainer decision BLOCKED-004 (2026-09-01): the row-ACCEPTED write path
  * -- the only place `independentVerdict`/`status` ever transition off
  * `PENDING`/`NOT_RUN`. Trigger: every non-N/A stage the registry declares for
@@ -677,9 +800,12 @@ function cmdAccept() {
   const freeze = loadJson(COMMAND_FREEZE_PATH)
   const coverage = loadJson(ACCEPTANCE_COVERAGE_PATH)
 
+  const signoffRegistry = existsSync(SIGNOFF_PATH) ? loadJson(SIGNOFF_PATH) : { entries: [] }
+
   const closure = checkCoverageClosure(epic, registry, freeze, coverage, row)
   const chain = checkCandidateChainConsistency(row, applicableStages)
   const distinctness = checkObservationDistinctness(row, applicableStages, freeze, epic)
+  const signoff = checkDelegateSignoff(epic, row, signoffRegistry)
 
   const failures = []
   if (!closure.valid) {
@@ -694,6 +820,12 @@ function cmdAccept() {
   if (!distinctness.valid) {
     failures.push(`predicate (iii) observation mutual-distinctness: shared observation file(s) between ${JSON.stringify(distinctness.conflicts)}`)
   }
+  if (!signoff.valid) {
+    const reasonText = { missing: 'no PASS sign-off recorded', stale: 'recorded sign-off is stale (row changed since)', 'missing-user-confirmation-ref': 'sign-off missing required --user-confirmation-ref (user-confirmation-tier epic)' }[signoff.reason]
+    failures.push(
+      `predicate (iv) delegate sign-off (BLOCKED-036): ${reasonText} — run: node scripts/first100/generate-ledger.mjs --record-signoff --epic ${epic} --conclusion PASS (row digest ${signoff.currentRowDigest})`,
+    )
+  }
   if (failures.length > 0) {
     console.error(`BLOCKED: ${epic} fails ${failures.length} predicate(s):\n  ${failures.join('\n  ')}`)
     process.exit(1)
@@ -705,9 +837,10 @@ function cmdAccept() {
     acceptedAtUtc: nowIso(),
     cells: Object.fromEntries(applicableStages.map((stage) => [stage, { ciRunUrl: row.cells[stage].ciRunUrl, candidateSha: row.cells[stage].candidateSha }])),
     coverageClosure: closure,
+    delegateSignoff: { delegateSession: signoff.matchedEntry.delegateSession, signedAtUtc: signoff.matchedEntry.signedAtUtc, userConfirmationRef: signoff.matchedEntry.userConfirmationRef ?? null },
   }
 
-  const inputsConsumed = { epic, closure, chain, distinctness }
+  const inputsConsumed = { epic, closure, chain, distinctness, signoff }
   const outLedger = writeLedgerHeader(ledger.rows, inputsConsumed)
   renderMarkdown(outLedger)
   console.log(`ACCEPTED ${epic}: independentVerdict=APPROVED, status=ACCEPTED`)
@@ -733,11 +866,12 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (flag('init')) cmdInit()
   else if (flag('check')) cmdCheck()
   else if (flag('accept')) cmdAccept()
+  else if (flag('record-signoff')) cmdRecordSignoff()
   else if (flag('supplement')) cmdGreenSupplement()
   else if (opt('epic')) cmdGreen()
   else {
     console.error(
-      'usage: generate-ledger.mjs --init | --check | --accept --epic <id> | --epic <id> --stage <C|P|U|F> --report <path> --ci-run-url <url> --candidate-sha <sha> | --supplement --epic <id> --stage <C|P|U|F> --supplement-seq <n> --report <path> --ci-run-url <url> --candidate-sha <sha>',
+      'usage: generate-ledger.mjs --init | --check | --accept --epic <id> | --epic <id> --stage <C|P|U|F> --report <path> --ci-run-url <url> --candidate-sha <sha> | --supplement --epic <id> --stage <C|P|U|F> --supplement-seq <n> --report <path> --ci-run-url <url> --candidate-sha <sha> | --record-signoff --epic <id> --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>]',
     )
     process.exit(1)
   }

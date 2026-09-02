@@ -29,8 +29,10 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   checkCandidateChainConsistency,
   checkCoverageClosure,
+  checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
   checkObservationDistinctness,
+  rowDigest,
 } from './generate-ledger.mjs'
 
 // checkCandidateChainConsistency's real usage always runs locally against
@@ -230,6 +232,83 @@ describe('checkObservationDistinctness', () => {
     const result = checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)
     expect(result.valid).toBe(false)
     expect(result.conflicts).toEqual([['C', 'F']])
+  })
+})
+
+describe('checkDelegateSignoff (BLOCKED-036, 2026-09-02)', () => {
+  const row = { cells: { C: { status: 'GREEN' } } }
+  const otherRow = { cells: { C: { status: 'GREEN' }, F: { status: 'GREEN' } } }
+  const digest = rowDigest(row)
+
+  it('red: no sign-off registry at all', () => {
+    const result = checkDelegateSignoff('E1', row, { entries: [] }, new Set())
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('missing')
+    expect(result.currentRowDigest).toBe(digest)
+  })
+
+  it('red: a sign-off exists for a different epic', () => {
+    const registry = { entries: [{ epic: 'E2', rowDigestSha256: digest, conclusion: 'PASS' }] }
+    const result = checkDelegateSignoff('E1', row, registry, new Set())
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('missing')
+  })
+
+  it('red (stale): a sign-off exists for this epic but the row has changed since (digest mismatch)', () => {
+    const registry = { entries: [{ epic: 'E1', rowDigestSha256: rowDigest(otherRow), conclusion: 'PASS' }] }
+    const result = checkDelegateSignoff('E1', row, registry, new Set())
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('stale')
+  })
+
+  it('red: a FAIL-conclusion entry does not count even at a matching digest', () => {
+    const registry = { entries: [{ epic: 'E1', rowDigestSha256: digest, conclusion: 'FAIL' }] }
+    const result = checkDelegateSignoff('E1', row, registry, new Set())
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('missing')
+  })
+
+  it('green: a PASS sign-off at the current row digest, epic not in the user-confirmation tier', () => {
+    const registry = { entries: [{ epic: 'E1', rowDigestSha256: digest, conclusion: 'PASS', delegateSession: 'guanjieqiao-92' }] }
+    const result = checkDelegateSignoff('E1', row, registry, new Set())
+    expect(result.valid).toBe(true)
+    expect(result.matchedEntry.delegateSession).toBe('guanjieqiao-92')
+  })
+
+  it('red: a user-confirmation-tier epic with a PASS sign-off but no userConfirmationRef', () => {
+    const registry = { entries: [{ epic: 'P2-01', rowDigestSha256: rowDigest(row), conclusion: 'PASS' }] }
+    const result = checkDelegateSignoff('P2-01', row, registry, new Set(['P2-01']))
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('missing-user-confirmation-ref')
+  })
+
+  it('green: a user-confirmation-tier epic with a PASS sign-off AND a userConfirmationRef', () => {
+    const registry = {
+      entries: [{ epic: 'P2-01', rowDigestSha256: rowDigest(row), conclusion: 'PASS', userConfirmationRef: 'decisions-approved.md#C8' }],
+    }
+    const result = checkDelegateSignoff('P2-01', row, registry, new Set(['P2-01']))
+    expect(result.valid).toBe(true)
+    expect(result.matchedEntry.userConfirmationRef).toBe('decisions-approved.md#C8')
+  })
+
+  it('rowDigest: identical row content produces the identical digest regardless of object identity', () => {
+    expect(rowDigest({ cells: { C: { status: 'GREEN' } } })).toBe(digest)
+  })
+
+  it('rowDigest: a genuinely different row produces a different digest', () => {
+    expect(rowDigest(otherRow)).not.toBe(digest)
+  })
+
+  it('default userConfirmationTierEpics (no 4th arg): a non-tier epic with a valid PASS sign-off is green', () => {
+    const registry = { entries: [{ epic: 'E1', rowDigestSha256: digest, conclusion: 'PASS' }] }
+    expect(checkDelegateSignoff('E1', row, registry).valid).toBe(true)
+  })
+
+  it('default userConfirmationTierEpics (no 4th arg): the real user-confirmation-tier epic P2-01 requires a ref', () => {
+    const registry = { entries: [{ epic: 'P2-01', rowDigestSha256: digest, conclusion: 'PASS' }] }
+    const result = checkDelegateSignoff('P2-01', row, registry)
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('missing-user-confirmation-ref')
   })
 })
 
