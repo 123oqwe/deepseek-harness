@@ -126,6 +126,11 @@
       "@deepseek-ai/dsh-agent/types": ["./packages/core/agent/src/types.ts"],
       "@deepseek-ai/dsh-agent/brand": ["./packages/core/agent/src/brand.ts"],
       "@deepseek-ai/dsh-agent/invariant": ["./packages/core/agent/src/invariant.ts"],
+      // No bare/index alias yet: src/index.ts is first100 registry P2-01's
+      // P-stage file, not yet created. These two submodule aliases are the
+      // only cross-package entry points C-stage exposes.
+      "@deepseek-ai/dsh-principal/types": ["./packages/identity/principal/src/types.ts"],
+      "@deepseek-ai/dsh-principal/chain": ["./packages/identity/principal/src/chain.ts"],
       "@deepseek-ai/dsh-scope/invariant": ["./packages/core/scope/src/invariant.ts"],
       "@deepseek-ai/dsh-agent-loop/invariant": ["./packages/core/agent-loop/src/invariant.ts"],
       "@deepseek-ai/dsh-experimental-agent-team/invariant": ["./packages/experimental/agent-team/src/invariant.ts"],
@@ -248,6 +253,13 @@
       // so these aliases stay hand-written like dsh-util-crypto above.
       "@deepseek-ai/dsh-util-time": ["./packages/util/time/src"],
       "@deepseek-ai/dsh-util-time/invariant": ["./packages/util/time/src/invariant.ts"],
+      // The generator (scripts/gen-tsconfig-paths.ts) only ever emits a bare
+      // and /invariant alias per package; dsh-evidence-format's /types
+      // subpath needs its own hand-written entry, kept outside the generated
+      // region below like dsh-principal/types above, or a regeneration
+      // silently drops it (as happened once already — restored per first100
+      // P2-01(C) fix-round review).
+      "@deepseek-ai/dsh-evidence-format/types": ["./packages/assurance/evidence-format/src/types.ts"],
       // BEGIN generated package aliases — pnpm run gen-tsconfig-paths
       "@deepseek-ai/dsh-acp": ["./packages/acp/acp/src"],
       "@deepseek-ai/dsh-acp/invariant": ["./packages/acp/acp/src/invariant.ts"],
@@ -323,7 +335,6 @@
       "@deepseek-ai/dsh-e2b": ["./packages/e2b/e2b/src"],
       "@deepseek-ai/dsh-e2b/invariant": ["./packages/e2b/e2b/src/invariant.ts"],
       "@deepseek-ai/dsh-evidence-format": ["./packages/assurance/evidence-format/src"],
-      "@deepseek-ai/dsh-evidence-format/types": ["./packages/assurance/evidence-format/src/types.ts"],
       "@deepseek-ai/dsh-evidence-format/invariant": ["./packages/assurance/evidence-format/src/invariant.ts"],
       "@deepseek-ai/dsh-file-reference": ["./packages/context/file-reference/src"],
       "@deepseek-ai/dsh-file-reference/invariant": ["./packages/context/file-reference/src/invariant.ts"],
@@ -398,6 +409,8 @@
       "@deepseek-ai/dsh-plugin-manifest/invariant": ["./packages/plugin/plugin-manifest/src/invariant.ts"],
       "@deepseek-ai/dsh-plugin-package-inventory-deepseek": ["./packages/llm/plugin-package-inventory-deepseek/src"],
       "@deepseek-ai/dsh-plugin-package-inventory-deepseek/invariant": ["./packages/llm/plugin-package-inventory-deepseek/src/invariant.ts"],
+      "@deepseek-ai/dsh-principal": ["./packages/identity/principal/src"],
+      "@deepseek-ai/dsh-principal/invariant": ["./packages/identity/principal/src/invariant.ts"],
       "@deepseek-ai/dsh-pwsh-local/invariant": ["./packages/shell/pwsh-local/src/invariant.ts"],
       "@deepseek-ai/dsh-pwsh-sandbox": ["./packages/shell/pwsh-sandbox/src"],
       "@deepseek-ai/dsh-pwsh-sandbox/invariant": ["./packages/shell/pwsh-sandbox/src/invariant.ts"],

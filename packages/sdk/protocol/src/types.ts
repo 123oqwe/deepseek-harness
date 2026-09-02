@@ -21,9 +21,25 @@
  */
 
 import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { SchemaVersion } from '@deepseek-ai/dsh-schema-registry'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
+
+/**
+ * Optional identity reference reserved for SDK request params and
+ * notification payloads that need to carry a traceable principal and
+ * delegation chain (first100 registry P2-01 must[1]). Not yet attached to any
+ * {@link HarnessSdkRequestMap}/{@link HarnessSdkNotificationMap} payload:
+ * wiring a specific payload to carry `identity` is a wire-shape change that
+ * needs its own schema-registry version bump, which is a later first100
+ * stage's job (see `@deepseek-ai/dsh-principal/types`'s module doc for why
+ * this identity package's own runtime module is not built yet).
+ */
+export interface SdkIdentityReference {
+  /** The principal, run, and delegation chain behind the carrying request or notification. */
+  readonly identity: IdentityContext
+}
 
 /**
  * Parameters for the process-wide SDK handshake.
