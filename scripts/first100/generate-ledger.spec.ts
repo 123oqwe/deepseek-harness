@@ -272,7 +272,7 @@ describe('checkDelegateSignoff (BLOCKED-036, 2026-09-02)', () => {
     const registry = { entries: [{ epic: 'E1', rowDigestSha256: digest, conclusion: 'PASS', delegateSession: 'guanjieqiao-92' }] }
     const result = checkDelegateSignoff('E1', row, registry, new Set())
     expect(result.valid).toBe(true)
-    expect(result.matchedEntry.delegateSession).toBe('guanjieqiao-92')
+    expect(result.matchedEntry?.delegateSession).toBe('guanjieqiao-92')
   })
 
   it('red: a user-confirmation-tier epic with a PASS sign-off but no userConfirmationRef', () => {
@@ -288,7 +288,7 @@ describe('checkDelegateSignoff (BLOCKED-036, 2026-09-02)', () => {
     }
     const result = checkDelegateSignoff('P2-01', row, registry, new Set(['P2-01']))
     expect(result.valid).toBe(true)
-    expect(result.matchedEntry.userConfirmationRef).toBe('decisions-approved.md#C8')
+    expect(result.matchedEntry?.userConfirmationRef).toBe('decisions-approved.md#C8')
   })
 
   it('rowDigest: identical row content produces the identical digest regardless of object identity', () => {
