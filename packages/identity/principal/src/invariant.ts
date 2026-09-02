@@ -17,7 +17,7 @@ export const inject = ['invariants']
 /**
  * No runtime invariant: this package is a pure type contract and pure
  * delegation-chain functions, with no event stream or mutable module state
- * to compare (the `adminGrants` registry in `./chain.ts` is a private
+ * to compare (the `adminGrantOwners` registry in `./chain.ts` is a private
  * unforgeability check, not a public relation).
  */
 const install: InvariantInstaller = () => {}

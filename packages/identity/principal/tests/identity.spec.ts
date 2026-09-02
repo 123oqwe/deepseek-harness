@@ -29,6 +29,7 @@ import {
   TenantMismatchError,
   type AgentPrincipal,
   type Principal,
+  type ServicePrincipal,
   type UserPrincipal,
 } from '../src/types.ts'
 
@@ -317,6 +318,53 @@ describe('isAnonymousDev / isAdminPrincipal', () => {
       '{"kind":"user","id":"attacker","tenantId":"tenant-a","adminGrant":{}}',
     ) as unknown as UserPrincipal
     expect(isAdminPrincipal(parsed)).toBe(false)
+  })
+
+  it('rejects a genuine adminGrant token reused via object literal on a principal with a different id and tenantId than it was minted for', () => {
+    // Second-round Reviewer's exact repro: a real, already-registered token
+    // reattached to a completely different identity.
+    const legitAdmin = createAdminUserPrincipal(PrincipalId('legit-admin'), TENANT_A)
+    const spoofed: UserPrincipal = {
+      kind: 'user',
+      id: PrincipalId('attacker'),
+      tenantId: TENANT_B,
+      adminGrant: legitAdmin.adminGrant!,
+    }
+    expect(isAdminPrincipal(spoofed)).toBe(false)
+  })
+
+  it('rejects a genuine adminGrant token reused via object literal on an attacker-constructed principal whose id and tenantId exactly match the real admin it was minted for', () => {
+    // PrincipalId/TenantId (./types.ts) brand any string with zero runtime
+    // gating, so an attacker who has merely observed a real admin's id and
+    // tenantId (routinely non-secret — logged, shown in URLs/UI) can
+    // reconstruct them exactly; only object-identity binding (not id/tenantId
+    // value equality) closes this, because the reconstructed object is a
+    // different object from the one the grant was bound to at mint time.
+    const legitAdmin = createAdminUserPrincipal(PrincipalId('legit-admin'), TENANT_A)
+    const impersonator: UserPrincipal = {
+      kind: 'user',
+      id: PrincipalId('legit-admin'),
+      tenantId: TENANT_A,
+      adminGrant: legitAdmin.adminGrant!,
+    }
+    expect(impersonator).not.toBe(legitAdmin)
+    expect(isAdminPrincipal(impersonator)).toBe(false)
+  })
+
+  it('rejects a genuine adminGrant token reused via object literal on a different-kind principal (service) carrying the admin user principal\'s own id and tenantId', () => {
+    const legitAdmin = createAdminUserPrincipal(PrincipalId('legit-admin'), TENANT_A)
+    const crossKind: ServicePrincipal = {
+      kind: 'service',
+      id: PrincipalId('legit-admin'),
+      tenantId: TENANT_A,
+      adminGrant: legitAdmin.adminGrant!,
+    }
+    expect(isAdminPrincipal(crossKind)).toBe(false)
+  })
+
+  it('still recognizes a real admin principal as admin when checked as itself, unmodified', () => {
+    const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+    expect(isAdminPrincipal(admin)).toBe(true)
   })
 })
 

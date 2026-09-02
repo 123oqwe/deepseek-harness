@@ -90,8 +90,9 @@ export type PrincipalKind = 'user' | 'service' | 'agent' | 'anonymous-dev'
 declare const ADMIN_GRANT: unique symbol
 
 /**
- * Unforgeable proof that a principal was constructed through
- * {@link ../chain.ts}'s `createAdminUserPrincipal`/`createAdminServicePrincipal`.
+ * Unforgeable proof that THIS SPECIFIC principal object was constructed
+ * through {@link ../chain.ts}'s `createAdminUserPrincipal`/`createAdminServicePrincipal`
+ * — not merely that some principal, somewhere, was.
  *
  * `ADMIN_GRANT` is a module-private, compile-time-only `unique symbol`
  * (mirrors {@link Branded}), so no plain object literal can satisfy this
@@ -99,11 +100,17 @@ declare const ADMIN_GRANT: unique symbol
  * `isAdmin: boolean` field left open (a literal `isAdmin: true` needed no
  * cast at all). That alone is still compile-time-only and, like every brand
  * in this module, defeatable by a cast (see this module's top-of-file
- * note); the real enforcement is `./chain.ts`'s private `adminGrants`
- * `WeakSet`, which `isAdminPrincipal` checks by object identity — a check no
- * `as` cast and no JSON-deserialized object can pass, because membership
- * requires a reference `createAdminUserPrincipal`/`createAdminServicePrincipal`
- * itself minted and registered.
+ * note); the real enforcement is `./chain.ts`'s private `adminGrantOwners`
+ * `WeakMap`, which binds each grant to the exact principal object
+ * `createAdminUserPrincipal`/`createAdminServicePrincipal` returned it in,
+ * and `isAdminPrincipal` checks by object identity (`===`) against that
+ * recorded owner. This defeats both a forged token (no `as` cast and no
+ * JSON-deserialized object can ever appear as a map key) and reuse of a
+ * real, stolen token reattached to a different principal object — including
+ * one an attacker builds with the exact same `id`/`tenantId` as the real
+ * admin via the public, ungated `PrincipalId`/`TenantId` brand functions —
+ * because a reconstructed object, however field-identical, is never `===`
+ * the one object identity was bound to at mint time.
  */
 export type AdminGrant = { readonly [ADMIN_GRANT]: true }
 

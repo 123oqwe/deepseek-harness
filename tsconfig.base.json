@@ -253,6 +253,13 @@
       // so these aliases stay hand-written like dsh-util-crypto above.
       "@deepseek-ai/dsh-util-time": ["./packages/util/time/src"],
       "@deepseek-ai/dsh-util-time/invariant": ["./packages/util/time/src/invariant.ts"],
+      // The generator (scripts/gen-tsconfig-paths.ts) only ever emits a bare
+      // and /invariant alias per package; dsh-evidence-format's /types
+      // subpath needs its own hand-written entry, kept outside the generated
+      // region below like dsh-principal/types above, or a regeneration
+      // silently drops it (as happened once already — restored per first100
+      // P2-01(C) fix-round review).
+      "@deepseek-ai/dsh-evidence-format/types": ["./packages/assurance/evidence-format/src/types.ts"],
       // BEGIN generated package aliases — pnpm run gen-tsconfig-paths
       "@deepseek-ai/dsh-acp": ["./packages/acp/acp/src"],
       "@deepseek-ai/dsh-acp/invariant": ["./packages/acp/acp/src/invariant.ts"],

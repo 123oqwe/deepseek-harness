@@ -28,22 +28,42 @@ import {
 
 /**
  * Every {@link AdminGrant} `createAdminUserPrincipal`/`createAdminServicePrincipal`
- * have minted. Membership is by object identity: unlike `AdminGrant`'s
- * compile-time-only brand (`./types.ts`), this check survives an explicit
- * `as` cast or a JSON-deserialized object claiming the field, because
- * nothing outside this module can ever obtain a reference already in this
- * set (registry P2-01 gate: "Admin is explicit capability").
+ * have minted, mapped to the exact principal object each was minted for.
+ * Binding by object identity (not by `id`/`tenantId` value equality) is
+ * required because {@link PrincipalId}/{@link TenantId} are unforgeable only
+ * at the type level — `./types.ts`'s `PrincipalId(raw)`/`TenantId(raw)` brand
+ * any string with no runtime gating, so a value-equality check would accept
+ * an attacker-built object literal carrying a real admin's `id`/`tenantId`
+ * (both routinely non-secret — logged, shown in URLs/UI) plus that admin's
+ * stolen `adminGrant` token. Checking object identity against the recorded
+ * owner instead means only the exact object one of these two constructors
+ * returned can ever pass — a freshly-built literal, however byte-identical
+ * its fields, is never `===` that object. This also makes a `kind` mismatch
+ * (a service grant reattached to a user-shaped object, or vice versa)
+ * impossible to smuggle through: `kind` is a property of the one bound
+ * object, so binding to that object's identity binds `kind` along with it —
+ * no separate `kind` check is needed (registry P2-01 gate: "Admin is
+ * explicit capability").
+ *
+ * This does not survive a process/wire boundary: a principal serialized out
+ * and deserialized back in (a session store round trip, an RPC call) is a
+ * new object, never `===` the one minted here, so a legitimately re-hydrated
+ * admin principal would fail this check too. Closing that gap needs a
+ * serialization-aware identity representation, which is a later stage's job
+ * (the same kind of deferred, disclosed gap as `./types.ts`'s must[2] note on
+ * prompt-text inference) — not attempted here.
  */
-const adminGrants = new WeakSet<AdminGrant>()
+const adminGrantOwners = new WeakMap<AdminGrant, UserPrincipal | ServicePrincipal>()
 
 /**
- * Mint one fresh, registered {@link AdminGrant} token.
- * @returns a token only `isAdminPrincipal` (via `adminGrants`) recognizes as genuine.
+ * Mint one fresh, as yet unbound {@link AdminGrant} token. The caller must
+ * register it in {@link adminGrantOwners} against the exact principal object
+ * it ends up attached to — the object cannot exist before its own token
+ * does, so binding happens as a second step in each constructor below.
+ * @returns a token `isAdminPrincipal` recognizes only once bound to its owner.
  */
 function mintAdminGrant(): AdminGrant {
-  const grant = {} as AdminGrant
-  adminGrants.add(grant)
-  return grant
+  return {} as AdminGrant
 }
 
 /**
@@ -63,10 +83,13 @@ export function createUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPr
  * (registry P2-01 validation[2]).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} carrying a freshly minted {@link AdminGrant}.
+ * @returns a {@link UserPrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
  */
 export function createAdminUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
-  return { kind: 'user', id, tenantId, adminGrant: mintAdminGrant() }
+  const adminGrant = mintAdminGrant()
+  const principal: UserPrincipal = { kind: 'user', id, tenantId, adminGrant }
+  adminGrantOwners.set(adminGrant, principal)
+  return principal
 }
 
 /**
@@ -86,10 +109,13 @@ export function createServicePrincipal(id: PrincipalId, tenantId: TenantId): Ser
  * (registry P2-01 validation[2]).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant}.
+ * @returns a {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
  */
 export function createAdminServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
-  return { kind: 'service', id, tenantId, adminGrant: mintAdminGrant() }
+  const adminGrant = mintAdminGrant()
+  const principal: ServicePrincipal = { kind: 'service', id, tenantId, adminGrant }
+  adminGrantOwners.set(adminGrant, principal)
+  return principal
 }
 
 /**
@@ -289,19 +315,23 @@ export function isAnonymousDev(principal: Principal): boolean {
  * Whether a principal holds the explicit admin capability. Never derived by
  * negation (e.g. "not anonymous-dev") — only `user`/`service` principals can
  * carry an {@link AdminGrant}, and it must be a genuine token registered by
- * `createAdminUserPrincipal`/`createAdminServicePrincipal` (registry P2-01
- * gate: "Admin is explicit capability"). The `adminGrants` `WeakSet` check
- * verifies this by object identity, so a hand-built object literal, an
- * explicit `as` cast, or a JSON-deserialized object can never pass — only a
- * reference those two constructors themselves minted can.
+ * `createAdminUserPrincipal`/`createAdminServicePrincipal` for this exact
+ * principal object (registry P2-01 gate: "Admin is explicit capability").
+ * The `adminGrantOwners` `WeakMap` check verifies both by object identity: a
+ * hand-built object literal, an explicit `as` cast, or a JSON-deserialized
+ * object can never appear as a key (only a reference those two constructors
+ * themselves minted can); and a genuine, stolen token reattached to a
+ * different — even field-identical — principal object fails the `===`
+ * comparison against the object it was actually minted for, so token reuse
+ * across identities is rejected too, not just outright forgery.
  * @param principal - the principal to check.
- * @returns `true` only for a `user`/`service` principal carrying a genuine, registered {@link AdminGrant}.
+ * @returns `true` only for a `user`/`service` principal carrying a genuine {@link AdminGrant} minted for this exact object.
  */
 export function isAdminPrincipal(principal: Principal): boolean {
   switch (principal.kind) {
     case 'user':
     case 'service':
-      return principal.adminGrant !== undefined && adminGrants.has(principal.adminGrant)
+      return principal.adminGrant !== undefined && adminGrantOwners.get(principal.adminGrant) === principal
     case 'agent':
     case 'anonymous-dev':
       return false
