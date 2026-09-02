@@ -251,10 +251,14 @@ export function dryReport(reg: Registry, repoRoot = resolveRepoRoot()): DryRepor
  * anomaly, no missing explicit command, and no missing required fixture.
  * Maintainer hardening (2026-08-27): a dry run must FAIL when 91 commands or 400
  * fixtures are missing — the runner never claims a catalog is runnable when it
- * cannot actually run all 100 epics.
+ * cannot actually run all N epics (BLOCKED-037: `totalIds === uniqueIds`
+ * replaces a hardcoded `=== 100`, which BASE-ALIGN-v2's new-gap epics would
+ * otherwise make permanently wrong -- `totalIds` is `reg.epics.length` from
+ * the same trusted registry read `report` was built from, so this stays a
+ * real "no duplicates, nothing silently dropped" check, not a loosening).
  */
 export function dryReportOk(report: DryReport): boolean {
-  return report.totalIds === 100 && report.uniqueIds === 100
+  return report.totalIds === report.uniqueIds && report.totalIds > 0
     && report.duplicateIds.length === 0
     && report.invalidIds.length === 0
     && report.rows.every(row => row.fixturesPresent <= 4)

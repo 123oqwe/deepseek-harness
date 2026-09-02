@@ -18,9 +18,9 @@
     "spec/first100-clause-coverage-report.json": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
-      "bytes": 371873,
-      "sha256": "cb3bf6d1f0ba3033a47f39c8fb826d7feb4c56b7b2771f7a05fea13b5597e870",
-      "gitBlobOid": "ea22552a2d352a850b2afd083888f67c085b32af",
+      "bytes": 372116,
+      "sha256": "d92235cce05d8a31f15b29a7e7b533b1dd3243461935ed2bc3f0f7965257c877",
+      "gitBlobOid": "ef237eaf6cf0f52ca3d406d339b35af9d75e8197",
       "generator": "scripts/first100/generate-specs.ts",
       "sourceDigest": "8f98b2ef23252dedcc3872df9138b98387411854cc99152409c7aa3534145fab"
     },
@@ -55,8 +55,8 @@
       "role": "derived-projection",
       "schemaVersion": "1.1",
       "bytes": 990,
-      "sha256": "be8fb76c528b24887f92d1a1bfad0e2be3ea9743e13a90d853424367375fa7b9",
-      "gitBlobOid": "3acc1e03ab7cab32d253ccf57dc2e4b8343fa950",
+      "sha256": "14b40e4dcc31635939e77831c22be702850e25313985196eb68563cf262dc562",
+      "gitBlobOid": "7ae1b365008fd93e75668f7ab5d170d9ce2768ce",
       "generator": "scripts/first100/generate-specs.ts",
       "sourceDigest": "c094f5180eca3eff2d6fcef25c1a97538d628468b6a414da6378dc77640f75be"
     },

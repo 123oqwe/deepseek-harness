@@ -10544,5 +10544,11 @@
         ]
       }
     }
+  },
+  "newGapEpics": {
+    "count": 0,
+    "epicIds": [],
+    "claim": "non-canonical-sourced",
+    "verifiedBy": "extract-registry.mjs --check (byte-exact re-extraction against each epic's own SHA-pinned provenance.source, not this report)"
   }
 }

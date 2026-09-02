@@ -124,6 +124,14 @@ interface Epic {
   verifyCommand: string | null
   stages: Record<'C' | 'P' | 'U' | 'F', Stage>
   fixtures: Record<'contract' | 'provider' | 'composition' | 'fault', string>
+  /**
+   * Absent = canonical (traces to the pinned v1.0 YAML, checked below).
+   * Present = BLOCKED-037 new-gap: traces to its own declared source
+   * instead, verified by extract-registry.mjs's own fail-closed
+   * re-extraction-and-compare, not against v1.0 YAML (which never
+   * described it).
+   */
+  provenance?: { kind: string; source: { path: string; sha256: string }; rationaleDoc: string; authorization: string }
 }
 export interface Registry {
   frozenBaseline: { sha: string; shortSha: string; label: string }
@@ -1469,8 +1477,32 @@ export interface ClauseCoverageReportV11 {
     sourceSpan: string
   }
   documentedBoundaryRule: string
+  /**
+   * `epicsTotal`/`channelsTotal` here count ONLY canonical (non-provenance)
+   * epics -- see `newGapEpics` below for the rest of the registry. Never
+   * silently folded into one denominator.
+   */
   totals: ClauseCoverageTotals
   epics: Record<string, { [K in ClauseChannel]: ClauseChannelReport }>
+  /**
+   * BLOCKED-037: a registry epic tagged `provenance` is deliberately absent
+   * from `totals`/`epics` above (those are strictly "coverage against v1.0
+   * YAML", which such an epic has none of by construction) -- this section
+   * exists so that omission is never mistaken for silence. Coverage claim:
+   * `non-canonical-sourced` (a fact, not `invented`/`undocumented`, which
+   * would wrongly imply a defect) -- each epic's clauses are asserted to
+   * trace 1:1 to its own declared `provenance.source`, an assertion this
+   * report does NOT re-verify (see `verifiedBy`): the real fail-closed
+   * check is extract-registry.mjs's own byte-exact re-extraction-and-
+   * compare against that exact SHA-pinned source, already run before this
+   * report is ever generated.
+   */
+  newGapEpics: {
+    count: number
+    epicIds: string[]
+    claim: 'non-canonical-sourced'
+    verifiedBy: 'extract-registry.mjs --check (byte-exact re-extraction against each epic\'s own SHA-pinned provenance.source, not this report)'
+  }
 }
 
 /** The matrix/registry's documented injection when the YAML lacks non_goals. */
@@ -1597,21 +1629,52 @@ export function scanYamlClauses(yamlText: string): Map<string, Record<ClauseChan
  *  clauses = 0. The 156 documented default-boundary non-goals (78 epics whose
  *  YAML lacks non_goals) are surfaced separately, never hidden. */
 export function renderClauseCoverageReport(reg: Registry, yamlText: string): string {
+  // BLOCKED-037: an epic tagged provenance (BASE-ALIGN-v2 new-gap) never
+  // had a v1.0 YAML clause to begin with -- it postdates that pinned
+  // source by construction (that's the whole reason it needed a new-gap
+  // doc instead of an ordinary matrix.md entry). So it is excluded from
+  // every check below that cross-references v1.0 YAML, and reported in
+  // its own section instead (see canonicalEpics/newGapEpics split).
+  // Its EQUIVALENT obligation -- proving its clauses trace to ITS OWN
+  // declared source, not fabricated -- is not re-checked here: it is
+  // already enforced, fail-closed, by extract-registry.mjs's own
+  // --check (a byte-exact re-extraction-and-compare against the exact
+  // SHA-pinned new-gap doc named in its own `provenance.source`). There
+  // is no second, independent document to cross-reference the way v1.0
+  // YAML cross-references the canonical matrix -- a new-gap doc IS the
+  // primary source, not a transcription of one, so a second check here
+  // would just re-run the same comparison extract-registry.mjs already
+  // makes fail-closed, not add real coverage.
+  const canonicalEpics = reg.epics.filter(e => !e.provenance)
+  const newGapEpics = reg.epics.filter(e => e.provenance)
+
   const scanned = scanYamlClauses(yamlText)
   const parsed = parseYaml(yamlText) as { issues?: Array<Record<string, unknown>> }
   const issues = parsed.issues ?? []
-  if (issues.length !== reg.epics.length) {
-    throw new Error(`clause-coverage: YAML issues ${issues.length} != registry epics ${reg.epics.length}`)
+  if (issues.length !== canonicalEpics.length) {
+    throw new Error(`clause-coverage: YAML issues ${issues.length} != canonical registry epics ${canonicalEpics.length}`)
   }
   const byId = new Set(issues.map(iss => iss.id as string))
 
-  // Fail closed unless every registry epic is present in both the YAML parse
-  // and the line-scan. scanYamlClauses already cross-validates per-item counts
-  // against the js-yaml parse and uses js-yaml text as the authority, so per
-  // item text/line agreement here would be redundant.
-  for (const e of reg.epics) {
+  // Fail closed unless every CANONICAL registry epic is present in both the
+  // YAML parse and the line-scan. scanYamlClauses already cross-validates
+  // per-item counts against the js-yaml parse and uses js-yaml text as the
+  // authority, so per item text/line agreement here would be redundant.
+  for (const e of canonicalEpics) {
     if (!byId.has(e.id)) throw new Error(`clause-coverage: ${e.id} missing from YAML`)
     if (!scanned.has(e.id)) throw new Error(`clause-coverage: ${e.id} missing from YAML scan`)
+  }
+  // Fail closed the other direction too: a provenance-tagged epic that DOES
+  // appear in the canonical v1.0 YAML is mislabeled -- either its
+  // provenance tag is wrong, or it's trying to hide inside the new-gap
+  // category to dodge the canonical cross-check it should actually pass.
+  for (const e of newGapEpics) {
+    if (byId.has(e.id) || scanned.has(e.id)) {
+      throw new Error(`clause-coverage: ${e.id} is tagged provenance (new-gap) but also appears in the canonical v1.0 YAML -- mislabeled, or trying to dodge the canonical cross-check`)
+    }
+    if (!e.provenance || !e.provenance.source.path || !e.provenance.source.sha256) {
+      throw new Error(`clause-coverage: ${e.id} is tagged provenance but its source is not a real, named, SHA-pinned reference`)
+    }
   }
 
   const epics: Record<string, { [K in ClauseChannel]: ClauseChannelReport }> = {}
@@ -1621,7 +1684,7 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
   let undocumentedTotal = 0
   let documentedTotal = 0
 
-  for (const e of reg.epics) {
+  for (const e of canonicalEpics) {
     const channelReports = {} as { [K in ClauseChannel]: ClauseChannelReport }
     let epicFullyMapped = true
     for (const [channel, _yamlKey] of CHANNEL_YAML_KEYS) {
@@ -1698,14 +1761,20 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
       'first100-requirements-matrix.md line 11 — "YAML 未写 non_goals 时，明确记为来源缺失，并采用 Markdown 已注入的最小默认边界"; the registry marker "YAML 来源缺失" + the boundary clause are the only invented clauses, all classified documented-default-boundary',
     totals: {
       epicsMapped,
-      epicsTotal: reg.epics.length,
+      epicsTotal: canonicalEpics.length,
       channelsMapped,
-      channelsTotal: reg.epics.length * CHANNEL_YAML_KEYS.length,
+      channelsTotal: canonicalEpics.length * CHANNEL_YAML_KEYS.length,
       unmatchedSourceClauses: unmatchedTotal,
       inventedUndocumentedClauses: undocumentedTotal,
       inventedDocumentedDefaultBoundaryClauses: documentedTotal,
     },
     epics,
+    newGapEpics: {
+      count: newGapEpics.length,
+      epicIds: newGapEpics.map(e => e.id).sort(),
+      claim: 'non-canonical-sourced',
+      verifiedBy: 'extract-registry.mjs --check (byte-exact re-extraction against each epic\'s own SHA-pinned provenance.source, not this report)',
+    },
   }
   return JSON.stringify(report, null, 2) + '\n'
 }

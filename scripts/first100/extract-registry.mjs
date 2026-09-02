@@ -57,52 +57,111 @@ const actualWaveSha = sha256(waveMapText)
 if (actualMatrixSha !== MATRIX_SHA) throw new Error(`matrix sha mismatch: ${actualMatrixSha}`)
 if (actualWaveSha !== WAVEMAP_SHA) throw new Error(`wave-map sha mismatch: ${actualWaveSha}`)
 
+/**
+ * BLOCKED-037: registry epics whose provenance is `BASE-ALIGN-v2 new-gap` --
+ * never derivable from the 3 canonical pinned docs above, because they
+ * describe capability gaps upstream itself introduced after those docs were
+ * written. The filenames and their SHAs are hardcoded here (never read from
+ * `registry.json`'s own `sourcePins`, which is an OUTPUT record, not an
+ * input -- letting registry data steer what the extractor consumes would
+ * reopen exactly the injection BLOCKED-035 exists to close, one level up).
+ * Adding a future new-gap source (e.g. a P9-class one) means adding an
+ * entry to this array plus its own SHA constant -- a real, reviewed code
+ * change, never a registry.json edit alone. Each is fail-closed SHA-verified
+ * the same way as the 3 canonical docs; a missing/mismatched file blocks
+ * extraction entirely, exactly like a canonical doc mismatch would.
+ */
+const NEWGAP_MATRIX_SHA = 'REPLACE_ME_WHEN_DRAFT_IS_FINALIZED'
+const NEWGAP_WAVEMAP_SHA = 'REPLACE_ME_WHEN_DRAFT_IS_FINALIZED'
+const NEWGAP_SOURCES = [
+  { matrix: 'base-align-v2/new-gap-matrix.md', matrixSha: NEWGAP_MATRIX_SHA, waveMap: 'base-align-v2/new-gap-wavemap.md', waveMapSha: NEWGAP_WAVEMAP_SHA },
+]
+/**
+ * Off by default: today's committed `tests/first100/registry.json` holds
+ * exactly the 100 canonical epics, and BASE-ALIGN-v2's own registry-content
+ * landing (P3-13 itself) is explicitly deferred until the merge tree is CI-
+ * proven clean and the new-gap doc drafts pass Tier-S panel review -- this
+ * flag exists so the mechanism can be built and bidirectionally verified
+ * now without changing that committed file's content one byte.
+ *
+ * Transitional, not a permanent feature: once P3-13's draft is finalized,
+ * SHA-pinned above, and actually landed in the committed registry.json
+ * (making it 101 epics), this gate must be REMOVED so new-gap loading runs
+ * unconditionally -- a flag someone has to remember to pass on every
+ * future `--check`/regeneration is exactly the "invariant held by an
+ * agent's own diligence" shape BLOCKED-034 exists to flag. Do not ship
+ * this flag as a standing feature.
+ */
+const INCLUDE_NEW_GAP = argv.includes('--include-new-gap')
+
 // ---------------------------------------------------------------------------
 // 2. Parse the matrix
 // ---------------------------------------------------------------------------
 const ID_RX = /\bP([0-8])-(\d{2})\b/
 const FIELD_RX = /^- \*\*(.+?)：\*\*(.*)$/
 
-const matrix = new Map() // id -> epic record
-let currentId = null
-let currentTitle = null
-let currentLine = 0
-let currentFields = null
-
-const lines = matrixText.split('\n')
-for (let i = 0; i < lines.length; i++) {
-  const line = lines[i]
-  const head = line.match(/^###\s+(P[0-8]-\d{2})\s+[—-]\s*(.+)$/)
-  if (head) {
-    if (currentId) matrix.set(currentId, { title: currentTitle, line: currentLine, fields: currentFields })
-    currentId = head[1]
-    currentTitle = head[2].trim()
-    currentLine = i + 1
-    currentFields = {}
-    continue
+/**
+ * Parse a matrix-format doc (`### P#-## — Title` headers, then
+ * `- **Label：**value` fields) into `id -> {title, line, fields}`. Shared
+ * by the canonical `first100-requirements-matrix.md` and any BLOCKED-037
+ * new-gap matrix doc -- identical parsing, identical trust level; the only
+ * difference is which SHA-pinned file is handed in.
+ */
+function parseMatrixText(text) {
+  const matrix = new Map()
+  let currentId = null
+  let currentTitle = null
+  let currentLine = 0
+  let currentFields = null
+  const lines = text.split('\n')
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const head = line.match(/^###\s+(P[0-8]-\d{2})\s+[—-]\s*(.+)$/)
+    if (head) {
+      if (currentId) matrix.set(currentId, { title: currentTitle, line: currentLine, fields: currentFields })
+      currentId = head[1]
+      currentTitle = head[2].trim()
+      currentLine = i + 1
+      currentFields = {}
+      continue
+    }
+    if (!currentId) continue
+    const m = line.match(FIELD_RX)
+    if (m) {
+      const label = m[1].trim()
+      const value = m[2].trim()
+      // group field labels into canonical keys
+      let key = null
+      if (label.startsWith('Priority / Wave')) key = 'priorityWave'
+      else if (label.startsWith('Files')) key = 'files'
+      else if (label.startsWith('MUST')) key = 'must'
+      else if (label.startsWith('明确 non-goal')) key = 'nonGoal'
+      else if (label.startsWith('Acceptance')) key = 'acceptance'
+      else if (label.startsWith('Validation')) key = 'validation'
+      else if (label.startsWith('验证命令')) key = 'verifyCommand'
+      else if (label.startsWith('真实任务证据')) key = 'realTask'
+      else if (label.startsWith('规格缺口')) key = 'specGap'
+      else if (label.startsWith('PrimaryLayer')) key = 'primaryLayer' // new-gap docs only; canonical epics get primaryLayer from r0-decision-package.md
+      if (key) currentFields[key] = value
+    }
   }
-  if (!currentId) continue
-  const m = line.match(FIELD_RX)
-  if (m) {
-    const label = m[1].trim()
-    const value = m[2].trim()
-    // group field labels into canonical keys
-    let key = null
-    if (label.startsWith('Priority / Wave')) key = 'priorityWave'
-    else if (label.startsWith('Files')) key = 'files'
-    else if (label.startsWith('MUST')) key = 'must'
-    else if (label.startsWith('明确 non-goal')) key = 'nonGoal'
-    else if (label.startsWith('Acceptance')) key = 'acceptance'
-    else if (label.startsWith('Validation')) key = 'validation'
-    else if (label.startsWith('验证命令')) key = 'verifyCommand'
-    else if (label.startsWith('真实任务证据')) key = 'realTask'
-    else if (label.startsWith('规格缺口')) key = 'specGap'
-    if (key) currentFields[key] = value
+  if (currentId) matrix.set(currentId, { title: currentTitle, line: currentLine, fields: currentFields })
+  return matrix
+}
+
+const matrix = parseMatrixText(matrixText)
+if (matrix.size !== 100) throw new Error(`matrix: expected 100 epic sections, got ${matrix.size}`)
+
+const newGapMatrix = new Map()
+const newGapWaveMap = new Map()
+if (INCLUDE_NEW_GAP) {
+  for (const src of NEWGAP_SOURCES) {
+    const mText = readFileSync(join(SOURCES_DIR, src.matrix), 'utf8')
+    const actualSha = sha256(mText)
+    if (actualSha !== src.matrixSha) throw new Error(`${src.matrix}: sha mismatch (got ${actualSha}, expected ${src.matrixSha}) -- new-gap sources are fail-closed SHA-pinned exactly like the 3 canonical docs`)
+    for (const [id, entry] of parseMatrixText(mText)) newGapMatrix.set(id, entry)
   }
 }
-if (currentId) matrix.set(currentId, { title: currentTitle, line: currentLine, fields: currentFields })
-
-if (matrix.size !== 100) throw new Error(`matrix: expected 100 epic sections, got ${matrix.size}`)
 
 const parseFiles = (s) => {
   const out = []
@@ -138,7 +197,6 @@ const parseRealTask = (s) => {
 // ---------------------------------------------------------------------------
 // 3. Parse the wave map
 // ---------------------------------------------------------------------------
-const waveMap = new Map() // id -> { wave, predecessors, stages, gate, rollback }
 const WAVE_HEAD_RX = /^#{2,4}\s+W(\d{1,2})\b/
 const STAGE_RX = /\*\*([CPUF])(?:\((\d+)\)|=(N\/A)):\*\*/g
 // Split a markdown table row on '|' but NOT inside a backtick-code span. The
@@ -174,57 +232,79 @@ const expandBraces = (p) => {
   return m[2].split(',').map((alt) => `${m[1]}${alt}${m[3]}`)
 }
 
-let wave = null
-for (const raw of waveMapText.split('\n')) {
-  const wh = raw.match(WAVE_HEAD_RX)
-  if (wh && Number(wh[1]) >= 1 && Number(wh[1]) <= 19) {
-    wave = Number(wh[1])
-    continue
+/**
+ * Parse a wave-map-format doc (`## W<n>` wave headers, then
+ * `| Title | predecessors | **C(n):**... **P(n):**... **U(n):**... **F(n):**...
+ * | Gate | Rollback |` table rows) into `id -> {wave, predecessors, stages,
+ * gate, rollback}`. Shared by the canonical `implementation-wave-map.md`
+ * and any BLOCKED-037 new-gap wave-map doc -- identical parsing, identical
+ * trust level, identical stage file-count consistency check.
+ */
+function parseWaveMapText(text) {
+  const waveMap = new Map()
+  let wave = null
+  for (const raw of text.split('\n')) {
+    const wh = raw.match(WAVE_HEAD_RX)
+    if (wh && Number(wh[1]) >= 1 && Number(wh[1]) <= 19) {
+      wave = Number(wh[1])
+      continue
+    }
+    // canonical epic table row: | P0-01 — title | predecessor | stages | gate | rollback |
+    const row = raw.match(/^\|\s*(P[0-8]-\d{2})\s+[—-]\s*(.+?)\s*\|(.+)$/)
+    if (row && wave !== null) {
+      const id = row[1]
+      const cells = splitMarkdownRow(row[3])
+      // cells[0] = title remainder (may be empty since title was captured in row[2]); then predecessor, stages, gate, rollback
+      const predecessorCell = cells[0] ?? ''
+      const stageCell = cells[1] ?? ''
+      const gateCell = cells[2] ?? ''
+      const rollbackCell = cells[3] ?? ''
+      const predecessors = predecessorCell === '—' || predecessorCell === '' || predecessorCell === '无'
+        ? []
+        : [...new Set([...predecessorCell.matchAll(/P[0-8]-\d{2}/g)].map((m) => m[0]))]
+      const stages = {}
+      STAGE_RX.lastIndex = 0
+      const segs = []
+      let m
+      while ((m = STAGE_RX.exec(stageCell))) segs.push({ key: m[1], na: m[3] === 'N/A', count: m[3] === 'N/A' ? null : Number(m[2]), pos: m.index })
+      for (let i = 0; i < segs.length; i++) {
+        const end = i + 1 < segs.length ? segs[i + 1].pos : stageCell.length
+        const body = stageCell.slice(segs[i].pos, end)
+        const fileMatches = []
+        FILE_TICK_RX.lastIndex = 0
+        let fm
+        while ((fm = FILE_TICK_RX.exec(body))) {
+          if (isFilePath(fm[1])) fileMatches.push(fm[1])
+        }
+        const files = fileMatches.flatMap(expandBraces)
+        let reason = null
+        if (segs[i].na) {
+          reason = body.replace(/\*\*P=N\/A:\*\*/, '').replace(/`[^`]+`/g, '').replace(/^\s*[—\-–]\s*/, '').trim()
+          if (!reason) reason = 'kernel/reference-monitor or static rule, not a replaceable provider'
+        }
+        stages[segs[i].key] = segs[i].na
+          ? { nOf: 'N/A', reason, files: [], count: 0 }
+          : { nOf: null, files, count: files.length }
+      }
+      // stage file-count consistency: declared count must equal expanded count
+      for (const k of ['C', 'P', 'U', 'F']) {
+        if (stages[k] && !stages[k].nOf && stages[k].count !== segs.find((s) => s.key === k)?.count) {
+          throw new Error(`${id} stage ${k}: declared count ${segs.find((s) => s.key === k)?.count} != expanded ${stages[k].count}`)
+        }
+      }
+      waveMap.set(id, { wave, predecessors, stages, gate: gateCell, rollback: rollbackCell })
+    }
   }
-  // canonical epic table row: | P0-01 — title | predecessor | stages | gate | rollback |
-  const row = raw.match(/^\|\s*(P[0-8]-\d{2})\s+[—-]\s*(.+?)\s*\|(.+)$/)
-  if (row && wave !== null) {
-    const id = row[1]
-    const cells = splitMarkdownRow(row[3])
-    // cells[0] = title remainder (may be empty since title was captured in row[2]); then predecessor, stages, gate, rollback
-    const predecessorCell = cells[0] ?? ''
-    const stageCell = cells[1] ?? ''
-    const gateCell = cells[2] ?? ''
-    const rollbackCell = cells[3] ?? ''
-    const predecessors = predecessorCell === '—' || predecessorCell === '' || predecessorCell === '无'
-      ? []
-      : [...new Set([...predecessorCell.matchAll(/P[0-8]-\d{2}/g)].map((m) => m[0]))]
-    const stages = {}
-    STAGE_RX.lastIndex = 0
-    const segs = []
-    let m
-    while ((m = STAGE_RX.exec(stageCell))) segs.push({ key: m[1], na: m[3] === 'N/A', count: m[3] === 'N/A' ? null : Number(m[2]), pos: m.index })
-    for (let i = 0; i < segs.length; i++) {
-      const end = i + 1 < segs.length ? segs[i + 1].pos : stageCell.length
-      const body = stageCell.slice(segs[i].pos, end)
-      const fileMatches = []
-      FILE_TICK_RX.lastIndex = 0
-      let fm
-      while ((fm = FILE_TICK_RX.exec(body))) {
-        if (isFilePath(fm[1])) fileMatches.push(fm[1])
-      }
-      const files = fileMatches.flatMap(expandBraces)
-      let reason = null
-      if (segs[i].na) {
-        reason = body.replace(/\*\*P=N\/A:\*\*/, '').replace(/`[^`]+`/g, '').replace(/^\s*[—\-–]\s*/, '').trim()
-        if (!reason) reason = 'kernel/reference-monitor or static rule, not a replaceable provider'
-      }
-      stages[segs[i].key] = segs[i].na
-        ? { nOf: 'N/A', reason, files: [], count: 0 }
-        : { nOf: null, files, count: files.length }
-    }
-    // stage file-count consistency: declared count must equal expanded count
-    for (const k of ['C', 'P', 'U', 'F']) {
-      if (stages[k] && !stages[k].nOf && stages[k].count !== segs.find((s) => s.key === k)?.count) {
-        throw new Error(`${id} stage ${k}: declared count ${segs.find((s) => s.key === k)?.count} != expanded ${stages[k].count}`)
-      }
-    }
-    waveMap.set(id, { wave, predecessors, stages, gate: gateCell, rollback: rollbackCell })
+  return waveMap
+}
+
+const waveMap = parseWaveMapText(waveMapText)
+if (INCLUDE_NEW_GAP) {
+  for (const src of NEWGAP_SOURCES) {
+    const wText = readFileSync(join(SOURCES_DIR, src.waveMap), 'utf8')
+    const actualSha = sha256(wText)
+    if (actualSha !== src.waveMapSha) throw new Error(`${src.waveMap}: sha mismatch (got ${actualSha}, expected ${src.waveMapSha}) -- new-gap sources are fail-closed SHA-pinned exactly like the 3 canonical docs`)
+    for (const [id, entry] of parseWaveMapText(wText)) newGapWaveMap.set(id, entry)
   }
 }
 
@@ -233,6 +313,23 @@ const wavesUsed = [...new Set([...waveMap.values()].map((e) => e.wave))].sort((a
 if (wavesUsed.length !== 19 || wavesUsed[0] !== 1 || wavesUsed[18] !== 19) {
   throw new Error(`wave-map: expected waves 1..19, got ${wavesUsed.join(',')}`)
 }
+
+/**
+ * Merge new-gap epics into the SAME Maps the canonical 100 already live in,
+ * strictly AFTER every canonical-count/wave-coverage assertion above has
+ * already run against the unmerged 100 -- so those checks keep validating
+ * exactly what they always validated, unaffected by anything added here.
+ * From this point on, the epic-assembly loop below runs unchanged over
+ * every id in `matrix`/`waveMap`: a new-gap epic is built through the exact
+ * same code path as a canonical one, not a parallel or looser one.
+ */
+const newGapEpicIds = new Set(newGapMatrix.keys())
+for (const id of newGapEpicIds) {
+  if (!newGapWaveMap.has(id)) throw new Error(`${id}: present in a new-gap matrix doc but missing from its wave-map companion`)
+  if (matrix.has(id)) throw new Error(`${id}: new-gap epic id collides with an existing canonical epic id`)
+}
+for (const [id, entry] of newGapMatrix) matrix.set(id, entry)
+for (const [id, entry] of newGapWaveMap) waveMap.set(id, entry)
 
 // ---------------------------------------------------------------------------
 // 4. Parse the decision package (primaryLayer + source-certified ambiguous ids)
@@ -315,19 +412,29 @@ const EVIDENCE_SCHEMA = [
 // 6. Assemble the registry
 // ---------------------------------------------------------------------------
 const groupCounts = {}
+const newGapCounts = {}
 const epics = []
 const ids = [...matrix.keys()].sort()
 
 for (const id of ids) {
   const { title, line, fields } = matrix.get(id)
+  const isNewGap = newGapEpicIds.has(id)
   const { priority, wave, deps } = parsePriorityWave(fields.priorityWave || '')
   const wm = waveMap.get(id)
   if (!wm) throw new Error(`${id}: missing wave-map row`)
-  const layer = layerById.get(id)
+  // Canonical epics get primaryLayer from r0-decision-package.md's independent
+  // mapping table; a new-gap epic has no entry there (it postdates that doc),
+  // so it declares its own PrimaryLayer field directly in its matrix source.
+  const layer = isNewGap ? fields.primaryLayer : layerById.get(id)
   if (!layer) throw new Error(`${id}: missing layer`)
   // phase comes from the ID prefix (P0-01 → phase 0); matrix `priority` is a priority class.
   const phaseNum = Number(id[1])
-  groupCounts[`P${phaseNum}`] = (groupCounts[`P${phaseNum}`] || 0) + 1
+  // groupCounts stays exactly what it always meant -- the 100 canonical
+  // epics only, checked against EXPECTED_COUNTS below unaffected by
+  // anything new-gap. New-gap epics get their own, separately-labeled
+  // count so nothing here silently changes an existing field's meaning.
+  if (isNewGap) newGapCounts[`P${phaseNum}`] = (newGapCounts[`P${phaseNum}`] || 0) + 1
+  else groupCounts[`P${phaseNum}`] = (groupCounts[`P${phaseNum}`] || 0) + 1
 
   const must = splitClauses(fields.must || '')
   const acceptance = splitClauses(fields.acceptance || '')
@@ -348,14 +455,16 @@ for (const id of ids) {
     wave: wm.wave,
     predecessors: declaredDeps,
     primaryLayer: layer,
-    layerSource: 'r0-decision-package.md §2 full mapping (Agent A)',
-    layerStatus: ambiguous.has(id) ? 'PENDING_MAINTAINER_ADJUDICATION' : 'AGENT_A_PROPOSED',
+    layerSource: isNewGap ? 'base-align-v2/new-gap-matrix.md (delegate-confirmed)' : 'r0-decision-package.md §2 full mapping (Agent A)',
+    layerStatus: isNewGap ? 'DELEGATE_CONFIRMED' : ambiguous.has(id) ? 'PENDING_MAINTAINER_ADJUDICATION' : 'AGENT_A_PROPOSED',
     canonicalOwner: specOwnerEpics.has(id) ? id : 'UNASSIGNED_UNTIL_APPROVAL',
     files: parseFiles(fields.files || ''),
     must,
     acceptance,
     nonGoals,
-    acceptanceSource: { path: 'first100-requirements-matrix.md', sha256: MATRIX_SHA, line },
+    acceptanceSource: isNewGap
+      ? { path: 'base-align-v2/new-gap-matrix.md', sha256: NEWGAP_MATRIX_SHA, line }
+      : { path: 'first100-requirements-matrix.md', sha256: MATRIX_SHA, line },
     validation,
     verifyCommand: fields.verifyCommand || null,
     realTask,
@@ -368,6 +477,21 @@ for (const id of ids) {
     },
     gate: wm.gate,
     rollback: wm.rollback,
+    // Absent = implicitly canonical (CANONICAL_EXTRACTION_FROM_PINNED_SOURCES,
+    // matching the registry's own top-level provenance.status). Present =
+    // BASE-ALIGN-v2 new-gap: its equivalent obligation is tracing every
+    // clause to THIS source (checkNewGapClauseCoverage in generate-specs.ts),
+    // not to the v1.0 YAML the 100 canonical epics trace to.
+    ...(isNewGap
+      ? {
+          provenance: {
+            kind: 'BASE-ALIGN-v2 new-gap',
+            source: { path: 'spec/first100/sources/base-align-v2/new-gap-matrix.md', sha256: NEWGAP_MATRIX_SHA },
+            rationaleDoc: 'spec/first100/sources/base-align-v2/upstream-status-COMPLETE.md §三',
+            authorization: 'decisions-approved.md#C8',
+          },
+        }
+      : {}),
   }
   epics.push(epic)
 }
@@ -397,6 +521,16 @@ const registry = {
   layerEnum: LAYER_ENUM,
   ownerStates: ['UNASSIGNED_UNTIL_APPROVAL'],
   groupCounts: EXPECTED_COUNTS,
+  // Separate field from groupCounts by design (BLOCKED-037): groupCounts
+  // keeps meaning exactly what it always meant -- the 100 canonical epics
+  // -- never redefined to "the total" and never silently including
+  // new-gap epics. Present only when at least one new-gap epic actually
+  // exists in this build (matching sourcePins'/provenance's own
+  // absent-not-zeroed convention below) -- so today's committed
+  // registry.json, extracted with INCLUDE_NEW_GAP off, stays byte-for-byte
+  // unchanged by this field's existence. Extractor-computed, never
+  // hand-edited.
+  ...(newGapEpicIds.size > 0 ? { newGapCounts } : {}),
   waveCount: 19,
   exitSemantics: {
     accept: 'ACCEPTED',
@@ -410,6 +544,19 @@ const registry = {
     'first100-requirements-matrix.md': { sha256: MATRIX_SHA, role: 'verbatim acceptance/nonGoals/files/must/validation/command source' },
     'implementation-wave-map.md': { sha256: WAVEMAP_SHA, role: 'wave/predecessor/stage/gate/rollback source' },
     'r0-decision-package.md': { sha256: sha256(decisionText), role: 'primaryLayer mapping + source-certified ambiguous ids + R0.1/R0.4 rule set' },
+    // Output only, never input (BLOCKED-037): these entries are a record of
+    // what was consumed, written here after the fact from the same
+    // NEWGAP_SOURCES constant the extractor already read from -- this
+    // object is never read back to decide what to extract. Present only
+    // when INCLUDE_NEW_GAP actually ran; absent (not merely empty) when it
+    // didn't, so this field's own shape honestly reflects whether any
+    // new-gap source was consulted for this specific build.
+    ...(INCLUDE_NEW_GAP
+      ? Object.fromEntries(NEWGAP_SOURCES.flatMap((src) => [
+          [src.matrix, { sha256: src.matrixSha, role: 'BASE-ALIGN-v2 new-gap epic matrix-format source' }],
+          [src.waveMap, { sha256: src.waveMapSha, role: 'BASE-ALIGN-v2 new-gap epic wave-map-format source' }],
+        ]))
+      : {}),
   },
   specOwners: SPEC_OWNERS,
   thresholdProposals,
@@ -447,6 +594,27 @@ const registry = {
       'spec/first100/sources/r0-decision-package.md': sha256(decisionText),
     },
     reproducible: 'node scripts/first100/extract-registry.mjs --check must exit 0 (byte-identical); enforced by scripts/first100/registry-regenerate.spec.ts',
+    // BLOCKED-037: an honest completion, not a redefinition, of `status`
+    // above. Leaving `status: CANONICAL_EXTRACTION_FROM_PINNED_SOURCES`
+    // unqualified once this registry also holds non-canonical epics would
+    // let the FIRST thing any reader/auditor sees overclaim the registry's
+    // own purity -- the same failure shape as a name-scoped guard calling
+    // itself type-scoped. This field is the honest completion: it names
+    // exactly how many epics are canonical vs. new-gap, their ids, source,
+    // and authorization, right next to the status a reader hits first.
+    // Present only when at least one new-gap epic actually exists in this
+    // specific build (INCLUDE_NEW_GAP on); omitted, not zeroed, otherwise --
+    // matching sourcePins' own honesty-about-absence convention above.
+    ...(newGapEpicIds.size > 0
+      ? {
+          newGapEpics: {
+            canonicalCount: epics.length - newGapEpicIds.size,
+            newGapCount: newGapEpicIds.size,
+            epicIds: [...newGapEpicIds].sort(),
+            note: 'These epics did not come from the 3 canonical pinned docs above -- they describe capability gaps upstream introduced after those docs were written. Each carries its own per-epic `provenance` field (source doc + SHA, rationale doc, authorization record); see decisions-approved.md#C8 for the reserved-scope authorization that permitted adding them.',
+          },
+        }
+      : {}),
   },
   epics,
 }

@@ -1092,7 +1092,7 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     const first = mutated.epics[0]
     if (first === undefined) throw new Error('registry has no epics')
     mutated.epics.push({ ...first, id: 'ZZ-99' })
-    expect(() => renderClauseCoverageReport(mutated, readYaml())).toThrow(/YAML issues 100 != registry epics 101/)
+    expect(() => renderClauseCoverageReport(mutated, readYaml())).toThrow(/YAML issues 100 != canonical registry epics 101/)
   })
 
   it('green: the manifest gives the clause-coverage report its own derived sourceDigest (registry+v1.0 YAML), distinct from the base projections and the digests file', () => {
