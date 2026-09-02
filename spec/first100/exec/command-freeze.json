@@ -1362,6 +1362,41 @@
         "testsDiscovered": 88
       },
       "note": "P1-01 F-stage (2026-09-02/03), real adversarial fault-testing against the shipped C/P/U plugin-manifest enforcement (evaluatePreMountAdmission, buildObservedPluginCapabilities/buildPluginPermissionStates/applyPostMountPluginEnforcement, plugin-verify CLI). Multiple real attacks defeated cleanly (huge capability arrays, prototype-pollution-style capability names, duplicate declared/observed names, unicode/injection strings, both disclosed trust boundaries -- experimental/webworker-runtime, cordis.patch.yml -- re-probed and confirmed inert). One real bug found and closed through 3 review rounds, each catching something the prior round missed: round 1 (assertJsonSerializable recursed with no depth limit -- a real ~5000-level-deep manifest crashed with an uncaught RangeError, reachable through plugin-verify/pre-mount admission/post-mount quarantine, none of which catch it -- fixed via an explicit work-stack rewrite); round 1 review REJECT (the rewrite's array branch pushed undefined-element errors eagerly while deferring other children, breaking traversal-order interleaving vs. the original recursive implementation, contradicting the code's own inline comment -- fuzzed 200 structures, 12 diverged in sequence though never in verdict/content); round 2 fix (every array element, including undefined, now deferred onto the same work stack -- genuinely order-identical, verified via a 5000-case fuzz comparison, 0 mismatches); round 2 review REJECT (deferring EVERY element onto stack.push(...children.reverse())'s spread call hit V8's ~125,000-argument ceiling -- round 1's version filtered undefined out eagerly so an all-undefined array was safe at any width, round 2's fix reintroduced the exact uncaught-RangeError failure class this whole effort exists to close, just via width instead of depth -- none of the 3 real call sites cap manifest field width); round 3 fix (both spread-pushes -- array AND object/record branches -- replaced with a plain for-loop push, zero behavior/order change, no argument-count limit, verified no crash at 300K-2M elements, both depth and order fixes reconfirmed intact); round 3 review ACCEPT -- independently re-verified all three properties (depth-safety, order-identity, width-safety) hold simultaneously via fresh harnesses built from scratch each round, including a combined width+depth stress test with no interaction issue. No 4th issue found. expectCases here are the 14 new F-stage-specific titles spanning all 3 review rounds, cross-checked byte-exact present-and-passing against a real vitest --reporter=json dry run (88/88 total in the same argv, superset from pre-existing C/P/U-stage tests in the same file, per BLOCKED-018's present-and-passing subset semantics)."
+    },
+    {
+      "epic": "P2-01",
+      "stage": "F",
+      "supplements": {
+        "epic": "P2-01",
+        "stage": "F"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/protocol",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries no identity field on any client-to-server request param type (BLOCKED-025)",
+        "leaves SessionPromptResult.identity, the server-sourced field, unaffected"
+      ],
+      "files": [
+        "packages/sdk/protocol/tests/types.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T11:35:00Z",
+      "dryRunProof": {
+        "treeSha": "93a4503e45f26548977872a2c23d16cd0d31a1bb",
+        "testsDiscovered": 21
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two independently-constructed mutants, both never committed, both reproduced across multiple isolated worktrees by separate Reviewers: (1) added `identity?: IdentityContext` to InitializeParams in packages/sdk/protocol/src/types.ts -- reproducing the Writer's own claimed proof; (2) added the identical field to SessionPromptParams instead -- a second, independently-constructed mutant proving the SAME test file catches a leak in either client-to-server param type, not just the one the Writer happened to test.",
+        "failureSummary": "Mutant (1): `node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc -b tsconfig.host.json` -> exit 2, `packages/sdk/protocol/tests/types.spec.ts(12,98): error TS2344: Type 'false' does not satisfy the constraint \"Expected: literal boolean: false, Actual: literal boolean: true\"` -- pinpoints exactly the ClientInitializeParams assertion. Mutant (2): same tsc -b command -> exit 2, `packages/sdk/protocol/tests/types.spec.ts(13,101): error TS2344: ...` -- pinpoints exactly the ClientSessionPromptParams assertion. Both mutants reverted immediately after capture (git checkout -- on the scratch edit only, never committed); tsc -b re-run clean (exit 0) after each revert, confirming GREEN against the real, unmodified source. Independently reproduced by two separate Reviewer dispatches across this supplement's two review rounds, plus a third independent reproduction of mutant (1) by the union-keyof sub-reviewer as part of confirming the test's design choice -- all three produced the identical RED failure and identical revert-to-GREEN outcome."
+      },
+      "note": "P2-01 F-stage supplement.1 (2026-09-03), BLOCKED-005-style: closes a gap the F-stage's own primary cell left open. The primary P2-01/F cell (7 expectCases, frozen 2026-09-02) closed the empty-DelegationChain crash found via 5 real adversarial attack categories. Separately, P2-01.U's wire-boundary work (BLOCKED-025) established that identity crosses packages/sdk/protocol's wire server-to-client only -- SessionPromptResult.identity, sourced from the server's own live Agent.identity, never accepted from client input -- but that finding had no permanent regression test pinning it, only an independent Reviewer's exhaustive grep. This supplement adds packages/sdk/protocol/tests/types.spec.ts, a real structural type-assertion (expectTypeOf<'identity' extends keyof ClientInitializeParams ? true : false>().toEqualTypeOf<false>(), and the same for ClientSessionPromptParams, matching an existing repo precedent in gateway.client.spec.ts's $dispatch leak check) with real teeth only under tsc -b tsconfig.host.json (vitest's expectTypeOf is a runtime no-op, independently confirmed by two separate Reviewers). Round 1 review: REJECT -- every technical claim held (the structural assertion, the runtime-no-op/tsc-enforcement split, the union-keyof intersection-not-union TypeScript behavior proven from scratch, gates/scope) but the mutation-sensitivity sub-reviewer's own extra self-constructed mutant, beyond its dispatch instructions, proved the guard is NAME-scoped not TYPE-scoped -- a same-type field under a different name (e.g. principalContext: IdentityContext) would slip through undetected, and this limitation was disclosed nowhere. Recorded as a permanent forward-pinned requirement, BLOCKED-031: whichever epic first does real work on P8-07 (primary) or P8-06 (fallback) must upgrade this guard to type-scoped with a real mutation-verification proof, as an explicit Reviewer-checklist item. Fix round: added an honest disclosure comment (name-scoped vs type-scoped, why acceptable for this narrow purpose given the codebase's consistent identity-naming convention, explicit BLOCKED-031 citation) plus matching bilingual README Known Limitations entries -- pure documentation addition, zero change to the actual assertion logic (independently confirmed byte-identical assertion lines and identical 21/21 test-pass behavior before and after). Round 2 review: ACCEPT -- disclosure accurate and non-overselling, BLOCKED-031 citation matches the real entry content, README additions genuinely bilingual-matched. This closes P2-01's last gap before its BLOCKED-022 user-confirmation accept package. expectCases here are the 2 new titles in the supplement's own test file, cross-checked byte-exact present-and-passing (21/21 total in the same argv, the remainder being packages/sdk/protocol's pre-existing transport.spec.ts suite)."
     }
 
   ]
