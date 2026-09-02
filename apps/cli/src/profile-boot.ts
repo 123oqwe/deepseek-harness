@@ -25,8 +25,10 @@ import {
   loadOptionalPatches,
   loadOverlayPatches,
   loadProfile,
+  partitionProfileLayersByAdmission,
   PROFILE_PATCH_FILENAME,
   watchUserPatches,
+  type DeniedProfileLayer,
   type Profile,
 } from '@deepseek-ai/dsh-app-boot'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
@@ -35,6 +37,7 @@ import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
 import { createTrustKernel, pinTrustKernel, type TrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { resolveFeatureGate } from '@deepseek-ai/dsh-feature-gates'
 import type { FeatureGateDeclaration, FeatureGateResolution, FeatureGateState } from '@deepseek-ai/dsh-feature-gates'
+import { buildPluginPermissionStates } from '@deepseek-ai/dsh-host-plugin-inventory'
 import { createProcessShutdown, type ProcessShutdown } from './process-shutdown.ts'
 
 const NAME = 'dsh'
@@ -133,6 +136,15 @@ interface ComposedProfile {
   homePatches: PatchOptions[]
   /** Layers above the user layers on a live reload: `--patch` overlays and the telemetry switch. */
   overlays: PatchOptions[]
+  /**
+   * Bundle layer package names actually composed into `bundlePatches` (Epic
+   * P1-01.U must[3]/acceptance[0]) — a production boot's pre-mount admission
+   * already excluded any denied layer's patches, so every name here is
+   * admitted, in `profile.layers` order.
+   */
+  admittedLayerNames: readonly string[]
+  /** Every bundle layer a production boot refused to compose, and why; empty outside production. */
+  deniedLayers: readonly DeniedProfileLayer[]
 }
 
 /** The full patch stack of one composed profile, in application order. */
@@ -152,19 +164,38 @@ function allPatches(composed: ComposedProfile): PatchOptions[] {
  * layer (`$DSH_HOME/cordis.patch.yml` — machine-local preferences that apply
  * to every profile, so it outranks the per-profile layer), `--patch` overlays,
  * then the telemetry switch.
+ *
+ * Epic P1-01.U's real pre-mount plugin admission (must[3]/acceptance[0])
+ * happens here, before any patch reaches `boot()`: {@link partitionProfileLayersByAdmission}
+ * judges every bundle layer's own `package.json` `dsh` field, and only an
+ * admitted layer's patches are composed — a denied layer's plugin code never
+ * mounts at all. `production: false` (the default outside an explicit
+ * `DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce` opt-in) admits every layer
+ * unconditionally, so an existing profile boots exactly as it did before
+ * this policy existed.
  * @param name - the profile name.
  * @param patchFiles - `--patch` overlay paths, in argv order.
- * @returns the profile and its patch layers.
+ * @param production - whether this boot enforces production plugin admission.
+ * @returns the profile, its patch layers, and the admission outcome.
  */
-async function composeProfile(
+export async function composeProfile(
   name: string,
   patchFiles: readonly string[],
+  production: boolean,
 ): Promise<ComposedProfile> {
   const profile = prepareProfile(name)
   await healProfilesModuleFallback({ installAnchor: INSTALL_ANCHOR, profile })
+  const { admitted, denied } = partitionProfileLayersByAdmission(profile, production)
+  for (const { layer, reason, wildcardFindings } of denied) {
+    const detail = wildcardFindings.length > 0 ? `: ${wildcardFindings.map(finding => finding.path).join(', ')}` : ''
+    process.stderr.write(
+      `${NAME}: plugin admission: excluding bundle ${JSON.stringify(layer.packageName)} from profile `
+      + `${JSON.stringify(name)} (${reason}${detail})\n`,
+    )
+  }
   const homePatches = loadOptionalPatches(NAME, homePatchPath()) ?? []
   const overlays = patchFiles.flatMap(file => loadOverlayPatches(NAME, resolve(file)))
-  const bundlePatches = profile.layers.flatMap(layer => layer.patches)
+  const bundlePatches = admitted.flatMap(layer => layer.patches)
   const rows = new Map<string, EntryOptions>()
   for (const row of composeEntries([bundlePatches, profile.patches, homePatches, overlays])) {
     if (typeof row.id === 'string') rows.set(row.id, row)
@@ -172,7 +203,14 @@ async function composeProfile(
   const composedOverlays = [...overlays]
   const telemetryPatch = resolveTelemetryPatch(process.env.DSH_TELEMETRY_DISABLED, rows.has(TELEMETRY_ROW_ID))
   if (telemetryPatch !== undefined) composedOverlays.push(telemetryPatch)
-  return { profile, bundlePatches, homePatches, overlays: composedOverlays }
+  return {
+    profile,
+    bundlePatches,
+    homePatches,
+    overlays: composedOverlays,
+    admittedLayerNames: admitted.map(layer => layer.packageName),
+    deniedLayers: denied,
+  }
 }
 
 /** Options for {@link runProfile}. */
@@ -292,6 +330,70 @@ export function resolveProfileFeatureGates(
   })
 }
 
+/** Env var whose value switches Epic P1-01.U's real plugin-admission/quarantine enforcement on. */
+const PLUGIN_ENFORCEMENT_ENV = 'DSH_PLUGIN_MANIFEST_ENFORCEMENT'
+
+/**
+ * Resolve must[3]/acceptance[0]'s production plugin-admission enforcement
+ * switch, mirroring {@link resolveFeatureGateEnvOverride}'s fail-loud
+ * validation (unlike {@link resolveTrustKernelInsecureOptIn}'s any-non-empty-value
+ * convention: a two-state on/off switch has exactly one non-default spelling,
+ * so anything else is a typo worth failing on, not a second meaning). Unset
+ * or empty means off — every existing profile boots exactly as it did before
+ * this policy existed. This default is a real, disclosed migration gap, not
+ * a formality: no bundle package shipped in this installation declares a
+ * Manifest v2 yet, so turning this on for a real shipped profile
+ * (`dsh-base` and every profile built on it) currently denies every one of
+ * its bundles — enforcement is real and tested against fixtures, but a
+ * production profile does not yet opt in by default because there is
+ * nothing shipped today that would pass it.
+ * @param raw - the raw `DSH_PLUGIN_MANIFEST_ENFORCEMENT` value.
+ * @returns whether this boot enforces production plugin admission/quarantine.
+ * @throws {TypeError} when `raw` is non-empty and not exactly `'enforce'`.
+ */
+export function resolvePluginEnforcementMode(raw: string | undefined): boolean {
+  if (raw === undefined || raw === '') return false
+  if (raw === 'enforce') return true
+  throw new TypeError(`${NAME}: ${PLUGIN_ENFORCEMENT_ENV} must be "enforce" or unset, got ${JSON.stringify(raw)}`)
+}
+
+/**
+ * Post-mount plugin quarantine (Epic P1-01.U's must[3]/acceptance[0] second
+ * half): after `boot()` settles, build every live Loader entry's real
+ * declared-vs-observed permission state (`@deepseek-ai/dsh-plugin-inventory`'s
+ * `buildPluginPermissionStates`, which walks the actual Cordis `Context`) and
+ * dispose the fiber of any entry `decidePluginTrust` marked `'quarantined'` —
+ * a plugin that registered a capability its manifest never declared loses
+ * every registration it made, for real, not just a returned decision value.
+ * A no-op outside production (`production: false`): every profile keeps
+ * running exactly as before. Pre-mount admission ({@link partitionProfileLayersByAdmission},
+ * called from {@link composeProfile}) already excluded a denied bundle
+ * layer's patches before this ever runs, so this only ever sees a
+ * `'manifest-v2'`-declared entry (or one with no resolvable package, which
+ * `buildPluginPermissionStates` already skips).
+ * @param ctx - the settled, active root context.
+ * @param production - whether this boot enforces production plugin admission.
+ * @param admittedLayerNames - the composed profile's admitted bundle layer names, for provenance.
+ */
+export async function applyPostMountPluginEnforcement(
+  ctx: Context,
+  production: boolean,
+  admittedLayerNames: readonly string[],
+): Promise<void> {
+  if (!production) return
+  const states = buildPluginPermissionStates(ctx, { bundlePackageNames: admittedLayerNames })
+  for (const state of states) {
+    if (state.trustDecision !== 'quarantined') continue
+    process.stderr.write(
+      `${NAME}: plugin quarantine: disposing ${JSON.stringify(state.packageIdentity.name)} `
+      + `(declared/observed mismatch: ${JSON.stringify(state.comparison?.mismatches)})\n`,
+    )
+    for (const entry of ctx.loader.entries()) {
+      if (entry.id === state.entryId) await entry.fiber?.dispose()
+    }
+  }
+}
+
 /**
  * Re-throw a watcher-setup failure unless a shutdown already owns the tree:
  * a signal aborted this invocation, or an app requested exit (`ctx.appExit`
@@ -315,7 +417,8 @@ function suppressShutdownError(ctx: Context, signal: AbortSignal, error: unknown
  * @returns the settled root context and the shutdown controller.
  */
 export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Context; shutdown: ProcessShutdown }> {
-  const composed = await composeProfile(options.profile, options.patchFiles)
+  const pluginEnforcement = resolvePluginEnforcementMode(process.env[PLUGIN_ENFORCEMENT_ENV])
+  const composed = await composeProfile(options.profile, options.patchFiles, pluginEnforcement)
   const trustKernelInsecure = resolveTrustKernelInsecureOptIn(process.env[TRUST_KERNEL_INSECURE_ENV])
   // Constructed before boot() creates the Cordis Context at all (must[1]):
   // createTrustKernel is pure and synchronous, so it cannot itself fail --
@@ -390,6 +493,12 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     hostCtx.provide('featureGates', resolveProfileFeatureGates(options.profile))
   })
   app.current = ctx
+  // Post-mount quarantine (must[3]/acceptance[0]): after every bundle's
+  // plugins have mounted and had their chance to register, before HMR/watch
+  // setup adds any further Loader entries of its own.
+  if (!signalShutdown.signal.aborted && ctx.fiber.state === FiberState.ACTIVE && ctx.get('loader') !== undefined) {
+    await applyPostMountPluginEnforcement(ctx, pluginEnforcement, composed.admittedLayerNames)
+  }
   // A live-reload profile can dispose the whole tree while post-boot watcher
   // setup is in flight — a signal or appExit. Loader presence and fiber state
   // own liveness; the initial check skips a tree that already exited, and the

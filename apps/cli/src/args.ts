@@ -44,8 +44,19 @@ interface PluginInvocation {
   args: string[]
 }
 
+/**
+ * Validate one plugin manifest fixture and report what a production profile
+ * boot would decide for it (Epic P1-01.U's `pnpm plugin:verify <fixture>`).
+ * No `--profile` — a fixture check needs no profile or Loader.
+ */
+interface PluginVerifyInvocation {
+  mode: 'plugin-verify'
+  /** Path to the fixture JSON file (a `package.json` `dsh` field value). */
+  fixture: string
+}
+
 /** The resolved `dsh` invocation. Help, version, and errors exit inside {@link parseDshArgs}. */
-export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation
+export type DshInvocation = ProfileInvocation | DumpConfigInvocation | PluginInvocation | PluginVerifyInvocation
 
 /** Launcher flags shared by the default command and the `web` alias. */
 interface BootOptions {
@@ -178,6 +189,18 @@ export function parseDshArgs(argv: readonly string[], version: string): DshInvoc
       if (options.profile === '') program.error('error: --profile needs a name')
       if (args.length === 0) program.error('error: plugin needs pnpm arguments to forward (e.g. add <package>)')
       resolved = { mode: 'plugin', profile: options.profile, args }
+    })
+
+  // A sibling top-level command, not a `plugin` subcommand: Commander
+  // enforces a parent command's own `requiredOption` (here, `plugin`'s
+  // `--profile`) even for an invoked child subcommand that never uses it, and
+  // this check needs no profile or Loader at all.
+  program.command('plugin-verify')
+    .description('validate a plugin manifest fixture and report the production admission decision (pnpm plugin:verify <fixture>)')
+    .argument('<fixture>', 'path to a fixture JSON file (a package.json dsh field value)')
+    .action((fixture: string) => {
+      rejectParentOptions('plugin-verify')
+      resolved = { mode: 'plugin-verify', fixture }
     })
 
   try {

@@ -11,6 +11,8 @@ kind: "package-reference"
 
 客户端与设置页可以展示宿主当前组合了什么：调用 `pluginInventory/list` 即按 Loader 顺序返回当前的非组条目——条目 id、模块标识、有效启用状态与根 Fiber 阶段（`pending`、`loading`、`active`、`failed` 或 `unloading`；条目没有存活根 Fiber 时为 `null`）。当部署组合了 Agent 预设 roster 时，快照还携带每个预设一组——id、trust、显示名、默认标记、健康状态与压平后的组合行——因为挂载 roster 的部署把模型侧插件运行在预设组合里，而不是 Loader 自己的条目上。该快照只表示调用当下：Loader 是唯一的生命周期权威，本包不拥有缓存、历史、来源模型、事件流或修改路径。Client 包通过显式的 [`api-remotes`](../../api/remotes/README.zh.md) 组合消费这个 Remote，而不导入 Host 实现。
 
+Epic P1-01.U 为本包新增了第一个真实的活跃 `Context` 走查:`buildObservedPluginCapabilities` 走查一个插件条目自己的 Cordis Fiber 子树(services 用全局 `ReflectService` store,tools/skills/events 用 `Fiber.getEffects()` 标签,MCP servers 用一个活跃 MCP-client 条目已解析的 `config.serverName`),并以 `@deepseek-ai/dsh-plugin-manifest` 的声明词汇报告它实际注册了什么;`buildPluginPermissionStates` 把它与每个条目自己的 `package.json` `dsh` 字段(`classifyPluginDeclaration`)组合,并对 `'manifest-v2'` 声明给出真实的 `compareDeclaredToObserved`/`decidePluginTrust` 结果——每个存活、非组、包可解析的 Loader 条目对应一个 `PluginPermissionState`。`apps/cli/src/profile-boot.ts` 在真实 profile 启动时调用二者,用于 acceptance[0] 的强制执行与 acceptance[1] 的声明/实际观察展示;二者为何尚未作为 `pluginInventory` Remote 方法暴露,参见[已知限制与延期工作](#known-limitations-and-deferred-work)。
+
 ## 目录
 
 - [使用本包](#use-this-package)
@@ -59,7 +61,7 @@ Fiber 状态映射到公共阶段词汇，其中 `disposed` 折叠为 `null`—�
 
 | 文件 | 职责 |
 |---|---|
-| [`src/index.ts`](src/index.ts) | `PluginInventoryGateway`：`pluginInventory` Remote 服务与 Loader 投影 |
+| [`src/index.ts`](src/index.ts) | `PluginInventoryGateway`：`pluginInventory` Remote 服务与 Loader 投影;以及 Epic P1-01.U 的纯函数导出 `buildObservedPluginCapabilities`、`buildPluginPermissionStates`、`mcpServerNameOf`、`resolveEntryPackageDir` |
 | [`src/types.ts`](src/types.ts) | 公共 payload 类型：`PluginInventoryEntry`、`PluginInventorySnapshot`、`PluginFiberPhase`;以及 Epic P1-01 的声明/实际观察权限类型——`PluginPermissionState`、`PluginPackageIdentity`、`PluginProvenance` |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件（无运行时不变式；每个快照都投影 Loader 持有的状态） |
 
@@ -97,7 +99,8 @@ Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产�
 这些限制说明一个点时刻清单无法告诉客户端什么。它们是当前包约束，不是任务积压。
 
 - **仅表示调用当下**——结果不包含持久的失败历史或订阅；只要不存在存活的根 Fiber，就会报告 `null`，而不区分其原因。
-- **无来源与修改能力**——服务不识别条目由哪个 bundle、profile 或 override 引入，也不能在任一平面启用、停用、添加或移除插件。`src/types.ts` 的 `PluginPermissionState`/`PluginPackageIdentity`/`PluginProvenance`（Epic P1-01）固定了后续读取器将要填充的形状——把一个 `PluginInventoryEntry` 与真实的 `package.json` 读取、`classifyPluginDeclaration` 调用，以及一次实际注册走查（`@deepseek-ai/dsh-plugin-manifest`）配对——但本包目前尚未构造任何一个；`pluginInventory/list` 的快照并不携带它们。
+- **`pluginInventory/list` 仍不携带权限状态**——`buildPluginPermissionStates` 已存在且真实（Epic P1-01.U），但尚未作为 `pluginInventory` Remote 方法暴露：typert 的 Zod schema 生成器无法序列化 `PluginManifestV2` 的非空元组字段（`readonly [X, ...X[]]`，例如 `CapabilityEffectDeclaration.authAudience`）——本类携带一个返回该类型的 `@Remote('permissions')` 方法时，一次真实构建失败（`tuple rest element must retain an array type`）证实了这一点。`apps/cli/src/plugin.ts`/`profile-boot.ts` 直接调用这个纯函数，用于真实的 CLI 侧展示与启动时强制执行（acceptance[0]/[1]）；未来的 Remote 界面需要一次 typert 生成器修复或 `PluginPermissionState` 的可序列化投影，二者都不是本阶段的工作。
+- **来源信息是尽力而为的，来自调用方自己的启动组合，而非本包自身的知识**——`buildPluginPermissionStates` 的 `provenance` 字段只在调用方在 `bundlePackageNames`（`apps/cli/src/profile-boot.ts` 已接纳的 profile 层）里提供了该模块名时才标记 `'bundle'`；其余一律报告 `'built-in'`，包括一个真实的 Agent 预设组合行——这个函数完全不与之交叉引用（那个粒度仍留在 `PluginInventorySnapshot.agentPresets` 上，本阶段未改变）。
 - **预设仅随 roster 出现**——未装 `dsh-agent-presets` 的部署只提供 Loader 条目；`agentPresets` 字段缺席而非为空。
 
 <a id="dev-note"></a>

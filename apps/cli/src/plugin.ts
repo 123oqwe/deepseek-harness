@@ -11,7 +11,7 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import {
   DEFAULT_PROFILE_BUNDLES,
@@ -23,6 +23,7 @@ import {
   writeProfileManifest,
   type ProfileManifest,
 } from '@deepseek-ai/dsh-app-boot'
+import { classifyPluginDeclaration, evaluatePreMountAdmission } from '@deepseek-ai/dsh-plugin-manifest'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
 
 const NAME = 'dsh'
@@ -160,4 +161,40 @@ export function runPlugin(profile: string, args: readonly string[]): number {
     }
   }
   return exitCode
+}
+
+/**
+ * `dsh plugin verify <fixture>` (registry `verifyCommand`, run as
+ * `pnpm plugin:verify <fixture>`): validate one fixture file as a
+ * `package.json` `dsh` field and report exactly what a production profile
+ * boot would decide for it (Epic P1-01.U's must[3]/acceptance[0]/
+ * acceptance[3]) — the same {@link classifyPluginDeclaration}/
+ * {@link evaluatePreMountAdmission} pair `packages/boot/app-boot/src/profile.ts`'s
+ * `partitionProfileLayersByAdmission` calls at real profile boot, run here
+ * against one fixture with no profile or Loader involved. `production: true`
+ * always: verifying a fixture answers "would this be admitted in
+ * production," the only question this command exists to answer.
+ * @param fixturePath - path to a JSON file holding a `dsh` field value (see
+ * `packages/plugin/plugin-manifest/tests/fixtures/*.json` for the exact shape).
+ * @returns `0` when the fixture would be admitted, `1` when denied or unreadable.
+ */
+export function runPluginVerify(fixturePath: string): number {
+  let dshField: unknown
+  try {
+    dshField = JSON.parse(readFileSync(resolve(fixturePath), 'utf8'))
+  } catch (error) {
+    process.stderr.write(`${NAME}: plugin verify: cannot read fixture ${JSON.stringify(fixturePath)}: ${String(error)}\n`)
+    return 1
+  }
+  const declaration = classifyPluginDeclaration(dshField)
+  const admission = evaluatePreMountAdmission(declaration, true)
+  process.stdout.write(`${NAME}: plugin verify: ${JSON.stringify(fixturePath)} classified as ${JSON.stringify(declaration.kind)}\n`)
+  if (admission.admitted) {
+    process.stdout.write(`${NAME}: plugin verify: ADMITTED — would be composed into a production profile\n`)
+    return 0
+  }
+  process.stdout.write(`${NAME}: plugin verify: DENIED (${admission.reason})`
+    + (admission.wildcardFindings.length > 0 ? ` — wildcard findings: ${admission.wildcardFindings.map(finding => `${finding.path}=${JSON.stringify(finding.pattern)}`).join(', ')}` : '')
+    + ' — would be excluded from a production profile at pre-mount admission\n')
+  return 1
 }

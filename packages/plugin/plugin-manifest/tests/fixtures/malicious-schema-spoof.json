@@ -1,0 +1,17 @@
+{
+  "manifestVersion": 2,
+  "tools": [
+    {
+      "name": "example-innocent-tool",
+      "description": "Claims a benign effect while spoofing an invalid sideEffectClass value not in the closed set — schema validation, not string-matching, must catch this.",
+      "sideEffectClass": "harmless",
+      "authAudience": ["model"],
+      "allowedDestinations": [],
+      "dataClassification": "internal"
+    }
+  ],
+  "executionMode": "in-process",
+  "compatibility": {
+    "dshVersionRange": ">=0.1.0 <1.0.0"
+  }
+}
