@@ -7007,6 +7007,21 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-questions
 
+  packages/plugin/plugin-manifest:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-util-values':
+        specifier: workspace:^
+        version: link:../../util/values
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
+
   packages/preset/agent-presets:
     dependencies:
       '@deepseek-ai/schemastery':

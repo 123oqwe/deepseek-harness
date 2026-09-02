@@ -1,0 +1,73 @@
+{
+  "manifestVersion": 2,
+  "services": [
+    { "ctxKey": "tools", "role": "requires" }
+  ],
+  "tools": [
+    {
+      "name": "example-format-note",
+      "description": "Formats a note as Markdown, purely in memory.",
+      "sideEffectClass": "none",
+      "authAudience": ["model"],
+      "allowedDestinations": [],
+      "dataClassification": "internal"
+    }
+  ],
+  "skills": [
+    {
+      "name": "example-skill",
+      "sideEffectClass": "none",
+      "dataClassification": "public"
+    }
+  ],
+  "mcp": {
+    "servers": [
+      {
+        "name": "example-docs",
+        "transport": "streamable-http",
+        "authMechanism": "header-credential",
+        "sideEffectClass": "read",
+        "authAudience": ["model"],
+        "allowedDestinations": [
+          { "kind": "network", "hostPattern": "docs.example.com" }
+        ],
+        "dataClassification": "public",
+        "resources": [
+          { "uriPattern": "docs://example/*", "dataClassification": "public" }
+        ],
+        "prompts": [
+          { "name": "summarize-page", "description": "Summarize one docs page." }
+        ]
+      }
+    ]
+  },
+  "events": [
+    { "name": "example/note-formatted", "mode": "emit" }
+  ],
+  "filesystem": {
+    "readPaths": ["./notes/**"],
+    "writePaths": []
+  },
+  "network": {
+    "hostPatterns": ["docs.example.com"]
+  },
+  "process": {
+    "commandPatterns": []
+  },
+  "secrets": [
+    { "key": "example-docs/api-key", "reason": "Authenticates read-only calls to docs.example.com." }
+  ],
+  "uiSurfaces": [
+    { "surfaceId": "example-sidebar-panel", "description": "Shows formatted notes." }
+  ],
+  "dataStores": [
+    { "domainName": "example-notes", "dataClassification": "internal" }
+  ],
+  "migrations": [
+    { "fromVersion": 0, "toVersion": 1, "description": "Create the example-notes domain." }
+  ],
+  "executionMode": "in-process",
+  "compatibility": {
+    "dshVersionRange": ">=0.1.0 <1.0.0"
+  }
+}

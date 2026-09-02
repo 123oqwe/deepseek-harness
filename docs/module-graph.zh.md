@@ -276,6 +276,9 @@ flowchart TD
   subgraph group_migration["packages/migration"]
     pkg_feature_gates["feature-gates"]
   end
+  subgraph group_plugin["packages/plugin"]
+    pkg_plugin_manifest["plugin-manifest"]
+  end
   subgraph group_preset["packages/preset"]
     pkg_agent_presets["agent-presets"]
     pkg_persona["persona"]
@@ -475,6 +478,8 @@ flowchart TD
   pkg_lsp --> pkg_llm
   pkg_feature_gates --> pkg_brand
   pkg_feature_gates --> pkg_invariants
+  pkg_plugin_manifest --> pkg_invariants
+  pkg_plugin_manifest --> pkg_util_values
   pkg_storage_domain --> pkg_invariants
   pkg_storage_domain --> pkg_storage
   pkg_storage_json --> pkg_invariants
@@ -1465,6 +1470,7 @@ flowchart TD
 | [`anonymous-user-id`](../packages/identity/anonymous-user-id) | `identity` | [`brand`](../packages/util/brand), [`home-paths`](../packages/util/home-paths), [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`lsp`](../packages/lsp/lsp) | `lsp` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm) |
 | [`feature-gates`](../packages/migration/feature-gates) | `migration` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants) |
+| [`plugin-manifest`](../packages/plugin/plugin-manifest) | `plugin` | [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
 | [`storage-domain`](../packages/storage/storage-domain) | `storage` | [`invariants`](../packages/runtime-diagnostics/invariants), [`storage`](../packages/storage/storage) |
 | [`storage-json`](../packages/storage/storage-json) | `storage` | [`invariants`](../packages/runtime-diagnostics/invariants), [`storage`](../packages/storage/storage) |
 | [`storage-sqlite`](../packages/storage/storage-sqlite) | `storage` | [`invariants`](../packages/runtime-diagnostics/invariants), [`storage`](../packages/storage/storage) |

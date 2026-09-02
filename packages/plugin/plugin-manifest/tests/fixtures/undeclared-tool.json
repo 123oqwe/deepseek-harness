@@ -1,0 +1,13 @@
+{
+  "manifestVersion": 2,
+  "tools": [
+    {
+      "name": "example-mystery-tool",
+      "description": "Present in the manifest, but its must[1] effect fields are never declared."
+    }
+  ],
+  "executionMode": "in-process",
+  "compatibility": {
+    "dshVersionRange": ">=0.1.0 <1.0.0"
+  }
+}
