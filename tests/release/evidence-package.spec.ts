@@ -34,6 +34,7 @@ import { execFileSync, spawnSync, type SpawnSyncReturns } from 'node:child_proce
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
+import { createHash } from 'node:crypto'
 import { afterEach, describe, expect, it } from 'vitest'
 import ts from 'typescript'
 
@@ -580,6 +581,23 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
     return full
   }
 
+  /** A minimal genuinely-accepted single-required-gate, single-required-artifact bundle, verified clean before returning -- the common starting point every tampering test below (P-stage's acceptance[0] block and F-stage's fault/qualification block alike) mutates from. */
+  function collectOneAcceptedGate(): { root: string } {
+    const { root, baseSha } = makeEvidenceFixture()
+    captureBaseline(root)
+    const initResult = collectInit(root, baseSha, ['typecheck'], ['lib/index.js'])
+    expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+    const gatePath = writeGateScript(root, 'gate.mjs', "console.log('ok'); process.exit(0)")
+    const runResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, gatePath])
+    expect(runResult.status, `run stderr: ${runResult.stderr}`).toBe(0)
+    const buildResult = collectBuildArtifact(root, 'lib/index.js')
+    expect(buildResult.status, `build-artifact stderr: ${buildResult.stderr}`).toBe(0)
+    expect(readEvidence(root).accepted).toBe(true)
+    const clean = verifyEvidence(root)
+    expect(clean.status, `precondition: must verify clean before tampering: ${clean.stdout}`).toBe(0)
+    return { root }
+  }
+
   describe('round-trip: real collect-then-verify produces a genuinely accepted, offline-verifiable EvidencePackage', () => {
     it('seeds every declared required gate as a MissingGateEvidence placeholder at init, keeping accepted=false until each one actually runs', () => {
       const { root, baseSha } = makeEvidenceFixture()
@@ -678,22 +696,6 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
   })
 
   describe('acceptance[0]: tampering with any referenced file after collection makes verify fail', () => {
-    function collectOneAcceptedGate(): { root: string } {
-      const { root, baseSha } = makeEvidenceFixture()
-      captureBaseline(root)
-      const initResult = collectInit(root, baseSha, ['typecheck'], ['lib/index.js'])
-      expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
-      const gatePath = writeGateScript(root, 'gate.mjs', "console.log('ok'); process.exit(0)")
-      const runResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, gatePath])
-      expect(runResult.status, `run stderr: ${runResult.stderr}`).toBe(0)
-      const buildResult = collectBuildArtifact(root, 'lib/index.js')
-      expect(buildResult.status, `build-artifact stderr: ${buildResult.stderr}`).toBe(0)
-      expect(readEvidence(root).accepted).toBe(true)
-      const clean = verifyEvidence(root)
-      expect(clean.status, `precondition: must verify clean before tampering: ${clean.stdout}`).toBe(0)
-      return { root }
-    }
-
     it('detects a mutated byte in a completed gate\'s captured log file', () => {
       const { root } = collectOneAcceptedGate()
       const logPath = join(root, '.dsh/evidence/evidence.d/logs/typecheck.log')
@@ -727,6 +729,181 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
       expect(result.stdout).toContain('recordDigest mismatch')
       expect(result.stdout).toContain('package signature mismatch')
       expect(result.stdout).toContain('not a passing CompletedGateEvidence')
+    })
+  })
+
+  describe('Epic P0-07 F-stage: must[2] fault/qualification hardening beyond acceptance[0]\'s existing coverage', () => {
+    /**
+     * An independent re-implementation of `collect-evidence.mjs`'s own
+     * canonical-JSON sha256 digest (sorted object keys, compact
+     * serialization) -- deliberately NOT imported from that script (this
+     * F-stage slice's declared files are only this spec and
+     * `verify-evidence.mjs`; see the Writer report's BLOCKED-012-class
+     * finding for why a real fix touching `collect-evidence.mjs` was not
+     * self-approved). Recomputing the algorithm here, rather than importing
+     * it, is also the more faithful adversarial model: a real forger reads
+     * the published algorithm and reimplements it, exactly as this helper
+     * does, and needs no secret key to do so (see `collect-evidence.mjs`'s
+     * own module doc for this already-documented signature limitation).
+     */
+    function sortKeysDeep(value: unknown): unknown {
+      if (Array.isArray(value)) return value.map(sortKeysDeep)
+      if (value !== null && typeof value === 'object') {
+        const obj = value as Record<string, unknown>
+        const sorted: Record<string, unknown> = {}
+        for (const key of Object.keys(obj).toSorted()) sorted[key] = sortKeysDeep(obj[key])
+        return sorted
+      }
+      return value
+    }
+    function digestOfValue(value: unknown): string {
+      return createHash('sha256').update(JSON.stringify(sortKeysDeep(value)), 'utf8').digest('hex')
+    }
+    /** Recomputes `pkg.signature` over the tampered package's own canonical serialization -- isolates a must[2] mismatch from the coarser top-level signature mismatch a naive hand-edit would also trigger (acceptance[0]'s already-covered "hand-edited evidence.json" case above). */
+    function forgeSelfConsistentSignature(pkg: { signature?: unknown }): void {
+      const { signature: _old, ...rest } = pkg
+      ;(pkg as { signature: unknown }).signature = digestOfValue(rest)
+    }
+
+    describe('a required entry\'s raw bytes genuinely absent at verify time, distinct from acceptance[0]\'s merely-tampered-content cases', () => {
+      it('detects a completed gate\'s captured log file deleted entirely, distinct from a merely mutated log', () => {
+        const { root } = collectOneAcceptedGate()
+        unlinkSync(join(root, '.dsh/evidence/evidence.d/logs/typecheck.log'))
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('log file missing at')
+      })
+
+      it('detects a required build artifact\'s file deleted entirely, distinct from a merely mutated one', () => {
+        const { root } = collectOneAcceptedGate()
+        unlinkSync(join(root, 'lib/index.js'))
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('required build artifact missing at lib/index.js')
+      })
+
+      it('detects a gate-level --artifact file deleted entirely after collection', () => {
+        const { root, baseSha } = makeEvidenceFixture()
+        captureBaseline(root)
+        const initResult = collectInit(root, baseSha, ['typecheck'], [])
+        expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+        write(root, 'coverage-report.txt', 'coverage: 100%\n')
+        const gatePath = writeGateScript(root, 'gate.mjs', "console.log('ok'); process.exit(0)")
+        const runResult = collectRun(root, 'typecheck', ['--required', '--artifact', 'coverage-report.txt'], [process.execPath, gatePath])
+        expect(runResult.status, `run stderr: ${runResult.stderr}`).toBe(0)
+        expect(readEvidence(root).requiredGates.typecheck!.artifacts).toHaveLength(1)
+
+        unlinkSync(join(root, 'coverage-report.txt'))
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('artifact missing at coverage-report.txt')
+      })
+
+      it('detects the manifest sidecar deleted entirely -- must[2] cannot be re-derived without its required-gate-id and required-artifact-path lists', () => {
+        const { root } = collectOneAcceptedGate()
+        unlinkSync(join(root, '.dsh/evidence/evidence.d/manifest.json'))
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('manifest sidecar missing at')
+      })
+    })
+
+    describe('a skipped or silently-absent required entry must never coexist with accepted=true, even against a self-consistently forged package', () => {
+      it('rejects a self-consistently forged package whose required gate is explicitly SkippedGateEvidence while accepted still claims true', () => {
+        const { root } = collectOneAcceptedGate()
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredGates: { typecheck: Record<string, unknown> }, signature?: unknown }
+        const gate = pkg.requiredGates.typecheck
+        gate.outcome = 'skipped'
+        gate.exitCode = null
+        gate.logDigest = null
+        gate.artifacts = []
+        gate.testCounts = null
+        gate.skipReasons = ['forged: pretending this required gate was skipped']
+        const { recordDigest: _oldRecordDigest, ...restOfRecord } = gate
+        gate.recordDigest = digestOfValue(restOfRecord)
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('not a passing CompletedGateEvidence')
+        expect(result.stdout).not.toContain('recordDigest mismatch')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
+
+      it('rejects a self-consistently forged package whose required gate has a nonzero exitCode while accepted still claims true', () => {
+        const { root } = collectOneAcceptedGate()
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredGates: { typecheck: Record<string, unknown> }, signature?: unknown }
+        const gate = pkg.requiredGates.typecheck
+        gate.exitCode = 1
+        const { recordDigest: _oldRecordDigest, ...restOfRecord } = gate
+        gate.recordDigest = digestOfValue(restOfRecord)
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('not a passing CompletedGateEvidence')
+        expect(result.stdout).not.toContain('recordDigest mismatch')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
+
+      it('detects a required gate silently deleted from requiredGates entirely, self-consistently forged so only the manifest cross-check catches it', () => {
+        const { root, baseSha } = makeEvidenceFixture()
+        captureBaseline(root)
+        const initResult = collectInit(root, baseSha, ['typecheck', 'lint'], [])
+        expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+        const typecheckPath = writeGateScript(root, 'typecheck-gate.mjs', "console.log('ok'); process.exit(0)")
+        const typecheckResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, typecheckPath])
+        expect(typecheckResult.status, `typecheck run stderr: ${typecheckResult.stderr}`).toBe(0)
+        const lintPath = writeGateScript(root, 'lint-gate.mjs', "console.log('ok'); process.exit(0)")
+        const lintResult = collectRun(root, 'lint', ['--required'], [process.execPath, lintPath])
+        expect(lintResult.status, `lint run stderr: ${lintResult.stderr}`).toBe(0)
+        expect(readEvidence(root).accepted, 'precondition: both required gates genuinely passed').toBe(true)
+        const clean = verifyEvidence(root)
+        expect(clean.status, `precondition: must verify clean before tampering: ${clean.stdout}`).toBe(0)
+
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredGates: Record<string, unknown>, signature?: unknown }
+        delete pkg.requiredGates.lint
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('accepted=true but required gate lint is missing from requiredGates entirely')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
+
+      it('detects a required build artifact silently deleted from requiredBuildArtifacts, self-consistently forged so only the manifest cross-check catches it', () => {
+        const { root } = collectOneAcceptedGate()
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredBuildArtifacts: Record<string, unknown>, signature?: unknown }
+        delete pkg.requiredBuildArtifacts['lib/index.js']
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('accepted=true but required build artifact lib/index.js is not recorded in requiredBuildArtifacts')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
+    })
+
+    it('detects and reports multiple independent fault types together in one bundle: a deleted gate log and a separately mutated build artifact', () => {
+      const { root } = collectOneAcceptedGate()
+      unlinkSync(join(root, '.dsh/evidence/evidence.d/logs/typecheck.log'))
+      write(root, 'lib/index.js', "console.log('TAMPERED')\n")
+
+      const result = verifyEvidence(root)
+      expect(result.status).toBe(1)
+      expect(result.stdout).toContain('log file missing at')
+      expect(result.stdout).toContain('lib/index.js digest mismatch')
     })
   })
 

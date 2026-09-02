@@ -27,12 +27,21 @@
  * the first.
  *
  * Also re-derives must[2] against the real, loaded data rather than trusting
- * the recorded `accepted` field: when `accepted: true`, every entry in
- * `requiredGates` must genuinely be a passing (`exitCode === 0`)
- * `CompletedGateEvidence`, and every `--required-artifact` path declared at
- * `collect-evidence.mjs init` (`<sidecar>/manifest.json`) must genuinely be
- * present in `requiredBuildArtifacts` — proving must[2] holds for real
- * collected evidence, not only for a compile-time literal.
+ * the recorded `accepted` field: when `accepted: true`, every `--required-gate`
+ * id and every `--required-artifact` path declared at `collect-evidence.mjs
+ * init` (`<sidecar>/manifest.json`) must genuinely be present — as a passing
+ * (`exitCode === 0`) `CompletedGateEvidence` in `requiredGates` for a gate
+ * id, in `requiredBuildArtifacts` for an artifact path — proving must[2]
+ * holds for real collected evidence, not only for a compile-time literal.
+ * The manifest sidecar is itself required to exist for this re-derivation to
+ * run at all (F-stage finding: silently treating a missing manifest as
+ * "nothing declared" would let a package that dropped a required gate id or
+ * artifact path key entirely — as opposed to merely losing the underlying
+ * file's real bytes or forging a matching outcome, both already caught
+ * above — verify clean). See `verifyAcceptedInvariant`'s own doc comment for
+ * how the gate-id cross-check closes the residual gap an earlier F-stage
+ * pass in this epic found but could not close within its own declared
+ * files.
  *
  * CLI: `node scripts/release/verify-evidence.mjs [--repo-root <path>] --evidence <path>`
  * `--repo-root` defaults to `process.cwd()`. Exits 0 with no mismatches, 1
@@ -89,9 +98,40 @@ function verifyGateFiles(record, repoRoot, dir, label, mismatches) {
   }
 }
 
-/** Re-derives must[2] against the real loaded data: an `accepted: true` package must genuinely have every required gate passing and every declared required artifact present. */
-function verifyAcceptedInvariant(pkg, requiredArtifactPaths, mismatches) {
+/**
+ * Re-derives must[2] against the real loaded data: an `accepted: true`
+ * package must genuinely have every declared required gate id present in
+ * `requiredGates` as a genuinely passing `CompletedGateEvidence`, and every
+ * declared required artifact path present in `requiredBuildArtifacts`. Both
+ * `requiredGateIds` and `requiredArtifactPaths` cross-reference the sidecar
+ * manifest's own independently-recorded lists, never just whatever keys
+ * happen to be present in `requiredGates`/`requiredBuildArtifacts` — so a
+ * gate id or artifact path whose entry was deleted entirely from the
+ * package (not merely left with a stale digest, or an outcome/exitCode
+ * forged in place) is still caught, even against a self-consistently
+ * recomputed `recordDigest`/package `signature` (no secret key is needed to
+ * forge one — see `collect-evidence.mjs`'s module doc). `verify`'s caller
+ * treats the manifest's own absence as a hard failure for the same reason.
+ *
+ * `requiredGateIds` closes a gap an earlier F-stage pass in this epic found
+ * but could not close within its own declared files (only this spec and
+ * this script, not `collect-evidence.mjs`): with no independently-persisted
+ * list of required gate ids, a required gate's entry deleted entirely from
+ * `requiredGates`, paired with a forged self-consistent signature, verified
+ * clean (confirmed exploitable: two required gates both genuinely passed,
+ * one entry deleted, signature recomputed to match). `collect-evidence.mjs`'s
+ * `cmdInit` now persists `requiredGateIds` into the sidecar manifest,
+ * parity with its pre-existing `requiredArtifactPaths` write, giving this
+ * function the same independent cross-check for gate ids it already had for
+ * artifact paths.
+ */
+function verifyAcceptedInvariant(pkg, requiredArtifactPaths, requiredGateIds, mismatches) {
   if (pkg.accepted !== true) return
+  for (const gateId of requiredGateIds) {
+    if (!Object.prototype.hasOwnProperty.call(pkg.requiredGates, gateId)) {
+      mismatches.push(`accepted=true but required gate ${gateId} is missing from requiredGates entirely`)
+    }
+  }
   for (const [gateId, record] of Object.entries(pkg.requiredGates)) {
     if (record.outcome !== 'completed' || record.exitCode !== 0) {
       mismatches.push(`accepted=true but required gate ${gateId} is not a passing CompletedGateEvidence (outcome=${record.outcome}, exitCode=${record.exitCode})`)
@@ -163,8 +203,12 @@ export function verify(repoRoot, evidencePath) {
   }
 
   const manifestPath = join(dir, 'manifest.json')
-  const requiredArtifactPaths = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')).requiredArtifactPaths : []
-  verifyAcceptedInvariant(pkg, requiredArtifactPaths, mismatches)
+  if (!existsSync(manifestPath)) {
+    mismatches.push(`manifest sidecar missing at ${manifestPath}`)
+  } else {
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+    verifyAcceptedInvariant(pkg, manifest.requiredArtifactPaths ?? [], manifest.requiredGateIds ?? [], mismatches)
+  }
 
   return { ok: mismatches.length === 0, mismatches }
 }
