@@ -520,6 +520,42 @@ describe('Epic P1-01.F: fault injection against the real, already-shipped valida
     }
   })
 
+  it('does not crash with an uncaught RangeError on a very wide (200,000-element) all-undefined array — past V8\'s spread-call argument limit', () => {
+    // assertJsonSerializable's array/object branches used to defer each
+    // frame's children onto the work stack with `stack.push(...children)` --
+    // a spread call. V8 caps a spread call's argument count at roughly
+    // 125,000-130,000; past that it throws the exact uncaught `RangeError`
+    // this whole fault-injection effort exists to eliminate, even though the
+    // explicit work-stack itself has no depth limit. 200,000 sits safely past
+    // that threshold with margin; every element is `undefined`, so every
+    // element must report its own error, not throw.
+    const width = 200_000
+    const manifest = {
+      manifestVersion: 2,
+      x: new Array(width).fill(undefined),
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const result = validatePluginManifestV2(manifest)
+    expect(result.valid).toBe(false)
+    if (!result.valid) {
+      expect(result.errors).toHaveLength(width)
+      expect(result.errors.every(error => error.message === 'array elements must not be undefined — JSON.parse can never produce this')).toBe(true)
+    }
+  })
+
+  it('does not crash on a very wide (200,000-entry) array of well-formed content either — the spread-call limit is not undefined-specific', () => {
+    const width = 200_000
+    const manifest = {
+      manifestVersion: 2,
+      x: Array.from({ length: width }, (_, i) => ({ ok: i })),
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    expect(() => validatePluginManifestV2(manifest)).not.toThrow()
+    expect(validatePluginManifestV2(manifest).valid).toBe(true)
+  })
+
   it('handles a large (50,000-entry) tools array without crashing or taking unreasonable time', () => {
     const tools = Array.from({ length: 50_000 }, (_, i) => ({
       name: `tool-${i}`, sideEffectClass: 'none', authAudience: ['model'], allowedDestinations: [], dataClassification: 'internal',

@@ -127,7 +127,13 @@ function assertJsonSerializable(value: unknown, path: string, errors: ManifestVa
         path: `${frame.path}[${index}]`,
         arrayElement: true,
       }))
-      stack.push(...children.reverse())
+      // A spread call (`stack.push(...children.reverse())`) hits V8's
+      // ~125,000-argument spread-call limit on a wide array, throwing the
+      // exact `RangeError` this function exists to prevent. `.reverse()`
+      // itself has no such limit (an in-place index swap, not a variadic
+      // call); only the push-by-spread did, so pushing one element per
+      // call keeps the identical reversed order without it.
+      for (const child of children.reverse()) stack.push(child)
       continue
     }
     if (isRecord(frame.value)) {
@@ -135,7 +141,7 @@ function assertJsonSerializable(value: unknown, path: string, errors: ManifestVa
         value: propertyValue,
         path: frame.path === '' ? key : `${frame.path}.${key}`,
       }))
-      stack.push(...children.reverse())
+      for (const child of children.reverse()) stack.push(child)
     }
   }
 }
