@@ -5,7 +5,7 @@
 
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { ContextSnapshotSection } from '@deepseek-ai/dsh-llm'
-import { assertRuntimeTenantPolicy, currentPrincipal, currentTenantId } from '@deepseek-ai/dsh-principal'
+import { assertRuntimeTenantPolicy, currentPrincipal, currentTenantId, sameChainShape } from '@deepseek-ai/dsh-principal'
 import type { IdentityContext, Principal } from '@deepseek-ai/dsh-principal/types'
 import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
 import { isReplacementSurfaceEvent } from '@deepseek-ai/dsh-session'
@@ -139,6 +139,19 @@ function samePrincipalIdentity(a: Principal, b: Principal): boolean {
  * the original principal and never learn a different one actually acted,
  * undermining acceptance[0]'s "any action traceable to root user/tenant and
  * full delegation chain".
+ *
+ * A terminal-principal match is not enough on its own: two chains can agree
+ * on `currentPrincipal` while disagreeing on everything that produced
+ * it — a different root, a different delegation depth, a same-tenant
+ * principal delegated to `supplied`'s terminal principal through a hop
+ * `recorded` never had. That is a genuinely different delegation chain, and
+ * acceptance[0] asks for traceability to the *full* chain, not only the
+ * principal currently acting. So `shouldLog` also becomes `true` whenever
+ * `recorded.chain` and `supplied.chain` have a different shape
+ * ({@link sameChainShape}, `@deepseek-ai/dsh-principal`) even when their
+ * terminal principals are identical — this closes the gap a fix round 2
+ * Reviewer found in the terminal-only comparison: same acting principal,
+ * silently different provenance underneath it, never logged.
  * @param recorded - the identity a prior run already attached to this session, from {@link lastAttachedIdentity}.
  * @param supplied - this run's own `AgentOptions.identity`, if any.
  * @throws {@link TenantMismatchError} (`@deepseek-ai/dsh-principal/types`) when `supplied` claims a tenant that differs from `recorded`'s.
@@ -154,5 +167,6 @@ export function resolveSessionIdentity(
   }
   const shouldLog = recorded === undefined
     || !samePrincipalIdentity(currentPrincipal(recorded.chain), currentPrincipal(supplied.chain))
+    || !sameChainShape(recorded.chain, supplied.chain)
   return { identity: supplied, shouldLog }
 }

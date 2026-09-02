@@ -19,6 +19,7 @@ import {
   isInChain,
   rootPrincipal,
   rootTenantId,
+  sameChainShape,
   sameTenant,
 } from '../src/chain.ts'
 import {
@@ -249,6 +250,57 @@ describe('sameTenant / assertSameTenantId', () => {
   it('throws TenantMismatchError when asserted tenant ids differ', () => {
     expect(() => assertSameTenantId(TENANT_A, TENANT_B)).toThrow(TenantMismatchError)
     expect(() => assertSameTenantId(TENANT_A, TENANT_A)).not.toThrow()
+  })
+})
+
+// Fix round attempt/P2-01-U-fix3-034415: the round-2 Reviewer found that
+// comparing only currentPrincipal (the terminal principal) misses a
+// genuinely different chain shape underneath an identical terminal
+// principal -- same acting user, reached via a different root/depth.
+describe('sameChainShape', () => {
+  it('reports two independently-constructed chains with the same root/depth/terminal as the same shape', () => {
+    const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
+    const a = extendChain(createChain(root, 1000), createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id), 2000)
+    const b = extendChain(createChain(root, 5000), createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id), 6000)
+    expect(a).not.toBe(b)
+    expect(sameChainShape(a, b)).toBe(true)
+  })
+
+  it('reports two single-entry chains rooted at the same principal as the same shape', () => {
+    const a = createChain(createUserPrincipal(PrincipalId('user-a'), TENANT_A), 1000)
+    const b = createChain(createUserPrincipal(PrincipalId('user-a'), TENANT_A), 2000)
+    expect(sameChainShape(a, b)).toBe(true)
+  })
+
+  it('reports a different shape when the terminal principal matches but the root/depth differ (Reviewer round-3 finding)', () => {
+    const userA = createUserPrincipal(PrincipalId('user-a'), TENANT_A)
+    const direct = createChain(userA, 1000)
+    const viaService = extendChain(
+      createChain(createServicePrincipal(PrincipalId('svc-x'), TENANT_A), 1000),
+      userA,
+      2000,
+    )
+    expect(currentPrincipal(direct)).toEqual(currentPrincipal(viaService))
+    expect(sameChainShape(direct, viaService)).toBe(false)
+  })
+
+  it('reports a different shape when chain lengths differ', () => {
+    const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
+    const shallow = createChain(root, 1000)
+    const deep = extendChain(shallow, createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id), 2000)
+    expect(sameChainShape(shallow, deep)).toBe(false)
+  })
+
+  it('reports a different shape when an equal-length, same-root, same-terminal chain differs at an interior hop', () => {
+    const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
+    const terminal = createAnonymousDevPrincipal(PrincipalId('terminal'), TENANT_A)
+    const viaAgent1 = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id)
+    const viaAgent2 = createAgentPrincipal(PrincipalId('agent2'), TENANT_A, root.id)
+    const a = extendChain(extendChain(createChain(root, 1000), viaAgent1, 2000), terminal, 3000)
+    const b = extendChain(extendChain(createChain(root, 1000), viaAgent2, 2000), terminal, 3000)
+    expect(rootPrincipal(a)).toEqual(rootPrincipal(b))
+    expect(currentPrincipal(a)).toEqual(currentPrincipal(b))
+    expect(sameChainShape(a, b)).toBe(false)
   })
 })
 

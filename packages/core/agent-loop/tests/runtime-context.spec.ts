@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId, TenantMismatchError } from '@deepseek-ai/dsh-principal'
+import { createChain, createServicePrincipal, createUserPrincipal, extendChain, PrincipalId, RunId, TenantId, TenantMismatchError } from '@deepseek-ai/dsh-principal'
 import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import { lastAttachedIdentity, resolveSessionIdentity, RuntimeContextProjection } from '../src/runtime-context.ts'
@@ -131,6 +131,50 @@ describe('resolveSessionIdentity', () => {
     const recorded = identityFor(TENANT_A, 'user-a')
     const supplied = identityFor(TENANT_A, 'user-a')
     expect(recorded).not.toBe(supplied)
+    const result = resolveSessionIdentity(recorded, supplied)
+    expect(result).toEqual({ identity: supplied, shouldLog: false })
+  })
+
+  // Reviewer follow-up (fix round attempt/P2-01-U-fix3-034415): round 2's
+  // fix compared only the chain's terminal principal (via
+  // samePrincipalIdentity), so it missed this case entirely. `recorded`'s
+  // chain has user-a@tenant-a as the ROOT (delegation depth 0 -- user-a
+  // acted directly). `supplied`'s chain reaches the SAME terminal principal
+  // (user-a@tenant-a) but via extendChain from a DIFFERENT root -- a
+  // service principal delegating to user-a (delegation depth 1, a
+  // different provenance). Since the terminal principal is identical on
+  // both sides, the round-2 check alone produced shouldLog: false; this
+  // genuinely different delegation chain shape must still be logged.
+  it('logs a same-terminal-principal resupply when the chain shape differs -- a different root/depth/provenance underneath an identical terminal principal', () => {
+    const userA = createUserPrincipal(PrincipalId('user-a'), TENANT_A)
+    const recorded: IdentityContext = { principal: userA, runId: RunId('run-1'), chain: createChain(userA, 0) }
+
+    const serviceRoot = createServicePrincipal(PrincipalId('svc-x'), TENANT_A)
+    const suppliedChain = extendChain(createChain(serviceRoot, 0), userA, 1)
+    const supplied: IdentityContext = { principal: userA, runId: RunId('run-1'), chain: suppliedChain }
+
+    expect(supplied.principal).toEqual(recorded.principal)
+    const result = resolveSessionIdentity(recorded, supplied)
+    expect(result).toEqual({ identity: supplied, shouldLog: true })
+  })
+
+  // Companion to the above: a genuinely identical chain shape (same root,
+  // same depth, same terminal, just a distinct object graph -- the ordinary
+  // case of resuming a session with an unchanged identity) must NOT log, so
+  // the new chain-shape check does not add false-positive logging noise on
+  // ordinary unchanged resumption.
+  it('does not log a resupply when recorded and supplied share the same chain shape (same root, same depth, same terminal), even as distinct chain objects', () => {
+    const serviceRootRecorded = createServicePrincipal(PrincipalId('svc-x'), TENANT_A)
+    const userARecorded = createUserPrincipal(PrincipalId('user-a'), TENANT_A)
+    const recordedChain = extendChain(createChain(serviceRootRecorded, 0), userARecorded, 1)
+    const recorded: IdentityContext = { principal: userARecorded, runId: RunId('run-1'), chain: recordedChain }
+
+    const serviceRootSupplied = createServicePrincipal(PrincipalId('svc-x'), TENANT_A)
+    const userASupplied = createUserPrincipal(PrincipalId('user-a'), TENANT_A)
+    const suppliedChain = extendChain(createChain(serviceRootSupplied, 0), userASupplied, 1)
+    const supplied: IdentityContext = { principal: userASupplied, runId: RunId('run-1'), chain: suppliedChain }
+
+    expect(recorded.chain).not.toBe(supplied.chain)
     const result = resolveSessionIdentity(recorded, supplied)
     expect(result).toEqual({ identity: supplied, shouldLog: false })
   })

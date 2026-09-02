@@ -277,6 +277,33 @@ export function delegationDepth(chain: DelegationChain): number {
 }
 
 /**
+ * Whether two delegation chains have the same shape: identical length, and
+ * the same principal identity (`kind`/`id`/`tenantId`) at every position
+ * from root to current — not only at the terminal/current position. A match
+ * on {@link currentPrincipal} alone can hide a genuinely different chain
+ * underneath it: the same acting principal reached through a different
+ * root, at a different {@link delegationDepth}, is a different provenance
+ * even though both chains agree on who is currently acting (first100
+ * registry P2-01 acceptance[0]: traceable to "root user/tenant AND the full
+ * delegation chain", not the terminal principal alone — the gap a prior
+ * fix round's terminal-only comparison left open).
+ * @param a - first chain.
+ * @param b - second chain.
+ * @returns `true` when both chains have the same length and every entry's
+ *   principal matches by `kind`/`id`/`tenantId` at the same position.
+ */
+export function sameChainShape(a: DelegationChain, b: DelegationChain): boolean {
+  if (a.entries.length !== b.entries.length) return false
+  return a.entries.every((entry, index) => {
+    const counterpart = b.entries[index]
+    return counterpart !== undefined
+      && entry.principal.kind === counterpart.principal.kind
+      && entry.principal.id === counterpart.principal.id
+      && entry.principal.tenantId === counterpart.principal.tenantId
+  })
+}
+
+/**
  * Whether a principal id appears anywhere in the chain.
  * @param chain - the delegation chain.
  * @param id - the principal id to look for.
