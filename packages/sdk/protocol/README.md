@@ -114,6 +114,7 @@ These limits define what the protocol does not cover or promise. They are curren
 - **No protocol-version negotiation** — the handshake carries only `serverInfo.version` (`0.0.1`, unvalidated by clients); pre-release stance, no compatibility promise.
 - **No cancel or session-close methods** — a client abandons a turn by closing the runtime process; see the [JSON-RPC serving plugin](../server/README.md).
 - **Server→client requests are a dead capability** — the transport supports them, but the server never sends one; the Python SDK's responder surface exists for future approval flows.
+- **The client-to-server identity type check is name-scoped, not type-scoped** — [`tests/types.spec.ts`](tests/types.spec.ts) pins BLOCKED-025's finding that `IdentityContext` crosses this wire server-to-client only, but its `'identity' extends keyof ...` assertion detects only a field literally named `identity`; a differently-named field of the same `IdentityContext` type on a client-to-server params type would compile and pass undetected. No other gate in the repo provides type-based coverage for this.
 
 <a id="dev-note"></a>
 ### Dev Note
