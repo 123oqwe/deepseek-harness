@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-trust-kernel",
   "description": "Minimal, non-replaceable Trust Kernel capability surface: root identity, signature roots, policy enforcement, audit append, secret broker handle, sandbox attestation verifier",
-  "version": "0.1.2-alpha.2",
+  "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
   },

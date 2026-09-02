@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-plugin-manifest",
   "description": "Contract-stage type surface and pure validation logic for Plugin Manifest v2 (Epic P1-01): the dsh.manifestVersion=2 capability declaration, must[1]'s Tool/MCP effect fields, and the legacy dsh.bundle compatibility read",
-  "version": "0.1.2-alpha.2",
+  "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
   },
