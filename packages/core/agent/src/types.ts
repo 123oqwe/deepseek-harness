@@ -15,10 +15,11 @@ export interface Agent {
   readonly id: SessionId
   /**
    * Which principal is acting as this agent, and its full delegation chain
-   * back to root (first100 registry P2-01 acceptance[0]). Optional and
-   * type-only for now: no producer attaches a real value yet — that wiring is
-   * a later first100 stage's job (see `@deepseek-ai/dsh-principal/types`'s
-   * module doc for why this package's own runtime module is not built yet).
+   * back to root (first100 registry P2-01 acceptance[0]). Optional: absent
+   * for an agent with no identity attached. `ReactLoopAgent`
+   * (`@deepseek-ai/dsh-agent-loop`) is the real producer, resolving it from
+   * `AgentOptions.identity` and the session's already-recorded identity via
+   * `resolveSessionIdentity` (`@deepseek-ai/dsh-agent-loop/runtime-context`).
    */
   readonly identity?: IdentityContext
 }

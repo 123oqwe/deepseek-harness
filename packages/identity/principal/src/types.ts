@@ -9,13 +9,18 @@
  * principal is currently acting, so any action can be traced back to its
  * root user/tenant (first100 registry P2-01 acceptance[0]).
  *
- * This module is the type contract only: it defines the vocabulary and the
- * errors {@link ../chain.ts} throws when validating a chain. It performs no
- * real attachment to session events, tool contexts, subagent requests, or SDK
- * requests — that wiring is a later first100 stage's job, tracked by
- * `packages/core/agent/src/runtime-types.ts`, `packages/core/session/src/types.ts`,
- * `packages/core/agent-loop/src/runtime-context.ts`, and
- * `packages/identity/principal/src/index.ts`.
+ * This module is the type contract: it defines the vocabulary and the errors
+ * {@link ../chain.ts} throws when validating a chain. `ReactLoopAgent`
+ * (`@deepseek-ai/dsh-agent-loop`) is the real producer/consumer for
+ * `Agent.identity` (`packages/core/agent/src/types.ts`) and `AgentOptions.identity`
+ * (`packages/core/agent/src/runtime-types.ts`): its constructor resolves the
+ * two via `resolveSessionIdentity` (`packages/core/agent-loop/src/runtime-context.ts`,
+ * which also calls `assertRuntimeTenantPolicy`,
+ * `packages/identity/principal/src/index.ts`) and durably logs a real
+ * `identity/attached` session event (`packages/core/session/src/types.ts`)
+ * on first attachment or a genuine principal change. Attachment to tool
+ * contexts and subagent requests remains type-only — that wiring is a later
+ * first100 stage's job.
  *
  * ## Never infer identity from prompt text (must[2])
  *

@@ -27,14 +27,30 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
 
 /**
- * Optional identity reference reserved for SDK request params and
- * notification payloads that need to carry a traceable principal and
- * delegation chain (first100 registry P2-01 must[1]). Not yet attached to any
- * {@link HarnessSdkRequestMap}/{@link HarnessSdkNotificationMap} payload:
- * wiring a specific payload to carry `identity` is a wire-shape change that
- * needs its own schema-registry version bump, which is a later first100
- * stage's job (see `@deepseek-ai/dsh-principal/types`'s module doc for why
- * this identity package's own runtime module is not built yet).
+ * Optional identity reference for an SDK payload that carries a traceable
+ * principal and delegation chain (first100 registry P2-01 must[1]). Every
+ * `IdentityContext` this package's own wire types attach travels
+ * SERVER-TO-CLIENT only (`SessionPromptResult` below; `SessionEvent`'s own
+ * `identity/attached` events, `@deepseek-ai/dsh-session/types`, riding
+ * `SessionEventNotification.event`) — the server's already-established,
+ * in-process identity reported outward for traceability, never a
+ * client-supplied claim the server reads back.
+ *
+ * Deliberately NOT attached to any CLIENT-TO-SERVER request param
+ * (`InitializeParams`/`SessionPromptParams` in {@link HarnessSdkRequestMap}):
+ * doing so would let a wire caller claim an `IdentityContext` — including a
+ * `Principal` carrying an `AdminGrant` — for the server to read back as
+ * authoritative, which is exactly the vulnerability class BLOCKED-025
+ * (`spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-025`) warns against: this
+ * package wires no Trust Kernel signature verification at any rehydration
+ * point, so a deserialized identity here would have no way to prove it is
+ * genuine rather than attacker-constructed. `isAdminPrincipal`
+ * (`@deepseek-ai/dsh-principal`) already fails closed for a merely
+ * deserialized `AdminGrant` (proven by `packages/identity/principal/tests/identity.spec.ts`'s
+ * structuredClone/JSON round-trip regressions), so no bypass exists today —
+ * but adding a request-side field would invite a FUTURE caller to build one
+ * by reading it back, so the field stays absent until a future epic
+ * establishes real rehydration authority per BLOCKED-025's resolution.
  */
 export interface SdkIdentityReference {
   /** The principal, run, and delegation chain behind the carrying request or notification. */
@@ -104,6 +120,14 @@ export type SdkPromptContentBlock = ContentBlock | SdkEncodedImageBlock
 export interface SessionPromptResult {
   /** Identity of the queued user message. */
   messageId: string
+  /**
+   * The prompted agent's own identity, when it has one (first100 registry
+   * P2-01 must[1]/acceptance[0]) — the server's already-established
+   * `Agent.identity`, reported outward for traceability. See
+   * {@link SdkIdentityReference}'s doc for why this travels server-to-client
+   * only and is never accepted back as a request param.
+   */
+  identity?: IdentityContext
 }
 
 /** Deployment-mapped SDK outcome: `ok` for an accepted result, `error` otherwise. */

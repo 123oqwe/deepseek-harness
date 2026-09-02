@@ -25,6 +25,7 @@ import {
   markAgentLoopRequest,
 } from '@deepseek-ai/dsh-llm'
 import { deepFreeze } from '@deepseek-ai/dsh-util-values'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { Scope } from '@deepseek-ai/dsh-scope'
 import { createScope } from '@deepseek-ai/dsh-scope'
 import type { EpochHeader, RequestContext, Session, SessionId, TurnEndReason, UserMessage } from '@deepseek-ai/dsh-session'
@@ -33,7 +34,7 @@ import { joinContextSections, renderContextSections, renderPrompt } from '@deeps
 import type { PromptAssembly } from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-session-projection'
 import type { Context } from '@deepseek-ai/cordis'
-import { RuntimeContextProjection } from './runtime-context.ts'
+import { lastAttachedIdentity, resolveSessionIdentity, RuntimeContextProjection } from './runtime-context.ts'
 import { executeToolCalls } from './tool-calls.ts'
 
 type Phase =
@@ -84,6 +85,14 @@ export class ReactLoopAgent implements Agent {
   /** Surface generation of the preceding built request. */
   private requestSurfaceGeneration: number | undefined
   private readonly runtimeContext: RuntimeContextProjection
+  /**
+   * Which principal is acting as this agent and its full delegation chain
+   * back to root (first100 registry P2-01 acceptance[0]). Resolved once in
+   * the constructor from this session's already-recorded identity (if any)
+   * and `options.identity`, runtime-policy-checked by
+   * {@link resolveSessionIdentity} when both exist.
+   */
+  readonly identity?: IdentityContext
 
   constructor(
     private loopCtx: Context,
@@ -103,6 +112,11 @@ export class ReactLoopAgent implements Agent {
     this.scope = createScope(loopCtx, this)
     this.ctx = this.scope.ctx.extend({ agent: this })
     this.runtimeContext = new RuntimeContextProjection(this.ctx, session)
+    const resolvedIdentity = resolveSessionIdentity(lastAttachedIdentity(session), options.identity)
+    if (resolvedIdentity.identity !== undefined) {
+      this.identity = resolvedIdentity.identity
+      if (resolvedIdentity.shouldLog) session.append('identity/attached', { identity: resolvedIdentity.identity })
+    }
   }
 
   get status(): AgentStatus {

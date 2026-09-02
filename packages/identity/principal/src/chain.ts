@@ -60,20 +60,43 @@ const adminGrantOwners = new WeakMap<AdminGrant, UserPrincipal | ServicePrincipa
  * register it in {@link adminGrantOwners} against the exact principal object
  * it ends up attached to — the object cannot exist before its own token
  * does, so binding happens as a second step in each constructor below.
- * @returns a token `isAdminPrincipal` recognizes only once bound to its owner.
+ *
+ * Frozen before return (registry P2-01 BLOCKED-026, hard gate for U-stage
+ * enforcement wiring, applied to the grant token itself and not only the
+ * principal wrapping it): `adminGrantOwners` binds by object identity, so a
+ * legitimate holder of the token could otherwise add an arbitrary own
+ * property to it in place — the token itself stays `===` its recorded owner
+ * key, so `isAdminPrincipal` would keep recognizing it, but any downstream
+ * code that trusts the token's shape as an opaque marker would see a
+ * silently mutated value. `Object.freeze` makes that a no-op in sloppy mode
+ * and a thrown `TypeError` in strict mode (this package's ESM modules are
+ * always strict).
+ * @returns a frozen token `isAdminPrincipal` recognizes only once bound to its owner.
  */
 function mintAdminGrant(): AdminGrant {
-  return {} as AdminGrant
+  return Object.freeze({} as AdminGrant)
 }
 
 /**
  * Construct an ordinary, non-admin user principal.
+ *
+ * Frozen before return (registry P2-01 BLOCKED-026, hard gate for U-stage
+ * enforcement wiring): `isAdminPrincipal` binds by object identity, so a
+ * legitimate holder of a real principal reference mutating a field in place
+ * (`principal.tenantId = attackerTenantId`) would otherwise still pass the
+ * identity check under its new, attacker-chosen field value — a
+ * confused-deputy vector distinct from the forged-object-literal class
+ * `adminGrantOwners` already closes. `Object.freeze` makes every in-place
+ * field mutation a no-op in sloppy mode and a thrown `TypeError` in strict
+ * mode (this package's ESM modules are always strict), closing that gap for
+ * every downstream consumer that trusts `principal.id`/`principal.tenantId`
+ * once obtained.
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} with no {@link AdminGrant}.
+ * @returns a frozen {@link UserPrincipal} with no {@link AdminGrant}.
  */
 export function createUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
-  return { kind: 'user', id, tenantId }
+  return Object.freeze({ kind: 'user', id, tenantId })
 }
 
 /**
@@ -81,25 +104,32 @@ export function createUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPr
  * export (never an `isAdmin`/`adminGrant` parameter on {@link createUserPrincipal})
  * so a static scan can forbid this specific import from tool-provider code
  * (registry P2-01 validation[2]).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026): an admin principal is exactly the object an
+ * in-place field mutation would be most valuable to forge against.
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link UserPrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
+ * @returns a frozen {@link UserPrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
  */
 export function createAdminUserPrincipal(id: PrincipalId, tenantId: TenantId): UserPrincipal {
   const adminGrant = mintAdminGrant()
   const principal: UserPrincipal = { kind: 'user', id, tenantId, adminGrant }
   adminGrantOwners.set(adminGrant, principal)
-  return principal
+  return Object.freeze(principal)
 }
 
 /**
  * Construct an ordinary, non-admin service principal.
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} with no {@link AdminGrant}.
+ * @returns a frozen {@link ServicePrincipal} with no {@link AdminGrant}.
  */
 export function createServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
-  return { kind: 'service', id, tenantId }
+  return Object.freeze({ kind: 'service', id, tenantId })
 }
 
 /**
@@ -107,38 +137,47 @@ export function createServicePrincipal(id: PrincipalId, tenantId: TenantId): Ser
  * export (never an `isAdmin`/`adminGrant` parameter on {@link createServicePrincipal})
  * so a static scan can forbid this specific import from tool-provider code
  * (registry P2-01 validation[2]).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns a {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
+ * @returns a frozen {@link ServicePrincipal} carrying a freshly minted {@link AdminGrant} bound to it by object identity.
  */
 export function createAdminServicePrincipal(id: PrincipalId, tenantId: TenantId): ServicePrincipal {
   const adminGrant = mintAdminGrant()
   const principal: ServicePrincipal = { kind: 'service', id, tenantId, adminGrant }
   adminGrantOwners.set(adminGrant, principal)
-  return principal
+  return Object.freeze(principal)
 }
 
 /**
  * Construct a delegated agent principal. Carries no admin flag: an agent's
  * authority is never self-declared (see `./types.ts`'s {@link AgentPrincipal} doc).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
  * @param delegatedBy - the principal id that authorized this agent's delegation.
- * @returns an {@link AgentPrincipal}.
+ * @returns a frozen {@link AgentPrincipal}.
  */
 export function createAgentPrincipal(id: PrincipalId, tenantId: TenantId, delegatedBy: PrincipalId): AgentPrincipal {
-  return { kind: 'agent', id, tenantId, delegatedBy }
+  return Object.freeze({ kind: 'agent', id, tenantId, delegatedBy })
 }
 
 /**
  * Construct an anonymous development-mode principal. Structurally distinct
  * from every admin-capable kind (registry P2-01 acceptance[2]).
+ *
+ * Frozen before return — see {@link createUserPrincipal}'s doc for why
+ * (registry P2-01 BLOCKED-026).
  * @param id - the principal's identity (already branded — never raw prompt/chat text).
  * @param tenantId - the tenant this principal belongs to.
- * @returns an {@link AnonymousDevPrincipal}.
+ * @returns a frozen {@link AnonymousDevPrincipal}.
  */
 export function createAnonymousDevPrincipal(id: PrincipalId, tenantId: TenantId): AnonymousDevPrincipal {
-  return { kind: 'anonymous-dev', id, tenantId }
+  return Object.freeze({ kind: 'anonymous-dev', id, tenantId })
 }
 
 /**
@@ -235,6 +274,62 @@ export function currentTenantId(chain: DelegationChain): TenantId {
  */
 export function delegationDepth(chain: DelegationChain): number {
   return chain.entries.length - 1
+}
+
+/**
+ * The delegation-authorizer id an entry's principal carries, or `undefined`
+ * for a principal kind that has no such field. Only {@link AgentPrincipal}
+ * carries {@link AgentPrincipal.delegatedBy} — {@link UserPrincipal},
+ * {@link ServicePrincipal}, and {@link AnonymousDevPrincipal} do not, so this
+ * always returns `undefined` for those kinds, making {@link sameChainShape}'s
+ * per-entry comparison uniform across every principal kind instead of
+ * branching on it.
+ * @param principal - the principal to read.
+ * @returns `principal.delegatedBy` for an agent principal, `undefined` otherwise.
+ */
+function delegatedByOf(principal: Principal): PrincipalId | undefined {
+  return principal.kind === 'agent' ? principal.delegatedBy : undefined
+}
+
+/**
+ * Whether two delegation chains have the same shape: identical length, and
+ * the same principal identity (`kind`/`id`/`tenantId`, plus `delegatedBy`
+ * where the entry is an {@link AgentPrincipal}) at every position from root
+ * to current — not only at the terminal/current position. A match on
+ * {@link currentPrincipal} alone can hide a genuinely different chain
+ * underneath it: the same acting principal reached through a different
+ * root, at a different {@link delegationDepth}, is a different provenance
+ * even though both chains agree on who is currently acting (first100
+ * registry P2-01 acceptance[0]: traceable to "root user/tenant AND the full
+ * delegation chain", not the terminal principal alone — the gap a prior fix
+ * round's terminal-only comparison left open).
+ *
+ * `delegatedBy` — which principal authorized an agent's delegation — is
+ * exactly this kind of provenance fact: two chains can be identical in
+ * length and in every entry's `kind`/`id`/`tenantId` while disagreeing on
+ * who authorized the terminal agent's delegation, which is itself a
+ * genuinely different chain (registry P2-01 fix round attempt/P2-01-U-fix3's
+ * own Reviewer finding — `delegatedBy` was invisible to this check).
+ * {@link delegatedByOf} makes the comparison uniform rather than branching
+ * on `kind`: it reads `undefined` for a non-agent entry, so a mismatched
+ * `kind` at a position is still caught by the `kind` comparison, and an
+ * agent-vs-agent mismatch is caught by comparing the two `delegatedBy`
+ * values directly.
+ * @param a - first chain.
+ * @param b - second chain.
+ * @returns `true` when both chains have the same length and every entry's
+ *   principal matches by `kind`/`id`/`tenantId`/`delegatedBy` at the same position.
+ */
+export function sameChainShape(a: DelegationChain, b: DelegationChain): boolean {
+  if (a.entries.length !== b.entries.length) return false
+  return a.entries.every((entry, index) => {
+    const counterpart = b.entries[index]
+    return counterpart !== undefined
+      && entry.principal.kind === counterpart.principal.kind
+      && entry.principal.id === counterpart.principal.id
+      && entry.principal.tenantId === counterpart.principal.tenantId
+      && delegatedByOf(entry.principal) === delegatedByOf(counterpart.principal)
+  })
 }
 
 /**
