@@ -220,11 +220,35 @@ export function extendChain(
 }
 
 /**
+ * Reject a chain whose `entries` is empty at runtime. `DelegationChain.entries`
+ * is typed as a non-empty tuple, but that guarantee only binds a caller that
+ * actually went through `createChain`/`extendChain` — a hand-built object
+ * literal, or an `IdentityContext` crossing an unvalidated durable boundary
+ * (session-log replay reaching `resolveSessionIdentity` in
+ * `packages/core/agent-loop/src/runtime-context.ts` via `lastAttachedIdentity`)
+ * can violate it at runtime. Every accessor below that reads `entries[0]` or
+ * folds over `entries` calls this first, so the failure is one clear,
+ * dedicated error instead of an accessor-specific opaque crash (reading
+ * `.principal` off `entries[0] === undefined`, or `Array.prototype.reduce`'s
+ * "Reduce of empty array with no initial value").
+ * @param chain - the delegation chain to check.
+ * @throws {Error} when `chain.entries` is empty.
+ * @returns Nothing.
+ */
+function assertNonEmptyChain(chain: DelegationChain): void {
+  if (chain.entries.length === 0) {
+    throw new Error('invalid DelegationChain: entries is empty -- a chain must contain at least a root entry')
+  }
+}
+
+/**
  * The chain's root principal.
  * @param chain - the delegation chain.
+ * @throws {Error} when `chain.entries` is empty (see {@link assertNonEmptyChain}).
  * @returns `chain.entries[0].principal`.
  */
 export function rootPrincipal(chain: DelegationChain): Principal {
+  assertNonEmptyChain(chain)
   return chain.entries[0].principal
 }
 
@@ -243,9 +267,11 @@ export function currentPrincipal(chain: DelegationChain): Principal {
  * `DelegationEntry | undefined` under `noUncheckedIndexedAccess`; folding
  * with no initial value keeps the non-empty guarantee in the return type.
  * @param chain - the delegation chain.
+ * @throws {Error} when `chain.entries` is empty (see {@link assertNonEmptyChain}).
  * @returns the last element of `chain.entries`.
  */
 function lastEntry(chain: DelegationChain): DelegationEntry {
+  assertNonEmptyChain(chain)
   return chain.entries.reduce((_, entry) => entry)
 }
 

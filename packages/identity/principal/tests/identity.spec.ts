@@ -179,6 +179,48 @@ describe('rootPrincipal / currentPrincipal / rootTenantId / currentTenantId', ()
   })
 })
 
+// F-stage fault-testing (attempt/P2-01-F): `DelegationChain.entries` is typed
+// as a non-empty tuple, but nothing at runtime enforces that for a value that
+// never went through createChain/extendChain -- a hand-built object literal,
+// or an IdentityContext replayed from an unvalidated durable session-log
+// boundary (packages/core/agent-loop/src/runtime-context.ts's
+// resolveSessionIdentity/lastAttachedIdentity). Before the fix, rootPrincipal
+// and currentPrincipal/currentTenantId (via the private lastEntry helper)
+// crashed on such a chain with an opaque, undocumented failure -- reading
+// `.principal` off `entries[0] === undefined`, or Array.prototype.reduce's
+// "Reduce of empty array with no initial value" -- rather than a clear,
+// intentional rejection.
+describe('rootPrincipal / currentPrincipal fail closed on a structurally invalid (empty-entries) chain', () => {
+  it('rootPrincipal throws a clear Error, not TypeError: Cannot read properties of undefined, for a chain with no entries', () => {
+    const malformed = { entries: [] } as unknown as DelegationChain
+    expect(() => rootPrincipal(malformed)).toThrow('invalid DelegationChain: entries is empty')
+    expect(() => rootPrincipal(malformed)).not.toThrow(TypeError)
+  })
+
+  it('currentPrincipal throws a clear Error, not the opaque Array.prototype.reduce TypeError, for a chain with no entries', () => {
+    const malformed = { entries: [] } as unknown as DelegationChain
+    expect(() => currentPrincipal(malformed)).toThrow('invalid DelegationChain: entries is empty')
+    expect(() => currentPrincipal(malformed)).not.toThrow(TypeError)
+  })
+
+  it('currentTenantId (built on currentPrincipal) also fails closed on an empty-entries chain, rather than crashing deep inside Array.prototype.reduce', () => {
+    const malformed = { entries: [] } as unknown as DelegationChain
+    expect(() => currentTenantId(malformed)).toThrow('invalid DelegationChain: entries is empty')
+  })
+
+  it('rootTenantId (built on rootPrincipal) also fails closed on an empty-entries chain', () => {
+    const malformed = { entries: [] } as unknown as DelegationChain
+    expect(() => rootTenantId(malformed)).toThrow('invalid DelegationChain: entries is empty')
+  })
+
+  it('a well-formed, non-empty chain is completely unaffected by the guard', () => {
+    const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
+    const chain = createChain(root, 1000)
+    expect(rootPrincipal(chain)).toEqual(root)
+    expect(currentPrincipal(chain)).toEqual(root)
+  })
+})
+
 describe('isInChain / assertInChain', () => {
   it('finds a principal id that was delegated earlier in the chain', () => {
     const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
