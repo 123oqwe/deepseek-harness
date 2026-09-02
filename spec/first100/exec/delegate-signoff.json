@@ -1,4 +1,17 @@
 {
-  "schema": { "name": "first100-delegate-signoff", "version": "1.0" },
-  "entries": []
+  "schema": {
+    "name": "first100-delegate-signoff",
+    "version": "1.0"
+  },
+  "entries": [
+    {
+      "epic": "P2-01",
+      "rowDigestSha256": "09e60c5418d65028a4c02871d86f1d49051828b525ae2def041c1abb68c78c5d",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-02T16:09:57.338Z",
+      "userConfirmationRef": "decisions-approved.md#C9",
+      "note": "gq-92 deep-verify: predicates i-iii independently re-derived by Supervisor via real --accept dry-run (all pass); 4 hardening gates (freeze/chain-shape/delegatedBy/identity-swap logging) + wire-guard 3-point (presence/gate-pass/sensitivityProof) confirmed against CI run 33650410487 (candidate b03a9f920f, numFailed=0/18045 passed/18113 total, signature verified)"
+    }
+  ]
 }

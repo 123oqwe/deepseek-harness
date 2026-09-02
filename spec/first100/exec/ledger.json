@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-02T14:19:03.625Z",
-  "inputDigest": "36f47bcf0477da763ad17e5554f4530d7a5e3aabc2ac78de86334f4fca413d72",
+  "lastUpdatedUtc": "2026-09-02T16:09:57.604Z",
+  "inputDigest": "ef6b415b9410766f68c615ad5cdd9440756e777e0ee7f12ce3f7ccac4bd3a893",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1655,12 +1655,55 @@
           "capturedAtUtc": "2026-09-02T13:59:00.668Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "F.1": {
+          "status": "GREEN",
+          "candidateSha": "b03a9f920f82aed43633d503068d8e323e3f3cf3",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33650410487",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-33650410487/first100-evidence-b03a9f920f82aed43633d503068d8e323e3f3cf3/vitest-report.json",
+          "observationSha256": "436bea5276b243d31153198aa81690e6718d76d6c7c487d2905d9623ba4bce01",
+          "expectCasesMatched": [
+            "carries no identity field on any client-to-server request param type (BLOCKED-025)",
+            "leaves SessionPromptResult.identity, the server-sourced field, unaffected"
+          ],
+          "capturedAtUtc": "2026-09-02T16:05:22.186Z"
+        }
+      },
       "candidateSha": "bf24fa0a3346516cf2b31fb2e40427f69189183f",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-02T16:09:57.603Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33587853573",
+            "candidateSha": "00169c8ec501f30adcd1439a01b6bb5da3929437"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33596937698",
+            "candidateSha": "87585733cf5ea34199bb8678ce7dacb69f7efeb6"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33637453508",
+            "candidateSha": "bf24fa0a3346516cf2b31fb2e40427f69189183f"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33637453508",
+            "candidateSha": "bf24fa0a3346516cf2b31fb2e40427f69189183f"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-02T16:09:57.338Z",
+          "userConfirmationRef": "decisions-approved.md#C9"
+        }
+      }
     },
     "P2-02": {
       "id": "P2-02",
