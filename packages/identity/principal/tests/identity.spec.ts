@@ -366,6 +366,28 @@ describe('isAnonymousDev / isAdminPrincipal', () => {
     const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
     expect(isAdminPrincipal(admin)).toBe(true)
   })
+
+  // Deliberate, disclosed fail-closed boundary (see chain.ts's adminGrantOwners
+  // doc): binding by object identity means a real admin principal reconstructed
+  // across a serialization boundary is never the original reference, so it is
+  // correctly rejected here even though every field is genuine. A later epic
+  // rehydrating admin principals across a process/wire boundary must establish
+  // authority via real Trust Kernel signature verification at that rehydration
+  // point -- never by trusting deserialized id/tenantId fields, and never by
+  // re-minting an AdminGrant based on them.
+  it('fails closed: a real admin principal round-tripped through structuredClone is never recognized as admin, since the clone is a new object never registered in adminGrantOwners', () => {
+    const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+    const cloned = structuredClone(admin)
+    expect(cloned).not.toBe(admin)
+    expect(isAdminPrincipal(cloned)).toBe(false)
+  })
+
+  it('fails closed: a real admin principal round-tripped through JSON.stringify/JSON.parse is never recognized as admin, since the rehydrated object is new and was never registered in adminGrantOwners', () => {
+    const admin = createAdminUserPrincipal(PrincipalId('real-admin'), TENANT_A)
+    const rehydrated = JSON.parse(JSON.stringify(admin)) as UserPrincipal
+    expect(rehydrated).not.toBe(admin)
+    expect(isAdminPrincipal(rehydrated)).toBe(false)
+  })
 })
 
 describe('TenantMismatchError / ForgedPrincipalError', () => {
