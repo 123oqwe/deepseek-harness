@@ -1158,7 +1158,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 12,
+    "count": 10,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1178,24 +1178,6 @@
         "reason": "BLOCKED-012 companion, not a substitution: packages/sdk/protocol/src/types.ts itself received the real, substantive must[1] change (SessionPromptResult gained an optional `identity?: IdentityContext` field, and SdkIdentityReference's doc now records the BLOCKED-025 disposition -- see that entry below). This companion patch covers only the small (4-line), necessary producer wiring that populates the new field with a genuine value: HarnessSdkJsonRpcServer.prompt() (packages/sdk/server/src/server.ts, the one real implementation of the session/prompt RPC method) already holds `rec.handle.agent` (an Agent, per packages/core/agent/src/types.ts); this patch adds `...identity === undefined ? {} : { identity: rec.handle.agent.identity }` to its existing return statement, sourced from the server's own already-live Agent.identity (real as of this slice's agent.ts wiring, P2-01-U-agent-identity-attachment above), never from client input. Without this, the new type field would be genuine-but-unpopulated (an unused field, the exact gap U-stage exists to close per acceptance[0]). Owner-map check (spec/first100-owner-map.json byFile, 441 entries): packages/sdk/server/src/server.ts is absent -- shared/common infrastructure, zero conflict.",
         "approvedAt": "2026-09-02",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
-      },
-      "P2-01-U-tool-execution-context": {
-        "epic": "P2-01",
-        "stage": "U",
-        "declaredPath": "ToolExecutionContext (must[1] literal name; no file or type of this name exists anywhere in the codebase at this tip -- BLOCKED-021)",
-        "approvedPath": "packages/core/tools/src/index.ts#ToolRunContext (extends ToolExecution extends ToolExecutionInput)",
-        "reason": "BLOCKED-021 resolution (type-name correspondence, not a file-path substitution -- BLOCKED-021 explicitly extends BLOCKED-012's mechanism to cover this class): grepped the real codebase at this tip; `ToolExecutionContext` does not exist under that name anywhere. The real runtime context a tool implementation receives after the registry accepts one call is `ToolRunContext` (packages/core/tools/src/index.ts), which `extends ToolExecution extends ToolExecutionInput`. `ToolExecutionInput.agent?: Agent` already existed before this epic (\"the agent on whose behalf the call runs (set by the agent loop)\", packages/core/agent-loop/src/tool-calls.ts:78 sets it from `ctx.agents.requireInitiator()`). must[1]'s requirement (\"ToolExecutionContext... carries identity references\") is therefore satisfied STRUCTURALLY, with zero edit needed to packages/core/tools/src/index.ts itself: once P2-01-U-agent-identity-attachment (above) makes `Agent.identity` a real, populated field, every `ToolRunContext.agent.identity` a tool body reads is real and traceable. Confirmed by this slice's own agent.spec.ts tests (`ctx.agentLoop.create(id, {..., identity})` then asserting `agent.identity`), since the same `agent` object instance flows into `exec.agent` at tool-calls.ts:78. Owner-map check: packages/core/tools/src/index.ts is absent from spec/first100-owner-map.json's byFile map -- shared/common infrastructure, zero conflict, and not touched by this patch (no edit needed there).",
-        "approvedAt": "2026-09-02",
-        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-021"
-      },
-      "P2-01-U-subagent-request": {
-        "epic": "P2-01",
-        "stage": "U",
-        "declaredPath": "SubagentRequest (must[1] literal name; no file or type of this name exists anywhere in the codebase at this tip -- BLOCKED-021)",
-        "approvedPath": "packages/subagent/subagent/src/types.ts#SubagentStartRequest",
-        "reason": "BLOCKED-021 resolution (type-name correspondence, not a file-path substitution): grepped the real codebase at this tip; `SubagentRequest` does not exist under that name. `SubagentStartRequest` (packages/subagent/subagent/src/types.ts) was already independently identified as the closest real candidate by P2-01.C's Writer (BLOCKED-021's own opening report) and confirmed here as the correct correspondent -- it is \"what a caller asks for when starting a ONE-SHOT subagent\" and already carries `readonly parent: Agent` (\"the spawning agent\"), predating this epic. Same structural-satisfaction reasoning as P2-01-U-tool-execution-context above: must[1]'s SubagentRequest requirement is satisfied with zero edit to packages/subagent/subagent/src/types.ts, because once `Agent.identity` is real (P2-01-U-agent-identity-attachment), every `SubagentStartRequest.parent.identity` a subagent provider reads is real and traceable, and any explicit `agentOptions?.identity` override for the child is the same `AgentOptions.identity` field this epic's P-stage already typed. `packages/subagent/subagent` is confirmed NOT in P2-01's declared files[] at any stage, matching BLOCKED-021's own finding. Owner-map check: packages/subagent/subagent/src/types.ts is absent from spec/first100-owner-map.json's byFile map -- zero conflict, and not touched by this patch (no edit needed there).",
-        "approvedAt": "2026-09-02",
-        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-021"
       },
       "P0-01": {
         "stage": "C",
