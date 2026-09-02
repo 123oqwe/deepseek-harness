@@ -32,7 +32,14 @@
  * `CompletedGateEvidence`, and every `--required-artifact` path declared at
  * `collect-evidence.mjs init` (`<sidecar>/manifest.json`) must genuinely be
  * present in `requiredBuildArtifacts` — proving must[2] holds for real
- * collected evidence, not only for a compile-time literal.
+ * collected evidence, not only for a compile-time literal. The manifest
+ * sidecar is itself required to exist for this re-derivation to run at all
+ * (F-stage finding: silently treating a missing manifest as "no required
+ * artifacts declared" would let a package that dropped a required artifact
+ * key entirely — as opposed to merely losing the underlying file's real
+ * bytes, already caught above — verify clean). See
+ * `verifyAcceptedInvariant`'s own doc comment for a known residual gap this
+ * F-stage slice found but could not close within its declared files.
  *
  * CLI: `node scripts/release/verify-evidence.mjs [--repo-root <path>] --evidence <path>`
  * `--repo-root` defaults to `process.cwd()`. Exits 0 with no mismatches, 1
@@ -89,7 +96,32 @@ function verifyGateFiles(record, repoRoot, dir, label, mismatches) {
   }
 }
 
-/** Re-derives must[2] against the real loaded data: an `accepted: true` package must genuinely have every required gate passing and every declared required artifact present. */
+/**
+ * Re-derives must[2] against the real loaded data: an `accepted: true`
+ * package must genuinely have every declared required artifact path
+ * present in `requiredBuildArtifacts`, and every entry actually present in
+ * `requiredGates` must be a genuinely passing `CompletedGateEvidence`.
+ * `requiredArtifactPaths` cross-references the sidecar manifest's own
+ * independently-recorded list, never just whatever keys happen to be
+ * present in `requiredBuildArtifacts` — so an artifact path whose entry was
+ * deleted entirely from the package (not merely left with a stale digest)
+ * is still caught; `verify`'s caller treats the manifest's own absence as a
+ * hard failure for the same reason.
+ *
+ * Known residual gap, not closed by this F-stage slice: no equivalent
+ * independent list exists for required GATE ids (the sidecar manifest
+ * records only `requiredArtifactPaths`), so a required gate id's entry
+ * deleted entirely from `requiredGates` — alongside a self-consistently
+ * recomputed `recordDigest`/package `signature`, which needs no secret key
+ * (see `collect-evidence.mjs`'s module doc) — is not detected here.
+ * Confirmed exploitable against a real fixture (two required gates, one
+ * entry deleted, signature recomputed to match: verifies clean). Closing it
+ * needs a `requiredGateIds` record persisted at collection time
+ * (`collect-evidence.mjs`'s `cmdInit`, parity with its existing
+ * `requiredArtifactPaths` write) — outside this slice's declared files;
+ * reported for Supervisor adjudication (BLOCKED-012-class) rather than
+ * self-approved here.
+ */
 function verifyAcceptedInvariant(pkg, requiredArtifactPaths, mismatches) {
   if (pkg.accepted !== true) return
   for (const [gateId, record] of Object.entries(pkg.requiredGates)) {
@@ -163,8 +195,12 @@ export function verify(repoRoot, evidencePath) {
   }
 
   const manifestPath = join(dir, 'manifest.json')
-  const requiredArtifactPaths = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')).requiredArtifactPaths : []
-  verifyAcceptedInvariant(pkg, requiredArtifactPaths, mismatches)
+  if (!existsSync(manifestPath)) {
+    mismatches.push(`manifest sidecar missing at ${manifestPath}`)
+  } else {
+    const requiredArtifactPaths = JSON.parse(readFileSync(manifestPath, 'utf8')).requiredArtifactPaths ?? []
+    verifyAcceptedInvariant(pkg, requiredArtifactPaths, mismatches)
+  }
 
   return { ok: mismatches.length === 0, mismatches }
 }
