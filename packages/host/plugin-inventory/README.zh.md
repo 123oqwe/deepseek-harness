@@ -60,7 +60,7 @@ Fiber 状态映射到公共阶段词汇，其中 `disposed` 折叠为 `null`—�
 | 文件 | 职责 |
 |---|---|
 | [`src/index.ts`](src/index.ts) | `PluginInventoryGateway`：`pluginInventory` Remote 服务与 Loader 投影 |
-| [`src/types.ts`](src/types.ts) | 公共 payload 类型：`PluginInventoryEntry`、`PluginInventorySnapshot`、`PluginFiberPhase` |
+| [`src/types.ts`](src/types.ts) | 公共 payload 类型：`PluginInventoryEntry`、`PluginInventorySnapshot`、`PluginFiberPhase`;以及 Epic P1-01 的声明/实际观察权限类型——`PluginPermissionState`、`PluginPackageIdentity`、`PluginProvenance` |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴生插件（无运行时不变式；每个快照都投影 Loader 持有的状态） |
 
 Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产物。
@@ -97,7 +97,7 @@ Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产�
 这些限制说明一个点时刻清单无法告诉客户端什么。它们是当前包约束，不是任务积压。
 
 - **仅表示调用当下**——结果不包含持久的失败历史或订阅；只要不存在存活的根 Fiber，就会报告 `null`，而不区分其原因。
-- **无来源与修改能力**——服务不识别条目由哪个 bundle、profile 或 override 引入，也不能在任一平面启用、停用、添加或移除插件。
+- **无来源与修改能力**——服务不识别条目由哪个 bundle、profile 或 override 引入，也不能在任一平面启用、停用、添加或移除插件。`src/types.ts` 的 `PluginPermissionState`/`PluginPackageIdentity`/`PluginProvenance`（Epic P1-01）固定了后续读取器将要填充的形状——把一个 `PluginInventoryEntry` 与真实的 `package.json` 读取、`classifyPluginDeclaration` 调用，以及一次实际注册走查（`@deepseek-ai/dsh-plugin-manifest`）配对——但本包目前尚未构造任何一个；`pluginInventory/list` 的快照并不携带它们。
 - **预设仅随 roster 出现**——未装 `dsh-agent-presets` 的部署只提供 Loader 条目；`agentPresets` 字段缺席而非为空。
 
 <a id="dev-note"></a>

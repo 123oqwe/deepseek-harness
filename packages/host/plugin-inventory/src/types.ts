@@ -1,4 +1,10 @@
 import type { Branded } from '@deepseek-ai/dsh-brand'
+import type {
+  ObservedPluginCapabilities,
+  PluginDeclaration,
+  PluginRegistrationComparison,
+  PluginTrustDecision,
+} from '@deepseek-ai/dsh-plugin-manifest'
 
 /** Stable Loader-tree identity of one configured plugin entry. */
 export type PluginEntryId = Branded<'PluginEntryId'>
@@ -67,4 +73,67 @@ export interface PluginInventorySnapshot {
    * composed in this deployment.
    */
   readonly agentPresets?: readonly AgentPresetPluginGroup[]
+}
+
+/**
+ * One installed plugin package's exact identity: the npm package name and
+ * installed version its own `package.json` declares. Mirrors this repo's
+ * existing `DeepSeekPluginPackageIdentity` naming
+ * (`@deepseek-ai/dsh-plugin-package-inventory-deepseek`, which resolves the
+ * same real-world fact — the `name`/`version` of the package that owns an
+ * active Loader entry — for DeepSeek request contribution) without this
+ * host package depending on that DeepSeek-request-specific one.
+ */
+export interface PluginPackageIdentity {
+  readonly name: string
+  readonly version: string
+}
+
+/**
+ * How a plugin entry's manifest/bundle patch reached the running Loader
+ * tree. `'bundle'` — a `dsh.profile.bundles` layer (`ProfileLayer.packageName`
+ * in `@deepseek-ai/dsh-app-boot`'s profile composition); `'agent-preset'` — a
+ * row in a composed {@link AgentPresetPluginGroup}; `'built-in'` — mounted
+ * directly by the harness with no package or preset boundary of its own.
+ */
+export type PluginProvenanceKind = 'bundle' | 'agent-preset' | 'built-in'
+
+/** Where one plugin entry's manifest/bundle patch reached the running Loader tree. */
+export interface PluginProvenance {
+  readonly kind: PluginProvenanceKind
+  /**
+   * The bundle package name (`kind: 'bundle'`) or agent-preset id
+   * (`kind: 'agent-preset'`, matching {@link AgentPresetPluginGroup.id})
+   * this entry composed through; absent for a `'built-in'` entry, which has
+   * no such identity to name.
+   */
+  readonly source?: string
+}
+
+/**
+ * must[0]/acceptance[1]'s declared-vs-observed permission state for one
+ * plugin entry: what its package.json's `dsh` field declares
+ * ({@link PluginDeclaration}, `@deepseek-ai/dsh-plugin-manifest`'s
+ * Contract-stage classification, reused directly here rather than
+ * summarized — a plugin with a valid manifest carries the full
+ * `PluginManifestV2` through `declaration.manifest`), what it actually
+ * registered into the live Cordis `Context`
+ * ({@link ObservedPluginCapabilities}), the installed package identity, and
+ * where the entry came from. `comparison`/`trustDecision` are present only
+ * once a caller has actually run
+ * `@deepseek-ai/dsh-plugin-manifest`'s `compareDeclaredToObserved`/
+ * `decidePluginTrust` against `declaration`/`observed` — this Provider-stage
+ * type only fixes the shape; pairing a live `PluginInventoryEntry` with a
+ * real `package.json` read, a real `classifyPluginDeclaration` call, and a
+ * real observed-registration walk is a later stage's job — this package's
+ * own `src/index.ts` does not build one.
+ */
+export interface PluginPermissionState {
+  readonly entryId: PluginEntryId
+  readonly packageIdentity: PluginPackageIdentity
+  readonly provenance: PluginProvenance
+  readonly declaration: PluginDeclaration
+  readonly observed: ObservedPluginCapabilities
+  readonly comparison?: PluginRegistrationComparison
+  readonly trustDecision?: PluginTrustDecision
 }

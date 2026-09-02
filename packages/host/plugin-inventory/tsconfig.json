@@ -21,6 +21,9 @@
       "path": "../../util/brand"
     },
     {
+      "path": "../../plugin/plugin-manifest"
+    },
+    {
       "path": "../../typert/protocol"
     },
     {

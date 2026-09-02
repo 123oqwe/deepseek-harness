@@ -1,5 +1,5 @@
 ---
-description: "Plugin Manifest v2 的 Contract 阶段类型表面与纯校验逻辑,供需要确切了解插件必须声明什么、schema/通配检查如何工作的用户与维护者阅读。"
+description: "Plugin Manifest v2 的类型表面、纯校验逻辑与声明/实际观察比对,供需要确切了解插件必须声明什么、schema/通配检查如何工作、quarantine 决策如何推导的用户与维护者阅读。"
 kind: "package-library"
 ---
 
@@ -11,7 +11,7 @@ kind: "package-library"
 
 `dsh-plugin-manifest` 固定了 Epic P1-01 Plugin Manifest v2 的类型表面与纯校验逻辑:插件包在 `package.json` 的 `dsh` 字段下携带的 `dsh.manifestVersion=2` 形态(must[0])——services、tools、skills、MCP servers/resources/prompts、events、filesystem、network、process、secrets、UI surfaces、data stores、migrations、执行模式与兼容性。每个 Tool/MCP capability,以及每个远程 Skill/MCP Provider,都声明 side-effect class、auth audience、allowed destinations 与 data classification(must[1]/acceptance[3])。本包同时兼容读取既有的 `dsh.bundle` 格式,并始终标记为 `legacy-untrusted`(must[3]),并检测通配权限申请(acceptance[0])。
 
-本包目前只交付 Contract 阶段切片:`src/types.ts` 的类型表面、`src/validate.ts` 的纯 schema/通配/legacy 读取函数,以及 `src/invariant.ts` 的 explained-empty 伴随检查。尚未接入 `dsh plugin`/profile 启动的真实读取器——没有 CLI、没有 Cordis 注册表比对、没有安装器决策。参见[已知限制与延后工作](#known-limitations-and-deferred-work)。
+`src/index.ts` 现在把每个 Contract 阶段运行时函数与类型一并 re-export,并新增了本包的 Provider 阶段逻辑:`compareDeclaredToObserved` 把一份已校验 manifest 的声明能力,与插件实际注册进活跃 Cordis `Context` 的内容做比对;`decidePluginTrust` 把该比对结果转化为 acceptance[0] 所要求的 quarantine 决策。两者都是对已算好数据的纯函数——本包仍未接入 `dsh plugin`/profile 启动的真实读取器:没有 CLI、没有走查活跃 `Context` 来构建这两个函数所比对的 `observed` 值的代码、没有安装器决策。参见[已知限制与延后工作](#known-limitations-and-deferred-work)。
 
 ## 目录
 
@@ -27,10 +27,10 @@ kind: "package-library"
 <a id="use-this-package"></a>
 ## 使用本包
 
-对 `package.json` 的 `dsh` 字段分类并按 schema 校验一份 manifest:
+对 `package.json` 的 `dsh` 字段分类并按 schema 校验一份 manifest——从包根或文档记载的 `/validate` 子路径导入均可:
 
 ```ts
-import { classifyPluginDeclaration, validatePluginManifestV2, detectWildcardPermissions } from '@deepseek-ai/dsh-plugin-manifest/validate'
+import { classifyPluginDeclaration, validatePluginManifestV2, detectWildcardPermissions } from '@deepseek-ai/dsh-plugin-manifest'
 
 declare const dshField: unknown // package.json's parsed "dsh" field
 
@@ -44,7 +44,23 @@ if (result.valid) {
 }
 ```
 
-每个导出都是对已解析 `unknown` JSON 数据的纯函数——没有一个会读文件、启动进程,或 import 它所校验的插件包本身。本包不为 `PluginManifestV2` 导出任何构造函数:插件作者把 manifest 写成自己 `package.json` 里的字面 JSON,本包只负责读取和检查它。
+把一份已校验 manifest 的声明与插件实际注册的内容做比对,并从结果推导 quarantine 决策:
+
+```ts
+import { compareDeclaredToObserved, decidePluginTrust, type ObservedPluginCapabilities } from '@deepseek-ai/dsh-plugin-manifest'
+
+declare const observed: ObservedPluginCapabilities // built by a later stage from a live Cordis Context
+
+if (result.valid) {
+  const comparison = compareDeclaredToObserved(result.manifest, observed)
+  // comparison.mismatches: capability names declared but never registered, or registered but never declared
+  // comparison.wildcardFindings: same wildcard findings detectWildcardPermissions already reports
+  const trust = decidePluginTrust(comparison)
+  // trust is 'active' when comparison has neither, 'quarantined' otherwise
+}
+```
+
+每个导出都是对已算好数据的纯函数——没有一个会读文件、启动进程、import 它所校验的插件包本身,或构造 Cordis `Context`。本包不为 `PluginManifestV2` 导出任何构造函数:插件作者把 manifest 写成自己 `package.json` 里的字面 JSON,本包只负责读取、检查与比对它。
 
 -----
 
@@ -69,7 +85,7 @@ if (result.valid) {
 |---|---|
 | [`src/types.ts`](src/types.ts) | `PluginManifestV2` 类型表面:每个 must[0] 字段、must[1] 的 Tool/MCP 副作用字段,以及 `PluginDeclaration`/`LegacyBundleDeclaration` 分类类型 |
 | [`src/validate.ts`](src/validate.ts) | 纯 schema 校验(`validatePluginManifestV2`)、静态数据检查(`assertJsonSerializable`)、通配权限检测(`detectWildcardPermissions`),以及旧版 `dsh.bundle` 兼容读取(`parseLegacyBundleDeclaration`、`classifyPluginDeclaration`) |
-| [`src/index.ts`](src/index.ts) | `./types.ts` 的纯类型 re-export——零运行时导出、零 Cordis 注册(本 Contract 阶段切片的强制 B4(f) 脚手架) |
+| [`src/index.ts`](src/index.ts) | 本包真正的运行时入口:re-export 每个 `./types.ts` 类型与 `./validate.ts` 函数,并新增 `ObservedPluginCapabilities`、`compareDeclaredToObserved` 与 `decidePluginTrust`——声明/实际观察比对与 quarantine 决策 |
 | [`src/invariant.ts`](src/invariant.ts) | 不变式伴随检查:explained-empty——本切片尚不存在已构造的 manifest 值或安装器 |
 
 </details>
@@ -82,6 +98,7 @@ if (result.valid) {
 - [`docs/plugins/manifest-v2.md`](../../../docs/plugins/manifest-v2.zh.md)——manifest 格式的用户侧文档。
 - [`spec/capability-manifest.schema.json`](../../../spec/capability-manifest.schema.json)——与本包类型表面逐字段对应的 JSON Schema(draft 2020-12)。
 - [`tests/manifest.spec.ts`](tests/manifest.spec.ts)——Contract 阶段的证明,包括本包 TypeScript 校验器与 JSON Schema 文档(ajv)在 golden fixture 上的一致性。
+- [`tests/manifest.provider.spec.ts`](tests/manifest.provider.spec.ts)——`compareDeclaredToObserved`/`decidePluginTrust` 的 Provider 阶段证明。
 - [`docs/architecture.md#profiles-and-bundles`](../../../docs/architecture.zh.md#profiles-and-bundles)——本包 manifest 所附加的既有 `dsh.bundle`/`dsh.profile` 词汇。
 
 -----
@@ -99,8 +116,9 @@ if (result.valid) {
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **尚无真实读取器或 CLI**——本 Contract 阶段切片只交付类型表面与纯校验函数;后续 P/U 阶段切片会把 `apps/cli/src/plugin.ts`(`pnpm plugin:verify <fixture>`)、`apps/cli/src/profile-boot.ts` 与 `packages/host/plugin-inventory` 接入,真正在安装与 profile 启动时调用 `classifyPluginDeclaration`。
-- **没有 Cordis 注册表比对**——acceptance[0] 的"声明与实际注册不一致"(比对 manifest 与已启动 profile 的 Cordis 注册表实际内容)需要一个真实的 `Context`,而本纯函数包从不构造它。该比对是 P/U 阶段的运行时职责。
+- **尚无真实读取器或 CLI**——本包仍只交付对已算好数据的纯函数;后续 Usage 阶段切片会把 `apps/cli/src/plugin.ts`(`pnpm plugin:verify <fixture>`)、`apps/cli/src/profile-boot.ts` 与 `packages/host/plugin-inventory` 接入,真正在安装与 profile 启动时调用 `classifyPluginDeclaration`/`compareDeclaredToObserved`/`decidePluginTrust`。
+- **`compareDeclaredToObserved` 从不自行构建 `observed` 值**——acceptance[0] 的"声明与实际注册不一致"需要走查一个真实 `Context` 的实际注册内容,而本纯函数包从不构造它。从已启动 profile 的实际 Cordis 注册表构建 `ObservedPluginCapabilities` 是后续 Usage 阶段的职责(通常是 `packages/host/plugin-inventory` 的 `PluginPermissionState`)。
+- **`decidePluginTrust` 从不强制执行 quarantine**——它只是一个纯决策(`'active' | 'quarantined'`);阻断新的工具调用、隔离插件的 `ctx` 面,或在安装器 UI 中展示该决策,都需要一次真实的启动流程,是后续阶段的工作。它也从不接触 `'missing'` 或 `'legacy-untrusted'` 声明——Contract 阶段的 `isDeniedInProductionByDefault` 已经回答了那条独立的、生产默认拒绝的轴线。
 - **`detectWildcardPermissions` 只识别精确的 `'*'`、`'**'` 与 `'/'` 模式**——一个实质上过宽但并非字面等于这三种字符串之一的模式(例如一个不必要地宽泛但非最大化的 glob)不会被标记。更细粒度的过度授权启发式是后续阶段(如果有)的工作。
 - **`sideEffectClass` 是单一声明标签,而非集合**——一个具有多种副作用(例如同时有 `'write'` 与 `'network'`)的 capability 只声明适用的单个最高影响等级;本 schema 不进一步拆解复合副作用。
 - **`assertJsonSerializable` 只在校验那一刻检查取值,不证明不可变性**——一个字段由 getter 支撑的 manifest,可以在一次读取时通过校验,而后续读取同一个 `result.manifest` 引用(未做克隆)时返回不同内容。文档约定的调用方式(`JSON.parse` 的输出,结构上不可能产出 getter)在实践中规避了这一点,但在公开 API 接受 `unknown` 的地方,这一约定并未被类型系统强制。

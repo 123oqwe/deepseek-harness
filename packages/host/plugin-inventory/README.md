@@ -60,7 +60,7 @@ Fiber states map onto the public phase vocabulary, with `disposed` folding into 
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | `PluginInventoryGateway`: the `pluginInventory` Remote service and the Loader projection |
-| [`src/types.ts`](src/types.ts) | Public payload types: `PluginInventoryEntry`, `PluginInventorySnapshot`, `PluginFiberPhase` |
+| [`src/types.ts`](src/types.ts) | Public payload types: `PluginInventoryEntry`, `PluginInventorySnapshot`, `PluginFiberPhase`; plus Epic P1-01's declared-vs-observed permission types — `PluginPermissionState`, `PluginPackageIdentity`, `PluginProvenance` |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion (no runtime invariant; every snapshot projects Loader-owned state) |
 
 Typert generates the Host and Client Remote artifacts exposed by `./typert` and `./remote`.
@@ -97,7 +97,7 @@ None; this package neither assembles nor sends a provider request.
 These limits define what a point-in-time inventory cannot tell a client. They are current package constraints, not a task backlog.
 
 - **Point-in-time state only** — the result contains no durable failure history or subscription; a missing root Fiber is reported as `null`, regardless of why no live root exists.
-- **No provenance or mutation** — the service does not identify which bundle, profile, or override introduced an entry, and it cannot enable, disable, add, or remove plugins in either plane.
+- **No provenance or mutation** — the service does not identify which bundle, profile, or override introduced an entry, and it cannot enable, disable, add, or remove plugins in either plane. `src/types.ts`'s `PluginPermissionState`/`PluginPackageIdentity`/`PluginProvenance` (Epic P1-01) fix the shape a later reader will populate — pairing a `PluginInventoryEntry` with a real `package.json` read, a `classifyPluginDeclaration` call, and an observed-registration walk (`@deepseek-ai/dsh-plugin-manifest`) — but nothing in this package constructs one yet; `pluginInventory/list`'s snapshot does not carry them.
 - **Presets appear only with a roster** — a deployment without `dsh-agent-presets` serves Loader entries alone; the `agentPresets` field is absent rather than empty.
 
 <a id="dev-note"></a>
