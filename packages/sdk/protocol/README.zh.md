@@ -114,6 +114,7 @@ kind: "package-library"
 - **无协议版本协商**——握手只携带 `serverInfo.version`（`0.0.1`，客户端不校验）；处于预发布阶段，无兼容承诺。
 - **无取消与会话关闭方法**——客户端放弃轮次的方式是关闭运行时进程；见 [JSON-RPC 服务插件](../server/README.zh.md)。
 - **server→client 请求是未使用的功能**——传输层支持，但服务器从不发送；Python SDK 的应答接口为未来审批流程预留。
+- **client→server 身份类型检查是按名称范围限定的，而非按类型范围限定**——[`tests/types.spec.ts`](tests/types.spec.ts) 固定了 BLOCKED-025 的结论：`IdentityContext` 只从服务端流向客户端；但其 `'identity' extends keyof ...` 断言只检测字面命名为 `identity` 的字段——client→server 载荷类型上若出现同为 `IdentityContext` 类型、但名称不同的字段，会编译通过而未被检测到。仓库中没有其他检查项为此提供基于类型的覆盖。
 
 <a id="dev-note"></a>
 ### 开发备注
