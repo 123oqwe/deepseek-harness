@@ -59,9 +59,9 @@
  * `.../gitdiff.patch` — so `verify-evidence.mjs` can recompute every digest
  * fully offline, without re-running any gate (acceptance[1]).
  * `<sidecar>/manifest.json` additionally records the `--required-artifact`
- * paths declared at `init` — private bookkeeping this script and
- * `verify-evidence.mjs` both read, kept out of the typed `EvidencePackage`
- * JSON itself (the C-stage type reserves no field for it).
+ * paths and `--required-gate` ids declared at `init` — private bookkeeping
+ * this script and `verify-evidence.mjs` both read, kept out of the typed
+ * `EvidencePackage` JSON itself (the C-stage type reserves no field for it).
  *
  * CLI: `node scripts/release/collect-evidence.mjs <init|run|build-artifact> [--repo-root <path>] [--out <path>] ...`
  * `--repo-root` defaults to `process.cwd()`; `--out` defaults to
@@ -245,7 +245,7 @@ function cmdInit(flags) {
   pkg.signature = digestOfPackage(pkg)
   mkdirSync(dirname(outPath), { recursive: true })
   writePackage(outPath, pkg)
-  writeFileSync(join(dir, 'manifest.json'), `${JSON.stringify({ requiredArtifactPaths }, null, 2)}\n`)
+  writeFileSync(join(dir, 'manifest.json'), `${JSON.stringify({ requiredArtifactPaths, requiredGateIds }, null, 2)}\n`)
   process.stdout.write(`collect-evidence init: wrote ${outPath}\n`)
   return 0
 }

@@ -801,7 +801,7 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
         expect(result.stdout).toContain('artifact missing at coverage-report.txt')
       })
 
-      it('detects the manifest sidecar deleted entirely -- must[2] cannot be re-derived without its required-artifact-path list', () => {
+      it('detects the manifest sidecar deleted entirely -- must[2] cannot be re-derived without its required-gate-id and required-artifact-path lists', () => {
         const { root } = collectOneAcceptedGate()
         unlinkSync(join(root, '.dsh/evidence/evidence.d/manifest.json'))
 
@@ -850,6 +850,33 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
         expect(result.status).toBe(1)
         expect(result.stdout).toContain('not a passing CompletedGateEvidence')
         expect(result.stdout).not.toContain('recordDigest mismatch')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
+
+      it('detects a required gate silently deleted from requiredGates entirely, self-consistently forged so only the manifest cross-check catches it', () => {
+        const { root, baseSha } = makeEvidenceFixture()
+        captureBaseline(root)
+        const initResult = collectInit(root, baseSha, ['typecheck', 'lint'], [])
+        expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+        const typecheckPath = writeGateScript(root, 'typecheck-gate.mjs', "console.log('ok'); process.exit(0)")
+        const typecheckResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, typecheckPath])
+        expect(typecheckResult.status, `typecheck run stderr: ${typecheckResult.stderr}`).toBe(0)
+        const lintPath = writeGateScript(root, 'lint-gate.mjs', "console.log('ok'); process.exit(0)")
+        const lintResult = collectRun(root, 'lint', ['--required'], [process.execPath, lintPath])
+        expect(lintResult.status, `lint run stderr: ${lintResult.stderr}`).toBe(0)
+        expect(readEvidence(root).accepted, 'precondition: both required gates genuinely passed').toBe(true)
+        const clean = verifyEvidence(root)
+        expect(clean.status, `precondition: must verify clean before tampering: ${clean.stdout}`).toBe(0)
+
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredGates: Record<string, unknown>, signature?: unknown }
+        delete pkg.requiredGates.lint
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('accepted=true but required gate lint is missing from requiredGates entirely')
         expect(result.stdout).not.toContain('package signature mismatch')
       })
 
