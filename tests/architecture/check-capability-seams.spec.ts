@@ -9,10 +9,10 @@
  * suite covers only the real filesystem scan and gate wiring.
  */
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 import { describe, expect, it, afterEach } from 'vitest'
 import {
@@ -280,4 +280,232 @@ describe('CI output (acceptance[3]): the real CLI script names the edge, source 
     expect(stdout).toContain('packages/fixture/consumer/src/index.ts')
     expect(stdout).toContain('fixture-def')
   })
+})
+
+/**
+ * Epic P0-03 F-stage. `tests/architecture/capability-seams.spec.ts` (declared
+ * in the epic's F-stage files) covers the pure `capability-seams.ts` module;
+ * these cases exercise the real filesystem scan and gate wiring this file
+ * already owns (U-stage), so they land here instead — a files[] deviation
+ * (BLOCKED-012) the Supervisor's manifest-patch process should record.
+ */
+describe('multiple simultaneous violations (F-stage): the real scanner reports every violation from one scan, not just one', () => {
+  it('reports a deep-import, a provider-app-dependency, and a missing-provider violation together from one real fixture', () => {
+    const fixture = fixtureRoot()
+    // Family "seam" carries full must[2] evidence (provider fixture, consumer
+    // composition test, unload/rollback test) so its only violations are the
+    // two structural ones below — isolated from the non-reversible-registration
+    // check U-stage's fixtures already cover one kind at a time.
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeManifest(fixture, 'packages/fixture/provider', 'fixture-provider')
+    writeManifest(fixture, 'packages/fixture/consumer', 'fixture-consumer')
+    writeManifest(fixture, 'packages/client/fixture-app', 'fixture-app')
+    writeSource(fixture, 'packages/fixture/provider', 'src/thing.ts', 'export const thing = 1\n')
+    writeSource(fixture, 'packages/fixture/provider', 'src/index.ts', "import 'fixture-app'\n")
+    writeSource(fixture, 'packages/fixture/consumer', 'src/index.ts', "import { thing } from 'fixture-provider/src/thing.ts'\n")
+    writeSource(fixture, 'packages/fixture/provider', 'tests/provider.spec.ts', "import { it } from 'vitest'\nit('provides', () => {})\n")
+    writeSource(fixture, 'packages/fixture/consumer', 'tests/consumer.spec.ts', "import 'fixture-def'\nimport { it } from 'vitest'\nit('disposes cleanly on unload', () => {})\n")
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [
+        { id: 'seam', definition: 'fixture-def', providers: ['fixture-provider'], consumers: ['fixture-consumer'] },
+        // A second, unrelated family with zero providers: missing-provider
+        // fires simultaneously alongside "seam"'s two structural violations.
+        { id: 'empty', definition: 'fixture-def', providers: [], consumers: [] },
+      ],
+      allowlist: [],
+    })
+
+    const { violations } = runCapabilitySeamsCheck(fixture)
+    const kinds = violations.map(violation => violation.kind)
+    expect(kinds).toContain('deep-import')
+    expect(kinds).toContain('provider-app-dependency')
+    expect(kinds).toContain('missing-provider')
+    expect(violations.length).toBeGreaterThanOrEqual(3)
+  })
+})
+
+describe('malformed architecture.layers.json (F-stage): the real scanner fails closed with a clear schema error, never a crash', () => {
+  it('reports a clear error and zero violations, without throwing, when families is missing from the real fixture file', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, { $schemaVersion: 1, allowlist: [] })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual(['architecture.layers.json: families must be an array'])
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error and zero violations, without throwing, when a family in the real fixture file is missing providers', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', consumers: [] }],
+      allowlist: [],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual(['fixture: providers must be an array'])
+    expect(result.violations).toEqual([])
+  })
+
+  it('still reports a clear schema error (and keeps scanning) when a real fixture family references a package absent from the workspace', () => {
+    // Already proven at the pure validateArchitectureLayers level in
+    // tests/architecture/capability-seams.spec.ts; this is the same case
+    // proven through the real filesystem scan (must[1]'s real boundary).
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['does-not-exist'], consumers: [] }],
+      allowlist: [],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual(['fixture: does-not-exist is not a workspace package'])
+  })
+
+  it('still reports a clear schema error (and keeps scanning) when the real fixture file declares a family id twice', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [
+        { id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: [] },
+        { id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: [] },
+      ],
+      allowlist: [],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual(['family id fixture is declared more than once'])
+  })
+
+  // The three cases below are array-ELEMENT malformations, not array-type
+  // malformations: `families`/`allowlist` are real arrays (the cases above
+  // already cover the array-typed field itself being missing/wrong-typed),
+  // but one element of the array is not a well-formed object. Before this
+  // fix, each crashed with an opaque TypeError reading a field off `null`/
+  // `undefined` instead of reporting a schema error.
+
+  it('reports a clear error and zero violations, without throwing, when a real fixture families element is null', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, { $schemaVersion: 1, families: [null], allowlist: [] })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'architecture.layers.json: a capability family must be an object, got null',
+    ])
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error and zero violations, without throwing, when a real fixture allowlist element is null', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: [] }],
+      allowlist: [null],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'architecture.layers.json: an allowlist entry must be an object, got null',
+    ])
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error, without throwing, when a real fixture allowlist entry is missing its owner field', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeManifest(fixture, 'packages/fixture/consumer', 'fixture-consumer')
+    writeSource(fixture, 'packages/fixture/def', 'tests/def.spec.ts', "import { it } from 'vitest'\nit('disposes cleanly on unload', () => {})\n")
+    writeSource(fixture, 'packages/fixture/consumer', 'tests/consumer.spec.ts', "import 'fixture-def'\nimport { it } from 'vitest'\nit('consumes', () => {})\n")
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: ['fixture-consumer'] }],
+      allowlist: [{
+        kind: 'missing-provider',
+        from: 'fixture-def',
+        to: 'fixture-def',
+        reason: 'hand-edited allowlist entry',
+        removalDate: '2026-12-01',
+        // owner intentionally omitted -- a plausible hand-edit slip.
+      }],
+    })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'missing-provider fixture-def -> fixture-def: owner must be a string, got undefined',
+    ])
+    // owner is not part of hasScannableShape's gate (unlike a malformed
+    // families/allowlist element), so the scan still runs; the fixture
+    // supplies full must[2] evidence so there is no real violation, which
+    // isolates the owner-type schema error from unrelated violations.
+    expect(result.violations).toEqual([])
+  })
+
+  it('reports a clear error, without throwing, when a real fixture families element is a string instead of an object', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeLayers(fixture, { $schemaVersion: 1, families: ['fixture'], allowlist: [] })
+
+    const result = runCapabilitySeamsCheck(fixture)
+    expect(result.schemaErrors).toEqual([
+      'architecture.layers.json: a capability family must be an object, got "fixture"',
+    ])
+    expect(result.violations).toEqual([])
+  })
+})
+
+describe('the real `pnpm run architecture:seams` command (F-stage): CI-blocking exit code end-to-end, not just a function\'s return value', () => {
+  it('matches the declared package.json script this suite\'s other cases assume', () => {
+    const rootPackageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as { scripts?: Record<string, string> }
+    expect(rootPackageJson.scripts?.['architecture:seams']).toBe('tsx scripts/architecture/check-capability-seams.mjs')
+  })
+
+  it('exits 0 for a real clean fixture when invoked as the real pnpm script (not the underlying function directly)', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeManifest(fixture, 'packages/fixture/consumer', 'fixture-consumer')
+    writeSource(fixture, 'packages/fixture/def', 'tests/def.spec.ts', "import { it } from 'vitest'\nit('disposes cleanly on unload', () => {})\n")
+    writeSource(fixture, 'packages/fixture/consumer', 'tests/consumer.spec.ts', "import 'fixture-def'\nimport { it } from 'vitest'\nit('consumes', () => {})\n")
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['fixture-def'], consumers: ['fixture-consumer'] }],
+      allowlist: [],
+    })
+
+    // cwd stays the real repository so pnpm resolves its own tsx toolchain;
+    // --repo-root redirects the scan to the fixture, matching this epic's
+    // own validation clause ("对一个测试 package 临时加入...deep import，确认失败后恢复")
+    // without ever mutating the real repository's tracked source.
+    const result = spawnSync('pnpm', ['run', 'architecture:seams', '--', '--repo-root', fixture], { cwd: root, encoding: 'utf8' })
+    expect(result.status, `stdout: ${result.stdout}\nstderr: ${result.stderr}`).toBe(0)
+    expect(result.stdout).toContain('0 violation(s)')
+  }, 30_000)
+
+  it('exits non-zero for a real fixture violation when invoked as the real pnpm script, naming the edge, file, and remediation', () => {
+    const fixture = fixtureRoot()
+    writeManifest(fixture, 'packages/fixture/def', 'fixture-def')
+    writeManifest(fixture, 'packages/fixture/provider', 'fixture-provider')
+    writeManifest(fixture, 'packages/fixture/consumer', 'fixture-consumer')
+    writeSource(fixture, 'packages/fixture/provider', 'src/thing.ts', 'export const thing = 1\n')
+    writeSource(fixture, 'packages/fixture/consumer', 'src/index.ts', "import { thing } from 'fixture-provider/src/thing.ts'\n")
+    writeLayers(fixture, {
+      $schemaVersion: 1,
+      families: [{ id: 'fixture', definition: 'fixture-def', providers: ['fixture-provider'], consumers: ['fixture-consumer'] }],
+      allowlist: [],
+    })
+
+    const result = spawnSync('pnpm', ['run', 'architecture:seams', '--', '--repo-root', fixture], { cwd: root, encoding: 'utf8' })
+    expect(result.status).not.toBe(0)
+    // main() reports violations through console.error, matching every other
+    // "unsuccessful command" line this gate prints.
+    expect(result.stderr).toContain('fixture-consumer -> fixture-provider')
+    expect(result.stderr).toContain('packages/fixture/consumer/src/index.ts')
+    expect(result.stderr).toContain('fixture-def')
+  }, 30_000)
 })

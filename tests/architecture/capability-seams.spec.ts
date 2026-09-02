@@ -21,6 +21,7 @@ import {
   validateAllowlistEntry,
   validateArchitectureLayers,
   validateCapabilityFamily,
+  type AllowlistEntry,
   type ArchitectureLayers,
   type CapabilityFamily,
   type ResolvedImport,
@@ -346,5 +347,120 @@ describe('isAllowlisted (acceptance[0])', () => {
     const violations = detectMissingProviderViolations(layersOf({ ...shellFamily, providers: [] }))
     expect(violations).toHaveLength(1)
     expect(isAllowlisted(violations[0] as SeamViolation, layers)).toBe(false)
+  })
+})
+
+/**
+ * Epic P0-03 F-stage: `architecture.layers.json` is untyped JSON at runtime —
+ * `ArchitectureLayers` only describes the well-formed shape, so a hand-edited
+ * document missing a required array field reaches these functions with no
+ * compile-time guarantee. Before this slice, a missing `families`/`allowlist`
+ * array or a family missing `providers`/`consumers` crashed with an opaque
+ * `TypeError: ... is not iterable` instead of the same clear, path-qualified
+ * schema error every other malformed case in this file already produces
+ * (`family id is declared more than once`, `is not a workspace package`,
+ * etc.) — a real gap against AGENTS.md's "Misconfiguration fails loud" and
+ * "validate at ... file ... boundaries" conventions. These cases assert the
+ * fix: every one of these fields now reports one clear error and the
+ * function returns normally instead of throwing.
+ */
+describe('malformed architecture.layers.json shape (F-stage: fails loud with a clear error, not a crash)', () => {
+  it('reports a clear error, and does not throw, when families is not an array', () => {
+    const doc = { $schemaVersion: 1, allowlist: [] } as unknown as ArchitectureLayers
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: families must be an array',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when allowlist is not an array', () => {
+    const doc = { $schemaVersion: 1, families: [] } as unknown as ArchitectureLayers
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: allowlist must be an array',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when a family is missing providers', () => {
+    const family = { id: 'shell', definition: '@deepseek-ai/dsh-shell', consumers: [] } as unknown as CapabilityFamily
+    expect(validateCapabilityFamily(family)).toEqual(['shell: providers must be an array'])
+    expect(validateArchitectureLayers(layersOf(family), new Set(['@deepseek-ai/dsh-shell'])))
+      .toContain('shell: providers must be an array')
+  })
+
+  it('reports a clear error, and does not throw, when a family is missing consumers', () => {
+    const family = { id: 'shell', definition: '@deepseek-ai/dsh-shell', providers: [] } as unknown as CapabilityFamily
+    expect(validateCapabilityFamily(family)).toEqual(['shell: consumers must be an array'])
+    expect(validateArchitectureLayers(layersOf(family), new Set(['@deepseek-ai/dsh-shell'])))
+      .toContain('shell: consumers must be an array')
+  })
+
+  it('still validates every well-formed family when only one family in the document is malformed', () => {
+    const malformed = { id: 'broken', definition: '@deepseek-ai/dsh-shell' } as unknown as CapabilityFamily
+    const errors = validateArchitectureLayers(
+      layersOf(shellFamily, malformed),
+      new Set([shellFamily.definition, ...shellFamily.providers, ...shellFamily.consumers]),
+    )
+    expect(errors).toContain('broken: providers must be an array')
+    expect(errors).toContain('broken: consumers must be an array')
+    // shellFamily itself is well-formed and fully in the workspace set: no
+    // spurious error attributed to it just because a sibling family is broken.
+    expect(errors.some(error => error.startsWith('shell:'))).toBe(false)
+  })
+
+  it('reports a clear error, and does not throw, when a families element is null', () => {
+    const family = null as unknown as CapabilityFamily
+    expect(validateCapabilityFamily(family)).toEqual([
+      'architecture.layers.json: a capability family must be an object, got null',
+    ])
+    expect(validateArchitectureLayers(layersOf(family), new Set())).toEqual([
+      'architecture.layers.json: a capability family must be an object, got null',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when an allowlist element is null', () => {
+    const doc = {
+      $schemaVersion: 1,
+      families: [],
+      allowlist: [null],
+    } as unknown as ArchitectureLayers
+    expect(validateAllowlistEntry(null as unknown as AllowlistEntry)).toEqual([
+      'architecture.layers.json: an allowlist entry must be an object, got null',
+    ])
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: an allowlist entry must be an object, got null',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when an allowlist entry is missing its owner field', () => {
+    const entry = {
+      kind: 'missing-provider',
+      from: '@deepseek-ai/dsh-authorization',
+      to: '@deepseek-ai/dsh-authorization',
+      reason: 'hand-edited allowlist entry',
+      removalDate: '2026-12-01',
+      // owner intentionally omitted — a plausible hand-edit slip.
+    } as unknown as AllowlistEntry
+    expect(validateAllowlistEntry(entry)).toEqual([
+      'missing-provider @deepseek-ai/dsh-authorization -> @deepseek-ai/dsh-authorization: owner must be a string, got undefined',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when a families element is a string or a number instead of an object', () => {
+    expect(validateCapabilityFamily('shell' as unknown as CapabilityFamily)).toEqual([
+      'architecture.layers.json: a capability family must be an object, got "shell"',
+    ])
+    expect(validateCapabilityFamily(42 as unknown as CapabilityFamily)).toEqual([
+      'architecture.layers.json: a capability family must be an object, got 42',
+    ])
+  })
+
+  it('reports a clear error, and does not throw, when families holds undefined (a sparse-array-shaped hole)', () => {
+    const doc = {
+      $schemaVersion: 1,
+      families: [undefined],
+      allowlist: [],
+    } as unknown as ArchitectureLayers
+    expect(validateArchitectureLayers(doc, new Set())).toEqual([
+      'architecture.layers.json: a capability family must be an object, got undefined',
+    ])
   })
 })

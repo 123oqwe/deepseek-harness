@@ -7,7 +7,11 @@
  * script while importing the `.ts` detector module directly — see
  * `docs/development.md#typescript-project-layout` on source-plane gates.
  *
- * Run: `pnpm run architecture:seams` (`tsx scripts/architecture/check-capability-seams.mjs`).
+ * Run: `pnpm run architecture:seams` (`tsx scripts/architecture/check-capability-seams.mjs
+ * [--repo-root <path>]`). `--repo-root` defaults to this script's own repository
+ * root (not `process.cwd()`) and exists for fixture-driven end-to-end tests
+ * (`tests/architecture/check-capability-seams.spec.ts`), matching
+ * `scripts/release/baseline-fingerprint.mjs`'s CLI.
  */
 
 import { readFileSync, globSync } from 'node:fs'
@@ -208,10 +212,39 @@ export function readCapabilityTestEvidence(root, packages, family) {
   return { familyId: family.id, hasProviderFixture, hasConsumerCompositionTest, hasUnloadRollbackTest }
 }
 
+/** Whether `value` is a non-null, non-array object — the runtime shape a `families[i]`/`allowlist[i]` element must have before this scanner reads any of its fields. */
+function isPlainObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * Whether `layers.families` and `layers.allowlist` are arrays, every element
+ * of each array is itself a well-formed object (not `null`, a string, a
+ * number, ...), and every family's `providers`/`consumers` are arrays — the
+ * minimum real shape the detector functions below (and `isAllowlisted`)
+ * assume when they iterate or index into a family or allowlist entry.
+ * `validateArchitectureLayers` already reports a clear schema error for each
+ * malformed field or element; this only decides whether it is safe to keep
+ * scanning.
+ * @param layers - the parsed `architecture.layers.json` document.
+ * @returns whether every array field and element the scan reads is actually well-formed.
+ */
+function hasScannableShape(layers) {
+  return Array.isArray(layers.families)
+    && Array.isArray(layers.allowlist)
+    && layers.families.every(family =>
+      isPlainObject(family) && Array.isArray(family.providers) && Array.isArray(family.consumers))
+    && layers.allowlist.every(entry => isPlainObject(entry))
+}
+
 /**
  * Run the complete capability-seam gate against a real (or fixture)
  * repository root: load `architecture.layers.json`, scan the real workspace,
  * and feed the resolved facts into `./capability-seams.ts`'s pure detectors.
+ * A document whose `families`/`allowlist`/per-family `providers`/`consumers`
+ * are not arrays, or whose `families`/`allowlist` hold a non-object element,
+ * fails closed: `schemaErrors` names the malformed field or element and
+ * `violations` stays empty rather than scanning against an unsafe shape.
  * @param root - repository (or fixture) root.
  * @returns document schema errors and unsuppressed seam violations.
  */
@@ -222,6 +255,10 @@ export function runCapabilitySeamsCheck(root) {
   const workspacePackageNames = new Set(packages.keys())
 
   const schemaErrors = validateArchitectureLayers(layers, workspacePackageNames)
+  if (!hasScannableShape(layers)) {
+    const families = Array.isArray(layers.families) ? layers.families.length : 0
+    return { schemaErrors, violations: [], scanned: { packages: packages.size, imports: 0, families } }
+  }
 
   const resolvedImports = collectResolvedImports(root, packages)
   const violations = []
@@ -255,9 +292,24 @@ export function formatViolation(violation) {
   return `  [${violation.kind}] ${violation.edge.from} -> ${violation.edge.to} (${violation.sourceFile}): ${violation.remediation}`
 }
 
+/**
+ * Resolve the repository root a CLI invocation scans: an explicit
+ * `--repo-root <path>` argument (fixture-driven end-to-end tests), or this
+ * script's own repository root otherwise — never `process.cwd()`, so the
+ * gate scans the same tree no matter where it is invoked from.
+ * @param args - CLI arguments (`process.argv.slice(2)`).
+ * @returns the resolved repository root.
+ */
+export function repoRootArg(args) {
+  const index = args.indexOf('--repo-root')
+  if (index === -1) return resolve(import.meta.dirname, '..', '..')
+  if (index + 1 >= args.length) throw new Error(`${GATE}: --repo-root requires a path`)
+  return resolve(args[index + 1])
+}
+
 /** CLI entry: run the gate against the repository root and report. @returns Nothing. */
 export function main() {
-  const root = resolve(import.meta.dirname, '..', '..')
+  const root = repoRootArg(process.argv.slice(2))
   const { schemaErrors, violations, scanned } = runCapabilitySeamsCheck(root)
   if (schemaErrors.length === 0 && violations.length === 0) {
     console.log(
