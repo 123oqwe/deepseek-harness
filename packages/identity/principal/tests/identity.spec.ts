@@ -302,6 +302,40 @@ describe('sameChainShape', () => {
     expect(currentPrincipal(a)).toEqual(currentPrincipal(b))
     expect(sameChainShape(a, b)).toBe(false)
   })
+
+  // Fix round attempt/P2-01-U-fix4-041919: fix round 3's own Reviewer,
+  // specifically instructed to probe for exactly this kind of overlooked
+  // field, found that AgentPrincipal.delegatedBy -- who authorized this
+  // agent's delegation -- was invisible to sameChainShape's kind/id/tenantId
+  // comparison. Two chains identical in length and in every entry's
+  // kind/id/tenantId, differing ONLY in the terminal agent's delegatedBy,
+  // previously reported the same shape.
+  it('reports a different shape when the terminal agent principal\'s delegatedBy differs, even with identical kind/id/tenantId throughout (Reviewer round-3 finding, closed in fix4)', () => {
+    const root = createUserPrincipal(PrincipalId('root'), TENANT_A)
+    const otherAuthorizer = createUserPrincipal(PrincipalId('other-authorizer'), TENANT_A)
+    const agentId = PrincipalId('agent-1')
+    const a = extendChain(createChain(root, 1000), createAgentPrincipal(agentId, TENANT_A, root.id), 2000)
+    const b = extendChain(createChain(root, 1000), createAgentPrincipal(agentId, TENANT_A, otherAuthorizer.id), 2000)
+    // Confirm kind/id/tenantId are identical at every position -- only delegatedBy differs.
+    expect(a.entries.length).toBe(b.entries.length)
+    expect(a.entries[0].principal).toEqual(b.entries[0].principal)
+    expect(a.entries[1]!.principal.kind).toBe(b.entries[1]!.principal.kind)
+    expect(a.entries[1]!.principal.id).toBe(b.entries[1]!.principal.id)
+    expect(a.entries[1]!.principal.tenantId).toBe(b.entries[1]!.principal.tenantId)
+    expect(sameChainShape(a, b)).toBe(false)
+  })
+
+  // Companion: a genuinely identical chain, including identical delegatedBy
+  // on every agent entry, must still report the same shape -- the new
+  // delegatedBy comparison must not add false-positive noise.
+  it('reports the same shape when delegatedBy matches on every agent entry, even across independently-constructed chains', () => {
+    const root = createUserPrincipal(PrincipalId('root'), TENANT_A)
+    const agentId = PrincipalId('agent-1')
+    const a = extendChain(createChain(root, 1000), createAgentPrincipal(agentId, TENANT_A, root.id), 2000)
+    const b = extendChain(createChain(root, 5000), createAgentPrincipal(agentId, TENANT_A, root.id), 6000)
+    expect(a).not.toBe(b)
+    expect(sameChainShape(a, b)).toBe(true)
+  })
 })
 
 describe('isAnonymousDev / isAdminPrincipal', () => {

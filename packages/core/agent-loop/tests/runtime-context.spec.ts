@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import { createChain, createServicePrincipal, createUserPrincipal, extendChain, PrincipalId, RunId, TenantId, TenantMismatchError } from '@deepseek-ai/dsh-principal'
+import { createAgentPrincipal, createChain, createServicePrincipal, createUserPrincipal, extendChain, PrincipalId, RunId, TenantId, TenantMismatchError } from '@deepseek-ai/dsh-principal'
 import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import { lastAttachedIdentity, resolveSessionIdentity, RuntimeContextProjection } from '../src/runtime-context.ts'
@@ -173,6 +173,57 @@ describe('resolveSessionIdentity', () => {
     const userASupplied = createUserPrincipal(PrincipalId('user-a'), TENANT_A)
     const suppliedChain = extendChain(createChain(serviceRootSupplied, 0), userASupplied, 1)
     const supplied: IdentityContext = { principal: userASupplied, runId: RunId('run-1'), chain: suppliedChain }
+
+    expect(recorded.chain).not.toBe(supplied.chain)
+    const result = resolveSessionIdentity(recorded, supplied)
+    expect(result).toEqual({ identity: supplied, shouldLog: false })
+  })
+
+  // Reviewer follow-up (fix round attempt/P2-01-U-fix4-041919): round 3's own
+  // Reviewer, specifically instructed to probe for exactly this kind of
+  // overlooked field, found that AgentPrincipal.delegatedBy -- who authorized
+  // this agent's delegation -- was invisible to both samePrincipalIdentity
+  // and sameChainShape. `recorded` and `supplied` are identical in chain
+  // length and in every entry's kind/id/tenantId; only the terminal agent's
+  // delegatedBy differs (root vs. a different same-tenant principal). Before
+  // this fix, sameChainShape reported these as the same shape and shouldLog
+  // came back false -- silently hiding a change in who authorized the
+  // delegation.
+  it('logs a resupply when chain shape and every kind/id/tenantId match but the terminal agent principal\'s delegatedBy differs (Reviewer round-3 finding, closed in fix4)', () => {
+    const root = createUserPrincipal(PrincipalId('root'), TENANT_A)
+    const otherAuthorizer = createUserPrincipal(PrincipalId('other-authorizer'), TENANT_A)
+    const agentId = PrincipalId('agent-1')
+
+    const recordedAgent = createAgentPrincipal(agentId, TENANT_A, root.id)
+    const recordedChain = extendChain(createChain(root, 0), recordedAgent, 1)
+    const recorded: IdentityContext = { principal: recordedAgent, runId: RunId('run-1'), chain: recordedChain }
+
+    const suppliedAgent = createAgentPrincipal(agentId, TENANT_A, otherAuthorizer.id)
+    const suppliedChain = extendChain(createChain(root, 0), suppliedAgent, 1)
+    const supplied: IdentityContext = { principal: suppliedAgent, runId: RunId('run-1'), chain: suppliedChain }
+
+    expect(recordedChain.entries.length).toBe(suppliedChain.entries.length)
+    expect(recordedAgent.kind).toBe(suppliedAgent.kind)
+    expect(recordedAgent.id).toBe(suppliedAgent.id)
+    expect(recordedAgent.tenantId).toBe(suppliedAgent.tenantId)
+    const result = resolveSessionIdentity(recorded, supplied)
+    expect(result).toEqual({ identity: supplied, shouldLog: true })
+  })
+
+  // Companion to the above: a genuinely identical chain -- including
+  // identical delegatedBy on the terminal agent entry -- is the ordinary
+  // case of resuming a session with an unchanged identity, and must not log.
+  it('does not log a resupply when the chain is genuinely identical, including delegatedBy on the terminal agent entry', () => {
+    const root = createUserPrincipal(PrincipalId('root'), TENANT_A)
+    const agentId = PrincipalId('agent-1')
+
+    const recordedAgent = createAgentPrincipal(agentId, TENANT_A, root.id)
+    const recordedChain = extendChain(createChain(root, 0), recordedAgent, 1)
+    const recorded: IdentityContext = { principal: recordedAgent, runId: RunId('run-1'), chain: recordedChain }
+
+    const suppliedAgent = createAgentPrincipal(agentId, TENANT_A, root.id)
+    const suppliedChain = extendChain(createChain(root, 0), suppliedAgent, 1)
+    const supplied: IdentityContext = { principal: suppliedAgent, runId: RunId('run-1'), chain: suppliedChain }
 
     expect(recorded.chain).not.toBe(supplied.chain)
     const result = resolveSessionIdentity(recorded, supplied)

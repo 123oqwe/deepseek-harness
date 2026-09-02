@@ -277,20 +277,48 @@ export function delegationDepth(chain: DelegationChain): number {
 }
 
 /**
+ * The delegation-authorizer id an entry's principal carries, or `undefined`
+ * for a principal kind that has no such field. Only {@link AgentPrincipal}
+ * carries {@link AgentPrincipal.delegatedBy} — {@link UserPrincipal},
+ * {@link ServicePrincipal}, and {@link AnonymousDevPrincipal} do not, so this
+ * always returns `undefined` for those kinds, making {@link sameChainShape}'s
+ * per-entry comparison uniform across every principal kind instead of
+ * branching on it.
+ * @param principal - the principal to read.
+ * @returns `principal.delegatedBy` for an agent principal, `undefined` otherwise.
+ */
+function delegatedByOf(principal: Principal): PrincipalId | undefined {
+  return principal.kind === 'agent' ? principal.delegatedBy : undefined
+}
+
+/**
  * Whether two delegation chains have the same shape: identical length, and
- * the same principal identity (`kind`/`id`/`tenantId`) at every position
- * from root to current — not only at the terminal/current position. A match
- * on {@link currentPrincipal} alone can hide a genuinely different chain
+ * the same principal identity (`kind`/`id`/`tenantId`, plus `delegatedBy`
+ * where the entry is an {@link AgentPrincipal}) at every position from root
+ * to current — not only at the terminal/current position. A match on
+ * {@link currentPrincipal} alone can hide a genuinely different chain
  * underneath it: the same acting principal reached through a different
  * root, at a different {@link delegationDepth}, is a different provenance
  * even though both chains agree on who is currently acting (first100
  * registry P2-01 acceptance[0]: traceable to "root user/tenant AND the full
- * delegation chain", not the terminal principal alone — the gap a prior
- * fix round's terminal-only comparison left open).
+ * delegation chain", not the terminal principal alone — the gap a prior fix
+ * round's terminal-only comparison left open).
+ *
+ * `delegatedBy` — which principal authorized an agent's delegation — is
+ * exactly this kind of provenance fact: two chains can be identical in
+ * length and in every entry's `kind`/`id`/`tenantId` while disagreeing on
+ * who authorized the terminal agent's delegation, which is itself a
+ * genuinely different chain (registry P2-01 fix round attempt/P2-01-U-fix3's
+ * own Reviewer finding — `delegatedBy` was invisible to this check).
+ * {@link delegatedByOf} makes the comparison uniform rather than branching
+ * on `kind`: it reads `undefined` for a non-agent entry, so a mismatched
+ * `kind` at a position is still caught by the `kind` comparison, and an
+ * agent-vs-agent mismatch is caught by comparing the two `delegatedBy`
+ * values directly.
  * @param a - first chain.
  * @param b - second chain.
  * @returns `true` when both chains have the same length and every entry's
- *   principal matches by `kind`/`id`/`tenantId` at the same position.
+ *   principal matches by `kind`/`id`/`tenantId`/`delegatedBy` at the same position.
  */
 export function sameChainShape(a: DelegationChain, b: DelegationChain): boolean {
   if (a.entries.length !== b.entries.length) return false
@@ -300,6 +328,7 @@ export function sameChainShape(a: DelegationChain, b: DelegationChain): boolean 
       && entry.principal.kind === counterpart.principal.kind
       && entry.principal.id === counterpart.principal.id
       && entry.principal.tenantId === counterpart.principal.tenantId
+      && delegatedByOf(entry.principal) === delegatedByOf(counterpart.principal)
   })
 }
 
