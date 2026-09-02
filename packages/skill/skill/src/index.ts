@@ -457,7 +457,7 @@ export class SkillRegistry extends Service {
         layer.runtime.set(definition.name, definition)
         return () => { layer.runtime.delete(definition.name) }
       },
-      { label: 'skills.register()' },
+      { label: `skills.register(${JSON.stringify(definition.name)})` },
     )
   }
 

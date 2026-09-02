@@ -1,33 +1,60 @@
 /**
- * Package entry point. Provider-stage: the real runtime module the
- * Contract-stage scaffold's own doc comment anticipated (this file carried
- * only `export type * from './types.ts'` through C-stage, per this
- * program's B4(f) scaffold rule). The main entry now re-exports every
- * Contract-stage runtime function (`./validate.ts`) alongside its types, so
- * `import { classifyPluginDeclaration } from '@deepseek-ai/dsh-plugin-manifest'`
- * works the same as the documented `/validate` subpath import — and adds
- * this package's first genuinely new Provider-stage logic:
- * {@link compareDeclaredToObserved} (acceptance[0]/[1]'s declared-vs-observed
- * comparison) and {@link decidePluginTrust} (acceptance[0]'s quarantine
- * decision for a manifest that passed schema validation).
+ * Package entry point. Provider-stage added declared-vs-observed comparison
+ * ({@link compareDeclaredToObserved}, {@link decidePluginTrust}) as pure
+ * functions over already-computed data. Usage-stage (Epic P1-01.U) adds this
+ * module's first real POLICY function, {@link evaluatePreMountAdmission},
+ * which `packages/boot/app-boot/src/profile.ts` and `apps/cli/src/plugin.ts`
+ * call at real profile-boot/verify time (acceptance[0], must[3]) — this
+ * module still never reads a plugin package's files, spawns a Loader, or
+ * constructs a Cordis `Context` itself; {@link ObservedPluginCapabilities} is
+ * still built by `packages/host/plugin-inventory` from a live `Context`, and
+ * the boot-time call sites (not this module) decide what happens to a denied
+ * or quarantined plugin (exclude it from composition, dispose its fiber, or
+ * fail the whole boot).
  *
- * Both are pure functions over already-computed data, same as every
- * Contract-stage export: neither reads a plugin package's files nor
- * constructs a Cordis `Context`. Building the actual `ObservedPluginCapabilities`
- * value from a live boot — walking a real `Context`'s registrations — is a
- * later stage's job (typically `packages/host/plugin-inventory`, which
- * composes this package's types into its own `PluginPermissionState`); this
- * module only builds the comparison/decision logic that later stage calls
- * with real inputs.
+ * **BLOCKED-027 re-judgment (required Usage-stage Reviewer checklist item).**
+ * The Provider-stage Known Limitation this ticket names — `compareDeclaredToObserved`
+ * matches by capability identity (name) only, never by field content
+ * (`sideEffectClass`/`authAudience`/`allowedDestinations`/`dataClassification`),
+ * and never descends into `McpServerDeclaration.resources`/`prompts` — is
+ * RATIFIED, not silently carried forward: this Usage-stage's real
+ * `ObservedPluginCapabilities` builder
+ * (`packages/host/plugin-inventory/src/index.ts`'s `buildObservedPluginCapabilities`)
+ * reads live Cordis registrations through `Fiber.getEffects()` labels and the
+ * global `ReflectService` store — neither surface carries `sideEffectClass`,
+ * `authAudience`, `allowedDestinations`, or `dataClassification` anywhere, for
+ * any registration kind, in this codebase today. A `ToolDefinition`
+ * (`packages/core/tools/src/index.ts`), a Cordis service `Impl`
+ * (`vendor/cordis/src/reflect.ts`), an MCP server's Loader `Fiber.config`
+ * (`packages/mcp/mcp-client`), and a registered skill's `SkillDefinition`
+ * (`packages/skill/skill/src/index.ts`) each carry zero fields matching this
+ * manifest's must[1] effect vocabulary — that vocabulary is this epic's own
+ * invention (`./types.ts`'s own doc comment: "no existing precedent in this
+ * repo"), not yet threaded through any real registration call site anywhere
+ * in the harness. A field-content comparison here would therefore compare a
+ * declared value against a field that structurally cannot exist on the
+ * observed side — not a weaker check, but a vacuous one (`undefined ===
+ * undefined` on every capability, every time), which is worse than no check:
+ * it would read as a real guarantee in this module's own types while
+ * verifying nothing. The real gap this leaves is not closeable inside
+ * `@deepseek-ai/dsh-plugin-manifest`, `dsh-plugin-inventory`, or
+ * `dsh-app-boot` — it needs a separate, larger change threading effect
+ * metadata through every tool/skill/MCP/event registration call site
+ * repo-wide so a live registration can carry its own declared effect fields
+ * for comparison, which is out of this slice's declared file set and a
+ * different epic-sized undertaking. Identity-only comparison is therefore the
+ * real Usage-stage enforcement design, not a placeholder for one — see
+ * `evaluatePreMountAdmission`'s and `compareDeclaredToObserved`'s own doc
+ * comments for exactly what each does and does not check.
  *
  * @module @deepseek-ai/dsh-plugin-manifest
  */
 export type * from './types.ts'
 export * from './validate.ts'
 
-import { detectWildcardPermissions } from './validate.ts'
+import { detectWildcardPermissions, isDeniedInProductionByDefault } from './validate.ts'
 import type { WildcardFinding } from './validate.ts'
-import type { PluginManifestV2 } from './types.ts'
+import type { PluginDeclaration, PluginManifestV2 } from './types.ts'
 
 /**
  * must[1]'s declaration vocabulary, mirrored for what a plugin actually
@@ -159,4 +186,55 @@ export type PluginTrustDecision = 'active' | 'quarantined'
  */
 export function decidePluginTrust(comparison: PluginRegistrationComparison): PluginTrustDecision {
   return comparison.mismatches.length > 0 || comparison.wildcardFindings.length > 0 ? 'quarantined' : 'active'
+}
+
+/**
+ * Why {@link evaluatePreMountAdmission} refused a plugin, before any of its
+ * code has run. `'missing-manifest'`/`'legacy-untrusted'` mirror
+ * {@link isDeniedInProductionByDefault}'s two denied `PluginDeclaration.kind`
+ * values (must[3]); `'wildcard-permission'` is acceptance[0]'s "申请通配权限"
+ * on an otherwise schema-valid manifest.
+ */
+export type PreMountDenialReason = 'missing-manifest' | 'legacy-untrusted' | 'wildcard-permission'
+
+/**
+ * acceptance[0]/must[3]'s pre-mount admission decision for one plugin, before
+ * any of its code has run: whether a production profile boot may compose
+ * this declaration's plugin into the tree at all. Pure and static — checked
+ * entirely from `declaration` itself, the same value {@link classifyPluginDeclaration}
+ * returns from a package's `package.json` `dsh` field — never a live
+ * `Context`. `packages/boot/app-boot/src/profile.ts`'s real profile
+ * composition calls this per bundle layer before `boot()` mounts anything
+ * (must[3]'s "生产 profile 默认拒绝" / production profile denies by default);
+ * `apps/cli/src/plugin.ts`'s `pnpm plugin:verify <fixture>` calls it directly
+ * against one fixture file for the same decision with no profile involved.
+ * @param declaration - a value {@link classifyPluginDeclaration} returned.
+ * @param production - whether the target profile enforces production
+ * admission (`packages/boot/app-boot/src/profile.ts`'s `resolvePluginEnforcementMode`);
+ * `false` admits every declaration unconditionally — every profile boots
+ * exactly as it did before this policy existed.
+ * @returns `{ admitted: true }`, or `{ admitted: false, reason, wildcardFindings }`
+ * naming why a production boot refuses this plugin.
+ */
+export function evaluatePreMountAdmission(
+  declaration: PluginDeclaration,
+  production: boolean,
+): { readonly admitted: true } | {
+  readonly admitted: false
+  readonly reason: PreMountDenialReason
+  readonly wildcardFindings: readonly WildcardFinding[]
+} {
+  if (!production) return { admitted: true }
+  if (isDeniedInProductionByDefault(declaration)) {
+    return {
+      admitted: false,
+      reason: declaration.kind === 'missing' ? 'missing-manifest' : 'legacy-untrusted',
+      wildcardFindings: [],
+    }
+  }
+  // isDeniedInProductionByDefault(declaration) === false narrows declaration.kind to 'manifest-v2'.
+  const manifestDeclaration = declaration as Extract<PluginDeclaration, { kind: 'manifest-v2' }>
+  const wildcardFindings = detectWildcardPermissions(manifestDeclaration.manifest)
+  if (wildcardFindings.length > 0) return { admitted: false, reason: 'wildcard-permission', wildcardFindings }
+  return { admitted: true }
 }

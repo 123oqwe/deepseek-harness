@@ -34,6 +34,13 @@ import { withFileLock } from '@deepseek-ai/dsh-atomic-write'
 import type { EntryOptions } from '@deepseek-ai/cordis-plugin-loader'
 import { applyEntryPatches, type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import {
+  classifyPluginDeclaration,
+  evaluatePreMountAdmission,
+  type PluginDeclaration,
+  type PreMountDenialReason,
+  type WildcardFinding,
+} from '@deepseek-ai/dsh-plugin-manifest'
 import { resolve as resolvePackage, type Package as ResolvePackageManifest } from 'resolve.exports'
 import { loadOverlayPatches } from './index.ts'
 
@@ -858,4 +865,65 @@ export function composeEntries(
     let index = 0
     warn(message.replace(/%C/g, () => JSON.stringify(args[index++])))
   })
+}
+
+/**
+ * Read one bundle layer's own `package.json` `dsh` field and classify it
+ * (Epic P1-01.U's must[3]/acceptance[0] pre-mount declaration). The same
+ * `dsh` field {@link ProfileManifest} already types for `bundle`/`profile`,
+ * read here at its full raw shape so a bundle package that also opts into
+ * `dsh.manifestVersion === 2` is classified correctly alongside its
+ * `dsh.bundle` patch pointer (additive, per `@deepseek-ai/dsh-plugin-manifest`'s
+ * own design: a package may carry both).
+ * @param packageDir - the bundle's resolved package directory ({@link ProfileLayer.packageDir}).
+ * @returns the classified declaration.
+ */
+export function readPluginDeclaration(packageDir: string): PluginDeclaration {
+  const manifest = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8')) as { dsh?: unknown }
+  return classifyPluginDeclaration(manifest.dsh)
+}
+
+/** One profile bundle layer a production boot refuses to compose, and why (must[3]/acceptance[0]). */
+export interface DeniedProfileLayer {
+  readonly layer: ProfileLayer
+  readonly declaration: PluginDeclaration
+  readonly reason: PreMountDenialReason
+  readonly wildcardFindings: readonly WildcardFinding[]
+}
+
+export type { PreMountDenialReason, WildcardFinding } from '@deepseek-ai/dsh-plugin-manifest'
+
+/**
+ * Partition a loaded profile's bundle layers into admitted vs. denied for a
+ * production boot (Epic P1-01.U's must[3]/acceptance[0]): every layer's own
+ * `package.json` `dsh` field is read and classified
+ * ({@link readPluginDeclaration}), then judged by
+ * {@link evaluatePreMountAdmission}. This is the real pre-mount enforcement
+ * point — `apps/cli/src/profile-boot.ts`'s `composeProfile` composes only the
+ * admitted layers' patches into the tree `boot()` mounts, so a denied
+ * layer's plugin code never runs at all (stronger than the post-mount
+ * quarantine `runProfile` applies for a declared/observed registration
+ * mismatch, which needs the plugin to have already run once to observe it).
+ * `production: false` admits every layer unconditionally, so a profile boots
+ * exactly as it did before this policy existed unless a caller opts in.
+ * @param profile - a profile {@link loadProfile} already resolved.
+ * @param production - whether this boot enforces production admission.
+ * @returns the admitted layers (in original order) and every denied layer with its reason.
+ */
+export function partitionProfileLayersByAdmission(
+  profile: Profile,
+  production: boolean,
+): { readonly admitted: readonly ProfileLayer[]; readonly denied: readonly DeniedProfileLayer[] } {
+  const admitted: ProfileLayer[] = []
+  const denied: DeniedProfileLayer[] = []
+  for (const layer of profile.layers) {
+    const declaration = readPluginDeclaration(layer.packageDir)
+    const admission = evaluatePreMountAdmission(declaration, production)
+    if (admission.admitted) {
+      admitted.push(layer)
+    } else {
+      denied.push({ layer, declaration, reason: admission.reason, wildcardFindings: admission.wildcardFindings })
+    }
+  }
+  return { admitted, denied }
 }

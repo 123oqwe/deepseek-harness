@@ -13,6 +13,7 @@ import {
   classifyPluginDeclaration,
   compareDeclaredToObserved,
   decidePluginTrust,
+  evaluatePreMountAdmission,
   validatePluginManifestV2,
   type ObservedPluginCapabilities,
   type RegistrationMismatch,
@@ -109,6 +110,16 @@ describe('compareDeclaredToObserved', () => {
     ]))
   })
 
+  it('reports no mismatch when a declared role: provides ctxKey was actually observed', () => {
+    const manifest = { ...loadFixture('benign') as Record<string, unknown>, services: [{ ctxKey: 'exampleService', role: 'provides' }] }
+    const result = validatePluginManifestV2(manifest)
+    expect(result.valid).toBe(true)
+    if (!result.valid) return
+    const observed: ObservedPluginCapabilities = { ...observedMatchingBenign(), ctxKeys: ['exampleService'] }
+    const comparison = compareDeclaredToObserved(result.manifest, observed)
+    expect(comparison.mismatches.some(mismatch => mismatch.category === 'ctxKey')).toBe(false)
+  })
+
   const categoryCases: Array<[RegistrationMismatch['category'], keyof ObservedPluginCapabilities]> = [
     ['tool', 'toolNames'],
     ['skill', 'skillNames'],
@@ -125,6 +136,19 @@ describe('compareDeclaredToObserved', () => {
     expect(comparison.mismatches).toEqual(expect.arrayContaining([
       { kind: 'undeclared-registration', category, name: 'ghost' },
     ]))
+  })
+
+  it('declares no tool mismatches for a valid manifest that omits the tools field entirely', () => {
+    const minimal = {
+      manifestVersion: 2,
+      executionMode: 'in-process',
+      compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+    }
+    const result = validatePluginManifestV2(minimal)
+    expect(result.valid).toBe(true)
+    if (!result.valid) return
+    const comparison = compareDeclaredToObserved(result.manifest, EMPTY_OBSERVED)
+    expect(comparison.mismatches.some(mismatch => mismatch.category === 'tool')).toBe(false)
   })
 
   it('carries the manifest wildcard findings alongside registration mismatches', () => {
@@ -177,5 +201,47 @@ describe('decidePluginTrust', () => {
     const observed: ObservedPluginCapabilities = { ...EMPTY_OBSERVED, toolNames: manifest.tools.map(tool => tool.name) }
     const comparison = compareDeclaredToObserved(result.manifest, observed)
     expect(decidePluginTrust(comparison)).toBe('quarantined')
+  })
+})
+
+describe('evaluatePreMountAdmission', () => {
+  it('admits every declaration unconditionally outside production', () => {
+    expect(evaluatePreMountAdmission({ kind: 'missing' }, false)).toEqual({ admitted: true })
+    expect(evaluatePreMountAdmission({ kind: 'legacy-untrusted', legacy: { trust: 'legacy-untrusted', patch: './cordis.patch.yml' } }, false))
+      .toEqual({ admitted: true })
+  })
+
+  it('denies a missing declaration in production as missing-manifest', () => {
+    expect(evaluatePreMountAdmission({ kind: 'missing' }, true)).toEqual({
+      admitted: false,
+      reason: 'missing-manifest',
+      wildcardFindings: [],
+    })
+  })
+
+  it('denies a legacy dsh.bundle declaration in production as legacy-untrusted (must[3])', () => {
+    const declaration = classifyPluginDeclaration(loadFixture('legacy-bundle'))
+    expect(declaration.kind).toBe('legacy-untrusted')
+    expect(evaluatePreMountAdmission(declaration, true)).toEqual({
+      admitted: false,
+      reason: 'legacy-untrusted',
+      wildcardFindings: [],
+    })
+  })
+
+  it('denies a schema-valid manifest requesting a wildcard destination in production', () => {
+    const declaration = classifyPluginDeclaration(loadFixture('overprivileged'))
+    expect(declaration.kind).toBe('manifest-v2')
+    const admission = evaluatePreMountAdmission(declaration, true)
+    expect(admission.admitted).toBe(false)
+    if (admission.admitted) return
+    expect(admission.reason).toBe('wildcard-permission')
+    expect(admission.wildcardFindings.length).toBeGreaterThan(0)
+  })
+
+  it('admits a benign schema-valid manifest with no wildcard findings in production', () => {
+    const declaration = classifyPluginDeclaration(loadFixture('benign'))
+    expect(declaration.kind).toBe('manifest-v2')
+    expect(evaluatePreMountAdmission(declaration, true)).toEqual({ admitted: true })
   })
 })

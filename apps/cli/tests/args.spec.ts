@@ -57,6 +57,12 @@ describe('parseDshArgs', () => {
       .toEqual({ mode: 'plugin', profile: 'tui', args: ['add', '--save-dev', 'x'] })
   })
 
+  it('routes plugin-verify (Epic P1-01.U pnpm plugin:verify <fixture>) with no --profile needed', () => {
+    expect(parse(['plugin-verify', 'fixture.json'])).toEqual({ mode: 'plugin-verify', fixture: 'fixture.json' })
+    expect(parse(['plugin-verify', './packages/plugin/plugin-manifest/tests/fixtures/benign.json']))
+      .toEqual({ mode: 'plugin-verify', fixture: './packages/plugin/plugin-manifest/tests/fixtures/benign.json' })
+  })
+
   it('routes profile and web config dumps', () => {
     expect(parse(['--profile', 'web', '--dump-config']))
       .toEqual({ mode: 'dump-config', profile: 'web', defaultOnly: false, patches: [] })

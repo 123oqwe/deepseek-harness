@@ -63,6 +63,12 @@
       "path": "../../packages/mcp/mcp-client"
     },
     {
+      "path": "../../packages/host/plugin-inventory"
+    },
+    {
+      "path": "../../packages/plugin/plugin-manifest"
+    },
+    {
       "path": "../../packages/test-support/loader-smoke"
     },
     {

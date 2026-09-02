@@ -17,13 +17,16 @@ import {
   healProfilesModuleFallback,
   initProfile,
   loadProfile,
+  partitionProfileLayersByAdmission,
   PROFILE_PATCH_FILENAME,
   PROFILE_TEMPLATES,
+  readPluginDeclaration,
   readProfileManifest,
   resolveBundleDir,
   resolveProfileDir,
   writeProfileManifest,
   type Profile,
+  type ProfileLayer,
 } from '../src/index.ts'
 
 const tmp = (): string => mkdtempSync(join(tmpdir(), 'dsh-profile-'))
@@ -299,6 +302,95 @@ describe('composeEntries', () => {
     expect(warnings.join('\n')).toContain('"missing"')
     // Default warn sink: skipped patches are silently dropped (boot repeats them).
     expect(composeEntries([[{ id: 'missing', config: {} }]])).toEqual([])
+  })
+})
+
+/** Stage one real on-disk package directory carrying an arbitrary `dsh` field, for pre-mount admission tests. */
+function stagePackageWithDsh(dsh: unknown, name = 'example-plugin'): string {
+  const dir = tmp()
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name, version: '1.0.0', ...dsh === undefined ? {} : { dsh } }))
+  return dir
+}
+
+function layerFor(packageDir: string, packageName = 'example-plugin'): ProfileLayer {
+  return { packageName, packageDir, patchPath: join(packageDir, 'cordis.patch.yml'), patches: [] }
+}
+
+const BENIGN_MANIFEST_DSH = {
+  manifestVersion: 2,
+  tools: [{
+    name: 'example-tool',
+    sideEffectClass: 'none',
+    authAudience: ['model'],
+    allowedDestinations: [],
+    dataClassification: 'internal',
+  }],
+  executionMode: 'in-process',
+  compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+}
+
+const WILDCARD_MANIFEST_DSH = {
+  manifestVersion: 2,
+  tools: [{
+    name: 'example-run-anything',
+    sideEffectClass: 'destructive',
+    authAudience: ['model'],
+    allowedDestinations: [{ kind: 'filesystem', pathPattern: '/' }],
+    dataClassification: 'secret',
+  }],
+  executionMode: 'process',
+  compatibility: { dshVersionRange: '>=0.1.0 <1.0.0' },
+}
+
+describe('readPluginDeclaration', () => {
+  it('classifies missing, legacy, and manifest-v2 dsh fields from a real on-disk package.json', () => {
+    expect(readPluginDeclaration(stagePackageWithDsh(undefined)).kind).toBe('missing')
+    expect(readPluginDeclaration(stagePackageWithDsh({ bundle: { patch: './cordis.patch.yml' } })).kind).toBe('legacy-untrusted')
+    expect(readPluginDeclaration(stagePackageWithDsh(BENIGN_MANIFEST_DSH)).kind).toBe('manifest-v2')
+  })
+})
+
+describe('partitionProfileLayersByAdmission', () => {
+  it('admits every layer unconditionally outside production, regardless of declaration', () => {
+    const profile: Profile = {
+      name: 'demo',
+      dir: tmp(),
+      layers: [
+        layerFor(stagePackageWithDsh(undefined), 'missing-plugin'),
+        layerFor(stagePackageWithDsh({ bundle: { patch: './cordis.patch.yml' } }), 'legacy-plugin'),
+        layerFor(stagePackageWithDsh(WILDCARD_MANIFEST_DSH), 'wildcard-plugin'),
+      ],
+      patchPath: join(tmp(), PROFILE_PATCH_FILENAME),
+      patches: [],
+      patchReload: 'live',
+    }
+    const { admitted, denied } = partitionProfileLayersByAdmission(profile, false)
+    expect(admitted).toEqual(profile.layers)
+    expect(denied).toEqual([])
+  })
+
+  it('denies missing, legacy, and wildcard-requesting layers in production, admitting only a clean manifest-v2 layer (must[3]/acceptance[0])', () => {
+    const profile: Profile = {
+      name: 'demo',
+      dir: tmp(),
+      layers: [
+        layerFor(stagePackageWithDsh(undefined), 'missing-plugin'),
+        layerFor(stagePackageWithDsh({ bundle: { patch: './cordis.patch.yml' } }), 'legacy-plugin'),
+        layerFor(stagePackageWithDsh(WILDCARD_MANIFEST_DSH), 'wildcard-plugin'),
+        layerFor(stagePackageWithDsh(BENIGN_MANIFEST_DSH), 'benign-plugin'),
+      ],
+      patchPath: join(tmp(), PROFILE_PATCH_FILENAME),
+      patches: [],
+      patchReload: 'live',
+    }
+    const { admitted, denied } = partitionProfileLayersByAdmission(profile, true)
+    expect(admitted.map(layer => layer.packageName)).toEqual(['benign-plugin'])
+    expect(denied.map(entry => ({ packageName: entry.layer.packageName, reason: entry.reason }))).toEqual([
+      { packageName: 'missing-plugin', reason: 'missing-manifest' },
+      { packageName: 'legacy-plugin', reason: 'legacy-untrusted' },
+      { packageName: 'wildcard-plugin', reason: 'wildcard-permission' },
+    ])
+    expect(denied.find(entry => entry.layer.packageName === 'wildcard-plugin')?.wildcardFindings.length).toBeGreaterThan(0)
   })
 })
 

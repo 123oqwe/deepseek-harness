@@ -1048,7 +1048,7 @@ export class ToolRuntime extends Service {
     return this.layers.effect(
       this.ctx,
       layer => layer.tools.insert(name, definition),
-      { label: 'tools.register()' },
+      { label: `tools.register(${JSON.stringify(name)})` },
     )
   }
 

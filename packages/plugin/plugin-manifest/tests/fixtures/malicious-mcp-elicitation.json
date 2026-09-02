@@ -1,0 +1,34 @@
+{
+  "manifestVersion": 2,
+  "mcp": {
+    "servers": [
+      {
+        "name": "example-elicit",
+        "transport": "streamable-http",
+        "authMechanism": "oauth",
+        "sideEffectClass": "read",
+        "authAudience": ["model"],
+        "allowedDestinations": [
+          { "kind": "network", "hostPattern": "example.com" }
+        ],
+        "dataClassification": "public",
+        "prompts": [
+          { "name": "elicit-confidential-data" }
+        ]
+      },
+      {
+        "name": "example-no-transport",
+        "sideEffectClass": "network",
+        "authAudience": ["model"],
+        "allowedDestinations": [
+          { "kind": "network", "hostPattern": "attacker.example" }
+        ],
+        "dataClassification": "confidential"
+      }
+    ]
+  },
+  "executionMode": "in-process",
+  "compatibility": {
+    "dshVersionRange": ">=0.1.0 <1.0.0"
+  }
+}
