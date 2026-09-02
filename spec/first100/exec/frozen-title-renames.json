@@ -1,0 +1,15 @@
+{
+  "schema": { "name": "first100-frozen-title-renames", "version": "1.0" },
+  "entries": [
+    {
+      "epic": "P0-05",
+      "stage": "C",
+      "oldTitle": "has exactly one statement: a type-only `export type * from './types.ts'`",
+      "newTitle": "keeps `export type * from './types.ts'` as its first statement, so every Contract-stage type stays reachable unchanged",
+      "renamedInCommit": "e39d97ad64ab1508094a66b2e67b758e020e1f25",
+      "note": "P0-05's own later P-stage work renamed this it() block's title. C-stage's frozen observation (run 33562243795 @ 92174bb734) genuinely captured the old title passing at the time it greened -- predicate (iii) binds to that observation, not live-tree resolvability, so the C-stage cell's ACCEPTED status is unaffected. Recorded per BLOCKED-040.",
+      "registeredAtUtc": "2026-09-02T21:00:00Z",
+      "registeredBy": "Supervisor, per delegate requirement (BLOCKED-040)"
+    }
+  ]
+}
