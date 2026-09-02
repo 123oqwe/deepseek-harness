@@ -220,11 +220,35 @@ export function extendChain(
 }
 
 /**
+ * Reject a chain whose `entries` is empty at runtime. `DelegationChain.entries`
+ * is typed as a non-empty tuple, but that guarantee only binds a caller that
+ * actually went through `createChain`/`extendChain` — a hand-built object
+ * literal, or an `IdentityContext` crossing an unvalidated durable boundary
+ * (session-log replay reaching `resolveSessionIdentity` in
+ * `packages/core/agent-loop/src/runtime-context.ts` via `lastAttachedIdentity`)
+ * can violate it at runtime. Every accessor below that reads `entries[0]` or
+ * folds over `entries` calls this first, so the failure is one clear,
+ * dedicated error instead of an accessor-specific opaque crash (reading
+ * `.principal` off `entries[0] === undefined`, or `Array.prototype.reduce`'s
+ * "Reduce of empty array with no initial value").
+ * @param chain - the delegation chain to check.
+ * @throws {Error} when `chain.entries` is empty.
+ * @returns Nothing.
+ */
+function assertNonEmptyChain(chain: DelegationChain): void {
+  if (chain.entries.length === 0) {
+    throw new Error('invalid DelegationChain: entries is empty -- a chain must contain at least a root entry')
+  }
+}
+
+/**
  * The chain's root principal.
  * @param chain - the delegation chain.
+ * @throws {Error} when `chain.entries` is empty (see {@link assertNonEmptyChain}).
  * @returns `chain.entries[0].principal`.
  */
 export function rootPrincipal(chain: DelegationChain): Principal {
+  assertNonEmptyChain(chain)
   return chain.entries[0].principal
 }
 
@@ -243,14 +267,18 @@ export function currentPrincipal(chain: DelegationChain): Principal {
  * `DelegationEntry | undefined` under `noUncheckedIndexedAccess`; folding
  * with no initial value keeps the non-empty guarantee in the return type.
  * @param chain - the delegation chain.
+ * @throws {Error} when `chain.entries` is empty (see {@link assertNonEmptyChain}).
  * @returns the last element of `chain.entries`.
  */
 function lastEntry(chain: DelegationChain): DelegationEntry {
+  assertNonEmptyChain(chain)
   return chain.entries.reduce((_, entry) => entry)
 }
 
 /**
  * The chain's root tenant — every hop in a valid chain shares this tenant.
+ * Reads only the root entry; see {@link currentTenantId}'s doc for the
+ * disclosed gap this and that function share.
  * @param chain - the delegation chain.
  * @returns `rootPrincipal(chain).tenantId`.
  */
@@ -260,6 +288,31 @@ export function rootTenantId(chain: DelegationChain): TenantId {
 
 /**
  * The tenant the chain's currently-acting principal belongs to.
+ *
+ * Disclosed gap (found by P2-01.F's fix-round Reviewer, non-blocking): this
+ * function and {@link rootTenantId} each read only one endpoint of the chain.
+ * `extendChain` rejects a cross-tenant hop only while a chain is built
+ * through it; a hand-built `DelegationChain` object literal (the same
+ * unvalidated-construction class {@link assertNonEmptyChain}'s doc already
+ * names) can carry an intermediate entry whose `tenantId` differs from both
+ * the root's and the terminal's while root and terminal still agree with
+ * each other — neither this function nor {@link rootTenantId} can detect
+ * that from the two endpoints alone. Concretely: `resolveSessionIdentity`
+ * (`packages/core/agent-loop/src/runtime-context.ts`) calls
+ * `assertRuntimeTenantPolicy` (`@deepseek-ai/dsh-principal`), which is built
+ * on this function, so an intermediate-hop mismatch of this exact shape does
+ * not raise {@link TenantMismatchError}. It is not silently invisible,
+ * though: `resolveSessionIdentity`'s {@link sameChainShape} comparison
+ * independently checks `tenantId` at every position, including
+ * intermediates, so `shouldLog` still becomes `true` and the divergence is
+ * durably logged via a new `identity/attached` event even though nothing
+ * throws. Not currently exploitable — the only functions that read a chain
+ * entry at a position other than root or terminal ({@link isInChain},
+ * {@link assertInChain}, {@link assertAgentDelegationValid}) have no real
+ * caller outside this package's own tests today — so this is a disclosed
+ * limitation, not a live bug: closing it would mean validating every hop's
+ * tenant at construction or access time, unwarranted until a real caller
+ * starts reading intermediate hops.
  * @param chain - the delegation chain.
  * @returns `currentPrincipal(chain).tenantId`.
  */

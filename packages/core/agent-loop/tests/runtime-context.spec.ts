@@ -229,4 +229,36 @@ describe('resolveSessionIdentity', () => {
     const result = resolveSessionIdentity(recorded, supplied)
     expect(result).toEqual({ identity: supplied, shouldLog: false })
   })
+
+  // F-stage fault-testing (attempt/P2-01-F): `recorded` (from
+  // `lastAttachedIdentity`'s session-log replay) and `supplied`
+  // (`AgentOptions.identity`) both reach `resolveSessionIdentity` with no
+  // schema validation of their internal `DelegationChain` shape -- a
+  // structurally malformed chain (empty `entries`, violating the type's
+  // non-empty-tuple guarantee at runtime) is a real, reachable input on this
+  // path: a corrupted/hand-edited session log, or any caller that bypasses
+  // createChain/extendChain. `@deepseek-ai/dsh-principal/chain.ts`'s
+  // currentPrincipal/currentTenantId now fail closed with a clear Error
+  // instead of an opaque Array.prototype.reduce TypeError -- this proves that
+  // fix is actually visible at resolveSessionIdentity's own call boundary,
+  // for both the recorded and the supplied side.
+  it('fails closed with a clear Error, not an opaque crash, when supplied.chain has no entries (malformed/replayed data bypassing createChain/extendChain)', () => {
+    const recorded = identityFor(TENANT_A)
+    const malformedSupplied = {
+      principal: recorded.principal,
+      runId: RunId('run-2'),
+      chain: { entries: [] },
+    } as unknown as IdentityContext
+    expect(() => resolveSessionIdentity(recorded, malformedSupplied)).toThrow('invalid DelegationChain: entries is empty')
+  })
+
+  it('fails closed with a clear Error, not an opaque crash, when recorded.chain (session-log replay) has no entries', () => {
+    const supplied = identityFor(TENANT_A)
+    const malformedRecorded = {
+      principal: supplied.principal,
+      runId: RunId('run-1'),
+      chain: { entries: [] },
+    } as unknown as IdentityContext
+    expect(() => resolveSessionIdentity(malformedRecorded, supplied)).toThrow('invalid DelegationChain: entries is empty')
+  })
 })
