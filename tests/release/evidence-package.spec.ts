@@ -893,6 +893,37 @@ describe('release/collect-evidence + verify-evidence (Epic P0-07 P-stage)', () =
         expect(result.stdout).toContain('accepted=true but required build artifact lib/index.js is not recorded in requiredBuildArtifacts')
         expect(result.stdout).not.toContain('package signature mismatch')
       })
+
+      it('detects a required gate AND a required build artifact both silently deleted in the same self-consistently forged bundle, with both faults independently reported', () => {
+        const { root, baseSha } = makeEvidenceFixture()
+        captureBaseline(root)
+        const initResult = collectInit(root, baseSha, ['typecheck', 'lint'], ['lib/index.js'])
+        expect(initResult.status, `init stderr: ${initResult.stderr}`).toBe(0)
+        const typecheckPath = writeGateScript(root, 'typecheck-gate.mjs', "console.log('ok'); process.exit(0)")
+        const typecheckResult = collectRun(root, 'typecheck', ['--required'], [process.execPath, typecheckPath])
+        expect(typecheckResult.status, `typecheck run stderr: ${typecheckResult.stderr}`).toBe(0)
+        const lintPath = writeGateScript(root, 'lint-gate.mjs', "console.log('ok'); process.exit(0)")
+        const lintResult = collectRun(root, 'lint', ['--required'], [process.execPath, lintPath])
+        expect(lintResult.status, `lint run stderr: ${lintResult.stderr}`).toBe(0)
+        const buildResult = collectBuildArtifact(root, 'lib/index.js')
+        expect(buildResult.status, `build-artifact stderr: ${buildResult.stderr}`).toBe(0)
+        expect(readEvidence(root).accepted, 'precondition: both required gates genuinely passed and the required artifact is genuinely recorded').toBe(true)
+        const clean = verifyEvidence(root)
+        expect(clean.status, `precondition: must verify clean before tampering: ${clean.stdout}`).toBe(0)
+
+        const outPath = join(root, '.dsh/evidence/evidence.json')
+        const pkg = JSON.parse(readFileSync(outPath, 'utf8')) as { requiredGates: Record<string, unknown>, requiredBuildArtifacts: Record<string, unknown>, signature?: unknown }
+        delete pkg.requiredGates.lint
+        delete pkg.requiredBuildArtifacts['lib/index.js']
+        forgeSelfConsistentSignature(pkg)
+        writeFileSync(outPath, `${JSON.stringify(pkg, null, 2)}\n`)
+
+        const result = verifyEvidence(root)
+        expect(result.status).toBe(1)
+        expect(result.stdout).toContain('accepted=true but required gate lint is missing from requiredGates entirely')
+        expect(result.stdout).toContain('accepted=true but required build artifact lib/index.js is not recorded in requiredBuildArtifacts')
+        expect(result.stdout).not.toContain('package signature mismatch')
+      })
     })
 
     it('detects and reports multiple independent fault types together in one bundle: a deleted gate log and a separately mutated build artifact', () => {
