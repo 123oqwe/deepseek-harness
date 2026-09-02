@@ -8,6 +8,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
 import type { LlmCallConfig, LlmFailure, ReasoningEffortId, ResolvedRetryPolicy } from '@deepseek-ai/dsh-llm'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { AgentCancelCause, Session, UserMessage } from '@deepseek-ai/dsh-session'
 export type { AgentCancelCause } from '@deepseek-ai/dsh-session'
 import type { Inbox } from './inbox.ts'
@@ -31,6 +32,17 @@ export interface AgentOptions {
   reasoningEffort?: ReasoningEffortId
   /** Maximum output tokens for each conversation-model request. */
   maxTokens?: number
+  /**
+   * The principal acting as this agent and its delegation chain back to
+   * root, to attach as `Agent.identity` (`./types.ts`, first100 registry
+   * P2-01 acceptance[0]). `Agent.identity` is `readonly`, so a constructor
+   * option is the only type-level path a caller has to supply it; still
+   * type-only for now, since no `Agent` implementation reads this option and
+   * attaches it yet -- that wiring is a later first100 stage's job (see
+   * `@deepseek-ai/dsh-principal/types`'s module doc for why this package's
+   * own runtime module is not built yet).
+   */
+  identity?: IdentityContext
 }
 
 /** Options for {@link Agent.cancel}. */
