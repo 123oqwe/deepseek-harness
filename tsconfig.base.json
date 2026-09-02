@@ -260,6 +260,13 @@
       // silently drops it (as happened once already — restored per first100
       // P2-01(C) fix-round review).
       "@deepseek-ai/dsh-evidence-format/types": ["./packages/assurance/evidence-format/src/types.ts"],
+      // Same reason as dsh-evidence-format/types above: dsh-plugin-manifest's
+      // /types and /validate subpaths (both real, README-documented public
+      // usage) are not a shape the generator emits, so they must stay
+      // hand-written outside the generated region -- a regeneration silently
+      // dropped them once already (first100 P1-01(C)/P2-01(C) merge, 2026-09-02).
+      "@deepseek-ai/dsh-plugin-manifest/types": ["./packages/plugin/plugin-manifest/src/types.ts"],
+      "@deepseek-ai/dsh-plugin-manifest/validate": ["./packages/plugin/plugin-manifest/src/validate.ts"],
       // BEGIN generated package aliases — pnpm run gen-tsconfig-paths
       "@deepseek-ai/dsh-acp": ["./packages/acp/acp/src"],
       "@deepseek-ai/dsh-acp/invariant": ["./packages/acp/acp/src/invariant.ts"],
@@ -404,8 +411,6 @@
       "@deepseek-ai/dsh-plan-mode": ["./packages/plan/plan-mode/src"],
       "@deepseek-ai/dsh-plan-mode/invariant": ["./packages/plan/plan-mode/src/invariant.ts"],
       "@deepseek-ai/dsh-plugin-manifest": ["./packages/plugin/plugin-manifest/src"],
-      "@deepseek-ai/dsh-plugin-manifest/types": ["./packages/plugin/plugin-manifest/src/types.ts"],
-      "@deepseek-ai/dsh-plugin-manifest/validate": ["./packages/plugin/plugin-manifest/src/validate.ts"],
       "@deepseek-ai/dsh-plugin-manifest/invariant": ["./packages/plugin/plugin-manifest/src/invariant.ts"],
       "@deepseek-ai/dsh-plugin-package-inventory-deepseek": ["./packages/llm/plugin-package-inventory-deepseek/src"],
       "@deepseek-ai/dsh-plugin-package-inventory-deepseek/invariant": ["./packages/llm/plugin-package-inventory-deepseek/src/invariant.ts"],
