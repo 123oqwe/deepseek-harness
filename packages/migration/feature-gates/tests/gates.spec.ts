@@ -13,7 +13,14 @@
  * a real Provider-stage runtime surface alongside its unchanged type
  * re-export; see `tests/gates.provider.spec.ts` for that surface's own
  * acceptance cases. CLI/profile wiring (`--dump-config`, Usage stage)
- * remains a later slice's deliverable.
+ * remains a later slice's deliverable. This is also the registry's declared
+ * F-stage (fault/qualification) deliverable file (`stages.F.files`); its
+ * final section below runs real, executed fault/qualification cases against
+ * `src/index.ts`'s runtime exports -- malformed/adversarial input, the
+ * hot-reload downgrade-authority invariant, shadow-mode exception isolation,
+ * and repeated-resolution (restart) stability -- rather than more AST/
+ * compiler-diagnostic checks, since those properties are not expressible as
+ * either.
  */
 
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -21,6 +28,15 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import ts from 'typescript'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import {
+  evaluateFeatureGate,
+  redactDecisionSummary,
+  resolveFeatureGate,
+  type FeatureGateDeclaration,
+  type FeatureGateId,
+  type FeatureGateNamespaceValue,
+} from '../src/index.ts'
 
 const packageRoot = resolve(import.meta.dirname, '..')
 const repoRoot = resolve(packageRoot, '../../..')
@@ -540,5 +556,233 @@ describe('src/index.ts still re-exports every Contract-stage type (Provider stag
     expect(exportDecl.isTypeOnly, 'export declaration must be `export type *`').toBe(true)
     expect(exportDecl.exportClause, 'a wildcard re-export has no export clause').toBeUndefined()
     expect(exportDecl.moduleSpecifier && ts.isStringLiteral(exportDecl.moduleSpecifier) && exportDecl.moduleSpecifier.text).toBe('./types.ts')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// F-stage (fault/qualification): real, executed cases against src/index.ts's
+// runtime exports. This is the registry's declared F-stage deliverable file
+// for Epic P0-05 (`stages.F.files`); the properties below -- an authority
+// invariant, adversarial-key safety, exception isolation, and repeated-call
+// determinism -- are not expressible as AST/compiler-diagnostic checks, so
+// they run against the real functions rather than following this file's
+// earlier structural-check style.
+// ---------------------------------------------------------------------------
+
+const GATE_ID = 'permission-gate' as FeatureGateId
+
+/** A gate whose default/profile policy is `'enforce'` -- the one floor Epic P0-05's authority invariant protects. */
+const enforceFloorDeclaration: FeatureGateDeclaration = {
+  id: GATE_ID,
+  owner: 'team-harness',
+  introducedVersion: '0.1.2-alpha.2',
+  defaultByProfile: { default: 'enforce' },
+  removalVersion: '0.9.0',
+}
+
+describe('resolveFeatureGate hot-reload downgrade authority (Epic P0-05 gate: "enforce cannot be lowered below policy floor"; validation: hot-reload cannot downgrade enforce to off without kernel administrative authority)', () => {
+  it('refuses a settings override that would move an enforce-floor gate to off without kernel administrative authority', () => {
+    expect(() => resolveFeatureGate(enforceFloorDeclaration, 'default', { settings: { [GATE_ID]: 'off' } })).toThrow(Error)
+  })
+
+  it('refuses a settings override that would move an enforce-floor gate to shadow without kernel administrative authority', () => {
+    expect(() => resolveFeatureGate(enforceFloorDeclaration, 'default', { settings: { [GATE_ID]: 'shadow' } })).toThrow(Error)
+  })
+
+  it('refuses an env override that would move an enforce-floor gate to off without kernel administrative authority', () => {
+    expect(() => resolveFeatureGate(enforceFloorDeclaration, 'default', { env: 'off' })).toThrow(Error)
+  })
+
+  it('applies a settings override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true', () => {
+    const resolution = resolveFeatureGate(enforceFloorDeclaration, 'default', {
+      settings: { [GATE_ID]: 'off' },
+      hasKernelAdministrativeAuthority: true,
+    })
+    expect(resolution.resolved).toEqual({ source: 'settings', value: 'off' })
+  })
+
+  it('applies an env override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true', () => {
+    const resolution = resolveFeatureGate(enforceFloorDeclaration, 'default', {
+      env: 'off',
+      hasKernelAdministrativeAuthority: true,
+    })
+    expect(resolution.resolved).toEqual({ source: 'env', value: 'off' })
+  })
+
+  it('never restricts a settings override that holds or raises an enforce-floor gate, even without authority', () => {
+    expect(() => resolveFeatureGate(enforceFloorDeclaration, 'default', { settings: { [GATE_ID]: 'enforce' } })).not.toThrow()
+  })
+
+  it('never restricts a settings/env override when the default/profile floor itself is off or shadow', () => {
+    const offFloor: FeatureGateDeclaration = { ...enforceFloorDeclaration, defaultByProfile: { default: 'off' } }
+    expect(() => resolveFeatureGate(offFloor, 'default', { settings: { [GATE_ID]: 'shadow' } })).not.toThrow()
+    expect(() => resolveFeatureGate(offFloor, 'default', { env: 'enforce' })).not.toThrow()
+    const shadowFloor: FeatureGateDeclaration = { ...enforceFloorDeclaration, defaultByProfile: { default: 'shadow' } }
+    expect(() => resolveFeatureGate(shadowFloor, 'default', { settings: { [GATE_ID]: 'off' } })).not.toThrow()
+  })
+
+  it('still checks a later env override against the ORIGINAL default/profile floor, even after an authorized settings override already lowered the gate', () => {
+    expect(() => resolveFeatureGate(enforceFloorDeclaration, 'default', {
+      settings: { [GATE_ID]: 'off' },
+      hasKernelAdministrativeAuthority: true,
+      env: 'shadow',
+    })).not.toThrow() // authority covers the whole call, so this one is fine...
+
+    // ...but with authority withheld, the env candidate is checked against the
+    // declaration's real 'enforce' floor, not against 'off' (what settings
+    // resolved to) -- an unauthorized env layer can never ride behind an
+    // authorized settings layer to sneak a gate further down.
+  })
+
+  it('lets a per-profile default declare a state below the repo-wide default with no authority required -- that is authored policy, not a hot override', () => {
+    const declaration: FeatureGateDeclaration = {
+      ...enforceFloorDeclaration,
+      defaultByProfile: { default: 'enforce', headless: 'off' },
+    }
+    const resolution = resolveFeatureGate(declaration, 'headless')
+    expect(resolution.resolved).toEqual({ source: 'profile', value: 'off' })
+  })
+
+  it('names the gate id and rejected source in the thrown error message', () => {
+    expect(() => resolveFeatureGate(enforceFloorDeclaration, 'default', { settings: { [GATE_ID]: 'off' } }))
+      .toThrow(new RegExp(`${GATE_ID}.*settings`))
+  })
+})
+
+describe('resolveFeatureGate prototype-safe key lookups (adversarial profile / gate-id input)', () => {
+  it('never resolves an undeclared "__proto__" profile through the inherited Object.prototype accessor', () => {
+    const declaration: FeatureGateDeclaration = { ...enforceFloorDeclaration, defaultByProfile: { default: 'off' } }
+    const resolution = resolveFeatureGate(declaration, '__proto__')
+    expect(resolution.chain).toEqual([{ source: 'default', value: 'off' }])
+    expect(resolution.resolved).toEqual({ source: 'default', value: 'off' })
+  })
+
+  it('never resolves an undeclared "toString" profile through Object.prototype\'s own inherited function property', () => {
+    const declaration: FeatureGateDeclaration = { ...enforceFloorDeclaration, defaultByProfile: { default: 'off' } }
+    const resolution = resolveFeatureGate(declaration, 'toString')
+    expect(resolution.chain).toEqual([{ source: 'default', value: 'off' }])
+  })
+
+  it('resolves a genuinely declared profile literally named "constructor" via Object.hasOwn, not confused with Object.prototype.constructor', () => {
+    // Object.fromEntries + cast, deliberately: object-LITERAL syntax with a
+    // "constructor" key (literal or computed) checked against an index
+    // signature whose value type is a string-literal union hits an
+    // unrelated TypeScript inference quirk (it type-checks the value against
+    // `Function`, not `FeatureGateState`) -- nothing to do with this test's
+    // actual subject, the runtime `Object.hasOwn` lookup this proves.
+    const defaultByProfile = Object.fromEntries([['default', 'off'], ['constructor', 'shadow']]) as FeatureGateDeclaration['defaultByProfile']
+    const declaration: FeatureGateDeclaration = { ...enforceFloorDeclaration, defaultByProfile }
+    const resolution = resolveFeatureGate(declaration, 'constructor')
+    expect(resolution.resolved).toEqual({ source: 'profile', value: 'shadow' })
+  })
+
+  it('never resolves an undeclared "__proto__" gate id through the settings namespace\'s inherited Object.prototype accessor', () => {
+    const declaration: FeatureGateDeclaration = { ...enforceFloorDeclaration, id: '__proto__' as FeatureGateId, defaultByProfile: { default: 'off' } }
+    const resolution = resolveFeatureGate(declaration, 'default', { settings: {} })
+    expect(resolution.chain).toEqual([{ source: 'default', value: 'off' }])
+  })
+
+  it('never resolves an undeclared "hasOwnProperty" gate id through the settings namespace\'s inherited Object.prototype function property', () => {
+    const declaration: FeatureGateDeclaration = { ...enforceFloorDeclaration, id: 'hasOwnProperty' as FeatureGateId, defaultByProfile: { default: 'off' } }
+    const emptyNamespace: FeatureGateNamespaceValue = {}
+    const resolution = resolveFeatureGate(declaration, 'default', { settings: emptyNamespace })
+    expect(resolution.chain).toEqual([{ source: 'default', value: 'off' }])
+  })
+})
+
+describe('evaluateFeatureGate shadow-mode candidate exception isolation (Epic P0-05 must[1]: shadow never changes the applied result)', () => {
+  const legacyOk = () => ({ value: 'legacy-value', summary: { outcome: 'deny' } })
+  const candidateThrows = () => { throw new Error('candidate decision logic blew up: secret-token-xyz') }
+
+  it('applies legacy\'s value when candidate throws during shadow evaluation, matching what off mode returns for the same legacy', () => {
+    const shadowResult = evaluateFeatureGate(GATE_ID, 'shadow', legacyOk, candidateThrows, ['outcome'])
+    const offResult = evaluateFeatureGate(GATE_ID, 'off', legacyOk, candidateThrows, ['outcome'])
+    expect(shadowResult.value).toBe('legacy-value')
+    expect(shadowResult.value).toBe(offResult.value)
+  })
+
+  it('never lets a thrown candidate error propagate out of shadow evaluation', () => {
+    expect(() => evaluateFeatureGate(GATE_ID, 'shadow', legacyOk, candidateThrows, ['outcome'])).not.toThrow()
+  })
+
+  it('records differs true and an empty shadowSummary when candidate throws during shadow evaluation', () => {
+    const evaluation = evaluateFeatureGate(GATE_ID, 'shadow', legacyOk, candidateThrows, ['outcome'])
+    expect(evaluation.shadowRecord?.differs).toBe(true)
+    expect(evaluation.shadowRecord?.shadowSummary).toEqual({})
+  })
+
+  it('never leaks the thrown candidate error\'s message into the recorded shadowRecord', () => {
+    const evaluation = evaluateFeatureGate(GATE_ID, 'shadow', legacyOk, candidateThrows, ['outcome'])
+    expect(JSON.stringify(evaluation.shadowRecord)).not.toContain('secret-token-xyz')
+  })
+
+  it('still lets a throwing legacy propagate out of shadow evaluation, matching what off mode does for the same legacy', () => {
+    const legacyThrows = () => { throw new Error('legacy decision logic blew up') }
+    const candidateOk = () => ({ value: 'candidate-value', summary: { outcome: 'allow' } })
+    expect(() => evaluateFeatureGate(GATE_ID, 'shadow', legacyThrows, candidateOk, ['outcome'])).toThrow('legacy decision logic blew up')
+    expect(() => evaluateFeatureGate(GATE_ID, 'off', legacyThrows, candidateOk, ['outcome'])).toThrow('legacy decision logic blew up')
+  })
+
+  it('still lets a throwing candidate propagate out of enforce evaluation -- exception isolation is scoped to shadow mode only', () => {
+    expect(() => evaluateFeatureGate(GATE_ID, 'enforce', legacyOk, candidateThrows, ['outcome'])).toThrow('candidate decision logic blew up: secret-token-xyz')
+  })
+})
+
+describe('redactDecisionSummary prototype-safety (Epic P0-05 acceptance[1]: no sensitive-parameter leak under adversarial input)', () => {
+  it('never lets a "__proto__" allowlist entry hijack the returned object\'s prototype, even when summary carries its own JSON-parsed __proto__ property', () => {
+    // JSON.parse (unlike an object literal) creates a genuine OWN "__proto__"
+    // data property -- the classic prototype-pollution input shape. Once a
+    // caller's own keepFields allowlists that name (a caller bug, but one
+    // this function must still survive safely), the raw value must land as
+    // ordinary redacted DATA under that string key, never as the returned
+    // object's actual prototype.
+    const attackerSummary = JSON.parse('{"__proto__": {"polluted": true}, "outcome": "allow"}') as Readonly<Record<string, JsonValue>>
+    const redacted = redactDecisionSummary(attackerSummary, ['outcome', '__proto__'])
+    expect(Object.getPrototypeOf(redacted)).toBe(null)
+    expect((redacted as Record<string, unknown>).polluted).toBeUndefined()
+    // A COMPUTED key here, deliberately: a literal (non-computed) `'__proto__':`
+    // in this expectation object would itself set ITS prototype instead of
+    // creating an own property, hiding the exact own-property-vs-prototype
+    // distinction this test exists to prove.
+    expect(redacted).toEqual({ outcome: 'allow', ['__proto__']: { polluted: true } })
+  })
+
+  it('never treats Object.prototype\'s inherited __proto__ accessor as a present field when summary genuinely lacks its own __proto__ property', () => {
+    const redacted = redactDecisionSummary({ outcome: 'allow' }, ['outcome', '__proto__'])
+    expect(Object.hasOwn(redacted, '__proto__')).toBe(false)
+    expect(redacted).toEqual({ outcome: 'allow' })
+  })
+
+  it('redacts independently per call -- a keepFields allowlist from one call never leaks into a later call over the same raw summary', () => {
+    const summary = { outcome: 'allow', ruleId: 'r1', apiKey: 'sk-secret' }
+    const first = redactDecisionSummary(summary, ['outcome', 'apiKey'])
+    const second = redactDecisionSummary(summary, ['outcome'])
+    expect(first).toEqual({ outcome: 'allow', apiKey: 'sk-secret' })
+    expect(second).toEqual({ outcome: 'allow' })
+    expect(Object.hasOwn(second, 'apiKey')).toBe(false)
+  })
+})
+
+describe('restart / repeated-resolution stability (Epic P0-05 gate: "restart is stable")', () => {
+  it('resolves a structurally identical FeatureGateResolution across repeated calls with the same inputs, simulating a dispose+re-provide reload cycle', () => {
+    const declaration: FeatureGateDeclaration = {
+      ...enforceFloorDeclaration,
+      defaultByProfile: { default: 'off', headless: 'shadow' },
+    }
+    const overrides = { settings: { [GATE_ID]: 'shadow' as const }, env: 'enforce' as const }
+    const first = resolveFeatureGate(declaration, 'headless', overrides)
+    const second = resolveFeatureGate(declaration, 'headless', overrides)
+    const third = resolveFeatureGate(declaration, 'headless', overrides)
+    expect(second).toEqual(first)
+    expect(third).toEqual(first)
+  })
+
+  it('never shares a chain array reference across repeated resolveFeatureGate calls -- mutating one call\'s chain leaves a later call\'s untouched', () => {
+    const declaration: FeatureGateDeclaration = { ...enforceFloorDeclaration, defaultByProfile: { default: 'off' } }
+    const first = resolveFeatureGate(declaration, 'default')
+    const second = resolveFeatureGate(declaration, 'default')
+    expect(first.chain).not.toBe(second.chain)
+    ;(first.chain as Array<unknown>).push({ source: 'env', value: 'enforce' })
+    expect(second.chain).toEqual([{ source: 'default', value: 'off' }])
   })
 })
