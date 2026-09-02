@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepseek-ai/dsh/spec/capability-manifest.schema.json",
+  "title": "dsh-plugin-manifest-v2",
+  "description": "Plugin Manifest v2 (Epic P1-01): the dsh.manifestVersion=2 shape of a plugin package's package.json 'dsh' field. Mirrors packages/plugin/plugin-manifest/src/types.ts's PluginManifestV2 field-for-field; the package's tests/manifest.spec.ts golden-fixture tests validate real fixtures against this document with ajv, in addition to the hand-written TypeScript validator in src/validate.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "executionMode", "compatibility"],
+  "properties": {
+    "manifestVersion": { "const": 2 },
+    "services": { "type": "array", "items": { "$ref": "#/$defs/serviceCapabilityDeclaration" } },
+    "tools": { "type": "array", "items": { "$ref": "#/$defs/toolCapabilityDeclaration" } },
+    "skills": { "type": "array", "items": { "$ref": "#/$defs/skillCapabilityDeclaration" } },
+    "mcp": { "$ref": "#/$defs/mcpCapabilityDeclaration" },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/eventCapabilityDeclaration" } },
+    "filesystem": { "$ref": "#/$defs/filesystemCapabilityDeclaration" },
+    "network": { "$ref": "#/$defs/networkCapabilityDeclaration" },
+    "process": { "$ref": "#/$defs/processCapabilityDeclaration" },
+    "secrets": { "type": "array", "items": { "$ref": "#/$defs/secretCapabilityDeclaration" } },
+    "uiSurfaces": { "type": "array", "items": { "$ref": "#/$defs/uiSurfaceCapabilityDeclaration" } },
+    "dataStores": { "type": "array", "items": { "$ref": "#/$defs/dataStoreCapabilityDeclaration" } },
+    "migrations": { "type": "array", "items": { "$ref": "#/$defs/migrationDeclaration" } },
+    "executionMode": { "$ref": "#/$defs/executionMode" },
+    "compatibility": { "$ref": "#/$defs/compatibilityDeclaration" }
+  },
+  "$defs": {
+    "sideEffectClass": {
+      "type": "string",
+      "enum": ["none", "read", "write", "network", "process", "destructive"]
+    },
+    "authAudience": {
+      "type": "string",
+      "enum": ["model", "user", "service"]
+    },
+    "dataClassification": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "secret"]
+    },
+    "capabilityDestination": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": ["kind", "pathPattern"],
+          "properties": {
+            "kind": { "const": "filesystem" },
+            "pathPattern": { "type": "string" }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["kind", "hostPattern"],
+          "properties": {
+            "kind": { "const": "network" },
+            "hostPattern": { "type": "string" }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["kind", "commandPattern"],
+          "properties": {
+            "kind": { "const": "process" },
+            "commandPattern": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "capabilityEffectFields": {
+      "type": "object",
+      "required": ["sideEffectClass", "authAudience", "allowedDestinations", "dataClassification"],
+      "properties": {
+        "sideEffectClass": { "$ref": "#/$defs/sideEffectClass" },
+        "authAudience": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/authAudience" }
+        },
+        "allowedDestinations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/capabilityDestination" }
+        },
+        "dataClassification": { "$ref": "#/$defs/dataClassification" }
+      }
+    },
+    "serviceCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ctxKey", "role"],
+      "properties": {
+        "ctxKey": { "type": "string" },
+        "role": { "type": "string", "enum": ["provides", "requires"] }
+      }
+    },
+    "toolCapabilityDeclaration": {
+      "allOf": [
+        { "$ref": "#/$defs/capabilityEffectFields" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "sideEffectClass", "authAudience", "allowedDestinations", "dataClassification"],
+          "properties": {
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "sideEffectClass": { "$ref": "#/$defs/sideEffectClass" },
+            "authAudience": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/authAudience" } },
+            "allowedDestinations": { "type": "array", "items": { "$ref": "#/$defs/capabilityDestination" } },
+            "dataClassification": { "$ref": "#/$defs/dataClassification" }
+          }
+        }
+      ]
+    },
+    "capabilityTransport": {
+      "type": "string",
+      "enum": ["stdio", "streamable-http"]
+    },
+    "authMechanism": {
+      "type": "string",
+      "enum": ["none", "header-credential", "oauth", "mtls"]
+    },
+    "remoteProviderDeclaration": {
+      "type": "object",
+      "required": ["transport", "authMechanism", "sideEffectClass", "authAudience", "allowedDestinations", "dataClassification"],
+      "properties": {
+        "transport": { "$ref": "#/$defs/capabilityTransport" },
+        "authMechanism": { "$ref": "#/$defs/authMechanism" },
+        "sideEffectClass": { "$ref": "#/$defs/sideEffectClass" },
+        "authAudience": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/authAudience" } },
+        "allowedDestinations": {
+          "type": "array",
+          "minItems": 1,
+          "description": "acceptance[3]: a remote provider always connects somewhere, so an empty array is itself an undeclared-network-destination violation.",
+          "items": { "$ref": "#/$defs/capabilityDestination" }
+        },
+        "dataClassification": { "$ref": "#/$defs/dataClassification" }
+      }
+    },
+    "mcpResourceDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uriPattern", "dataClassification"],
+      "properties": {
+        "uriPattern": { "type": "string" },
+        "dataClassification": { "$ref": "#/$defs/dataClassification" }
+      }
+    },
+    "mcpPromptDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "mcpServerDeclaration": {
+      "allOf": [
+        { "$ref": "#/$defs/remoteProviderDeclaration" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "transport", "authMechanism", "sideEffectClass", "authAudience", "allowedDestinations", "dataClassification"],
+          "properties": {
+            "name": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$" },
+            "transport": { "$ref": "#/$defs/capabilityTransport" },
+            "authMechanism": { "$ref": "#/$defs/authMechanism" },
+            "sideEffectClass": { "$ref": "#/$defs/sideEffectClass" },
+            "authAudience": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/authAudience" } },
+            "allowedDestinations": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/capabilityDestination" } },
+            "dataClassification": { "$ref": "#/$defs/dataClassification" },
+            "resources": { "type": "array", "items": { "$ref": "#/$defs/mcpResourceDeclaration" } },
+            "prompts": { "type": "array", "items": { "$ref": "#/$defs/mcpPromptDeclaration" } }
+          }
+        }
+      ]
+    },
+    "mcpCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["servers"],
+      "properties": {
+        "servers": { "type": "array", "items": { "$ref": "#/$defs/mcpServerDeclaration" } }
+      }
+    },
+    "skillCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "sideEffectClass", "dataClassification"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "sideEffectClass": { "$ref": "#/$defs/sideEffectClass" },
+        "dataClassification": { "$ref": "#/$defs/dataClassification" },
+        "remoteProvider": { "$ref": "#/$defs/remoteProviderDeclaration" }
+      }
+    },
+    "dispatchMode": {
+      "type": "string",
+      "enum": ["emit", "parallel", "serial", "bail", "waterfall"]
+    },
+    "eventCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "mode"],
+      "properties": {
+        "name": { "type": "string" },
+        "mode": { "$ref": "#/$defs/dispatchMode" }
+      }
+    },
+    "filesystemCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readPaths", "writePaths"],
+      "properties": {
+        "readPaths": { "type": "array", "items": { "type": "string" } },
+        "writePaths": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "networkCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hostPatterns"],
+      "properties": {
+        "hostPatterns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "processCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commandPatterns"],
+      "properties": {
+        "commandPatterns": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "secretCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "reason"],
+      "properties": {
+        "key": { "type": "string" },
+        "reason": { "type": "string" }
+      }
+    },
+    "uiSurfaceCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceId"],
+      "properties": {
+        "surfaceId": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "dataStoreCapabilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domainName", "dataClassification"],
+      "properties": {
+        "domainName": { "type": "string" },
+        "dataClassification": { "$ref": "#/$defs/dataClassification" }
+      }
+    },
+    "migrationDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fromVersion", "toVersion", "description"],
+      "properties": {
+        "fromVersion": { "type": "number" },
+        "toVersion": { "type": "number" },
+        "description": { "type": "string" }
+      }
+    },
+    "executionMode": {
+      "type": "string",
+      "enum": ["in-process", "worker-thread", "process", "container"]
+    },
+    "compatibilityDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dshVersionRange"],
+      "properties": {
+        "dshVersionRange": { "type": "string" }
+      }
+    }
+  }
+}

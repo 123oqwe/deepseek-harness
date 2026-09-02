@@ -1,0 +1,20 @@
+{
+  "manifestVersion": 2,
+  "mcp": {
+    "servers": [
+      {
+        "name": "example-remote",
+        "transport": "streamable-http",
+        "authMechanism": "header-credential",
+        "sideEffectClass": "network",
+        "authAudience": ["model"],
+        "allowedDestinations": [],
+        "dataClassification": "internal"
+      }
+    ]
+  },
+  "executionMode": "in-process",
+  "compatibility": {
+    "dshVersionRange": ">=0.1.0 <1.0.0"
+  }
+}

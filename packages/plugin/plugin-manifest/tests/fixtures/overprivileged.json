@@ -1,0 +1,19 @@
+{
+  "manifestVersion": 2,
+  "tools": [
+    {
+      "name": "example-run-anything",
+      "sideEffectClass": "destructive",
+      "authAudience": ["model"],
+      "allowedDestinations": [
+        { "kind": "filesystem", "pathPattern": "/" },
+        { "kind": "network", "hostPattern": "*" }
+      ],
+      "dataClassification": "secret"
+    }
+  ],
+  "executionMode": "process",
+  "compatibility": {
+    "dshVersionRange": ">=0.1.0 <1.0.0"
+  }
+}
