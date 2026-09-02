@@ -9,13 +9,22 @@
  *   `SettingsProvider.register('feature-gates', schema).get()` would hand a
  *   caller (that provider's `resolve()` always `deepFreeze`s the value a
  *   `SettingsScope<T>.get()` returns, so this function only ever reads it).
+ *   Its `settings`/`env` layers also enforce this epic's own `gate` bar,
+ *   "enforce cannot be lowered below policy floor": once `default`/`profile`
+ *   (the declaration's own authored policy) resolve a gate to `'enforce'`, a
+ *   hot `settings` write or `env` override may not move it to `'shadow'` or
+ *   `'off'` without `overrides.hasKernelAdministrativeAuthority`.
  * - {@link evaluateFeatureGate} -- must[1]: in `shadow` mode both decisions
  *   run, but only `legacy`'s value is ever applied (acceptance[0]: `off` and
  *   `shadow` apply the identical value for the same `legacy`/`candidate`
- *   pair), and a redacted diff is recorded (acceptance[1]).
+ *   pair), and a redacted diff is recorded (acceptance[1]). A throwing
+ *   `candidate` never propagates out of `shadow` mode either -- matching
+ *   what `'off'` mode (which never calls `candidate` at all) would do for
+ *   the same `legacy`.
  * - {@link redactDecisionSummary} -- the real redaction call site
  *   {@link RedactedJsonValue}'s own doc comment calls for: a fixed field
- *   allowlist, not a bare cast.
+ *   allowlist, not a bare cast, and immune to a `summary` carrying its own
+ *   `__proto__`/`constructor`-named field.
  * - {@link checkFeatureGateExpiry} -- acceptance[2]'s release-gate check,
  *   against a real SemVer-precedence version comparison.
  *
@@ -26,7 +35,13 @@
  * Cordis plugin surface, a settings-namespace registration, or
  * `--dump-config` itself -- registering the `feature-gates` settings
  * namespace and wiring `apps/cli/src/dump-config.ts` to render
- * {@link FeatureGateResolution} are Usage-stage's declared files.
+ * {@link FeatureGateResolution} are Usage-stage's declared files. Presenting
+ * real proof of `overrides.hasKernelAdministrativeAuthority` (e.g. deriving
+ * it from `ctx.get('trustKernel')`) is that same later slice's wiring job --
+ * this Provider-stage module stays `ctx`-free, matching
+ * `docs/architecture/trust-kernel-boundary.md`'s standing rule that no
+ * epic may wire a real enforcement point consuming the Trust Kernel before
+ * the vendored Cordis `Fiber` fix (Option A) lands.
  *
  * @module @deepseek-ai/dsh-feature-gates
  */
@@ -58,22 +73,76 @@ export interface FeatureGateOverrideInputs {
   readonly settings?: FeatureGateNamespaceValue
   /** The highest-precedence CLI/environment override, when one was supplied. */
   readonly env?: FeatureGateState
+  /**
+   * Proof, established by the caller before calling {@link resolveFeatureGate},
+   * that whoever is driving this `settings`/`env` override holds kernel
+   * administrative authority -- for example a real caller deriving this from
+   * `ctx.get('trustKernel') !== undefined` plus its own actor check, never
+   * from a bare `ctx.trustKernel` property read. Required only to let a
+   * `settings`/`env` candidate move a gate OFF its declared `'enforce'` floor
+   * (Epic P0-05 gate: "enforce cannot be lowered below policy floor");
+   * omitted or `false` is the safe default and never blocks an override that
+   * holds at or raises the floor. This module does not and cannot verify the
+   * claim itself -- it stays `ctx`-free, matching this module's own doc
+   * comment on why a real Trust Kernel call is a later slice's job.
+   */
+  readonly hasKernelAdministrativeAuthority?: boolean
+}
+
+/**
+ * Refuse a `settings`/`env` candidate that would move a gate OFF its
+ * declared `'enforce'` floor without kernel administrative authority (Epic
+ * P0-05 gate: "enforce cannot be lowered below policy floor"; validation:
+ * "hot-reload cannot downgrade enforce to off except with kernel
+ * administrative authority"). Scoped to leaving `'enforce'` specifically,
+ * never a `'shadow'` -> `'off'` move: `'shadow'` already applies `legacy`'s
+ * value exactly like `'off'` does (see {@link evaluateFeatureGate}), so only
+ * a departure FROM `'enforce'` actually changes what a caller's decision
+ * logic applies -- the one transition this gate exists to guard.
+ * @param source - which override layer supplied `candidate`.
+ * @param candidate - the state that layer would contribute.
+ * @param floor - the state `default`/`profile` alone resolved to, before this layer.
+ * @param gateId - the gate this candidate is for, for a clear error message.
+ * @param hasKernelAdministrativeAuthority - see {@link FeatureGateOverrideInputs.hasKernelAdministrativeAuthority}.
+ * @throws {Error} when `floor` is `'enforce'`, `candidate` is not, and authority was not asserted.
+ */
+function assertAuthorizedFeatureGateOverride(
+  source: 'settings' | 'env',
+  candidate: FeatureGateState,
+  floor: FeatureGateState,
+  gateId: FeatureGateId,
+  hasKernelAdministrativeAuthority: boolean,
+): void {
+  if (floor === 'enforce' && candidate !== 'enforce' && !hasKernelAdministrativeAuthority) {
+    throw new Error(
+      `resolveFeatureGate: gate "${gateId}"'s "${source}" override would move it off its declared "enforce" floor `
+      + `(default/profile) to "${candidate}" -- refused. A settings/env override may not lower an "enforce" gate `
+      + 'without overrides.hasKernelAdministrativeAuthority (Epic P0-05 gate: "enforce cannot be lowered below policy floor").',
+    )
+  }
 }
 
 /**
  * Resolve one gate's final state and full override chain for `--dump-config`
  * (Epic P0-05 must[3]). Layers, lowest precedence first: the declaration's
  * own `defaultByProfile.default`; `defaultByProfile[profile]`, only when
- * `profile` is not `'default'` and the declaration carries an explicit key
- * for it; `overrides.settings[declaration.id]`, only when the namespace
- * value carries this gate's id; `overrides.env`, when supplied. A layer with
- * no candidate for this gate contributes no chain entry -- the chain shows
- * exactly what actually fed the resolution, never a placeholder for a layer
- * that had nothing to say.
+ * `profile` is not `'default'` and the declaration carries an OWN key for
+ * it (`Object.hasOwn`, not a bracket/destructure read -- a `profile` string
+ * of `'__proto__'` or similar must never resolve through the prototype
+ * chain's own accessor as if it were a declared override); `overrides.settings[declaration.id]`,
+ * only when the namespace value carries this gate's OWN id, same guard;
+ * `overrides.env`, when supplied. A layer with no candidate for this gate
+ * contributes no chain entry -- the chain shows exactly what actually fed
+ * the resolution, never a placeholder for a layer that had nothing to say.
+ * `settings`/`env` are also checked against
+ * {@link assertAuthorizedFeatureGateOverride} before they may enter the
+ * chain.
  * @param declaration - the gate's fixed lifecycle metadata (must[2]).
  * @param profile - the active `dsh --profile` name.
- * @param overrides - the settings/env candidates above the declaration's own defaults.
+ * @param overrides - the settings/env candidates above the declaration's own defaults, and any authority proof.
  * @returns the winning source/value and the complete override chain, lowest-precedence first.
+ * @throws {Error} when a `settings`/`env` candidate would lower an `'enforce'`-floor
+ * gate without authority; see {@link assertAuthorizedFeatureGateOverride}.
  */
 export function resolveFeatureGate(
   declaration: FeatureGateDeclaration,
@@ -82,17 +151,22 @@ export function resolveFeatureGate(
 ): FeatureGateResolution {
   let resolved: FeatureGateOverrideEntry = { source: 'default', value: declaration.defaultByProfile.default }
   const chain: FeatureGateOverrideEntry[] = [resolved]
-  const { [profile]: profileValue } = declaration.defaultByProfile
+  const profileValue = Object.hasOwn(declaration.defaultByProfile, profile) ? declaration.defaultByProfile[profile] : undefined
   if (profile !== 'default' && profileValue !== undefined) {
     resolved = { source: 'profile', value: profileValue }
     chain.push(resolved)
   }
-  const { [declaration.id]: settingsValue } = overrides.settings ?? {}
+  const floor = resolved.value
+  const hasAuthority = overrides.hasKernelAdministrativeAuthority ?? false
+  const settings = overrides.settings ?? {}
+  const settingsValue = Object.hasOwn(settings, declaration.id) ? settings[declaration.id] : undefined
   if (settingsValue !== undefined) {
+    assertAuthorizedFeatureGateOverride('settings', settingsValue, floor, declaration.id, hasAuthority)
     resolved = { source: 'settings', value: settingsValue }
     chain.push(resolved)
   }
   if (overrides.env !== undefined) {
+    assertAuthorizedFeatureGateOverride('env', overrides.env, floor, declaration.id, hasAuthority)
     resolved = { source: 'env', value: overrides.env }
     chain.push(resolved)
   }
@@ -106,7 +180,15 @@ export function resolveFeatureGate(
  * cast. Any field outside `keepFields` -- a raw request parameter, secret,
  * or other sensitive value a caller's summary object happens to carry -- is
  * dropped before the cast, so "no sensitive parameter leak" holds for the
- * actual value, not just its type.
+ * actual value, not just its type. Membership is `Object.hasOwn`, and the
+ * result starts prototype-less (`Object.create(null)`): a `summary` built
+ * from `JSON.parse` of adversarial input can carry a genuine own
+ * `__proto__`/`constructor`-named field, and if a caller's own `keepFields`
+ * ever allowlists one of those names, a plain `{}` accumulator would let
+ * `redacted[field] = value` hijack the returned object's prototype (and, for
+ * an unset field, `summary[field]` would silently read `Object.prototype`
+ * itself off the inherited accessor rather than correctly reporting "not
+ * present") instead of recording an ordinary redacted data field.
  * @param summary - the raw decision summary a caller built from its own decision logic.
  * @param keepFields - the fixed set of field names safe to record; every other field is dropped.
  * @returns a {@link RedactedJsonValue} carrying only the allowlisted fields `summary` actually has.
@@ -115,9 +197,10 @@ export function redactDecisionSummary(
   summary: Readonly<Record<string, JsonValue>>,
   keepFields: readonly string[],
 ): RedactedJsonValue {
-  const redacted: Record<string, JsonValue> = {}
+  const redacted: Record<string, JsonValue> = Object.create(null) as Record<string, JsonValue>
   for (const field of keepFields) {
-    const { [field]: value } = summary
+    if (!Object.hasOwn(summary, field)) continue
+    const value = summary[field]
     if (value !== undefined) redacted[field] = value
   }
   return redacted as RedactedJsonValue
@@ -156,7 +239,20 @@ export interface FeatureGateEvaluation<T> {
  * allowlist later drops still gets flagged -- shadow mode exists to catch
  * behavioral drift, and under-reporting it because of what is safe to store
  * would defeat that), while `legacySummary`/`shadowSummary` themselves are
- * redacted through {@link redactDecisionSummary} (acceptance[1]).
+ * redacted through {@link redactDecisionSummary} (acceptance[1]). A
+ * `candidate` that THROWS never propagates out of `'shadow'` mode: `'off'`
+ * mode never calls `candidate` at all, so a broken candidate cannot fail a
+ * request `'off'` would have served fine -- letting the exception through in
+ * `'shadow'` mode would itself be `'shadow'` "changing the result" (must[1]),
+ * the one thing this state exists to never do. The caught error's own
+ * message is never recorded (it could itself carry a sensitive request
+ * parameter, exactly what acceptance[1] forbids); `shadowSummary` becomes an
+ * empty redacted record and `differs` is forced `true` -- a crash is
+ * evidence of real divergence, never silently reported as agreement. A
+ * throwing `legacy`, and a throwing `candidate` under `'enforce'`, are NOT
+ * caught: both mirror exactly what the corresponding non-shadow state
+ * (`'off'`/`'enforce'`) already does for that same failure, so no isolation
+ * is needed there.
  *
  * A pure function: no I/O, no shared mutable state, callable twice with a
  * different `state` argument for a direct side-by-side comparison.
@@ -181,14 +277,26 @@ export function evaluateFeatureGate<T>(
       return { value: candidate().value }
     case 'shadow': {
       const legacyOutcome = legacy()
-      const candidateOutcome = candidate()
+      let candidateOutcome: FeatureGateDecisionOutcome<T> | undefined
+      try {
+        candidateOutcome = candidate()
+      } catch {
+        // Swallowed deliberately: a throwing candidate must never surface to
+        // this state's caller (see this function's own doc comment), and its
+        // message is not safe to record unredacted. `candidateOutcome` stays
+        // `undefined`, which the branches below treat as "no candidate value
+        // to compare" without ever letting the error escape this block.
+      }
       return {
         value: legacyOutcome.value,
         shadowRecord: {
           gateId,
           legacySummary: redactDecisionSummary(legacyOutcome.summary, keepFields),
-          shadowSummary: redactDecisionSummary(candidateOutcome.summary, keepFields),
-          differs: !deepEqualJson(legacyOutcome.summary, candidateOutcome.summary),
+          shadowSummary: candidateOutcome === undefined
+            ? ({} as RedactedJsonValue)
+            : redactDecisionSummary(candidateOutcome.summary, keepFields),
+          differs: candidateOutcome === undefined
+            || !deepEqualJson(legacyOutcome.summary, candidateOutcome.summary),
         },
       }
     }
