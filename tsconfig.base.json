@@ -126,6 +126,11 @@
       "@deepseek-ai/dsh-agent/types": ["./packages/core/agent/src/types.ts"],
       "@deepseek-ai/dsh-agent/brand": ["./packages/core/agent/src/brand.ts"],
       "@deepseek-ai/dsh-agent/invariant": ["./packages/core/agent/src/invariant.ts"],
+      // No bare/index alias yet: src/index.ts is first100 registry P2-01's
+      // P-stage file, not yet created. These two submodule aliases are the
+      // only cross-package entry points C-stage exposes.
+      "@deepseek-ai/dsh-principal/types": ["./packages/identity/principal/src/types.ts"],
+      "@deepseek-ai/dsh-principal/chain": ["./packages/identity/principal/src/chain.ts"],
       "@deepseek-ai/dsh-scope/invariant": ["./packages/core/scope/src/invariant.ts"],
       "@deepseek-ai/dsh-agent-loop/invariant": ["./packages/core/agent-loop/src/invariant.ts"],
       "@deepseek-ai/dsh-experimental-agent-team/invariant": ["./packages/experimental/agent-team/src/invariant.ts"],

@@ -21,6 +21,9 @@
       "path": "../../core/session"
     },
     {
+      "path": "../../identity/principal"
+    },
+    {
       "path": "../../schema/schema-registry"
     },
     {

@@ -5,6 +5,7 @@
  */
 
 import type { UserMessage } from '@deepseek-ai/dsh-llm/types'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 
@@ -12,6 +13,14 @@ import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protoc
 export interface Agent {
   /** Session-backed Agent identity. */
   readonly id: SessionId
+  /**
+   * Which principal is acting as this agent, and its full delegation chain
+   * back to root (first100 registry P2-01 acceptance[0]). Optional and
+   * type-only for now: no producer attaches a real value yet — that wiring is
+   * a later first100 stage's job (see `@deepseek-ai/dsh-principal/types`'s
+   * module doc for why this package's own runtime module is not built yet).
+   */
+  readonly identity?: IdentityContext
 }
 
 declare module '@deepseek-ai/dsh-typert-protocol' {

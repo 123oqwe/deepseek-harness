@@ -27,6 +27,9 @@
       "path": "../../core/system-prompt"
     },
     {
+      "path": "../../identity/principal"
+    },
+    {
       "path": "../../runtime-diagnostics/invariants"
     },
     {

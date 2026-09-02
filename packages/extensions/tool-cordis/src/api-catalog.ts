@@ -3417,7 +3417,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Agent',
-    declaration: 'export interface Agent {\n    readonly id: SessionId;\n}',
+    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n}',
   },
   {
     name: 'AgentCancelCause',
@@ -3464,6 +3464,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface AgentPresetRow {\n    readonly id: string;\n    readonly trust: PresetTrust;\n    readonly isDefault: boolean;\n    readonly name?: string;\n    readonly description?: string;\n    readonly broken?: string;\n}',
   },
   {
+    name: 'AgentPrincipal',
+    declaration: 'export interface AgentPrincipal {\n    readonly kind: \'agent\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly delegatedBy: PrincipalId;\n}',
+  },
+  {
     name: 'AgentSetup',
     declaration: 'export type AgentSetup = (agentCtx: Context) => AgentSetupCommit | Promise<AgentSetupCommit | void> | void;',
   },
@@ -3474,6 +3478,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AgentStatus',
     declaration: 'export type AgentStatus = \'idle\' | \'running\';',
+  },
+  {
+    name: 'AnonymousDevPrincipal',
+    declaration: 'export interface AnonymousDevPrincipal {\n    readonly kind: \'anonymous-dev\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n}',
   },
   {
     name: 'ApiKeyRecord',
@@ -3892,6 +3900,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type DeepSeekLlmApiJson = null | boolean | number | string | DeepSeekLlmApiJson[] | {\n    [key: string]: DeepSeekLlmApiJson;\n};',
   },
   {
+    name: 'DelegationChain',
+    declaration: 'export interface DelegationChain {\n    readonly entries: readonly [\n        DelegationEntry,\n        ...DelegationEntry[]\n    ];\n}',
+  },
+  {
+    name: 'DelegationEntry',
+    declaration: 'export interface DelegationEntry {\n    readonly principal: Principal;\n    readonly delegatedAt: number;\n    readonly reason?: string;\n}',
+  },
+  {
     name: 'DiffCallView',
     declaration: 'export interface DiffCallView {\n    card: \'diff\';\n    title: string;\n    diffs: FileDiff[];\n    locations?: FileLocation[];\n}',
   },
@@ -4130,6 +4146,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'GrantRecord',
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
+  },
+  {
+    name: 'IdentityContext',
+    declaration: 'export interface IdentityContext {\n    readonly principal: Principal;\n    readonly runId: RunId;\n    readonly chain: DelegationChain;\n}',
   },
   {
     name: 'ImageAttachmentLimits',
@@ -4580,6 +4600,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type PreToolDecision = {\n    kind: \'allow\';\n} | {\n    kind: \'deny\';\n    reason: string;\n} | {\n    kind: \'ask\';\n    reason?: string;\n};',
   },
   {
+    name: 'Principal',
+    declaration: 'export type Principal = UserPrincipal | ServicePrincipal | AgentPrincipal | AnonymousDevPrincipal;',
+  },
+  {
+    name: 'PrincipalId',
+    declaration: 'export type PrincipalId = Branded<\'PrincipalId\'>;',
+  },
+  {
     name: 'ProjectionChangeListener',
     declaration: 'export type ProjectionChangeListener = (session: Session, key: Extract<keyof SessionProjectionMap, string>, value: unknown, seq: number) => void;',
   },
@@ -4732,6 +4760,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
   },
   {
+    name: 'RunId',
+    declaration: 'export type RunId = Branded<\'RunId\'>;',
+  },
+  {
     name: 'RunnerFailureRule',
     declaration: 'export interface RunnerFailureRule {\n    allowedExitCodes?: readonly number[];\n    fatalSignatures: readonly string[];\n    informationalLines?: readonly string[];\n}',
   },
@@ -4810,6 +4842,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SendTeamMessageResult',
     declaration: 'export interface SendTeamMessageResult {\n    readonly messageId: TeamMessageId;\n    readonly status: \'accepted\' | \'queued\';\n}',
+  },
+  {
+    name: 'ServicePrincipal',
+    declaration: 'export interface ServicePrincipal {\n    readonly kind: \'service\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly isAdmin: boolean;\n}',
   },
   {
     name: 'Session',
@@ -5636,6 +5672,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface TeamWaitResult {\n    readonly timedOut: boolean;\n}',
   },
   {
+    name: 'TenantId',
+    declaration: 'export type TenantId = Branded<\'TenantId\'>;',
+  },
+  {
     name: 'TerminalBackend',
     declaration: 'export interface TerminalBackend {\n    readonly type: string;\n    spawn(spec: TerminalBackendSpawnSpec): Promise<TerminalBackendSession>;\n}',
   },
@@ -5954,6 +5994,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'UserMessage',
     declaration: 'export interface UserMessage extends Message {\n    readonly role: \'user\';\n}',
+  },
+  {
+    name: 'UserPrincipal',
+    declaration: 'export interface UserPrincipal {\n    readonly kind: \'user\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly isAdmin: boolean;\n}',
   },
   {
     name: 'VerifiedWebhookDelivery',
