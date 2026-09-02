@@ -766,6 +766,51 @@
         "testsDiscovered": 20
       },
       "note": "P0-05 U-stage (2026-09-01), wiring the P-stage runtime into the real CLI/boot sequence. `profile-boot.ts` provides `featureGates` (resolved via the real `resolveProfileFeatureGates`, default->profile->env chain) on the Cordis Context inside boot()'s prepare closure, before any config-tree entry mounts -- independently verified via the real Cordis Loader (`packages/boot/app-boot`'s `boot()`: `prepare` genuinely runs strictly before `mountRootInclude`) and the real single-provide guarantee (`vendor/cordis/src/reflect.ts`'s real duplicate-registration error text, not a wrapper). `dump-config.ts` gets `renderFeatureGateDump` (must[3]): one comment-prefixed block per declared gate naming the resolved source/value and full chain, keeping the combined dump loadable YAML -- independently re-run standalone (not just via the test harness) against a synthetic declaration with a real env override, confirmed genuine chain output. `packages/bundle/base/cordis.patch.yml`: confirmed unchanged and correctly so -- every row mounts a real Cordis plugin; feature gates, like Trust Kernel, are a non-plugin boot mechanism with nothing to mount. No production feature gate is declared anywhere yet (`FEATURE_GATE_DECLARATIONS`/`RELEASE_GATE_FEATURE_GATES` both genuinely empty, confirmed by grep) -- explicitly out of this epic's nonGoals-bounded scope; the mechanism is proven end-to-end via test-local synthetic declarations, the honest way to bridge the gap. acceptance[2] (an expired gate fails the release gate): BLOCKED-012-class deviation -- `scripts/release/feature-gate-expiry.ts` wired into the real, pre-existing `scripts/release/verify.ts` release gate (not P0-07's evidence collector, a genuine domain mismatch correctly rejected and documented in the Agent Note's alternatives-considered) -- independently re-verified by mutating a scratch expired gate into the real check and confirming `pnpm run release:verify` genuinely throws and exits nonzero, then restoring to a clean pass. Real RED->GREEN across 3 files, independently re-verified via 3 separate mutations in 3 different files, each producing genuine failures then cleanly restored. `pnpm run typecheck` (full host+client build) clean. A required Agent Note (EN/ZH/i18n triple) covers all scope decisions and alternatives considered. Independent review: ACCEPT."
+    },
+    {
+      "epic": "P0-03",
+      "stage": "F",
+      "argv": ["pnpm", "exec", "vitest", "run", "tests/architecture/", "--reporter=json"],
+      "expectExit": 0,
+      "expectCases": [
+        "reports a clear error, and does not throw, when families is not an array",
+        "reports a clear error, and does not throw, when allowlist is not an array",
+        "reports a clear error, and does not throw, when a family is missing providers",
+        "reports a clear error, and does not throw, when a family is missing consumers",
+        "still validates every well-formed family when only one family in the document is malformed",
+        "reports a clear error, and does not throw, when a families element is null",
+        "reports a clear error, and does not throw, when an allowlist element is null",
+        "reports a clear error, and does not throw, when an allowlist entry is missing its owner field",
+        "reports a clear error, and does not throw, when a families element is a string or a number instead of an object",
+        "reports a clear error, and does not throw, when families holds undefined (a sparse-array-shaped hole)",
+        "reports a deep-import, a provider-app-dependency, and a missing-provider violation together from one real fixture",
+        "reports a clear error and zero violations, without throwing, when families is missing from the real fixture file",
+        "reports a clear error and zero violations, without throwing, when a family in the real fixture file is missing providers",
+        "still reports a clear schema error (and keeps scanning) when a real fixture family references a package absent from the workspace",
+        "still reports a clear schema error (and keeps scanning) when the real fixture file declares a family id twice",
+        "reports a clear error and zero violations, without throwing, when a real fixture families element is null",
+        "reports a clear error and zero violations, without throwing, when a real fixture allowlist element is null",
+        "reports a clear error, without throwing, when a real fixture allowlist entry is missing its owner field",
+        "reports a clear error, without throwing, when a real fixture families element is a string instead of an object",
+        "matches the declared package.json script this suite's other cases assume",
+        "exits 0 for a real clean fixture when invoked as the real pnpm script (not the underlying function directly)",
+        "exits non-zero for a real fixture violation when invoked as the real pnpm script, naming the edge, file, and remediation"
+      ],
+      "files": [
+        "tests/architecture/capability-seams.spec.ts",
+        "tests/architecture/check-capability-seams.spec.ts",
+        "scripts/architecture/capability-seams.ts",
+        "scripts/architecture/check-capability-seams.mjs",
+        "AGENTS.md",
+        "docs/glossary.md",
+        "docs/glossary.zh.md"
+      ],
+      "frozenAtUtc": "2026-09-01T23:35:00Z",
+      "dryRunProof": {
+        "treeSha": "bb741eba2e8eb66741de26269b8ae48eb5f1b218",
+        "testsDiscovered": 61
+      },
+      "note": "P0-03 F-stage (2026-09-01), fault/qualification hardening of the capability-seam scanner across both the pure detector (`capability-seams.ts`, exercised via `capability-seams.spec.ts`) and the real workspace scanner (`check-capability-seams.mjs`, exercised via `check-capability-seams.spec.ts`). First submission (0bc2dfb18b) added malformed-input guards checking whether `families`/`allowlist`/`providers`/`consumers` were arrays, but not whether individual array elements were well-formed objects before reading fields off them -- a first independent Reviewer REJECTed with 3 real reproduced crashes (`families: [null]`, `allowlist: [null]`, an allowlist entry missing `owner` crashing inside `.trim()`). Fix round (a2597627ae) replaced the narrow guards with a general `isPlainObject(value)` check (duplicated identically in both the `.ts` detector and the `.mjs` scanner, which do not share a runtime) applied before any array-element field read, plus a `typeof entry.owner !== 'string'` guard; `hasScannableShape` in the `.mjs` scanner got the same treatment so the real scan fails closed on an unsafe shape rather than attempting to read it. A second independent Reviewer re-read the full slice from scratch (not just the fix-round delta), re-ran every claimed check personally (61/61 vitest, typecheck, first100:slice-gate, the real `pnpm run architecture:seams` against the live repo matching the claimed 0-violations/29-families/4175-edges numbers, oxlint), fuzz-tested the detector directly with 15 synthetic malformed shapes beyond the reviewed cases (0 crashes), and drove the real CLI against 3 hand-built fixtures (0 crashes) before verdict: ACCEPT, with two explicitly non-blocking observations (a test-symmetry gap between the two unsynchronized implementations, and a pre-existing non-string-`id` gap out of this round's scope) neither of which reproduces a crash or gate failure. Merging attempt/P0-03-F into first100-exec (bb741eba2e) produced a real conflict in AGENTS.md against an unrelated intervening commit (e08d9dc0af, P0-07.U) that had already condensed a neighboring bullet to stay inside the file's frozen word-budget ceiling; `tests/architecture/check-capability-seams.spec.ts` auto-merged cleanly (non-overlapping hunks). BLOCKED-012-class deviation (disclosed, recorded in tests/first100/adjudication.json#deliverablePathPatches as P0-03-F-agents-md-relocation, count 7->8): the registry's declared F-stage AGENTS.md doc-note deliverable was relocated to the unbudgeted docs/glossary.md#capability-seam entry (with its docs/glossary.zh.md pair translated and docs/glossary.i18n.yaml re-recorded) per docs/AGENTS.md's own relocate-before-condense-before-raise remediation order, since no further genuine slop remained to condense and the ceiling is frozen above target. Post-merge: first100:slice-gate and the full tests/architecture/ suite (61/61) re-verified clean."
     }
   ]
 }
