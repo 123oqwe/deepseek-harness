@@ -37,7 +37,7 @@ export function checkCoverageClosure(
 
 export function checkCandidateChainConsistency(row: unknown, applicableStages: string[], gitRoot?: string): CandidateChainResult
 
-export function checkObservationDistinctness(row: unknown, applicableStages: string[]): ObservationDistinctnessResult
+export function checkObservationDistinctness(row: unknown, applicableStages: string[], freeze: unknown, epicId: string): ObservationDistinctnessResult
 
 export interface FlakeRegistryCheckResult {
   valid: boolean

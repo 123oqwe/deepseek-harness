@@ -20,8 +20,12 @@
  *   - requires every one of the frozen `expectCases` titles to appear in the
  *     report as passed, and the report's overall exit to match `expectExit`
  *     (closes the "one always-true case lights up the whole cell" path);
- *   - refuses to let two cells reference the same observation report file,
- *     by content digest (B7①);
+ *   - refuses to let two cells/supplements share one observation report
+ *     file (by content digest) UNLESS their frozen commands (argv +
+ *     case-titles set) genuinely differ (B7①, redefined by BLOCKED-018
+ *     2026-09-01 -- the prior rule required byte-distinct files regardless
+ *     of command identity, which capped any single-CI-run batch at however
+ *     many distinct observation artifacts that workflow happens to upload);
  *   - stamps the ledger file header with `generatedBy` + a digest of every
  *     input consumed, so a hand-edited ledger is detectable via `--check`.
  *
@@ -127,19 +131,77 @@ function buildSkeleton(existing) {
   return rows
 }
 
-/** Every observation-report digest already recorded on any cell or supplement, mapped to its label. */
-function usedObservationDigests(rows) {
+/**
+ * Two frozen command-freeze entries represent the identical command (argv +
+ * case-titles set) -- the real "one proof greens many cells" abuse BLOCKED-018
+ * keeps forbidden even after retiring the byte-distinct-file requirement.
+ */
+function isIdenticalFrozenCommand(a, b) {
+  const argvEqual = a.argv.length === b.argv.length && a.argv.every((v, i) => v === b.argv[i])
+  const casesA = [...a.expectCases].sort()
+  const casesB = [...b.expectCases].sort()
+  const casesEqual = casesA.length === casesB.length && casesA.every((v, i) => v === casesB[i])
+  return argvEqual && casesEqual
+}
+
+/**
+ * Every observation-report digest already recorded on any cell or
+ * supplement, mapped to every consumer's label and frozen command.
+ * BLOCKED-018 (2026-09-01): retired the plain "one file, one cell" rule --
+ * this CI workflow structurally produces only 2 distinct observation-file
+ * artifacts per run, which would cap any single-run batch at 2 greened
+ * cells. Two consumers may now share one digest iff their frozen commands
+ * genuinely differ (checked by `isIdenticalFrozenCommand` at each call
+ * site); each consumer's own case-titles being present-and-passing in the
+ * shared report is already enforced separately by the `missing` check in
+ * `cmdGreen`/`cmdGreenSupplement`.
+ */
+function usedObservationDigests(rows, freeze) {
   const used = new Map()
+  const add = (sha, label, frozenEntry) => {
+    if (!used.has(sha)) used.set(sha, [])
+    used.get(sha).push({ label, frozen: frozenEntry })
+  }
   for (const row of Object.values(rows)) {
     for (const stage of STAGES) {
       const cell = row.cells[stage]
-      if (cell?.observationSha256) used.set(cell.observationSha256, `${row.id}.${stage}`)
+      if (cell?.observationSha256) {
+        const frozenEntry = freeze.entries.find((e) => e.epic === row.id && e.stage === stage && !e.supplements)
+        add(cell.observationSha256, `${row.id}.${stage}`, frozenEntry)
+      }
     }
     for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
-      if (supplement?.observationSha256) used.set(supplement.observationSha256, `${row.id}.${key} (supplement)`)
+      if (supplement?.observationSha256) {
+        const [stage, seqStr] = key.split('.')
+        const frozenEntry = freeze.entries.find(
+          (e) => e.supplements?.epic === row.id && e.supplements?.stage === stage && e.supplementSeq === Number(seqStr),
+        )
+        add(supplement.observationSha256, `${row.id}.${key} (supplement)`, frozenEntry)
+      }
     }
   }
   return used
+}
+
+/**
+ * The real B7①/BLOCKED-018 collision check shared by `cmdGreen` and
+ * `cmdGreenSupplement`: blocks only when an existing consumer of this same
+ * observation digest has an IDENTICAL frozen command (argv + case-titles
+ * set) to the one being greened now -- an unresolvable existing consumer
+ * (its own frozen entry missing) is treated as a conflict, fail-safe.
+ */
+function checkSharedObservationAllowed(used, observationSha256, selfLabel, frozen, reportPath) {
+  const usages = (used.get(observationSha256) ?? []).filter((u) => u.label !== selfLabel)
+  const conflicting = usages.filter((u) => !u.frozen || isIdenticalFrozenCommand(u.frozen, frozen))
+  if (conflicting.length > 0) {
+    console.error(
+      `BLOCKED: observation report ${reportPath} (sha256 ${observationSha256}) shares an IDENTICAL frozen command with already-greened ${conflicting.map((c) => c.label).join(', ')} — two consumers with the same frozen command must not both be greened from one shared observation (B7①, BLOCKED-018)`,
+    )
+    process.exit(1)
+  }
+  if (usages.length > 0) {
+    console.log(`BLOCKED-018: sharing observation ${reportPath} with ${usages.map((u) => u.label).join(', ')} — frozen commands genuinely differ, allowed`)
+  }
 }
 
 function parseVitestJsonReport(reportPath) {
@@ -287,12 +349,8 @@ function cmdGreen() {
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
   const rows = existing.rows
 
-  const used = usedObservationDigests(rows)
-  const usedBy = used.get(observationSha256)
-  if (usedBy && usedBy !== `${epic}.${stage}`) {
-    console.error(`BLOCKED: observation report ${reportPath} (sha256 ${observationSha256}) already greened cell ${usedBy} — two cells must not share one observation file (B7①)`)
-    process.exit(1)
-  }
+  const used = usedObservationDigests(rows, freeze)
+  checkSharedObservationAllowed(used, observationSha256, `${epic}.${stage}`, frozen, reportPath)
 
   const missing = frozen.expectCases.filter((title) => !titles.has(title))
   if (missing.length > 0) {
@@ -394,12 +452,8 @@ function cmdGreenSupplement() {
   }
 
   const key = `${stage}.${supplementSeq}`
-  const used = usedObservationDigests(rows)
-  const usedBy = used.get(observationSha256)
-  if (usedBy && usedBy !== `${epic}.${key} (supplement)`) {
-    console.error(`BLOCKED: observation report ${reportPath} (sha256 ${observationSha256}) already greened ${usedBy} — two cells/supplements must not share one observation file (B7①)`)
-    process.exit(1)
-  }
+  const used = usedObservationDigests(rows, freeze)
+  checkSharedObservationAllowed(used, observationSha256, `${epic}.${key} (supplement)`, frozen, reportPath)
 
   const missing = frozen.expectCases.filter((title) => !titles.has(title))
   if (missing.length > 0) {
@@ -525,25 +579,41 @@ export function checkCandidateChainConsistency(row, applicableStages, gitRoot = 
 }
 
 /**
- * Maintainer decision BLOCKED-004 predicate (iii) (2026-09-01): observation
- * mutual-distinctness, re-checked at the row level (B7① is already enforced
- * globally at every `cmdGreen`/`cmdGreenSupplement` write time; this is
- * defense in depth against any out-of-band ledger edit).
+ * Maintainer decision BLOCKED-004 predicate (iii) (2026-09-01, redefined by
+ * BLOCKED-018 2026-09-01): observation mutual-distinctness, re-checked at
+ * the row level (the same rule is already enforced globally at every
+ * `cmdGreen`/`cmdGreenSupplement` write time via `checkSharedObservationAllowed`;
+ * this is defense in depth against any out-of-band ledger edit). Two stages
+ * or supplements sharing one observation digest is a conflict only when
+ * their frozen commands (argv + case-titles set) are identical -- a shared
+ * digest with genuinely different frozen commands is legitimate. `freeze`
+ * and `epicId` are required to resolve each stage/supplement's own frozen
+ * entry for that comparison; an entry that cannot be resolved is treated as
+ * a conflict, fail-safe.
  */
-export function checkObservationDistinctness(row, applicableStages) {
+export function checkObservationDistinctness(row, applicableStages, freeze, epicId) {
   const seen = new Map()
   const conflicts = []
+  const record = (sha, label, frozenEntry) => {
+    if (!seen.has(sha)) {
+      seen.set(sha, { label, frozen: frozenEntry })
+      return
+    }
+    const prior = seen.get(sha)
+    if (!prior.frozen || !frozenEntry || isIdenticalFrozenCommand(prior.frozen, frozenEntry)) conflicts.push([prior.label, label])
+  }
   for (const stage of applicableStages) {
     const sha = row.cells[stage]?.observationSha256
     if (!sha) continue
-    if (seen.has(sha)) conflicts.push([seen.get(sha), stage])
-    else seen.set(sha, stage)
+    const frozenEntry = freeze.entries.find((e) => e.epic === epicId && e.stage === stage && !e.supplements)
+    record(sha, stage, frozenEntry)
   }
   for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
     const sha = supplement?.observationSha256
     if (!sha) continue
-    if (seen.has(sha)) conflicts.push([seen.get(sha), key])
-    else seen.set(sha, key)
+    const [stage, seqStr] = key.split('.')
+    const frozenEntry = freeze.entries.find((e) => e.supplements?.epic === epicId && e.supplements?.stage === stage && e.supplementSeq === Number(seqStr))
+    record(sha, key, frozenEntry)
   }
   return { valid: conflicts.length === 0, conflicts }
 }
@@ -595,7 +665,7 @@ function cmdAccept() {
 
   const closure = checkCoverageClosure(epic, registry, freeze, coverage, row)
   const chain = checkCandidateChainConsistency(row, applicableStages)
-  const distinctness = checkObservationDistinctness(row, applicableStages)
+  const distinctness = checkObservationDistinctness(row, applicableStages, freeze, epic)
 
   const failures = []
   if (!closure.valid) {

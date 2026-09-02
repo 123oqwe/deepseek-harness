@@ -15,7 +15,10 @@
  *     (checked against this repository's actual commit graph), never merely
  *     asserted;
  *   - checkObservationDistinctness: row-level B7① recheck across cells and
- *     supplements.
+ *     supplements, redefined by BLOCKED-018 (2026-09-01): a shared
+ *     observation digest is a conflict only when the sharing consumers'
+ *     frozen commands (argv + case-titles set) are identical -- a shared
+ *     digest with genuinely different frozen commands is legitimate.
  */
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
@@ -174,22 +177,59 @@ describe('checkCandidateChainConsistency', () => {
 })
 
 describe('checkObservationDistinctness', () => {
+  const epicId = 'PX-99'
+  const frozenC = { epic: epicId, stage: 'C', argv: ['pnpm', 'run', 'c'], expectCases: ['c case 1'] }
+  const frozenF = { epic: epicId, stage: 'F', argv: ['pnpm', 'run', 'f'], expectCases: ['f case 1'] }
+  const frozenFSupp = { supplements: { epic: epicId, stage: 'F' }, supplementSeq: 1, argv: ['pnpm', 'run', 'f-supp'], expectCases: ['f supp case 1'] }
+
   it('green: every cell and supplement observation is pairwise distinct', () => {
     const row = {
       cells: { C: { observationSha256: 'sha-c' }, F: { observationSha256: 'sha-f' } },
       supplements: { 'F.1': { observationSha256: 'sha-f-supp' } },
     }
-    expect(checkObservationDistinctness(row, ['C', 'F'])).toEqual({ valid: true, conflicts: [] })
+    const freeze = { entries: [frozenC, frozenF, frozenFSupp] }
+    expect(checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)).toEqual({ valid: true, conflicts: [] })
   })
 
-  it('red: a cell and a supplement sharing one observation file is rejected (B7① row-level recheck)', () => {
+  it('red: a cell and a supplement sharing one observation file with IDENTICAL frozen commands is rejected (B7① row-level recheck)', () => {
     const row = {
       cells: { C: { observationSha256: 'shared-sha' }, F: { observationSha256: 'sha-f' } },
       supplements: { 'F.1': { observationSha256: 'shared-sha' } },
     }
-    const result = checkObservationDistinctness(row, ['C', 'F'])
+    // The supplement's own frozen entry is deliberately given the exact same
+    // argv/expectCases as C's -- the real "one proof greens many" abuse.
+    const freeze = { entries: [frozenC, frozenF, { ...frozenFSupp, argv: frozenC.argv, expectCases: frozenC.expectCases }] }
+    const result = checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)
     expect(result.valid).toBe(false)
     expect(result.conflicts).toEqual([['C', 'F.1']])
+  })
+
+  it('green (BLOCKED-018): two stages sharing one observation digest is allowed when their frozen commands genuinely differ', () => {
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' }, F: { observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC, frozenF] }
+    expect(checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)).toEqual({ valid: true, conflicts: [] })
+  })
+
+  it('red (BLOCKED-018): two stages sharing one observation digest with IDENTICAL frozen commands is still rejected', () => {
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' }, F: { observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC, { ...frozenF, argv: frozenC.argv, expectCases: frozenC.expectCases }] }
+    const result = checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)
+    expect(result.valid).toBe(false)
+    expect(result.conflicts).toEqual([['C', 'F']])
+  })
+
+  it('red: a shared digest whose consumer frozen entry cannot be resolved is treated as a conflict, fail-safe', () => {
+    const row = {
+      cells: { C: { observationSha256: 'shared-sha' }, F: { observationSha256: 'shared-sha' } },
+    }
+    const freeze = { entries: [frozenC] } // frozenF deliberately absent
+    const result = checkObservationDistinctness(row, ['C', 'F'], freeze, epicId)
+    expect(result.valid).toBe(false)
+    expect(result.conflicts).toEqual([['C', 'F']])
   })
 })
 
