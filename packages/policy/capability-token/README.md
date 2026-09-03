@@ -200,20 +200,16 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Every decision function throws `'not implemented'`.** `issueToken`,
-  `verifyToken`, `attenuateToken`, `digestToken`, `isTokenRevoked`,
-  `assertTokenPresented`, and `redactTokenForLog` are Contract-stage
-  RED-scaffold stubs: real signatures and real JSDoc-documented behavior,
-  no working body. `tests/token.spec.ts` fails every case against this
-  today, by design — a later fix-round implements the logic these
-  signatures and tests already commit to.
 - **No wiring into real durable storage, real cryptographic signing, or
   Cordis registration exists yet.** `packages/policy/capability-token/src/index.ts`
-  (this epic's own Provider-stage file) and
-  `packages/core/agent-loop/src/runtime-context.ts` do not call into this
-  package — this package alone cannot issue a token a real sub-agent
-  delegation, tool call, plugin RPC, or ExecutionWorld boundary would
-  actually enforce.
+  (a plain barrel re-exporting `types`/`attenuate`, not real Provider-stage
+  wiring) and `packages/core/agent-loop/src/runtime-context.ts` do not call
+  into this package — this package alone cannot issue a token a real
+  sub-agent delegation, tool call, plugin RPC, or ExecutionWorld boundary
+  would actually enforce. Signing itself is a fixed marker byte sequence,
+  not real asymmetric cryptography — `TrustKernelSignatureRoots` carries no
+  key material yet, pending the vendored Cordis `Fiber` fix
+  (`docs/architecture/trust-kernel-boundary.md`).
 - **`packages/kernel/trust-kernel/src/types.ts` was read, not modified.**
   This epic's file scope lists that file as a Contract-stage read (kind
   `P`) for the `TrustKernelSignatureRoots` handle's shape. No additive
@@ -241,3 +237,16 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   recognized as narrower. Real glob/prefix-aware resource-pattern narrowing
   is a later stage's job; this Contract stage only fixes the type shape and
   the literal-subset case any real implementation must at least get right.
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+None.
+
+</details>

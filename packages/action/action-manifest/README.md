@@ -100,7 +100,19 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Every decision function throws `'not implemented'`.** `createActionManifest`, `assertManifestPrecedesExecution`, `canonicalizeArguments`, `computeArgumentsHash`, and `classifySideEffect` are Contract-stage RED-scaffold stubs: real signatures and real JSDoc-documented behavior, no working body. `tests/manifest.spec.ts` fails every case against this today, by design — a later fix-round implements the logic these signatures and tests already commit to.
 - **No wiring into real tool dispatch exists yet.** `packages/core/tools/src/index.ts`, `packages/core/tools/src/ptc.ts`, `packages/core/tools/src/code-mode.ts`, `packages/core/agent-loop/src/tool-calls.ts`, and `packages/core/session/src/known-event-types.ts` do not call into this package (registry's own `stages.U.files`) — this package alone cannot generate a real manifest for an actual tool call, durably append one to a session log, or block a real execution attempt.
 - **`CapabilityRef`'s exact string grammar is unfixed**, and it deliberately does not import `@deepseek-ai/dsh-plugin-ownership`'s `StableCapabilityId` — Epic P1-09 is not a declared predecessor of P2-03. A later integration stage decides whether and how to unify the two capability-identity vocabularies.
 - **`classifySideEffect`'s policy for a classified (non-`undefined`) `declared` value is unfixed beyond acceptance[2]'s unclassifiable default.** This Contract stage commits only to "unclassifiable defaults to `'destructive'` + `requiresApproval: true`"; which classified side-effect classes otherwise require approval is a later fix-round's policy decision, out of this narrow slice's scope (registry `nonGoals`: "不引入与本项无关的垂直业务逻辑").
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+None.
+
+</details>
