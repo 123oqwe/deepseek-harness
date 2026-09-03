@@ -137,17 +137,17 @@ function tempFixture(id: string): string {
 }
 
 describe('issue-runner dry catalog', () => {
-  it('dry-catalogs all 100 IDs but FAILS while commands/fixtures are missing (never a false PASS)', () => {
+  it('dry-catalogs all IDs (100 canonical + P3-13) but FAILS while commands/fixtures are missing (never a false PASS)', () => {
     const report = dryReport(reg, repoRoot)
-    expect(report.totalIds).toBe(100)
-    expect(report.uniqueIds).toBe(100)
+    expect(report.totalIds).toBe(reg.epics.length)
+    expect(report.uniqueIds).toBe(reg.epics.length)
     expect(report.duplicateIds).toEqual([])
     expect(report.invalidIds).toEqual([])
     expect(report.explicitCommands).toBe(9)
-    expect(report.missingCommands).toBe(91)
+    expect(report.missingCommands).toBe(reg.epics.length - 9)
     expect(report.accepted).toBe(0)
-    expect(report.rows.length).toBe(100)
-    // Maintainer hardening (2026-08-27): 91 missing commands / 400 missing
+    expect(report.rows.length).toBe(reg.epics.length)
+    // Maintainer hardening (2026-08-27): missing commands / missing
     // fixtures must NOT output PASS — the runner never claims a catalog it
     // cannot actually run.
     expect(report.missingFixtures.length).toBeGreaterThan(0)
@@ -178,8 +178,8 @@ describe('issue-runner dry catalog', () => {
   it('dry rejects a duplicate id', () => {
     const dup = { ...reg, epics: [...reg.epics, reg.epics[0]!] }
     const report = dryReport(dup, repoRoot)
-    expect(report.totalIds).toBe(101)
-    expect(report.uniqueIds).toBe(100)
+    expect(report.totalIds).toBe(reg.epics.length + 1)
+    expect(report.uniqueIds).toBe(reg.epics.length)
     expect(report.duplicateIds).toContain('P0-01')
     expect(dryReportOk(report)).toBe(false)
   })
@@ -596,7 +596,7 @@ describe('report aggregation', () => {
 
   it('reports unrun issues as NOT_RUN when no observations exist', () => {
     const issues = aggregate(schema, reg, { publicKeyPem: makeKeyPair().publicKeyPem, repoRoot, observationsDir: `${AGG_DIR}-empty` })
-    expect(issues.length).toBe(100)
+    expect(issues.length).toBe(reg.epics.length)
     expect(issues.every((issue: IssueVerdict) => issue.status === 'NOT_RUN')).toBe(true)
   })
 })

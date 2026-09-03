@@ -58,6 +58,12 @@
           "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
           "observedAtUtc": "2026-09-02T01:35:57Z",
           "outcome": "passed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33717175331",
+          "candidateSha": "990d9f55d5905278d5617f1763a29f5b1378c11e",
+          "observedAtUtc": "2026-09-03T05:14:22.321Z",
+          "outcome": "failed"
         }
       ],
       "unrelatedNote": "BLOCKED-023 same-SHA divergence evidence (2026-09-02): attempt 1 and attempt 2 of CI run 33578193549 ran the byte-identical candidate commit e4390a90a29e71dea1c2d32f3943b4692b5fd933 -- attempt 1 failed this test, attempt 2 passed it, with zero code changes between attempts (a same-SHA rerun). This is the definition of non-determinism: a deterministic failure cannot flip to passing on a byte-identical retry. This test spawns a real CLI subprocess (pnpm run architecture:seams against a real on-disk fixture) as its own acceptance[3] proof, consistent with subprocess-spawning tests being this repository's highest-flake-risk class (matching the already-registered Inspector real-Worker entry's own failure mode). Independently verified: the Supervisor downloaded and byte-compared both attempts' vitest-report.json artifacts (ids 9827604568 and 9828038921) directly from GitHub before registering.",

@@ -133,21 +133,23 @@ describe('first100 registry regeneration', () => {
     }
     for (const e of registry.epics) {
       // Agent A's per-layer choices are proposals until the ADR; owner assignment
-      // is UNASSIGNED_UNTIL_APPROVAL for every non-spec-owner epic.
-      expect(['AGENT_A_PROPOSED', 'PENDING_MAINTAINER_ADJUDICATION']).toContain(e.layerStatus)
+      // is UNASSIGNED_UNTIL_APPROVAL for every non-spec-owner epic. DELEGATE_CONFIRMED
+      // is P3-13's own resolution path (BASE-ALIGN-v2 new-gap, delegate-confirmed
+      // layer at creation), distinct from the 100 canonical epics' statuses.
+      expect(['AGENT_A_PROPOSED', 'PENDING_MAINTAINER_ADJUDICATION', 'DELEGATE_CONFIRMED']).toContain(e.layerStatus)
       expect(['UNASSIGNED_UNTIL_APPROVAL', e.id]).toContain(e.canonicalOwner)
     }
   })
 
-  it('coverage: the registry pins exactly 100 unique epics across waves 1..19', () => {
+  it('coverage: the registry pins 100 canonical epics + P3-13 (BASE-ALIGN-v2 new-gap) across waves 1..19', () => {
     const registry = JSON.parse(readFileSync(REGISTRY, 'utf8')) as {
       groupCounts: Record<string, number>
       waveCount: number
       epics: { id: string; wave: number }[]
     }
     const ids = registry.epics.map(e => e.id)
-    expect(new Set(ids).size).toBe(100)
-    expect(registry.epics).toHaveLength(100)
+    expect(new Set(ids).size).toBe(101)
+    expect(registry.epics).toHaveLength(101)
     expect(registry.waveCount).toBe(19)
     const waves = [...new Set(registry.epics.map(e => e.wave))].sort((a, b) => a - b)
     expect(waves[0]).toBe(1)
