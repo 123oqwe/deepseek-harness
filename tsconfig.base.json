@@ -246,6 +246,13 @@
       // silently drops it (as happened once already — restored per first100
       // P2-01(C) fix-round review).
       "@deepseek-ai/dsh-evidence-format/types": ["./packages/assurance/evidence-format/src/types.ts"],
+      // Same reason as dsh-evidence-format/types above: dsh-workspace-trust
+      // publishes a ./types subpath in its package.json exports (first100
+      // registry P1-07), and packages/workspace/workspace/src/index.ts imports
+      // TrustRecord through it, but the generator emits no such alias -- without
+      // this entry the source plane cannot resolve the subpath and
+      // gen-cordis-catalog fails outright.
+      "@deepseek-ai/dsh-workspace-trust/types": ["./packages/workspace/workspace-trust/src/types.ts"],
       // Same reason as dsh-evidence-format/types above: dsh-plugin-manifest's
       // /types and /validate subpaths (both real, README-documented public
       // usage) are not a shape the generator emits, so they must stay

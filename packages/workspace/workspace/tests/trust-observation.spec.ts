@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mkdir, mkdtemp, realpath, rename, rm, stat, symlink, unlink } from 'node:fs/promises'
+import type { Stats } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
@@ -82,7 +83,11 @@ describe('must[0]: real canonical-realpath + inode/volume observation', () => {
     const identity = await observeWorkspaceIdentity(dir)
     const stats = await stat(dir)
 
-    expect(identity.volume).toStrictEqual({ device: stats.dev, inode: stats.ino })
+    expect(identity.volume).toStrictEqual({
+      device: stats.dev,
+      inode: stats.ino,
+      createdAtMs: stats.birthtimeMs,
+    })
   })
 
   it('binds a freshly created workspace to its observed identity at untrusted, with no grantor', async () => {
@@ -142,8 +147,16 @@ describe('acceptance[1]: trust is not inherited across a real identity change', 
     const after = await observeWorkspaceIdentity(dir)
     const record = await workspaces.workspaceTrust(workspace.id)
 
+    // Deliberately no assertion that the inode changed. Whether the kernel
+    // hands the rebuilt directory a fresh inode or reuses the one it just
+    // freed is a filesystem's choice -- APFS allocates a new one, ext4 reuses
+    // it -- and acceptance[1] is a claim about trust, not about inode
+    // allocation. Asserting the inode differed made this case pass on macOS
+    // while the property it exists to prove was false on Linux: a reused
+    // inode leaves the observed identity byte-identical, so an attacker who
+    // deletes a trusted directory and rebuilds one at the same path inherits
+    // its trust. The state assertion below is the acceptance clause itself.
     expect(after.canonicalPath).toBe(before.canonicalPath)
-    expect(after.volume.inode).not.toBe(before.volume.inode)
     expect(record.state).toBe('untrusted')
     expect(record.grantedBy).toBeUndefined()
     expect(record.identity).toStrictEqual(after)
@@ -200,5 +213,34 @@ describe('acceptance[1]: trust is not inherited across a real identity change', 
     expect(after.canonicalPath).not.toBe(before.canonicalPath)
     expect(reconciled.state).toBe('untrusted')
     expect(reconciled.identity).toStrictEqual(after)
+  })
+})
+
+describe('filesystem identity signals available for workspace binding', () => {
+  it('reports a distinct creation timestamp for a directory rebuilt at a path, even when the inode is reused', async () => {
+    const root = await tempRoot()
+    const dir = join(root, 'project')
+
+    // Runs until the kernel actually reuses an inode, so the assertion is made
+    // against the condition it is about rather than a filesystem that never
+    // reaches it. macOS/APFS allocates a fresh inode every time and exits the
+    // loop without a reuse; ext4 reuses on the first attempt.
+    let reused: { before: Stats; after: Stats } | undefined
+    for (let attempt = 0; attempt < 50 && reused === undefined; attempt += 1) {
+      await mkdir(dir)
+      const before = await stat(dir)
+      await rm(dir, { recursive: true })
+      await mkdir(dir)
+      const after = await stat(dir)
+      if (before.ino === after.ino) reused = { before, after }
+      await rm(dir, { recursive: true })
+    }
+
+    if (reused === undefined) return
+
+    // birthtimeMs is 0 on a filesystem that does not record a creation time,
+    // which would make it useless as the distinguishing component.
+    expect(reused.after.birthtimeMs).toBeGreaterThan(0)
+    expect(reused.after.birthtimeMs).not.toBe(reused.before.birthtimeMs)
   })
 })

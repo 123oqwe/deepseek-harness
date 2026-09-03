@@ -47,5 +47,5 @@ export async function realpathNormalize(path: string): Promise<string> {
 export async function observeWorkspaceIdentity(path: string): Promise<WorkspaceIdentity> {
   const canonicalPath = await realpathNormalize(path)
   const stats = await stat(canonicalPath)
-  return { canonicalPath, volume: { device: stats.dev, inode: stats.ino } }
+  return { canonicalPath, volume: { device: stats.dev, inode: stats.ino, createdAtMs: stats.birthtimeMs } }
 }

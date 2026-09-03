@@ -113,10 +113,18 @@ export function authorizeProjectLoad(state: TrustState, kind: ProjectContentKind
  * @returns `record` unchanged when `observed` matches `record.identity`; otherwise a demoted `'untrusted'` record bound to `observed`.
  */
 export function reconcileWorkspaceTrust(record: TrustRecord, observed: WorkspaceIdentity, at: string): TrustRecord {
+  // A creation time of 0 means the filesystem reports none, leaving an inode
+  // number that cannot be told apart from the same number reissued to a
+  // different directory. Refusing to confirm identity in that case keeps a
+  // filesystem's missing metadata from silently granting trust to whatever
+  // now occupies the path.
+  const confirmable = record.identity.volume.createdAtMs > 0 && observed.volume.createdAtMs > 0
   const unchanged =
+    confirmable &&
     record.identity.canonicalPath === observed.canonicalPath &&
     record.identity.volume.device === observed.volume.device &&
-    record.identity.volume.inode === observed.volume.inode
+    record.identity.volume.inode === observed.volume.inode &&
+    record.identity.volume.createdAtMs === observed.volume.createdAtMs
   if (unchanged) return record
   return { identity: observed, state: 'untrusted', at }
 }

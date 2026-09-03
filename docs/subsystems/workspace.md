@@ -263,6 +263,42 @@ Durable workspace registry. Startup waits for `sessionPersistence`, builds one c
 async create(path: string, title?: string): Promise<Workspace>
 
 /**
+ * This workspace's trust binding, re-observed against the filesystem on
+ * every call (Epic P1-07 must[0], acceptance[1]). A workspace is bound
+ * `'untrusted'` on first observation, and any change to the canonical path
+ * or the device/inode pair it was bound to demotes it back there — a
+ * directory replaced in place, a symlink on the way to it retargeted, or the
+ * directory moved out from under the path it was opened at.
+ *
+ * The binding is process-local: a restart re-observes and re-binds at
+ * `'untrusted'` (see this package's README).
+ * @param id - The workspace whose trust binding to observe.
+ * @returns the trust binding as of this observation.
+ * @throws when `id` is unknown, or when the very first observation of a
+ * workspace's path fails.
+ */
+async workspaceTrust(id: WorkspaceId): Promise<TrustRecord>
+
+/**
+ * Raise one workspace's trust on a host user's authority (Epic P1-07
+ * must[2]'s host-user gate). Reconciles the binding first, so an upgrade is
+ * never granted against an identity the filesystem has already invalidated.
+ *
+ * The refusal rule and the audit record are
+ * `@deepseek-ai/dsh-workspace-trust`'s: only a `'user'` principal can author
+ * an upgrade. Presenting the host user's interaction, and appending the
+ * returned audit record, are both call-site work this registry does not do.
+ * @param id - The workspace to upgrade.
+ * @param target - The trust state to raise it to.
+ * @param hostPrincipal - The principal presented as the upgrade's author.
+ * @returns the upgrade result, carrying the new binding and its audit record
+ * on success and a refusal reason otherwise.
+ * @throws when `id` is unknown, or when the workspace's path cannot be
+ * observed and was never bound.
+ */
+async upgradeWorkspaceTrust( id: WorkspaceId, target: TrustState, hostPrincipal: Principal, ): Promise<TrustUpgradeResult>
+
+/**
  * Look up a workspace by id.
  * @param id - Workspace id.
  * @returns the workspace, or `undefined` when unknown.

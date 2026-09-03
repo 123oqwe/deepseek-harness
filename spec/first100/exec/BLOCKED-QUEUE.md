@@ -899,3 +899,21 @@ There is nothing to sign or verify *with*. Epic P2-02's Contract stage consequen
 | whether a gate rejects a case | executing it against that case | reading the assertion |
 
 This subsumes the narrower rule already in force ("verify claimed SHAs, runs, and ledger state against real sources before acting on any 'X is done' claim, from any sender") and extends it from *claims made by a sender* to *claims made by any artifact, including the repository's own prose*.
+
+### BLOCKED-052 — a test that can only pass on one platform certifies that platform, not the code; P1-07's acceptance[1] was green on macOS while false on Linux, and P1-07.C must be re-greened (Supervisor finding, delegate-ruled, 2026-09-03)
+
+**The defect.** `reconcileWorkspaceTrust` compared only `(canonicalPath, device, inode)`. An inode number is a reusable allocation slot: delete a trusted project directory, create one at the same path, and ext4 hands back the inode it just freed, so all three fields are byte-identical and **trust transfers to the attacker's directory**. This is the exact inverse of P1-07 acceptance[1] ("目录被替换、symlink 改指、移动后信任不自动继承").
+
+**Why it stayed hidden.** The test asserted `expect(after.volume.inode).not.toBe(before.volume.inode)` — a claim about the *filesystem's allocation behavior*, not about trust. Measured directly: **macOS/APFS reused an inode 0 times in 200 delete-rebuild cycles; Linux/ext4 reused on the first attempt** (CI reported `expected 2106031 not to be 2106031`). The case passed locally every time while the property it existed to prove was false in CI.
+
+**Fix.** Identity gains `createdAtMs` (`fs.Stats.birthtimeMs`) — set when the inode is allocated to its current occupant, so it separates a rebuilt directory from the original even when the number is reused. It requires no write into the project directory (writing a nonce into an *untrusted* directory would itself be wrong) and no content hashing.
+
+**Fail-closed, deliberately not assuming birthtime availability.** Per [BLOCKED-051](#blocked-051), designing on "Linux reports birthtime" would be reading a description instead of evaluating the thing. Instead `createdAtMs === 0` on either side means identity is **unconfirmable** and the workspace drops to `'untrusted'` — never a fall back to inode matching. The security property therefore holds whether or not the filesystem records a creation time. A probe case loops until the kernel actually reuses an inode and then records whether `birthtimeMs` is non-zero and distinct, to capture the real Linux behavior as evidence rather than assumption.
+
+The inode assertion is replaced by `expect(record.state).toBe('untrusted')` — the acceptance clause itself.
+
+**Scope.** The fix lands in `workspace-trust/src/{types,index}.ts` (C-stage scope) from the P stage, following this program's established handling of a real escape found in an already-closed stage. Delegate approved; no path patch required. Two frozen C cases changed content (not titles), so predicate (iii) is unaffected.
+
+**Consequence — P1-07.C must be re-greened.** Its GREEN was taken from a test version that could not prove its own clause: what that observation certified was "on macOS, a rebuilt directory happened to get a different inode", not acceptance[1]. A fresh CI observation must be taken against the strengthened tests and the cell re-greened, with this reason recorded. Structurally identical to P6-07.C's "the frozen test was never discovered by CI" — in both, the green certified less than it appeared to, and both are handled the same way.
+
+**Standing lesson.** *A test that can only pass in one class of environment proves a property of that environment, not of the code under test.* This widens [BLOCKED-038](#blocked-038)'s cross-platform scope: it previously recorded that some epics **cannot** be verified on the development machine; it now also covers epics that **appear** verifiable there and yield a false green. Which other acceptance clauses depend on a local pass whose real property is only falsifiable on another OS or filesystem is an open question to answer before R10, not now.

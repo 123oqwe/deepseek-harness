@@ -32,7 +32,7 @@ const PROJECT_LEVEL_EXECUTABLE_KINDS: readonly ProjectContentKind[] = [
 
 const clonedRepoIdentity: WorkspaceIdentity = {
   canonicalPath: '/home/harry/clones/malicious-repo',
-  volume: { device: 1, inode: 1001 },
+  volume: { device: 1, inode: 1001, createdAtMs: 1_700_000_000_000 },
 }
 
 function trustedExecuteRecord(identity: WorkspaceIdentity): TrustRecord {
@@ -104,7 +104,11 @@ describe('P1-07 Contract — acceptance[1]: 目录被替换、symlink 改指、�
     const record = trustedExecuteRecord(clonedRepoIdentity)
     const replaced: WorkspaceIdentity = {
       canonicalPath: clonedRepoIdentity.canonicalPath,
-      volume: { device: clonedRepoIdentity.volume.device, inode: clonedRepoIdentity.volume.inode + 1 },
+      volume: {
+        device: clonedRepoIdentity.volume.device,
+        inode: clonedRepoIdentity.volume.inode + 1,
+        createdAtMs: clonedRepoIdentity.volume.createdAtMs,
+      },
     }
     const reconciled = reconcileWorkspaceTrust(record, replaced, '2026-08-31T01:00:00.000Z')
     expect(reconciled.state).toBe('untrusted')
@@ -160,5 +164,42 @@ describe('P1-07 Contract — acceptance[2]: 降级 trust 立即撤销项目能�
     const result = downgradeTrust(record, 'untrusted', '2026-08-31T02:00:00.000Z')
     expect(result.record.state).toBe('untrusted')
     expect(result.revokedKinds).toEqual([])
+  })
+})
+
+describe('an inode number reissued to a different directory does not carry trust', () => {
+  it('drops trust when the path, device, and inode all match but the creation time does not', () => {
+    const granted: TrustRecord = {
+      identity: { canonicalPath: '/w/project', volume: { device: 1, inode: 1001, createdAtMs: 1_000 } },
+      state: 'trusted-execute',
+      at: '2026-09-03T00:00:00.000Z',
+      grantedBy: PrincipalId('user-1'),
+    }
+    // Exactly what ext4 hands back after a trusted directory is deleted and an
+    // attacker's directory is created at the same path: the freed inode is
+    // reissued, so every field the old comparison looked at is identical.
+    const rebuilt = {
+      canonicalPath: '/w/project',
+      volume: { device: 1, inode: 1001, createdAtMs: 2_000 },
+    }
+
+    const reconciled = reconcileWorkspaceTrust(granted, rebuilt, '2026-09-03T01:00:00.000Z')
+
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.grantedBy).toBeUndefined()
+  })
+
+  it('refuses to confirm identity when the filesystem reports no creation time, rather than matching on the inode alone', () => {
+    const granted: TrustRecord = {
+      identity: { canonicalPath: '/w/project', volume: { device: 1, inode: 1001, createdAtMs: 0 } },
+      state: 'trusted-execute',
+      at: '2026-09-03T00:00:00.000Z',
+      grantedBy: PrincipalId('user-1'),
+    }
+    const observed = { canonicalPath: '/w/project', volume: { device: 1, inode: 1001, createdAtMs: 0 } }
+
+    const reconciled = reconcileWorkspaceTrust(granted, observed, '2026-09-03T01:00:00.000Z')
+
+    expect(reconciled.state).toBe('untrusted')
   })
 })

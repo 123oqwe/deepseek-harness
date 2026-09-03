@@ -2882,6 +2882,20 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the existing or newly durable workspace.',
       },
       {
+        signature: 'async workspaceTrust(id: WorkspaceId): Promise<TrustRecord>',
+        description: 'This workspace\'s trust binding, re-observed against the filesystem on every call (Epic P1-07 must[0], acceptance[1]). A workspace is bound `\'untrusted\'` on first observation, and any change to the canonical path or the device/inode pair it was bound to demotes it back there — a directory replaced in place, a symlink on the way to it retargeted, or the directory moved out from under the path it was opened at.\n\nThe binding is process-local: a restart re-observes and re-binds at `\'untrusted\'` (see this package\'s README).',
+        parameters: [{ name: 'id', description: 'The workspace whose trust binding to observe.' }],
+        returns: 'the trust binding as of this observation.',
+        throws: ['when `id` is unknown, or when the very first observation of a workspace\'s path fails.'],
+      },
+      {
+        signature: 'async upgradeWorkspaceTrust( id: WorkspaceId, target: TrustState, hostPrincipal: Principal, ): Promise<TrustUpgradeResult>',
+        description: 'Raise one workspace\'s trust on a host user\'s authority (Epic P1-07 must[2]\'s host-user gate). Reconciles the binding first, so an upgrade is never granted against an identity the filesystem has already invalidated.\n\nThe refusal rule and the audit record are `@deepseek-ai/dsh-workspace-trust`\'s: only a `\'user\'` principal can author an upgrade. Presenting the host user\'s interaction, and appending the returned audit record, are both call-site work this registry does not do.',
+        parameters: [{ name: 'id', description: 'The workspace to upgrade.' }, { name: 'target', description: 'The trust state to raise it to.' }, { name: 'hostPrincipal', description: 'The principal presented as the upgrade\'s author.' }],
+        returns: 'the upgrade result, carrying the new binding and its audit record on success and a refusal reason otherwise.',
+        throws: ['when `id` is unknown, or when the workspace\'s path cannot be observed and was never bound.'],
+      },
+      {
         signature: 'get(id: WorkspaceId): Workspace | undefined',
         description: 'Look up a workspace by id.',
         parameters: [{ name: 'id', description: 'Workspace id.' }],
@@ -6000,6 +6014,26 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ToolSchema {\n    name: string;\n    description: string;\n    parameters: Record<string, unknown>;\n}',
   },
   {
+    name: 'TrustRecord',
+    declaration: 'export interface TrustRecord {\n    readonly identity: WorkspaceIdentity;\n    readonly state: TrustState;\n    readonly at: string;\n    readonly grantedBy?: PrincipalId;\n}',
+  },
+  {
+    name: 'TrustState',
+    declaration: 'export type TrustState = \'untrusted\' | \'trusted-read\' | \'trusted-execute\';',
+  },
+  {
+    name: 'TrustUpgradeAuditRecord',
+    declaration: 'export interface TrustUpgradeAuditRecord {\n    readonly identity: WorkspaceIdentity;\n    readonly fromState: TrustState;\n    readonly toState: TrustState;\n    readonly hostPrincipalId: PrincipalId;\n    readonly at: string;\n}',
+  },
+  {
+    name: 'TrustUpgradeDenialReason',
+    declaration: 'export type TrustUpgradeDenialReason = \'non-host-principal\';',
+  },
+  {
+    name: 'TrustUpgradeResult',
+    declaration: 'export type TrustUpgradeResult = {\n    readonly upgraded: true;\n    readonly record: TrustRecord;\n    readonly audit: TrustUpgradeAuditRecord;\n} | {\n    readonly upgraded: false;\n    readonly reason: TrustUpgradeDenialReason;\n};',
+  },
+  {
     name: 'TurnEndCancelCause',
     declaration: 'export type TurnEndCancelCause = AgentCancelCause | {\n    readonly kind: \'legacy\';\n};',
   },
@@ -6320,6 +6354,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type WorkspaceFollowIncrement = {\n    readonly type: \'upsert\';\n    readonly workspace: WorkspaceView;\n} | {\n    readonly type: \'remove\';\n    readonly workspaceId: WorkspaceId;\n} | {\n    readonly type: \'order\';\n    readonly workspaceIds: readonly WorkspaceId[];\n} | {\n    readonly type: \'archived\';\n    readonly archivedSessionIds: readonly SessionId[];\n};',
   },
   {
+    name: 'WorkspaceIdentity',
+    declaration: 'export interface WorkspaceIdentity {\n    readonly canonicalPath: string;\n    readonly volume: WorkspaceVolumeIdentity;\n}',
+  },
+  {
     name: 'WorkspaceInsertBeforeRequest',
     declaration: 'export interface WorkspaceInsertBeforeRequest {\n    readonly workspaceId: WorkspaceId;\n    readonly beforeWorkspaceId?: WorkspaceId;\n}',
   },
@@ -6342,6 +6380,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkspaceView',
     declaration: 'export interface WorkspaceView {\n    readonly workspaceId: WorkspaceId;\n    readonly path: string;\n    readonly title: string;\n    readonly sessionIds: readonly SessionId[];\n    readonly createdAt: string;\n    readonly updatedAt: string;\n}',
+  },
+  {
+    name: 'WorkspaceVolumeIdentity',
+    declaration: 'export interface WorkspaceVolumeIdentity {\n    readonly device: number;\n    readonly inode: number;\n    readonly createdAtMs: number;\n}',
   },
 ]
 

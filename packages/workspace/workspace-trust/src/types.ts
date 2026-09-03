@@ -73,6 +73,25 @@ export interface WorkspaceVolumeIdentity {
   readonly device: number
   /** The inode number within that volume (`fs.Stats.ino`). */
   readonly inode: number
+  /**
+   * The creation time (`fs.Stats.birthtimeMs`) of the object occupying
+   * `inode` at binding time, or `0` on a filesystem that records none.
+   *
+   * An inode number alone does not identify a directory across deletion.
+   * ext4 hands a rebuilt directory the inode it just freed, so an attacker
+   * who deletes a trusted project and creates their own at the same path
+   * produces a byte-identical `device`/`inode` pair and inherits its trust —
+   * observed directly in CI, where a rebuilt directory came back as inode
+   * 2106031 both times. APFS allocates a fresh inode and hides the problem,
+   * which is why this only ever failed on Linux. A creation timestamp is set
+   * when the inode is allocated to its current occupant, so it separates the
+   * rebuilt directory from the original even when the number is reused.
+   *
+   * `0` means the filesystem reports no creation time. That is treated as an
+   * unconfirmable identity rather than a match — see
+   * `../index.ts`'s `reconcileWorkspaceTrust`.
+   */
+  readonly createdAtMs: number
 }
 
 /**
