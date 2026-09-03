@@ -57,8 +57,10 @@ const genuinePackageBytes = new Uint8Array([
 
 /** A copy of `bytes` with the byte at `index` altered by one bit — the "篡改一个字节" attack. */
 function flipOneByte(bytes: Uint8Array, index: number): Uint8Array {
+  const original = bytes[index]
+  if (original === undefined) throw new Error(`test fixture error: no byte at index ${index}`)
   const tampered = Uint8Array.from(bytes)
-  tampered[index] ^= 0x01
+  tampered[index] = original ^ 0x01
   return tampered
 }
 
@@ -130,10 +132,12 @@ describe('P1-02 Provider — computePackageDigest over real bytes', () => {
 
   it('changes the digest when two bytes are swapped, so it depends on byte order and not only on content', () => {
     const reordered = Uint8Array.from(genuinePackageBytes)
-    const [first, second] = [reordered[3], reordered[4]]
+    const first = reordered[3]
+    const second = reordered[4]
+    if (first === undefined || second === undefined) throw new Error('test fixture error: payload is shorter than the swapped indices')
     expect(first).not.toBe(second)
-    reordered[3] = second as number
-    reordered[4] = first as number
+    reordered[3] = second
+    reordered[4] = first
     expect(computePackageDigest(reordered)).not.toBe(computePackageDigest(genuinePackageBytes))
   })
 
@@ -212,11 +216,16 @@ describe('P1-02 Provider — acceptance[1]: the same locked package verifies off
 })
 
 describe('P1-02 Provider — the limit of a digest without a trust root (BLOCKED-050)', () => {
-  it('still verifies an attacker who tampers with the bytes and rewrites the claim to match: the digest binds the artifact to the claim, never the claim to an authority', () => {
+  it('KNOWN GAP (BLOCKED-050 hollow signature root): a tamper-and-rewrite attacker still verifies -- asserts CURRENT behavior, NOT desired behavior; giving the kernel real key material MUST break this test', () => {
     const kernel = createTrustKernel()
     const tampered = flipOneByte(genuinePackageBytes, 9)
     // The attacker controls the claim as well as the artifact, so both
-    // digests are recomputed from the tampered bytes and agree.
+    // digests are recomputed from the tampered bytes and agree. A digest
+    // binds an artifact to a claim; only a signature over the claim, against
+    // a root holding real key material, binds the claim to an authority.
+    // When `createTrustKernel()` stops minting `signatureRoots` as
+    // `Object.freeze({})`, this expectation is meant to fail: that failure is
+    // Epic P1-02's unlock signal, never a regression to restore to green.
     const result = verifyPluginProvenance(buildInput(tampered, tampered), kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
   })
