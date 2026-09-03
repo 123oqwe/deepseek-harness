@@ -162,17 +162,10 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Every decision function throws `'not implemented'`.**
-  `genesisRunEvent`, `appendRunEvent`, `referencesByKind`, `createRun`,
-  `transition`, `attachSessionToRun`, `listNonTerminalRuns`, and `resumeRun`
-  are Contract-stage RED-scaffold stubs: real signatures and real
-  JSDoc-documented behavior, no working body.
-  `tests/state-machine.spec.ts` fails every case against this today, by
-  design — a later fix-round implements the logic these signatures and
-  tests already commit to.
 - **No wiring into real durable storage or Cordis registration exists
-  yet.** `packages/run/run/src/index.ts` (this epic's own Provider-stage
-  file) and `packages/session/session-persistence/src/coordinator.ts`
+  yet.** `packages/run/run/src/index.ts` (a plain barrel re-exporting
+  `types`/`events`/`state-machine`, not real Provider-stage wiring) and
+  `packages/session/session-persistence/src/coordinator.ts`
   (acceptance[0]'s restart path) do not call into this package — this
   package alone cannot list, resume, or durably record a real Run.
 - **`packages/core/session/src/types.ts` was read, not modified.** This
@@ -192,3 +185,16 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   different concept (one workflow execution) that this epic's Usage-stage
   file scope, not this Contract stage's, is responsible for reconciling
   against `WorkflowRef`.
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+None.
+
+</details>
