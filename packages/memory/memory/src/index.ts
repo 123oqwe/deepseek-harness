@@ -10,11 +10,11 @@
  * there is no `write`/`set`/`put` verb — so a durable record can never
  * originate outside it (`acceptance[1]`).
  *
- * Wiring a live `ctx.memory` call to a durable session log (so `must[3]`'s
- * read-scoping invariant in `./invariant.ts` has real `memory/access` events
- * to check) is first100 registry P6-01's Usage stage, not this Contract
- * stage: this module stays session-agnostic, matching `WebRuntime`, which
- * likewise performs no session logging itself.
+ * Wiring a live `ctx.memory` call to a durable session log (so the
+ * `memory/access` event `./types.ts` declares has a real emitter) is first100
+ * registry P6-01's Usage stage, not this Contract stage: this module stays
+ * session-agnostic, matching `WebRuntime`, which likewise performs no session
+ * logging itself.
  * @module @deepseek-ai/dsh-memory
  */
 

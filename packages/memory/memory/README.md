@@ -99,7 +99,7 @@ This section explains the design decisions behind the service; the observable be
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: the `MemoryRuntime` service, the provider registry, execution-time selection, and the Contract-stage `createLocalReferenceMemoryProvider`/`createFakeMemoryProvider` stubs |
 | [`src/types.ts`](src/types.ts) | Vocabulary: request/result types, `MemoryProvider`, the `MemoryError` taxonomy, and the `memory/access` durable session event |
-| [`src/invariant.ts`](src/invariant.ts) | Package-owned session-event invariant: every logged `memory/access` read carries a complete access context (`must[3]`) |
+| — | No runtime invariant companion is published; `memory/access` is this package's own event, minted only by `MemoryRuntime`, so no independent second source exists to cross-check it against — the same situation `dsh-web` resolved by omitting a companion. `must[3]`'s read scoping belongs in `query()`/`get()`/`export()` themselves, not a post-hoc log check. |
 
 ### Data model
 
@@ -133,7 +133,8 @@ No direct invalidation; a named future consumer would own any request-prefix cha
 These limits define when the service is incomplete on its own. They are current package constraints for the Contract stage.
 
 - **No shipped provider** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are intentionally unimplemented stubs whose methods reject with a plain error; a real, durable provider is first100 registry P6-01's Provider stage.
-- **No live session-log wiring** — nothing yet emits the `memory/access` durable event this package declares, so `src/invariant.ts` has no real events to validate until the Usage stage wires a live call site.
+- **No live session-log wiring** — nothing yet emits the `memory/access` durable event this package declares; a live call site is the Usage stage's job.
+- **`must[3]` read-scoping enforcement is not yet added** — `query()`/`get()`/`export()` do not yet reject an incomplete `MemoryAccessContext`; `../tests/conformance.spec.ts` asserts the required `MemoryError` `MEMORY_ACCESS_CONTEXT_REQUIRED` behavior, currently RED pending that enforcement.
 - **No model-facing tool** — `ctx.memory` has no consumer yet; a `dsh-tool-memory`-shaped package is out of this epic's scope.
 
 <a id="dev-note"></a>

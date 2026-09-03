@@ -197,6 +197,45 @@ describe('must[3]: every read is scoped by principal, purpose, scope, and contex
       })
     }
   })
+
+  // get() and export() carry the identical MemoryAccessContext (`./types.ts`)
+  // must[3] names by dimension, not by verb — a bug isolated to either
+  // method's own enforcement must be caught here, not only on query()'s.
+  it('get() rejects a request whose access context is missing any of the four required fields', async () => {
+    const { memory } = await mountMemory()
+    memory.registerProvider(createFakeMemoryProvider())
+    const complete = testAccessContext()
+    const incompleteVariants: Record<string, MemoryAccessContext> = {
+      principal: { ...complete, principal: undefined } as unknown as MemoryAccessContext,
+      purpose: { ...complete, purpose: '' },
+      scope: { ...complete, scope: undefined } as unknown as MemoryAccessContext,
+      contextBudget: { ...complete, contextBudget: undefined } as unknown as MemoryAccessContext,
+    }
+    for (const accessContext of Object.values(incompleteVariants)) {
+      await expect(memory.get({ accessContext, id: MemoryRecordId('irrelevant-for-this-check') })).rejects.toMatchObject({
+        name: 'MemoryError',
+        code: 'MEMORY_ACCESS_CONTEXT_REQUIRED',
+      })
+    }
+  })
+
+  it('export() rejects a request whose access context is missing any of the four required fields', async () => {
+    const { memory } = await mountMemory()
+    memory.registerProvider(createFakeMemoryProvider())
+    const complete = testAccessContext()
+    const incompleteVariants: Record<string, MemoryAccessContext> = {
+      principal: { ...complete, principal: undefined } as unknown as MemoryAccessContext,
+      purpose: { ...complete, purpose: '' },
+      scope: { ...complete, scope: undefined } as unknown as MemoryAccessContext,
+      contextBudget: { ...complete, contextBudget: undefined } as unknown as MemoryAccessContext,
+    }
+    for (const accessContext of Object.values(incompleteVariants)) {
+      await expect(memory.export({ accessContext })).rejects.toMatchObject({
+        name: 'MemoryError',
+        code: 'MEMORY_ACCESS_CONTEXT_REQUIRED',
+      })
+    }
+  })
 })
 
 describe('acceptance[2]: Memory is not Session Query, and their boundary is documented', () => {
@@ -205,13 +244,17 @@ describe('acceptance[2]: Memory is not Session Query, and their boundary is docu
 
     const { memory } = await mountMemory()
     memory.registerProvider(createFakeMemoryProvider())
-    const proposed = await memory.propose({ principal: testPrincipal(), scope: testScope(), content: { note: 'not a transcript entry' } })
-    // A MemoryRecordView carries no session-transcript-shaped fields (no
-    // `role`, `seq`, or surface `content` blocks) — it is a durable Memory
-    // record, never a Session Query projection of session events.
-    await expect(memory.get({ accessContext: testAccessContext(), id: proposed.id })).resolves.toMatchObject({
+    const content = { note: 'not a transcript entry' }
+    const proposed = await memory.propose({ principal: testPrincipal(), scope: testScope(), content })
+    // A MemoryRecordView is EXACTLY {id, principal, content, updatedAt} — no
+    // session-transcript-shaped fields (no `role`, `seq`, or surface
+    // `content` blocks) and, unlike toMatchObject, no other extra property a
+    // stub or wrong implementation could tack on and still pass a subset
+    // match: toStrictEqual rejects any key beyond this exact set.
+    await expect(memory.get({ accessContext: testAccessContext(), id: proposed.id })).resolves.toStrictEqual({
       id: proposed.id,
-      principal: expect.objectContaining({ kind: 'user' }) as unknown,
+      principal: testPrincipal(),
+      content,
       updatedAt: expect.any(String) as unknown,
     })
   })
