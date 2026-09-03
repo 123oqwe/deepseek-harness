@@ -200,14 +200,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Every decision function throws `'not implemented'`.** `archiveSession`,
-  `softDeleteSession`, `placeLegalHold`, `assertNoLegalHold`,
-  `propagateDeletion`, `hardErase`, `listSessions`, and
-  `readSessionLogWithRepair` are Contract-stage RED-scaffold stubs: real
-  signatures and real JSDoc-documented behavior, no working body.
-  `tests/lifecycle.e2e.ts` fails every case against this today, by design —
-  a later fix-round implements the logic these signatures and tests already
-  commit to.
 - **No wiring into real durable storage, a real query index, or Cordis
   registration exists yet.** This package alone cannot list, page, delete,
   retain, or repair a real session — a later Provider/Usage-stage supplies
@@ -228,3 +220,16 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **`MemoryRef`/`ArtifactRef` are not reconciled with any real store's id
   type.** No memory or artifact store package exists yet anywhere in this
   repository for a later stage to reconcile against.
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+None.
+
+</details>

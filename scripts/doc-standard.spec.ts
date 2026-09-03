@@ -71,6 +71,7 @@ const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
   'packages/sandbox/sandbox-windows-acl': 'Windows ACL sandbox library consumed by sandbox-local.',
   'packages/sdk/client': 'Client-process library; the spawned runtime owns plugin behavior.',
   'packages/sdk/protocol': 'Wire-protocol library with type declarations only.',
+  'packages/session/session-lifecycle': 'Contract-stage type declarations and pure listing/retention/deletion functions only; no plugin entry or mount configuration.',
   'packages/session/session-telemetry': 'Telemetry Service Definition and capture library; providers mount the backend.',
   'packages/session/session-title-llm': 'Shared LLM title-provider registration and request policy.',
   'packages/subagent/subagent-in-process-driver': 'Shared one-shot child-agent driver used by provider plugins.',
