@@ -65,8 +65,18 @@
  * @module @deepseek-ai/dsh-capability-token
  */
 
+import { readFile, rename, writeFile } from 'node:fs/promises'
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
+import {
+  attenuateToken,
+  digestToken,
+  isTokenRevoked,
+  issueToken,
+  redactTokenForLog,
+  verifyToken,
+} from './attenuate.ts'
 import type {
+  CapabilityToken,
   CapabilityTokenDigest,
   CapabilityTokenLogRecord,
   CapabilityTokenNonce,
@@ -137,7 +147,97 @@ export interface CapabilityTokenStore {
  * @returns a store over `path`.
  */
 export function createFileCapabilityTokenStore(path: string): CapabilityTokenStore {
-  throw new Error(`not implemented: createFileCapabilityTokenStore(${path})`)
+  /**
+   * Every read and write of `path` is chained onto this promise, so a `save`
+   * never interleaves with another one and loses a revocation or a nonce.
+   */
+  let queue: Promise<unknown> = Promise.resolve()
+  const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
+    const next = queue.then(operation, operation)
+    queue = next.then(() => undefined, () => undefined)
+    return next
+  }
+
+  return {
+    async load(): Promise<CapabilityTokenStoreState> {
+      return enqueue(async () => {
+        let raw: string
+        try {
+          raw = await readFile(path, 'utf8')
+        } catch (error) {
+          // A store whose document does not exist yet is a first boot, not a
+          // failure; every other read error (permissions, an unreadable
+          // medium) still propagates.
+          if ((error as NodeJS.ErrnoException).code === 'ENOENT') return EMPTY_STORE_STATE
+          throw error
+        }
+        return reviveState(JSON.parse(raw) as SerializedStoreState)
+      })
+    },
+
+    async save(state: CapabilityTokenStoreState): Promise<void> {
+      await enqueue(async () => {
+        const temporary = `${path}.tmp`
+        await writeFile(temporary, `${JSON.stringify(serializeState(state), null, 2)}\n`, 'utf8')
+        await rename(temporary, path)
+      })
+    },
+  }
+}
+
+/** The state a store reports for a medium that has never been written to. */
+const EMPTY_STORE_STATE: CapabilityTokenStoreState = {
+  tokens: [],
+  revokedDigests: [],
+  spentNonces: [],
+  auditRecords: [],
+}
+
+/**
+ * A {@link SignedCapabilityToken} as JSON holds it: `signature` becomes a
+ * plain byte array, because `Uint8Array` has no JSON representation of its
+ * own and would otherwise round-trip as an index-keyed object.
+ */
+interface SerializedSignedToken {
+  readonly token: CapabilityToken
+  readonly signature: readonly number[]
+}
+
+/** {@link CapabilityTokenStoreState} as JSON holds it. */
+interface SerializedStoreState {
+  readonly tokens: readonly SerializedSignedToken[]
+  readonly revokedDigests: readonly CapabilityTokenDigest[]
+  readonly spentNonces: readonly CapabilityTokenNonce[]
+  readonly auditRecords: readonly CapabilityTokenLogRecord[]
+}
+
+/**
+ * Project `state` down to the JSON-representable form a store writes.
+ * @param state - the state to serialize.
+ * @returns the same state with each `signature` as a plain byte array.
+ */
+function serializeState(state: CapabilityTokenStoreState): SerializedStoreState {
+  return {
+    tokens: state.tokens.map(signed => ({ token: signed.token, signature: [...signed.signature] })),
+    revokedDigests: [...state.revokedDigests],
+    spentNonces: [...state.spentNonces],
+    auditRecords: [...state.auditRecords],
+  }
+}
+
+/**
+ * Rebuild the in-memory state from what a store read back, restoring each
+ * `signature` to a real `Uint8Array`.
+ * @param state - the parsed JSON document.
+ * @returns the state with each `signature` back as a `Uint8Array`.
+ */
+function reviveState(state: SerializedStoreState): CapabilityTokenStoreState {
+  return {
+    tokens: state.tokens.map(signed => ({ token: signed.token, signature: new Uint8Array(signed.signature) })),
+    revokedDigests: [...state.revokedDigests],
+    spentNonces: [...state.spentNonces],
+    auditRecords: [...state.auditRecords],
+  }
 }
 
 /**
@@ -152,6 +252,22 @@ export function createFileCapabilityTokenStore(path: string): CapabilityTokenSto
  * `./attenuate.ts` unchanged and is not, today, evidence of a token's origin.
  */
 export class CapabilityTokenService {
+  readonly #store: CapabilityTokenStore
+  readonly #trustRoot: TrustKernelSignatureRoots
+  readonly #tokens: SignedCapabilityToken[]
+  readonly #revokedDigests: Set<CapabilityTokenDigest>
+  readonly #spentNonces: Set<CapabilityTokenNonce>
+  readonly #auditRecords: CapabilityTokenLogRecord[]
+
+  private constructor(store: CapabilityTokenStore, trustRoot: TrustKernelSignatureRoots, state: CapabilityTokenStoreState) {
+    this.#store = store
+    this.#trustRoot = trustRoot
+    this.#tokens = [...state.tokens]
+    this.#revokedDigests = new Set(state.revokedDigests)
+    this.#spentNonces = new Set(state.spentNonces)
+    this.#auditRecords = [...state.auditRecords]
+  }
+
   /**
    * Reconstruct a service from everything `store` durably holds. The only
    * way to obtain a service — there is no constructor starting from an
@@ -161,8 +277,33 @@ export class CapabilityTokenService {
    * @param trustRoot - the `TrustKernelSignatureRoots` handle passed through to `./attenuate.ts`.
    * @returns a service over `store`'s recorded state.
    */
-  static restore(store: CapabilityTokenStore, trustRoot: TrustKernelSignatureRoots): Promise<CapabilityTokenService> {
-    throw new Error(`not implemented: CapabilityTokenService.restore(${typeof store}, ${typeof trustRoot})`)
+  static async restore(store: CapabilityTokenStore, trustRoot: TrustKernelSignatureRoots): Promise<CapabilityTokenService> {
+    return new CapabilityTokenService(store, trustRoot, await store.load())
+  }
+
+  /**
+   * Write this service's complete current state through to its store.
+   * @returns once the write is durable.
+   */
+  async #persist(): Promise<void> {
+    await this.#store.save({
+      tokens: [...this.#tokens],
+      revokedDigests: [...this.#revokedDigests],
+      spentNonces: [...this.#spentNonces],
+      auditRecords: [...this.#auditRecords],
+    })
+  }
+
+  /**
+   * Record `signed` in the token registry and append its redacted audit
+   * record, then persist both — the one path by which a token becomes
+   * durable, so no caller can add a token without its audit record.
+   * @param signed - the freshly issued or attenuated token to record.
+   */
+  async #record(signed: SignedCapabilityToken): Promise<void> {
+    this.#tokens.push(signed)
+    this.#auditRecords.push(redactTokenForLog(signed))
+    await this.#persist()
   }
 
   /**
@@ -172,8 +313,10 @@ export class CapabilityTokenService {
    * @param nonce - a fresh, caller-generated nonce.
    * @returns the newly issued, durably recorded token.
    */
-  issue(request: TokenIssuanceRequest, nonce: CapabilityTokenNonce): Promise<SignedCapabilityToken> {
-    throw new Error(`not implemented: CapabilityTokenService.issue(${typeof request}, ${String(nonce)})`)
+  async issue(request: TokenIssuanceRequest, nonce: CapabilityTokenNonce): Promise<SignedCapabilityToken> {
+    const signed = issueToken(this.#trustRoot, request, nonce)
+    await this.#record(signed)
+    return signed
   }
 
   /**
@@ -184,8 +327,10 @@ export class CapabilityTokenService {
    * @param request - the requested child scope.
    * @returns `attenuateToken`'s own decision, unchanged.
    */
-  attenuate(parent: SignedCapabilityToken, request: TokenAttenuationRequest): Promise<TokenAttenuationDecision> {
-    throw new Error(`not implemented: CapabilityTokenService.attenuate(${typeof parent}, ${typeof request})`)
+  async attenuate(parent: SignedCapabilityToken, request: TokenAttenuationRequest): Promise<TokenAttenuationDecision> {
+    const decision = attenuateToken(this.#trustRoot, parent, request)
+    if (decision.accepted) await this.#record(decision.child)
+    return decision
   }
 
   /**
@@ -197,7 +342,21 @@ export class CapabilityTokenService {
    * @returns the lineage, root-first and ending with `digest`, or `undefined` when no recorded token has that digest.
    */
   lineageOf(digest: CapabilityTokenDigest): TokenLineage | undefined {
-    throw new Error(`not implemented: CapabilityTokenService.lineageOf(${String(digest)})`)
+    const byDigest = new Map(this.#tokens.map(signed => [digestToken(signed.token), signed.token] as const))
+    let current = byDigest.get(digest)
+    if (current === undefined) return undefined
+
+    // Walked leaf-first, then reversed, so the returned chain is root-first.
+    const chain: CapabilityTokenDigest[] = [digest]
+    while (current.parentDigest !== null) {
+      chain.push(current.parentDigest)
+      const parent = byDigest.get(current.parentDigest)
+      // An ancestor absent from the registry still contributes its digest —
+      // dropping it would silently hide an ancestor's revocation.
+      if (parent === undefined) break
+      current = parent
+    }
+    return chain.reverse() as unknown as TokenLineage
   }
 
   /**
@@ -206,8 +365,9 @@ export class CapabilityTokenService {
    * record is written, and none is needed.
    * @param digest - the digest to revoke.
    */
-  revoke(digest: CapabilityTokenDigest): Promise<void> {
-    throw new Error(`not implemented: CapabilityTokenService.revoke(${String(digest)})`)
+  async revoke(digest: CapabilityTokenDigest): Promise<void> {
+    this.#revokedDigests.add(digest)
+    await this.#persist()
   }
 
   /**
@@ -219,7 +379,9 @@ export class CapabilityTokenService {
    * @returns `true` when the token's lineage contains a revoked digest; `false` when it does not, and for a digest no recorded token has.
    */
   isRevoked(digest: CapabilityTokenDigest): boolean {
-    throw new Error(`not implemented: CapabilityTokenService.isRevoked(${String(digest)})`)
+    const lineage = this.lineageOf(digest)
+    if (lineage === undefined) return false
+    return isTokenRevoked(lineage, this.#revokedDigests)
   }
 
   /**
@@ -236,8 +398,12 @@ export class CapabilityTokenService {
    * @param now - Unix epoch milliseconds to check expiry against.
    * @returns `verifyToken`'s own result, against the durable nonce ledger.
    */
-  verify(signed: SignedCapabilityToken, now: number): Promise<TokenVerificationResult> {
-    throw new Error(`not implemented: CapabilityTokenService.verify(${typeof signed}, ${String(now)})`)
+  async verify(signed: SignedCapabilityToken, now: number): Promise<TokenVerificationResult> {
+    const result = verifyToken(this.#trustRoot, signed, { now, seenNonces: this.#spentNonces })
+    if (!result.verified) return result
+    this.#spentNonces.add(signed.token.nonce)
+    await this.#persist()
+    return result
   }
 
   /**
@@ -248,6 +414,6 @@ export class CapabilityTokenService {
    * @returns the recorded audit records, oldest first.
    */
   auditRecords(): readonly CapabilityTokenLogRecord[] {
-    throw new Error('not implemented: CapabilityTokenService.auditRecords()')
+    return [...this.#auditRecords]
   }
 }
