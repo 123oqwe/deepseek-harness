@@ -39,6 +39,7 @@ The test-support group gives repository tests deterministic, keyless ways to exe
 - [Testing policy](../../docs/testing.md) — the keyless snapshot tier these harnesses serve and when it is required.
 - [Runtime invariants subsystem](../../docs/subsystems/invariants.md) — the package-owned runtime checks each test-support package ships as `./invariant`.
 - [Package groups](../README.md) — how support groups relate to the product groups.
+- [Harness capability benchmark framework](../../benchmarks/harness-capability/README.md) — the qualification benchmark whose deterministic, fault, and security lanes must run without external API configuration.
 
 -----
 

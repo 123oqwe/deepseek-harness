@@ -1,0 +1,64 @@
+# Contract-stage manifest for the Harness capability benchmark framework (Epic P0-08).
+#
+# This file freezes the structural schema benchmarks/harness-capability/runner.ts (a later,
+# U-stage slice -- not yet implemented) must satisfy once it starts executing lanes for real.
+# tests/benchmark/runner.spec.ts is the source of truth for the frozen schema; see
+# benchmarks/harness-capability/README.md for the human-readable contract.
+#
+# Frozen schema:
+#   lanes: exactly 5 entries, name in {deterministic, fault, security, real-model, scale} (must[0])
+#   lanes[].metrics: exactly the 8 standard metric names, no more, no fewer (must[1])
+#   lanes[].reporting.confidenceInterval: true and lanes[].reporting.seedReplay: true (must[2])
+#
+# This file is DELIBERATELY INCOMPLETE relative to the frozen schema above -- see the header
+# comment in tests/benchmark/runner.spec.ts for why a Contract-stage manifest is authored
+# incomplete on purpose, and benchmarks/harness-capability/README.md for what each gap covers.
+
+schemaVersion: 1
+
+lanes:
+  - name: deterministic
+    metrics:
+      - task_success
+      - duplicate_side_effect
+      - policy_bypass
+      - recovery_success
+      # missing: verification_precision, router_regret, token_cost, latency
+    reporting:
+      confidenceInterval: true
+      seedReplay: true
+
+  - name: fault
+    metrics:
+      - task_success
+      - duplicate_side_effect
+      - policy_bypass
+      - recovery_success
+      - verification_precision
+      - router_regret
+      - token_cost
+      - latency_p95 # wrong name -- must[1] requires "latency", not "latency_p95"
+    reporting:
+      confidenceInterval: true
+      # missing: seedReplay
+
+  - name: security
+    metrics:
+      - task_success
+      - duplicate_side_effect
+      - policy_bypass
+      - recovery_success
+      - verification_precision
+      - router_regret
+      - token_cost
+      - latency
+    # missing: reporting entirely
+
+  - name: smoke-lane # not one of the 5 required lane names (must[0])
+    metrics:
+      - task_success
+    reporting:
+      confidenceInterval: true
+      seedReplay: true
+
+# real-model and scale lanes are not yet declared (must[0])
