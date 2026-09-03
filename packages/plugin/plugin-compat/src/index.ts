@@ -49,10 +49,14 @@
  * falling back to `'active'`: the return type has no slot for that outcome
  * to occupy.
  *
- * This slice is Contract-stage only: {@link solvePluginGraph} has a real,
- * epic-accurate signature but throws `'not implemented'` unconditionally —
- * the real whole-graph constraint solver is `src/solver.ts`'s later
- * Provider-stage deliverable, not this module's.
+ * {@link solvePluginGraph} solves the whole graph directly in this module:
+ * a pre-pass (`findProviderConstraintContradictions`) reports a direct
+ * requires-provider/excludes-provider clash over a capability's sole
+ * provider as a minimal {@link UnsatCore} (must[2]) before any per-manifest
+ * activation is computed; absent such a clash, every manifest is solved
+ * independently against the shared {@link HostCompatContext} and the
+ * graph's declared `providedCapabilities` into a deterministic
+ * {@link LoadPlan} (acceptance[0]).
  *
  * @module @deepseek-ai/dsh-plugin-compat
  */
@@ -317,6 +321,242 @@ export type PluginGraphSolution =
   | { readonly solvable: false; readonly unsatCore: UnsatCore }
 
 /**
+ * One manifest's declared {@link ProviderConstraint}, paired with the
+ * manifest that declared it — {@link findProviderConstraintContradictions}'s
+ * working unit for detecting a direct requires-provider/excludes-provider
+ * clash on the same capability/provider pair across two different
+ * manifests.
+ */
+interface ProviderConstraintSite {
+  readonly manifest: PluginCompatManifest
+  readonly constraint: ProviderConstraint
+}
+
+/**
+ * Every {@link PluginId} whose `providedCapabilities` names a given
+ * {@link CapabilityId}, across the whole graph — the single "who can
+ * satisfy this capability" index both {@link findProviderConstraintContradictions}
+ * and the per-manifest solve read from.
+ */
+function indexProvidedCapabilities(manifests: readonly PluginCompatManifest[]): Map<CapabilityId, PluginId[]> {
+  const index = new Map<CapabilityId, PluginId[]>()
+  for (const manifest of manifests) {
+    for (const capabilityId of manifest.providedCapabilities) {
+      const providers = index.get(capabilityId)
+      if (providers) {
+        providers.push(manifest.pluginId)
+      } else {
+        index.set(capabilityId, [manifest.pluginId])
+      }
+    }
+  }
+  return index
+}
+
+/**
+ * must[2]'s direct contradiction: a required {@link CapabilityRequirement}
+ * whose provider constraints include both a `'requires-provider'` naming
+ * provider `P` (declared by one manifest) and an `'excludes-provider'`
+ * naming the same `P` (declared by a different manifest), where `P` is the
+ * graph's only provider of that capability. No provider assignment can
+ * satisfy both declarations at once, and neither manifest's requirement is
+ * more "at fault" than the other, so this is reported as a graph-level
+ * {@link UnsatCore} rather than blocking one manifest and activating the
+ * other — {@link solvePluginGraph} never silently picks a side. A
+ * capability whose provider constraints do not fit this exact shape (no
+ * opposing manifest, or a contested provider that is not the capability's
+ * sole one) is left to the per-manifest solve in {@link solveManifest},
+ * which blocks only the manifest whose own requirement fails.
+ */
+function findProviderConstraintContradictions(
+  manifests: readonly PluginCompatManifest[],
+  providedBy: ReadonlyMap<CapabilityId, readonly PluginId[]>,
+): UnsatCore {
+  const requiresSites = new Map<string, ProviderConstraintSite[]>()
+  const excludesSites = new Map<string, ProviderConstraintSite[]>()
+
+  for (const manifest of manifests) {
+    for (const constraint of manifest.providerConstraints) {
+      const requirement = manifest.capabilities.find(candidate => candidate.capabilityId === constraint.capabilityId)
+      if (requirement?.necessity !== 'required') continue
+
+      const key = `${constraint.capabilityId} ${constraint.providerId}`
+      const bucket = constraint.kind === 'requires-provider' ? requiresSites : excludesSites
+      const site: ProviderConstraintSite = { manifest, constraint }
+      const existing = bucket.get(key)
+      if (existing) {
+        existing.push(site)
+      } else {
+        bucket.set(key, [site])
+      }
+    }
+  }
+
+  const entries: UnsatCoreConstraint[] = []
+  const seen = new Set<string>()
+
+  for (const [key, requirers] of requiresSites) {
+    const excluders = excludesSites.get(key)
+    const anchor = requirers[0]
+    if (!excluders || excluders.length === 0 || !anchor) continue
+
+    const { capabilityId, providerId } = anchor.constraint
+    const providers = providedBy.get(capabilityId) ?? []
+    const isSoleProvider = providers.length === 1 && providers[0] === providerId
+    if (!isSoleProvider) continue
+
+    for (const site of [...requirers, ...excluders]) {
+      const dedupeKey = `${site.manifest.pluginId} ${site.constraint.capabilityId} ${site.constraint.kind}`
+      if (seen.has(dedupeKey)) continue
+      seen.add(dedupeKey)
+      entries.push({
+        pluginId: site.manifest.pluginId,
+        reasonCode: 'provider-constraint-violation',
+        constraintRef: providerId,
+        detail: site.constraint.kind === 'requires-provider'
+          ? `requires-provider '${providerId}' for '${capabilityId}' directly contradicts another manifest's excludes-provider constraint on '${capabilityId}''s only provider`
+          : `excludes-provider '${providerId}' for '${capabilityId}' rules out '${capabilityId}''s only provider, which another manifest's requires-provider constraint requires`,
+      })
+    }
+  }
+
+  return entries.sort((a, b) => comparePluginId(a.pluginId, b.pluginId))
+}
+
+/**
+ * The {@link PluginId}s eligible to satisfy `manifest`'s own dependency on
+ * `capabilityId`: the graph's providers of `capabilityId`, narrowed by
+ * `manifest`'s own {@link ProviderConstraint}s for that capability — a
+ * `'requires-provider'` constraint keeps only its named provider,
+ * `'excludes-provider'` removes its named provider. Only `manifest`'s own
+ * declared constraints narrow its own requirement; another manifest's
+ * constraints on the same capability never do (see
+ * {@link findProviderConstraintContradictions} for when that instead
+ * signals a graph-level conflict).
+ */
+function admissibleProviders(
+  manifest: PluginCompatManifest,
+  capabilityId: CapabilityId,
+  providedBy: ReadonlyMap<CapabilityId, readonly PluginId[]>,
+): readonly PluginId[] {
+  const base = providedBy.get(capabilityId) ?? []
+  const own = manifest.providerConstraints.filter(constraint => constraint.capabilityId === capabilityId)
+  if (own.length === 0) return base
+
+  const requiredProviderIds = new Set(own.filter(constraint => constraint.kind === 'requires-provider').map(constraint => constraint.providerId))
+  const excludedProviderIds = new Set(own.filter(constraint => constraint.kind === 'excludes-provider').map(constraint => constraint.providerId))
+
+  return base.filter(providerId =>
+    (requiredProviderIds.size === 0 || requiredProviderIds.has(providerId)) && !excludedProviderIds.has(providerId),
+  )
+}
+
+/** must[0]'s runtime API range check: `host.runtimeApiVersion` must fall within `manifest.runtimeApiRange`'s inclusive bounds. */
+function checkRuntimeApiRange(manifest: PluginCompatManifest, host: HostCompatContext): ConflictReasonCode | undefined {
+  const { min, max } = manifest.runtimeApiRange
+  return host.runtimeApiVersion >= min && host.runtimeApiVersion <= max ? undefined : 'runtime-api-range-incompatible'
+}
+
+/**
+ * must[0]/acceptance[1]'s schema range check: every `manifest.schemaRanges`
+ * entry's declared major band must cover the host's registered major for
+ * that {@link SchemaId}. A `schemaId` the host has no registered version
+ * for fails closed, the same as a registered major outside the declared
+ * band — a manifest never resolves active against a schema the host
+ * cannot confirm compatibility for.
+ */
+function checkSchemaRanges(manifest: PluginCompatManifest, host: HostCompatContext): ConflictReasonCode | undefined {
+  for (const range of manifest.schemaRanges) {
+    const registered = host.registeredSchemaVersions.get(range.schemaId)
+    if (!registered || registered.major < range.minVersion.major || registered.major > range.maxVersion.major) {
+      return 'schema-major-mismatch'
+    }
+  }
+  return undefined
+}
+
+/**
+ * One `manifest`'s {@link PluginActivation} once no graph-level
+ * {@link UnsatCore} applies: blocked on the first of a runtime-API-range,
+ * schema-range, or required-capability failure (checked in that priority
+ * order — {@link ConflictReasonCode}'s only per-manifest codes), else
+ * active with every unsatisfied optional capability listed in
+ * `disabledOptionalCapabilities` (acceptance[2]).
+ */
+function solveManifest(
+  manifest: PluginCompatManifest,
+  host: HostCompatContext,
+  providedBy: ReadonlyMap<CapabilityId, readonly PluginId[]>,
+): PluginActivation {
+  const runtimeReason = checkRuntimeApiRange(manifest, host)
+  if (runtimeReason) {
+    return { pluginId: manifest.pluginId, activation: { status: 'blocked', reasonCode: runtimeReason, missingCapabilities: [] } }
+  }
+
+  const schemaReason = checkSchemaRanges(manifest, host)
+  if (schemaReason) {
+    return { pluginId: manifest.pluginId, activation: { status: 'blocked', reasonCode: schemaReason, missingCapabilities: [] } }
+  }
+
+  const missingCapabilities: CapabilityId[] = []
+  const disabledOptionalCapabilities: CapabilityId[] = []
+  let blockedReasonCode: ConflictReasonCode | undefined
+
+  for (const requirement of manifest.capabilities) {
+    const admissible = admissibleProviders(manifest, requirement.capabilityId, providedBy)
+    if (admissible.length > 0) continue
+
+    if (requirement.necessity === 'optional') {
+      disabledOptionalCapabilities.push(requirement.capabilityId)
+      continue
+    }
+
+    missingCapabilities.push(requirement.capabilityId)
+    if (!blockedReasonCode) {
+      const globalProviders = providedBy.get(requirement.capabilityId) ?? []
+      blockedReasonCode = globalProviders.length === 0 ? 'missing-required-capability' : 'provider-constraint-violation'
+    }
+  }
+
+  if (blockedReasonCode) {
+    return { pluginId: manifest.pluginId, activation: { status: 'blocked', reasonCode: blockedReasonCode, missingCapabilities } }
+  }
+
+  return { pluginId: manifest.pluginId, activation: { status: 'active', disabledOptionalCapabilities } }
+}
+
+/**
+ * Stable, content-only ordering for two {@link PluginId}s — sorts
+ * {@link LoadPlan.activations} and {@link UnsatCore} entries so the result
+ * never depends on `manifests` array order (acceptance[0]).
+ */
+function comparePluginId(a: PluginId, b: PluginId): number {
+  if (a < b) return -1
+  if (a > b) return 1
+  return 0
+}
+
+/**
+ * Deterministic identity of a solved {@link LoadPlan}: a stable
+ * serialization of every {@link PluginActivation} (with each activation's
+ * own capability-id lists sorted), built from output already sorted by
+ * {@link PluginId} — equal `manifests`/`host` inputs always produce an
+ * equal `planId`, regardless of `manifests` array order (acceptance[0]).
+ */
+function computePlanId(activations: readonly PluginActivation[]): string {
+  const canonical = activations.map((row) => {
+    const activation = row.activation
+    return {
+      pluginId: row.pluginId,
+      activation: activation.status === 'active'
+        ? { status: 'active' as const, disabledOptionalCapabilities: [...activation.disabledOptionalCapabilities].sort() }
+        : { status: 'blocked' as const, reasonCode: activation.reasonCode, missingCapabilities: [...activation.missingCapabilities].sort() },
+    }
+  })
+  return JSON.stringify(canonical)
+}
+
+/**
  * must[1]'s boot-time entry point: solve every `manifests` entry together
  * against `host` in one call, returning either a complete {@link LoadPlan}
  * or a minimal {@link UnsatCore} (must[2]). This is the only exported
@@ -334,5 +574,16 @@ export type PluginGraphSolution =
  *   with the minimal {@link UnsatCore}.
  */
 export function solvePluginGraph(manifests: readonly PluginCompatManifest[], host: HostCompatContext): PluginGraphSolution {
-  throw new Error(`not implemented: solvePluginGraph(${String(manifests.length)} manifests, hostRuntimeApiVersion=${String(host.runtimeApiVersion)})`)
+  const providedBy = indexProvidedCapabilities(manifests)
+
+  const unsatCore = findProviderConstraintContradictions(manifests, providedBy)
+  if (unsatCore.length > 0) {
+    return { solvable: false, unsatCore }
+  }
+
+  const activations = manifests
+    .map(manifest => solveManifest(manifest, host, providedBy))
+    .sort((a, b) => comparePluginId(a.pluginId, b.pluginId))
+
+  return { solvable: true, loadPlan: { activations, planId: computePlanId(activations) } }
 }
