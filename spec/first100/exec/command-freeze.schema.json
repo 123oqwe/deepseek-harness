@@ -5,20 +5,32 @@
   "description": "Sole production command truth source for First-100 verification (maintainer decision B4). Supersedes spec/first100-command-registry.json. (epic, stage) is a unique key: first-frozen-wins, a duplicate (epic, stage) pair invalidates the whole entry. Append-only: entries are never edited or removed after freeze, only appended.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "entries"],
+  "required": [
+    "schema",
+    "entries"
+  ],
   "properties": {
     "schema": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "version"],
+      "required": [
+        "name",
+        "version"
+      ],
       "properties": {
-        "name": { "const": "first100-command-freeze" },
-        "version": { "const": "1.0" }
+        "name": {
+          "const": "first100-command-freeze"
+        },
+        "version": {
+          "const": "1.0"
+        }
       }
     },
     "entries": {
       "type": "array",
-      "items": { "$ref": "#/$defs/entry" }
+      "items": {
+        "$ref": "#/$defs/entry"
+      }
     }
   },
   "$defs": {
@@ -42,12 +54,19 @@
         },
         "stage": {
           "type": "string",
-          "enum": ["C", "P", "U", "F"],
+          "enum": [
+            "C",
+            "P",
+            "U",
+            "F"
+          ],
           "description": "A/B/C/D ledger stage label per 100-row-program-ledger.md §4 (A=C, B=P, C=U, D=F)."
         },
         "argv": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 1,
           "description": "Exact argv, frozen with a verbose reporter (e.g. vitest --reporter=verbose or --reporter=json) so the verifier can grep raw logs by named case title."
         },
@@ -61,13 +80,17 @@
         },
         "expectCases": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "minItems": 1,
           "description": "Named case titles, 1:1 with this epic's acceptance[] entries for this stage (never a bare count). The verifier greps the hashed raw log for each title to confirm it is present and passing; this closes the 'one always-true case lights up the whole cell' cheat path."
         },
         "files": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "description": "Test file path(s) this argv exercises. Must fall inside the epic's registry files[] (append-only overlay additions allowed); registry fixtures{} template paths are void placeholders and never satisfy this."
         },
         "frozenAtUtc": {
@@ -77,7 +100,10 @@
         "dryRunProof": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["treeSha", "testsDiscovered"],
+          "required": [
+            "treeSha",
+            "testsDiscovered"
+          ],
           "properties": {
             "treeSha": {
               "type": "string",
@@ -91,16 +117,32 @@
             }
           }
         },
-        "note": { "type": "string" },
+        "note": {
+          "type": "string"
+        },
         "coveredStages": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["epic", "stage"],
+            "required": [
+              "epic",
+              "stage"
+            ],
             "properties": {
-              "epic": { "type": "string", "pattern": "^P[0-8]-\\d{2}$" },
-              "stage": { "type": "string", "enum": ["C", "P", "U", "F"] }
+              "epic": {
+                "type": "string",
+                "pattern": "^P[0-8]-\\d{2}$"
+              },
+              "stage": {
+                "type": "string",
+                "enum": [
+                  "C",
+                  "P",
+                  "U",
+                  "F"
+                ]
+              }
             }
           },
           "minItems": 1,
@@ -109,10 +151,24 @@
         "supplements": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["epic", "stage"],
+          "required": [
+            "epic",
+            "stage"
+          ],
           "properties": {
-            "epic": { "type": "string", "pattern": "^P[0-8]-\\d{2}$" },
-            "stage": { "type": "string", "enum": ["C", "P", "U", "F"] }
+            "epic": {
+              "type": "string",
+              "pattern": "^P[0-8]-\\d{2}$"
+            },
+            "stage": {
+              "type": "string",
+              "enum": [
+                "C",
+                "P",
+                "U",
+                "F"
+              ]
+            }
           },
           "description": "Maintainer decision BLOCKED-005 (2026-09-01): marks this entry as a SUPPLEMENT that adds new named expectCases into a later-discovered acceptance-coverage gap, without re-freezing (or invalidating) the already-frozen (epic, stage) pair it supplements. supplements.epic/supplements.stage must equal this entry's own epic/stage (the pair being supplemented); supplementSeq then disambiguates the entry's unique key from the primary entry's plain (epic, stage) key and from any other supplement of the same pair. Never edits or greens the pointed-to cell's own state -- only contributes expectCases titles to predicate (i)'s (coverage-closure) union. Mechanically validated by scripts/first100/generate-specs.ts's checkSupplementalEntry()."
         },
@@ -124,7 +180,10 @@
         "sensitivityProof": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["mutationDescription", "failureSummary"],
+          "required": [
+            "mutationDescription",
+            "failureSummary"
+          ],
           "properties": {
             "mutationDescription": {
               "type": "string",
@@ -136,6 +195,16 @@
             }
           },
           "description": "Maintainer decision BLOCKED-005 hardening clause (2026-09-01): mandatory on any supplement entry whose case follows the 'coverage completion' path (the covered behavior already exists, so genuine RED against the unmodified tree is unobtainable) -- proves the new case actually detects a broken version of the behavior it claims to cover, closing the 'one always-true case vacuously completes any acceptance index' gap. A supplement that instead obtains genuine RED (dryRunProof's tree already fails the new case pre-implementation) is exempt; this field is then omitted."
+        },
+        "supersedes": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The frozenAtUtc of the entry this one replaces for the same (epic, stage). Present only on the live entry of a supersession pair; the replaced entry carries the reciprocal supersededBy. Recorded as a timestamp rather than an index so the reference survives reordering of the entries array."
+        },
+        "supersededBy": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The frozenAtUtc of the entry that replaced this one. Its presence removes this entry from every primary-entry lookup, so a superseded freeze can never green a cell. generate-ledger.mjs fails closed when more than one non-superseded entry exists for one (epic, stage)."
         }
       }
     }
