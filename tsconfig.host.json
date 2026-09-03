@@ -314,6 +314,7 @@
     { "path": "./packages/plan/plan-mode" },
     { "path": "./packages/plugin/plugin-manifest" },
     { "path": "./packages/plugin/plugin-compat" },
+    { "path": "./packages/plugin/plugin-ownership" },
     { "path": "./packages/preset/agent-presets" },
     { "path": "./packages/preset/persona" },
     { "path": "./packages/guard/repeat-tool-reminder" },
