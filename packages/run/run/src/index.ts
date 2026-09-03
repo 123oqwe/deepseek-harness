@@ -28,16 +28,19 @@
  * Sessions (acceptance[2]) cannot be a row inside any one of their logs.
  * That package is therefore left untouched by this stage.
  *
- * Every function below has a real, epic-accurate signature and a placeholder
- * (`'not implemented'`) body — the Provider-stage RED scaffold this program's
- * prior stages follow. `tests/run-service.spec.ts` asserts the behavior a
- * later fix-round must satisfy.
- *
  * @module @deepseek-ai/dsh-run
  */
 
+import { readFile, rename, writeFile } from 'node:fs/promises'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import {
+  attachSessionToRun,
+  createRun,
+  listNonTerminalRuns,
+  resumeRun,
+  transition,
+} from './state-machine.ts'
 import type {
   Run,
   RunEntityReference,
@@ -92,7 +95,71 @@ export interface RunStore {
  * @returns a store over `path`.
  */
 export function createFileRunStore(path: string): RunStore {
-  throw new Error(`not implemented: createFileRunStore(${path})`)
+  /**
+   * Every read and write of `path` is chained onto this promise, so a `put`
+   * never interleaves its read-modify-write with another one and loses a Run.
+   */
+  let queue: Promise<unknown> = Promise.resolve()
+  const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
+    const next = queue.then(operation, operation)
+    queue = next.then(
+      () => undefined,
+      () => undefined,
+    )
+    return next
+  }
+
+  const read = async (): Promise<Run[]> => {
+    let text: string
+    try {
+      text = await readFile(path, 'utf8')
+    } catch (error) {
+      // A store file that was never written is a first boot, not a failure;
+      // any other read failure (permissions, a directory at `path`) is real.
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+      throw error
+    }
+    if (text.trim() === '') return []
+    const document = JSON.parse(text) as RunStoreDocument
+    if (document.version !== RUN_STORE_FORMAT_VERSION) {
+      throw new Error(
+        `unsupported Run store format version ${String(document.version)} at ${path}, expected ${RUN_STORE_FORMAT_VERSION}`,
+      )
+    }
+    return [...document.runs]
+  }
+
+  const write = async (runs: readonly Run[]): Promise<void> => {
+    const document: RunStoreDocument = { version: RUN_STORE_FORMAT_VERSION, runs }
+    // Write-then-rename: a crash mid-write leaves the previous complete
+    // document in place at `path` rather than a truncated one.
+    const temporaryPath = `${path}.${process.pid}.tmp`
+    await writeFile(temporaryPath, `${JSON.stringify(document)}\n`, 'utf8')
+    await rename(temporaryPath, path)
+  }
+
+  return {
+    loadAll: () => enqueue(read),
+    put: (run: Run) =>
+      enqueue(async () => {
+        const runs = await read()
+        // Replace in place so a Run keeps its original position in the
+        // document across every later `put`.
+        const index = runs.findIndex(existing => existing.id === run.id)
+        if (index === -1) runs.push(run)
+        else runs[index] = run
+        await write(runs)
+      }),
+  }
+}
+
+/** The on-disk format version {@link createFileRunStore} reads and writes. */
+const RUN_STORE_FORMAT_VERSION = 1
+
+/** The JSON document {@link createFileRunStore} keeps at its path. */
+interface RunStoreDocument {
+  readonly version: number
+  readonly runs: readonly Run[]
 }
 
 /**
@@ -121,8 +188,10 @@ export class RunService {
    * @param store - the durable store to reconstruct the registry from.
    * @returns a service registering exactly the Runs `store` holds.
    */
-  static restore(store: RunStore): Promise<RunService> {
-    return Promise.reject(new Error(`not implemented: RunService.restore(${typeof store} RunStore)`))
+  static async restore(store: RunStore): Promise<RunService> {
+    const runs = new Map<RunId, Run>()
+    for (const run of await store.loadAll()) runs.set(run.id, run)
+    return new RunService(store, runs)
   }
 
   /**
@@ -135,8 +204,12 @@ export class RunService {
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this Run is accepted at.
    * @returns the newly accepted, durably recorded {@link Run}.
    */
-  accept(id: RunId, initialSessionId: SessionId, occurredAt: number): Promise<Run> {
-    return Promise.reject(new Error(`not implemented: RunService.accept(${id}, ${initialSessionId}, ${occurredAt}) against its ${typeof this.store} RunStore holding ${this.runs.size} runs`))
+  async accept(id: RunId, initialSessionId: SessionId, occurredAt: number): Promise<Run> {
+    if (this.runs.has(id)) throw new Error(`run ${id} is already registered`)
+    const run = createRun(id, initialSessionId, occurredAt)
+    await this.store.put(run)
+    this.runs.set(id, run)
+    return run
   }
 
   /**
@@ -152,13 +225,17 @@ export class RunService {
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this transition is stamped with.
    * @returns `./state-machine.ts`'s decision, unchanged.
    */
-  advance(
+  async advance(
     id: RunId,
     to: RunState,
     references: readonly RunEntityReference[],
     occurredAt: number,
   ): Promise<RunTransitionDecision> {
-    return Promise.reject(new Error(`not implemented: RunService.advance(${id}, ${to}, ${references.length} refs, ${occurredAt}) against its ${typeof this.store} RunStore`))
+    const decision = transition(this.registered(id), to, references, occurredAt)
+    if (!decision.accepted) return decision
+    await this.store.put(decision.run)
+    this.runs.set(id, decision.run)
+    return decision
   }
 
   /**
@@ -170,8 +247,11 @@ export class RunService {
    * @param sessionId - the Session/Agent to add.
    * @returns the Run with `sessionId` present in `sessionIds`.
    */
-  attachSession(id: RunId, sessionId: SessionId): Promise<Run> {
-    return Promise.reject(new Error(`not implemented: RunService.attachSession(${id}, ${sessionId}) against its ${typeof this.store} RunStore`))
+  async attachSession(id: RunId, sessionId: SessionId): Promise<Run> {
+    const run = attachSessionToRun(this.registered(id), sessionId)
+    await this.store.put(run)
+    this.runs.set(id, run)
+    return run
   }
 
   /**
@@ -182,7 +262,7 @@ export class RunService {
    * @returns exactly the registered non-terminal Runs.
    */
   listNonTerminal(): readonly Run[] {
-    throw new Error(`not implemented: RunService.listNonTerminal() over ${this.runs.size} registered runs`)
+    return listNonTerminalRuns([...this.runs.values()])
   }
 
   /**
@@ -193,7 +273,7 @@ export class RunService {
    * `{ resumed: false, reason: 'already-terminal' }`.
    */
   resume(id: RunId): RunResumeDecision {
-    throw new Error(`not implemented: RunService.resume(${id}) over ${this.runs.size} registered runs`)
+    return resumeRun(this.registered(id))
   }
 
   /**
@@ -203,7 +283,7 @@ export class RunService {
    * @returns every matching registered Run; empty when the Session has none.
    */
   runsForSession(sessionId: SessionId): readonly Run[] {
-    throw new Error(`not implemented: RunService.runsForSession(${sessionId}) over ${this.runs.size} registered runs`)
+    return [...this.runs.values()].filter(run => run.sessionIds.includes(sessionId))
   }
 
   /**
@@ -212,6 +292,18 @@ export class RunService {
    * @returns the registered {@link Run}, or `undefined` when this service registers no such id.
    */
   get(id: RunId): Run | undefined {
-    throw new Error(`not implemented: RunService.get(${id}) over ${this.runs.size} registered runs`)
+    return this.runs.get(id)
+  }
+
+  /**
+   * The registered Run `id`, for the paths that have no decision to return
+   * for an id this service does not know at all.
+   * @param id - the Run to look up.
+   * @returns the registered {@link Run}; throws when this service registers no such id.
+   */
+  private registered(id: RunId): Run {
+    const run = this.runs.get(id)
+    if (run === undefined) throw new Error(`run ${id} is not registered`)
+    return run
   }
 }
