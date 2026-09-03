@@ -1,5 +1,8 @@
 {
-  "schema": { "name": "first100-flake-registry", "version": "1.0" },
+  "schema": {
+    "name": "first100-flake-registry",
+    "version": "1.0"
+  },
   "entries": [
     {
       "testFile": "packages/experimental/inspector/tests/integration.host.spec.ts",
@@ -27,6 +30,12 @@
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33481139517",
           "candidateSha": "6decdacb89c082742866fbaaa53e6892c04099e8",
           "observedAtUtc": "2026-09-01T07:13:55Z",
+          "outcome": "failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33685469628",
+          "candidateSha": "042f9e959377f776306550177215299eeef896fc",
+          "observedAtUtc": "2026-09-03T02:45:18.469Z",
           "outcome": "failed"
         }
       ],
