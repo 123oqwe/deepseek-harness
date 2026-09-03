@@ -26,6 +26,7 @@
 export type * from './types.ts'
 
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { randomUUID } from 'node:crypto'
 import type {
   CapabilityKind,
   CapabilityOrigin,
@@ -91,7 +92,23 @@ export function claimCapability(
   existing: readonly CapabilityRegistration[],
   policy: RegistryPolicy,
 ): RegistrationDecision {
-  throw new Error(`not implemented: claimCapability(${String(request.capabilityId)}, ${String(existing.length)} existing, ${String(policy.allowReplace)})`)
+  if (isReservedNamespace(request.namespace) && !policy.officialPluginIdentities.has(request.pluginIdentity)) {
+    return { admitted: false, reason: 'namespace-reserved' }
+  }
+  if (existing.some(registration => registration.capabilityId === request.capabilityId)) {
+    return { admitted: false, reason: 'capability-collision' }
+  }
+  return {
+    admitted: true,
+    registration: {
+      pluginIdentity: request.pluginIdentity,
+      namespace: request.namespace,
+      capabilityId: request.capabilityId,
+      kind: request.kind,
+      origin: request.origin,
+      ownershipToken: mintOwnershipToken(request.pluginIdentity),
+    },
+  }
 }
 
 /**
@@ -114,7 +131,24 @@ export function requestReplace(
   existing: readonly CapabilityRegistration[],
   policy: RegistryPolicy,
 ): RegistrationDecision {
-  throw new Error(`not implemented: requestReplace(${String(contract.targetCapabilityId)}, ${String(existing.length)} existing, allowReplace=${String(policy.allowReplace)})`)
+  if (!policy.allowReplace) {
+    return { admitted: false, reason: 'replace-not-authorized' }
+  }
+  const target = existing.find(registration => registration.capabilityId === contract.targetCapabilityId)
+  if (target === undefined) {
+    return { admitted: false, reason: 'replace-not-authorized' }
+  }
+  return {
+    admitted: true,
+    registration: {
+      pluginIdentity: contract.replacingPluginIdentity,
+      namespace: target.namespace,
+      capabilityId: target.capabilityId,
+      kind: target.kind,
+      origin: target.origin,
+      ownershipToken: mintOwnershipToken(contract.replacingPluginIdentity),
+    },
+  }
 }
 
 /**
@@ -133,7 +167,13 @@ export function revokeByOwnershipToken(
   token: OwnershipToken,
   existing: readonly CapabilityRegistration[],
 ): RevocationResult {
-  throw new Error(`not implemented: revokeByOwnershipToken(${String(token)}, ${String(existing.length)} existing)`)
+  const revokedCapabilityIds = existing
+    .filter(registration => registration.ownershipToken === token)
+    .map(registration => registration.capabilityId)
+  if (revokedCapabilityIds.length === 0) {
+    return { revoked: false, reason: 'unknown-token' }
+  }
+  return { revoked: true, revokedCapabilityIds }
 }
 
 /**
@@ -145,7 +185,17 @@ export function revokeByOwnershipToken(
  * @returns one entry per distinct capability id in `history`.
  */
 export function buildInventoryChain(history: readonly CapabilityRegistration[]): readonly InventoryChainEntry[] {
-  throw new Error(`not implemented: buildInventoryChain(${String(history.length)} entries)`)
+  const chains = new Map<StableCapabilityId, InventoryChainEntry>()
+  for (const registration of history) {
+    const previous = chains.get(registration.capabilityId)
+    chains.set(
+      registration.capabilityId,
+      previous === undefined
+        ? { capabilityId: registration.capabilityId, current: registration.pluginIdentity }
+        : { capabilityId: registration.capabilityId, current: registration.pluginIdentity, replaces: previous.current },
+    )
+  }
+  return Array.from(chains.values())
 }
 
 /**
@@ -159,5 +209,5 @@ export function buildInventoryChain(history: readonly CapabilityRegistration[]):
  * @returns a fresh {@link OwnershipToken}, unique per call.
  */
 export function mintOwnershipToken(pluginIdentity: PluginIdentity): OwnershipToken {
-  throw new Error(`not implemented: mintOwnershipToken(${String(pluginIdentity)})`)
+  return brandString<OwnershipToken>(`${pluginIdentity}:${randomUUID()}`)
 }
