@@ -71,7 +71,7 @@ if (actualWaveSha !== WAVEMAP_SHA) throw new Error(`wave-map sha mismatch: ${act
  * the same way as the 3 canonical docs; a missing/mismatched file blocks
  * extraction entirely, exactly like a canonical doc mismatch would.
  */
-const NEWGAP_MATRIX_SHA = '30d561844b742556cf071b6078626df8e0f21f7dd85a8824658f5ab33320d173'
+const NEWGAP_MATRIX_SHA = '43d6c2a8b68675c7b42132f40a3a7739a8fad76623c5e05203b5d2ccb42fcb88'
 const NEWGAP_WAVEMAP_SHA = 'e309e6a4c9bf17c5bcd5565348b3664df428956ed8bf6e6f7878b8aab2e9fc5e'
 const NEWGAP_SOURCES = [
   { matrix: 'base-align-v2/new-gap-matrix.md', matrixSha: NEWGAP_MATRIX_SHA, waveMap: 'base-align-v2/new-gap-wavemap.md', waveMapSha: NEWGAP_WAVEMAP_SHA },

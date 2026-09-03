@@ -890,7 +890,7 @@ adjudication:
       packages/subagent/subagent/src/request.ts: "P5-05"
       packages/subagent/subagent/src/result.ts: "P5-06"
     sequences:
-      packages/execution/execution-world/src/types.ts: ["P3-01", "P3-09", "P3-04", "P3-05"]
+      packages/execution/execution-world/src/types.ts: ["P3-01", "P3-09", "P3-04", "P3-05", "P3-13"]
       packages/kernel/trust-kernel/src/types.ts: ["P0-02", "P1-02", "P2-02"]
       packages/subagent/subagent/src/request.ts: ["P5-05", "P5-07", "P5-08"]
       packages/subagent/subagent/src/result.ts: ["P5-06", "P6-09", "P5-07", "P5-08"]
@@ -901,6 +901,8 @@ adjudication:
         1: "P3-01"
       - 0: "P3-05"
         1: "P3-04"
+      - 0: "P3-13"
+        1: "P3-05"
       - 0: "P2-02"
         1: "P0-02"
       - 0: "P2-02"
@@ -1001,8 +1003,8 @@ remainingPending:
 fileOwnership:
   writtenFiles: 443
   statusCounts:
-    sole: 417
-    sequential: 22
+    sole: 416
+    sequential: 23
     serialized: 4
     conflict: 0
   conflictsPendingAdjudication: 0
@@ -3327,11 +3329,11 @@ epics:
     - path: "packages/code-runtime/code-runtime-worker-thread/src/protocol.ts"
       kind: "B"
     - path: "packages/execution/execution-world/src/index.ts"
-      kind: "B"
+      kind: "P"
     - path: "packages/execution/execution-world/src/types.ts"
-      kind: "B"
+      kind: "P"
     - path: "packages/sandbox/sandbox/src/policy.ts"
-      kind: "B"
+      kind: "P"
     - path: "packages/code-runtime/code-runtime-worker-thread/src/policy.ts"
       kind: "N"
     - path: "packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts"

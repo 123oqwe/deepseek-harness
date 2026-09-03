@@ -10,13 +10,17 @@
  * program ran. This script closes that gap: it is the permanent, reusable
  * gate any future baseline re-anchor runs, replacing manual patrol.
  *
- * Every registry epic's `files[]` entries carry a `kind`: `B` (baseline --
- * this file is claimed to already exist at the pinned baseline SHA, per
- * `first100-requirements-matrix.md`'s own `[B]`/`[N]`/`[P]` legend), `N`
- * (new -- this epic creates the file for the first time), or `P`
- * (prior_output -- created by an earlier stage of the SAME epic; existence
- * depends on that epic's own build sequence, not the baseline tree, so it
- * is intentionally not checked here).
+ * Every registry epic's `files[]` entries carry a `kind`, per
+ * `first100-requirements-matrix.md`'s own canonical legend (its "阅读规则"
+ * section): `B` (`status: baseline` -- a static audit claim only, still
+ * needing real preflight verification per the legend's own parenthetical;
+ * this script IS that verification for existence specifically), `N` (this
+ * epic's own new deliverable), or `P` (`prior_output` -- produced by an
+ * EARLIER STAGE OR EARLIER PREDECESSOR EPIC, not necessarily the same
+ * epic; e.g. P3-08 marks P3-01's own `execution-world/src/index.ts` as
+ * `P`). A `P` reference's existence depends on this program's own build
+ * sequence (which epic/stage produces it, and whether that has run yet),
+ * never the baseline tree, so it is intentionally not checked here.
  *
  * Fail-closed default: any `kind: 'B'` reference that does not exist as a
  * real git blob at the given baseline SHA fails the run. A `kind: 'N'`

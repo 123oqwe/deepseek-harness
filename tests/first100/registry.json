@@ -60,7 +60,7 @@
       "role": "primaryLayer mapping + source-certified ambiguous ids + R0.1/R0.4 rule set"
     },
     "base-align-v2/new-gap-matrix.md": {
-      "sha256": "30d561844b742556cf071b6078626df8e0f21f7dd85a8824658f5ab33320d173",
+      "sha256": "43d6c2a8b68675c7b42132f40a3a7739a8fad76623c5e05203b5d2ccb42fcb88",
       "role": "BASE-ALIGN-v2 new-gap epic matrix-format source"
     },
     "base-align-v2/new-gap-wavemap.md": {
@@ -5959,15 +5959,15 @@
         },
         {
           "path": "packages/execution/execution-world/src/index.ts",
-          "kind": "B"
+          "kind": "P"
         },
         {
           "path": "packages/execution/execution-world/src/types.ts",
-          "kind": "B"
+          "kind": "P"
         },
         {
           "path": "packages/sandbox/sandbox/src/policy.ts",
-          "kind": "B"
+          "kind": "P"
         },
         {
           "path": "packages/code-runtime/code-runtime-worker-thread/src/policy.ts",
@@ -6004,7 +6004,7 @@
       ],
       "acceptanceSource": {
         "path": "base-align-v2/new-gap-matrix.md",
-        "sha256": "30d561844b742556cf071b6078626df8e0f21f7dd85a8824658f5ab33320d173",
+        "sha256": "43d6c2a8b68675c7b42132f40a3a7739a8fad76623c5e05203b5d2ccb42fcb88",
         "line": 43
       },
       "validation": [
@@ -6068,7 +6068,7 @@
         "kind": "BASE-ALIGN-v2 new-gap",
         "source": {
           "path": "spec/first100/sources/base-align-v2/new-gap-matrix.md",
-          "sha256": "30d561844b742556cf071b6078626df8e0f21f7dd85a8824658f5ab33320d173"
+          "sha256": "43d6c2a8b68675c7b42132f40a3a7739a8fad76623c5e05203b5d2ccb42fcb88"
         },
         "rationaleDoc": "spec/first100/sources/base-align-v2/upstream-status-COMPLETE.md §三",
         "authorization": "decisions-approved.md#C8"

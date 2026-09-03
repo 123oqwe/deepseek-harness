@@ -7,8 +7,8 @@
   },
   "writtenFiles": 443,
   "statusCounts": {
-    "sole": 417,
-    "sequential": 22,
+    "sole": 416,
+    "sequential": 23,
     "serialized": 4,
     "conflict": 0
   },
@@ -1471,10 +1471,12 @@
     "packages/execution/execution-world/src/index.ts": {
       "owners": [
         "P3-01",
+        "P3-13",
         "P3-08"
       ],
       "waves": [
         7,
+        9,
         10
       ],
       "status": "SEQUENTIAL"
@@ -1504,11 +1506,13 @@
         "P3-01",
         "P3-09",
         "P3-04",
-        "P3-05"
+        "P3-05",
+        "P3-13"
       ],
       "waves": [
         7,
         8,
+        9,
         9,
         9
       ],
@@ -1519,7 +1523,8 @@
           "P3-01",
           "P3-09",
           "P3-04",
-          "P3-05"
+          "P3-05",
+          "P3-13"
         ]
       }
     },
@@ -3329,12 +3334,14 @@
     },
     "packages/sandbox/sandbox/src/policy.ts": {
       "owners": [
-        "P3-02"
+        "P3-02",
+        "P3-13"
       ],
       "waves": [
-        8
+        8,
+        9
       ],
-      "status": "SOLE"
+      "status": "SEQUENTIAL"
     },
     "packages/sandbox/sandbox/src/process.ts": {
       "owners": [
@@ -4745,7 +4752,8 @@
         "P3-01",
         "P3-09",
         "P3-04",
-        "P3-05"
+        "P3-05",
+        "P3-13"
       ],
       "packages/kernel/trust-kernel/src/types.ts": [
         "P0-02",
@@ -4776,6 +4784,10 @@
       [
         "P3-05",
         "P3-04"
+      ],
+      [
+        "P3-13",
+        "P3-05"
       ],
       [
         "P2-02",
