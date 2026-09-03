@@ -1,0 +1,48 @@
+{
+  "name": "@deepseek-ai/dsh-plugin-provenance",
+  "description": "Contract-stage type surface and pure decision logic for Epic P1-02's plugin signature, source provenance, and dependency SBOM verification: Sigstore-style identity/provenance and org offline signing, digest/source-commit/builder-identity/SBOM checks against the TrustKernel-held trust root, and explicit-profile-gated unsigned-dev mode",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/plugin/plugin-provenance"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./signature": {
+      "types": "./lib/types/signature.d.ts",
+      "default": "./lib/types/signature.js"
+    },
+    "./sbom": {
+      "types": "./lib/types/sbom.d.ts",
+      "default": "./lib/types/sbom.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
+  }
+}

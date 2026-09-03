@@ -313,6 +313,7 @@
     { "path": "./packages/todo/tool-todo" },
     { "path": "./packages/plan/plan-mode" },
     { "path": "./packages/plugin/plugin-manifest" },
+    { "path": "./packages/plugin/plugin-provenance" },
     { "path": "./packages/preset/agent-presets" },
     { "path": "./packages/preset/persona" },
     { "path": "./packages/guard/repeat-tool-reminder" },
