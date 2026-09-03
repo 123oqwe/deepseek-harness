@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T17:30:09.509Z",
-  "inputDigest": "0fb3f59b8c4decd592e06f1121457e6d860f59ed3369e4f65df18ea12b7959c3",
+  "lastUpdatedUtc": "2026-09-03T18:04:27.149Z",
+  "inputDigest": "e5520525ce7ac629f7a30c7c82b7ed40272be135a56bbc72af2deda04adf8383",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1819,7 +1819,50 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "2f5291c323d6957f450fa037543a9fd7c4327074",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33786571517",
+          "observationReportPath": "/tmp/ci-run-33786571517/first100-vitest-report-2f5291c323d6957f450fa037543a9fd7c4327074/vitest-report.json",
+          "observationSha256": "3e687eee668e02a4856443542e03479b6284f27414c71efd464b5ea61ac90cc8",
+          "expectCasesMatched": [
+            "issueToken mints a root token with exactly these ten fields, no more and no fewer",
+            "verifyToken accepts a token issued by the real TrustKernel under the same trust root",
+            "verifyToken rejects a token whose signature does not match its claimed content (tampered)",
+            "verifyToken accepts a token one millisecond before it expires",
+            "verifyToken rejects a token at the exact instant it expires",
+            "verifyToken rejects an already-expired token",
+            "verifyToken accepts a token whose nonce has not been seen before",
+            "verifyToken rejects a token whose nonce was already seen (replay)",
+            "a request identical to the parent's own scope on every dimension is accepted",
+            "requesting a strict verb subset of the parent's verbs is accepted",
+            "requesting a verb absent from the parent's verbs is rejected",
+            "requesting a strict resource subset of the parent's resources is accepted",
+            "requesting a resource absent from the parent's resources is rejected",
+            "requesting exactly the parent's budget is accepted (exact boundary)",
+            "requesting one unit more than the parent's budget is rejected (one past the exact boundary)",
+            "requesting a strictly lower budget than the parent's is accepted",
+            "requesting an unconstrained (omitted) budget under a budget-constrained parent is rejected as wider",
+            "requesting any budget under an unconstrained parent is accepted",
+            "requesting exactly the parent's expiry is accepted (exact boundary)",
+            "requesting an expiry one millisecond past the parent's is rejected (one past the exact boundary)",
+            "requesting a strictly earlier expiry than the parent's is accepted",
+            "a request violating both verbs and budget is rejected naming verbs first (fixed check order)",
+            "a successful attenuation inherits tenant/capability from the parent and derives delegationDepth/parentDigest, never from the request",
+            "tool calls without a presented token are refused",
+            "plugin-rpc calls without a presented token are refused",
+            "external-agent calls without a presented token are refused",
+            "execution-world calls without a presented token are refused",
+            "tool calls with a presented token are not refused for missing presence",
+            "plugin-rpc calls with a presented token are not refused for missing presence",
+            "external-agent calls with a presented token are not refused for missing presence",
+            "execution-world calls with a presented token are not refused for missing presence",
+            "revoking the root ancestor invalidates a grandchild many delegation hops away",
+            "revoking an intermediate ancestor invalidates its descendant",
+            "revoking a token's own digest invalidates it directly",
+            "revoking an unrelated digest does not invalidate an unconnected lineage",
+            "redactTokenForLog produces exactly digest/subject/tenant/capability/delegationDepth/expiresAt — never verbs, resources, constraints, nonce, or the raw signature"
+          ],
+          "capturedAtUtc": "2026-09-03T18:04:26.809Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -1832,7 +1875,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "2f5291c323d6957f450fa037543a9fd7c4327074",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1850,7 +1893,27 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "2f5291c323d6957f450fa037543a9fd7c4327074",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33786571517",
+          "observationReportPath": "/tmp/ci-run-33786571517/first100-vitest-report-2f5291c323d6957f450fa037543a9fd7c4327074/vitest-report.json",
+          "observationSha256": "3e687eee668e02a4856443542e03479b6284f27414c71efd464b5ea61ac90cc8",
+          "expectCasesMatched": [
+            "must[0]: a constructed manifest carries actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements",
+            "must[1]: an execution attempt with no manifest appended for its actionId is refused before any policy/approval step could run",
+            "must[2]: a code-mode embedded sub-dispatch is admitted when its manifest precedes it, and refused exactly like a native call when it does not",
+            "must[2]: a plugin RPC call is admitted when its manifest precedes it, and refused exactly like a native call when it does not",
+            "a manifest generated and durably appended before execution admits that exact execution attempt",
+            "an external write whose actionId has no preceding manifest is blocked, even when unrelated manifests already exist in the log",
+            "a manifest appended for the right actionId but the wrong arguments hash does not admit execution (tamper/substitution is not a preceding manifest)",
+            "objects with the same keys in a different order hash identically",
+            "strings in different Unicode normalization forms (NFC vs NFD) hash identically",
+            "numbers in different literal representations of the same value hash identically",
+            "arguments that differ semantically hash to different values (canonicalization is not a constant function)",
+            "an action whose side effect cannot be classified defaults to the highest-risk class and requires approval",
+            "an action with a declared, classifiable side effect is classified as declared, not defaulted to the unclassifiable high-risk fallback"
+          ],
+          "capturedAtUtc": "2026-09-03T18:04:27.148Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -1863,7 +1926,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "2f5291c323d6957f450fa037543a9fd7c4327074",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
