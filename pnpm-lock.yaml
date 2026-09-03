@@ -9925,6 +9925,9 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
@@ -9940,6 +9943,9 @@ importers:
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../workspace-trust
 
   packages/workspace/workspace-trust:
     devDependencies:

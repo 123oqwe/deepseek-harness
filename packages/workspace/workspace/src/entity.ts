@@ -5,15 +5,25 @@
  * `updatedAt` stamping and invalid-account pruning happen exactly once.
  * Not re-exported from the package entrypoint — consumers see only the
  * `Workspace` interface.
+ *
+ * The entity also holds this workspace's trust binding (Epic P1-07 must[0]).
+ * That binding is process-local, never part of {@link WorkspaceRecord}: see
+ * this package's README for why durable trust is deferred. Every trust
+ * DECISION comes from `@deepseek-ai/dsh-workspace-trust`'s pure functions —
+ * this module contributes only the real `fs.realpath`/`fs.stat` observation
+ * they consume, and never re-derives what an observation means.
  * @module @deepseek-ai/dsh-workspace/src/entity
  */
 
 import { stat } from 'node:fs/promises'
+import type { Principal } from '@deepseek-ai/dsh-principal/types'
 import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
 import type { KvTable } from '@deepseek-ai/dsh-storage-domain'
+import { bindWorkspaceTrust, reconcileWorkspaceTrust, requestTrustUpgrade } from '@deepseek-ai/dsh-workspace-trust'
+import type { TrustRecord, TrustState, TrustUpgradeResult } from '@deepseek-ai/dsh-workspace-trust/types'
 import type { WorkspaceRecord } from './spec.ts'
 import type { Workspace, WorkspaceId } from './types.ts'
-import { realpathNormalize } from './paths.ts'
+import { observeWorkspaceIdentity, realpathNormalize } from './paths.ts'
 
 /** An insertSessionBefore request named a session or anchor not on the account (storage failures stay plain errors). */
 export class WorkspaceMoveInvalidError extends Error {
@@ -68,16 +78,23 @@ const unchangedSentinel = new Error('workspace record unchanged (internal sentin
 /** The single {@link Workspace} implementation; constructed only by the registry. */
 export class WorkspaceEntity implements Workspace {
   private record: WorkspaceRecord
+  private trustRecord?: TrustRecord
 
   /**
    * @param host - Registry-owned table, session-path index, and header reads.
    * @param id - The record's stable id.
    * @param record - The validated record snapshot loaded or just written.
+   * @param openedPath - The path spelling this workspace was opened through,
+   * re-resolved on every trust observation. It is the spelling and not
+   * `record.path` because a symlink retargeted between two observations is one
+   * of the identity changes trust must not survive, and canonicalizing it away
+   * at create time would hide exactly that change.
    */
   constructor(
     private readonly host: WorkspaceEntityHost,
     readonly id: WorkspaceId,
     record: WorkspaceRecord,
+    private readonly openedPath: string,
   ) {
     this.record = record
   }
@@ -185,6 +202,61 @@ export class WorkspaceEntity implements Workspace {
       // directory is not usable right now; the record itself never mutates.
       return 'missing-dir'
     }
+  }
+
+  /**
+   * Re-observe {@link openedPath} and reconcile this workspace's trust binding
+   * against what the filesystem now reports (Epic P1-07 must[0],
+   * acceptance[1]). Seeds an `'untrusted'` binding on the first call.
+   *
+   * The identity comparison itself is
+   * `@deepseek-ai/dsh-workspace-trust`'s `reconcileWorkspaceTrust`, so a
+   * directory replaced in place, a symlink retargeted, and a directory moved
+   * are demoted by the same rule that package already documents — nothing here
+   * decides which differences matter. A path that no longer resolves yields no
+   * identity to compare, and is demoted to `'untrusted'` on the last identity
+   * observed rather than left at its prior state.
+   * @returns this workspace's trust binding as of this observation.
+   * @throws the `fs` rejection when the very first observation fails: an
+   * unobservable workspace that was never bound has no identity to report.
+   */
+  async reconcileTrust(): Promise<TrustRecord> {
+    const at = new Date().toISOString()
+    const current = this.trustRecord
+    let observed
+    try {
+      observed = await observeWorkspaceIdentity(this.openedPath)
+    } catch (error) {
+      if (current === undefined) throw error
+      this.trustRecord = bindWorkspaceTrust(current.identity, at)
+      return this.trustRecord
+    }
+    this.trustRecord = current === undefined
+      ? bindWorkspaceTrust(observed, at)
+      : reconcileWorkspaceTrust(current, observed, at)
+    return this.trustRecord
+  }
+
+  /**
+   * Raise this workspace's trust to `target` on `hostPrincipal`'s authority
+   * (Epic P1-07 must[2]'s host-user gate). The binding is reconciled first, so
+   * an upgrade is always adjudicated against a freshly observed identity and
+   * never against a stale one that a directory swap has already invalidated.
+   *
+   * The adjudication and the audit record are
+   * `@deepseek-ai/dsh-workspace-trust`'s `requestTrustUpgrade`; a refusal
+   * leaves the reconciled binding untouched. The returned audit record is not
+   * appended anywhere yet — see this package's README for what that needs.
+   * @param target - The trust state to raise this workspace to.
+   * @param hostPrincipal - The principal presented as the upgrade's author.
+   * @returns the upgrade result, carrying the new binding and its audit record
+   * on success and a refusal reason otherwise.
+   */
+  async upgradeTrust(target: TrustState, hostPrincipal: Principal): Promise<TrustUpgradeResult> {
+    const current = await this.reconcileTrust()
+    const result = requestTrustUpgrade(current, target, hostPrincipal, new Date().toISOString())
+    if (result.upgraded) this.trustRecord = result.record
+    return result
   }
 
   /**

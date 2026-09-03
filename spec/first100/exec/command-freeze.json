@@ -2221,6 +2221,42 @@
         "testsDiscovered": 17
       },
       "note": "P-stage RED scaffold for P6-01, attempt/P6-01-P @ cdb39bc042 (branched from first100-exec @ b1803848df). 17/17 genuinely failed on real not-implemented errors or real assertion mismatches, zero module/syntax errors; C-stages own 19 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: a DURABLE file-backed provider (createDurableFileMemoryProvider). Both C-stage providers are in-memory and lose every record at process exit, which contradicts this subsystems own definition of memory as cross-session and long-lived. Every durability case constructs a SECOND provider instance over the same directory sharing no in-memory value, so an in-memory double cannot pass; durability is declared per-directory, not per-instance, and ids are uuid-based so a second instance cannot re-mint an earlier id. TWO DECLARED-SCOPE FINDINGS, both reported rather than silently acted on: (1) the memory/access durable session event was deliberately NOT implemented here despite the Supervisors own dispatch prompt naming it as a candidate -- the landed C-stage README and src/index.ts module JSDoc BOTH explicitly assign it to the Usage stage, and emitting it from a provider would put session-log wiring inside a backend when the event is MemoryRuntimes own to mint at the seam; the Writer pushed back on the prompt with that evidence, correctly. (2) packages/session-query/session-query/src/types.ts (P-stages other declared file) needs NO change and was not modified -- it is entirely session-transcript corpus vocabulary with zero memory references, and P6-01s only session-query-touching clause is acceptance[2] (Memory is NOT Session Query, boundary documented), which C-stage already discharged by keeping the two vocabularies disjoint; adding any memory-aware type there would WEAKEN that acceptance clause rather than satisfy it. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workspace/workspace/tests/trust-observation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "observes the fs.realpath canonical path for a symlinked, dot-segmented spelling of the same directory",
+        "observes exactly the device and inode fs.stat reports for that canonical path",
+        "binds a freshly created workspace to its observed identity at untrusted, with no grantor",
+        "refuses a trust upgrade authored by a non-host principal, leaving the workspace untrusted",
+        "keeps host-granted trust across a re-observation of an unchanged directory",
+        "drops trust when the workspace directory is replaced in place under the same canonical path",
+        "drops trust when the symlink the workspace was opened through is retargeted to another directory",
+        "drops trust when the workspace directory is moved out from under the path it was opened at",
+        "does not carry trust to the new canonical path of a moved directory that kept its inode"
+      ],
+      "files": [
+        "packages/workspace/workspace/tests/trust-observation.spec.ts",
+        "packages/workspace/workspace/src/paths.ts",
+        "packages/workspace/workspace/src/entity.ts",
+        "packages/workspace/workspace/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T21:43:52Z",
+      "dryRunProof": {
+        "treeSha": "ec77316dd0728144466cb5f3c6e274e57e8faf4d",
+        "testsDiscovered": 9
+      },
+      "note": "P-stage RED scaffold for P1-07, attempt/P1-07-P (branched from land-base-align-v2 @ 6684d54579). 9/9 genuinely failed on real 'is not a function' errors for not-yet-existing exports, zero module/syntax/import-resolution errors; C-stage's 11 frozen cases independently re-confirmed still green. Genuinely new at P-stage: real filesystem observation. Every workspace-trust export is pure over caller-supplied data and never stats a path, so must[0]'s 'canonical realpath + inode/volume identity' has no producer yet; P adds observeWorkspaceIdentity (fs.realpath + fs.stat dev/ino) in paths.ts and binds it to the real Workspace entity/registry, delegating every DECISION to C's bindWorkspaceTrust/reconcileWorkspaceTrust/requestTrustUpgrade rather than a second decision table. acceptance[1]'s three vectors are exercised against a real filesystem (a directory replaced in place, a real symlink retargeted, a real rename), never a hand-built WorkspaceIdentity. CLAUSE-OWNERSHIP DECISION, reported not guessed: this stage owns must[0] and acceptance[1] only. acceptance[0] (zero subprocess/network/credential read on opening a malicious repo) and must[1]'s real load-gating are NOT covered here -- their load sites are apps/cli/src/profile-boot.ts and the project plugin/hook/MCP/skill loaders, all in stages.U's declared file scope and off-limits to P; a workspace-package proxy for them would assert nothing about the real loaders. must[2]'s host-user interaction (U) and its Trust Kernel audit append (Fiber-fix-gated) likewise stay out; only the non-host-principal refusal is asserted here, as the wiring check that P's upgrade path delegates to C rather than raising trust itself. acceptance[2] (downgrade revokes) is left to U/F: C's downgradeTrust is already green and pure, and a provider wrapper around it would be a duplicate observation. BUILD-INFRASTRUCTURE EDITS, declared: packages/workspace/workspace/{package.json,tsconfig.json} gain @deepseek-ai/dsh-workspace-trust and @deepseek-ai/dsh-principal edges; no cycle (neither package depends on dsh-workspace). KNOWN GAP recorded for the maintainer: the trust record is per-entity in-memory, not durable, because durable trust would require a WorkspaceRecord field in packages/workspace/workspace/src/spec.ts, which is outside stages.P's declared 3-file scope -- flagged rather than silently patched. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
