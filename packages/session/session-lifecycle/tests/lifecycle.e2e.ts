@@ -122,14 +122,20 @@ describe('P6-07 Contract — must[0]: listing supports tenant/workspace/status/t
     expect(page.items.map(record => record.header.id)).toStrictEqual([SessionId('s-archived')])
   })
 
-  it('filters by a time range, admitting sessions whose createdAt falls within [from, to] inclusive and excluding ones outside it', () => {
+  it('filters by a time range, admitting sessions whose createdAt falls within [from, to] inclusive -- including both boundary values themselves -- and excluding ones outside it', () => {
+    const from = FIXED_TIME - 500
+    const to = FIXED_TIME + 500
     const records = [
-      fixtureRecord({ id: SessionId('s-before'), createdAt: FIXED_TIME - 1000 }),
+      fixtureRecord({ id: SessionId('s-before'), createdAt: from - 1 }),
+      fixtureRecord({ id: SessionId('s-at-from'), createdAt: from }),
       fixtureRecord({ id: SessionId('s-in-range'), createdAt: FIXED_TIME }),
-      fixtureRecord({ id: SessionId('s-after'), createdAt: FIXED_TIME + 1000 }),
+      fixtureRecord({ id: SessionId('s-at-to'), createdAt: to }),
+      fixtureRecord({ id: SessionId('s-after'), createdAt: to + 1 }),
     ]
-    const page = listSessions(records, { filters: [{ kind: 'time', from: FIXED_TIME - 500, to: FIXED_TIME + 500 }] })
-    expect(page.items.map(record => record.header.id)).toStrictEqual([SessionId('s-in-range')])
+    const page = listSessions(records, { filters: [{ kind: 'time', from, to }] })
+    expect(page.items.map(record => record.header.id)).toStrictEqual([
+      SessionId('s-at-from'), SessionId('s-in-range'), SessionId('s-at-to'),
+    ])
   })
 
   it('combines multiple filter clauses with AND semantics, admitting only records matching every clause', () => {
@@ -187,16 +193,24 @@ describe('P6-07 Contract — must[1]: soft delete, legal hold, hard erase, and a
   const dispositionProducers: readonly {
     readonly label: string
     readonly produce: (record: SessionLifecycleRecord) => SessionLifecycleRecord
-    readonly expectedKind: SessionDisposition['kind']
+    readonly expectedDisposition: SessionDisposition
   }[] = [
-    { label: 'archiveSession', produce: record => archiveSession(record, ACTOR, FIXED_TIME), expectedKind: 'archived' },
-    { label: 'softDeleteSession', produce: record => softDeleteSession(record, ACTOR, FIXED_TIME), expectedKind: 'soft-deleted' },
+    {
+      label: 'archiveSession',
+      produce: record => archiveSession(record, ACTOR, FIXED_TIME),
+      expectedDisposition: { kind: 'archived', archivedAt: FIXED_TIME, archivedBy: ACTOR },
+    },
+    {
+      label: 'softDeleteSession',
+      produce: record => softDeleteSession(record, ACTOR, FIXED_TIME),
+      expectedDisposition: { kind: 'soft-deleted', deletedAt: FIXED_TIME, deletedBy: ACTOR },
+    },
   ]
 
-  it.each(dispositionProducers)('$label produces exactly the $expectedKind disposition, never conflated with the other', ({ produce, expectedKind }) => {
+  it.each(dispositionProducers)('$label produces exactly the expected disposition object -- including the real attribution fields passed in, not just its kind -- never conflated with the other', ({ produce, expectedDisposition }) => {
     const before = fixtureRecord()
     const after = produce(before)
-    expect(after.disposition.kind).toBe(expectedKind)
+    expect(after.disposition).toStrictEqual(expectedDisposition)
   })
 
   it('placeLegalHold adds an independent hold marker without changing the session\'s disposition, proving legal hold is not itself a disposition value', () => {
@@ -209,8 +223,8 @@ describe('P6-07 Contract — must[1]: soft delete, legal hold, hard erase, and a
   it('a session can be simultaneously soft-deleted and under legal hold, proving legal hold and deletion are independent concerns rather than conflated', () => {
     const softDeleted = fixtureRecord({ disposition: { kind: 'soft-deleted', deletedAt: FIXED_TIME, deletedBy: ACTOR } })
     const held = placeLegalHold(softDeleted, ACTOR, 'litigation pending', FIXED_TIME)
-    expect(held.disposition.kind).toBe('soft-deleted')
-    expect(held.legalHold?.heldBy).toBe(ACTOR)
+    expect(held.disposition).toStrictEqual(softDeleted.disposition)
+    expect(held.legalHold).toStrictEqual({ heldAt: FIXED_TIME, heldBy: ACTOR, reason: 'litigation pending' })
   })
 
   it('hardErase is a one-way destructive operation, not a disposition value -- its result carries no disposition field at all', () => {
@@ -227,6 +241,14 @@ describe('P6-07 Contract — acceptance[1]: legal hold blocks hard erase', () =>
   it('assertNoLegalHold refuses a session under legal hold with LegalHoldBlocksErasureError', () => {
     const held = fixtureRecord({ legalHold: { heldAt: FIXED_TIME, heldBy: ACTOR, reason: 'litigation pending' } })
     expect(() => assertNoLegalHold(held)).toThrow(LegalHoldBlocksErasureError)
+  })
+
+  it('assertNoLegalHold refuses a session that is under legal hold AND already soft-deleted, proving disposition never bypasses the hold check', () => {
+    const heldAndSoftDeleted = fixtureRecord({
+      disposition: { kind: 'soft-deleted', deletedAt: FIXED_TIME, deletedBy: ACTOR },
+      legalHold: { heldAt: FIXED_TIME, heldBy: ACTOR, reason: 'litigation pending' },
+    })
+    expect(() => assertNoLegalHold(heldAndSoftDeleted)).toThrow(LegalHoldBlocksErasureError)
   })
 
   it('a session with no legal hold is admitted: assertNoLegalHold\'s proof authorizes a real hardErase call all the way through', () => {
@@ -260,13 +282,17 @@ describe('P6-07 Contract — must[2]: deletion propagates to query-index/attachm
 })
 
 describe('P6-07 Contract — acceptance[2]: an authorized erase propagates completely to every dependent store', () => {
-  it('an authorized hardErase (no legal hold) reaches all four dependent-store kinds, in order, in its propagation result', () => {
+  it('an authorized hardErase (no legal hold) reaches all four dependent-store kinds, in order, with the full real target shape per kind -- not just kind order -- matching must[2]\'s standalone propagateDeletion(HARD_ERASE_POLICY) rigor', () => {
     const clear = fixtureRecord()
     const dependents = fixtureDependents(clear.header.id)
     const proof = assertNoLegalHold(clear)
     const result = hardErase(clear, dependents, proof, FIXED_TIME)
-    expect(result.propagation.targets.map(target => target.kind)).toStrictEqual([
-      'query-index', 'attachments', 'memory', 'artifacts',
+    expect(result.erasedAt).toBe(FIXED_TIME)
+    expect(result.propagation.targets).toStrictEqual([
+      { kind: 'query-index', action: 'destroy', sessionId: dependents.sessionId },
+      { kind: 'attachments', action: 'destroy', attachmentIds: dependents.attachmentIds },
+      { kind: 'memory', action: 'destroy', memoryRefs: dependents.memoryRefs },
+      { kind: 'artifacts', action: 'destroy', artifactRefs: dependents.artifactRefs },
     ])
   })
 })
