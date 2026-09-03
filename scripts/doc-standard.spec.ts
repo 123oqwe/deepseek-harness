@@ -64,6 +64,7 @@ const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
   'packages/plugin/plugin-compat': 'Contract-stage type declarations and a pure whole-graph solver function only; no plugin entry or mount configuration.',
   'packages/plugin/plugin-manifest': 'Contract-stage type declarations and pure validation functions only; no plugin entry or mount configuration.',
   'packages/plugin/plugin-ownership': 'Contract-stage type declarations and pure decision-function signatures only; no plugin entry or mount configuration.',
+  'packages/plugin/plugin-provenance': 'Contract-stage type declarations and pure verification functions only; no plugin entry or mount configuration.',
   'packages/sandbox/sandbox-windows-acl': 'Windows ACL sandbox library consumed by sandbox-local.',
   'packages/sdk/client': 'Client-process library; the spawned runtime owns plugin behavior.',
   'packages/sdk/protocol': 'Wire-protocol library with type declarations only.',
