@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`dsh-workspace` gives a host a persistent set of workspaces: named user directories, each with the sessions that ran in it, kept in a stable order across restarts. With it, a UI can show a sidebar of projects, attach sessions to the right project, hide a session from the grouping without losing it, and remove a project — removal never deletes the folder or the session histories, which become ungrouped. Use it in GUI or host compositions that need durable project grouping; headless and minimal runs can omit it entirely. The package is host-side only: the model, tools, and agent loop never see it, so it adds no tokens, prompts, or request context. It needs a session store and a persistence backend mounted alongside it; setup is a few composition rows.
+`dsh-workspace` gives a host a persistent set of workspaces: named user directories, each with the sessions that ran in it, kept in a stable order across restarts. With it, a UI can show a sidebar of projects, attach sessions to the right project, hide a session from the grouping without losing it, and remove a project — removal never deletes the folder or the session histories, which become ungrouped. Use it in GUI or host compositions that need durable project grouping; headless and minimal runs can omit it entirely. The package is host-side only: the model, tools, and agent loop never see it, so it adds no tokens, prompts, or request context. It also holds each project's trust state, bound to the directory the filesystem reports and dropped whenever that directory changes identity. It needs a session store and a persistence backend mounted alongside it; setup is a few composition rows.
 
 ## Table of Contents
 
@@ -63,6 +63,19 @@ ctx.workspaceRegistry.list() // shows the project, newest first
 
 A session joins the project of the directory it runs in: create a session in a project's directory and it appears under that project, newest first. A session can only belong to one project. A session whose directory cannot be validated — no recorded directory, or a moved or deleted folder — cannot join and stays ungrouped.
 
+### Trusting a project directory
+
+Every project carries a trust state — `untrusted`, `trusted-read`, or `trusted-execute` — bound to the directory the filesystem actually reports rather than to its path alone. A new project starts untrusted, and only a host user can raise it:
+
+```text
+await ctx.workspaceRegistry.workspaceTrust(project.id) // untrusted, freshly observed
+const result = await ctx.workspaceRegistry.upgradeWorkspaceTrust(project.id, 'trusted-execute', hostUser)
+// result.upgraded is false with reason 'non-host-principal' unless hostUser is a 'user' principal;
+// on success it carries the new binding and the audit record the upgrade is meant to be recorded by
+```
+
+Trust is never inherited across a change of directory: reading it re-observes the folder, and a directory replaced in place, a symlink retargeted elsewhere, or the folder moved away all drop the project back to untrusted. What a trust state then permits or refuses to load is decided by [`@deepseek-ai/dsh-workspace-trust`](../workspace-trust/README.md) and enforced at the loaders themselves, which are not part of this package.
+
 ### Hiding sessions and removing projects
 
 Hide a session from the grouping when it should stop appearing there: it disappears from the visible list, while its session, history, and place in the project stay intact. Remove a project when it is no longer needed: it leaves the list, and its folder, files, and session histories are never touched — those sessions become ungrouped. Adding the same directory again afterwards starts a fresh project without the old sessions.
@@ -80,6 +93,8 @@ This section explains the design decisions behind the feature and points at the 
 ### Design philosophy
 
 - **One record per canonical path.** `fs.realpath` is the single uniqueness canon: paths are stored canonicalized, so a symlink to an owned directory collides, and uniqueness is string equality of canonical paths.
+- **Trust binds to an observed identity, and this package only observes it.** `observeWorkspaceIdentity` reads the canonical path and the `fs.Stats` device/inode pair together; every decision about what a change of identity means, who may raise trust, and what a state permits belongs to `@deepseek-ai/dsh-workspace-trust`'s pure functions. There is deliberately no second decision table here.
+- **Trust is re-observed, never remembered across a change.** Each read of a project's trust re-resolves the path spelling it was opened through, so a retargeted symlink is seen as the different directory it now is.
 - **Membership is ownership plus a live cwd fact.** The record's ordered `sessionIds` is the ownership truth; the startup header index validates it, and `sessionIds` filters on read while the next mutation prunes durably.
 - **Header-only reads.** Bootstrap and attach validation read `SessionHeader` fields only; event bodies are never loaded.
 - **Two-write mutations with an explicit marker.** Create and delete persist a `pendingMutation` marker before the record/order pair can diverge, so startup completes exactly the interrupted operation and unmarked divergence fails loud as corruption.
@@ -87,17 +102,17 @@ This section explains the design decisions behind the feature and points at the 
 
 ### API behavior
 
-The API is one small family with two owners: `WorkspaceRegistry` creates, orders, and deletes projects and manages their session accounting; the `Workspace` entity exposes the display title, directory status, and the session projection. Per-method contracts live in the code, not this README — see [src/index.ts](src/index.ts) and [src/entity.ts](src/entity.ts).
+The API is one small family with two owners: `WorkspaceRegistry` creates, orders, and deletes projects, manages their session accounting, and serves their trust bindings (`workspaceTrust`, `upgradeWorkspaceTrust`); the `Workspace` entity exposes the display title, directory status, and the session projection. Per-method contracts live in the code, not this README — see [src/index.ts](src/index.ts) and [src/entity.ts](src/entity.ts).
 
 ### Source map
 
 | File | Role |
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: `WorkspaceRegistry` service, header index, bootstrap, operation serialization |
-| [`src/entity.ts`](src/entity.ts) | Package-private `Workspace` implementation and its single `mutate` write path |
+| [`src/entity.ts`](src/entity.ts) | Package-private `Workspace` implementation, its single `mutate` write path, and its process-local trust binding |
 | [`src/spec.ts`](src/spec.ts) | Domain declaration: record schema, registry state, `defineDomain` spec |
 | [`src/types.ts`](src/types.ts) | Public `Workspace` interface and `WorkspaceId` brand |
-| [`src/paths.ts`](src/paths.ts) | The `realpath` uniqueness canon |
+| [`src/paths.ts`](src/paths.ts) | The `realpath` uniqueness canon and `observeWorkspaceIdentity`, the canonical-path-plus-device/inode observation trust binds to |
 | [`src/invariant.ts`](src/invariant.ts) | Invariant companion: the entity cache mirrors the durable table |
 
 ### Durable shape
@@ -161,6 +176,10 @@ These limits define when the project list is a poor fit or needs special operati
 - **A session joins only with a recorded directory** — a session belongs to a project only when its record carries a directory that resolves to the project's path; sessions without one stay ungrouped, and a session from another directory cannot be moved in.
 - **External changes are seen late** — if another process deletes or damages a directory, the project reflects it only at the next refresh or restart.
 - **Archiving is one-way** — a hidden session keeps its history and its place, but no unarchive action exists yet; the archive set is a durable display filter.
+- **Trust is process-local and is not persisted** — a project's trust state lives only in the running registry: it is not a `WorkspaceRecord` field, so a restart re-observes every project and re-binds it at `untrusted`, and a host user's upgrade has to be granted again. Making trust durable is not designed here.
+- **Nothing consumes a project's trust state yet** — this package produces the binding and the refusal reason, but the project plugin, hook, MCP server, executable skill, and home/profile patch loaders do not consult it, so raising or dropping trust does not by itself change what loads. Wiring those loaders, and presenting the host user's upgrade interaction, are separate absent capabilities.
+- **The upgrade audit record is returned, never appended** — `upgradeWorkspaceTrust` hands back the audit record its caller is expected to record; no audit sink is written to. A real Trust Kernel audit append needs the vendored Cordis `Fiber` fix first ([boundary](../../../docs/architecture/trust-kernel-boundary.md)).
+- **A project rebuilt at startup is re-observed through its stored canonical path** — the spelling it was originally opened through does not survive the process, so a symlink retarget that happened while the host was not running is seen only as the different canonical path it now resolves to.
 - **Re-adding a directory starts fresh** — after removal, adding the same directory again creates a new project with an empty session list; the old sessions do not come back automatically.
 
 <a id="dev-note"></a>

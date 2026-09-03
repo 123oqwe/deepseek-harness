@@ -15,13 +15,26 @@ const hostUser = createUserPrincipal(PrincipalId('host-user'), TenantId('tenant-
 const serviceActor = createServicePrincipal(PrincipalId('svc'), TenantId('tenant-a'))
 
 const roots: string[] = []
-const disposers: (() => void)[] = []
+const disposers: (() => Promise<void>)[] = []
 
 /** A private temp root owned by exactly one test, canonicalized so no assertion compares a symlinked `/tmp` spelling. */
 async function tempRoot(): Promise<string> {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'dsh-p107-')))
   roots.push(root)
   return root
+}
+
+/**
+ * Recursively remove a directory, refusing any path that is not strictly
+ * inside a root this file itself created with `mkdtemp`. The recursive
+ * removals below exist to rebuild a directory under its old name; the
+ * containment check is asserted here rather than trusted at each call site so
+ * that no future edit can aim one at a caller-supplied or defaulted path.
+ */
+async function removeInsideTempRoot(path: string): Promise<void> {
+  const owner = roots.find(root => path.startsWith(`${root}/`))
+  if (owner === undefined) throw new Error(`refusing to remove '${path}': not inside a temp root of this test file`)
+  await rm(path, { recursive: true })
 }
 
 /** Boot the real storage/domain/registry composition over an empty session history. */
@@ -38,12 +51,12 @@ async function registry() {
     inspect: vi.fn(() => { throw new Error('event bodies must not be inspected') }),
   } as never)
   const fiber = await ctx.plugin(WorkspaceRegistry)
-  disposers.push(() => { fiber.dispose() })
+  disposers.push(async () => { await fiber.dispose() })
   return ctx.workspaceRegistry
 }
 
 afterEach(async () => {
-  for (const dispose of disposers.splice(0)) dispose()
+  for (const dispose of disposers.splice(0)) await dispose()
   for (const root of roots.splice(0)) await rm(root, { recursive: true, force: true })
 })
 
@@ -124,7 +137,7 @@ describe('acceptance[1]: trust is not inherited across a real identity change', 
     await workspaces.upgradeWorkspaceTrust(workspace.id, 'trusted-execute', hostUser)
     const before = await observeWorkspaceIdentity(dir)
 
-    await rm(dir, { recursive: true })
+    await removeInsideTempRoot(dir)
     await mkdir(dir)
     const after = await observeWorkspaceIdentity(dir)
     const record = await workspaces.workspaceTrust(workspace.id)

@@ -9,9 +9,11 @@ import { randomUUID } from 'node:crypto'
 import { stat } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
+import type { Principal } from '@deepseek-ai/dsh-principal/types'
 import type { SessionHeader, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-session-persistence'
 import type { DomainGlobal, KvTable } from '@deepseek-ai/dsh-storage-domain'
+import type { TrustRecord, TrustState, TrustUpgradeResult } from '@deepseek-ai/dsh-workspace-trust/types'
 import { WorkspaceEntity } from './entity.ts'
 import type { WorkspaceEntityHost } from './entity.ts'
 
@@ -24,7 +26,7 @@ import type { Workspace, WorkspaceId as WorkspaceIdBrand } from './types.ts'
 export type { Workspace } from './types.ts'
 export { workspaceDomainState, workspaceRecord, workspaceDomainSpec } from './spec.ts'
 export type { WorkspaceDomainState, WorkspaceRecord } from './spec.ts'
-export { realpathNormalize } from './paths.ts'
+export { observeWorkspaceIdentity, realpathNormalize } from './paths.ts'
 
 /** Identifies one workspace record (see `src/types.ts` for the brand rationale). */
 export type WorkspaceId = WorkspaceIdBrand
@@ -160,7 +162,51 @@ export class WorkspaceRegistry extends Service {
     if (!(await stat(canonical)).isDirectory()) {
       throw new Error(`cannot create a workspace at '${canonical}': path is not a directory`)
     }
-    return await this.enqueueOperation(() => this.createCanonical(canonical, title))
+    return await this.enqueueOperation(() => this.createCanonical(canonical, path, title))
+  }
+
+  /**
+   * This workspace's trust binding, re-observed against the filesystem on
+   * every call (Epic P1-07 must[0], acceptance[1]). A workspace is bound
+   * `'untrusted'` on first observation, and any change to the canonical path
+   * or the device/inode pair it was bound to demotes it back there — a
+   * directory replaced in place, a symlink on the way to it retargeted, or the
+   * directory moved out from under the path it was opened at.
+   *
+   * The binding is process-local: a restart re-observes and re-binds at
+   * `'untrusted'` (see this package's README).
+   * @param id - The workspace whose trust binding to observe.
+   * @returns the trust binding as of this observation.
+   * @throws when `id` is unknown, or when the very first observation of a
+   * workspace's path fails.
+   */
+  async workspaceTrust(id: WorkspaceId): Promise<TrustRecord> {
+    return await this.requireEntity(id).reconcileTrust()
+  }
+
+  /**
+   * Raise one workspace's trust on a host user's authority (Epic P1-07
+   * must[2]'s host-user gate). Reconciles the binding first, so an upgrade is
+   * never granted against an identity the filesystem has already invalidated.
+   *
+   * The refusal rule and the audit record are
+   * `@deepseek-ai/dsh-workspace-trust`'s: only a `'user'` principal can author
+   * an upgrade. Presenting the host user's interaction, and appending the
+   * returned audit record, are both call-site work this registry does not do.
+   * @param id - The workspace to upgrade.
+   * @param target - The trust state to raise it to.
+   * @param hostPrincipal - The principal presented as the upgrade's author.
+   * @returns the upgrade result, carrying the new binding and its audit record
+   * on success and a refusal reason otherwise.
+   * @throws when `id` is unknown, or when the workspace's path cannot be
+   * observed and was never bound.
+   */
+  async upgradeWorkspaceTrust(
+    id: WorkspaceId,
+    target: TrustState,
+    hostPrincipal: Principal,
+  ): Promise<TrustUpgradeResult> {
+    return await this.requireEntity(id).upgradeTrust(target, hostPrincipal)
   }
 
   /**
@@ -282,7 +328,7 @@ export class WorkspaceRegistry extends Service {
     return undefined
   }
 
-  private async createCanonical(canonical: string, title?: string): Promise<WorkspaceEntity> {
+  private async createCanonical(canonical: string, openedPath: string, title?: string): Promise<WorkspaceEntity> {
     for (const entity of this.entities.values()) {
       if (entity.path === canonical) return entity
     }
@@ -299,7 +345,7 @@ export class WorkspaceRegistry extends Service {
       createdAt: now,
       updatedAt: now,
     }
-    const entity = new WorkspaceEntity(this.host, id, record)
+    const entity = new WorkspaceEntity(this.host, id, record, openedPath)
     this.entities.set(id, entity)
     const pendingState: WorkspaceDomainState = {
       ...state,
@@ -554,7 +600,10 @@ export class WorkspaceRegistry extends Service {
     this.entities.clear()
     for (const id of this.requireState().workspaceIds) {
       const record = this.requireTable().get(id) as WorkspaceRecord
-      this.entities.set(id, new WorkspaceEntity(this.host, id, record))
+      // A rebuilt entity has no opening spelling to remember: its record
+      // survived the process that resolved one. The stored canonical path is
+      // the only path it can re-observe, and its trust starts unbound anyway.
+      this.entities.set(id, new WorkspaceEntity(this.host, id, record, record.path))
     }
   }
 
@@ -628,6 +677,12 @@ export class WorkspaceRegistry extends Service {
       throw new Error(`cannot validate session '${id}': session persistence holds no such session`)
     }
     return header
+  }
+
+  private requireEntity(id: WorkspaceId): WorkspaceEntity {
+    const entity = this.entities.get(id)
+    if (entity === undefined) throw new Error(`unknown workspace '${id}'`)
+    return entity
   }
 
   private requireTable(): KvTable<WorkspaceId, WorkspaceRecord> {
