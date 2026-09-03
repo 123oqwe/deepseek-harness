@@ -29,6 +29,7 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { appendRunEvent, genesisRunEvent } from './events.ts'
 import type {
   Run,
   RunEntityReference,
@@ -91,7 +92,15 @@ export const RUN_SERVICE_OWNER_ID: RunOwnerId = brandString<RunOwnerId>('dsh-run
  * @returns the newly accepted {@link Run}.
  */
 export function createRun(id: RunId, initialSessionId: SessionId, occurredAt: number): Run {
-  throw new Error(`not implemented: createRun(${String(id)}, ${String(initialSessionId)}, ${String(occurredAt)})`)
+  const initialReferences: readonly RunEntityReference[] = [{ kind: 'session', id: initialSessionId }]
+  return {
+    id,
+    state: 'accepted',
+    ownerId: RUN_SERVICE_OWNER_ID,
+    sessionIds: [initialSessionId],
+    createdAt: occurredAt,
+    events: [genesisRunEvent(id, 'accepted', initialReferences, occurredAt)],
+  }
 }
 
 /**
@@ -114,7 +123,13 @@ export function transition(
   references: readonly RunEntityReference[],
   occurredAt: number,
 ): RunTransitionDecision {
-  throw new Error(`not implemented: transition(${String(run.id)}, ${run.state} -> ${to}, ${String(references.length)} references, ${String(occurredAt)})`)
+  if (!LEGAL_RUN_TRANSITIONS[run.state].includes(to)) {
+    return { accepted: false, reason: 'illegal-transition', from: run.state, to }
+  }
+  return {
+    accepted: true,
+    run: { ...run, state: to, events: appendRunEvent(run, to, references, occurredAt) },
+  }
 }
 
 /**
@@ -128,7 +143,8 @@ export function transition(
  * @returns a Run whose `sessionIds` contains every id `run.sessionIds` already had, plus `sessionId` if it was not already present.
  */
 export function attachSessionToRun(run: Run, sessionId: SessionId): Run {
-  throw new Error(`not implemented: attachSessionToRun(${String(run.id)}, ${String(sessionId)})`)
+  if (run.sessionIds.includes(sessionId)) return run
+  return { ...run, sessionIds: [...run.sessionIds, sessionId] }
 }
 
 /**
@@ -141,7 +157,7 @@ export function attachSessionToRun(run: Run, sessionId: SessionId): Run {
  * @returns exactly the non-terminal Runs in `runs`, in the order given.
  */
 export function listNonTerminalRuns(runs: readonly Run[]): readonly Run[] {
-  throw new Error(`not implemented: listNonTerminalRuns(${String(runs.length)} runs)`)
+  return runs.filter(run => !TERMINAL_RUN_STATES.has(run.state))
 }
 
 /**
@@ -155,5 +171,8 @@ export function listNonTerminalRuns(runs: readonly Run[]): readonly Run[] {
  * {@link RUN_SERVICE_OWNER_ID}, or `{ resumed: false, reason: 'already-terminal' }`.
  */
 export function resumeRun(run: Run): RunResumeDecision {
-  throw new Error(`not implemented: resumeRun(${String(run.id)}, ${run.state})`)
+  if (TERMINAL_RUN_STATES.has(run.state)) {
+    return { resumed: false, reason: 'already-terminal' }
+  }
+  return { resumed: true, run: { ...run, ownerId: RUN_SERVICE_OWNER_ID } }
 }

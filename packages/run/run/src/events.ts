@@ -18,6 +18,7 @@
  * @module @deepseek-ai/dsh-run/events
  */
 
+import { RunEventSeq } from './types.ts'
 import type { Run, RunEntityKind, RunEntityReference, RunEvent, RunId, RunState } from './types.ts'
 
 /**
@@ -38,7 +39,14 @@ export function genesisRunEvent(
   references: readonly RunEntityReference[],
   occurredAt: number,
 ): RunEvent {
-  throw new Error(`not implemented: genesisRunEvent(${String(runId)}, ${initialState}, ${String(references.length)} references, ${String(occurredAt)})`)
+  return {
+    seq: RunEventSeq(0),
+    runId,
+    occurredAt,
+    fromState: null,
+    toState: initialState,
+    references,
+  }
 }
 
 /**
@@ -61,7 +69,15 @@ export function appendRunEvent(
   references: readonly RunEntityReference[],
   occurredAt: number,
 ): readonly [RunEvent, ...RunEvent[]] {
-  throw new Error(`not implemented: appendRunEvent(${String(run.id)}, ${run.state} -> ${toState}, ${String(references.length)} references, ${String(occurredAt)})`)
+  const nextEntry: RunEvent = {
+    seq: RunEventSeq(run.events.length),
+    runId: run.id,
+    occurredAt,
+    fromState: run.state,
+    toState,
+    references,
+  }
+  return [...run.events, nextEntry] as readonly [RunEvent, ...RunEvent[]]
 }
 
 /**
@@ -74,5 +90,11 @@ export function appendRunEvent(
  * @returns every matching reference, in the order its owning entry appears in `events`.
  */
 export function referencesByKind(events: readonly RunEvent[], kind: RunEntityKind): readonly RunEntityReference[] {
-  throw new Error(`not implemented: referencesByKind(${String(events.length)} events, ${kind})`)
+  const result: RunEntityReference[] = []
+  for (const event of events) {
+    for (const reference of event.references) {
+      if (reference.kind === kind) result.push(reference)
+    }
+  }
+  return result
 }
