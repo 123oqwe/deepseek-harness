@@ -50,7 +50,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = '3bb1baaa93be70b368f89f31282a82f0328c0c9cec1c3a3969e34a6f7988001c'
+const MATRIX_SHA = 'bfeabf7605f7f6a72d1bc5c6529ecbf71df7567baa378456874894a76443077d'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -98,7 +98,7 @@ const RESCOPE23_PRIOR_MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4
 // BLOCKED-012 bar for removal); P5-10 is authorized-for-review but its own
 // change here is a files[] baseline-drift correction (control.ts N->B, a
 // different fix class), not a must-narrowing, so it is not listed either.
-const RESCOPE23_EPIC_IDS = ['P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11', 'P6-05', 'P6-06', 'P6-07', 'P6-10']
+const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11', 'P6-05', 'P6-06', 'P6-07', 'P6-10']
 
 /**
  * Off by default: today's committed `tests/first100/registry.json` holds

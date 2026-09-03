@@ -3473,10 +3473,8 @@
     "P3-03": {
       "must": {
         "sourceCount": 3,
-        "projectedCount": 3,
-        "unmatchedSource": [],
-        "invented": [],
-        "clauses": [
+        "projectedCount": 2,
+        "unmatchedSource": [
           {
             "text": "定义 typed outcome：policy_denied、sandbox_unavailable、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
             "digest": "9a6a325a932f95dac5efde35e0132ecdccff9874c505f6f3b98b0393848f2807",
@@ -3492,6 +3490,20 @@
               "startLine": 5367,
               "endLine": 5367
             }
+          }
+        ],
+        "invented": [
+          {
+            "text": "定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
+            "digest": "cac3b8c0df64b8fdb90e70613837717ec462d4a19739efbbb209e37c04a30f82",
+            "classification": "undocumented"
+          }
+        ],
+        "clauses": [
+          {
+            "text": "定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
+            "digest": "cac3b8c0df64b8fdb90e70613837717ec462d4a19739efbbb209e37c04a30f82",
+            "span": null
           },
           {
             "text": "保留原始输出为 artifact，但与控制状态分离。",
@@ -7025,15 +7037,15 @@
         ],
         "invented": [
           {
-            "text": "Task 支持 attempt、lease、owner、artifact outputs、verification status。",
-            "digest": "ba057c0774e66a45c469b42ef3c6609e4c1775171e1af2097c553ef09fca16df",
+            "text": "Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status。",
+            "digest": "ab3f9f2bc738e5f830ec27948e5101b433b25a691a5a3a9f0dcf68f7900ec98b",
             "classification": "undocumented"
           }
         ],
         "clauses": [
           {
-            "text": "Task 支持 attempt、lease、owner、artifact outputs、verification status。",
-            "digest": "ba057c0774e66a45c469b42ef3c6609e4c1775171e1af2097c553ef09fca16df",
+            "text": "Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status。",
+            "digest": "ab3f9f2bc738e5f830ec27948e5101b433b25a691a5a3a9f0dcf68f7900ec98b",
             "span": null
           },
           {
@@ -7762,7 +7774,7 @@
     "P6-06": {
       "must": {
         "sourceCount": 3,
-        "projectedCount": 2,
+        "projectedCount": 3,
         "unmatchedSource": [
           {
             "text": "任何 open tool call/approval/action ledger entry 不得被裁剪成不一致 surface。",
@@ -7773,7 +7785,13 @@
             }
           }
         ],
-        "invented": [],
+        "invented": [
+          {
+            "text": "任何 open action ledger entry 不得被裁剪成不一致 surface。",
+            "digest": "07b4d798f1ce8e7e9b7a09ba2bf5d089e4ae66b684d1e3e050faa1dc86644cba",
+            "classification": "undocumented"
+          }
+        ],
         "clauses": [
           {
             "text": "CompactionResult 标记覆盖 event ranges、preserved constraints、open actions、artifact/evidence refs、dropped categories。",
@@ -7790,6 +7808,11 @@
               "startLine": 11312,
               "endLine": 11312
             }
+          },
+          {
+            "text": "任何 open action ledger entry 不得被裁剪成不一致 surface。",
+            "digest": "07b4d798f1ce8e7e9b7a09ba2bf5d089e4ae66b684d1e3e050faa1dc86644cba",
+            "span": null
           }
         ]
       },
@@ -10627,8 +10650,9 @@
     "verifiedBy": "extract-registry.mjs --check (byte-exact re-extraction against each epic's own SHA-pinned provenance.source, not this report)"
   },
   "baseAlignV2Rescope23": {
-    "count": 9,
+    "count": 10,
     "epicIds": [
+      "P3-03",
       "P3-07",
       "P4-05",
       "P4-10",
@@ -10641,6 +10665,17 @@
     ],
     "rescopeSpec": "spec/first100/sources/base-align-v2/23-partial-rescope-spec.md",
     "divergedClauses": {
+      "P3-03": {
+        "must": {
+          "unmatchedSource": [
+            "定义 typed outcome：policy_denied、sandbox_unavailable、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
+            "provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。"
+          ],
+          "invented": [
+            "定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。"
+          ]
+        }
+      },
       "P3-07": {
         "must": {
           "unmatchedSource": [
@@ -10690,7 +10725,7 @@
             "Mailbox 为点对点 durable messages"
           ],
           "invented": [
-            "Task 支持 attempt、lease、owner、artifact outputs、verification status。"
+            "Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status。"
           ]
         }
       },
@@ -10707,7 +10742,9 @@
           "unmatchedSource": [
             "任何 open tool call/approval/action ledger entry 不得被裁剪成不一致 surface。"
           ],
-          "invented": []
+          "invented": [
+            "任何 open action ledger entry 不得被裁剪成不一致 surface。"
+          ]
         }
       },
       "P6-07": {

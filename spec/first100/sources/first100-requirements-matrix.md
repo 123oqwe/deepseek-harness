@@ -529,7 +529,7 @@
 - **Priority / Wave / 依赖：** P0 / W8 / `P3-01`、`P0-06`。
 - **问题 → 目标：** 当前本地 sandbox 的部分拒绝依赖 stderr/退出码语义，容易被工具输出伪装或误分类。 → 让 Runtime、Verifier 和 UI 能可靠区分 policy denial、sandbox failure、tool failure、timeout 与 user cancellation。
 - **Files：** target `packages/sandbox/sandbox-local/src/index.ts` [B]；`packages/sandbox/sandbox/src/index.ts` [B]；`packages/core/tools/src/types.ts` [B]；`packages/core/agent-loop/src/tool-calls.ts` [B]；`packages/llm/llm/src/error.ts` [B]；new `packages/execution/execution-world/src/errors.ts` [N]；`packages/execution/execution-world/src/outcome.ts` [N]；`packages/execution/execution-world/tests/denial.spec.ts` [N]。
-- **MUST：** 定义 typed outcome：policy_denied、sandbox_unavailable、resource_exhausted、timeout、cancelled、tool_failed、world_lost。；provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。；保留原始输出为 artifact，但与控制状态分离。
+- **MUST：** 定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。；保留原始输出为 artifact，但与控制状态分离。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 恶意程序打印伪造 denial 文本不能改变 outcome。；每类错误在 session/event、SDK、UI 中保持类型。；Retry policy 能基于类型做正确决策。
@@ -1015,7 +1015,7 @@
 - **Priority / Wave / 依赖：** P1 / W7 / `P4-06`、`P4-07`。
 - **问题 → 目标：** dsh-agent-teams 展示 durable tasks、依赖、消息、调度价值，但其状态单进程序列化且模型可能不更新任务状态；这些需要核心原子语义。 → 把社区多 Agent 插件中有价值的通用协作能力上移为 Harness primitives，而不内置 captain/部门等垂直角色。
 - **Files：** target `packages/core/agent/src/consumed-work.ts` [B]；`packages/core/agent/src/inbox.ts` [B]；`packages/subagent/subagent/src/list-children.ts` [B]；`packages/run/run/src/types.ts` [P]；new `packages/collaboration/taskboard/src/index.ts` [N]；`packages/collaboration/taskboard/src/types.ts` [N]；`packages/collaboration/taskboard/src/store.ts` [N]；`packages/collaboration/mailbox/src/index.ts` [N]；`packages/collaboration/blackboard/src/index.ts` [N]；`packages/collaboration/taskboard/tests/claims.e2e.ts` [N]。
-- **MUST：** Task 支持 attempt、lease、owner、artifact outputs、verification status。；Blackboard 只存结构化 facts/artifact refs，带 provenance。；角色、组织图和 captain 保持插件/skill 层。
+- **MUST：** Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status。；Blackboard 只存结构化 facts/artifact refs，带 provenance。；角色、组织图和 captain 保持插件/skill 层。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 多进程并发 claim 只有一个 winner。；模型未手动更新任务时，runtime 根据 receipts 推进状态。；循环依赖在提交时拒绝。
@@ -1118,7 +1118,7 @@
 - **Priority / Wave / 依赖：** P0 / W11 / `P4-01`、`P7-01`。
 - **问题 → 目标：** 现有 compaction 架构方向正确并有 tool pairing，但通用长任务需要机器可验证的 summary coverage 与 provenance。 → 在缩短上下文时不丢失约束、未完成动作、审批、证据引用或 tool call/result 配对。
 - **Files：** target `packages/compaction/compaction/src/index.ts` [B]；`packages/compaction/compaction/src/checkpoint.ts` [B]；`packages/compaction/compaction/src/tool-pairing.ts` [B]；`packages/compaction/compaction/src/types.ts` [B]；`packages/core/session/src/surface.ts` [B]；new `packages/compaction/compaction/src/coverage.ts` [N]；`packages/compaction/compaction/src/provenance.ts` [N]；`packages/compaction/compaction/tests/fidelity.e2e.ts` [N]。
-- **MUST：** CompactionResult 标记覆盖 event ranges、preserved constraints、open actions、artifact/evidence refs、dropped categories。；对 hard constraints 和 unresolved items 使用结构化保留区，不只自然语言摘要。
+- **MUST：** CompactionResult 标记覆盖 event ranges、preserved constraints、open actions、artifact/evidence refs、dropped categories。；对 hard constraints 和 unresolved items 使用结构化保留区，不只自然语言摘要。；任何 open action ledger entry 不得被裁剪成不一致 surface。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** compaction 前后 VerificationContract、未完成 action、审批状态等价。；摘要中的每个关键 claim 可回链原事件。；多轮 compaction 不累计丢失关键事实。
