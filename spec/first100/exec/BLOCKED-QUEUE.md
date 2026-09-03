@@ -849,3 +849,53 @@ Fast-forward beats deletion because a *correct* `first100-exec` makes any future
 - Name the base **explicitly** — `land-base-align-v2` or a literal SHA — never a bare branch name whose local ref might be stale.
 - A Writer creates its branch with `git branch <name> <base>` plus its **own** `git worktree add`, and never `git checkout` inside the shared worktree at `/Users/guanjieqiao/dsh-first100-clean`, whose HEAD another session depends on.
 - Before trusting any "X is already landed" premise in a dispatch, the Writer verifies X exists on its actual base (`git ls-tree`), and treats a mismatch as blocking rather than as something to work around.
+
+### BLOCKED-050 — the Trust Kernel ships structural non-replaceability, never key material; every epic claiming "kernel-signed" or "kernel-verified" is unprovable until it says where the keys come from (Supervisor finding via P2-02 Writer, delegate-widened to P1-02, 2026-09-03)
+
+**The observation.** `packages/kernel/trust-kernel/src/index.ts` constructs its six capabilities as empty structure:
+
+```
+rootIdentity      = Object.freeze({})   // empty
+signatureRoots    = Object.freeze({})   // empty
+secretBroker      = Object.freeze({})   // empty
+policyEnforcement = always 'deny'
+auditAppend       = empty function
+```
+
+There is nothing to sign or verify *with*. Epic P2-02's Contract stage consequently uses a fixed four-byte marker `[0x01,0x02,0x03,0x04]` as a "signature", and **its own test hand-constructs those four bytes with no kernel involved and `verifyToken` accepts them** — so any code can mint a token that passes verification. The signature check is structurally present and semantically empty.
+
+**Common root cause, stated once.** P0-02 (ACCEPTED) delivered exactly what it promised: the Trust Kernel is *non-replaceable* — pinned before any entry mounts, proof against delete-then-reprovide, direct store writes, and `impl.value` reassignment. Non-replaceability is a property of the *slot*, not of its *contents*. **An empty capability that cannot be swapped out is still empty.** No epic may treat P0-02's acceptance as supplying key material, because it never claimed to.
+
+**Ruling — applies identically to both consumers of `signatureRoots`:**
+
+| Epic | Consumer | Status |
+|---|---|---|
+| P1-02 插件签名、来源证明与 SBOM | `packages/plugin/plugin-provenance/src/{index,signature}.ts` (C GREEN) | signature/provenance acceptance clauses MUST NOT be judged satisfied |
+| P2-02 可衰减 Capability Token 与子 Agent 委托 | `packages/policy/capability-token/src/{attenuate,types}.ts` (C GREEN) | must[1] (TrustKernel 签发/验证) MUST NOT be judged satisfied |
+
+**Neither epic may reach ACCEPTED while its signature clause is open, regardless of how many stage cells are GREEN.** A four-green row must never read as "the kernel endorsed this". Any epic asserting kernel-backed signing or verification must state in its own README and freeze note where its key material comes from; absent that, its signature assertions are empty and must be recorded as such.
+
+**Second, independent prerequisite** (P2-02 only, and any future *enforcement* point): a ctx-mediated kernel consumer is gated on the vendored Cordis `Fiber` structural fix (Option A). Verified not landed as of 2026-09-03 — `vendor/cordis/src/fiber.ts:198` still declares `public store: Dict<Impl> | undefined` as a plain writable public field, and none of `vendor/README.md`'s 15 logged local modifications concerns the store lock. See [BLOCKED-011](#blocked-011) and `docs/architecture/trust-kernel-boundary.md`.
+
+**What may still proceed.** 「不确定即 BLOCKED 禁猜」 forbids guessing past an unknown; it does not require abandoning work that stays real once the unknown is recorded. P2-02's Provider stage proceeds on the clauses that need neither keys nor `ctx`: real lineage reconstruction (today `isTokenRevoked` walks a caller-supplied `TokenLineage` whose digests no token ever produced, so cascading revocation is **not actually proven**) and a durable nonce ledger.
+
+### BLOCKED-051 — reading a description is not evaluating the thing it describes; where a tool can evaluate the relation, reading is not an acceptable substitute (delegate generalization of a Supervisor self-correction, 2026-09-03)
+
+**The immediate case.** A Writer was asked to prove a new dependency edge created no cycle. It read both `package.json` files, found neither named the other, and reported "one-directional" — true, and useless: the cycle closed through a third package neither file mentions (`session-persistence → session-lifecycle → workspace → session-persistence`). The Supervisor accepted that reasoning. Both were wrong, and the RED commit built on it was unusable. **A manifest read cannot see a two-hop cycle. `tsc -b` can, in one command, and reports TS6202.**
+
+**Three instances of one failure in a single day**, which is what makes this a rule rather than a lesson:
+
+- read a **summary** as if it were the **definition** (a package README's RED-scaffold prose vs. the actual `src/` — [BLOCKED-052](#blocked-052));
+- read a **comment** as if it were the **legend** (a JSDoc description of layer mapping vs. the real gate);
+- read a **manifest** as if it were the **dependency graph** (this case).
+
+**Rule.** Where a tool can actually evaluate a relation, evaluate it — do not substitute reading a description of it. Descriptions drift from what they describe, and the drift is invisible from inside the description. Concretely:
+
+| Claim about | Evaluate with | Never substitute |
+|---|---|---|
+| dependency/reference cycles | `tsc -b <pkg>/tsconfig.json` | reading `package.json` / `tsconfig.json` |
+| a test suite's real state | running it | a README's claim about it |
+| what a frozen command discovers | dry-running the `argv` | the `expectCases` list |
+| whether a gate rejects a case | executing it against that case | reading the assertion |
+
+This subsumes the narrower rule already in force ("verify claimed SHAs, runs, and ledger state against real sources before acting on any 'X is done' claim, from any sender") and extends it from *claims made by a sender* to *claims made by any artifact, including the repository's own prose*.

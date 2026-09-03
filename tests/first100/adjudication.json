@@ -1163,7 +1163,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 12,
+    "count": 13,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1272,6 +1272,15 @@
         "reason": "Companion to P6-07-C-lifecycle-discovery: F-stage names the identical declared path for the identical mechanical reason (not independently discoverable by first100-exact-sha.ymls observation step). Decided now, at C-stage patch time, specifically so F-stage does not rediscover the same gap later and invent a third filename -- both stages target the same approvedPath.",
         "approvedAt": "2026-09-03",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-048"
+      },
+      "P6-07-P-lifecycle-store": {
+        "epic": "P6-07",
+        "stage": "P",
+        "declaredPath": "packages/session/session-persistence/src/index.ts",
+        "approvedPath": "packages/session/session-lifecycle/src/store.ts",
+        "reason": "Architecturally unrealizable as declared, not a convenience relocation -- a strictly stronger basis than a path-spelling correction. P6-07's declared P-stage deliverables sit in packages/session/session-persistence/src/, but a durable session-lifecycle registry must name SessionLifecycleRecord/SessionDisposition and call the C-stage's listSessions/assertNoLegalHold/hardErase/propagateDeletion. That import closes a real project-reference cycle, verified by running the compiler rather than by reading manifests: session-persistence -> session-lifecycle -> workspace/workspace -> session-persistence, where the latter two edges already exist (session-lifecycle peer-depends on dsh-workspace; workspace/workspace peer-depends on dsh-session-persistence). `pnpm exec tsc -b packages/session/session-persistence/tsconfig.json` reports TS6202 on a branch carrying the declared edge. No level of effort inside the declared scope avoids this: every P6-07 clause is an assertion about lifecycle semantics (must[0]'s filters ARE listSessions; acceptance[1]'s hold IS assertNoLegalHold; acceptance[2]'s propagation IS propagateDeletion), so a record-type-generic store that cannot name a disposition observes none of them and proves only that a JSON document round-trips. A variant exploiting tsconfig.host.json's direct inclusion of packages/*/*/tests/** (letting a test import what src/ may not) was also rejected: it would produce real observations while no shipped code assembles the service, making a fixture read as a product surface -- worse than an honest gap, because it greens. The reverse direction is acyclic and is the natural one: the package owning the decisions gains the durable store beneath them. session-lifecycle is not referenced by any other package's tsconfig (apps/web/tsconfig.json does reference it, but an application is a terminal consumer and does not enter the inter-package dependency graph), and session-persistence's transitive closure (cosmokit, cordis, brand, core/session) never reaches session-lifecycle, so this placement adds zero new dependency edges. Cross-package repointing is within this mechanism's established range -- see P0-06-U-session-replay, which repoints from core/session/src/types.ts into a different package. The epic's must/acceptance clauses are unchanged. Only the index.ts deliverable is repointed; coordinator.ts and revision.ts stay declared-but-unmodified, which is already the settled reading of a stage file list (it is a scope ceiling, not a quota) and is what this stage would have done in either placement -- PersistenceCoordinator's storage contract is keyed on SessionId and SessionEvent under SESSION_FORMAT_VERSION, and a lifecycle disposition is not a session-log event.",
+        "approvedAt": "2026-09-03",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
       }
     }
   }
