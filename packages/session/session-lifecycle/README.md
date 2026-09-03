@@ -28,7 +28,7 @@ real and epic-accurate, but every decision function (`archiveSession`,
 `propagateDeletion`, `hardErase`, `listSessions`,
 `readSessionLogWithRepair`) throws `'not implemented: ...'` — the pure
 decision logic itself is a later fix-round's deliverable, proven by
-`tests/lifecycle.e2e.ts`'s real assertions against that (currently failing)
+`tests/lifecycle.spec.ts`'s real assertions against that (currently failing)
 behavior. `SOFT_DELETE_POLICY` and `HARD_ERASE_POLICY` are the one
 exception: real, already-correct declared data — the policies themselves —
 not the adjudication logic under test.
@@ -161,7 +161,7 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/lifecycle.e2e.ts`](tests/lifecycle.e2e.ts) — the Contract-stage RED
+- [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) — the Contract-stage RED
   scaffold: one or more cases per registry must[]/acceptance[] clause,
   including an exhaustive page-size sweep for acceptance[0]'s pagination
   guarantee.
