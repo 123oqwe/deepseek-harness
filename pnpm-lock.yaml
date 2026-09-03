@@ -5834,6 +5834,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-plugin-compat':
+        specifier: workspace:^
+        version: link:../../plugin/plugin-compat
       '@deepseek-ai/dsh-plugin-manifest':
         specifier: workspace:^
         version: link:../../plugin/plugin-manifest
@@ -6613,6 +6616,18 @@ importers:
       '@deepseek-ai/dsh-user-questions':
         specifier: workspace:^
         version: link:../../interaction/user-questions
+
+  packages/plugin/plugin-compat:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-schema-registry':
+        specifier: workspace:^
+        version: link:../../schema/schema-registry
 
   packages/plugin/plugin-manifest:
     devDependencies:
