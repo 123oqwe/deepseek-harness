@@ -101,7 +101,19 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Every decision function throws `'not implemented'`.** `bindWorkspaceTrust`, `authorizeProjectLoad`, `reconcileWorkspaceTrust`, `requestTrustUpgrade`, and `downgradeTrust` are Contract-stage RED-scaffold stubs: real signatures and real JSDoc-documented behavior, no working body. `tests/trust.spec.ts` fails every case against this today, by design — a later fix-round implements the logic these signatures and tests already commit to.
 - **No wiring into real `fs.realpath`/`fs.stat` observation, real project plugin/hook/MCP-server/skill loaders, or `apps/cli/src/profile-boot.ts`'s home-patch layer exists yet** (registry's own `stages.P`/`stages.U` files) — this package alone cannot observe a real directory's identity or gate a real load.
 - **No real `@deepseek-ai/dsh-trust-kernel` audit-append wiring exists yet, and cannot until the vendored Cordis `Fiber` structural fix lands** (`docs/architecture/trust-kernel-boundary.md`) — `TrustUpgradeAuditRecord` fixes only the shape a later append call will carry.
 - **The exact fail-closed default for a headless/non-interactive boot is unfixed here.** Registry validation ("验证 headless profile 无交互时默认不信任") implies `bindWorkspaceTrust` always starts at `'untrusted'` with no interactive path to skip that — this Contract stage's signature already forces that (there is no constructor argument to seed a non-`'untrusted'` initial state), but the real headless-boot call site enforcing it is a later Usage-stage's job.
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+None.
+
+</details>

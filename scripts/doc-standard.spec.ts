@@ -95,6 +95,7 @@ const PACKAGE_LIBRARIES: Readonly<Record<string, string>> = {
   'packages/util/timeout': 'Zero-dependency timeout utility.',
   'packages/util/values': 'Stateless lossless-JSON and immutable-value helpers.',
   'packages/util/workspace-path': 'Zero-dependency Workspace path formatter.',
+  'packages/workspace/workspace-trust': 'Contract-stage type declarations and pure trust-binding/reconciliation functions only; no plugin entry or mount configuration.',
 }
 
 function readFrontmatter(file: string): Record<string, unknown> {
