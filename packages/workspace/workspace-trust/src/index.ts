@@ -1,14 +1,15 @@
 /**
- * Package entry point. Contract-stage RED scaffold for Epic P1-07's project
- * trust boundary: this module's exported decision functions have real,
- * epic-accurate signatures but placeholder bodies (`'not implemented'`) —
- * the pure decision logic itself is this epic's Contract-stage deliverable
- * to a later fix-round, not this scaffold's. `isHostUserPrincipal` is the
- * one exception: a one-line predicate directly grounded in must[2]'s "宿主
- * 用户交互" (host USER interaction) text — distinguishing a genuine
- * `UserPrincipal` from `@deepseek-ai/dsh-principal`'s `'service'`/`'agent'`/
- * `'anonymous-dev'` principal kinds — not itself the fail-closed adjudication
- * `requestTrustUpgrade` performs.
+ * Package entry point. Contract-stage pure decision logic for Epic P1-07's
+ * project trust boundary: {@link bindWorkspaceTrust}, {@link authorizeProjectLoad},
+ * {@link reconcileWorkspaceTrust}, {@link requestTrustUpgrade}, and
+ * {@link downgradeTrust} implement must[0]/must[1]/must[2] and
+ * acceptance[0]/acceptance[1]/acceptance[2] against the plain
+ * `WorkspaceIdentity`/`TrustRecord`/`Principal` values a caller already
+ * resolved. `isHostUserPrincipal` is a one-line predicate directly grounded
+ * in must[2]'s "宿主用户交互" (host USER interaction) text —
+ * distinguishing a genuine `UserPrincipal` from `@deepseek-ai/dsh-principal`'s
+ * `'service'`/`'agent'`/`'anonymous-dev'` principal kinds — that
+ * `requestTrustUpgrade` composes into its fail-closed adjudication.
  *
  * None of these functions read a file, spawn a process, stat a path, or
  * construct a Cordis `Context` — every `WorkspaceIdentity`,
@@ -37,6 +38,16 @@ import type {
   WorkspaceIdentity,
 } from './types.ts'
 
+/** {@link ProjectContentKind}'s declared member order, used to walk every kind when computing `downgradeTrust`'s `revokedKinds`. */
+const PROJECT_CONTENT_KINDS: readonly ProjectContentKind[] = [
+  'safe-read',
+  'project-plugin',
+  'project-hook',
+  'mcp-server',
+  'executable-skill',
+  'home-profile-patch-override',
+]
+
 /**
  * must[2]'s "宿主用户交互" (host USER interaction) predicate: `true` only for
  * a `Principal` whose `kind` is `'user'`. Does not by itself decide whether
@@ -62,7 +73,7 @@ export function isHostUserPrincipal(principal: Principal): boolean {
  * @returns a fresh `'untrusted'` {@link TrustRecord} for `identity`.
  */
 export function bindWorkspaceTrust(identity: WorkspaceIdentity, at: string): TrustRecord {
-  throw new Error(`not implemented: bindWorkspaceTrust(${identity.canonicalPath}, ${at})`)
+  return { identity, state: 'untrusted', at }
 }
 
 /**
@@ -80,7 +91,8 @@ export function bindWorkspaceTrust(identity: WorkspaceIdentity, at: string): Tru
  * @returns `{ permitted: true }`, or `{ permitted: false, reason, requiredState }` naming the minimum state that would admit `kind`.
  */
 export function authorizeProjectLoad(state: TrustState, kind: ProjectContentKind): LoadDecision {
-  throw new Error(`not implemented: authorizeProjectLoad(${state}, ${kind})`)
+  if (kind === 'safe-read' || state === 'trusted-execute') return { permitted: true }
+  return { permitted: false, reason: 'trust-required', requiredState: 'trusted-execute' }
 }
 
 /**
@@ -101,7 +113,12 @@ export function authorizeProjectLoad(state: TrustState, kind: ProjectContentKind
  * @returns `record` unchanged when `observed` matches `record.identity`; otherwise a demoted `'untrusted'` record bound to `observed`.
  */
 export function reconcileWorkspaceTrust(record: TrustRecord, observed: WorkspaceIdentity, at: string): TrustRecord {
-  throw new Error(`not implemented: reconcileWorkspaceTrust(${record.identity.canonicalPath}, ${observed.canonicalPath}, ${at})`)
+  const unchanged =
+    record.identity.canonicalPath === observed.canonicalPath &&
+    record.identity.volume.device === observed.volume.device &&
+    record.identity.volume.inode === observed.volume.inode
+  if (unchanged) return record
+  return { identity: observed, state: 'untrusted', at }
 }
 
 /**
@@ -125,9 +142,18 @@ export function requestTrustUpgrade(
   hostPrincipal: Principal,
   at: string,
 ): TrustUpgradeResult {
-  throw new Error(
-    `not implemented: requestTrustUpgrade(${current.state} -> ${target}, isHostUser=${String(isHostUserPrincipal(hostPrincipal))}, ${at})`,
-  )
+  if (!isHostUserPrincipal(hostPrincipal)) return { upgraded: false, reason: 'non-host-principal' }
+  return {
+    upgraded: true,
+    record: { identity: current.identity, state: target, at, grantedBy: hostPrincipal.id },
+    audit: {
+      identity: current.identity,
+      fromState: current.state,
+      toState: target,
+      hostPrincipalId: hostPrincipal.id,
+      at,
+    },
+  }
 }
 
 /**
@@ -144,5 +170,14 @@ export function requestTrustUpgrade(
  * @returns the demoted {@link TrustRecord} together with the {@link ProjectContentKind}s it revokes.
  */
 export function downgradeTrust(current: TrustRecord, target: TrustState, at: string): TrustDowngradeResult {
-  throw new Error(`not implemented: downgradeTrust(${current.state} -> ${target}, ${at})`)
+  const revokedKinds = PROJECT_CONTENT_KINDS.filter(
+    kind => authorizeProjectLoad(current.state, kind).permitted && !authorizeProjectLoad(target, kind).permitted,
+  )
+  return {
+    record:
+      target === 'untrusted' || current.grantedBy === undefined
+        ? { identity: current.identity, state: target, at }
+        : { identity: current.identity, state: target, at, grantedBy: current.grantedBy },
+    revokedKinds,
+  }
 }
