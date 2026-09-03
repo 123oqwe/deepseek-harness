@@ -32,6 +32,7 @@ const officialPlugin = brandString<PluginIdentity>('dsh-base')
 const attackerPlugin = brandString<PluginIdentity>('evil-plugin')
 const friendlyPluginA = brandString<PluginIdentity>('friendly-tools-a')
 const friendlyPluginB = brandString<PluginIdentity>('friendly-tools-b')
+const friendlyPluginC = brandString<PluginIdentity>('friendly-tools-c')
 
 const reservedNamespace: Namespace = RESERVED_NAMESPACE_ROOT
 const friendlyNamespace = brandString<Namespace>('friendly-tools')
@@ -91,6 +92,18 @@ describe('P1-09 Contract — must clauses', () => {
     if (!decision.admitted) expect(decision.reason).toBe('namespace-reserved')
   })
 
+  it('must[1]: an unofficial plugin cannot claim a capability inside a dotted sub-namespace under the dsh.* reserved root', () => {
+    const dottedReservedNamespace = brandString<Namespace>('dsh.core')
+    const capabilityId = brandString<StableCapabilityId>('dsh.core:write_file')
+    const decision = claimCapability(
+      { pluginIdentity: attackerPlugin, namespace: dottedReservedNamespace, capabilityId, kind: 'service', origin: 'static' },
+      [],
+      policy,
+    )
+    expect(decision.admitted).toBe(false)
+    if (!decision.admitted) expect(decision.reason).toBe('namespace-reserved')
+  })
+
   it('must[2]: an explicit replace contract fails closed when policy does not authorize replacement', () => {
     const capabilityId = brandString<StableCapabilityId>('friendly-tools:write_file')
     const existing = [fixtureRegistration(friendlyPluginA, capabilityId, brandString<OwnershipToken>('token-a'))]
@@ -98,6 +111,19 @@ describe('P1-09 Contract — must clauses', () => {
       { targetCapabilityId: capabilityId, replacingPluginIdentity: friendlyPluginB },
       existing,
       policyDenyingReplace,
+    )
+    expect(decision.admitted).toBe(false)
+    if (!decision.admitted) expect(decision.reason).toBe('replace-not-authorized')
+  })
+
+  it('must[2]: an explicit replace contract fails closed with replace-not-authorized when the target capability id has no existing registration to replace', () => {
+    const unrelatedId = brandString<StableCapabilityId>('friendly-tools:unrelated')
+    const targetId = brandString<StableCapabilityId>('friendly-tools:never_claimed')
+    const existing = [fixtureRegistration(friendlyPluginA, unrelatedId, brandString<OwnershipToken>('token-unrelated'))]
+    const decision = requestReplace(
+      { targetCapabilityId: targetId, replacingPluginIdentity: friendlyPluginB },
+      existing,
+      policy,
     )
     expect(decision.admitted).toBe(false)
     if (!decision.admitted) expect(decision.reason).toBe('replace-not-authorized')
@@ -195,6 +221,23 @@ describe('P1-09 Contract — acceptance[1]: 允许合法 provider replacement，
       expect(entry?.replaces).toBe(friendlyPluginA)
     }
   })
+
+  it('buildInventoryChain on a 3-owner history reports the current owner and its immediate predecessor, not the chain\'s original first owner', () => {
+    const capabilityId = brandString<StableCapabilityId>('friendly-tools:long_lived_provider')
+    const originalOwner = fixtureRegistration(friendlyPluginA, capabilityId, brandString<OwnershipToken>('token-1'))
+    const secondOwner = fixtureRegistration(friendlyPluginB, capabilityId, brandString<OwnershipToken>('token-2'))
+    const thirdOwner = fixtureRegistration(friendlyPluginC, capabilityId, brandString<OwnershipToken>('token-3'))
+
+    const chain = buildInventoryChain([originalOwner, secondOwner, thirdOwner])
+    const entries = chain.filter(candidate => candidate.capabilityId === capabilityId)
+    expect(entries).toHaveLength(1)
+    const entry = entries[0]
+    expect(entry).toBeDefined()
+    expect(entry?.current).toBe(friendlyPluginC)
+    expect(entry?.replaces).toBe(friendlyPluginB)
+    expect(entry?.replaces).not.toBe(friendlyPluginA)
+    expect(entry?.replacedBy).toBeUndefined()
+  })
 })
 
 describe('P1-09 Contract — acceptance[2]: 动态 Cordis 定义同样受规则约束', () => {
@@ -217,5 +260,24 @@ describe('P1-09 Contract — acceptance[2]: 动态 Cordis 定义同样受规则�
     )
     expect(dynamicCollisionAttempt.admitted).toBe(false)
     if (!dynamicCollisionAttempt.admitted) expect(dynamicCollisionAttempt.reason).toBe('capability-collision')
+  })
+
+  it('a dynamically defined capability for a fresh, non-reserved, non-colliding namespace is admitted exactly as a statically declared one would be', () => {
+    const dynamicNamespace = brandString<Namespace>('friendly-dynamic-tools')
+    const capabilityId = brandString<StableCapabilityId>('friendly-dynamic-tools:new_dynamic_tool')
+    const decision = claimCapability(
+      { pluginIdentity: friendlyPluginA, namespace: dynamicNamespace, capabilityId, kind: 'tool', origin: 'dynamic' },
+      [],
+      policy,
+    )
+    expect(decision.admitted).toBe(true)
+    if (decision.admitted) {
+      expect(decision.registration.pluginIdentity).toBe(friendlyPluginA)
+      expect(decision.registration.namespace).toBe(dynamicNamespace)
+      expect(decision.registration.capabilityId).toBe(capabilityId)
+      expect(decision.registration.origin).toBe('dynamic')
+      expect(typeof decision.registration.ownershipToken).toBe('string')
+      expect(decision.registration.ownershipToken.length).toBeGreaterThan(0)
+    }
   })
 })
