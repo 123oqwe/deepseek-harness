@@ -828,3 +828,24 @@ Not in this family but hit the same day, worth distinguishing: `packages/run/run
 > **`frozen.dryRunProof.testsDiscovered` must equal the count of `frozen.expectCases` titles actually found (in any status) in the real CI observation report.** A mismatch means the frozen `argv` and the CI-executed command are discovering a different test set — reject the green, do not attempt it. This needs no new field and no new mechanism, only comparing two counts `generate-ledger.mjs` already has in hand at green-time (`frozen.dryRunProof.testsDiscovered` vs. `titles.size` computed from the real report it already parses).
 
 Failing safe in the meantime: today, a mismatch of this exact shape (P6-07's frozen 27 titles vs. 0 found in the real observation) surfaces as predicate (iii) ("every `expectCases` title found passing") failing outright — greening is refused, not silently corrupted. The gap costs a stall, not a wrong acceptance. Scheduled alongside BLOCKED-042/046/047's batched pass after W4 closes, where it is a one-line comparison to add, not new engineering.
+
+### BLOCKED-049 — a stale local `first100-exec` branch handed a Writer a tree missing 40+ commits, including the epic's own predecessor package; fixed by fast-forwarding rather than deleting, and by naming an explicit base in every dispatch (Supervisor finding, delegate-confirmed, 2026-09-03, RESOLVED)
+
+**What happened.** A P6-07.P Writer was dispatched with the instruction "branch off current `first100-exec` HEAD". `refs/heads/first100-exec` was a stale local branch at `15227989f0`, **529 commits behind** `fork/first100-exec`, held checked-out by an unrelated worktree at `/private/tmp/first100-exec-merge-wt`. The real integration branch is `land-base-align-v2`, which is what the Supervisor pushes to `fork/first100-exec`.
+
+The tree the Writer got did not contain `packages/session/session-lifecycle/` at all — the epic's own already-green Contract stage. Its `git checkout` of the new branch also moved the *shared* worktree's HEAD off `land-base-align-v2`.
+
+**Why it did not cause damage.** The Writer noticed that its two instructions were mutually inconsistent — "branch off `first100-exec`" and "delegate every decision to the Contract stage's functions" cannot both hold when those functions do not exist on that branch — and **stopped with zero commits and zero edits** to ask which base was correct. This is 「不确定即 BLOCKED 禁猜」 doing exactly what it exists for. The value is asymmetric and worth stating plainly: a contaminated base is not caught by later review, because every subsequent audit layer then verifies work against the wrong foundation and passes.
+
+**Resolution (delegate-specified order, executed 2026-09-03).** Not a delete:
+
+1. `git worktree remove /private/tmp/first100-exec-merge-wt` — verified clean (`git status --porcelain` empty) first.
+2. `git branch -f first100-exec fork/first100-exec` — verified `git log fork/first100-exec..first100-exec` was empty, so this is a pure fast-forward losing no history.
+
+Fast-forward beats deletion because a *correct* `first100-exec` makes any future literal-minded "branch off `first100-exec`" land on the right tree, where a deleted branch would only make it fail differently or silently resolve to another wrong ref.
+
+**Standing rules this establishes for every Writer dispatch.**
+
+- Name the base **explicitly** — `land-base-align-v2` or a literal SHA — never a bare branch name whose local ref might be stale.
+- A Writer creates its branch with `git branch <name> <base>` plus its **own** `git worktree add`, and never `git checkout` inside the shared worktree at `/Users/guanjieqiao/dsh-first100-clean`, whose HEAD another session depends on.
+- Before trusting any "X is already landed" premise in a dispatch, the Writer verifies X exists on its actual base (`git ls-tree`), and treats a mismatch as blocking rather than as something to work around.
