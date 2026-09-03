@@ -97,6 +97,19 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **Every decision function throws `'not implemented'`.** `claimCapability`, `requestReplace`, `revokeByOwnershipToken`, `buildInventoryChain`, and `mintOwnershipToken` are Contract-stage RED-scaffold stubs: real signatures and real JSDoc-documented behavior, no working body. `tests/ownership.spec.ts` fails every case against this today, by design — a later fix-round implements the logic these signatures and tests already commit to.
 - **No wiring into real Cordis registration exists yet.** `packages/extensions/cordis-host-runner/src/registry.ts`/`lifecycle.ts`, `packages/core/tools/src/index.ts`, and `packages/host/plugin-inventory/src/index.ts` do not call into this package (registry's own `stages.U.files`) — this package alone cannot reject a real tool/service/event registration or enforce anything at a real plugin boot or unload.
 - **`StableCapabilityId`'s exact string grammar is unfixed.** This Contract stage does not commit to a concrete `${Namespace}:${string}` separator or a validation regex for it — the Usage-stage integration, once it has a real `ctx` key/tool name/event name to namespace, decides that grammar and any format validation.
+- **`buildInventoryChain` never populates `replacedBy`.** It reports only each capability id's terminal (current-owner) state, consistent with the type's "absent while current still owns it" contract — no frozen case exercises the non-terminal, already-superseded shape.
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+None.
+
+</details>
