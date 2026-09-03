@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-02T16:09:57.604Z",
-  "inputDigest": "ef6b415b9410766f68c615ad5cdd9440756e777e0ee7f12ce3f7ccac4bd3a893",
+  "lastUpdatedUtc": "2026-09-03T06:02:36.147Z",
+  "inputDigest": "424c2fba166eed9f4da2db8202428fcb03a44b13fa827c661c88f8ca1a9cbd87",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2398,6 +2398,37 @@
         "P3-01"
       ],
       "wave": 8,
+      "cells": {
+        "C": {
+          "status": "NOT_RUN"
+        },
+        "P": {
+          "status": "NOT_RUN"
+        },
+        "U": {
+          "status": "NOT_RUN"
+        },
+        "F": {
+          "status": "NOT_RUN"
+        }
+      },
+      "supplements": {},
+      "candidateSha": null,
+      "independentVerdict": "PENDING",
+      "openFindings": null,
+      "status": "NOT_RUN",
+      "acceptedEvidence": null
+    },
+    "P3-13": {
+      "id": "P3-13",
+      "title": "Code-Runtime ExecutionWorld Policy Binding",
+      "layer": "L2_PROVIDER",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
+      "predecessors": [
+        "P3-01",
+        "P3-02"
+      ],
+      "wave": 9,
       "cells": {
         "C": {
           "status": "NOT_RUN"

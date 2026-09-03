@@ -316,18 +316,26 @@ function writeLedgerHeader(rows, inputsConsumed) {
  * ledger-mutating command already routes through, makes the count follow
  * the ledger's own ACCEPTED rows mechanically rather than depending on
  * anyone remembering to update it (delegate suggestion, 2026-09-02).
- * `totals.totalEpics` (109) intentionally stays untouched: it counts the
- * full program including the 9 P9 extension items, which are tracked as
- * VERIFIED/scheduled-BLOCKED outside this 100-row registry ledger, not as
- * ACCEPTED ledger rows.
+ * `totals.totalEpics` is likewise derived here (delegate finding, 2026-09-03):
+ * it counts the full program -- every registry-ledger row (`rows`, one per
+ * `registry.epics` entry) plus the `P9_EXTENSION_ITEM_COUNT` extension items,
+ * which are tracked as VERIFIED/scheduled-BLOCKED outside this ledger, not as
+ * ACCEPTED ledger rows. It previously drifted stale (stuck at 109 after
+ * P3-13 landed as the registry's 101st epic) for the same reason
+ * `acceptedEpics` once did.
  */
+const P9_EXTENSION_ITEM_COUNT = 9
+
 function syncExecState(ledgerBytes, rows) {
   if (!existsSync(EXEC_STATE_PATH)) return
   const state = loadJson(EXEC_STATE_PATH)
   state.ledgerDigest = sha256(ledgerBytes)
   state.registryDigest = sha256(readFileSync(REGISTRY_PATH))
   state.lastUpdatedUtc = nowIso()
-  if (state.totals) state.totals.acceptedEpics = Object.values(rows).filter((row) => row.status === 'ACCEPTED').length
+  if (state.totals) {
+    state.totals.acceptedEpics = Object.values(rows).filter((row) => row.status === 'ACCEPTED').length
+    state.totals.totalEpics = Object.keys(rows).length + P9_EXTENSION_ITEM_COUNT
+  }
   writeFileSync(EXEC_STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
 }
 
