@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T21:03:12.922Z",
-  "inputDigest": "d55b279da9836c34f31fee15c633778f63bebe0b62d76768e111c0abed13e35a",
+  "lastUpdatedUtc": "2026-09-03T21:34:49.840Z",
+  "inputDigest": "1d51e7a9ac1defdd144b6916302efbeb0ee29caa2950bd51fee5fc4582cad9c3",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3665,7 +3665,31 @@
           "capturedAtUtc": "2026-09-03T17:30:09.508Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "491acfd8eb9cd40330eb52bfe0c74220697a36e8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33807228116",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-p601p/first100-evidence-491acfd8eb9cd40330eb52bfe0c74220697a36e8/vitest-report.json",
+          "observationSha256": "17829aa1f0e5ea6771abe6174ebc7fc2d4b0b96aeae5ce1462cf6e119ad15aff",
+          "expectCasesMatched": [
+            "a second provider instance over the same directory reads back a record the first instance proposed",
+            "a provider instance over a different directory does not see the first directory's record — durability is per-directory, never process-global",
+            "a revise() by one instance is the content a later instance reads back",
+            "a forget() by one instance stays forgotten for a later instance, while a sibling record it did not forget stays readable",
+            "query() from a later instance finds an earlier instance's record by case-insensitive substring",
+            "query() from a later instance returns no records for a term absent from every stored record",
+            "a second instance mints ids distinct from every id the first instance minted, and both records remain readable",
+            "export() over a directory with no backing file yet resolves zero records rather than throwing",
+            "a record read back by a later instance is exactly {id, principal, content, updatedAt}, with the principal round-tripped unchanged",
+            "export() scoped to one tenant returns that tenant's record and never the other tenant's, from the same backing directory",
+            "get() resolves undefined for a record id proposed under a different tenant, even though the id exists in the same backing file",
+            "export() scoped to one sessionId returns only that session's record, while a tenant-wide scope naming no sessionId returns both",
+            "revise() rejects an id proposed under a different tenant with MEMORY_RECORD_NOT_FOUND, leaving the record's content untouched",
+            "revise() rejects an id that was never proposed in any tenant with MEMORY_RECORD_NOT_FOUND",
+            "query() at exactly contextBudget.maxRecords returns every match untruncated",
+            "query() one record over contextBudget.maxRecords truncates to the budget and flags truncated",
+            "with providerId pinned to durable-file alongside a registered in-memory fake, the record is written durably and read back by a later instance"
+          ],
+          "capturedAtUtc": "2026-09-03T21:34:49.832Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -3675,7 +3699,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "abd04f2b279612deeb1145b0569b4baa2abee162",
+      "candidateSha": "491acfd8eb9cd40330eb52bfe0c74220697a36e8",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
