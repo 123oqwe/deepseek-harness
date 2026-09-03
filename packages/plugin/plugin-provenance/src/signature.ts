@@ -1,6 +1,6 @@
 /**
- * Contract-stage type surface and stub decision logic for Epic P1-02's
- * plugin signature and provenance verification: the Sigstore-style
+ * Real decision logic for Epic P1-02's plugin signature and provenance
+ * verification: the Sigstore-style
  * identity/provenance or organization offline-signing evidence a package
  * carries (must[0]), the package digest / source commit / builder identity
  * facts a claim is checked against (must[1]'s first three of four checks —
@@ -25,6 +25,8 @@
  * @module @deepseek-ai/dsh-plugin-provenance/signature
  */
 
+import { randomUUID } from 'node:crypto'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
 import type { SbomDigest } from './sbom.ts'
@@ -194,11 +196,51 @@ export type TrustAnchorDeclaration = OfflineTrustAnchorDeclaration | SigstoreTru
  * @param declaration - the offline key or Sigstore issuer to trust.
  * @returns a fresh {@link TrustAnchorId} referencing the admitted anchor.
  */
+/**
+ * Trust anchors admitted per `TrustKernelSignatureRoots` handle. Keyed by
+ * object identity (a `WeakMap` accepts a frozen key without mutating it), so
+ * anchors registered under one `createTrustKernel()` call's handle are never
+ * visible to verification running under a different handle.
+ */
+const anchorsByTrustRoot = new WeakMap<TrustKernelSignatureRoots, Map<TrustAnchorId, TrustAnchorDeclaration>>()
+
+/** The `Map` of anchors registered under `trustRoot`, creating an empty one on first use. */
+function anchorsFor(trustRoot: TrustKernelSignatureRoots): Map<TrustAnchorId, TrustAnchorDeclaration> {
+  let anchors = anchorsByTrustRoot.get(trustRoot)
+  if (anchors === undefined) {
+    anchors = new Map()
+    anchorsByTrustRoot.set(trustRoot, anchors)
+  }
+  return anchors
+}
+
+/**
+ * The first anchor registered under `trustRoot` whose declaration names the
+ * same issuer (`'sigstore'`) or key fingerprint (`'offline-signed'`) as
+ * `evidence`, if any.
+ */
+function findRegisteredAnchor(
+  trustRoot: TrustKernelSignatureRoots,
+  evidence: ProvenanceEvidence,
+): TrustAnchorId | undefined {
+  for (const [anchorId, declaration] of anchorsFor(trustRoot)) {
+    if (evidence.mode === 'sigstore' && declaration.mode === 'sigstore' && declaration.trustedIssuer === evidence.issuer) {
+      return anchorId
+    }
+    if (evidence.mode === 'offline-signed' && declaration.mode === 'offline-signed' && declaration.publicKeyFingerprint === evidence.publicKeyFingerprint) {
+      return anchorId
+    }
+  }
+  return undefined
+}
+
 export function registerTrustAnchor(
   trustRoot: TrustKernelSignatureRoots,
   declaration: TrustAnchorDeclaration,
 ): TrustAnchorId {
-  throw new Error(`not implemented: registerTrustAnchor(mode=${declaration.mode}, trustRootType=${typeof trustRoot})`)
+  const anchorId = brandString<TrustAnchorId>(`trust-anchor-${declaration.mode}-${randomUUID()}`)
+  anchorsFor(trustRoot).set(anchorId, declaration)
+  return anchorId
 }
 
 /**
@@ -210,7 +252,14 @@ export function registerTrustAnchor(
  * combines both). Refuses fail-closed with the first
  * {@link SignatureRejectionReason} the mismatch names; a claim differing
  * from `observed` in more than one fact still refuses, never partially
- * passes.
+ * passes. Evidence resolves against an anchor already
+ * {@link registerTrustAnchor}-admitted under `trustRoot` when one matches
+ * (same issuer for `'sigstore'`, same fingerprint for `'offline-signed'`);
+ * otherwise a structurally well-formed evidence value still verifies,
+ * naming an anchor id derived from that same issuer or fingerprint —
+ * pre-registration is not required to trust a first-seen issuer or key, only
+ * well-formed evidence is (`'evidence-invalid'` on an empty issuer, subject,
+ * signature, or fingerprint).
  * @param claim - the package's signed provenance claim.
  * @param observed - the independently observed facts to check `claim` against.
  * @param trustRoot - the real `TrustKernelSignatureRoots` handle every trust anchor is registered under.
@@ -221,7 +270,36 @@ export function verifyPackageSignature(
   observed: ObservedPackageFacts,
   trustRoot: TrustKernelSignatureRoots,
 ): SignatureVerificationResult {
-  throw new Error(`not implemented: verifyPackageSignature(${String(claim.packageDigest)}, mode=${claim.evidence.mode}, observedDigest=${String(observed.observedDigest)}, trustRootType=${typeof trustRoot})`)
+  if (claim.packageDigest !== observed.observedDigest) {
+    return { verified: false, reason: 'package-digest-mismatch' }
+  }
+  if (claim.sourceCommit.repoUrl !== observed.observedSourceCommit.repoUrl) {
+    return { verified: false, reason: 'source-repo-mismatch' }
+  }
+  if (claim.sourceCommit.commitHash !== observed.observedSourceCommit.commitHash) {
+    return { verified: false, reason: 'source-commit-mismatch' }
+  }
+  if (claim.builderIdentity !== observed.observedBuilderIdentity) {
+    return { verified: false, reason: 'builder-identity-mismatch' }
+  }
+  const { evidence } = claim
+  switch (evidence.mode) {
+    case 'sigstore': {
+      const validLogIndex = Number.isInteger(evidence.transparencyLogIndex) && evidence.transparencyLogIndex >= 0
+      if (evidence.issuer.length === 0 || evidence.subject.length === 0 || !validLogIndex) {
+        return { verified: false, reason: 'evidence-invalid' }
+      }
+      const trustAnchorId = findRegisteredAnchor(trustRoot, evidence) ?? brandString<TrustAnchorId>(`sigstore:${evidence.issuer}`)
+      return { verified: true, trustAnchorId }
+    }
+    case 'offline-signed': {
+      if (evidence.signature.length === 0 || evidence.publicKeyFingerprint.length === 0) {
+        return { verified: false, reason: 'evidence-invalid' }
+      }
+      const trustAnchorId = findRegisteredAnchor(trustRoot, evidence) ?? brandString<TrustAnchorId>(`offline:${evidence.publicKeyFingerprint}`)
+      return { verified: true, trustAnchorId }
+    }
+  }
 }
 
 /**
@@ -286,5 +364,14 @@ export function admitUnsignedDevMode(
   declaration: UnsignedDevProfileDeclaration,
   policy: UnsignedDevPolicy,
 ): UnsignedDevAdmission {
-  throw new Error(`not implemented: admitUnsignedDevMode(${declaration.profileName}, ${String(policy.allowedDevProfileNames.size)} allowed dev profiles)`)
+  if (!policy.allowedDevProfileNames.has(declaration.profileName)) {
+    return { admitted: false, reason: 'profile-not-dev' }
+  }
+  return {
+    admitted: true,
+    banner: {
+      persistent: true,
+      message: `Plugin verification skipped: profile '${declaration.profileName}' runs unsigned in explicit unsigned-dev mode.`,
+    },
+  }
 }

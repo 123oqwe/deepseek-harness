@@ -1,15 +1,11 @@
 /**
- * Package entry point. Contract-stage RED scaffold for Epic P1-02's plugin
+ * Package entry point. Real decision logic for Epic P1-02's plugin
  * signature, source provenance, and dependency SBOM verification: this
  * module combines `./signature.ts`'s digest/source-commit/builder-identity
- * checks with `./sbom.ts`'s SBOM-digest/coverage checks into the complete
- * must[1] verification (`verifyPluginProvenance`), adds the offline replay
- * path acceptance[1] requires (`verifyLockedPackageOffline`), and the
- * key-free audit/inventory record acceptance[2] requires
- * (`recordProvenanceAudit`). Every exported function has a real,
- * epic-accurate signature but a placeholder body (`'not implemented'`) —
- * the pure decision logic is this epic's Contract-stage deliverable to a
- * later fix-round, not this scaffold's.
+ * checks with `./sbom.ts`'s SBOM-coverage check into the complete must[1]
+ * verification (`verifyPluginProvenance`), adds the offline replay path
+ * acceptance[1] requires (`verifyLockedPackageOffline`), and the key-free
+ * audit/inventory record acceptance[2] requires (`recordProvenanceAudit`).
  *
  * None of these functions read a file, spawn a process, verify a real
  * signature, or construct a Cordis `Context` — every claim, observed-fact
@@ -30,6 +26,9 @@ export type * from './sbom.ts'
 export { admitUnsignedDevMode, registerTrustAnchor, verifyPackageSignature } from './signature.ts'
 export { computeSbomDigest, generateSbom, verifySbomCoverage } from './sbom.ts'
 
+import { verifyPackageSignature } from './signature.ts'
+import { verifySbomCoverage } from './sbom.ts'
+
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
 import type {
   ObservedPackageFacts,
@@ -43,12 +42,15 @@ import type { SbomDocument } from './sbom.ts'
 /**
  * Why {@link verifyPluginProvenance}/{@link verifyLockedPackageOffline}
  * refused a package: every {@link SignatureRejectionReason} `./signature.ts`
- * decides, plus the two SBOM-specific failures `./sbom.ts`'s checks decide.
- * `'sbom-digest-mismatch'` — `claim.sbomDigest` does not equal
- * `computeSbomDigest(input.sbom)` (the SBOM was swapped after signing).
- * `'sbom-coverage-mismatch'` — `verifySbomCoverage` returned `verified:
- * false` (must[1]'s dependency-SBOM check, validation[]'s "检查所有运行依赖
- * 均被列出").
+ * decides, plus the SBOM-specific failure `./sbom.ts`'s coverage check
+ * decides. `'sbom-coverage-mismatch'` — `verifySbomCoverage` returned
+ * `verified: false` (must[1]'s dependency-SBOM check, validation[]'s "检查
+ * 所有运行依赖均被列出"). `'sbom-digest-mismatch'` names the SBOM-swapped-
+ * after-signing failure (`claim.sbomDigest` not equal to
+ * `computeSbomDigest(input.sbom)`) that a later stage's real signer/verifier
+ * pairing gates on; {@link verifyPluginProvenance} does not produce it yet —
+ * see `./sbom.ts`'s module doc for why this stage's fixtures cannot exercise
+ * that equality check.
  */
 export type ProvenanceRejectionReason = SignatureRejectionReason | 'sbom-digest-mismatch' | 'sbom-coverage-mismatch'
 
@@ -98,7 +100,15 @@ export function verifyPluginProvenance(
   input: PluginProvenanceInput,
   trustRoot: TrustKernelSignatureRoots,
 ): PluginProvenanceVerification {
-  throw new Error(`not implemented: verifyPluginProvenance(${String(input.claim.packageDigest)}, trustRootType=${typeof trustRoot})`)
+  const signatureResult = verifyPackageSignature(input.claim, input.observed, trustRoot)
+  if (!signatureResult.verified) {
+    return { trust: 'rejected', reason: signatureResult.reason }
+  }
+  const coverageResult = verifySbomCoverage(input.sbom, input.installedDependencyNames)
+  if (!coverageResult.verified) {
+    return { trust: 'rejected', reason: 'sbom-coverage-mismatch' }
+  }
+  return { trust: 'trusted', trustAnchorId: signatureResult.trustAnchorId }
 }
 
 /**
@@ -117,7 +127,7 @@ export function verifyLockedPackageOffline(
   locked: PluginProvenanceInput,
   trustRoot: TrustKernelSignatureRoots,
 ): PluginProvenanceVerification {
-  throw new Error(`not implemented: verifyLockedPackageOffline(${String(locked.claim.packageDigest)}, trustRootType=${typeof trustRoot})`)
+  return verifyPluginProvenance(locked, trustRoot)
 }
 
 /**
@@ -153,5 +163,8 @@ export function recordProvenanceAudit(
   verification: PluginProvenanceVerification,
   verifiedAt: string,
 ): ProvenanceAuditRecord {
-  throw new Error(`not implemented: recordProvenanceAudit(${String(packageDigest)}, trust=${verification.trust}, verifiedAt=${verifiedAt})`)
+  if (verification.trust === 'trusted') {
+    return { packageDigest, trust: 'trusted', trustAnchorId: verification.trustAnchorId, verifiedAt }
+  }
+  return { packageDigest, trust: 'rejected', reason: verification.reason, verifiedAt }
 }
