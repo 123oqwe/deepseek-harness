@@ -1,31 +1,44 @@
 /**
- * Real decision logic for Epic P1-02's plugin signature and provenance
- * verification: the Sigstore-style
- * identity/provenance or organization offline-signing evidence a package
- * carries (must[0]), the package digest / source commit / builder identity
- * facts a claim is checked against (must[1]'s first three of four checks —
- * `./sbom.ts` owns the fourth), the `TrustKernel`-held trust root every
- * check runs against (must[2]/must[3]), and the explicit-dev-profile-gated
- * `unsigned-dev` fallback (must[4]).
+ * Decision logic for Epic P1-02's plugin signature and provenance
+ * verification: the Sigstore-style identity/provenance or organization
+ * offline-signing evidence a package carries (must[0]), the package digest /
+ * source commit / builder identity facts a claim is checked against (must[1]'s
+ * first three of four checks — `./sbom.ts` owns the fourth), and the
+ * explicit-dev-profile-gated `unsigned-dev` fallback (must[4]).
+ *
+ * **What the `trustRoot` parameter does, and what it does not.** Every
+ * verification and registration function below takes a
+ * {@link TrustKernelSignatureRoots} handle, and this module uses it as a
+ * `WeakMap` key and nothing else: it scopes which registered trust anchors a
+ * verification can see, so anchors admitted under one `createTrustKernel()`
+ * call are invisible to another. Its CONTENTS are never read, and there are
+ * none to read — `createTrustKernel()` mints `signatureRoots` as
+ * `Object.freeze({})`, holding no key material, which is exactly why an empty
+ * frozen object serves as one. Consequently must[2] ("TrustKernel 持有可信根")
+ * is NOT satisfied by this module and must not be reported as such
+ * (BLOCKED-050). must[3] ("普通插件不能修改") holds only in its structural
+ * sense: no function here accepts a plugin-supplied substitute, and no
+ * ordinary caller can construct a handle — but a root that cannot be swapped
+ * is still an empty root.
+ *
+ * **No function in this module verifies a signature.**
+ * {@link verifyPackageSignature} compares claimed facts against observed ones
+ * and then checks only that the evidence's fields are non-empty;
+ * `OfflineSignedProvenanceEvidence.signature` is never checked against a key,
+ * and an issuer or fingerprint no {@link registerTrustAnchor} call ever
+ * admitted is trusted on first sight. {@link computePackageDigest} is the one
+ * real cryptographic operation here, and it binds an artifact to a claim, not
+ * a claim to an authority. See the package README's Known Limitations.
  *
  * **Grounding.** {@link PackageDigest}, {@link SourceCommitHash},
  * {@link BuilderIdentity}, and {@link TrustAnchorId} have no branded-type
  * precedent in this repo; each follows the `Branded<B>` idiom from
  * `@deepseek-ai/dsh-brand` per this repo's opaque-cross-boundary-id rule.
- * The trust root itself is not a type this package defines: must[2]/must[3]
- * ("TrustKernel 持有可信根" / "普通插件不能修改" — the trust root lives in
- * TrustKernel, and an ordinary plugin cannot modify it) are satisfied by
- * requiring `@deepseek-ai/dsh-trust-kernel`'s own
- * {@link TrustKernelSignatureRoots} handle — a value opaque and frozen at
- * construction, with no exported constructor in this package or that one
- * besides `createTrustKernel()` — as the sole trust-root parameter every
- * verification and trust-anchor-registration function below accepts. No
- * function in this module accepts a plugin-supplied substitute.
  *
  * @module @deepseek-ai/dsh-plugin-provenance/signature
  */
 
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
@@ -33,6 +46,29 @@ import type { SbomDigest } from './sbom.ts'
 
 /** Content digest of an installed package tarball (must[1]'s "package digest"). */
 export type PackageDigest = Branded<'PackageDigest'>
+
+/**
+ * Recompute a package's {@link PackageDigest} from the package's actual
+ * bytes, so that the digest {@link verifyPackageSignature} compares against a
+ * claim is derived from the artifact on disk rather than asserted alongside
+ * it. This is what makes acceptance[0]'s "篡改一个字节" (a single tampered
+ * byte) a real rejection: any change to `packageBytes` — a flipped bit, a
+ * reordering, an inserted or removed byte — yields a different digest, so a
+ * claim whose `packageDigest` was fixed before the tampering no longer
+ * matches what is installed.
+ *
+ * Its guarantee stops exactly there, and this module holds no key material
+ * that could extend it: the digest binds the artifact to the claim, not the
+ * claim to any authority. An attacker who tampers with the bytes AND rewrites
+ * the claim's `packageDigest` to match still verifies — detecting that needs
+ * a signature over the claim against a trust root, which
+ * `packages/kernel/trust-kernel` does not yet hold (BLOCKED-050).
+ * @param packageBytes - the package artifact's exact bytes, as read from the installed tarball.
+ * @returns the `sha256:<hex>` digest of `packageBytes`, using the same encoding as `./sbom.ts`'s `computeSbomDigest`.
+ */
+export function computePackageDigest(packageBytes: Uint8Array): PackageDigest {
+  return brandString<PackageDigest>(`sha256:${createHash('sha256').update(packageBytes).digest('hex')}`)
+}
 
 /** A git commit hash, always paired with a repo URL in {@link SourceCommitReference}. */
 export type SourceCommitHash = Branded<'SourceCommitHash'>
@@ -184,14 +220,16 @@ export interface SigstoreTrustAnchorDeclaration {
 export type TrustAnchorDeclaration = OfflineTrustAnchorDeclaration | SigstoreTrustAnchorDeclaration
 
 /**
- * must[2]/must[3]'s sole trust-anchor admission entrypoint: register
- * `declaration` as a new trust anchor under `trustRoot`. The only way to
- * call this successfully is to already hold a real
- * `TrustKernelSignatureRoots` handle — `@deepseek-ai/dsh-trust-kernel`'s
- * `createTrustKernel()` is the only exported value in this repo that
- * produces one, and the handle it returns is deep-frozen — so no ordinary
- * plugin can construct, mutate, or substitute a trust root to smuggle in an
- * anchor {@link verifyPackageSignature} would then wrongly trust.
+ * The sole trust-anchor admission entrypoint: register `declaration` as a new
+ * trust anchor under `trustRoot`. The only way to call this successfully is
+ * to already hold a real `TrustKernelSignatureRoots` handle —
+ * `@deepseek-ai/dsh-trust-kernel`'s `createTrustKernel()` is the only exported
+ * value in this repo that produces one, and the handle it returns is
+ * deep-frozen — so no ordinary plugin can construct, mutate, or substitute a
+ * trust root. Registration decides which anchor id a verdict NAMES; it does
+ * not decide whether a claim verifies at all, because
+ * {@link verifyPackageSignature} also trusts an unregistered issuer or key on
+ * first sight (see this module's own doc comment).
  * @param trustRoot - the real `TrustKernelSignatureRoots` handle from `createTrustKernel()`.
  * @param declaration - the offline key or Sigstore issuer to trust.
  * @returns a fresh {@link TrustAnchorId} referencing the admitted anchor.
