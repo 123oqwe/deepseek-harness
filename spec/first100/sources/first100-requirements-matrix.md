@@ -355,7 +355,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W4 / `P2-01`、`P0-06`。
 - **问题 → 目标：** Tool call 只表达函数名和参数，无法统一覆盖 API、浏览器、shell、嵌套 code-mode、子 Agent 代执行和非工具型插件动作。 → 在任何有副作用的执行前，以规范化对象描述动作、目标、参数、预期状态变化、幂等与补偿。
-- **Files：** target `packages/core/tools/src/types.ts` [B]；`packages/core/tools/src/index.ts` [B]；`packages/core/tools/src/code-mode.ts` [B]；`packages/core/agent-loop/src/tool-calls.ts` [B]；`packages/core/session/src/known-event-types.ts` [B]；new `packages/action/action-manifest/src/index.ts` [N]；`packages/action/action-manifest/src/types.ts` [N]；`packages/action/action-manifest/src/canonicalize.ts` [N]；`packages/action/action-manifest/tests/manifest.spec.ts` [N]。
+- **Files：** target `packages/core/tools/src/types.ts` [B]；`packages/core/tools/src/index.ts` [B]；`packages/core/tools/src/ptc.ts` [B]；`packages/core/agent-loop/src/tool-calls.ts` [B]；`packages/core/session/src/known-event-types.ts` [B]；new `packages/action/action-manifest/src/index.ts` [N]；`packages/action/action-manifest/src/types.ts` [N]；`packages/action/action-manifest/src/canonicalize.ts` [N]；`packages/action/action-manifest/tests/manifest.spec.ts` [N]。
 - **MUST：** 字段包含 actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements。；所有执行路径先生成并 durable append manifest，再做 policy/approval。；code-mode 内嵌工具和插件 RPC 不能绕过。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -584,7 +584,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W10 / `P3-02`、`P3-05`。
 - **问题 → 目标：** 本地平台实现能力不同；若某个限制失败而仍继续执行，会形成隐蔽降级。 → 把 sandbox-local 从便利 provider 提升为可测量、可证明、语义一致的本地执行后端。
-- **Files：** target `packages/sandbox/sandbox-local/src/index.ts` [B]；`packages/sandbox/sandbox-local/src/profiles.ts` [B]；`packages/sandbox/sandbox-local/src/invariant.ts` [B]；`packages/sandbox/sandbox/src/invariant.ts` [B]；new `packages/sandbox/sandbox-local/src/capabilities.ts` [N]；`packages/sandbox/sandbox-local/src/attestation.ts` [N]；`packages/sandbox/sandbox-local/tests/conformance.e2e.ts` [N]。
+- **Files：** target `packages/sandbox/sandbox-local/src/index.ts` [B]；`packages/sandbox/sandbox-local/src/profiles.ts` [B]；new `packages/sandbox/sandbox-local/src/capabilities.ts` [N]；`packages/sandbox/sandbox-local/src/attestation.ts` [N]；`packages/sandbox/sandbox-local/tests/conformance.e2e.ts` [N]。
 - **MUST：** 启动时生成 attestation；开发降级需显式 flag。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -930,7 +930,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W9 / `P2-02`、`P4-03`。
 - **问题 → 目标：** 当前外部 provider 主要收到任务文本和工作目录；父上下文、persona、tool filter、深度、验证和 capability delegation 不完整。 → 让内部和外部子 Agent 接收一致的目标、上下文、权限、预算、世界和输出合同。
-- **Files：** target `packages/subagent/subagent/src/descriptor.ts` [B]；`packages/subagent/subagent/src/descriptor-seed.ts` [B]；`packages/subagent/subagent/src/depth.ts` [B]；`packages/subagent/subagent/src/runtime-types.ts` [B]；`packages/subagent/subagent/src/client.ts` [B]；new `packages/subagent/subagent/src/request.ts` [N]；`packages/subagent/subagent/tests/request-contract.spec.ts` [N]。
+- **Files：** target `packages/subagent/subagent/src/descriptor.ts` [B]；`packages/subagent/subagent/src/descriptor-seed.ts` [B]；`packages/subagent/subagent/src/depth.ts` [B]；`packages/subagent/subagent/src/types.ts` [B]；`packages/subagent/subagent/src/client.ts` [B]；new `packages/subagent/subagent/src/request.ts` [N]；`packages/subagent/subagent/tests/request-contract.spec.ts` [N]。
 - **MUST：** Request 包含 objective、deliverables、context refs、artifact refs、capability token、WorldSpec、budget、output schema、verification obligations、parent trace。；传引用而非复制全部父上下文；provider 决定如何 materialize。；所有字段进入 session/run event，敏感值仅用引用。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -1103,7 +1103,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W12 / `P4-03`、`P6-04`、`P2-02`。
 - **问题 → 目标：** 社区 context 插件展示了可见性价值；但核心需要稳定、只读、带来源的 projection contract，而不是把内部 Context 暴露给 UI/插件。 → 让每个 Agent 只得到完成任务所需的上下文，并支持类似 dsh-context 的可视化而不暴露内部可变对象。
-- **Files：** target `packages/core/agent-loop/src/runtime-context.ts` [B]；`packages/context/agent-instructions/src/state.ts` [B]；`packages/context/agent-instructions/src/render.ts` [B]；`packages/host/apiproxy/README.md` [B]；new `packages/context/context-topology/src/index.ts` [N]；`packages/context/context-topology/src/types.ts` [N]；`packages/context/context-telemetry/src/index.ts` [N]；`packages/context/context-telemetry/tests/isolation.spec.ts` [N]。
+- **Files：** target `packages/core/agent-loop/src/runtime-context.ts` [B]；`packages/context/agent-instructions/src/state.ts` [B]；`packages/context/agent-instructions/src/render.ts` [B]；new `packages/context/context-topology/src/index.ts` [N]；`packages/context/context-topology/src/types.ts` [N]；`packages/context/context-telemetry/src/index.ts` [N]；`packages/context/context-telemetry/tests/isolation.spec.ts` [N]。
 - **MUST：** RunPlan 为每个 Agent 声明 shared/private/retrievable context zones。；Telemetry 只发布 source ids、token counts、selection reasons、redacted previews。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -1304,7 +1304,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W16 / `P0-08`、`P7-05`、`P7-08`。
 - **问题 → 目标：** 当前 BENCHMARK.md 只有启动方式，没有覆盖长任务、安全、审批、外部副作用、恢复、多模型、插件攻击、租户隔离和 SDK 重连的系统级验收矩阵。 → 证明底座具备支撑多类用途的通用能力，同时防止为了过测试把销售、金融或医疗逻辑写进核心。
-- **Files：** target `BENCHMARK.md` [B]；`package.json` [B]；`docs/testing.md` [B]；`packages/test-support/README.md` [B]；`examples/jsonrpc-agent/README.md` [B]；new `tests/capability/README.md` [N]；`tests/capability/manifest.yaml` [N]；`tests/capability/runner.ts` [N]；`tests/capability/worlds/code-world.ts` [N]；`tests/capability/worlds/research-world.ts` [N]；`tests/capability/worlds/external-write-world.ts` [N]；`tests/capability/worlds/high-risk-world.ts` [N]；`tests/capability/worlds/long-run-world.ts` [N]；`tests/capability/worlds/malicious-plugin-world.ts` [N]；`tests/capability/worlds/multi-tenant-world.ts` [N]；`tests/capability/worlds/sdk-reconnect-world.ts` [N]。
+- **Files：** target `BENCHMARK.md` [B]；`package.json` [B]；`docs/testing.md` [B]；`packages/test-support/README.md` [B]；new `tests/capability/README.md` [N]；`tests/capability/manifest.yaml` [N]；`tests/capability/runner.ts` [N]；`tests/capability/worlds/code-world.ts` [N]；`tests/capability/worlds/research-world.ts` [N]；`tests/capability/worlds/external-write-world.ts` [N]；`tests/capability/worlds/high-risk-world.ts` [N]；`tests/capability/worlds/long-run-world.ts` [N]；`tests/capability/worlds/malicious-plugin-world.ts` [N]；`tests/capability/worlds/multi-tenant-world.ts` [N]；`tests/capability/worlds/sdk-reconnect-world.ts` [N]。
 - **MUST：** 建立 15 类通用场景：代码变更、证据研究、外部写、日程/消息、高风险财务模拟、医疗/法律安全策略、24h 虚拟长任务、50-Agent、Provider failover、恶意插件、租户隔离、自扩展、恶意附件、崩溃恢复、SDK 重连。；场景只提供目标、工具契约、世界状态、风险策略和验收条件；具体领域行为由 fixture Skill/Provider 提供，测试结束即卸载。；分为 deterministic scripted-model lane 与 real-model statistical lane，禁止把模型波动混入安全硬门。；每个场景输出完整 Evidence/Outcome/Trace，并检查资源清理和副作用。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不以“能跑一个销售 Demo”代替通用 Harness 验收。
@@ -1351,7 +1351,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W16 / `P4-01`、`P7-05`、`P6-09`、`P8-01`。
 - **问题 → 目标：** 当前 SDK 主要暴露 initialize、session/prompt、shutdown 和少量通知；外部客户端需要解析低层 Session event 才能推断 Run、Action、审批或验证状态，无法稳定治理长任务。 → 把 Harness 控制平面从“提交 prompt、看 session event”升级为可以精确管理真实工作的资源 API。
-- **Files：** target `packages/sdk/protocol/src/types.ts` [B]；`packages/sdk/server/src/server.ts` [B]；`packages/sdk/client/src/api.ts` [B]；`packages/api/remotes/src/index.ts` [B]；`packages/api/remotes/src/types.ts` [B]；`packages/host/apiproxy/src/api-proxy.ts` [B]；new `packages/api/remotes/src/run.ts` [N]；`packages/api/remotes/src/action.ts` [N]；`packages/api/remotes/src/approval.ts` [N]；`packages/api/remotes/src/artifact.ts` [N]；`packages/api/remotes/src/verification.ts` [N]；`packages/api/remotes/src/world.ts` [N]；`packages/sdk/protocol/src/resources.ts` [N]；`packages/sdk/protocol/tests/resources.contract.spec.ts` [N]。
+- **Files：** target `packages/sdk/protocol/src/types.ts` [B]；`packages/sdk/server/src/server.ts` [B]；`packages/sdk/client/src/api.ts` [B]；`packages/api/remotes/src/index.ts` [B]；`packages/api/remotes/src/types.ts` [B]；new `packages/api/remotes/src/run.ts` [N]；`packages/api/remotes/src/action.ts` [N]；`packages/api/remotes/src/approval.ts` [N]；`packages/api/remotes/src/artifact.ts` [N]；`packages/api/remotes/src/verification.ts` [N]；`packages/api/remotes/src/world.ts` [N]；`packages/sdk/protocol/src/resources.ts` [N]；`packages/sdk/protocol/tests/resources.contract.spec.ts` [N]。
 - **MUST：** 定义稳定资源 ID、summary/detail representations、pagination、filter、watch 和 optimistic concurrency token。；提供 run.create/get/list、agent.get/list、action.get/list、approval.get/list、artifact.get/list、verification.get、world.get/list。；Remote API 只读取各领域 Service Definition，不复制业务状态；遗留 API Proxy 逐项迁移并保留明确 compatibility route。；所有资源响应带 tenant、classification、revision、createdAt/updatedAt、provenance 和 allowedActions。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不把 Remote Resource 本身变成新的状态源；canonical domain ledger 仍是事实来源。
@@ -1407,7 +1407,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W17 / `P2-01`、`P2-02`、`P8-02`。
 - **问题 → 目标：** 官方 identity README 明确当前值不代表 authenticated account；Host/SDK/API 若只依赖进程或 workspace 身份，无法阻止跨租户读取、命令伪造和权限扩大。 → 把当前匿名相关 ID 升级为真正的认证与授权边界，使 Harness 可安全运行多用户和企业工作。
-- **Files：** target `packages/identity/README.md` [B]；`packages/api/remotes/src/agent-lookup.ts` [B]；`packages/api/gateway/src/index.ts` [B]；`packages/host/webserver/src/index.ts` [B]；`packages/sdk/protocol/src/types.ts` [B]；`packages/workspace/workspace/src/entity.ts` [B]；new `packages/identity/auth/src/index.ts` [N]；`packages/identity/auth/src/types.ts` [N]；`packages/identity/tenant/src/index.ts` [N]；`packages/identity/authorization/src/index.ts` [N]；`packages/identity/authorization/src/policy.ts` [N]；`packages/api/auth-middleware/src/index.ts` [N]；`packages/identity/authorization/tests/tenant-isolation.e2e.ts` [N]。
+- **Files：** target `packages/identity/README.md` [B]；`packages/api/gateway/src/index.ts` [B]；`packages/host/webserver/src/index.ts` [B]；`packages/sdk/protocol/src/types.ts` [B]；`packages/workspace/workspace/src/entity.ts` [B]；new `packages/identity/auth/src/index.ts` [N]；`packages/identity/auth/src/types.ts` [N]；`packages/identity/tenant/src/index.ts` [N]；`packages/identity/authorization/src/index.ts` [N]；`packages/identity/authorization/src/policy.ts` [N]；`packages/api/auth-middleware/src/index.ts` [N]；`packages/identity/authorization/tests/tenant-isolation.e2e.ts` [N]。
 - **MUST：** 定义 authenticated Principal、ServiceAccount、Tenant、Organization、Role、Attribute 和 scoped session。；API/SDK handshake 验证 OIDC/JWT 或可替换 Auth Provider；内部调用使用短期 service token 与明确 audience。；所有 resource lookup 先绑定 tenant，再做 RBAC+ABAC+CapabilityToken 检查；禁止先全局 lookup 后过滤。；Workspace、Run、Artifact、Memory、Approval、Plugin、World 和 Audit 全部携带不可为空的 tenant boundary。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不把匿名 telemetry correlation id 当作用户登录身份。
@@ -1435,7 +1435,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W18 / `P8-02`、`P8-03`、`P8-04`、`P8-05`。
 - **问题 → 目标：** 当前 Web 主要围绕对话/Session，复杂 Run 的 Agent Graph、Workflow phases、预算、Action、Policy、Approval、Evidence、Repair 和 World 状态缺少统一操作界面。 → 让人类能看见系统正在做什么、为什么这样做、哪里阻塞，并能安全干预。
-- **Files：** target `apps/web/src/main.ts` [B]；`packages/client/runtime/src/index.ts` [B]；`packages/client/modules/src/index.ts` [B]；`packages/api/remotes/src/client/index.ts` [B]；`packages/host/apiproxy/src/api-proxy.ts` [B]；new `packages/client/ui-run-control/src/index.ts` [N]；`packages/client/ui-run-control/src/store.ts` [N]；`packages/client/ui-run-control/src/components/RunList.tsx` [N]；`packages/client/ui-run-control/src/components/RunGraph.tsx` [N]；`packages/client/ui-run-control/src/components/ActionTrace.tsx` [N]；`packages/client/ui-run-control/src/components/EvidencePanel.tsx` [N]；`packages/client/ui-run-control/src/components/ApprovalQueue.tsx` [N]；`packages/client/ui-run-control/tests/run-control.e2e.ts` [N]。
+- **Files：** target `apps/web/src/main.ts` [B]；`packages/client/modules/src/index.ts` [B]；`packages/api/remotes/src/client/index.ts` [B]；new `packages/client/ui-run-control/src/index.ts` [N]；`packages/client/ui-run-control/src/store.ts` [N]；`packages/client/ui-run-control/src/components/RunList.tsx` [N]；`packages/client/ui-run-control/src/components/RunGraph.tsx` [N]；`packages/client/ui-run-control/src/components/ActionTrace.tsx` [N]；`packages/client/ui-run-control/src/components/EvidencePanel.tsx` [N]；`packages/client/ui-run-control/src/components/ApprovalQueue.tsx` [N]；`packages/client/ui-run-control/tests/run-control.e2e.ts` [N]。
 - **MUST：** 展示 Run 列表、状态、Agent/Workflow DAG、当前阶段、预算、成本、阻塞、Action、Policy 决策、Evidence、Verification 与 artifacts。；Pause/cancel/resume/retry/approve/reject/takeover 操作调用 Remote command，UI 不直接篡改状态。；基于 server returned allowedActions 控制显示，但服务端仍强制鉴权；敏感参数按 classification 脱敏。；使用 resumable stream 更新，断线重连后从 snapshot+delta 恢复。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不把 UI 作为 Policy 或状态事实来源。
@@ -1449,7 +1449,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W18 / `P2-10`、`P3-10`、`P6-10`、`P8-06`。
 - **问题 → 目标：** 当前 settings/profile/permission presets 更偏本地用户配置，缺少 org→tenant→workspace→run 的不可弱化政策层、资源配额、保留/删除、legal hold 和标准化审计导出。 → 使企业能在组织层统一约束 Agent，同时保留项目级灵活性和完整审计。
-- **Files：** target `packages/settings/settings/src/index.ts` [B]；`packages/interaction/permission-presets/src/index.ts` [B]；`packages/workspace/workspace/src/index.ts` [B]；`packages/storage/storage/src/index.ts` [B]；`packages/host/apiproxy/src/session-export.ts` [B]；new `packages/governance/org-policy/src/index.ts` [N]；`packages/governance/org-policy/src/types.ts` [N]；`packages/governance/quota/src/index.ts` [N]；`packages/governance/retention/src/index.ts` [N]；`packages/governance/audit-export/src/index.ts` [N]；`packages/client/ui-governance/src/index.ts` [N]；`packages/governance/org-policy/tests/hierarchy.e2e.ts` [N]。
+- **Files：** target `packages/settings/settings/src/index.ts` [B]；`packages/interaction/permission-presets/src/index.ts` [B]；`packages/workspace/workspace/src/index.ts` [B]；`packages/storage/storage/src/index.ts` [B]；`packages/session-query/session-log-export/src/archive.ts` [B]；new `packages/governance/org-policy/src/index.ts` [N]；`packages/governance/org-policy/src/types.ts` [N]；`packages/governance/quota/src/index.ts` [N]；`packages/governance/retention/src/index.ts` [N]；`packages/governance/audit-export/src/index.ts` [N]；`packages/client/ui-governance/src/index.ts` [N]；`packages/governance/org-policy/tests/hierarchy.e2e.ts` [N]。
 - **MUST：** 实现 monotonic policy hierarchy：下层可收紧但不能放宽上层 deny、data residency、model/provider、plugin trust、budget 和 approval 要求。；定义 tenant/workspace/run 配额：并发 Agent、CPU、memory、network、token、cost、storage、artifact、workflow。；实现 retention、erase、legal hold、export jobs，并覆盖 Session/Run/Action/Evidence/Artifact/Memory/Telemetry outbox。；审计导出使用 versioned schema、完整性链、分页和增量 cursor，可送 SIEM 但默认脱敏。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不在 Harness 内实现某个国家/行业的全部法规；提供可验证 Policy Pack 接口。
