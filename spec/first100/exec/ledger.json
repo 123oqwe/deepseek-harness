@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T18:39:50.492Z",
-  "inputDigest": "ab346bc8929b47c30d74202f15da8af4f0a680605e485ad452f7337077513032",
+  "lastUpdatedUtc": "2026-09-03T20:10:12.099Z",
+  "inputDigest": "fc662ff3e6b3939b73fa422667f50a0df7dcf0facd50eaabb98d43c5e1facf3e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3783,7 +3783,45 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33798817909",
+          "observationReportPath": "/tmp/ci-run-33798817909/first100-vitest-report-b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e/vitest-report.json",
+          "observationSha256": "7ef14642257506694f2f9f2e69e7e448849df22ab6439d620cb6927447636d0c",
+          "expectCasesMatched": [
+            "filters by tenant, admitting only matching-tenant sessions and excluding others",
+            "filters by workspace, admitting only matching-workspace sessions and excluding sessions with no workspace or a different one",
+            "filters by status (disposition kind), admitting only sessions in the requested dispositions",
+            "filters by a time range, admitting sessions whose createdAt falls within [from, to] inclusive -- including both boundary values themselves -- and excluding ones outside it",
+            "combines multiple filter clauses with AND semantics, admitting only records matching every clause",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 1",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 4997",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 4176",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 1638",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 7",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 4999",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 454",
+            "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 5000",
+            "paginates correctly when multiple sessions share the exact same createdAt, exercising the id tiebreak rather than relying on createdAt alone to order records",
+            "'archiveSession' produces exactly the expected disposition object -- including the real attribution fields passed in, not just its kind -- never conflated with the other",
+            "'softDeleteSession' produces exactly the expected disposition object -- including the real attribution fields passed in, not just its kind -- never conflated with the other",
+            "placeLegalHold adds an independent hold marker without changing the session's disposition, proving legal hold is not itself a disposition value",
+            "a session can be simultaneously soft-deleted and under legal hold, proving legal hold and deletion are independent concerns rather than conflated",
+            "hardErase is a one-way destructive operation, not a disposition value -- its result carries no disposition field at all",
+            "assertNoLegalHold refuses a session under legal hold with LegalHoldBlocksErasureError",
+            "assertNoLegalHold refuses a session that is under legal hold AND already soft-deleted, proving disposition never bypasses the hold check",
+            "a session with no legal hold is admitted: assertNoLegalHold's proof authorizes a real hardErase call all the way through",
+            "SOFT_DELETE_POLICY only hides the query index, leaving attachments/memory/artifacts untouched",
+            "HARD_ERASE_POLICY destroys all four target kinds completely, matching acceptance[2]",
+            "an authorized hardErase (no legal hold) reaches all four dependent-store kinds, in order, with the full real target shape per kind -- not just kind order -- matching must[2]'s standalone propagateDeletion(HARD_ERASE_POLICY) rigor",
+            "a corruption partway through the log recovers only the valid prefix before it, plus evidence -- never a line after it, even one that is individually well-formed",
+            "a fully valid log with no corruption reads back completely, with no partial-recovery evidence",
+            "a corruption at the very first line leaves no recoverable prefix at all, returning evidence with no events"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-03T20:10:12.080Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -3796,7 +3834,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
