@@ -1980,6 +1980,66 @@
         "testsDiscovered": 3
       },
       "note": "C-stage RED scaffold for P0-08 (BENCHMARK.md upgrade to a 5-lane/8-metric capability benchmark framework), attempt/P0-08-C @ 94c5cb345b. Structurally different from every other epic landed this session -- no .ts source in Stage Cs declared files[] (runner.ts/report.ts/scenarios/ are U-stage), so no throwing-stub pattern applies. Instead: manifest.yml is a real, valid, parseable YAML file authored DELIBERATELY INCOMPLETE relative to the frozen schema (missing lanes, missing/wrong metric names, missing reporting flags -- each gap documented inline in the file itself), and each test case runs a positive-control assertion (a hardcoded complete fixture, proving the comparator recognizes completeness) plus a real assertion against the actual incomplete manifest (which fails on a genuine structural mismatch, never a file-not-found/module error). Coverage is deliberately narrower than the full acceptance[] text: acceptance[0]-[2] describe runtime properties (lane execution, seed reproducibility, real-model scoring separation) untestable without the U-stage runner and are explicitly NOT covered here -- only must[0]-[2] (the manifest schema itself) are. Independently re-verified by the Supervisor via a direct read of both the test file and the manifest.yml content (not delegated to a review subagent, given this epics interpretive judgment call). 3/3 genuinely failed on real structural mismatches, zero module/syntax errors. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P2-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/capability-token/tests/token.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "issueToken mints a root token with exactly these ten fields, no more and no fewer",
+        "verifyToken accepts a token issued by the real TrustKernel under the same trust root",
+        "verifyToken rejects a token whose signature does not match its claimed content (tampered)",
+        "verifyToken accepts a token one millisecond before it expires",
+        "verifyToken rejects a token at the exact instant it expires",
+        "verifyToken rejects an already-expired token",
+        "verifyToken accepts a token whose nonce has not been seen before",
+        "verifyToken rejects a token whose nonce was already seen (replay)",
+        "a request identical to the parent's own scope on every dimension is accepted",
+        "requesting a strict verb subset of the parent's verbs is accepted",
+        "requesting a verb absent from the parent's verbs is rejected",
+        "requesting a strict resource subset of the parent's resources is accepted",
+        "requesting a resource absent from the parent's resources is rejected",
+        "requesting exactly the parent's budget is accepted (exact boundary)",
+        "requesting one unit more than the parent's budget is rejected (one past the exact boundary)",
+        "requesting a strictly lower budget than the parent's is accepted",
+        "requesting an unconstrained (omitted) budget under a budget-constrained parent is rejected as wider",
+        "requesting any budget under an unconstrained parent is accepted",
+        "requesting exactly the parent's expiry is accepted (exact boundary)",
+        "requesting an expiry one millisecond past the parent's is rejected (one past the exact boundary)",
+        "requesting a strictly earlier expiry than the parent's is accepted",
+        "a request violating both verbs and budget is rejected naming verbs first (fixed check order)",
+        "a successful attenuation inherits tenant/capability from the parent and derives delegationDepth/parentDigest, never from the request",
+        "tool calls without a presented token are refused",
+        "plugin-rpc calls without a presented token are refused",
+        "external-agent calls without a presented token are refused",
+        "execution-world calls without a presented token are refused",
+        "tool calls with a presented token are not refused for missing presence",
+        "plugin-rpc calls with a presented token are not refused for missing presence",
+        "external-agent calls with a presented token are not refused for missing presence",
+        "execution-world calls with a presented token are not refused for missing presence",
+        "revoking the root ancestor invalidates a grandchild many delegation hops away",
+        "revoking an intermediate ancestor invalidates its descendant",
+        "revoking a token's own digest invalidates it directly",
+        "revoking an unrelated digest does not invalidate an unconnected lineage",
+        "redactTokenForLog produces exactly digest/subject/tenant/capability/delegationDepth/expiresAt — never verbs, resources, constraints, nonce, or the raw signature"
+      ],
+      "files": [
+        "packages/policy/capability-token/tests/token.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T15:01:04.352Z",
+      "dryRunProof": {
+        "treeSha": "cce56a8137b7eaa74fde5385fba023d30bda7d07",
+        "testsDiscovered": 36
+      },
+      "note": "C-stage RED scaffold for P2-02 (attenuable capability tokens + sub-agent delegation), attempt/P2-02-C @ 01c4da9b89. Shares packages/kernel/trust-kernel/src/types.ts with the already-landed P1-02 -- confirmed read-only by both epics, no write conflict. 36 cases: exact-boundary pairs for all 4 narrowable dimensions (verbs/resources/budget/expiry -- equal-to-parent accepted, one-unit-past rejected with exact toStrictEqual reason checks, spot-verified directly by the Supervisor), structural TrustKernel gating mirroring the P1-02 precedent, 4-surface consumer gate (tool/plugin-rpc/external-agent/execution-world), and a revocation-lineage cascade (root/intermediate/self revocation invalidates descendants; an unrelated digest leaves a token valid, negative control). 36/36 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
