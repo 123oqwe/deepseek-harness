@@ -4,16 +4,13 @@
  * covers more than one distinct behavior) to `registry.json`'s P6-01
  * `acceptance[]`/`must[]` clauses, cited verbatim in each title/comment.
  *
- * RED by design: `createLocalReferenceMemoryProvider()` and
- * `createFakeMemoryProvider()` (`../src/index.ts`) are intentionally
- * unimplemented stubs — every method rejects with a plain `not implemented`
- * error. Every case below asserts the REAL expected behavior once a provider
- * is implemented, so every case currently fails on that genuine mismatch
- * (an unimplemented `MemoryProvider` method, or a not-yet-added seam
- * enforcement), never on a missing module or a syntax error. The routing
- * (`MemoryRuntime.registerProvider`/provider selection) is real, matching
- * `WebRuntime` (`@deepseek-ai/dsh-web`) — only provider-level business logic
- * is stubbed.
+ * The suite runs against two independently written in-memory providers,
+ * `createLocalReferenceMemoryProvider()` and `createFakeMemoryProvider()`
+ * (`../src/index.ts`), which differ in data structure, id scheme, and query
+ * matching — so a case that passes for both is exercising the seam rather than
+ * one implementation's internals. Routing
+ * (`MemoryRuntime.registerProvider`/provider selection) matches `WebRuntime`
+ * (`@deepseek-ai/dsh-web`).
  * @module
  */
 

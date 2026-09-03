@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface for Epic P6-07's session lifecycle -- listing/pagination, the retention taxonomy, deletion propagation, and corrupted-log recovery -- for maintainers picking up the RED-scaffold fix-round."
+description: "The type surface and pure decision functions for Epic P6-07's session lifecycle: keyset listing/pagination, the retention taxonomy with a structural legal-hold gate, deletion propagation, and corrupted-log recovery."
 kind: "package-library"
 ---
 
@@ -7,7 +7,7 @@ kind: "package-library"
 
 ## Summary
 
-`dsh-session-lifecycle` fixes the type surface for Epic P6-07's session
+`dsh-session-lifecycle` ships the type surface and decision functions for Epic P6-07's session
 lifecycle: tenant/workspace/status/time-filtered, cursor-paginated listing
 whose cursor encodes a stable sort key so no page walk omits or duplicates a
 session (must[0]/acceptance[0]); the soft-delete/legal-hold/hard-erase/archive
@@ -19,23 +19,17 @@ memory, and artifacts per a declared policy (must[2]/acceptance[2]); and a
 corrupted-log read that returns only the minimal recoverable prefix plus
 evidence, never a fabricated full recovery (acceptance[3]).
 
-This package currently ships this epic's Contract-stage RED scaffold only:
-`src/retention.ts`'s disposition/legal-hold types and transition signatures,
-`src/delete.ts`'s propagation types and hard-erase signature, and
-`src/index.ts`'s listing/pagination and corrupted-log-read signatures are
-real and epic-accurate, but every decision function (`archiveSession`,
-`softDeleteSession`, `placeLegalHold`, `assertNoLegalHold`,
-`propagateDeletion`, `hardErase`, `listSessions`,
-`readSessionLogWithRepair`) throws `'not implemented: ...'` — the pure
-decision logic itself is a later fix-round's deliverable, proven by
-`tests/lifecycle.spec.ts`'s real assertions against that (currently failing)
-behavior. `SOFT_DELETE_POLICY` and `HARD_ERASE_POLICY` are the one
-exception: real, already-correct declared data — the policies themselves —
-not the adjudication logic under test.
+Eight working decision functions ship: `archiveSession`, `softDeleteSession`,
+`placeLegalHold`, and `assertNoLegalHold` in `src/retention.ts`;
+`propagateDeletion` and `hardErase` in `src/delete.ts`; `listSessions` and
+`readSessionLogWithRepair` in `src/index.ts`. `SOFT_DELETE_POLICY` and
+`HARD_ERASE_POLICY` are declared `DeletionPolicy` data the propagation
+functions read. `tests/lifecycle.spec.ts` covers all of it in 28 cases,
+including an exhaustive page-size sweep for acceptance[0].
 
 No invariant companion is published. Every function in this package is pure
 over caller-supplied data (`SessionLifecycleRecord`, `SessionDependents`, raw
-log lines) — this Contract-stage slice constructs no real durable retention
+log lines) — this package constructs no real durable retention
 store, query index, attachment store, memory store, or artifact store to
 cross-reference against. A real invariant here — for example, "no session
 whose durable record shows an active legal hold was ever hard-erased" —
@@ -115,9 +109,10 @@ observable type contract is fully covered in [Use this package](#use-this-packag
   hold. There is no argument position through which a caller can push a
   held session straight to `hardErase`.
 - **`MemoryRef`/`ArtifactRef` are package-local, not re-minted from
-  elsewhere.** No canonical branded id exists yet anywhere in this repository
-  for a memory-store or artifact-store entry — no `packages/memory` or
-  `packages/artifact` package exists, and `@deepseek-ai/dsh-run`'s own
+  elsewhere.** `@deepseek-ai/dsh-memory`'s `MemoryRecordId` names a record
+  inside one memory provider's own store, not a deletion target this package
+  can reach; no artifact-store package exists at all, and
+  `@deepseek-ai/dsh-run`'s own
   `ArtifactRef` (first100 registry P4-01, itself unlanded and not one of this
   epic's declared predecessors) answers a different question — which entity
   a Run event log cites, not which record a session's deletion must reach.
@@ -150,8 +145,8 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 
 | File | Role |
 |---|---|
-| [`src/retention.ts`](src/retention.ts) | The disposition/legal-hold taxonomy (must[1]) and the structural erase gate (acceptance[1]): `SessionDisposition`, `LegalHold`, `SessionLifecycleRecord`, `NoLegalHoldProof`, `LegalHoldBlocksErasureError`, and the Contract-stage RED-scaffold transition functions |
-| [`src/delete.ts`](src/delete.ts) | Deletion propagation (must[2]) and hard erase (acceptance[1]/[2]): `PropagationTarget`, `DeletionPolicy`, `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY` (real), and the Contract-stage RED-scaffold `propagateDeletion`/`hardErase` |
+| [`src/retention.ts`](src/retention.ts) | The disposition/legal-hold taxonomy (must[1]) and the structural erase gate (acceptance[1]): `SessionDisposition`, `LegalHold`, `SessionLifecycleRecord`, `NoLegalHoldProof`, `LegalHoldBlocksErasureError`, and the transition functions |
+| [`src/delete.ts`](src/delete.ts) | Deletion propagation (must[2]) and hard erase (acceptance[1]/[2]): `PropagationTarget`, `DeletionPolicy`, `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY`, and `propagateDeletion`/`hardErase` |
 | [`src/index.ts`](src/index.ts) | Listing/pagination (must[0]/acceptance[0]) and corrupted-log recovery (acceptance[3]); re-exports `./retention.ts` and `./delete.ts`'s public surface |
 
 </details>
@@ -161,8 +156,8 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) — the Contract-stage RED
-  scaffold: one or more cases per registry must[]/acceptance[] clause,
+- [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) — 28 cases: one or
+  more per registry must[]/acceptance[] clause,
   including an exhaustive page-size sweep for acceptance[0]'s pagination
   guarantee.
 - `@deepseek-ai/dsh-principal` (`../../identity/principal/src/types.ts`,
@@ -205,8 +200,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   retain, or repair a real session — a later Provider/Usage-stage supplies
   real records and dependent-store inventories from the packages that own
   them (`packages/session/session-persistence`, `packages/session-query/session-query`,
-  `@deepseek-ai/dsh-attachment`, and this epic's still-unbuilt memory and
-  artifact stores).
+  `@deepseek-ai/dsh-attachment`, `@deepseek-ai/dsh-memory`, and this epic's
+  still-unbuilt artifact store).
+- **`propagateDeletion` and `hardErase` plan a deletion; they never perform
+  one.** Both return a `PropagationOutcome` listing which target kinds a
+  policy reaches and with what action. Nothing in this package calls a query
+  index, attachment store, memory store, or artifact store, so a returned
+  `EraseResult` records an intent, not a completed erase, and a caller that
+  drops it deletes nothing.
 - **`packages/session-query/session-query/src/cursor.ts` was read, not
   modified.** Its existing `SessionSearchCursor` shape (an opaque branded
   string with one mint function) fully informed this package's own
@@ -218,8 +219,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   revocation-race enforcement (a hold placed concurrently with an in-flight
   erase) needs a real durable retention store, which is a later stage's job.
 - **`MemoryRef`/`ArtifactRef` are not reconciled with any real store's id
-  type.** No memory or artifact store package exists yet anywhere in this
-  repository for a later stage to reconcile against.
+  type.** `MemoryRef` is not `@deepseek-ai/dsh-memory`'s `MemoryRecordId`
+  and nothing converts between them; no artifact store exists to reconcile
+  `ArtifactRef` against at all.
 
 -----
 

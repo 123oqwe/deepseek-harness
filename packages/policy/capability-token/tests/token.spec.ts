@@ -1,5 +1,5 @@
 /**
- * Contract-stage RED scaffold for Epic P2-02's attenuable Capability Token
+ * Clause coverage for Epic P2-02's attenuable Capability Token
  * and sub-agent delegation. One case per registry-declared must[]/
  * acceptance[] clause, with acceptance[0]'s four narrowable dimensions
  * (verbs/resources/budget/expiry) each covered by an exact-boundary pair —
@@ -7,13 +7,10 @@
  * (illegal) — never only the rejection direction, plus a strictly-narrower
  * positive case per dimension.
  *
- * Every case below calls a real exported function
- * (`../src/attenuate.ts`) against real branded fixture data built from a
- * real `TrustKernelSignatureRoots` handle (`createTrustKernel()`,
- * `@deepseek-ai/dsh-trust-kernel`, Epic P0-02 — already landed). Every
- * function under test currently throws `'not implemented: ...'`, so every
- * case fails for that reason today — the assertions themselves describe
- * the behavior a later fix-round must satisfy.
+ * Every case calls an exported function from `../src/attenuate.ts` against
+ * real branded fixture data built from a real `TrustKernelSignatureRoots`
+ * handle (`createTrustKernel()`, `@deepseek-ai/dsh-trust-kernel`, Epic
+ * P0-02).
  */
 
 import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'

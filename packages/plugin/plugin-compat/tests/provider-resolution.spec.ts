@@ -1,11 +1,11 @@
 /**
- * Provider-stage RED scaffold for Epic P1-08. Every case here exercises
- * `../src/solver.ts`'s real exports against real branded fixture data and,
+ * Provider-stage coverage for Epic P1-08. Every case here exercises
+ * `../src/solver.ts`'s exports against real branded fixture data and,
  * for host-context resolution, against the real
  * `@deepseek-ai/dsh-schema-registry` runtime registry — never a parallel
  * mechanism and never a mirrored copy of the registration list.
  *
- * Scope split against the already-green Contract-stage suite
+ * Scope split against the Contract-stage suite
  * (`./solver.spec.ts`): that suite proves `solvePluginGraph`'s per-manifest
  * verdicts, its minimal unsat core, and its plan determinism, all against a
  * caller-supplied `HostCompatContext` and a graph where a declared
@@ -14,10 +14,6 @@
  * the host's real registered schema majors, resolving which provider each
  * requirement actually binds to, and propagating blocking along those
  * provider edges to a fixpoint.
- *
- * Both `resolveHostCompatContext` and `resolveActivatedGraph` currently
- * throw `'not implemented: ...'` unconditionally, so every case fails for
- * that reason today.
  */
 
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'

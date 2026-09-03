@@ -1,13 +1,10 @@
 /**
- * Contract-stage RED scaffold for Epic P1-07's project trust boundary. One
+ * Clause coverage for Epic P1-07's project trust boundary. One
  * `it()` per registry-declared must[]/acceptance[] clause (must[2] split
  * into its refuse/admit halves, acceptance[1] split into its three named
  * identity-change vectors plus one unchanged-identity control) that is
- * structurally testable at this Contract level. Every case below calls a
- * real exported function from `../src/index.ts` against real fixture data;
- * every decision function currently throws `'not implemented: ...'`, so
- * every case fails for that reason today — the assertions themselves
- * describe the behavior a later fix-round must satisfy.
+ * structurally testable at this Contract level. Every case calls an
+ * exported function from `../src/index.ts` against real fixture data.
  */
 
 import { createServicePrincipal, createUserPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'

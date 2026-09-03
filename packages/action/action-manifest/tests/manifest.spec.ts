@@ -1,14 +1,9 @@
 /**
- * Contract-stage RED scaffold for Epic P2-03's first-class ActionManifest.
- * One `it()` per registry-declared must[] clause and acceptance[] item
- * (compound clauses split into multiple named cases, mirroring
- * `@deepseek-ai/dsh-plugin-ownership`'s precedent). Every case below calls a
- * real exported function from `../src/canonicalize.ts` against real
- * branded/typed fixture data; every function currently throws
- * `'not implemented: ...'`, so every case fails for that reason today — the
- * assertions past the throwing call describe the behavior a later
- * fix-round must satisfy (dead code until then, same idiom as the
- * `plugin-ownership` precedent's multi-step cases).
+ * Clause coverage for Epic P2-03's first-class ActionManifest. One `it()` per
+ * registry-declared must[] clause and acceptance[] item (compound clauses split
+ * into multiple named cases, mirroring `@deepseek-ai/dsh-plugin-ownership`'s
+ * precedent). Every case calls an exported function from
+ * `../src/canonicalize.ts` against real branded/typed fixture data.
  */
 
 import { brandString } from '@deepseek-ai/dsh-brand'
