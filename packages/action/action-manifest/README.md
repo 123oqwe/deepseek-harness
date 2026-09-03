@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface and pure decision-function signatures for Epic P2-03's first-class ActionManifest, for maintainers picking up the RED-scaffold fix-round."
+description: "The type surface and pure decision functions for Epic P2-03's first-class ActionManifest: manifest construction, argument canonicalization and hashing, side-effect classification, and the durable-append-precedes-execution gate."
 kind: "package-library"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-library"
 
 `dsh-action-manifest` fixes the type surface and function signatures for Epic P2-03's first-class ActionManifest: every external write operation's manifest carries `actionId`/`runId`/`actor`/`capability`/`target`/`argumentsHash`/`sideEffectClass`/`idempotencyKey`/`preconditions`/`expectedDiff`/`compensation`/evidence requirements (must[0]); manifest generation and durable append must precede any policy/approval decision (must[1]); code-mode embedded tools and plugin RPC calls are held to the exact same manifest-generation gate as a native tool call, with no bypass (must[2]).
 
-This package currently ships this epic's Contract-stage RED scaffold only: `src/types.ts`'s types are real and epic-accurate, and `src/canonicalize.ts`'s decision functions (`createActionManifest`, `assertManifestPrecedesExecution`, `canonicalizeArguments`, `computeArgumentsHash`, `classifySideEffect`) have real, epic-accurate signatures, but every one of them throws `'not implemented: ...'` — the pure decision logic itself is a later fix-round's deliverable, proven by `tests/manifest.spec.ts`'s real assertions against that (currently failing) behavior. No invariant companion is published because this Contract-stage slice constructs no registry, log, or `Context` value yet to check an owned relation over — `assertManifestPrecedesExecution` decides over a plain `readonly AppendedManifest[]` a caller supplies, not a value this package owns or mutates.
+The package ships the type surface in `src/types.ts` and five working pure decision functions in `src/canonicalize.ts`: `canonicalizeArguments`, `computeArgumentsHash`, `classifySideEffect`, `createActionManifest`, and `assertManifestPrecedesExecution`. `tests/manifest.spec.ts` covers them in 13 cases, one per registry-declared must[] clause and acceptance[] item. No invariant companion is published because this slice constructs no registry, log, or `Context` value to check an owned relation over — `assertManifestPrecedesExecution` decides over a plain `readonly AppendedManifest[]` a caller supplies, not a value this package owns or mutates.
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@ This package currently ships this epic's Contract-stage RED scaffold only: `src/
 <a id="use-this-package"></a>
 ## Use this package
 
-The manifest surface, once implemented, is called with plain data — no file, process, or Cordis `Context` access:
+The manifest surface is called with plain data — no file, process, or Cordis `Context` access:
 
 ```ts
 import { createActionManifest, assertManifestPrecedesExecution, computeArgumentsHash } from '@deepseek-ai/dsh-action-manifest'
@@ -69,7 +69,7 @@ This section explains the design decisions behind the package; the observable ty
 | File | Role |
 |---|---|
 | [`src/types.ts`](src/types.ts) | The manifest/request/gate type surface: `ActionManifest`, `CreateActionManifestRequest`, `AppendedManifest`, `ExecutionGateDecision`, `SideEffectClassification`, plus the branded ids and value types they compose |
-| [`src/canonicalize.ts`](src/canonicalize.ts) | `canonicalizeArguments`/`computeArgumentsHash` (acceptance[1]), `classifySideEffect` (acceptance[2]), `createActionManifest` (must[0]/must[1]), `assertManifestPrecedesExecution` (must[1]/acceptance[0]/must[2]) — Contract-stage RED scaffold: real signatures, `'not implemented'` bodies |
+| [`src/canonicalize.ts`](src/canonicalize.ts) | `canonicalizeArguments`/`computeArgumentsHash` (acceptance[1]), `classifySideEffect` (acceptance[2]), `createActionManifest` (must[0]/must[1]), `assertManifestPrecedesExecution` (must[1]/acceptance[0]/must[2]) |
 | [`src/index.ts`](src/index.ts) | Package entry point barrel; re-exports `./canonicalize.ts` in full. Not itself part of this epic's Contract-stage deliverable — see its own module doc |
 
 </details>
@@ -79,7 +79,7 @@ This section explains the design decisions behind the package; the observable ty
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/manifest.spec.ts`](tests/manifest.spec.ts) — the Contract-stage RED scaffold: one case per registry-declared must[] clause and acceptance[] item, with acceptance[0] and must[2] each split into paired admit/refuse cases.
+- [`tests/manifest.spec.ts`](tests/manifest.spec.ts) — 13 cases, one per registry-declared must[] clause and acceptance[] item, with acceptance[0] and must[2] each split into paired admit/refuse cases.
 - [`../../../spec/action-manifest.schema.json`](../../../spec/action-manifest.schema.json) — the JSON Schema mirror of `ActionManifest`, since this epic's `stages.C.files` is schema-first.
 - [`packages/core/tools/src/index.ts`](../../core/tools/src/index.ts), [`packages/core/tools/src/ptc.ts`](../../core/tools/src/ptc.ts), [`packages/core/agent-loop/src/tool-calls.ts`](../../core/agent-loop/src/tool-calls.ts) — the real tool-dispatch, code-mode `run_code` bridge, and agent-loop paths must[1]/must[2] require this epic's gate to sit in front of (Usage-stage wiring, not this package's job; this epic's `stages.P` is `N/A`).
 - [`@deepseek-ai/dsh-principal`](../../identity/principal/README.md) — this epic's predecessor (P2-01), the source of `Principal`/`RunId`.
@@ -102,7 +102,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **No wiring into real tool dispatch exists yet.** `packages/core/tools/src/index.ts`, `packages/core/tools/src/ptc.ts`, `packages/core/tools/src/code-mode.ts`, `packages/core/agent-loop/src/tool-calls.ts`, and `packages/core/session/src/known-event-types.ts` do not call into this package (registry's own `stages.U.files`) — this package alone cannot generate a real manifest for an actual tool call, durably append one to a session log, or block a real execution attempt.
 - **`CapabilityRef`'s exact string grammar is unfixed**, and it deliberately does not import `@deepseek-ai/dsh-plugin-ownership`'s `StableCapabilityId` — Epic P1-09 is not a declared predecessor of P2-03. A later integration stage decides whether and how to unify the two capability-identity vocabularies.
-- **`classifySideEffect`'s policy for a classified (non-`undefined`) `declared` value is unfixed beyond acceptance[2]'s unclassifiable default.** This Contract stage commits only to "unclassifiable defaults to `'destructive'` + `requiresApproval: true`"; which classified side-effect classes otherwise require approval is a later fix-round's policy decision, out of this narrow slice's scope (registry `nonGoals`: "不引入与本项无关的垂直业务逻辑").
+- **`classifySideEffect` trusts a declared class verbatim and requires approval only for `'destructive'`.** `'write'`, `'network'`, and `'process'` return `requiresApproval: false`, and no export re-derives a class from `target` or `args` to catch a capability that under-declares its own side effect. A richer approval policy is a deployment concern this package does not own (registry `nonGoals`: "不引入与本项无关的垂直业务逻辑").
 
 -----
 

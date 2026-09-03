@@ -1,17 +1,14 @@
 /**
- * Contract-stage RED scaffold for Epic P1-02's plugin signature, provenance,
+ * Clause coverage for Epic P1-02's plugin signature, provenance,
  * and dependency SBOM verification. One `it()` per registry-declared
  * acceptance clause (splitting acceptance[0]'s three named fail-closed
  * scenarios into four cases — the "替换 source repo" scenario further splits
  * into a repo-URL variant and a commit-hash variant, since
  * `SourceCommitReference` binds both facts and must[1] requires checking the
  * source commit as a whole) plus every must[] clause that is structurally
- * testable at this Contract level. Every case below calls a real exported
- * function against real branded fixture data; every function currently
- * throws `'not implemented: ...'` (`../src/signature.ts`, `../src/sbom.ts`,
- * `../src/index.ts`), so every case fails for that reason today — the
- * assertions themselves describe the behavior a later fix-round must
- * satisfy.
+ * testable at this Contract level. Every case calls an exported function from
+ * `../src/signature.ts`, `../src/sbom.ts`, or `../src/index.ts` against real
+ * branded fixture data.
  */
 
 import { brandString } from '@deepseek-ai/dsh-brand'

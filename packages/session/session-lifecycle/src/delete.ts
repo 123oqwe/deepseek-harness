@@ -1,14 +1,15 @@
 /**
- * Contract-stage RED scaffold for Epic P6-07's hard-erase operation and
+ * Epic P6-07's hard-erase operation and
  * must[2]'s deletion-propagation mechanics: the four dependent-store kinds a
  * deletion must be able to reach, a policy declaring which kinds a given
  * deletion mode reaches and how (must[2]'s "按 policy" qualifier), and the
  * propagation-execution plus hard-erase entry points (acceptance[1]/[2]).
  *
  * **Grounding: `MemoryRef`/`ArtifactRef` are package-local, not re-minted
- * from elsewhere.** No canonical branded id exists yet anywhere in this
- * repository for a memory-store entry or an artifact-store entry: no
- * `packages/memory` or `packages/artifact` package exists, and
+ * from elsewhere.** No canonical branded id names a deletion target in a
+ * memory store or an artifact store: `@deepseek-ai/dsh-memory`'s
+ * `MemoryRecordId` identifies a record inside one provider's own store, no
+ * artifact-store package exists at all, and
  * `@deepseek-ai/dsh-run`'s own `ArtifactRef` (first100 registry P4-01,
  * itself an unlanded Contract-stage slice, not one of this epic's declared
  * predecessors) is scoped to Run event log references — a different

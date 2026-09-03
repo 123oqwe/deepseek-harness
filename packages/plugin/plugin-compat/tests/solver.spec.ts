@@ -1,13 +1,10 @@
 /**
- * Contract-stage RED scaffold for Epic P1-08's plugin ABI, capability, and
- * schema compatibility negotiation. One `it()` per registry-declared must[]
- * clause (must[0] split into its declared-shape and provider-constraint
- * cases) and one per acceptance[] clause (acceptance[1] split into its two
- * named fail-closed scenarios). Every case below calls the real exported
- * `solvePluginGraph` (`../src/index.ts`) against real branded fixture data
- * with assertions describing the behavior a later fix-round must satisfy;
- * `solvePluginGraph` currently throws `'not implemented: ...'`
- * unconditionally, so every case fails for that reason today.
+ * Clause coverage for Epic P1-08's plugin ABI, capability, and schema
+ * compatibility negotiation. One `it()` per registry-declared must[] clause
+ * (must[0] split into its declared-shape and provider-constraint cases) and
+ * one per acceptance[] clause (acceptance[1] split into its two named
+ * fail-closed scenarios). Every case calls the exported `solvePluginGraph`
+ * (`../src/index.ts`) against real branded fixture data.
  */
 
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'

@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface and TrustKernel-gated decision-function signatures for Epic P2-02's attenuable Capability Token and sub-agent delegation, for maintainers picking up the RED-scaffold fix-round."
+description: "The type surface and TrustKernel-gated decision functions for Epic P2-02's attenuable Capability Token and sub-agent delegation: issuance, verification, narrowing-only attenuation, cascading revocation, a presence gate, and log-safe redaction."
 kind: "package-library"
 ---
 
@@ -7,8 +7,8 @@ kind: "package-library"
 
 ## Summary
 
-`dsh-capability-token` fixes the type surface and decision-function
-signatures for Epic P2-02's attenuable Capability Token: the closed
+`dsh-capability-token` ships the type surface and decision functions
+for Epic P2-02's attenuable Capability Token: the closed
 `subject`/`tenant`/`capability`/`verbs`/`resources`/`constraints`/`expiry`/
 `nonce`/`delegationDepth`/`parentDigest` token shape (must[0]); a
 TrustKernel-gated issuance and verification surface, so only the real Trust
@@ -22,19 +22,16 @@ chain (acceptance[1]) and log-safe redaction that never lets the raw token
 reach a log or model-visible surface (acceptance[2]) round out the decision
 surface.
 
-This package currently ships this epic's Contract-stage RED scaffold only:
-`src/types.ts`'s types and brand constructors are real and epic-accurate,
-and `src/attenuate.ts`'s seven decision functions (`issueToken`,
-`verifyToken`, `attenuateToken`, `digestToken`, `isTokenRevoked`,
-`assertTokenPresented`, `redactTokenForLog`) have real, epic-accurate
-signatures — but every one of them throws `'not implemented: ...'`. No
-coincidentally-correct placeholder logic exists anywhere in this package;
-the pure decision logic itself is a later fix-round's deliverable, proven
-by `tests/token.spec.ts`'s real assertions against that (currently failing)
-behavior.
+`src/types.ts` carries the types and brand constructors; `src/attenuate.ts`
+carries seven working decision functions (`issueToken`, `verifyToken`,
+`attenuateToken`, `digestToken`, `isTokenRevoked`, `assertTokenPresented`,
+`redactTokenForLog`), covered by `tests/token.spec.ts` in 36 cases. Token
+digests are real SHA-256 over a canonical field list; token *signatures* are
+a fixed marker byte sequence, because `TrustKernelSignatureRoots` carries no
+key material — see [Known Limitations](#known-limitations-and-deferred-work).
 
-No invariant companion is published because this Contract-stage slice
-constructs no token registry, nonce ledger, or revocation store yet to
+No invariant companion is published because this package
+constructs no token registry, nonce ledger, or revocation store to
 check an owned relation over: `verifyToken`'s replay check and
 `isTokenRevoked`'s cascading check both take their `seenNonces`/
 `revokedDigests` sets as caller-supplied pure data, not from a durable
@@ -153,7 +150,7 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 | File | Role |
 |---|---|
 | [`src/types.ts`](src/types.ts) | The Capability Token type surface: `CapabilityToken`, `SignedCapabilityToken`, `TokenConstraints`, `TokenLineage`, every issuance/verification/attenuation request and decision type, and the `CapabilityName`/`CapabilityTokenNonce`/`CapabilityTokenDigest`/`TokenBudget` brand constructors |
-| [`src/attenuate.ts`](src/attenuate.ts) | The TrustKernel-gated decision-function surface (Contract-stage RED scaffold): `issueToken`, `verifyToken`, `attenuateToken`, `digestToken`, `isTokenRevoked`, `assertTokenPresented`, `redactTokenForLog` |
+| [`src/attenuate.ts`](src/attenuate.ts) | The TrustKernel-gated decision-function surface: `issueToken`, `verifyToken`, `attenuateToken`, `digestToken`, `isTokenRevoked`, `assertTokenPresented`, `redactTokenForLog` |
 
 </details>
 
@@ -162,8 +159,8 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/token.spec.ts`](tests/token.spec.ts) — the Contract-stage RED
-  scaffold: one case per must[]/acceptance[] clause, with acceptance[0]'s
+- [`tests/token.spec.ts`](tests/token.spec.ts) — 36 cases: one per
+  must[]/acceptance[] clause, with acceptance[0]'s
   four narrowable dimensions each covered by an exact-boundary pair (the
   parent's own limit, legal; one unit past it, illegal) plus a
   strictly-narrower positive case.
@@ -176,19 +173,17 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 - `@deepseek-ai/dsh-run` (`packages/run/run`, Epic P4-01) and
   `@deepseek-ai/dsh-plugin-provenance` (`packages/plugin/plugin-provenance`,
   Epic P1-02) — this repo's other Contract-stage pure-decision packages,
-  followed here for package layout, RED-scaffold conventions, and (for
-  provenance) the TrustKernel-handle-as-gate idiom. Both live on their own
-  unmerged `attempt/*-C` branches as of this package's own Contract stage,
-  so neither is linked here.
+  followed here for package layout and (for provenance) the
+  TrustKernel-handle-as-gate idiom.
 
 -----
 
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as this package exports types and pure decision-function signatures
-only and registers nothing model-facing. Once implemented, no export in
-this package is safe to place directly into model-visible text — only
+None, as this package exports types and pure decision functions
+only and registers nothing model-facing. No export's return value is safe to
+place directly into model-visible text — only
 `redactTokenForLog`'s narrow, six-field output (acceptance[2]) is intended
 to ever reach a log or model-visible surface.
 
@@ -200,16 +195,25 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **No wiring into real durable storage, real cryptographic signing, or
-  Cordis registration exists yet.** `packages/policy/capability-token/src/index.ts`
-  (a plain barrel re-exporting `types`/`attenuate`, not real Provider-stage
-  wiring) and `packages/core/agent-loop/src/runtime-context.ts` do not call
-  into this package — this package alone cannot issue a token a real
-  sub-agent delegation, tool call, plugin RPC, or ExecutionWorld boundary
-  would actually enforce. Signing itself is a fixed marker byte sequence,
-  not real asymmetric cryptography — `TrustKernelSignatureRoots` carries no
-  key material yet, pending the vendored Cordis `Fiber` fix
+- **A token signature is a fixed marker, not cryptography.** `issueToken`
+  and `attenuateToken` sign with the constant bytes `01 02 03 04`, and
+  `verifyToken` accepts any signature equal to them, so a signature binds
+  nothing to a token's contents: an attacker who edits `verbs`, `resources`,
+  or `expiresAt` and reattaches those four bytes passes `verifyToken`. The
+  `trustRoot` parameter is unread in all three functions — holding a real
+  `TrustKernelSignatureRoots` handle is a compile-time gate on who can call
+  them, not a runtime check. `TrustKernelSignatureRoots` carries no key
+  material pending the vendored Cordis `Fiber` fix
   (`docs/architecture/trust-kernel-boundary.md`).
+- **No wiring into real durable storage or Cordis registration exists
+  yet.** `packages/policy/capability-token/src/index.ts` is a plain barrel
+  re-exporting `types`/`attenuate`, and
+  `packages/core/agent-loop/src/runtime-context.ts` does not call into this
+  package — this package alone cannot issue a token a real sub-agent
+  delegation, tool call, plugin RPC, or ExecutionWorld boundary would
+  actually enforce. `verifyToken`'s replay check and `isTokenRevoked`'s
+  cascade both read caller-supplied sets, so nothing here persists a seen
+  nonce or a revoked digest between calls.
 - **`packages/kernel/trust-kernel/src/types.ts` was read, not modified.**
   This epic's file scope lists that file as a Contract-stage read (kind
   `P`) for the `TrustKernelSignatureRoots` handle's shape. No additive
@@ -230,13 +234,11 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   later stage find a genuine reason to add one, that is that stage's change
   to make and justify, not this one's.
 - **Resource narrowing is exact-value subset only.** `attenuateToken`'s
-  `'resources-not-subset'` check, as specified here, treats `resources` as
-  a plain set of exact string values — a child requesting
-  `file:///workspace/a/foo.txt` against a parent scoped to
-  `file:///workspace/a/*` is not, by this Contract stage's rule alone,
-  recognized as narrower. Real glob/prefix-aware resource-pattern narrowing
-  is a later stage's job; this Contract stage only fixes the type shape and
-  the literal-subset case any real implementation must at least get right.
+  `'resources-not-subset'` check treats `resources` as a plain set of exact
+  string values — a child requesting `file:///workspace/a/foo.txt` against a
+  parent scoped to `file:///workspace/a/*` is refused, not recognized as
+  narrower. Glob- and prefix-aware resource-pattern narrowing is a later
+  stage's job.
 
 -----
 

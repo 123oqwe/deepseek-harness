@@ -1,16 +1,13 @@
 /**
- * Contract-stage RED scaffold for Epic P6-07's session lifecycle: pagination
+ * Clause coverage for Epic P6-07's session lifecycle: pagination
  * and filtering (must[0]/acceptance[0]), the soft-delete/legal-hold/
  * hard-erase/archive taxonomy (must[1]/acceptance[1]), deletion propagation
  * (must[2]/acceptance[2]), and corrupted-log partial recovery
  * (acceptance[3]).
  *
- * Every case below calls a real exported function against real branded
- * fixture data; every function under test currently throws
- * `'not implemented: ...'` (`../src/retention.ts`, `../src/delete.ts`,
- * `../src/index.ts`), so every case fails for that reason today — the
- * assertions themselves describe the behavior a later fix-round must
- * satisfy.
+ * Every case calls an exported function from `../src/retention.ts`,
+ * `../src/delete.ts`, or `../src/index.ts` against real branded fixture
+ * data.
  */
 
 import fc from 'fast-check'

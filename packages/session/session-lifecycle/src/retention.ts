@@ -1,5 +1,5 @@
 /**
- * Contract-stage RED scaffold for Epic P6-07's session retention taxonomy
+ * Epic P6-07's session retention taxonomy
  * (must[1]): the three mutually exclusive dispositions a session may occupy
  * at rest, and the independent legal-hold marker that structurally gates
  * hard erase (acceptance[1]).

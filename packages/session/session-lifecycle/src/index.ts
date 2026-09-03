@@ -1,5 +1,5 @@
 /**
- * Contract-stage RED scaffold for Epic P6-07's session-lifecycle listing and
+ * Epic P6-07's session-lifecycle listing and
  * corrupted-log partial recovery: must[0]'s tenant/workspace/status/time
  * filters and cursor-paginated listing (acceptance[0]'s no-omission/
  * no-duplication pagination guarantee), and acceptance[3]'s
@@ -17,11 +17,10 @@
  * (see `listSessions`'s doc comment). Reusing the same brand for both would
  * let a caller pass a session-search cursor into `listSessions` (or vice
  * versa) without a type error, even though the two encodings are never
- * interchangeable once implemented — exactly the kind of confusable-brand
- * mistake this repository's branded-type convention exists to prevent. No
- * change to `session-query`'s `cursor.ts` was needed: its existing shape
- * (an opaque branded string with a single mint function) already fully
- * informs this package-local mint.
+ * interchangeable — exactly the kind of confusable-brand mistake this
+ * repository's branded-type convention exists to prevent. `session-query`'s
+ * `cursor.ts` is unchanged: its existing shape (an opaque branded string
+ * with a single mint function) informs this package-local mint.
  *
  * @module @deepseek-ai/dsh-session-lifecycle
  */

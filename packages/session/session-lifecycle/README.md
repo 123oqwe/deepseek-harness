@@ -141,11 +141,12 @@ observable type contract is fully covered in [Use this package](#use-this-packag
   hold. There is no argument position through which a caller can push a
   held session straight to `hardErase`.
 - **`MemoryRef`/`ArtifactRef` are package-local, not re-minted from
-  elsewhere.** No canonical branded id exists yet anywhere in this repository
-  for a memory-store or artifact-store entry — no `packages/memory` or
-  `packages/artifact` package exists, and `@deepseek-ai/dsh-run`'s own
-  `ArtifactRef` (first100 registry P4-01, itself unlanded and not one of this
-  epic's declared predecessors) answers a different question — which entity
+  elsewhere.** No canonical branded id exists yet for a memory-store or
+  artifact-store entry that this package could reuse: `@deepseek-ai/dsh-memory`
+  mints `MemoryRecordId` for its own records rather than a cross-package
+  reference, no `packages/artifact` package exists, and
+  `@deepseek-ai/dsh-run`'s own `ArtifactRef` (first100 registry P4-01, not one
+  of this epic's declared predecessors) answers a different question — which entity
   a Run event log cites, not which record a session's deletion must reach.
   `AttachmentId` (`@deepseek-ai/dsh-attachment`) and `SessionId` are real,
   already-shipped ids and are imported, never re-minted.
@@ -258,8 +259,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   calls the query index, attachment store, memory store, or artifact store to
   carry it out. A later stage supplies real dependent-store inventories from
   the packages that own them (`packages/session-query/session-query`,
-  `@deepseek-ai/dsh-attachment`, and this epic's still-unbuilt memory and
-  artifact stores) and performs the reach.
+  `@deepseek-ai/dsh-attachment`, `@deepseek-ai/dsh-memory`, and this epic's
+  still-unbuilt artifact store) and performs the reach.
 - **The corrupted-log read has no durable caller.**
   `readSessionLogWithRepair` takes already-attempted-parsed lines; nothing
   reads a real session log off disk to produce them. The store's own document
