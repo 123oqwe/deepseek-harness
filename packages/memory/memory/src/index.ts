@@ -19,6 +19,8 @@
  */
 
 import { randomUUID } from 'node:crypto'
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {
@@ -34,6 +36,7 @@ import type {
   MemoryQueryResult,
   MemoryRecordView,
   MemoryReviseRequest,
+  MemoryScope,
 } from './types.ts'
 import { MemoryError, MemoryRecordId } from './types.ts'
 
@@ -351,6 +354,200 @@ export function createFakeMemoryProvider(): MemoryProvider {
       return Promise.resolve({ records: [...records], truncated: false })
     },
   }
+}
+
+/**
+ * Options for {@link createDurableFileMemoryProvider}.
+ */
+export interface DurableFileMemoryProviderOptions {
+  /**
+   * Directory holding this provider's backing file. Two provider instances
+   * constructed over the same directory share one record set and share no
+   * in-memory value; the directory is created on first write if absent.
+   */
+  readonly directory: string
+}
+
+/**
+ * Durable, same-host `MemoryProvider` backed by a JSON file under
+ * `options.directory` — the Provider-stage counterpart to the Contract-stage
+ * in-memory providers, which lose every record at process exit. Memory is by
+ * definition cross-session and long-lived, so a provider that cannot outlive
+ * the process cannot serve the seam's purpose.
+ *
+ * Durability is per-directory, not per-instance: a provider constructed later
+ * over the same `directory` reads back every record an earlier instance
+ * proposed or revised, and does not read back one an earlier instance forgot.
+ * Instances hold no shared in-memory state, so cross-instance visibility
+ * comes from the file alone.
+ *
+ * Record ids are `durable-file-<uuid>` — minted per record, never per
+ * instance-local counter, so a second instance over the same directory can
+ * never re-mint an id the first one already used.
+ *
+ * Scoping (`must[3]`): each record persists the `MemoryScope` its `propose()`
+ * carried. A read (`query`/`get`/`export`) sees a record only when the read's
+ * `accessContext.scope.tenantId` equals the record's `tenantId`; when the
+ * read's scope also names a `sessionId`, the record's `sessionId` must equal
+ * it, and a read whose scope names no `sessionId` sees every session within
+ * the tenant. `revise()`/`forget()` apply the same scope filter, so an
+ * out-of-scope id is indistinguishable from one that was never proposed.
+ *
+ * `query()` matches by case-insensitive substring over the record's
+ * JSON-serialized content — a mechanism choice private to this provider, as
+ * `must[0]` requires the seam itself to name none.
+ * @param options - the backing directory for this provider's records.
+ * @returns a durable {@link MemoryProvider} whose id is `durable-file`.
+ */
+export function createDurableFileMemoryProvider(options: DurableFileMemoryProviderOptions): MemoryProvider {
+  const path = join(options.directory, DURABLE_FILE_MEMORY_FILENAME)
+
+  /**
+   * Every read and write of `path` is chained onto this promise, so a mutation
+   * never interleaves its read-modify-write with another one and loses a
+   * record.
+   */
+  let queue: Promise<unknown> = Promise.resolve()
+  const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
+    const next = queue.then(operation, operation)
+    queue = next.then(
+      () => undefined,
+      () => undefined,
+    )
+    return next
+  }
+
+  const read = async (): Promise<DurableMemoryRecord[]> => {
+    let text: string
+    try {
+      text = await readFile(path, 'utf8')
+    } catch (error) {
+      // A backing file that was never written is a first boot, not a failure;
+      // any other read failure (permissions, a directory at `path`) is real.
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+      throw error
+    }
+    if (text.trim() === '') return []
+    const document = JSON.parse(text) as DurableMemoryDocument
+    if (document.version !== DURABLE_FILE_MEMORY_FORMAT_VERSION) {
+      throw new MemoryError(
+        `unsupported durable memory format version ${String(document.version)} at ${path}, expected ${DURABLE_FILE_MEMORY_FORMAT_VERSION}`,
+        'MEMORY_UNSUPPORTED_FORMAT_VERSION',
+      )
+    }
+    return [...document.records]
+  }
+
+  const write = async (records: readonly DurableMemoryRecord[]): Promise<void> => {
+    const document: DurableMemoryDocument = { version: DURABLE_FILE_MEMORY_FORMAT_VERSION, records }
+    await mkdir(options.directory, { recursive: true })
+    // Write-then-rename: a crash mid-write leaves the previous complete
+    // document in place at `path` rather than a truncated one.
+    const temporaryPath = `${path}.${process.pid}.${randomUUID()}.tmp`
+    await writeFile(temporaryPath, `${JSON.stringify(document)}\n`, 'utf8')
+    await rename(temporaryPath, path)
+  }
+
+  /** The records `scope` may see, in the order they were proposed. */
+  const visible = (records: readonly DurableMemoryRecord[], scope: MemoryScope): DurableMemoryRecord[] =>
+    records.filter(record => inScope(record, scope))
+
+  return {
+    id: 'durable-file',
+    // Usable wherever the process can write to the local filesystem; the
+    // directory is created on first write, so nothing is checked here (a
+    // stat() would be a network-free but still needless I/O round trip on a
+    // call the seam makes for every operation).
+    available: () => true,
+    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult> {
+      return enqueue(async () => {
+        // A per-record uuid, never an instance-local counter: a second
+        // instance over the same directory can never re-mint a used id.
+        const id = MemoryRecordId(`durable-file-${randomUUID()}`)
+        const records = await read()
+        records.push({
+          id,
+          principal: request.principal,
+          content: request.content,
+          updatedAt: new Date().toISOString(),
+          scope: request.scope,
+        })
+        await write(records)
+        return { id }
+      })
+    },
+    query(request: MemoryQueryRequest): Promise<MemoryQueryResult> {
+      return enqueue(async () => {
+        const needle = request.query.toLowerCase()
+        const matches = visible(await read(), request.accessContext.scope)
+          .filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
+        return { records: matches.map(toRecordView), truncated: false }
+      })
+    },
+    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined> {
+      return enqueue(async () => {
+        const found = visible(await read(), request.accessContext.scope).find(record => record.id === request.id)
+        return found === undefined ? undefined : toRecordView(found)
+      })
+    },
+    revise(request: MemoryReviseRequest): Promise<void> {
+      return enqueue(async () => {
+        const records = await read()
+        const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
+        const existing = records[index]
+        if (existing === undefined) {
+          // An out-of-scope id is indistinguishable from one never proposed.
+          throw new MemoryError(`memory record "${request.id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
+        }
+        records[index] = { ...existing, content: request.content, updatedAt: new Date().toISOString() }
+        await write(records)
+      })
+    },
+    forget(request: MemoryForgetRequest): Promise<void> {
+      return enqueue(async () => {
+        const records = await read()
+        const index = records.findIndex(record => record.id === request.id && inScope(record, request.scope))
+        if (index === -1) return
+        records.splice(index, 1)
+        await write(records)
+      })
+    },
+    export(request: MemoryExportRequest): Promise<MemoryExportResult> {
+      return enqueue(async () => ({
+        records: visible(await read(), request.accessContext.scope).map(toRecordView),
+        truncated: false,
+      }))
+    },
+  }
+}
+
+/** Basename of the JSON document {@link createDurableFileMemoryProvider} keeps in its directory. */
+const DURABLE_FILE_MEMORY_FILENAME = 'memory.json'
+
+/** The on-disk format version {@link createDurableFileMemoryProvider} reads and writes. */
+const DURABLE_FILE_MEMORY_FORMAT_VERSION = 1
+
+/** One persisted record: the reader's projection plus the scope its `propose()` carried. */
+interface DurableMemoryRecord extends MemoryRecordView {
+  readonly scope: MemoryScope
+}
+
+/** The JSON document {@link createDurableFileMemoryProvider} keeps at its path. */
+interface DurableMemoryDocument {
+  readonly version: number
+  readonly records: readonly DurableMemoryRecord[]
+}
+
+/** Whether a read or write confined to `scope` may see `record` (`must[3]`). */
+function inScope(record: DurableMemoryRecord, scope: MemoryScope): boolean {
+  if (record.scope.tenantId !== scope.tenantId) return false
+  // A scope naming no sessionId sees every session within the tenant.
+  return scope.sessionId === undefined || record.scope.sessionId === scope.sessionId
+}
+
+/** Strip the persisted scope, leaving exactly the reader-visible projection. */
+function toRecordView(record: DurableMemoryRecord): MemoryRecordView {
+  return { id: record.id, principal: record.principal, content: record.content, updatedAt: record.updatedAt }
 }
 
 export default MemoryRuntime
