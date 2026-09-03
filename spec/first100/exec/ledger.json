@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T20:22:20.337Z",
-  "inputDigest": "02d0f82db60884dff7542e18bcbddb77b8b2d516d07b41047e24bd1e302350c4",
+  "lastUpdatedUtc": "2026-09-03T21:03:12.922Z",
+  "inputDigest": "d55b279da9836c34f31fee15c633778f63bebe0b62d76768e111c0abed13e35a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1471,7 +1471,30 @@
           "capturedAtUtc": "2026-09-03T16:27:56.574Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33804242898",
+          "observationReportPath": "/tmp/ci-run-33804242898/first100-vitest-report-b1803848dfa379396582e5aa5e4240f1bf80c824/vitest-report.json",
+          "observationSha256": "43e1c467674db0e0c8ba1c9da3c2d2a627de2e8a8b4c81e91f48c6bcf7d169a3",
+          "expectCasesMatched": [
+            "resolves one registeredSchemaVersions entry per live registration, at that registration's current version",
+            "reads the registry rather than a mirrored list: a schemaId the real registry bootstraps resolves to its registered version, and one it never registered is absent",
+            "carries the caller's runtime API version through unchanged — the schema registry contributes no runtime API fact",
+            "a manifest whose schema range covers the real registry's registered major resolves active against the resolved host context",
+            "the registered major is admitted at both inclusive range boundaries — a range pinned exactly to it resolves active",
+            "a manifest whose schema range starts one major above the real registered major is blocked with schema-major-mismatch",
+            "an active provider produces an explicit binding naming the consumer, the capability, and the provider it resolved to",
+            "a consumer whose only required-capability provider is itself blocked is blocked too, never active against a provider that will not load",
+            "a second, still-active provider of the same capability keeps the consumer active and binds to that survivor",
+            "cascade reaches a three-plugin chain: blocking the root blocks both its direct and its indirect consumer, not only the first hop",
+            "a mutually-dependent provider pair, each satisfying the other's required capability, both resolve active — a cycle is not a cascade",
+            "must[3]: a security-critical required capability whose sole provider is blocked blocks the consumer, while a non-security optional capability with a blocked provider only disables that capability",
+            "a consumer's own excludes-provider constraint removes that provider from binding, resolving to the remaining eligible one",
+            "among several eligible active providers the binding is the lexicographically smallest pluginId, not the first in the manifests array",
+            "reordering the same graph produces a deep-equal resolved plan, planId and bindings included",
+            "must[2] still takes precedence over cascade: a direct requires/excludes contradiction over the sole provider returns the minimal unsat core, never a resolved plan"
+          ],
+          "capturedAtUtc": "2026-09-03T21:03:12.558Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -1481,7 +1504,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+      "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -2777,7 +2800,33 @@
           "capturedAtUtc": "2026-09-03T17:30:09.265Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33804242898",
+          "observationReportPath": "/tmp/ci-run-33804242898/first100-vitest-report-b1803848dfa379396582e5aa5e4240f1bf80c824/vitest-report.json",
+          "observationSha256": "43e1c467674db0e0c8ba1c9da3c2d2a627de2e8a8b4c81e91f48c6bcf7d169a3",
+          "expectCasesMatched": [
+            "lists a non-terminal Run reconstructed from the durable store by a fresh service",
+            "lists every non-terminal Run, not just the most recently written one",
+            "omits a Run that reached a terminal state before the restart from the non-terminal listing",
+            "resumes a non-terminal Run reconstructed after a restart",
+            "refuses to resume a Run that reached a terminal state before the restart",
+            "reconstructs a restored Run exactly, brands included, not an approximation of it",
+            "starts empty on a first boot, with no store file on disk yet",
+            "accepts a legal transition through the service and durably records the new state",
+            "rejects an illegal transition through the service, naming the exact rejected pair",
+            "writes nothing for a rejected transition: the restored Run keeps its state and its unextended event log",
+            "associates one Session with multiple Runs across a restart",
+            "lists no Run for a Session that never initiated or joined one",
+            "spans one Run across multiple Sessions durably: an attached Session survives a restart",
+            "appends across a restart without rewriting or reordering any earlier entry",
+            "restores a log entry's entity references, not just its state pair",
+            "owns a Run restored after a restart with RUN_SERVICE_OWNER_ID, never the initiating SessionId",
+            "reads back exactly what a separate store instance over the same path wrote",
+            "reports no Runs for a path that has never been written to, rather than failing",
+            "writes the Run to the named path, not somewhere else"
+          ],
+          "capturedAtUtc": "2026-09-03T21:03:12.918Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -2787,7 +2836,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "abd04f2b279612deeb1145b0569b4baa2abee162",
+      "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
