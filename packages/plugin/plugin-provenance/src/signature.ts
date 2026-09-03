@@ -34,6 +34,29 @@ import type { SbomDigest } from './sbom.ts'
 /** Content digest of an installed package tarball (must[1]'s "package digest"). */
 export type PackageDigest = Branded<'PackageDigest'>
 
+/**
+ * Recompute a package's {@link PackageDigest} from the package's actual
+ * bytes, so that the digest {@link verifyPackageSignature} compares against a
+ * claim is derived from the artifact on disk rather than asserted alongside
+ * it. This is what makes acceptance[0]'s "篡改一个字节" (a single tampered
+ * byte) a real rejection: any change to `packageBytes` — a flipped bit, a
+ * reordering, an inserted or removed byte — yields a different digest, so a
+ * claim whose `packageDigest` was fixed before the tampering no longer
+ * matches what is installed.
+ *
+ * Its guarantee stops exactly there, and this module holds no key material
+ * that could extend it: the digest binds the artifact to the claim, not the
+ * claim to any authority. An attacker who tampers with the bytes AND rewrites
+ * the claim's `packageDigest` to match still verifies — detecting that needs
+ * a signature over the claim against a trust root, which
+ * `packages/kernel/trust-kernel` does not yet hold (BLOCKED-050).
+ * @param packageBytes - the package artifact's exact bytes, as read from the installed tarball.
+ * @returns the `sha256:<hex>` digest of `packageBytes`, using the same encoding as `./sbom.ts`'s `computeSbomDigest`.
+ */
+export function computePackageDigest(packageBytes: Uint8Array): PackageDigest {
+  throw new Error(`not implemented: computePackageDigest over ${packageBytes.length} bytes`)
+}
+
 /** A git commit hash, always paired with a repo URL in {@link SourceCommitReference}. */
 export type SourceCommitHash = Branded<'SourceCommitHash'>
 
