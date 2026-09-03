@@ -198,7 +198,7 @@ function usedObservationDigests(rows, freeze) {
     for (const stage of STAGES) {
       const cell = row.cells[stage]
       if (cell?.observationSha256) {
-        const frozenEntry = freeze.entries.find((e) => e.epic === row.id && e.stage === stage && !e.supplements)
+        const frozenEntry = freeze.entries.find((e) => e.epic === row.id && e.stage === stage && !e.supplements && !e.supersededBy)
         add(cell.observationSha256, `${row.id}.${stage}`, frozenEntry)
       }
     }
@@ -387,7 +387,12 @@ function cmdGreen() {
   }
 
   const freeze = loadJson(COMMAND_FREEZE_PATH)
-  const frozen = freeze.entries.find((e) => e.epic === epic && e.stage === stage)
+  const live = freeze.entries.filter((e) => e.epic === epic && e.stage === stage && !e.supplements && !e.supersededBy)
+  if (live.length > 1) {
+    console.error(`BLOCKED: ${live.length} live (non-superseded) command-freeze.json entries for (${epic}, ${stage}) — mark all but one with supersededBy before greening`)
+    process.exit(1)
+  }
+  const frozen = live[0]
   if (!frozen) {
     console.error(`BLOCKED: no frozen command-freeze.json entry for (${epic}, ${stage}) — freeze it first (B4b)`)
     process.exit(1)
@@ -581,7 +586,7 @@ export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
       const frozenMatch = freeze.entries.find((f) => {
         if (f.epic !== epicId || f.stage !== citation.stage) return false
         if (citation.supplementSeq !== undefined) return f.supplementSeq === citation.supplementSeq && f.supplements?.epic === epicId
-        return f.supplements === undefined
+        return f.supplements === undefined && !f.supersededBy
       })
       const observedTitles =
         citation.supplementSeq !== undefined
@@ -659,7 +664,7 @@ export function checkObservationDistinctness(row, applicableStages, freeze, epic
   for (const stage of applicableStages) {
     const sha = row.cells[stage]?.observationSha256
     if (!sha) continue
-    const frozenEntry = freeze.entries.find((e) => e.epic === epicId && e.stage === stage && !e.supplements)
+    const frozenEntry = freeze.entries.find((e) => e.epic === epicId && e.stage === stage && !e.supplements && !e.supersededBy)
     record(sha, stage, frozenEntry)
   }
   for (const [key, supplement] of Object.entries(row.supplements ?? {})) {

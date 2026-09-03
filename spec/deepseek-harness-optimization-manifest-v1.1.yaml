@@ -913,7 +913,7 @@ adjudication:
     note: "Each sequence is a permutation of the same-wave writers with the canonical owner (the N creator) first. The result.ts sequence resolves the documented P5-06/P6-09 file-contract cycle (matrix gap note: P5-06 depends on P6-09 yet P6-09 consumes result.ts as prior_output introduced_by P5-06) by FILE-LEVEL serialization (P5-06 creates, then P6-09 modifies) — NOT a DAG edge, which would cycle. Same-wave adjacent pairs in every sequence have explicit predecessorEdges; computeDag verifies the union stays acyclic."
   deliverablePathPatches:
     status: "ADJUDICATED"
-    count: 10
+    count: 12
     note: "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch)."
     entries:
       P2-01-U-agent-identity-attachment:
@@ -995,6 +995,22 @@ adjudication:
         reason: "BLOCKED-012: F-stage's fix round added a real, genuinely useful fact -- that architecture.layers.json declares each capability family and pnpm run architecture:seams enforces it -- to AGENTS.md's existing capability-seam bullet. Merging attempt/P0-03-F into first100-exec produced a real conflict on that exact bullet against an unrelated intervening commit (e08d9dc0af, P0-07.U) that had already condensed AGENTS.md's neighboring Trust Kernel line to stay inside the file's word-budget ceiling. Re-running verify-doc-budgets after a good-faith conflict resolution showed root AGENTS.md at 2038/2030 words; docs/AGENTS.md's own policy states the file's ceiling is frozen above its 1,950 target specifically because it already sits above target (raising it further is not an option), and prescribes relocate-before-condense-before-raise. No further genuine slop (per docs/AGENTS.md's own slop checklist) remained to condense without deleting a load-bearing rule. The fact was relocated to docs/glossary.md#capability-seam -- the entry already linked from the AGENTS.md bullet in question, unbudgeted, and the canonical home for this exact vocabulary term -- with its docs/glossary.zh.md pair translated to match and docs/glossary.i18n.yaml re-recorded (verify-translation-pairing, part of first100:slice-gate, passes). Owner-map check: docs/glossary.md carries no exclusive owner. Condition 4 (frozen test lands in the declared/patched files[]): unaffected -- this patch concerns only the doc-note deliverable, not P0-03.F's frozen test file (tests/architecture/capability-seams.spec.ts), which was not moved."
         approvedAt: "2026-09-01"
         basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
+      P6-07-C-lifecycle-discovery:
+        epic: "P6-07"
+        stage: "C"
+        declaredPath: "packages/session/session-lifecycle/tests/lifecycle.e2e.ts"
+        approvedPath: "packages/session/session-lifecycle/tests/lifecycle.spec.ts"
+        reason: "The pinned first100-requirements-matrix.md source (line 1134) names this exact path -- .e2e.ts is not a Writer naming choice, it is the sources own declared kind:N deliverable. Mechanical problem: first100-exact-sha.ymls Full test suite step (the workflow this program requires for ledger-greening observations) runs a bare `pnpm exec vitest run --reporter=json`, which uses vitest.config.tss default testIncludes (packages/*/*/tests/**/*.spec.{ts,tsx} only) -- it never discovers any *.e2e.ts file. Every other real .e2e.ts test in this repo (packages/e2b/e2b, packages/llm/llm-pi-ai, packages/sandbox/sandbox-local/packages/shell/bash-sandbox) is instead verified by its own dedicated CI workflow (e2b-e2e.yml / pi-ai-provider-e2e.yml / sandbox.yml), never by first100-exact-sha.yml -- widening the default includes glob to also discover .e2e.ts would pull those genuinely-external-resource-dependent suites into the main CI gate, a disproportionate blast radius for this one epics path. Renaming the actual deliverable to lifecycle.spec.ts is the only fix whose blast radius matches the problem: same test content, same assertions, discoverable by the same CI step every other epic already relies on. Verified byte-for-byte before approval: all 27 originally-frozen case titles are unchanged under the new path (0 missing); a 28th case (a createdAt-collision pagination-tiebreak test closing a GREEN-review-found coverage gap) was added separately during the GREEN corrective round, unrelated to this path patch."
+        approvedAt: "2026-09-03"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-048"
+      P6-07-F-lifecycle-discovery:
+        epic: "P6-07"
+        stage: "F"
+        declaredPath: "packages/session/session-lifecycle/tests/lifecycle.e2e.ts"
+        approvedPath: "packages/session/session-lifecycle/tests/lifecycle.spec.ts"
+        reason: "Companion to P6-07-C-lifecycle-discovery: F-stage names the identical declared path for the identical mechanical reason (not independently discoverable by first100-exact-sha.ymls observation step). Decided now, at C-stage patch time, specifically so F-stage does not rediscover the same gap later and invent a third filename -- both stages target the same approvedPath."
+        approvedAt: "2026-09-03"
+        basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-048"
 remainingPending:
   sameWaveConflicts: 0
   unassignedOwners: 1
