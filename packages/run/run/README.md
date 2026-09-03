@@ -16,18 +16,18 @@ Approval, and Verification entities (must[1]); and a Run owned by the Run
 Service's own fixed identity, never a UI session or "current turn" pointer
 (must[2]).
 
-This package currently ships this epic's Contract-stage RED scaffold only:
-`src/types.ts`'s types, `src/events.ts`'s event-log signatures, and
-`src/state-machine.ts`'s Run-lifecycle signatures are real and epic-accurate,
-but every decision function (`genesisRunEvent`, `appendRunEvent`,
-`referencesByKind`, `createRun`, `transition`, `attachSessionToRun`,
-`listNonTerminalRuns`, `resumeRun`) throws `'not implemented: ...'` — the
-pure decision logic itself is a later fix-round's deliverable, proven by
-`tests/state-machine.spec.ts`'s real assertions against that (currently
-failing) behavior. `LEGAL_RUN_TRANSITIONS`, `TERMINAL_RUN_STATES`, and
-`RUN_SERVICE_OWNER_ID` are the one exception: real, already-correct data —
-the declared transition table and the Run Service's fixed owner identity —
-not themselves the adjudication logic under test.
+This package ships this epic's Contract and Provider stages, both real and
+green: `src/types.ts`'s types, `src/events.ts`'s append-only event-log
+mechanics, and `src/state-machine.ts`'s Run-lifecycle decisions
+(`createRun`, `transition`, `attachSessionToRun`, `listNonTerminalRuns`,
+`resumeRun`) are implemented and proven by `tests/state-machine.spec.ts`'s
+111 cases — an exhaustive 10x10 state-pair sweep derived from the real
+`LEGAL_RUN_TRANSITIONS` table, so every legal edge has a passing-direction
+case and every illegal pair a rejected one. `src/index.ts` adds the
+Provider-stage durable registry (`RunStore`, `createFileRunStore`,
+`RunService`), proven by `tests/run-service.spec.ts`'s 19 cases, each
+restart case using a fresh store and service over the same path so a Run
+can only reappear from durable bytes.
 
 No invariant companion is published because this Contract-stage slice
 constructs no Run registry or Cordis `Context` value yet to check an owned
