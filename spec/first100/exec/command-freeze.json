@@ -1726,6 +1726,44 @@
         "testsDiscovered": 13
       },
       "note": "C-stage RED scaffold for P1-02 (plugin signing/provenance/SBOM), attempt/P1-02-C @ 18ccb4b27f (post-corrective-round, closes 1 Reviewer-flagged gap: no case previously held repoUrl fixed while tampering commitHash alone, so a stub checking only repoUrl would have passed must[1]s source-commit verification requirement undetected; added a distinct source-commit-mismatch reason code and case). 13/13 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-manifest/tests/manifest.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a constructed manifest carries actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements",
+        "must[1]: an execution attempt with no manifest appended for its actionId is refused before any policy/approval step could run",
+        "must[2]: a code-mode embedded sub-dispatch is admitted when its manifest precedes it, and refused exactly like a native call when it does not",
+        "must[2]: a plugin RPC call is admitted when its manifest precedes it, and refused exactly like a native call when it does not",
+        "a manifest generated and durably appended before execution admits that exact execution attempt",
+        "an external write whose actionId has no preceding manifest is blocked, even when unrelated manifests already exist in the log",
+        "a manifest appended for the right actionId but the wrong arguments hash does not admit execution (tamper/substitution is not a preceding manifest)",
+        "objects with the same keys in a different order hash identically",
+        "strings in different Unicode normalization forms (NFC vs NFD) hash identically",
+        "numbers in different literal representations of the same value hash identically",
+        "arguments that differ semantically hash to different values (canonicalization is not a constant function)",
+        "an action whose side effect cannot be classified defaults to the highest-risk class and requires approval",
+        "an action with a declared, classifiable side effect is classified as declared, not defaulted to the unclassifiable high-risk fallback"
+      ],
+      "files": [
+        "packages/action/action-manifest/tests/manifest.spec.ts",
+        "spec/action-manifest.schema.json"
+      ],
+      "frozenAtUtc": "2026-09-03T13:44:50.173Z",
+      "dryRunProof": {
+        "treeSha": "4eabc990a38d4b0d1fb9b1795242ea3468f729d6",
+        "testsDiscovered": 13
+      },
+      "note": "C-stage RED scaffold for P2-03 (first-class ActionManifest), attempt/P2-03-C @ 8a150930c8. 13/13 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. spec/action-manifest.schema.json separately validated with ajv (strict) plus round-tripped fixtures. Reviewed and ACCEPTED with no MUST-FIX; 3 non-blocking notes recorded for the U-stage reviewer: (1) must[1]/must[2]s ordering/cannot-bypass language is only testable as existence-gating at C-stage -- assertManifestPrecedesExecution is a pure predicate over an already-given appended list, so real temporal ordering and real code-mode/plugin-RPC call-site wiring remain untested until U-stage, matching the P6-01 precedents same C/U split; (2) the two must[2] cases (code-mode, plugin-RPC) are structurally near-identical, both exercising the same generic gate rather than two distinct bypass closures; (3) acceptance[1]s single anti-gaming case is minimally sufficient (hand-verified it catches both a key-count-only and a key-names-only degenerate hash) but only one such case exists. origin/requiresApproval fields added beyond musts[0] literal list are soundly grounded in must[2]/acceptance[2]s own text. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
