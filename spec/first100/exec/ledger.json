@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T20:10:12.099Z",
-  "inputDigest": "fc662ff3e6b3939b73fa422667f50a0df7dcf0facd50eaabb98d43c5e1facf3e",
+  "lastUpdatedUtc": "2026-09-03T20:22:20.337Z",
+  "inputDigest": "02d0f82db60884dff7542e18bcbddb77b8b2d516d07b41047e24bd1e302350c4",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1400,7 +1400,25 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "efd21746cc870523a8534a642a7d2c14db5438a8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33800254687",
+          "observationReportPath": "/tmp/ci-run-33800254687/first100-vitest-report-efd21746cc870523a8534a642a7d2c14db5438a8/vitest-report.json",
+          "observationSha256": "77c6e00d0d729c0814270cededd9d1cafae5e91a303d28279fefb1e70d71351f",
+          "expectCasesMatched": [
+            "must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to",
+            "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load",
+            "must[2]: a trust upgrade presented by a non-host principal is refused and produces neither a new record nor an audit entry",
+            "must[2]: a trust upgrade presented by a genuine host user principal succeeds and writes an audit record naming the host principal and the state transition",
+            "a trusted-read workspace (never upgraded to trusted-execute) still denies every project-level executable load kind, so opening the clone alone can never reach a subprocess/network/credential-read path",
+            "directory replaced: the same canonical path reporting a different device/inode demotes an existing trusted-execute record to untrusted",
+            "symlink retargeted: a different canonical path demotes an existing trusted-execute record to untrusted even when device/inode happen to match",
+            "directory moved: a different canonical path with the same device/inode still demotes an existing trusted-execute record to untrusted",
+            "an unchanged identity (same canonical path, device, and inode) preserves the current trust state and grantor",
+            "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and updates the record to the target state",
+            "downgrading from trusted-read to untrusted revokes nothing further, since trusted-read never granted any project-level executable kind"
+          ],
+          "capturedAtUtc": "2026-09-03T20:22:20.303Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -1413,7 +1431,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "efd21746cc870523a8534a642a7d2c14db5438a8",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
