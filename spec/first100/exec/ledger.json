@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T21:34:49.840Z",
-  "inputDigest": "1d51e7a9ac1defdd144b6916302efbeb0ee29caa2950bd51fee5fc4582cad9c3",
+  "lastUpdatedUtc": "2026-09-03T23:49:55.299Z",
+  "inputDigest": "7b0b781103d9f63caced43d998defa43a0ab6915cb59d5501da4f5b68f31f645",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1401,10 +1401,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "efd21746cc870523a8534a642a7d2c14db5438a8",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33800254687",
-          "observationReportPath": "/tmp/ci-run-33800254687/first100-vitest-report-efd21746cc870523a8534a642a7d2c14db5438a8/vitest-report.json",
-          "observationSha256": "77c6e00d0d729c0814270cededd9d1cafae5e91a303d28279fefb1e70d71351f",
+          "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3a5e/first100-evidence-3a5e0692948c78418011204e8d847266a2410a68/vitest-report.json",
+          "observationSha256": "91e834ae7ef7e24af7e90005fa39c4e0c543966ed10601fb7e3f525f2e742fde",
           "expectCasesMatched": [
             "must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to",
             "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load",
@@ -1418,10 +1418,26 @@
             "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and updates the record to the target state",
             "downgrading from trusted-read to untrusted revokes nothing further, since trusted-read never granted any project-level executable kind"
           ],
-          "capturedAtUtc": "2026-09-03T20:22:20.303Z"
+          "capturedAtUtc": "2026-09-03T23:49:55.292Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3a5e/first100-evidence-3a5e0692948c78418011204e8d847266a2410a68/vitest-report.json",
+          "observationSha256": "91e834ae7ef7e24af7e90005fa39c4e0c543966ed10601fb7e3f525f2e742fde",
+          "expectCasesMatched": [
+            "observes the fs.realpath canonical path for a symlinked, dot-segmented spelling of the same directory",
+            "observes exactly the device and inode fs.stat reports for that canonical path",
+            "binds a freshly created workspace to its observed identity at untrusted, with no grantor",
+            "refuses a trust upgrade authored by a non-host principal, leaving the workspace untrusted",
+            "keeps host-granted trust across a re-observation of an unchanged directory",
+            "drops trust when the workspace directory is replaced in place under the same canonical path",
+            "drops trust when the symlink the workspace was opened through is retargeted to another directory",
+            "drops trust when the workspace directory is moved out from under the path it was opened at",
+            "does not carry trust to the new canonical path of a moved directory that kept its inode"
+          ],
+          "capturedAtUtc": "2026-09-03T23:49:54.652Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -1431,7 +1447,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "efd21746cc870523a8534a642a7d2c14db5438a8",
+      "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1916,7 +1932,37 @@
           "capturedAtUtc": "2026-09-03T18:04:26.809Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3a5e/first100-evidence-3a5e0692948c78418011204e8d847266a2410a68/vitest-report.json",
+          "observationSha256": "91e834ae7ef7e24af7e90005fa39c4e0c543966ed10601fb7e3f525f2e742fde",
+          "expectCasesMatched": [
+            "reports an empty state for a path that has never been written to, rather than failing",
+            "reads back through a separate store instance exactly what the first instance wrote, signature bytes included",
+            "reconstructs a grandchild's full root-first digest chain by walking recorded parentDigest hops",
+            "reconstructs a root token's lineage as exactly its own single digest",
+            "reconstructs no lineage for a digest no recorded token has",
+            "the grandchild's own token never names the root's digest, so a cascade cannot be a direct digest match",
+            "revoking the root invalidates a grandchild two attenuation hops away",
+            "revoking an intermediate child invalidates its own descendant but leaves the root valid",
+            "revoking one branch's root leaves an unrelated branch's descendant valid",
+            "a revocation recorded before a restart still invalidates the descendant after it",
+            "verifies a freshly issued token whose nonce has never been spent",
+            "refuses a second presentation of the same token as replayed",
+            "still refuses a replay after a restart, because the spent nonce was recorded durably",
+            "still verifies a sibling token whose own nonce was never spent, after the same restart",
+            "refuses an expired token through the service exactly as verifyToken does",
+            "records an accepted child so its lineage is reconstructable",
+            "refuses a widening request with attenuateToken's own reason, unchanged",
+            "writes nothing at all for a refused attenuation: no token, no audit record, across a restart",
+            "records exactly redactTokenForLog's output for each issued and attenuated token, oldest first",
+            "never lets a nonce or a signature byte reach the audit surface",
+            "keeps the audit trail free of nonces after a restart, when it is read back from disk",
+            "keeps every audit record's digest equal to the digest of a token the store really holds",
+            "leaves the audit trail on disk carrying no nonce, even though the token registry beside it must"
+          ],
+          "capturedAtUtc": "2026-09-03T23:49:54.882Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -1926,7 +1972,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "2f5291c323d6957f450fa037543a9fd7c4327074",
+      "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -3915,7 +3961,32 @@
           "capturedAtUtc": "2026-09-03T20:10:12.080Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3a5e/first100-evidence-3a5e0692948c78418011204e8d847266a2410a68/vitest-report.json",
+          "observationSha256": "91e834ae7ef7e24af7e90005fa39c4e0c543966ed10601fb7e3f525f2e742fde",
+          "expectCasesMatched": [
+            "lists a lifecycle record reconstructed from the durable store by a fresh service",
+            "walks every page of a restored listing, visiting each durable record exactly once with no omission or duplication",
+            "starts empty on a first boot, with no store file on disk yet",
+            "reads back exactly what a separate store instance over the same path wrote, brands included",
+            "filters a restored listing by tenant, excluding another tenant's record",
+            "filters a restored listing by workspace",
+            "filters a restored listing by status, excluding a soft-deleted record from an active-only page",
+            "filters a restored listing by time range",
+            "persists an archive so a fresh service reads back the archived disposition, not the active one",
+            "persists a soft delete so a fresh service reads back the soft-deleted disposition",
+            "keeps archive and soft delete separate: an archived record is never listed under a soft-deleted status filter",
+            "persists a legal hold so a fresh service still refuses to hard-erase after a restart",
+            "leaves a held record durably intact after a refused erase, rather than partially destroying it",
+            "carries a legal hold alongside a soft-deleted disposition across a restart",
+            "propagates an authorized erase to all four dependent stores and removes the record durably",
+            "propagates a soft delete to the query index only, leaving attachments, memory and artifacts untouched",
+            "does not resurrect an erased record for a fresh service over the same path",
+            "refuses a store document written under an unsupported format version instead of reading it as empty"
+          ],
+          "capturedAtUtc": "2026-09-03T23:49:55.088Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -3925,7 +3996,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "b064fb61bc5cc6895a4ffeb353ca7fd458b49b9e",
+      "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",

@@ -236,11 +236,21 @@ describe('filesystem identity signals available for workspace binding', () => {
       await rm(dir, { recursive: true })
     }
 
+    // Asserted unconditionally, because it is the load-bearing unknown and it
+    // is answerable on every platform: a filesystem recording no creation time
+    // reports 0, which would make createdAtMs useless as the distinguishing
+    // component and silently reduce identity back to a reusable inode number.
+    // Keeping this outside the reuse branch means the probe still proves
+    // something on a filesystem that never reuses -- an earlier version only
+    // asserted inside the branch and so proved nothing at all on macOS, the
+    // same silent-pass shape this whole finding is about.
+    await mkdir(dir)
+    const fresh = await stat(dir)
+    expect(fresh.birthtimeMs).toBeGreaterThan(0)
+    await rm(dir, { recursive: true })
+
     if (reused === undefined) return
 
-    // birthtimeMs is 0 on a filesystem that does not record a creation time,
-    // which would make it useless as the distinguishing component.
-    expect(reused.after.birthtimeMs).toBeGreaterThan(0)
     expect(reused.after.birthtimeMs).not.toBe(reused.before.birthtimeMs)
   })
 })
