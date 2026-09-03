@@ -1,0 +1,42 @@
+{
+  "name": "@deepseek-ai/dsh-workspace-trust",
+  "description": "Contract-stage type surface and pure decision logic for Epic P1-07's project trust boundary: canonical-realpath-plus-inode/volume-bound trust states, denial of project-level executable content (plugins/hooks/MCP servers/executable skills/home-profile-patch overrides) while untrusted, host-user-interaction-gated trust upgrades with an audit record, and immediate capability revocation on downgrade",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/workspace/workspace-trust"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^"
+  }
+}

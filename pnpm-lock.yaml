@@ -9814,6 +9814,15 @@ importers:
         specifier: workspace:^
         version: link:../../typert/protocol
 
+  packages/workspace/workspace-trust:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-principal':
+        specifier: workspace:^
+        version: link:../../identity/principal
+
   python/sdk-runtime:
     dependencies:
       '@deepseek-ai/cordis':
