@@ -97,6 +97,8 @@ The dependency graph is generated: [docs/module-graph.md](../docs/module-graph.m
 
 [`architecture.layers.json`](../architecture.layers.json) declares each capability family's Service Definition, providers, consumers, and dated/owned allowlist exceptions; its contract lives in [`scripts/architecture/capability-seams.ts`](../scripts/architecture/capability-seams.ts) and is checked by [`tests/architecture/capability-seams.spec.ts`](../tests/architecture/capability-seams.spec.ts). The CI-wired repo-wide scanner is a later slice.
 
+[`docs/architecture/layering.md`](../docs/architecture/layering.md) declares the six-layer package sequence (kernel → protocol/types → capability definitions → providers → orchestration/runtime → surfaces/apps) and its cycle/exemption rules; its contract lives in [`scripts/architecture/layer-order.ts`](../scripts/architecture/layer-order.ts) and is checked by [`tests/architecture/layer-deps.spec.ts`](../tests/architecture/layer-deps.spec.ts). The CI-wired repo-wide scanner is a later slice.
+
 -----
 
 <a id="package-readme-contracts"></a>
