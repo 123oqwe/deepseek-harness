@@ -1,13 +1,9 @@
 /**
- * Contract-stage RED scaffold for Epic P2-03's first-class ActionManifest:
- * argument canonicalization and hashing (acceptance[1]), side-effect
- * classification with a fail-closed default (acceptance[2]), manifest
- * construction (must[0], must[1]), and the durable-append-precedes-
- * execution ordering gate (must[1], acceptance[0], must[2]). Every export
- * below has a real, epic-accurate signature but a placeholder body
- * (`'not implemented'`) — the pure decision logic itself is this epic's
- * Contract-stage deliverable to a later fix-round, matching
- * `@deepseek-ai/dsh-plugin-ownership`'s precedent.
+ * Contract-stage pure decision logic for Epic P2-03's first-class
+ * ActionManifest: argument canonicalization and hashing (acceptance[1]),
+ * side-effect classification with a fail-closed default (acceptance[2]),
+ * manifest construction (must[0], must[1]), and the durable-append-precedes-
+ * execution ordering gate (must[1], acceptance[0], must[2]).
  *
  * None of these functions read a file, spawn a process, or construct a
  * Cordis `Context` — every input is a plain value the caller supplies. This
@@ -32,6 +28,8 @@ import type {
   ExecutionGateDecision,
   SideEffectClassification,
 } from './types.ts'
+import { createHash } from 'node:crypto'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 
 /**
@@ -45,7 +43,15 @@ import type { JsonValue } from '@deepseek-ai/dsh-util-values'
  * @returns the canonical string form of `args`.
  */
 export function canonicalizeArguments(args: JsonValue): string {
-  throw new Error(`not implemented: canonicalizeArguments(${JSON.stringify(args)})`)
+  if (args === null) return 'null'
+  if (typeof args === 'boolean') return args ? 'true' : 'false'
+  if (typeof args === 'number') return JSON.stringify(args)
+  if (typeof args === 'string') return JSON.stringify(args.normalize('NFC'))
+  if (Array.isArray(args)) return `[${args.map(canonicalizeArguments).join(',')}]`
+  const entries = Object.entries(args)
+    .map(([key, value]): [string, JsonValue] => [key.normalize('NFC'), value])
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+  return `{${entries.map(([key, value]) => `${JSON.stringify(key)}:${canonicalizeArguments(value)}`).join(',')}}`
 }
 
 /**
@@ -59,7 +65,8 @@ export function canonicalizeArguments(args: JsonValue): string {
  * @returns a stable {@link ArgumentsHash} for `args`.
  */
 export function computeArgumentsHash(args: JsonValue): ArgumentsHash {
-  throw new Error(`not implemented: computeArgumentsHash(${JSON.stringify(args)})`)
+  const digest = createHash('sha256').update(canonicalizeArguments(args), 'utf8').digest('hex')
+  return brandString<ArgumentsHash>(digest)
 }
 
 /**
@@ -78,7 +85,8 @@ export function computeArgumentsHash(args: JsonValue): ArgumentsHash {
  * @returns the resulting {@link SideEffectClassification}.
  */
 export function classifySideEffect(declared: ActionSideEffectClass | undefined): SideEffectClassification {
-  throw new Error(`not implemented: classifySideEffect(${String(declared)})`)
+  if (declared === undefined) return { sideEffectClass: 'destructive', classified: false, requiresApproval: true }
+  return { sideEffectClass: declared, classified: true, requiresApproval: declared === 'destructive' }
 }
 
 /**
@@ -95,7 +103,23 @@ export function classifySideEffect(declared: ActionSideEffectClass | undefined):
  * @returns a complete {@link ActionManifest}.
  */
 export function createActionManifest(request: CreateActionManifestRequest): ActionManifest {
-  throw new Error(`not implemented: createActionManifest(${String(request.actionId)}, ${String(request.capability)})`)
+  const classification = classifySideEffect(request.declaredSideEffectClass)
+  return {
+    actionId: request.actionId,
+    runId: request.runId,
+    actor: request.actor,
+    capability: request.capability,
+    origin: request.origin,
+    target: request.target,
+    argumentsHash: computeArgumentsHash(request.args),
+    sideEffectClass: classification.sideEffectClass,
+    requiresApproval: classification.requiresApproval,
+    idempotencyKey: request.idempotencyKey,
+    preconditions: request.preconditions,
+    expectedDiff: request.expectedDiff,
+    compensation: request.compensation,
+    evidenceRequirements: request.evidenceRequirements,
+  }
 }
 
 /**
@@ -122,5 +146,9 @@ export function assertManifestPrecedesExecution(
   argumentsHash: ArgumentsHash,
   appended: readonly AppendedManifest[],
 ): ExecutionGateDecision {
-  throw new Error(`not implemented: assertManifestPrecedesExecution(${String(actionId)}, ${String(argumentsHash)}, ${String(appended.length)} appended)`)
+  const forActionId = appended.filter(entry => entry.manifest.actionId === actionId)
+  if (forActionId.length === 0) return { admitted: false, reason: 'no-manifest-appended' }
+  const matching = forActionId.find(entry => entry.manifest.argumentsHash === argumentsHash)
+  if (matching === undefined) return { admitted: false, reason: 'manifest-argument-mismatch' }
+  return { admitted: true, manifest: matching.manifest }
 }
