@@ -24,6 +24,9 @@
       "path": "../../plugin/plugin-manifest"
     },
     {
+      "path": "../../plugin/plugin-compat"
+    },
+    {
       "path": "../../typert/protocol"
     }
   ]

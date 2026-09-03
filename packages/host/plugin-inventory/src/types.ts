@@ -5,6 +5,7 @@ import type {
   PluginRegistrationComparison,
   PluginTrustDecision,
 } from '@deepseek-ai/dsh-plugin-manifest'
+import type { PluginActivationStatus } from '@deepseek-ai/dsh-plugin-compat'
 
 /** Stable Loader-tree identity of one configured plugin entry. */
 export type PluginEntryId = Branded<'PluginEntryId'>
@@ -26,6 +27,17 @@ export interface PluginInventoryEntry {
   /** Effective Loader enablement, including disabled ancestor groups. */
   readonly enabled: boolean
   readonly fiberPhase: PluginFiberPhase
+  /**
+   * Epic P1-08's solved compatibility-graph outcome for this entry's
+   * plugin, present once a `@deepseek-ai/dsh-plugin-compat` `solvePluginGraph`
+   * call has recorded one for the current boot (registry's own validation
+   * guidance: "将结果写入 `--dump-config` 和 plugin inventory" / write the
+   * result to `--dump-config` and plugin inventory); absent before that
+   * Usage-stage wiring runs. Mirrors one `PluginGraphSolution.loadPlan`
+   * row's `activation` field so a reader does not need its own copy of
+   * `PluginId` resolution to find this entry's outcome.
+   */
+  readonly compatActivation?: PluginActivationStatus
 }
 
 /** Effective enablement of one preset composition row. */
