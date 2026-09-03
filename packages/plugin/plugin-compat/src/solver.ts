@@ -35,6 +35,8 @@
  * @module @deepseek-ai/dsh-plugin-compat/solver
  */
 
+import { listSchemas } from '@deepseek-ai/dsh-schema-registry'
+import { solvePluginGraph } from './index.ts'
 import type {
   CapabilityId,
   HostCompatContext,
@@ -42,6 +44,8 @@ import type {
   PluginCompatManifest,
   PluginId,
   RuntimeApiVersion,
+  SchemaId,
+  SchemaVersion,
   UnsatCore,
 } from './index.ts'
 
@@ -111,7 +115,62 @@ export type ResolvedGraphSolution =
  *   version.
  */
 export function resolveHostCompatContext(runtimeApiVersion: RuntimeApiVersion): HostCompatContext {
-  throw new Error(`not implemented: resolveHostCompatContext(${runtimeApiVersion})`)
+  const registeredSchemaVersions = new Map<SchemaId, SchemaVersion>()
+  for (const registration of listSchemas()) {
+    registeredSchemaVersions.set(registration.schemaId, registration.version)
+  }
+  return { runtimeApiVersion, registeredSchemaVersions }
+}
+
+/**
+ * Every {@link PluginId} whose `providedCapabilities` names a given
+ * {@link CapabilityId} — the graph's "who could satisfy this" index, before
+ * any consumer's own {@link ProviderConstraint}s or the cascade's
+ * still-active set narrow it.
+ */
+function indexProviders(manifests: readonly PluginCompatManifest[]): Map<CapabilityId, PluginId[]> {
+  const index = new Map<CapabilityId, PluginId[]>()
+  for (const manifest of manifests) {
+    for (const capabilityId of manifest.providedCapabilities) {
+      const providers = index.get(capabilityId)
+      if (providers) providers.push(manifest.pluginId)
+      else index.set(capabilityId, [manifest.pluginId])
+    }
+  }
+  return index
+}
+
+/**
+ * The still-active providers `consumer` may bind to for `capabilityId`,
+ * sorted lexicographically so the smallest eligible {@link PluginId} is
+ * first regardless of `manifests` array order: the graph's providers of
+ * `capabilityId`, narrowed by `consumer`'s own {@link ProviderConstraint}s
+ * (`'requires-provider'` keeps only its named providers,
+ * `'excludes-provider'` removes its named ones) and by `active`.
+ */
+function eligibleProviders(
+  consumer: PluginCompatManifest,
+  capabilityId: CapabilityId,
+  providedBy: ReadonlyMap<CapabilityId, readonly PluginId[]>,
+  active: ReadonlySet<PluginId>,
+): readonly PluginId[] {
+  const own = consumer.providerConstraints.filter(constraint => constraint.capabilityId === capabilityId)
+  const required = new Set(own.filter(constraint => constraint.kind === 'requires-provider').map(constraint => constraint.providerId))
+  const excluded = new Set(own.filter(constraint => constraint.kind === 'excludes-provider').map(constraint => constraint.providerId))
+
+  return (providedBy.get(capabilityId) ?? [])
+    .filter(providerId =>
+      active.has(providerId)
+      && (required.size === 0 || required.has(providerId))
+      && !excluded.has(providerId))
+    .sort(comparePluginId)
+}
+
+/** Stable, content-only ordering for two {@link PluginId}s. */
+function comparePluginId(a: PluginId, b: PluginId): number {
+  if (a < b) return -1
+  if (a > b) return 1
+  return 0
 }
 
 /**
@@ -143,7 +202,98 @@ export function resolveActivatedGraph(
   manifests: readonly PluginCompatManifest[],
   host: HostCompatContext,
 ): ResolvedGraphSolution {
-  throw new Error(
-    `not implemented: resolveActivatedGraph(${manifests.length} manifests, runtimeApiVersion=${host.runtimeApiVersion})`,
-  )
+  const base = solvePluginGraph(manifests, host)
+  if (!base.solvable) return base
+
+  const byId = new Map(manifests.map(manifest => [manifest.pluginId, manifest] as const))
+  const providedBy = indexProviders(manifests)
+
+  // Greatest fixpoint: start from every Contract-stage-active plugin and
+  // remove those whose required capabilities have no still-active admissible
+  // provider, until a pass removes nothing. Removal is one-way, so the loop
+  // runs at most once per plugin and a provider cycle whose members satisfy
+  // each other survives — a cycle is not a cascade.
+  const active = new Set<PluginId>()
+  for (const row of base.loadPlan.activations) {
+    if (row.activation.status === 'active') active.add(row.pluginId)
+  }
+
+  for (let changed = true; changed;) {
+    changed = false
+    for (const pluginId of [...active]) {
+      const manifest = byId.get(pluginId)
+      if (!manifest) continue
+      const unsatisfied = manifest.capabilities.some(requirement =>
+        requirement.necessity === 'required'
+        && eligibleProviders(manifest, requirement.capabilityId, providedBy, active).length === 0)
+      if (unsatisfied) {
+        active.delete(pluginId)
+        changed = true
+      }
+    }
+  }
+
+  const activations: PluginActivation[] = []
+  const bindings: ProviderBinding[] = []
+
+  for (const row of base.loadPlan.activations) {
+    const manifest = byId.get(row.pluginId)
+    if (row.activation.status === 'blocked' || !manifest) {
+      activations.push(row)
+      continue
+    }
+
+    const missingCapabilities: CapabilityId[] = []
+    const disabledOptionalCapabilities: CapabilityId[] = []
+    const resolved: ProviderBinding[] = []
+    for (const requirement of manifest.capabilities) {
+      const [providerId] = eligibleProviders(manifest, requirement.capabilityId, providedBy, active)
+      if (providerId !== undefined) {
+        resolved.push({ consumerId: manifest.pluginId, capabilityId: requirement.capabilityId, providerId })
+      } else if (requirement.necessity === 'required') {
+        missingCapabilities.push(requirement.capabilityId)
+      } else {
+        disabledOptionalCapabilities.push(requirement.capabilityId)
+      }
+    }
+
+    if (active.has(manifest.pluginId)) {
+      activations.push({ pluginId: manifest.pluginId, activation: { status: 'active', disabledOptionalCapabilities } })
+      bindings.push(...resolved)
+    } else {
+      activations.push({
+        pluginId: manifest.pluginId,
+        activation: { status: 'blocked', reasonCode: 'missing-required-capability', missingCapabilities },
+      })
+    }
+  }
+
+  bindings.sort((a, b) =>
+    comparePluginId(a.consumerId, b.consumerId)
+    || (a.capabilityId < b.capabilityId ? -1 : a.capabilityId > b.capabilityId ? 1 : 0))
+
+  return { solvable: true, loadPlan: { activations, bindings, planId: computeResolvedPlanId(activations, bindings) } }
+}
+
+/**
+ * Deterministic identity of a {@link ResolvedLoadPlan}: a stable
+ * serialization of both already-sorted `activations` and `bindings` (with
+ * each activation's own capability-id lists sorted), so equal graphs produce
+ * an equal `planId` regardless of `manifests` array order.
+ */
+function computeResolvedPlanId(
+  activations: readonly PluginActivation[],
+  bindings: readonly ProviderBinding[],
+): string {
+  const canonicalActivations = activations.map(row => ({
+    pluginId: row.pluginId,
+    activation: row.activation.status === 'active'
+      ? { status: 'active' as const, disabledOptionalCapabilities: [...row.activation.disabledOptionalCapabilities].sort() }
+      : {
+        status: 'blocked' as const,
+        reasonCode: row.activation.reasonCode,
+        missingCapabilities: [...row.activation.missingCapabilities].sort(),
+      },
+  }))
+  return JSON.stringify({ activations: canonicalActivations, bindings })
 }
