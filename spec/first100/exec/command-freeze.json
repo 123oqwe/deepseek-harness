@@ -1598,25 +1598,29 @@
         "revise() updates an existing record, reflected by a later get()",
         "forget() removes a record so a later get() resolves undefined",
         "export() resolves every record visible to the access context",
+        "propose() accepts a candidate record and resolves a new MemoryRecordId",
+        "query() resolves matching records honoring the caller-supplied context budget",
+        "get() resolves the record previously created by propose()",
+        "revise() updates an existing record, reflected by a later get()",
+        "forget() removes a record so a later get() resolves undefined",
+        "export() resolves every record visible to the access context",
         "swapping the registered provider changes which provider serves the same runtime call",
-        "a provider object alone is inert -- it takes effect only once registered on ctx.memory",
+        "a provider object alone is inert — it takes effect only once registered on ctx.memory",
         "revise() rejects an id that was never returned by propose()",
         "query() rejects a request whose access context is missing any of the four required fields",
+        "get() rejects a request whose access context is missing any of the four required fields",
+        "export() rejects a request whose access context is missing any of the four required fields",
         "docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry"
       ],
       "files": [
-        "packages/memory/memory/src/types.ts",
-        "packages/memory/memory/src/invariant.ts",
-        "packages/memory/memory/src/index.ts",
-        "packages/memory/memory/tests/conformance.spec.ts",
-        "docs/subsystems/memory.md"
+        "packages/memory/memory/tests/conformance.spec.ts"
       ],
-      "frozenAtUtc": "2026-09-03T06:16:34.170Z",
+      "frozenAtUtc": "2026-09-03T13:19:43.161Z",
       "dryRunProof": {
-        "treeSha": "8578ba4fb5467237e96d71e6af3337fac5ede812",
-        "testsDiscovered": 17
+        "treeSha": "6e7b79e66dcc8f7071058be2911905a17b7e13c2",
+        "testsDiscovered": 19
       },
-      "note": "C-stage RED scaffold on attempt/P6-01-C at eae6bee074d5fd4585a4c309f7aa15dc57fa4383 (fork/first100-exec base 9d97b15653). Note the 6 conformance ops (propose/query/get/revise/forget/export) each run against 2 providers (local-reference + fake), producing 12 of the 17 real vitest titles that are byte-identical across both provider runs -- expectCases here lists each of those 6 distinct titles once (11 unique strings total covering all 4 must[] + all 3 acceptance[] clauses: the 6x2 conformance run covers must[0]+acceptance[0]; provider-swap covers must[1]; Service-Definition-only-access covers must[2]; revise-on-forged-id covers acceptance[1]; missing-access-context-field covers must[3]; doc-existence+record-shape-distinctness covers acceptance[2]), not the full 17-row vitest output; verify-frozen-titles-resolvable.mjs matches by title membership, not position, so this is a valid frozen form. Today (RED): 17/17 failing on genuine Error: not implemented behind various assertion shapes (promise-rejection mismatch, object-shape mismatch), zero module/syntax errors -- confirmed via independent supervisor-side re-run, not just the Writer self-report. expectExit=0 is the GREEN target this freeze grades a future candidate run against (matches every other entry in this file); it is NOT today RED run exit code (which is 1)."
+      "note": "C-stage RED scaffold for P6-01 (native provider-neutral Memory Service Definition), attempt/P6-01-C @ 17ca16450f (post-corrective-round, closes 3 Reviewer-flagged gaps: acceptance[2] tightened from a gameable toMatchObject to an exact toStrictEqual shape check; must[3] access-context scoping now also tested on get()/export(), not just query(); the self-referential src/invariant.ts (no independent second source, matching AGENTS.md disqualified pattern) removed with the required README rationale sentence, matching the dsh-web precedent). 19/19 genuinely failed on real not-implemented/assertion-mismatch errors, zero module/syntax errors, independently re-verified by the Supervisor. Supersedes the pre-corrective-round entry committed at b987645544 (17 cases, wrong assertion strictness) -- nothing had graded a GREEN observation against that entry. expectExit=0 is the GREEN target per the P0-01.C precedent."
     },
     {
       "epic": "P1-07",
