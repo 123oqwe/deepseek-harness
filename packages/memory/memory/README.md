@@ -133,6 +133,7 @@ No direct invalidation; a named future consumer would own any request-prefix cha
 These limits define when the service is incomplete on its own. They are current package constraints for the Contract stage.
 
 - **No shipped provider** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are intentionally unimplemented stubs whose methods reject with a plain error; a real, durable provider is first100 registry P6-01's Provider stage.
+- **The durable provider is not implemented yet** — `createDurableFileMemoryProvider({ directory })` declares the durable, file-backed backend (per-directory durability, tenant/session read scoping, `durable-file-<uuid>` ids) and its methods reject with a plain `not implemented` error; `../tests/durable-provider.spec.ts` asserts the required behavior, currently RED pending that implementation.
 - **No live session-log wiring** — nothing yet emits the `memory/access` durable event this package declares; a live call site is the Usage stage's job.
 - **`must[3]` read-scoping enforcement is not yet added** — `query()`/`get()`/`export()` do not yet reject an incomplete `MemoryAccessContext`; `../tests/conformance.spec.ts` asserts the required `MemoryError` `MEMORY_ACCESS_CONTEXT_REQUIRED` behavior, currently RED pending that enforcement.
 - **No model-facing tool** — `ctx.memory` has no consumer yet; a `dsh-tool-memory`-shaped package is out of this epic's scope.

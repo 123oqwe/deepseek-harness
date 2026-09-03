@@ -353,4 +353,77 @@ export function createFakeMemoryProvider(): MemoryProvider {
   }
 }
 
+/**
+ * Options for {@link createDurableFileMemoryProvider}.
+ */
+export interface DurableFileMemoryProviderOptions {
+  /**
+   * Directory holding this provider's backing file. Two provider instances
+   * constructed over the same directory share one record set and share no
+   * in-memory value; the directory is created on first write if absent.
+   */
+  readonly directory: string
+}
+
+/**
+ * Durable, same-host `MemoryProvider` backed by a JSON file under
+ * `options.directory` — the Provider-stage counterpart to the Contract-stage
+ * in-memory providers, which lose every record at process exit. Memory is by
+ * definition cross-session and long-lived, so a provider that cannot outlive
+ * the process cannot serve the seam's purpose.
+ *
+ * Durability is per-directory, not per-instance: a provider constructed later
+ * over the same `directory` reads back every record an earlier instance
+ * proposed or revised, and does not read back one an earlier instance forgot.
+ * Instances hold no shared in-memory state, so cross-instance visibility
+ * comes from the file alone.
+ *
+ * Record ids are `durable-file-<uuid>` — minted per record, never per
+ * instance-local counter, so a second instance over the same directory can
+ * never re-mint an id the first one already used.
+ *
+ * Scoping (`must[3]`): each record persists the `MemoryScope` its `propose()`
+ * carried. A read (`query`/`get`/`export`) sees a record only when the read's
+ * `accessContext.scope.tenantId` equals the record's `tenantId`; when the
+ * read's scope also names a `sessionId`, the record's `sessionId` must equal
+ * it, and a read whose scope names no `sessionId` sees every session within
+ * the tenant. `revise()`/`forget()` apply the same scope filter, so an
+ * out-of-scope id is indistinguishable from one that was never proposed.
+ *
+ * `query()` matches by case-insensitive substring over the record's
+ * JSON-serialized content — a mechanism choice private to this provider, as
+ * `must[0]` requires the seam itself to name none.
+ * @param options - the backing directory for this provider's records.
+ * @returns a durable {@link MemoryProvider} whose id is `durable-file`.
+ */
+export function createDurableFileMemoryProvider(options: DurableFileMemoryProviderOptions): MemoryProvider {
+  const { directory } = options
+  return {
+    id: 'durable-file',
+    // Usable wherever the process can write to the local filesystem; the
+    // directory is created on first write, so nothing is checked here (a
+    // stat() would be a network-free but still needless I/O round trip on a
+    // call the seam makes for every operation).
+    available: () => true,
+    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult> {
+      throw new Error(`not implemented: createDurableFileMemoryProvider({ directory: ${directory} }).propose(${JSON.stringify(request.scope)})`)
+    },
+    query(request: MemoryQueryRequest): Promise<MemoryQueryResult> {
+      throw new Error(`not implemented: createDurableFileMemoryProvider({ directory: ${directory} }).query(${request.query})`)
+    },
+    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined> {
+      throw new Error(`not implemented: createDurableFileMemoryProvider({ directory: ${directory} }).get(${request.id})`)
+    },
+    revise(request: MemoryReviseRequest): Promise<void> {
+      throw new Error(`not implemented: createDurableFileMemoryProvider({ directory: ${directory} }).revise(${request.id})`)
+    },
+    forget(request: MemoryForgetRequest): Promise<void> {
+      throw new Error(`not implemented: createDurableFileMemoryProvider({ directory: ${directory} }).forget(${request.id})`)
+    },
+    export(request: MemoryExportRequest): Promise<MemoryExportResult> {
+      throw new Error(`not implemented: createDurableFileMemoryProvider({ directory: ${directory} }).export(${JSON.stringify(request.accessContext.scope)})`)
+    },
+  }
+}
+
 export default MemoryRuntime
