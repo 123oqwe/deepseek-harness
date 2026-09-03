@@ -48,10 +48,14 @@
  * @module @deepseek-ai/dsh-session-lifecycle/store
  */
 
+import { readFile, rename, writeFile } from 'node:fs/promises'
 import type { PrincipalId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { listSessions } from './index.ts'
 import type { SessionListPage, SessionListPageRequest } from './index.ts'
+import { SOFT_DELETE_POLICY, hardErase, propagateDeletion } from './delete.ts'
 import type { EraseResult, PropagationOutcome, SessionDependents } from './delete.ts'
+import { archiveSession, assertNoLegalHold, placeLegalHold, softDeleteSession } from './retention.ts'
 import type { SessionLifecycleRecord } from './retention.ts'
 
 /**
@@ -103,7 +107,77 @@ export interface SessionLifecycleStore {
  * @returns a store over `path`.
  */
 export function createFileSessionLifecycleStore(path: string): SessionLifecycleStore {
-  throw new Error(`not implemented: createFileSessionLifecycleStore(${path})`)
+  /**
+   * Every read and write of `path` is chained onto this promise, so a write
+   * never interleaves its read-modify-write with another one and loses a
+   * record.
+   */
+  let queue: Promise<unknown> = Promise.resolve()
+  const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
+    const next = queue.then(operation, operation)
+    queue = next.then(
+      () => undefined,
+      () => undefined,
+    )
+    return next
+  }
+
+  const read = async (): Promise<SessionLifecycleRecord[]> => {
+    let text: string
+    try {
+      text = await readFile(path, 'utf8')
+    } catch (error) {
+      // A store file that was never written is a first boot, not a failure;
+      // any other read failure (permissions, a directory at `path`) is real.
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+      throw error
+    }
+    if (text.trim() === '') return []
+    const document = JSON.parse(text) as SessionLifecycleStoreDocument
+    if (document.version !== SESSION_LIFECYCLE_STORE_FORMAT_VERSION) {
+      throw new Error(
+        `unsupported session lifecycle store format version ${String(document.version)} at ${path}, expected ${SESSION_LIFECYCLE_STORE_FORMAT_VERSION}`,
+      )
+    }
+    return [...document.records]
+  }
+
+  const write = async (records: readonly SessionLifecycleRecord[]): Promise<void> => {
+    const document: SessionLifecycleStoreDocument = { version: SESSION_LIFECYCLE_STORE_FORMAT_VERSION, records }
+    // Write-then-rename: a crash mid-write leaves the previous complete
+    // document in place at `path` rather than a truncated one.
+    const temporaryPath = `${path}.${process.pid}.tmp`
+    await writeFile(temporaryPath, `${JSON.stringify(document)}\n`, 'utf8')
+    await rename(temporaryPath, path)
+  }
+
+  return {
+    loadAll: () => enqueue(read),
+    put: (record: SessionLifecycleRecord) =>
+      enqueue(async () => {
+        const records = await read()
+        // Replace in place so a record keeps its original position in the
+        // document across every later write.
+        const index = records.findIndex(existing => existing.header.id === record.header.id)
+        if (index === -1) records.push(record)
+        else records[index] = record
+        await write(records)
+      }),
+    remove: (sessionId: SessionId) =>
+      enqueue(async () => {
+        const records = await read()
+        await write(records.filter(existing => existing.header.id !== sessionId))
+      }),
+  }
+}
+
+/** The on-disk format version {@link createFileSessionLifecycleStore} reads and writes. */
+const SESSION_LIFECYCLE_STORE_FORMAT_VERSION = 1
+
+/** The JSON document {@link createFileSessionLifecycleStore} keeps at its path. */
+interface SessionLifecycleStoreDocument {
+  readonly version: number
+  readonly records: readonly SessionLifecycleRecord[]
 }
 
 /** The result of a soft delete: the durably recorded record and what the deletion reached. */
@@ -142,9 +216,10 @@ export class SessionLifecycleService {
    * @param store - the durable store to reconstruct the registry from.
    * @returns a service registering exactly the records `store` holds.
    */
-  static restore(store: SessionLifecycleStore): Promise<SessionLifecycleService> {
-    void store
-    return Promise.reject(new Error('not implemented: SessionLifecycleService.restore'))
+  static async restore(store: SessionLifecycleStore): Promise<SessionLifecycleService> {
+    const records = new Map<SessionId, SessionLifecycleRecord>()
+    for (const record of await store.loadAll()) records.set(record.header.id, record)
+    return new SessionLifecycleService(store, records)
   }
 
   /**
@@ -153,9 +228,13 @@ export class SessionLifecycleService {
    * @param record - the lifecycle record to register; rejects when its session id is already registered.
    * @returns the durably recorded {@link SessionLifecycleRecord}.
    */
-  register(record: SessionLifecycleRecord): Promise<SessionLifecycleRecord> {
-    void record
-    return Promise.reject(new Error('not implemented: SessionLifecycleService.register'))
+  async register(record: SessionLifecycleRecord): Promise<SessionLifecycleRecord> {
+    if (this.records.has(record.header.id)) {
+      throw new Error(`session '${String(record.header.id)}' is already registered`)
+    }
+    await this.store.put(record)
+    this.records.set(record.header.id, record)
+    return record
   }
 
   /**
@@ -166,8 +245,7 @@ export class SessionLifecycleService {
    * @returns one page of matching records plus a continuation cursor, absent on the final page.
    */
   list(request: SessionListPageRequest): SessionListPage {
-    void request
-    throw new Error('not implemented: SessionLifecycleService.list')
+    return listSessions([...this.records.values()], request)
   }
 
   /**
@@ -179,11 +257,8 @@ export class SessionLifecycleService {
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this archive is stamped with.
    * @returns the durably recorded archived record.
    */
-  archive(sessionId: SessionId, archivedBy: PrincipalId, occurredAt: number): Promise<SessionLifecycleRecord> {
-    void sessionId
-    void archivedBy
-    void occurredAt
-    return Promise.reject(new Error('not implemented: SessionLifecycleService.archive'))
+  async archive(sessionId: SessionId, archivedBy: PrincipalId, occurredAt: number): Promise<SessionLifecycleRecord> {
+    return this.commit(archiveSession(this.registered(sessionId), archivedBy, occurredAt))
   }
 
   /**
@@ -197,17 +272,14 @@ export class SessionLifecycleService {
    * @param dependents - the session's dependent-store inventory to propagate against.
    * @returns the durably recorded soft-deleted record and the targets the deletion reached.
    */
-  softDelete(
+  async softDelete(
     sessionId: SessionId,
     deletedBy: PrincipalId,
     occurredAt: number,
     dependents: SessionDependents,
   ): Promise<SoftDeleteOutcome> {
-    void sessionId
-    void deletedBy
-    void occurredAt
-    void dependents
-    return Promise.reject(new Error('not implemented: SessionLifecycleService.softDelete'))
+    const record = await this.commit(softDeleteSession(this.registered(sessionId), deletedBy, occurredAt))
+    return { record, propagation: propagateDeletion(dependents, SOFT_DELETE_POLICY) }
   }
 
   /**
@@ -221,17 +293,13 @@ export class SessionLifecycleService {
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this hold is stamped with.
    * @returns the durably recorded held record.
    */
-  placeHold(
+  async placeHold(
     sessionId: SessionId,
     heldBy: PrincipalId,
     reason: string,
     occurredAt: number,
   ): Promise<SessionLifecycleRecord> {
-    void sessionId
-    void heldBy
-    void reason
-    void occurredAt
-    return Promise.reject(new Error('not implemented: SessionLifecycleService.placeHold'))
+    return this.commit(placeLegalHold(this.registered(sessionId), heldBy, reason, occurredAt))
   }
 
   /**
@@ -246,11 +314,15 @@ export class SessionLifecycleService {
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this erase is stamped with.
    * @returns the complete {@link EraseResult}, including `HARD_ERASE_POLICY`'s full propagation outcome.
    */
-  erase(sessionId: SessionId, dependents: SessionDependents, occurredAt: number): Promise<EraseResult> {
-    void sessionId
-    void dependents
-    void occurredAt
-    return Promise.reject(new Error('not implemented: SessionLifecycleService.erase'))
+  async erase(sessionId: SessionId, dependents: SessionDependents, occurredAt: number): Promise<EraseResult> {
+    const record = this.registered(sessionId)
+    // Throws LegalHoldBlocksErasureError before anything is written or
+    // removed, so a refused erase leaves the durable record untouched.
+    const proof = assertNoLegalHold(record)
+    const result = hardErase(record, dependents, proof, occurredAt)
+    await this.store.remove(sessionId)
+    this.records.delete(sessionId)
+    return result
   }
 
   /**
@@ -260,9 +332,31 @@ export class SessionLifecycleService {
    * service registers no such session.
    */
   get(sessionId: SessionId): SessionLifecycleRecord | undefined {
-    void sessionId
-    void this.store
-    void this.records
-    throw new Error('not implemented: SessionLifecycleService.get')
+    return this.records.get(sessionId)
+  }
+
+  /**
+   * Durably record `record` as the current state of its session and publish it
+   * to this registry — the single write-through path every disposition change
+   * takes, so no transition can update the registry without reaching the store.
+   * @param record - the Contract-stage function's already-decided result.
+   * @returns the same `record`, once it is durable.
+   */
+  private async commit(record: SessionLifecycleRecord): Promise<SessionLifecycleRecord> {
+    await this.store.put(record)
+    this.records.set(record.header.id, record)
+    return record
+  }
+
+  /**
+   * The registered record for `sessionId`, for the paths that have no decision
+   * to return for a session this service does not know at all.
+   * @param sessionId - the session to look up.
+   * @returns the registered {@link SessionLifecycleRecord}; throws when unregistered.
+   */
+  private registered(sessionId: SessionId): SessionLifecycleRecord {
+    const record = this.records.get(sessionId)
+    if (record === undefined) throw new Error(`session '${String(sessionId)}' is not registered`)
+    return record
   }
 }

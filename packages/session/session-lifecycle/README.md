@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface for Epic P6-07's session lifecycle -- listing/pagination, the retention taxonomy, deletion propagation, and corrupted-log recovery -- for maintainers picking up the RED-scaffold fix-round."
+description: "Epic P6-07's session lifecycle -- listing/pagination, the retention taxonomy, deletion propagation, corrupted-log recovery, and the durable registry that carries a session's disposition across a process restart."
 kind: "package-library"
 ---
 
@@ -19,31 +19,32 @@ memory, and artifacts per a declared policy (must[2]/acceptance[2]); and a
 corrupted-log read that returns only the minimal recoverable prefix plus
 evidence, never a fabricated full recovery (acceptance[3]).
 
-This package currently ships this epic's Contract-stage RED scaffold only:
-`src/retention.ts`'s disposition/legal-hold types and transition signatures,
-`src/delete.ts`'s propagation types and hard-erase signature, and
-`src/index.ts`'s listing/pagination and corrupted-log-read signatures are
-real and epic-accurate, but every decision function (`archiveSession`,
-`softDeleteSession`, `placeLegalHold`, `assertNoLegalHold`,
-`propagateDeletion`, `hardErase`, `listSessions`,
-`readSessionLogWithRepair`) throws `'not implemented: ...'` — the pure
-decision logic itself is a later fix-round's deliverable, proven by
-`tests/lifecycle.spec.ts`'s real assertions against that (currently failing)
-behavior. `SOFT_DELETE_POLICY` and `HARD_ERASE_POLICY` are the one
-exception: real, already-correct declared data — the policies themselves —
-not the adjudication logic under test.
+The package has two halves. `src/retention.ts`, `src/delete.ts` and
+`src/index.ts` hold the decisions — `archiveSession`, `softDeleteSession`,
+`placeLegalHold`, `assertNoLegalHold`, `propagateDeletion`, `hardErase`,
+`listSessions`, `readSessionLogWithRepair` — as pure functions over
+caller-supplied data, performing no I/O. `src/store.ts` holds the durability
+those decisions need to mean anything past process exit: a
+`SessionLifecycleStore` seam, a file-backed store over it, and a
+`SessionLifecycleService` that writes every accepted change through and
+reconstructs the whole registry from the store on the next boot. Without it a
+soft delete, an archive, or a legal hold is a value returned to a caller and
+then lost, which puts acceptance[0]'s stable pagination and acceptance[1]'s
+erase-blocking hold out of reach — a restart is precisely the event that
+destroys an in-memory record set. The service delegates every decision to the
+pure half and adds no second, divergent filter, sort order, hold check, or
+propagation policy of its own.
 
-No invariant companion is published. Every function in this package is pure
-over caller-supplied data (`SessionLifecycleRecord`, `SessionDependents`, raw
-log lines) — this Contract-stage slice constructs no real durable retention
-store, query index, attachment store, memory store, or artifact store to
-cross-reference against. A real invariant here — for example, "no session
+No invariant companion is published. The durable store records lifecycle
+dispositions and nothing else — this package still constructs no query index,
+attachment store, memory store, or artifact store to cross-reference
+against. A real invariant here — for example, "no session
 whose durable record shows an active legal hold was ever hard-erased" —
-needs a real store recording both facts independently; minting one now would
-either be empty or re-derive a fact only this package's own in-memory
-fixtures produce, not an independent second source. This mirrors
-`@deepseek-ai/dsh-run`'s identical Contract-stage decision (first100 registry
-P4-01) for the same reason.
+needs both facts recorded independently, and the erasure half has no store to
+be observed in: `hardErase` destroys the record rather than marking it, so
+this package's own store is not a second source for it. This mirrors
+`@deepseek-ai/dsh-run`'s identical decision (first100 registry P4-01) for the
+same reason.
 
 ## Table of Contents
 
@@ -58,11 +59,10 @@ P4-01) for the same reason.
 <a id="use-this-package"></a>
 ## Use this package
 
-Every export is a pure function over already-computed data — no export in
-this package reads a file, spawns a process, or constructs a Cordis
-`Context`; a later Provider-stage caller supplies real session records and
-dependent-store inventories and calls these functions to decide and record
-each lifecycle operation:
+Every export outside `src/store.ts` is a pure function over already-computed
+data — it reads no file, spawns no process, and constructs no Cordis
+`Context`. A caller holding real session records and dependent-store
+inventories calls these to decide each lifecycle operation:
 
 ```ts
 import { listSessions } from '@deepseek-ai/dsh-session-lifecycle'
@@ -79,6 +79,32 @@ const proof = assertNoLegalHold(clearRecord) // throws LegalHoldBlocksErasureErr
 const result = hardErase(clearRecord, dependents, proof, Date.now())
 // result.propagation.targets covers all four HARD_ERASE_POLICY target kinds
 ```
+
+### Making a lifecycle change durable
+
+`src/store.ts` is the one part of this package that touches a filesystem.
+`SessionLifecycleService.restore` is its only constructor, so a fresh process
+cannot begin with an empty registry while durable records sit unlisted in the
+store:
+
+```ts
+import { SessionLifecycleService, createFileSessionLifecycleStore } from '@deepseek-ai/dsh-session-lifecycle/store'
+
+const service = await SessionLifecycleService.restore(createFileSessionLifecycleStore(path))
+await service.register(record)
+await service.placeHold(sessionId, principalId, 'litigation pending', Date.now())
+
+// A later process over the same path observes both, sharing nothing but the file:
+const restored = await SessionLifecycleService.restore(createFileSessionLifecycleStore(path))
+restored.list({ filters: [{ kind: 'status', values: ['active'] }], limit: 100 })
+await restored.erase(sessionId, dependents, Date.now()) // throws LegalHoldBlocksErasureError
+```
+
+A refused erase writes nothing: the durable record is exactly what it was
+before the call, never partially destroyed. An authorized `erase` removes the
+record permanently and returns `HARD_ERASE_POLICY`'s full propagation
+outcome; `softDelete` returns `SOFT_DELETE_POLICY`'s, which reaches the query
+index alone and leaves attachments, memory, and artifacts intact.
 
 -----
 
@@ -138,6 +164,22 @@ observable type contract is fully covered in [Use this package](#use-this-packag
   so a page's `nextCursor` encodes a position in that fixed order rather than
   a numeric offset that a concurrent insert or delete could invalidate
   (acceptance[0]).
+- **The durable store lives here, not in
+  `@deepseek-ai/dsh-session-persistence`.** A durable lifecycle registry must
+  name `SessionLifecycleRecord` and call this package's decision functions,
+  and that import closes a real project-reference cycle —
+  `session-persistence` → `session-lifecycle` → `workspace/workspace` →
+  `session-persistence`, whose last two edges already exist — which `tsc -b`
+  reports as TS6202. Placed here the store adds no dependency edge at all.
+  It is also not stored through `PersistenceCoordinator`: that coordinator's
+  storage contract is keyed on session identity and session-log structure,
+  and a retention disposition is not a session-log event.
+- **Every disposition change takes one write-through path.** The service's
+  transitions funnel through a single private `commit`, so no transition can
+  update the in-memory registry without reaching the store first. The store
+  seam itself is deliberately minimal — whole-record reads and writes plus a
+  removal — because a `SessionLifecycleRecord` is one immutable value with no
+  partial update an implementation could reconcile incorrectly.
 - **A deletion mode's propagation reach is declared data, not inline
   branching.** `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY` (`src/delete.ts`)
   are real, already-correct `DeletionPolicy` values — which of the four
@@ -153,6 +195,7 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 | [`src/retention.ts`](src/retention.ts) | The disposition/legal-hold taxonomy (must[1]) and the structural erase gate (acceptance[1]): `SessionDisposition`, `LegalHold`, `SessionLifecycleRecord`, `NoLegalHoldProof`, `LegalHoldBlocksErasureError`, and the Contract-stage RED-scaffold transition functions |
 | [`src/delete.ts`](src/delete.ts) | Deletion propagation (must[2]) and hard erase (acceptance[1]/[2]): `PropagationTarget`, `DeletionPolicy`, `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY` (real), and the Contract-stage RED-scaffold `propagateDeletion`/`hardErase` |
 | [`src/index.ts`](src/index.ts) | Listing/pagination (must[0]/acceptance[0]) and corrupted-log recovery (acceptance[3]); re-exports `./retention.ts` and `./delete.ts`'s public surface |
+| [`src/store.ts`](src/store.ts) | The durable registry (acceptance[0]/acceptance[1]): the `SessionLifecycleStore` seam, the file-backed `createFileSessionLifecycleStore`, and `SessionLifecycleService`, whose only constructor is `restore(store)` |
 
 </details>
 
@@ -161,10 +204,14 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) — the Contract-stage RED
-  scaffold: one or more cases per registry must[]/acceptance[] clause,
+- [`tests/lifecycle.spec.ts`](tests/lifecycle.spec.ts) — the pure decision
+  functions: one or more cases per registry must[]/acceptance[] clause,
   including an exhaustive page-size sweep for acceptance[0]'s pagination
   guarantee.
+- [`tests/store.spec.ts`](tests/store.spec.ts) — the durable registry. Every
+  durability case builds a second store and a second service over the same
+  path, sharing no map, closure, or record value with the first, so a record
+  that reappears came from durable bytes and an in-memory double cannot pass.
 - `@deepseek-ai/dsh-principal` (`../../identity/principal/src/types.ts`,
   `../../identity/principal/src/chain.ts`) — this epic's predecessor (first100
   registry P2-01); source of `TenantId`, `PrincipalId`, and the `AdminGrant`
@@ -200,13 +247,24 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **No wiring into real durable storage, a real query index, or Cordis
-  registration exists yet.** This package alone cannot list, page, delete,
-  retain, or repair a real session — a later Provider/Usage-stage supplies
-  real records and dependent-store inventories from the packages that own
-  them (`packages/session/session-persistence`, `packages/session-query/session-query`,
+- **Nothing wires `SessionLifecycleService` into a live session path.** A
+  real harness run still persists no lifecycle record: no plugin constructs
+  the service, no session creation registers a record with it, and it is
+  registered on no Cordis `Context`. The store is durable and correct in
+  isolation, and reaching it requires a caller that does not exist yet —
+  that wiring is a later stage's job.
+- **Deletion propagation is decided, not executed.** `propagateDeletion`
+  returns which targets a deletion reaches and with what action; no code here
+  calls the query index, attachment store, memory store, or artifact store to
+  carry it out. A later stage supplies real dependent-store inventories from
+  the packages that own them (`packages/session-query/session-query`,
   `@deepseek-ai/dsh-attachment`, and this epic's still-unbuilt memory and
-  artifact stores).
+  artifact stores) and performs the reach.
+- **The corrupted-log read has no durable caller.**
+  `readSessionLogWithRepair` takes already-attempted-parsed lines; nothing
+  reads a real session log off disk to produce them. The store's own document
+  is deliberately not a second corruption-recovery surface — a document this
+  build cannot interpret is refused outright, never partially read.
 - **`packages/session-query/session-query/src/cursor.ts` was read, not
   modified.** Its existing `SessionSearchCursor` shape (an opaque branded
   string with one mint function) fully informed this package's own
