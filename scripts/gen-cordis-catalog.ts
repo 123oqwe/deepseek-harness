@@ -83,6 +83,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   invariants: 'invariants.md',
   llm: 'llm-streaming.md',
   lsp: 'lsp.md',
+  memory: 'memory.md',
   messageFeedback: 'feedback.md',
   permissionPresets: 'permission-presets.md',
   planMode: 'plan.md',
@@ -729,6 +730,17 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   WorkflowAgentEndInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
   WorkflowAgentInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
   WorkflowResultInfo: 'event-local snapshot is owned by packages/workflow/workflow/src/index.ts',
+  MemoryProvider: 'provider-neutral Memory Service provider contract is owned by packages/memory/memory/src/types.ts',
+  MemoryProposeRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryProposeResult: 'service-local result contract is owned by packages/memory/memory/src/types.ts',
+  MemoryQueryRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryQueryResult: 'service-local result contract is owned by packages/memory/memory/src/types.ts',
+  MemoryGetRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryRecordView: 'provisional record view is owned by packages/memory/memory/src/types.ts',
+  MemoryReviseRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryForgetRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryExportRequest: 'service-local request contract is owned by packages/memory/memory/src/types.ts',
+  MemoryExportResult: 'service-local result contract is owned by packages/memory/memory/src/types.ts',
 }
 
 /** Repository data policy consumed by the Cordis catalog projector. */

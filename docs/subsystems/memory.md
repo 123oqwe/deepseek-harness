@@ -89,6 +89,89 @@ interface MemoryAccessContext {
 
 `ctx.memory` is the only intended entry point. A `MemoryProvider` object is inert on its own — constructing one has no effect until `ctx.memory.registerProvider()` makes it reachable; there is no free-standing `proposeMemory()`/`queryMemory()` export a consumer could call while skipping the seam.
 
+<!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
+
+<a id="cordis-surface"></a>
+
+## Cordis API
+
+Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+
+<a id="ctxmemory--memoryruntime"></a>
+
+### `ctx.memory` — `MemoryRuntime`
+
+The memory access service. Registered as `ctx.memory` (one instance per context).
+
+Selection semantics (resolved at execution time, never order-dependent):
+
+- A configured id that is registered and `available()` → that provider.
+- A configured id not registered → `MEMORY_PROVIDER_CONFIGURED_MISSING`.
+- A configured id registered but unavailable → `MEMORY_PROVIDER_CONFIGURED_UNAVAILABLE`.
+- No id configured, exactly one registered usable provider → that provider.
+- No id configured, multiple usable providers → `MEMORY_PROVIDER_AMBIGUOUS`.
+- No id configured, no usable provider → `MEMORY_PROVIDER_UNAVAILABLE`.
+
+```ts cordis-catalog
+/**
+ * Register a memory provider. Throws {@link MemoryError}
+ * `MEMORY_DUPLICATE_PROVIDER` if its id is already registered. Returns a
+ * disposer; disposed with the calling fiber.
+ * @param provider - the provider; its `id` is the registry key.
+ * @returns the disposer that unregisters the provider.
+ */
+registerProvider(provider: MemoryProvider): () => void
+
+/**
+ * Submit a candidate write. The only mutation entry point this seam
+ * exposes (`acceptance[1]`).
+ * @param request - the candidate content, its principal, and its scope.
+ * @returns the newly minted record's identity.
+ */
+async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>
+
+/**
+ * Run a free-text read through the selected provider, capped to
+ * `request.accessContext.contextBudget.maxRecords`.
+ * @param request - the query and its complete access context.
+ * @returns matching records, capped to the caller's budget.
+ */
+async query(request: MemoryQueryRequest): Promise<MemoryQueryResult>
+
+/**
+ * Fetch one record by id.
+ * @param request - the record id and its complete access context.
+ * @returns the record, or `undefined` when no such record is visible to the access context.
+ */
+async get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>
+
+/**
+ * Update an existing record's content. Rejected when `request.id` was
+ * never returned by a prior `propose()` (`acceptance[1]`).
+ * @param request - the target id, its new content, its principal, and its scope.
+ * @returns Nothing.
+ */
+async revise(request: MemoryReviseRequest): Promise<void>
+
+/**
+ * Remove a record. Idempotent.
+ * @param request - the target id, its principal, and its scope.
+ * @returns Nothing.
+ */
+async forget(request: MemoryForgetRequest): Promise<void>
+
+/**
+ * Bulk-read every record visible to `request.accessContext`, capped to
+ * `contextBudget.maxRecords`.
+ * @param request - the complete access context.
+ * @returns every visible record, capped to the caller's budget.
+ */
+async export(request: MemoryExportRequest): Promise<MemoryExportResult>
+```
+
+Source: [`packages/memory/memory/src/index.ts`](../../packages/memory/memory/src/index.ts)
+<!-- END GENERATED cordis-surface -->
+
 ## Status
 
-Contract stage only (first100 registry P6-01, C). `MemoryRuntime`'s provider registry and selection logic are real; `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` (`packages/memory/memory/src/index.ts`) are intentionally unimplemented stubs pending the Provider stage. `must[3]` read-scoping enforcement in `query()`/`get()`/`export()` is not yet added either — [`packages/memory/memory/tests/conformance.spec.ts`](../../packages/memory/memory/tests/conformance.spec.ts) asserts it. Wiring a live `ctx.memory` call into the durable session log, so the `memory/access` event this page's read-scoping section describes has a real emitter, is the Usage stage's job; the package publishes no `./invariant` companion for it (see the [package README](../../packages/memory/memory/README.md#understand-the-implementation)).
+Contract stage only (first100 registry P6-01, C). `MemoryRuntime`'s provider registry/selection logic, both Contract-stage providers (`createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()`), and `must[3]` read-scoping enforcement in `query()`/`get()`/`export()` are all real (`packages/memory/memory/src/index.ts`) — [`packages/memory/memory/tests/conformance.spec.ts`](../../packages/memory/memory/tests/conformance.spec.ts) passes against them. Wiring a live `ctx.memory` call into the durable session log, so the `memory/access` event this page's read-scoping section describes has a real emitter, is the Usage stage's job; the package publishes no `./invariant` companion for it (see the [package README](../../packages/memory/memory/README.md#understand-the-implementation)).

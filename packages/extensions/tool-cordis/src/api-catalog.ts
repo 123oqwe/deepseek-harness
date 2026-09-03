@@ -1206,6 +1206,55 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'memory',
+    summary: 'The memory access service.',
+    description: 'The memory access service. Registered as `ctx.memory` (one instance per context).\n\nSelection semantics (resolved at execution time, never order-dependent):\n\n- A configured id that is registered and `available()` → that provider.\n- A configured id not registered → `MEMORY_PROVIDER_CONFIGURED_MISSING`.\n- A configured id registered but unavailable → `MEMORY_PROVIDER_CONFIGURED_UNAVAILABLE`.\n- No id configured, exactly one registered usable provider → that provider.\n- No id configured, multiple usable providers → `MEMORY_PROVIDER_AMBIGUOUS`.\n- No id configured, no usable provider → `MEMORY_PROVIDER_UNAVAILABLE`.',
+    methods: [
+      {
+        signature: 'registerProvider(provider: MemoryProvider): () => void',
+        description: 'Register a memory provider. Throws MemoryError `MEMORY_DUPLICATE_PROVIDER` if its id is already registered. Returns a disposer; disposed with the calling fiber.',
+        parameters: [{ name: 'provider', description: 'the provider; its `id` is the registry key.' }],
+        returns: 'the disposer that unregisters the provider.',
+      },
+      {
+        signature: 'async propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>',
+        description: 'Submit a candidate write. The only mutation entry point this seam exposes (`acceptance[1]`).',
+        parameters: [{ name: 'request', description: 'the candidate content, its principal, and its scope.' }],
+        returns: 'the newly minted record\'s identity.',
+      },
+      {
+        signature: 'async query(request: MemoryQueryRequest): Promise<MemoryQueryResult>',
+        description: 'Run a free-text read through the selected provider, capped to `request.accessContext.contextBudget.maxRecords`.',
+        parameters: [{ name: 'request', description: 'the query and its complete access context.' }],
+        returns: 'matching records, capped to the caller\'s budget.',
+      },
+      {
+        signature: 'async get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>',
+        description: 'Fetch one record by id.',
+        parameters: [{ name: 'request', description: 'the record id and its complete access context.' }],
+        returns: 'the record, or `undefined` when no such record is visible to the access context.',
+      },
+      {
+        signature: 'async revise(request: MemoryReviseRequest): Promise<void>',
+        description: 'Update an existing record\'s content. Rejected when `request.id` was never returned by a prior `propose()` (`acceptance[1]`).',
+        parameters: [{ name: 'request', description: 'the target id, its new content, its principal, and its scope.' }],
+        returns: 'Nothing.',
+      },
+      {
+        signature: 'async forget(request: MemoryForgetRequest): Promise<void>',
+        description: 'Remove a record. Idempotent.',
+        parameters: [{ name: 'request', description: 'the target id, its principal, and its scope.' }],
+        returns: 'Nothing.',
+      },
+      {
+        signature: 'async export(request: MemoryExportRequest): Promise<MemoryExportResult>',
+        description: 'Bulk-read every record visible to `request.accessContext`, capped to `contextBudget.maxRecords`.',
+        parameters: [{ name: 'request', description: 'the complete access context.' }],
+        returns: 'every visible record, capped to the caller\'s budget.',
+      },
+    ],
+  },
+  {
     key: 'messageFeedback',
     summary: 'Storage-domain sidecar service.',
     description: 'Storage-domain sidecar service. It inspects persisted Session history and never creates or resumes an Agent or Session.',
@@ -4401,6 +4450,66 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ManualCompactAgentContext',
     declaration: 'export interface ManualCompactAgentContext extends CompactionAgentContext {\n    runMaintenance<T>(task: (signal: AbortSignal) => Promise<T>): Promise<T>;\n}',
+  },
+  {
+    name: 'MemoryAccessContext',
+    declaration: 'export interface MemoryAccessContext {\n    readonly principal: Principal;\n    readonly purpose: string;\n    readonly scope: MemoryScope;\n    readonly contextBudget: MemoryContextBudget;\n}',
+  },
+  {
+    name: 'MemoryContextBudget',
+    declaration: 'export interface MemoryContextBudget {\n    readonly maxRecords?: number;\n    readonly maxTokens?: number;\n}',
+  },
+  {
+    name: 'MemoryExportRequest',
+    declaration: 'export interface MemoryExportRequest {\n    readonly accessContext: MemoryAccessContext;\n}',
+  },
+  {
+    name: 'MemoryExportResult',
+    declaration: 'export interface MemoryExportResult {\n    readonly records: readonly MemoryRecordView[];\n    readonly truncated: boolean;\n}',
+  },
+  {
+    name: 'MemoryForgetRequest',
+    declaration: 'export interface MemoryForgetRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly id: MemoryRecordId;\n}',
+  },
+  {
+    name: 'MemoryGetRequest',
+    declaration: 'export interface MemoryGetRequest {\n    readonly accessContext: MemoryAccessContext;\n    readonly id: MemoryRecordId;\n}',
+  },
+  {
+    name: 'MemoryProposeRequest',
+    declaration: 'export interface MemoryProposeRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly content: unknown;\n}',
+  },
+  {
+    name: 'MemoryProposeResult',
+    declaration: 'export interface MemoryProposeResult {\n    readonly id: MemoryRecordId;\n}',
+  },
+  {
+    name: 'MemoryProvider',
+    declaration: 'export interface MemoryProvider {\n    readonly id: string;\n    available(): boolean;\n    propose(request: MemoryProposeRequest): Promise<MemoryProposeResult>;\n    query(request: MemoryQueryRequest): Promise<MemoryQueryResult>;\n    get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined>;\n    revise(request: MemoryReviseRequest): Promise<void>;\n    forget(request: MemoryForgetRequest): Promise<void>;\n    export(request: MemoryExportRequest): Promise<MemoryExportResult>;\n}',
+  },
+  {
+    name: 'MemoryQueryRequest',
+    declaration: 'export interface MemoryQueryRequest {\n    readonly accessContext: MemoryAccessContext;\n    readonly query: string;\n}',
+  },
+  {
+    name: 'MemoryQueryResult',
+    declaration: 'export interface MemoryQueryResult {\n    readonly records: readonly MemoryRecordView[];\n    readonly truncated: boolean;\n}',
+  },
+  {
+    name: 'MemoryRecordId',
+    declaration: 'export type MemoryRecordId = Branded<\'MemoryRecordId\'>;',
+  },
+  {
+    name: 'MemoryRecordView',
+    declaration: 'export interface MemoryRecordView {\n    readonly id: MemoryRecordId;\n    readonly principal: Principal;\n    readonly content: unknown;\n    readonly updatedAt: string;\n}',
+  },
+  {
+    name: 'MemoryReviseRequest',
+    declaration: 'export interface MemoryReviseRequest {\n    readonly principal: Principal;\n    readonly scope: MemoryScope;\n    readonly id: MemoryRecordId;\n    readonly content: unknown;\n}',
+  },
+  {
+    name: 'MemoryScope',
+    declaration: 'export interface MemoryScope {\n    readonly tenantId: TenantId;\n    readonly sessionId?: string;\n}',
   },
   {
     name: 'Message',
