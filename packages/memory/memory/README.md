@@ -9,7 +9,7 @@ kind: "package-reference"
 
 `dsh-memory` (`ctx.memory`) is the provider-neutral durable Memory capability seam (first100 registry P6-01): propose a candidate write, query or get existing records, revise or forget one, and export everything visible to a caller — all without naming a vector database, graph database, or any other retrieval mechanism. A concrete provider (local-reference, embedding-backed, graph-backed, ...) plugs in as a backend, and the service resolves one usable provider per call, so consumers never bind to a specific vendor. Every read carries a complete access context (`principal`, `purpose`, `scope`, `contextBudget`); the seam enforces the size bound itself. `propose()` is the only mutation entry point — there is no `write`/`set`/`put` verb — so a durable record can never originate outside it.
 
-Contract stage only (first100 registry P6-01, C): the provider registry and selection logic are real, mirroring `dsh-web`'s `WebRuntime`, but no shipped provider exists yet. `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are intentionally unimplemented stubs for the Contract-stage conformance suite; a later Provider stage replaces their bodies.
+Contract and Provider stages (first100 registry P6-01, C+P): the provider registry, selection logic, and `must[3]` access-context enforcement are real, mirroring `dsh-web`'s `WebRuntime`. Three providers ship: `createLocalReferenceMemoryProvider()` and `createFakeMemoryProvider()` are deliberately independent in-memory implementations (different data structure, id minting, and search algorithm) that prove provider-swap conformance, and `createDurableFileMemoryProvider()` persists across processes.
 
 ## Table of Contents
 
@@ -132,10 +132,10 @@ No direct invalidation; a named future consumer would own any request-prefix cha
 
 These limits define when the service is incomplete on its own. They are current package constraints for the Contract stage.
 
-- **No shipped provider** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are intentionally unimplemented stubs whose methods reject with a plain error; a real, durable provider is first100 registry P6-01's Provider stage.
+- **The two in-memory providers lose everything at process exit** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are real and conformance-tested, but exist to prove provider replaceability, not to retain records. Use `createDurableFileMemoryProvider()` when records must survive the process.
 - **The durable provider keeps one JSON document per directory** — `createDurableFileMemoryProvider({ directory })` rewrites `memory.json` in full on every mutation, serialized on one per-instance chain and committed write-temp-then-rename, so it suits a single host's record counts rather than large or highly concurrent stores; a multi-writer store across processes is out of scope.
 - **No live session-log wiring** — nothing yet emits the `memory/access` durable event this package declares; a live call site is the Usage stage's job.
-- **`must[3]` read-scoping enforcement is not yet added** — `query()`/`get()`/`export()` do not yet reject an incomplete `MemoryAccessContext`; `../tests/conformance.spec.ts` asserts the required `MemoryError` `MEMORY_ACCESS_CONTEXT_REQUIRED` behavior, currently RED pending that enforcement.
+- **`must[3]` enforcement lives at the seam, not in providers** — `MemoryRuntime.query()`/`get()`/`export()` reject an incomplete `MemoryAccessContext` with `MEMORY_ACCESS_CONTEXT_REQUIRED` before any provider is reached, so a provider cannot be handed an unscoped read; a provider registered outside the seam would not inherit that check.
 - **No model-facing tool** — `ctx.memory` has no consumer yet; a `dsh-tool-memory`-shaped package is out of this epic's scope.
 
 <a id="dev-note"></a>
