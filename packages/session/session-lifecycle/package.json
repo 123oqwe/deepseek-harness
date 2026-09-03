@@ -1,0 +1,54 @@
+{
+  "name": "@deepseek-ai/dsh-session-lifecycle",
+  "description": "Contract-stage type surface for Epic P6-07's session lifecycle: tenant/workspace/status/time-filtered cursor-paginated listing, the soft-delete/legal-hold/hard-erase/archive retention taxonomy, deletion propagation to query/attachments/memory/artifacts per policy, and minimal-recoverable-range corrupted-log reads",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/session/session-lifecycle"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./retention": {
+      "types": "./lib/types/retention.d.ts",
+      "default": "./lib/types/retention.js"
+    },
+    "./delete": {
+      "types": "./lib/types/delete.d.ts",
+      "default": "./lib/types/delete.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/dsh-attachment": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-workspace": "workspace:^",
+    "@deepseek-ai/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-attachment": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
+    "@deepseek-ai/dsh-workspace": "workspace:^",
+    "@deepseek-ai/cordis": "workspace:^"
+  }
+}
