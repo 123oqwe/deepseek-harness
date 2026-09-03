@@ -1899,6 +1899,59 @@
         "testsDiscovered": 111
       },
       "note": "C-stage RED scaffold for P4-01 (first-class Run Service + Run event log), attempt/P4-01-C @ 80d14f552a. 111 cases (an exhaustive 10x10=100 state-pair sweep for must[0]/acceptance[1], derived programmatically from the real exported LEGAL_RUN_TRANSITIONS table so it cannot drift out of sync -- all 21 legal edges get a passing-direction case with exact toStrictEqual event checks, all 79 illegal pairs get a rejected-direction case with exact reason/from/to checks, plus 11 further cases for must[1]/must[2]/acceptance[0]/acceptance[2], all using exact toStrictEqual/toBe assertions, never loose toMatchObject). 111/111 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (both the vitest run and a direct read of the test file -- spot-checked, not delegated to a review subagent this time). Reviewed and ACCEPTED with no MUST-FIX. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P6-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-lifecycle/tests/lifecycle.e2e.ts",
+        "-c",
+        "vitest.e2e.config.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "filters by tenant, admitting only matching-tenant sessions and excluding others",
+        "filters by workspace, admitting only matching-workspace sessions and excluding sessions with no workspace or a different one",
+        "filters by status (disposition kind), admitting only sessions in the requested dispositions",
+        "filters by a time range, admitting sessions whose createdAt falls within [from, to] inclusive -- including both boundary values themselves -- and excluding ones outside it",
+        "combines multiple filter clauses with AND semantics, admitting only records matching every clause",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 1",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 4997",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 4176",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 1638",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 7",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 4999",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 454",
+        "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 5000",
+        "'archiveSession' produces exactly the expected disposition object -- including the real attribution fields passed in, not just its kind -- never conflated with the other",
+        "'softDeleteSession' produces exactly the expected disposition object -- including the real attribution fields passed in, not just its kind -- never conflated with the other",
+        "placeLegalHold adds an independent hold marker without changing the session's disposition, proving legal hold is not itself a disposition value",
+        "a session can be simultaneously soft-deleted and under legal hold, proving legal hold and deletion are independent concerns rather than conflated",
+        "hardErase is a one-way destructive operation, not a disposition value -- its result carries no disposition field at all",
+        "assertNoLegalHold refuses a session under legal hold with LegalHoldBlocksErasureError",
+        "assertNoLegalHold refuses a session that is under legal hold AND already soft-deleted, proving disposition never bypasses the hold check",
+        "a session with no legal hold is admitted: assertNoLegalHold's proof authorizes a real hardErase call all the way through",
+        "SOFT_DELETE_POLICY only hides the query index, leaving attachments/memory/artifacts untouched",
+        "HARD_ERASE_POLICY destroys all four target kinds completely, matching acceptance[2]",
+        "an authorized hardErase (no legal hold) reaches all four dependent-store kinds, in order, with the full real target shape per kind -- not just kind order -- matching must[2]'s standalone propagateDeletion(HARD_ERASE_POLICY) rigor",
+        "a corruption partway through the log recovers only the valid prefix before it, plus evidence -- never a line after it, even one that is individually well-formed",
+        "a fully valid log with no corruption reads back completely, with no partial-recovery evidence",
+        "a corruption at the very first line leaves no recoverable prefix at all, returning evidence with no events"
+      ],
+      "files": [
+        "packages/session/session-lifecycle/tests/lifecycle.e2e.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T14:36:02.028Z",
+      "dryRunProof": {
+        "treeSha": "74917f42d685f74fac0a8974ffc6a188786916be",
+        "testsDiscovered": 27
+      },
+      "note": "C-stage RED scaffold for P6-07 (Session lifecycle: pagination/filter/delete/retention/repair), attempt/P6-07-C @ ebe676a032 (post-corrective-round). This crash/data-integrity epic received double-Reviewer treatment per the delegate standing rule: Reviewer 1 (structural/coverage) found no gaps -- real branded structural legal-hold gate, closed discriminated corrupted-log-result union, full-state-reconstruction pagination/propagation assertions. Reviewer 2 (seeded-mutation testing) found 4 real gaps via constructed wrong-implementation mutations, 2 independently spot-verified by the Supervisor before dispatching a corrective round: time-range filter never tested an exact boundary value; archive/soft-delete attribution fields (archivedAt/archivedBy, deletedAt/deletedBy) were only checked by .kind, not the full disposition object; hardErase-level propagation check lost action/id shape (kind-only); assertNoLegalHold was never tested on a record already soft-deleted/archived. All 4 closed plus one same-class .kind-only check fixed on sight. Note the argv requires -c vitest.e2e.config.ts -- the default vitest config does not discover *.e2e.ts files. 27/27 genuinely failed on real not-implemented/assertion-mismatch errors (2 cases now fail on a specific error-type assertion rather than the generic throw), zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
