@@ -1652,6 +1652,39 @@
         "testsDiscovered": 11
       },
       "note": "C-stage RED scaffold for P1-07 (project trust boundary). 11/11 cases genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (not just the Writer self-report) in the Writer worktree at commit bd1cc7f198ccd8014f2a208bb898df2df408fd55. expectExit=0 is the GREEN target this freeze grades against, per the established P0-01.C precedent (today real state: 11/11 failing). Type surface reuses dsh-principal Principal/PrincipalId for host-user identity; TrustUpgradeAuditRecord deliberately package-local, not wired to the real Trust Kernel auditAppend pending the Fiber structural fix (per docs/architecture/trust-kernel-boundary.md)."
+    },
+    {
+      "epic": "P1-08",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-compat/tests/solver.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a manifest declaring runtime API range, schema ranges, a satisfied required capability, and a satisfied requires-provider constraint resolves active with no disabled optional capabilities",
+        "must[0]: an excludes-provider constraint still resolves active when a different provider of the same capability remains eligible",
+        "must[1]: solving three independent manifests in one call resolves all three together, not one plugin at a time",
+        "must[2]: a direct requires-provider vs. excludes-provider contradiction over the graph's only provider yields a minimal unsat core, excluding an unrelated healthy plugin",
+        "must[3]: a missing required security-critical capability always blocks the plugin, never resolves active with the capability silently absent",
+        "solving two structurally-equal but distinct manifest/host inputs produces deep-equal load plans",
+        "a plugin missing a (non-security) required capability is blocked, never active",
+        "a plugin whose declared schema range major does not cover the host's registered major is blocked, never active",
+        "a plugin missing only an optional capability stays active, with that capability explicitly listed as disabled"
+      ],
+      "files": [
+        "packages/plugin/plugin-compat/tests/solver.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T13:08:19.806Z",
+      "dryRunProof": {
+        "treeSha": "566f0630743d3fe3734128e4dba56e4eb9c7d08b",
+        "testsDiscovered": 9
+      },
+      "note": "C-stage RED scaffold for P1-08 (plugin ABI/capability/schema compat negotiation), attempt/P1-08-C @ c3f448aca2. 9/9 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. Reviewed and ACCEPTED with no MUST-FIX: must[2] unsat-core case is a genuine multi-plugin graph-level contradiction (not merely a locally-unsatisfiable single plugin), correctly excludes an unrelated healthy plugin, checked non-gameably; must[3] (never silently degrade a security capability) is enforced by construction via a closed 2-variant PluginActivationStatus union with no partial-degraded slot, stronger than a runtime assertion. compatActivation? added to packages/host/plugin-inventory/src/types.ts is purely additive/optional, no breaking change. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
