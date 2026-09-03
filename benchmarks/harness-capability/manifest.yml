@@ -10,9 +10,9 @@
 #   lanes[].metrics: exactly the 8 standard metric names, no more, no fewer (must[1])
 #   lanes[].reporting.confidenceInterval: true and lanes[].reporting.seedReplay: true (must[2])
 #
-# This file is DELIBERATELY INCOMPLETE relative to the frozen schema above -- see the header
-# comment in tests/benchmark/runner.spec.ts for why a Contract-stage manifest is authored
-# incomplete on purpose, and benchmarks/harness-capability/README.md for what each gap covers.
+# This file fully satisfies the frozen schema above -- tests/benchmark/runner.spec.ts's real
+# js-yaml parse of this file passes must[0]-[2]. See benchmarks/harness-capability/README.md
+# for the human-readable contract each lane and metric documents.
 
 schemaVersion: 1
 
@@ -23,7 +23,10 @@ lanes:
       - duplicate_side_effect
       - policy_bypass
       - recovery_success
-      # missing: verification_precision, router_regret, token_cost, latency
+      - verification_precision
+      - router_regret
+      - token_cost
+      - latency
     reporting:
       confidenceInterval: true
       seedReplay: true
@@ -37,10 +40,10 @@ lanes:
       - verification_precision
       - router_regret
       - token_cost
-      - latency_p95 # wrong name -- must[1] requires "latency", not "latency_p95"
+      - latency
     reporting:
       confidenceInterval: true
-      # missing: seedReplay
+      seedReplay: true
 
   - name: security
     metrics:
@@ -52,13 +55,34 @@ lanes:
       - router_regret
       - token_cost
       - latency
-    # missing: reporting entirely
-
-  - name: smoke-lane # not one of the 5 required lane names (must[0])
-    metrics:
-      - task_success
     reporting:
       confidenceInterval: true
       seedReplay: true
 
-# real-model and scale lanes are not yet declared (must[0])
+  - name: real-model
+    metrics:
+      - task_success
+      - duplicate_side_effect
+      - policy_bypass
+      - recovery_success
+      - verification_precision
+      - router_regret
+      - token_cost
+      - latency
+    reporting:
+      confidenceInterval: true
+      seedReplay: true
+
+  - name: scale
+    metrics:
+      - task_success
+      - duplicate_side_effect
+      - policy_bypass
+      - recovery_success
+      - verification_precision
+      - router_regret
+      - token_cost
+      - latency
+    reporting:
+      confidenceInterval: true
+      seedReplay: true

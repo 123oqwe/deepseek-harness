@@ -4,7 +4,7 @@ A model-independent benchmark for the Harness's own capabilities -- recovery, sa
 
 ## Stage: Contract only
 
-This directory currently holds the frozen structural schema for [`manifest.yml`](manifest.yml), enforced by [`tests/benchmark/runner.spec.ts`](../../tests/benchmark/runner.spec.ts), and nothing else. `runner.ts`, `report.ts`, and `scenarios/` -- the code that actually boots a profile and executes a lane -- do not exist yet; they are a later, U-stage slice of Epic P0-08 (`tests/first100/registry.json`). `manifest.yml` in this directory is deliberately incomplete relative to the schema it documents below; the test file's header comment explains why.
+This directory currently holds the frozen structural schema for [`manifest.yml`](manifest.yml), enforced by [`tests/benchmark/runner.spec.ts`](../../tests/benchmark/runner.spec.ts), and nothing else. `runner.ts`, `report.ts`, and `scenarios/` -- the code that actually boots a profile and executes a lane -- do not exist yet; they are a later, U-stage slice of Epic P0-08 (`tests/first100/registry.json`). `manifest.yml` fully satisfies the schema it documents below.
 
 ## The 5 lanes
 
@@ -31,7 +31,7 @@ Every lane declares exactly these 8 metric names in its `metrics` list:
 
 ## Confidence intervals and seed replay
 
-Each lane's `reporting` block declares `confidenceInterval: true` and `seedReplay: true`: this lane's report must record a confidence interval per metric and, for every failure, the seed that reproduces it. `manifest.yml`'s comments mark which lanes are currently missing one or both flags.
+Each lane's `reporting` block declares `confidenceInterval: true` and `seedReplay: true`: this lane's report must record a confidence interval per metric and, for every failure, the seed that reproduces it.
 
 ## Related documentation
 
