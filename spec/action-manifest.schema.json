@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://deepseek-ai/dsh/spec/action-manifest.schema.json",
+  "title": "dsh-action-manifest-v1",
+  "description": "Epic P2-03's first-class ActionManifest: the durable, pre-execution record every external write operation must carry. Mirrors packages/action/action-manifest/src/types.ts's ActionManifest field-for-field; that package's tests/manifest.spec.ts Contract-stage RED scaffold covers the field set and decision logic in TypeScript. actor.adminGrant (a TypeScript-only compile-time unique-symbol token, see @deepseek-ai/dsh-principal's AdminGrant) has no JSON representation and is intentionally omitted from this schema's actor definition.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actionId",
+    "runId",
+    "actor",
+    "capability",
+    "origin",
+    "target",
+    "argumentsHash",
+    "sideEffectClass",
+    "requiresApproval",
+    "idempotencyKey",
+    "preconditions",
+    "expectedDiff",
+    "compensation",
+    "evidenceRequirements"
+  ],
+  "properties": {
+    "actionId": { "type": "string", "minLength": 1 },
+    "runId": { "type": "string", "minLength": 1 },
+    "actor": { "$ref": "#/$defs/principal" },
+    "capability": { "type": "string", "minLength": 1 },
+    "origin": { "$ref": "#/$defs/actionOrigin" },
+    "target": { "$ref": "#/$defs/actionTarget" },
+    "argumentsHash": { "type": "string", "minLength": 1 },
+    "sideEffectClass": { "$ref": "#/$defs/sideEffectClass" },
+    "requiresApproval": { "type": "boolean" },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
+    "preconditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/precondition" }
+    },
+    "expectedDiff": { "$ref": "#/$defs/expectedDiff" },
+    "compensation": { "$ref": "#/$defs/compensation" },
+    "evidenceRequirements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/evidenceRequirement" }
+    }
+  },
+  "$defs": {
+    "sideEffectClass": {
+      "type": "string",
+      "enum": ["read", "write", "network", "process", "destructive"]
+    },
+    "actionOrigin": {
+      "type": "string",
+      "enum": ["native-tool-call", "code-mode-embedded", "plugin-rpc"]
+    },
+    "principal": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": ["kind", "id", "tenantId"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["user", "service", "anonymous-dev"] },
+            "id": { "type": "string", "minLength": 1 },
+            "tenantId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["kind", "id", "tenantId", "delegatedBy"],
+          "properties": {
+            "kind": { "const": "agent" },
+            "id": { "type": "string", "minLength": 1 },
+            "tenantId": { "type": "string", "minLength": 1 },
+            "delegatedBy": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "actionTarget": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": ["kind", "path"],
+          "properties": {
+            "kind": { "const": "filesystem" },
+            "path": { "type": "string" }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["kind", "host"],
+          "properties": {
+            "kind": { "const": "network" },
+            "host": { "type": "string" }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["kind", "command"],
+          "properties": {
+            "kind": { "const": "process" },
+            "command": { "type": "string" }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["kind", "ref"],
+          "properties": {
+            "kind": { "const": "other" },
+            "ref": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "precondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 }
+      }
+    },
+    "expectedDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "before": {},
+        "after": {}
+      }
+    },
+    "compensation": {
+      "type": "object",
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "required": ["reversible", "capability", "argumentsHash", "description"],
+          "properties": {
+            "reversible": { "const": true },
+            "capability": { "type": "string", "minLength": 1 },
+            "argumentsHash": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "additionalProperties": false,
+          "required": ["reversible", "reason"],
+          "properties": {
+            "reversible": { "const": false },
+            "reason": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "evidenceRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "description"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["before-state", "after-state", "external-receipt"] },
+        "description": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
