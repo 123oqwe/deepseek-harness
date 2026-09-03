@@ -2221,6 +2221,54 @@
         "testsDiscovered": 17
       },
       "note": "P-stage RED scaffold for P6-01, attempt/P6-01-P @ cdb39bc042 (branched from first100-exec @ b1803848df). 17/17 genuinely failed on real not-implemented errors or real assertion mismatches, zero module/syntax errors; C-stages own 19 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: a DURABLE file-backed provider (createDurableFileMemoryProvider). Both C-stage providers are in-memory and lose every record at process exit, which contradicts this subsystems own definition of memory as cross-session and long-lived. Every durability case constructs a SECOND provider instance over the same directory sharing no in-memory value, so an in-memory double cannot pass; durability is declared per-directory, not per-instance, and ids are uuid-based so a second instance cannot re-mint an earlier id. TWO DECLARED-SCOPE FINDINGS, both reported rather than silently acted on: (1) the memory/access durable session event was deliberately NOT implemented here despite the Supervisors own dispatch prompt naming it as a candidate -- the landed C-stage README and src/index.ts module JSDoc BOTH explicitly assign it to the Usage stage, and emitting it from a provider would put session-log wiring inside a backend when the event is MemoryRuntimes own to mint at the seam; the Writer pushed back on the prompt with that evidence, correctly. (2) packages/session-query/session-query/src/types.ts (P-stages other declared file) needs NO change and was not modified -- it is entirely session-transcript corpus vocabulary with zero memory references, and P6-01s only session-query-touching clause is acceptance[2] (Memory is NOT Session Query, boundary documented), which C-stage already discharged by keeping the two vocabularies disjoint; adding any memory-aware type there would WEAKEN that acceptance clause rather than satisfy it. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P2-02",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/capability-token/tests/token-service.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "reports an empty state for a path that has never been written to, rather than failing",
+        "reads back through a separate store instance exactly what the first instance wrote, signature bytes included",
+        "reconstructs a grandchild's full root-first digest chain by walking recorded parentDigest hops",
+        "reconstructs a root token's lineage as exactly its own single digest",
+        "reconstructs no lineage for a digest no recorded token has",
+        "the grandchild's own token never names the root's digest, so a cascade cannot be a direct digest match",
+        "revoking the root invalidates a grandchild two attenuation hops away",
+        "revoking an intermediate child invalidates its own descendant but leaves the root valid",
+        "revoking one branch's root leaves an unrelated branch's descendant valid",
+        "a revocation recorded before a restart still invalidates the descendant after it",
+        "verifies a freshly issued token whose nonce has never been spent",
+        "refuses a second presentation of the same token as replayed",
+        "still refuses a replay after a restart, because the spent nonce was recorded durably",
+        "still verifies a sibling token whose own nonce was never spent, after the same restart",
+        "refuses an expired token through the service exactly as verifyToken does",
+        "records an accepted child so its lineage is reconstructable",
+        "refuses a widening request with attenuateToken's own reason, unchanged",
+        "writes nothing at all for a refused attenuation: no token, no audit record, across a restart",
+        "records exactly redactTokenForLog's output for each issued and attenuated token, oldest first",
+        "never lets a nonce or a signature byte reach the audit surface",
+        "keeps the audit trail free of nonces after a restart, when it is read back from disk",
+        "keeps every audit record's digest equal to the digest of a token the store really holds",
+        "leaves the audit trail on disk carrying no nonce, even though the token registry beside it must"
+      ],
+      "files": [
+        "packages/policy/capability-token/tests/token-service.spec.ts",
+        "packages/policy/capability-token/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T21:52:29Z",
+      "dryRunProof": {
+        "treeSha": "ec77316dd0728144466cb5f3c6e274e57e8faf4d",
+        "testsDiscovered": 23
+      },
+      "note": "P-stage RED scaffold for P2-02, attempt/P2-02-P branched from land-base-align-v2 @ 6684d54579; treeSha is that base tree (git rev-parse HEAD: at freeze time, before the RED commit). 23/23 genuinely failed on real not-implemented errors, zero module/syntax errors, verified by parsing the JSON reporter rather than reading console output; C-stage token.spec.ts independently re-confirmed still green (36/36) after the change, and tsc -b on the package exits 0. Genuinely new at P-stage: acceptance[1] is NOT proven by the C-stage. isTokenRevoked takes a TokenLineage the caller already assembled, and token.spec.ts passes it three literal strings (digest-root/digest-child/digest-grandchild) that no token ever produced -- a correct test of the membership check, not of cascading revocation. P adds a CapabilityTokenStore durability seam, a real file-backed createFileCapabilityTokenStore (not an in-memory double), and a CapabilityTokenService whose only constructor is static restore(store, trustRoot), which reconstructs a real lineage by walking recorded parentDigest hops from tokens it actually minted; one case asserts the grandchild token does not name the root digest at all, so a passing cascade cannot be a direct digest match. Also new: the nonce ledger behind verifyToken replay checking is made durable (C takes seenNonces as caller-supplied pure data; a ledger that dies with the process defeats its own purpose). Every restart case uses a fresh store + fresh service over the same path sharing no value or closure. MUST[1] IS BLOCKED, NOT SATISFIED, AND NO CASE CLAIMS IT: two independent unmet prerequisites, both outside P-stage file scope -- (a) createTrustKernel() mints signatureRoots as Object.freeze({}), holding no key material, so there is nothing to sign or verify with; attenuate.ts signs with the fixed bytes [0x01,0x02,0x03,0x04], which any code can construct with no kernel involved (token.spec.ts fixtureSigned does exactly that and verifyToken accepts it), so a token signature proves nothing about its origin today; (b) making the kernel the authority requires a ctx-mediated enforcement point, gated behind the vendored Cordis Fiber structural fix (Option A) per docs/architecture/trust-kernel-boundary.md line 52 and BLOCKED-011 -- verified NOT landed against the vendored source and manifest, not the doc prose: vendor/cordis/src/fiber.ts:198 store is still a plain public writable field, vendor/README.md local-modification log has no such entry, and the newest relevant commit is f55b54b2ae annotating P0-02.F limitations as deferred pending Option A. P2-02 CANNOT REACH ACCEPTED WHILE MUST[1] IS OPEN, however many stage cells go green. must[3] is left to the U stage, whose own registry file scope (core/tools/src/index.ts, subagent/child-agent.ts) is exactly those enforcement call sites; a Provider-stage proxy would be a thin fake. DECLARED-SCOPE DEVIATION, reported for audit: packages/core/agent-loop/src/runtime-context.ts (P-stage other declared file) was read in full and deliberately NOT modified -- the only honest candidate there is handing a child token over at sub-agent delegation, which is a call site owned by U child-agent.ts, so a zero-change is correct and no docs/architecture.md update is implied; git status confirms zero changes to that package. No package.json or tsconfig.json edit was needed and no dependency edge was added. SEPARATE PRE-EXISTING FINDING, not touched: this package README (summary and front-matter) and token.spec.ts module docstring all state the C-stage functions throw not implemented, which is false -- they are fully implemented and 36/36 pass; left to the coordinator, who is fixing the same pattern across dsh-memory and dsh-workspace-trust in one pass. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
