@@ -999,9 +999,9 @@ remainingPending:
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 441
+  writtenFiles: 440
   statusCounts:
-    sole: 415
+    sole: 414
     sequential: 22
     serialized: 4
     conflict: 0
@@ -4532,7 +4532,7 @@ epics:
     - path: "packages/core/agent/src/inbox.ts"
       kind: "B"
     - path: "packages/subagent/subagent/src/control.ts"
-      kind: "N"
+      kind: "B"
     - path: "packages/subagent/subagent/tests/control-race.e2e.ts"
       kind: "N"
     stages:

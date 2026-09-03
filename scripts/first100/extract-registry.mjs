@@ -50,7 +50,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = 'e14dd98008d19afa2f5f45c994174eaca0e2f1150c9a304869b42284aa7330b6'
+const MATRIX_SHA = '3bb1baaa93be70b368f89f31282a82f0328c0c9cec1c3a3969e34a6f7988001c'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -90,7 +90,15 @@ const NEWGAP_SOURCES = [
  * ACTUALLY been edited, not the full 23-item authorization ceiling.
  */
 const RESCOPE23_PRIOR_MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa'
-const RESCOPE23_EPIC_IDS = ['P4-05', 'P4-10', 'P6-05']
+// Only epics whose `must` text was ACTUALLY narrowed belong here -- of the
+// 23 authorized-for-review epics, 13 were independently re-reviewed against
+// this same evidence and left untouched (a compound MUST clause where the
+// covered portion isn't cleanly separable, or judgment language hedged as
+// "largely"/"partially" rather than an unhedged "met", falls below the
+// BLOCKED-012 bar for removal); P5-10 is authorized-for-review but its own
+// change here is a files[] baseline-drift correction (control.ts N->B, a
+// different fix class), not a must-narrowing, so it is not listed either.
+const RESCOPE23_EPIC_IDS = ['P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11', 'P6-05', 'P6-06', 'P6-07', 'P6-10']
 
 /**
  * Off by default: today's committed `tests/first100/registry.json` holds

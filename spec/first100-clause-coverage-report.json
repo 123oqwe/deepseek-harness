@@ -3885,10 +3885,8 @@
     "P3-07": {
       "must": {
         "sourceCount": 5,
-        "projectedCount": 5,
-        "unmatchedSource": [],
-        "invented": [],
-        "clauses": [
+        "projectedCount": 2,
+        "unmatchedSource": [
           {
             "text": "启动时 probe 可用隔离机制并生成 attestation",
             "digest": "3337a0a1f8bf6cab56020b5cc8697f9ac13d684f24db93690974f60205294036",
@@ -3914,19 +3912,33 @@
             }
           },
           {
-            "text": "开发降级需显式 flag。",
-            "digest": "596c4b7b6e4282b2d7e02a438b598ed03cc2b7f032beac6a19d8a3ea67831be4",
-            "span": {
-              "startLine": 5940,
-              "endLine": 5940
-            }
-          },
-          {
             "text": "统一路径 canonicalization、writable roots 和只读系统路径。",
             "digest": "18fc04966c2f38ecc57850c9955aca58c9b91ff21dc28771d139b30a89023358",
             "span": {
               "startLine": 5941,
               "endLine": 5941
+            }
+          }
+        ],
+        "invented": [
+          {
+            "text": "启动时生成 attestation",
+            "digest": "739b1fa6339e6e82d4c7d9bff473054f5b60e9735f28fa0d9b146b2f4a0f5c38",
+            "classification": "undocumented"
+          }
+        ],
+        "clauses": [
+          {
+            "text": "启动时生成 attestation",
+            "digest": "739b1fa6339e6e82d4c7d9bff473054f5b60e9735f28fa0d9b146b2f4a0f5c38",
+            "span": null
+          },
+          {
+            "text": "开发降级需显式 flag。",
+            "digest": "596c4b7b6e4282b2d7e02a438b598ed03cc2b7f032beac6a19d8a3ea67831be4",
+            "span": {
+              "startLine": 5940,
+              "endLine": 5940
             }
           }
         ]
@@ -6576,21 +6588,11 @@
     "P5-07": {
       "must": {
         "sourceCount": 4,
-        "projectedCount": 4,
-        "unmatchedSource": [],
-        "invented": [],
-        "clauses": [
+        "projectedCount": 3,
+        "unmatchedSource": [
           {
             "text": "流式映射 Codex thread/turn/items 到标准 child events",
             "digest": "ba42a388fa064c36a9bda7148c2c675aba5b21dbe6d48f1838b1c2ce4ac27570",
-            "span": {
-              "startLine": 9707,
-              "endLine": 9707
-            }
-          },
-          {
-            "text": "tool/approval 请求回到父 Policy。",
-            "digest": "598d8dce57ef1a9cd1fc896e4167e0e990a256d69d37825be38b1c6f76233873",
             "span": {
               "startLine": 9707,
               "endLine": 9707
@@ -6603,6 +6605,28 @@
               "startLine": 9708,
               "endLine": 9708
             }
+          }
+        ],
+        "invented": [
+          {
+            "text": "支持 resume/fork，并保存 provider continuation identity。",
+            "digest": "ca4250ec585ddb45411e3e253711705cf2d3632ebe6a5dc573a41d4df274c54d",
+            "classification": "undocumented"
+          }
+        ],
+        "clauses": [
+          {
+            "text": "tool/approval 请求回到父 Policy。",
+            "digest": "598d8dce57ef1a9cd1fc896e4167e0e990a256d69d37825be38b1c6f76233873",
+            "span": {
+              "startLine": 9707,
+              "endLine": 9707
+            }
+          },
+          {
+            "text": "支持 resume/fork，并保存 provider continuation identity。",
+            "digest": "ca4250ec585ddb45411e3e253711705cf2d3632ebe6a5dc573a41d4df274c54d",
+            "span": null
           },
           {
             "text": "收集 diff、test output、usage、artifacts，不只最终 answer。",
@@ -6980,10 +7004,8 @@
     "P5-11": {
       "must": {
         "sourceCount": 4,
-        "projectedCount": 4,
-        "unmatchedSource": [],
-        "invented": [],
-        "clauses": [
+        "projectedCount": 3,
+        "unmatchedSource": [
           {
             "text": "Task 支持 dependency DAG、atomic claim、attempt、lease、owner、artifact outputs、verification status。",
             "digest": "4db0bc1e5f3cc756323995f908333ce1cef163f68993563b9b0981c95b4859d1",
@@ -6999,6 +7021,20 @@
               "startLine": 10285,
               "endLine": 10285
             }
+          }
+        ],
+        "invented": [
+          {
+            "text": "Task 支持 attempt、lease、owner、artifact outputs、verification status。",
+            "digest": "ba057c0774e66a45c469b42ef3c6609e4c1775171e1af2097c553ef09fca16df",
+            "classification": "undocumented"
+          }
+        ],
+        "clauses": [
+          {
+            "text": "Task 支持 attempt、lease、owner、artifact outputs、verification status。",
+            "digest": "ba057c0774e66a45c469b42ef3c6609e4c1775171e1af2097c553ef09fca16df",
+            "span": null
           },
           {
             "text": "Blackboard 只存结构化 facts/artifact refs，带 provenance。",
@@ -7726,8 +7762,17 @@
     "P6-06": {
       "must": {
         "sourceCount": 3,
-        "projectedCount": 3,
-        "unmatchedSource": [],
+        "projectedCount": 2,
+        "unmatchedSource": [
+          {
+            "text": "任何 open tool call/approval/action ledger entry 不得被裁剪成不一致 surface。",
+            "digest": "40307df9c7f1c0ce065cfb064175730a41014e752ede9819639e1a156cd7afa8",
+            "span": {
+              "startLine": 11313,
+              "endLine": 11313
+            }
+          }
+        ],
         "invented": [],
         "clauses": [
           {
@@ -7744,14 +7789,6 @@
             "span": {
               "startLine": 11312,
               "endLine": 11312
-            }
-          },
-          {
-            "text": "任何 open tool call/approval/action ledger entry 不得被裁剪成不一致 surface。",
-            "digest": "40307df9c7f1c0ce065cfb064175730a41014e752ede9819639e1a156cd7afa8",
-            "span": {
-              "startLine": 11313,
-              "endLine": 11313
             }
           }
         ]
@@ -7821,10 +7858,8 @@
     "P6-07": {
       "must": {
         "sourceCount": 4,
-        "projectedCount": 4,
-        "unmatchedSource": [],
-        "invented": [],
-        "clauses": [
+        "projectedCount": 3,
+        "unmatchedSource": [
           {
             "text": "列表支持 cursor、tenant/workspace/status/time filters。",
             "digest": "36aa8d88f870b6dae14880b9c456b3f015440a97f5593373cc83e88201973f75",
@@ -7832,6 +7867,28 @@
               "startLine": 11461,
               "endLine": 11461
             }
+          },
+          {
+            "text": "repair 生成明确 damage report，不静默伪造完成。",
+            "digest": "ff5448f26af1bbd6b72b55d7ccf6741e56ddeed3d3856c3b06ad70b31c23c366",
+            "span": {
+              "startLine": 11463,
+              "endLine": 11463
+            }
+          }
+        ],
+        "invented": [
+          {
+            "text": "列表支持 tenant/workspace/status/time filters。",
+            "digest": "081daa057ddfe28356ab520d21f3b62bf14215794ef3d5fcf9d584425caa9124",
+            "classification": "undocumented"
+          }
+        ],
+        "clauses": [
+          {
+            "text": "列表支持 tenant/workspace/status/time filters。",
+            "digest": "081daa057ddfe28356ab520d21f3b62bf14215794ef3d5fcf9d584425caa9124",
+            "span": null
           },
           {
             "text": "soft delete、legal hold、hard erase、archive 分离",
@@ -7847,14 +7904,6 @@
             "span": {
               "startLine": 11462,
               "endLine": 11462
-            }
-          },
-          {
-            "text": "repair 生成明确 damage report，不静默伪造完成。",
-            "digest": "ff5448f26af1bbd6b72b55d7ccf6741e56ddeed3d3856c3b06ad70b31c23c366",
-            "span": {
-              "startLine": 11463,
-              "endLine": 11463
             }
           }
         ]
@@ -8139,8 +8188,23 @@
       "must": {
         "sourceCount": 4,
         "projectedCount": 4,
-        "unmatchedSource": [],
-        "invented": [],
+        "unmatchedSource": [
+          {
+            "text": "fork/snapshot 记录 parent lineage 与 purpose filter，默认不复制 secrets/grants。",
+            "digest": "10ff201c7e4945035d5ce7034d67975a7d12690ffcbd9bb094df52002cc5930e",
+            "span": {
+              "startLine": 11922,
+              "endLine": 11922
+            }
+          }
+        ],
+        "invented": [
+          {
+            "text": "fork/snapshot 记录 purpose filter，默认不复制 secrets/grants。",
+            "digest": "4f7aafd66716676459767a3091e5477ca1d8e5edb14444c91c3d27864fc453b6",
+            "classification": "undocumented"
+          }
+        ],
         "clauses": [
           {
             "text": "数据标记 public/internal/confidential/restricted 与 purpose",
@@ -8167,12 +8231,9 @@
             }
           },
           {
-            "text": "fork/snapshot 记录 parent lineage 与 purpose filter，默认不复制 secrets/grants。",
-            "digest": "10ff201c7e4945035d5ce7034d67975a7d12690ffcbd9bb094df52002cc5930e",
-            "span": {
-              "startLine": 11922,
-              "endLine": 11922
-            }
+            "text": "fork/snapshot 记录 purpose filter，默认不复制 secrets/grants。",
+            "digest": "4f7aafd66716676459767a3091e5477ca1d8e5edb14444c91c3d27864fc453b6",
+            "span": null
           }
         ]
       },
@@ -10566,14 +10627,33 @@
     "verifiedBy": "extract-registry.mjs --check (byte-exact re-extraction against each epic's own SHA-pinned provenance.source, not this report)"
   },
   "baseAlignV2Rescope23": {
-    "count": 3,
+    "count": 9,
     "epicIds": [
+      "P3-07",
       "P4-05",
       "P4-10",
-      "P6-05"
+      "P5-07",
+      "P5-11",
+      "P6-05",
+      "P6-06",
+      "P6-07",
+      "P6-10"
     ],
     "rescopeSpec": "spec/first100/sources/base-align-v2/23-partial-rescope-spec.md",
     "divergedClauses": {
+      "P3-07": {
+        "must": {
+          "unmatchedSource": [
+            "启动时 probe 可用隔离机制并生成 attestation",
+            "每次执行验证 requested policy ⊆ supported semantics。",
+            "拒绝以 warning 代替关键限制",
+            "统一路径 canonicalization、writable roots 和只读系统路径。"
+          ],
+          "invented": [
+            "启动时生成 attestation"
+          ]
+        }
+      },
       "P4-05": {
         "must": {
           "unmatchedSource": [
@@ -10592,12 +10672,63 @@
           ]
         }
       },
+      "P5-07": {
+        "must": {
+          "unmatchedSource": [
+            "流式映射 Codex thread/turn/items 到标准 child events",
+            "支持 resume/fork/interrupt，并保存 provider continuation identity。"
+          ],
+          "invented": [
+            "支持 resume/fork，并保存 provider continuation identity。"
+          ]
+        }
+      },
+      "P5-11": {
+        "must": {
+          "unmatchedSource": [
+            "Task 支持 dependency DAG、atomic claim、attempt、lease、owner、artifact outputs、verification status。",
+            "Mailbox 为点对点 durable messages"
+          ],
+          "invented": [
+            "Task 支持 attempt、lease、owner、artifact outputs、verification status。"
+          ]
+        }
+      },
       "P6-05": {
         "must": {
           "unmatchedSource": [
             "子 Agent 默认不继承全部父 history。"
           ],
           "invented": []
+        }
+      },
+      "P6-06": {
+        "must": {
+          "unmatchedSource": [
+            "任何 open tool call/approval/action ledger entry 不得被裁剪成不一致 surface。"
+          ],
+          "invented": []
+        }
+      },
+      "P6-07": {
+        "must": {
+          "unmatchedSource": [
+            "列表支持 cursor、tenant/workspace/status/time filters。",
+            "repair 生成明确 damage report，不静默伪造完成。"
+          ],
+          "invented": [
+            "列表支持 tenant/workspace/status/time filters。"
+          ]
+        }
+      },
+      "P6-10": {
+        "must": {
+          "unmatchedSource": [
+            "fork/snapshot 记录 parent lineage 与 purpose filter，默认不复制 secrets/grants。"
+          ],
+          "invented": [
+            "fork/snapshot 记录 purpose filter，默认不复制 secrets/grants。"
+          ]
         }
       }
     }
