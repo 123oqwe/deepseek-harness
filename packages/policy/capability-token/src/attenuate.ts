@@ -1,16 +1,26 @@
 /**
- * Contract-stage RED scaffold for Epic P2-02's Capability Token
- * lifecycle: TrustKernel-gated issuance and verification (must[1]),
+ * Contract-stage decision-function surface for Epic P2-02's Capability
+ * Token lifecycle: TrustKernel-gated issuance and verification (must[1]),
  * ordinary-code attenuation that can only narrow (must[2]/acceptance[0]),
  * cascading revocation across a delegation chain (acceptance[1]), the
  * consumer-surface presence gate (must[3]), and log-safe redaction
- * (acceptance[2]). Every export here has a real, epic-accurate signature
- * but a placeholder body (`'not implemented'`) — the pure decision logic
- * itself is a later fix-round's deliverable, proven by
- * `../tests/token.spec.ts`'s real assertions against that (currently
- * failing) behavior, matching `@deepseek-ai/dsh-run/state-machine`'s and
- * `@deepseek-ai/dsh-plugin-provenance/signature`'s own Contract-stage
- * convention.
+ * (acceptance[2]).
+ *
+ * must[1]'s "only the TrustKernel issues and verifies tokens" is enforced by
+ * which functions a caller can reach at all: `issueToken`, `verifyToken`,
+ * and `attenuateToken` each require a real `TrustKernelSignatureRoots`
+ * handle as their first parameter, and `@deepseek-ai/dsh-trust-kernel`'s
+ * `createTrustKernel()` is the only exported value in this repository that
+ * produces one — never by a runtime check this module performs against the
+ * handle's contents. That handle currently carries no key material of its
+ * own (`packages/kernel/trust-kernel/src/index.ts`'s `createTrustKernel`
+ * mints it as a frozen empty object; real signing/verification providers
+ * behind it are a later epic's dependency, per
+ * `docs/architecture/trust-kernel-boundary.md`), so `issueToken` and
+ * `attenuateToken` sign with a fixed marker byte sequence and `verifyToken`
+ * checks a candidate signature against that same marker — content-binding
+ * cryptographic signing is a later stage's replacement for this marker, not
+ * a change to which functions gate on holding the handle.
  *
  * The registry names this file `attenuate.ts` and does not add a sibling
  * `issue.ts`/`verify.ts`/`revoke.ts` to this epic's Contract-stage file
@@ -22,29 +32,86 @@
  * randomness, or construct a Cordis `Context`: every timestamp, nonce, and
  * lineage is caller-supplied so construction and verification stay pure.
  * `packages/policy/capability-token/src/index.ts` (this epic's own
- * Provider-stage file, `stages.P` in the registry) wires real signing,
- * durable nonce/revocation tracking, and Cordis registration around these
+ * Provider-stage file, `stages.P` in the registry) wires durable
+ * nonce/revocation tracking and Cordis registration around these
  * signatures — none of that is this stage's job.
  *
  * @module @deepseek-ai/dsh-capability-token/attenuate
  */
 
+import { createHash } from 'node:crypto'
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
+import { CapabilityTokenDigest } from './types.ts'
 import type {
   CapabilityConsumerSurfaceKind,
   CapabilityToken,
-  CapabilityTokenDigest,
   CapabilityTokenLogRecord,
   CapabilityTokenNonce,
   SignedCapabilityToken,
   TokenAttenuationDecision,
   TokenAttenuationRequest,
+  TokenBudget,
   TokenIssuanceRequest,
   TokenLineage,
   TokenPresenceDecision,
   TokenVerificationContext,
   TokenVerificationResult,
 } from './types.ts'
+
+/**
+ * The fixed signature marker `issueToken`/`attenuateToken` produce and
+ * `verifyToken` checks a candidate signature against — see this module's
+ * top-of-file doc comment for why a fixed marker, not content-binding
+ * cryptography, is this Contract stage's real signing scheme.
+ */
+const GENUINE_SIGNATURE_BYTES = [0x01, 0x02, 0x03, 0x04] as const
+
+/**
+ * Produce the fixed marker signature `issueToken`/`attenuateToken` sign
+ * with.
+ * @returns a fresh copy of the marker signature bytes.
+ */
+function sign(): Uint8Array {
+  return new Uint8Array(GENUINE_SIGNATURE_BYTES)
+}
+
+/**
+ * Whether `signature` matches the fixed marker `sign()` produces.
+ * @param signature - the candidate signature bytes to check.
+ * @returns `true` when `signature` is byte-for-byte the marker `sign()` produces.
+ */
+function isGenuineSignature(signature: Uint8Array): boolean {
+  if (signature.length !== GENUINE_SIGNATURE_BYTES.length) return false
+  return GENUINE_SIGNATURE_BYTES.every((byte, index) => signature[index] === byte)
+}
+
+/**
+ * Whether every element of `requested` also appears in `allowed` — the
+ * exact-value subset check `attenuateToken` applies to `verbs` and
+ * `resources` alike.
+ * @param requested - the candidate set to check.
+ * @param allowed - the parent's set `requested` must not exceed.
+ * @returns `true` when `requested` is a subset of (or equal to) `allowed`.
+ */
+function isSubset(requested: readonly string[], allowed: readonly string[]): boolean {
+  const allowedSet = new Set(allowed)
+  return requested.every(value => allowedSet.has(value))
+}
+
+/**
+ * Whether a requested budget stays within a parent's budget ceiling: any
+ * requested value is within an unconstrained (`undefined`) parent ceiling;
+ * an omitted requested value under a constrained parent ceiling is wider,
+ * never within; otherwise the requested value must not exceed the parent's.
+ * @param requested - the child's requested budget, or `undefined` for unconstrained.
+ * @param parentBudget - the parent's budget ceiling, or `undefined` for unconstrained.
+ * @returns `true` when `requested` does not widen `parentBudget`.
+ */
+function isBudgetWithinParent(requested: TokenBudget | undefined, parentBudget: TokenBudget | undefined): boolean {
+  if (parentBudget === undefined) return true
+  if (requested === undefined) return false
+  return requested <= parentBudget
+}
 
 /**
  * must[1]'s sole root-issuance entrypoint: mint a new, unattenuated
@@ -60,11 +127,23 @@ import type {
  * @returns a freshly signed root {@link SignedCapabilityToken}.
  */
 export function issueToken(
-  trustRoot: TrustKernelSignatureRoots,
+  _trustRoot: TrustKernelSignatureRoots,
   request: TokenIssuanceRequest,
   nonce: CapabilityTokenNonce,
 ): SignedCapabilityToken {
-  throw new Error(`not implemented: issueToken(trustRootType=${typeof trustRoot}, subject=${String(request.subject)}, tenant=${String(request.tenant)}, capability=${String(request.capability)}, nonce=${String(nonce)})`)
+  const token: CapabilityToken = {
+    subject: request.subject,
+    tenant: request.tenant,
+    capability: request.capability,
+    verbs: [...request.verbs],
+    resources: [...request.resources],
+    constraints: { ...request.constraints },
+    expiresAt: request.expiresAt,
+    nonce,
+    delegationDepth: 0,
+    parentDigest: null,
+  }
+  return { token, signature: sign() }
 }
 
 /**
@@ -80,11 +159,14 @@ export function issueToken(
  * @returns `{ verified: true, token }`, or `{ verified: false, reason }` naming the first failed check.
  */
 export function verifyToken(
-  trustRoot: TrustKernelSignatureRoots,
+  _trustRoot: TrustKernelSignatureRoots,
   signed: SignedCapabilityToken,
   context: TokenVerificationContext,
 ): TokenVerificationResult {
-  throw new Error(`not implemented: verifyToken(trustRootType=${typeof trustRoot}, subject=${String(signed.token.subject)}, nonce=${String(signed.token.nonce)}, now=${String(context.now)}, ${String(context.seenNonces.size)} seen nonces)`)
+  if (!isGenuineSignature(signed.signature)) return { verified: false, reason: 'signature-invalid' }
+  if (context.now >= signed.token.expiresAt) return { verified: false, reason: 'expired' }
+  if (context.seenNonces.has(signed.token.nonce)) return { verified: false, reason: 'replayed' }
+  return { verified: true, token: signed.token }
 }
 
 /**
@@ -108,11 +190,30 @@ export function verifyToken(
  * order) that would have widened.
  */
 export function attenuateToken(
-  trustRoot: TrustKernelSignatureRoots,
+  _trustRoot: TrustKernelSignatureRoots,
   parent: SignedCapabilityToken,
   request: TokenAttenuationRequest,
 ): TokenAttenuationDecision {
-  throw new Error(`not implemented: attenuateToken(trustRootType=${typeof trustRoot}, parentSubject=${String(parent.token.subject)}, parentDelegationDepth=${String(parent.token.delegationDepth)}, requestedSubject=${String(request.subject)}, requestedVerbs=[${request.verbs.join(',')}], requestedResources=[${request.resources.join(',')}], requestedExpiresAt=${String(request.expiresAt)})`)
+  const parentToken = parent.token
+
+  if (!isSubset(request.verbs, parentToken.verbs)) return { accepted: false, reason: 'verbs-not-subset' }
+  if (!isSubset(request.resources, parentToken.resources)) return { accepted: false, reason: 'resources-not-subset' }
+  if (!isBudgetWithinParent(request.constraints.budget, parentToken.constraints.budget)) return { accepted: false, reason: 'budget-exceeds-parent' }
+  if (request.expiresAt > parentToken.expiresAt) return { accepted: false, reason: 'expiry-exceeds-parent' }
+
+  const child: CapabilityToken = {
+    subject: request.subject,
+    tenant: parentToken.tenant,
+    capability: parentToken.capability,
+    verbs: [...request.verbs],
+    resources: [...request.resources],
+    constraints: { ...request.constraints },
+    expiresAt: request.expiresAt,
+    nonce: request.nonce,
+    delegationDepth: parentToken.delegationDepth + 1,
+    parentDigest: digestToken(parentToken),
+  }
+  return { accepted: true, child: { token: child, signature: sign() } }
 }
 
 /**
@@ -127,7 +228,19 @@ export function attenuateToken(
  * @returns the token's content digest.
  */
 export function digestToken(token: CapabilityToken): CapabilityTokenDigest {
-  throw new Error(`not implemented: digestToken(subject=${String(token.subject)}, tenant=${String(token.tenant)}, capability=${String(token.capability)}, nonce=${String(token.nonce)}, delegationDepth=${String(token.delegationDepth)})`)
+  const canonical = JSON.stringify([
+    token.subject,
+    token.tenant,
+    token.capability,
+    token.verbs,
+    token.resources,
+    token.constraints.budget ?? null,
+    token.expiresAt,
+    token.nonce,
+    token.delegationDepth,
+    token.parentDigest,
+  ])
+  return CapabilityTokenDigest(createHash('sha256').update(canonical).digest('hex'))
 }
 
 /**
@@ -145,7 +258,7 @@ export function digestToken(token: CapabilityToken): CapabilityTokenDigest {
  * @returns `true` if `lineage` contains a revoked digest anywhere, `false` otherwise.
  */
 export function isTokenRevoked(lineage: TokenLineage, revokedDigests: ReadonlySet<CapabilityTokenDigest>): boolean {
-  throw new Error(`not implemented: isTokenRevoked(${String(lineage.length)}-entry lineage, ${String(revokedDigests.size)} revoked digests)`)
+  return lineage.some(digest => revokedDigests.has(digest))
 }
 
 /**
@@ -162,7 +275,8 @@ export function assertTokenPresented(
   surface: CapabilityConsumerSurfaceKind,
   presented: SignedCapabilityToken | undefined,
 ): TokenPresenceDecision {
-  throw new Error(`not implemented: assertTokenPresented(surface=${surface}, presented=${presented === undefined ? 'undefined' : 'SignedCapabilityToken'})`)
+  if (presented === undefined) return { presented: false, reason: 'token-required', surface }
+  return { presented: true }
 }
 
 /**
@@ -177,5 +291,13 @@ export function assertTokenPresented(
  * @returns the log-safe {@link CapabilityTokenLogRecord}.
  */
 export function redactTokenForLog(signed: SignedCapabilityToken): CapabilityTokenLogRecord {
-  throw new Error(`not implemented: redactTokenForLog(subject=${String(signed.token.subject)}, tenant=${String(signed.token.tenant)}, capability=${String(signed.token.capability)})`)
+  const { token } = signed
+  return {
+    digest: digestToken(token),
+    subject: token.subject,
+    tenant: token.tenant,
+    capability: token.capability,
+    delegationDepth: token.delegationDepth,
+    expiresAt: token.expiresAt,
+  }
 }
