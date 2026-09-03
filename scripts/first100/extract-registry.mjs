@@ -50,7 +50,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = 'bfeabf7605f7f6a72d1bc5c6529ecbf71df7567baa378456874894a76443077d'
+const MATRIX_SHA = 'a24a860811de4e22f04d7d8bdbabea80d7d4918862ed516f5f2b59acc9ccddaf'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)

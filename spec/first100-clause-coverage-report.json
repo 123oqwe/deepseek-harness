@@ -3473,7 +3473,7 @@
     "P3-03": {
       "must": {
         "sourceCount": 3,
-        "projectedCount": 2,
+        "projectedCount": 3,
         "unmatchedSource": [
           {
             "text": "定义 typed outcome：policy_denied、sandbox_unavailable、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
@@ -3481,14 +3481,6 @@
             "span": {
               "startLine": 5366,
               "endLine": 5366
-            }
-          },
-          {
-            "text": "provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。",
-            "digest": "1ce3e04f2c046c7745143f25a62c914a82a639559476ddd9cfb34279842cb13a",
-            "span": {
-              "startLine": 5367,
-              "endLine": 5367
             }
           }
         ],
@@ -3504,6 +3496,14 @@
             "text": "定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
             "digest": "cac3b8c0df64b8fdb90e70613837717ec462d4a19739efbbb209e37c04a30f82",
             "span": null
+          },
+          {
+            "text": "provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。",
+            "digest": "1ce3e04f2c046c7745143f25a62c914a82a639559476ddd9cfb34279842cb13a",
+            "span": {
+              "startLine": 5367,
+              "endLine": 5367
+            }
           },
           {
             "text": "保留原始输出为 artifact，但与控制状态分离。",
@@ -10668,8 +10668,7 @@
       "P3-03": {
         "must": {
           "unmatchedSource": [
-            "定义 typed outcome：policy_denied、sandbox_unavailable、resource_exhausted、timeout、cancelled、tool_failed、world_lost。",
-            "provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。"
+            "定义 typed outcome：policy_denied、sandbox_unavailable、resource_exhausted、timeout、cancelled、tool_failed、world_lost。"
           ],
           "invented": [
             "定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。"

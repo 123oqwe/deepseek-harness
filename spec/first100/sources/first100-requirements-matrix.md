@@ -529,7 +529,7 @@
 - **Priority / Wave / 依赖：** P0 / W8 / `P3-01`、`P0-06`。
 - **问题 → 目标：** 当前本地 sandbox 的部分拒绝依赖 stderr/退出码语义，容易被工具输出伪装或误分类。 → 让 Runtime、Verifier 和 UI 能可靠区分 policy denial、sandbox failure、tool failure、timeout 与 user cancellation。
 - **Files：** target `packages/sandbox/sandbox-local/src/index.ts` [B]；`packages/sandbox/sandbox/src/index.ts` [B]；`packages/core/tools/src/types.ts` [B]；`packages/core/agent-loop/src/tool-calls.ts` [B]；`packages/llm/llm/src/error.ts` [B]；new `packages/execution/execution-world/src/errors.ts` [N]；`packages/execution/execution-world/src/outcome.ts` [N]；`packages/execution/execution-world/tests/denial.spec.ts` [N]。
-- **MUST：** 定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。；保留原始输出为 artifact，但与控制状态分离。
+- **MUST：** 定义 typed outcome：policy_denied、resource_exhausted、timeout、cancelled、tool_failed、world_lost。；provider 通过控制通道返回状态，不解析模型可控 stdout/stderr 决定安全语义。；保留原始输出为 artifact，但与控制状态分离。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 恶意程序打印伪造 denial 文本不能改变 outcome。；每类错误在 session/event、SDK、UI 中保持类型。；Retry policy 能基于类型做正确决策。
