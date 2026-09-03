@@ -36,6 +36,67 @@ function edge(
   return { detectionMethod: 'package-graph', nature: 'value', ...fields }
 }
 
+/**
+ * `findShortestCycle`'s 10-second production-scale budget (acceptance[2])
+ * needs a graph large enough that a naive algorithm which enumerates every
+ * simple cycle -- rather than searching for the shortest one directly, e.g.
+ * BFS from each package -- would plausibly blow it. An N-package complete
+ * digraph (every package depends on every other) has on the order of N!
+ * simple cycles through all N packages alone, before counting every shorter
+ * one; `DENSE_CYCLE_PACKAGE_COUNT` packages builds in milliseconds but
+ * already puts a naive enumerator far outside the budget.
+ */
+const DENSE_CYCLE_PACKAGE_COUNT = 14
+
+/** A complete digraph over `DENSE_CYCLE_PACKAGE_COUNT` synthetic packages: every pair has edges both ways, so its true shortest cycle is any single pair (length 2). */
+function buildDenseOverlappingCyclesFixture(): LayerDependencyEdge[] {
+  const packages = Array.from(
+    { length: DENSE_CYCLE_PACKAGE_COUNT },
+    (_, i) => `@deepseek-ai/dsh-dense-fixture-${i}`,
+  )
+  const edges: LayerDependencyEdge[] = []
+  for (const fromPackage of packages) {
+    for (const toPackage of packages) {
+      if (fromPackage === toPackage) continue
+      edges.push(edge({
+        fromPackage, fromLayer: 'capability-definitions',
+        toPackage, toLayer: 'capability-definitions',
+      }))
+    }
+  }
+  return edges
+}
+
+/**
+ * A four-package cycle whose edges (and whose first package,
+ * alphabetically and by order of appearance) come first, so a naive
+ * first-encountered-cycle DFS rooted at the first package would close this
+ * cycle and stop before ever visiting the disjoint, later-appearing
+ * two-package cycle below -- unlike `must[3]`'s existing
+ * "returns the shortest cycle when a longer cycle also exists" case, whose
+ * shorter cycle is both real-shortest and first-encountered, so a
+ * first-found (non-shortest-path) search would accidentally pass it too.
+ */
+const ORDER_TRAP_LONG_A = '@deepseek-ai/dsh-cycle-long-a'
+const ORDER_TRAP_LONG_B = '@deepseek-ai/dsh-cycle-long-b'
+const ORDER_TRAP_LONG_C = '@deepseek-ai/dsh-cycle-long-c'
+const ORDER_TRAP_LONG_D = '@deepseek-ai/dsh-cycle-long-d'
+/** The disjoint, later-appearing two-package cycle that is the true shortest cycle in {@link ORDER_TRAP_GRAPH}. */
+const ORDER_TRAP_SHORT_E = '@deepseek-ai/dsh-cycle-short-e'
+const ORDER_TRAP_SHORT_F = '@deepseek-ai/dsh-cycle-short-f'
+
+const ORDER_TRAP_GRAPH: LayerDependencyEdge[] = [
+  // The four-package cycle: first in array order and alphabetically first,
+  // so it is what a naive first-encountered-cycle DFS would close on.
+  edge({ fromPackage: ORDER_TRAP_LONG_A, fromLayer: 'capability-definitions', toPackage: ORDER_TRAP_LONG_B, toLayer: 'capability-definitions' }),
+  edge({ fromPackage: ORDER_TRAP_LONG_B, fromLayer: 'capability-definitions', toPackage: ORDER_TRAP_LONG_C, toLayer: 'capability-definitions' }),
+  edge({ fromPackage: ORDER_TRAP_LONG_C, fromLayer: 'capability-definitions', toPackage: ORDER_TRAP_LONG_D, toLayer: 'capability-definitions' }),
+  edge({ fromPackage: ORDER_TRAP_LONG_D, fromLayer: 'capability-definitions', toPackage: ORDER_TRAP_LONG_A, toLayer: 'capability-definitions' }),
+  // The disjoint, later-appearing two-package cycle -- the real shortest cycle.
+  edge({ fromPackage: ORDER_TRAP_SHORT_E, fromLayer: 'capability-definitions', toPackage: ORDER_TRAP_SHORT_F, toLayer: 'capability-definitions' }),
+  edge({ fromPackage: ORDER_TRAP_SHORT_F, fromLayer: 'capability-definitions', toPackage: ORDER_TRAP_SHORT_E, toLayer: 'capability-definitions' }),
+]
+
 describe('LAYER_ORDER (must[0])', () => {
   it('ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing', () => {
     const ranks = LAYER_ORDER.map(layer => layerRank(layer))
@@ -258,5 +319,20 @@ describe('findShortestCycle (must[3], acceptance[0], acceptance[2])', () => {
     const result = findShortestCycle(twoAndThreeCycle, [])
     expect(result.shortestCycle).toHaveLength(2)
     expect(new Set(result.shortestCycle)).toEqual(new Set([LLM_DEFINITION, SHELL_DEFINITION]))
+  })
+
+  it('finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order', () => {
+    const result = findShortestCycle(ORDER_TRAP_GRAPH, [])
+    expect(result.shortestCycle).toHaveLength(2)
+    expect(new Set(result.shortestCycle)).toEqual(new Set([ORDER_TRAP_SHORT_E, ORDER_TRAP_SHORT_F]))
+  })
+
+  it('completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])', () => {
+    const denseGraph = buildDenseOverlappingCyclesFixture()
+    const startedAt = Date.now()
+    const result = findShortestCycle(denseGraph, [])
+    const elapsedMs = Date.now() - startedAt
+    expect(elapsedMs).toBeLessThan(10_000)
+    expect(result.shortestCycle).toHaveLength(2)
   })
 })
