@@ -71,8 +71,8 @@ if (actualWaveSha !== WAVEMAP_SHA) throw new Error(`wave-map sha mismatch: ${act
  * the same way as the 3 canonical docs; a missing/mismatched file blocks
  * extraction entirely, exactly like a canonical doc mismatch would.
  */
-const NEWGAP_MATRIX_SHA = 'REPLACE_ME_WHEN_DRAFT_IS_FINALIZED'
-const NEWGAP_WAVEMAP_SHA = 'REPLACE_ME_WHEN_DRAFT_IS_FINALIZED'
+const NEWGAP_MATRIX_SHA = '30d561844b742556cf071b6078626df8e0f21f7dd85a8824658f5ab33320d173'
+const NEWGAP_WAVEMAP_SHA = 'e309e6a4c9bf17c5bcd5565348b3664df428956ed8bf6e6f7878b8aab2e9fc5e'
 const NEWGAP_SOURCES = [
   { matrix: 'base-align-v2/new-gap-matrix.md', matrixSha: NEWGAP_MATRIX_SHA, waveMap: 'base-align-v2/new-gap-wavemap.md', waveMapSha: NEWGAP_WAVEMAP_SHA },
 ]
@@ -101,22 +101,17 @@ const RESCOPE23_PRIOR_MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4
 const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11', 'P6-05', 'P6-06', 'P6-07', 'P6-10']
 
 /**
- * Off by default: today's committed `tests/first100/registry.json` holds
- * exactly the 100 canonical epics, and BASE-ALIGN-v2's own registry-content
- * landing (P3-13 itself) is explicitly deferred until the merge tree is CI-
- * proven clean and the new-gap doc drafts pass Tier-S panel review -- this
- * flag exists so the mechanism can be built and bidirectionally verified
- * now without changing that committed file's content one byte.
- *
- * Transitional, not a permanent feature: once P3-13's draft is finalized,
- * SHA-pinned above, and actually landed in the committed registry.json
- * (making it 101 epics), this gate must be REMOVED so new-gap loading runs
- * unconditionally -- a flag someone has to remember to pass on every
- * future `--check`/regeneration is exactly the "invariant held by an
- * agent's own diligence" shape BLOCKED-034 exists to flag. Do not ship
- * this flag as a standing feature.
+ * Unconditional since P3-13 landed (2026-09-03): its new-gap-matrix.md/
+ * new-gap-wavemap.md drafts passed Tier-S panel review and are SHA-pinned
+ * above, and registry.json now carries it as the 101st epic. The prior
+ * `--include-new-gap` CLI flag was transitional scaffolding only (so the
+ * mechanism could be built and bidirectionally verified before landing
+ * without changing the committed registry byte); it is intentionally not
+ * read from argv anymore -- a flag someone has to remember to pass on
+ * every future `--check`/regeneration is exactly the "invariant held by
+ * an agent's own diligence" shape BLOCKED-034 exists to flag.
  */
-const INCLUDE_NEW_GAP = argv.includes('--include-new-gap')
+const INCLUDE_NEW_GAP = true
 
 // ---------------------------------------------------------------------------
 // 2. Parse the matrix
@@ -537,10 +532,10 @@ for (const e of epics) {
 const registry = {
   schema: { name: 'first100-registry', version: '1.1', kind: 'canonical-source-of-truth', generatedFrom: 'planning sources (matrix + wave-map + decision package)' },
   frozenBaseline: {
-    sha: '0a53fb55bea101816fa226bb964ae2bed71c343b',
-    shortSha: '0a53fb55',
-    label: 'baseline-0a53fb55',
-    note: 'All First-100 evidence binds to this exact SHA (upstream master tip at first100-exec BASE-ALIGN, 2026-08-31; supersedes baseline-b150a551, downgraded to audit provenance per maintainer decision A1).',
+    sha: '4e84901e6471b79ec0338099867ebb4606d12bb5',
+    shortSha: '4e84901e',
+    label: 'baseline-4e84901e',
+    note: 'All First-100 evidence binds to this exact SHA (upstream master tip re-anchored via BASE-ALIGN-v2, 2026-09-03; supersedes baseline-0a53fb55, downgraded to audit provenance per BLOCKED-016).',
   },
   layerEnum: LAYER_ENUM,
   ownerStates: ['UNASSIGNED_UNTIL_APPROVAL'],

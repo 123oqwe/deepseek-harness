@@ -977,6 +977,28 @@
         }
       }
     },
+    "P3-13": {
+      "epicCommand": "MISSING_UNTIL_W9",
+      "epicCommandStatus": "MISSING_UNTIL_WAVE",
+      "stages": {
+        "C": {
+          "command": "pnpm vitest run packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        },
+        "P": {
+          "command": "pnpm first100:issue --id P3-13 --lane provider",
+          "status": "LANE_RUNNER"
+        },
+        "U": {
+          "command": "pnpm first100:issue --id P3-13 --lane composition",
+          "status": "LANE_RUNNER"
+        },
+        "F": {
+          "command": "pnpm vitest run packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts",
+          "status": "DERIVED_FROM_FILES"
+        }
+      }
+    },
     "P4-01": {
       "epicCommand": "MISSING_UNTIL_W4",
       "epicCommandStatus": "MISSING_UNTIL_WAVE",

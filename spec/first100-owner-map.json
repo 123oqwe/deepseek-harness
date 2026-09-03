@@ -5,9 +5,9 @@
     "scope": "files each epic creates (N) or modifies (P); baseline (B) references are shared inputs, not owned",
     "uniqueOwnerPerWave": "one writer -> SOLE; writers in strictly distinct waves -> SEQUENTIAL (allowed); two writers in the same wave -> CONFLICT, PENDING_MAINTAINER_ADJUDICATION, no writer silently dropped; a same-wave double-write on a canonical-owner file with a valid maintainer-approved write sequence (Q4(a)) -> SERIALIZED, and every same-wave adjacent pair must carry an explicit predecessor edge"
   },
-  "writtenFiles": 440,
+  "writtenFiles": 443,
   "statusCounts": {
-    "sole": 414,
+    "sole": 417,
     "sequential": 22,
     "serialized": 4,
     "conflict": 0
@@ -163,6 +163,15 @@
       ],
       "waves": [
         7
+      ],
+      "status": "SOLE"
+    },
+    "docs/subsystems/code-runtime.md": {
+      "owners": [
+        "P3-13"
+      ],
+      "waves": [
+        9
       ],
       "status": "SOLE"
     },
@@ -952,6 +961,24 @@
       ],
       "waves": [
         18
+      ],
+      "status": "SOLE"
+    },
+    "packages/code-runtime/code-runtime-worker-thread/src/policy.ts": {
+      "owners": [
+        "P3-13"
+      ],
+      "waves": [
+        9
+      ],
+      "status": "SOLE"
+    },
+    "packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts": {
+      "owners": [
+        "P3-13"
+      ],
+      "waves": [
+        9
       ],
       "status": "SOLE"
     },
@@ -4360,6 +4387,12 @@
       "primaryLayer": "L2_PROVIDER",
       "layerStatus": "ADJUDICATED",
       "canonicalOwner": "packages/attachment/attachment-security",
+      "humanAssignee": "UNASSIGNED"
+    },
+    "P3-13": {
+      "primaryLayer": "L2_PROVIDER",
+      "layerStatus": "DELEGATE_CONFIRMED",
+      "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "humanAssignee": "UNASSIGNED"
     },
     "P4-01": {

@@ -516,18 +516,26 @@ export function composeEffective(
  * maintainer item-by-item approval; it is independent of the R0 gate, which is
  * left unchanged and stays red until the maintainer records the resolution
  * (mapping approval or recovered evidence).
+ *
+ * Scoped to canonical epics only (BLOCKED-037): a `provenance`-tagged
+ * (BASE-ALIGN-v2 new-gap) epic's `primaryLayer` is set directly at creation
+ * (delegate-confirmed rationale inline in its own source doc), never sourced
+ * from r0-decision-package.md's ambiguous layer table this mapping resolves
+ * — it was never part of the 100-ID gap this overlay exists to close, so it
+ * is neither required to appear in it nor an "extra" id when absent.
  */
 export function checkLayerMapping(reg: Registry, adj: Adjudication): LayerMappingCheck {
   const lm = adj.layerMapping
   const status = lm?.status ?? 'MISSING'
   const approved = status === 'APPROVED'
   const entries = lm?.entries ?? {}
-  const regIds = new Set(reg.epics.map(e => e.id))
+  const canonicalEpics = reg.epics.filter(e => !e.provenance)
+  const regIds = new Set(canonicalEpics.map(e => e.id))
   const missingIds: string[] = []
   const layerMismatches: string[] = []
   const noRationale: string[] = []
   const noSource: string[] = []
-  for (const e of reg.epics) {
+  for (const e of canonicalEpics) {
     const entry = entries[e.id]
     if (entry === undefined) {
       missingIds.push(e.id)

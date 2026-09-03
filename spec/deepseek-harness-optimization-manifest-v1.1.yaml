@@ -3,10 +3,10 @@ schema:
   version: "1.1"
   kind: "generated-from-canonical-registry-plus-adjudication"
 frozenBaseline:
-  sha: "0a53fb55bea101816fa226bb964ae2bed71c343b"
-  shortSha: "0a53fb55"
-  label: "baseline-0a53fb55"
-  note: "All First-100 evidence binds to this exact SHA (upstream master tip at first100-exec BASE-ALIGN, 2026-08-31; supersedes baseline-b150a551, downgraded to audit provenance per maintainer decision A1)."
+  sha: "4e84901e6471b79ec0338099867ebb4606d12bb5"
+  shortSha: "4e84901e"
+  label: "baseline-4e84901e"
+  note: "All First-100 evidence binds to this exact SHA (upstream master tip re-anchored via BASE-ALIGN-v2, 2026-09-03; supersedes baseline-0a53fb55, downgraded to audit provenance per BLOCKED-016)."
 layerEnum: ["L0_KERNEL", "L1_CONTRACT", "L2_PROVIDER", "L3_CONSUMER", "L4_COMPOSITION", "L5_SURFACE", "L6_QUALIFICATION"]
 groupCounts:
   P0: 8
@@ -995,13 +995,13 @@ adjudication:
         basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-012"
 remainingPending:
   sameWaveConflicts: 0
-  unassignedOwners: 0
+  unassignedOwners: 1
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 440
+  writtenFiles: 443
   statusCounts:
-    sole: 414
+    sole: 417
     sequential: 22
     serialized: 4
     conflict: 0
@@ -3300,6 +3300,66 @@ epics:
     provider: "tests/first100/fixtures/P3-12.provider.spec.ts"
     composition: "tests/first100/fixtures/P3-12.composition.spec.ts"
     fault: "tests/first100/fixtures/P3-12.fault.spec.ts"
+  - id: "P3-13"
+    title: "Code-Runtime ExecutionWorld Policy Binding"
+    phase: 3
+    priority: "P1"
+    wave: 9
+    predecessors: ["P3-01", "P3-02"]
+    primaryLayer: "L2_PROVIDER"
+    layerStatus: "DELEGATE_CONFIRMED"
+    canonicalOwner: "UNASSIGNED_UNTIL_APPROVAL"
+    humanAssignee: "UNASSIGNED"
+    acceptance: ["一个尝试绕过策略直接触网/触盘/起子进程的恶意程序体，在 worker-thread provider 下被 fail closed 拒绝，而非静默放行或仅记录。", "worker/子进程被 terminate 后，独立复现验证不存在存活的孤儿 OS 进程（或该残留被显式记录为已知限制，附复现证据，不得未经验证就声称已关闭）。", "同一段程序体对 local shell world 与 code-runtime world，solver 的判定记录（网络/文件系统/进程三维）逐项比对相同，而非仅行为相似。"]
+    nonGoals: ["本项不改变 code-runtime 的语言支持范围（仍是 TypeScript/Python 既有两个 provider）", "不引入与本项无关的垂直业务逻辑", "不扩权、不跨项偷做 P3-08 的容器级隔离范围。"]
+    verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
+    files:
+    - path: "packages/code-runtime/code-runtime/src/index.ts"
+      kind: "B"
+    - path: "packages/code-runtime/code-runtime/src/types.ts"
+      kind: "B"
+    - path: "packages/code-runtime/code-runtime-worker-thread/src/index.ts"
+      kind: "B"
+    - path: "packages/code-runtime/code-runtime-worker-thread/src/bootstrap.ts"
+      kind: "B"
+    - path: "packages/code-runtime/code-runtime-worker-thread/src/worker.ts"
+      kind: "B"
+    - path: "packages/code-runtime/code-runtime-worker-thread/src/protocol.ts"
+      kind: "B"
+    - path: "packages/execution/execution-world/src/index.ts"
+      kind: "B"
+    - path: "packages/execution/execution-world/src/types.ts"
+      kind: "B"
+    - path: "packages/sandbox/sandbox/src/policy.ts"
+      kind: "B"
+    - path: "packages/code-runtime/code-runtime-worker-thread/src/policy.ts"
+      kind: "N"
+    - path: "packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts"
+      kind: "N"
+    - path: "docs/subsystems/code-runtime.md"
+      kind: "N"
+    stages:
+    C:
+      nOf: null
+      files: ["packages/code-runtime/code-runtime-worker-thread/src/policy.ts", "packages/code-runtime/code-runtime-worker-thread/src/protocol.ts", "packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts"]
+      count: 3
+    P:
+      nOf: null
+      files: ["packages/code-runtime/code-runtime-worker-thread/src/bootstrap.ts", "packages/code-runtime/code-runtime-worker-thread/src/worker.ts", "packages/code-runtime/code-runtime-worker-thread/src/policy.ts"]
+      count: 3
+    U:
+      nOf: null
+      files: ["packages/code-runtime/code-runtime-worker-thread/src/index.ts", "docs/subsystems/code-runtime.md"]
+      count: 2
+    F:
+      nOf: null
+      files: ["packages/code-runtime/code-runtime-worker-thread/tests/policy.spec.ts"]
+      count: 1
+    fixtures:
+    contract: "tests/first100/fixtures/P3-13.contract.spec.ts"
+    provider: "tests/first100/fixtures/P3-13.provider.spec.ts"
+    composition: "tests/first100/fixtures/P3-13.composition.spec.ts"
+    fault: "tests/first100/fixtures/P3-13.fault.spec.ts"
   - id: "P4-01"
     title: "一等公民 Run Service 与 Run Event Log"
     phase: 4

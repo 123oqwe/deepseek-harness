@@ -143,7 +143,7 @@ describe('first100 spec generation', () => {
     expect(digests.digests[REGISTRY_PATH]).toBe(sha256(registryBytes))
   })
 
-  it('green: structural invariants hold (100 nodes, 13 evidence keys, 100 commands, 19 waves)', () => {
+  it('green: structural invariants hold (101 nodes/commands incl. P3-13, 13 evidence keys, 19 waves)', () => {
     const { registryBytes, reg } = readRegistry()
     const { artifacts } = renderArtifacts(reg, registryBytes)
 
@@ -152,7 +152,7 @@ describe('first100 spec generation', () => {
       acyclic: boolean
       waves: Record<string, string[]>
     }
-    expect(graph.nodes).toBe(100)
+    expect(graph.nodes).toBe(reg.epics.length)
     // The committed graph's acyclicity is a real computed result, not a hardcode:
     // the artifact must agree with a fresh topological-sort analysis.
     const dag = computeDag(reg)
@@ -169,7 +169,7 @@ describe('first100 spec generation', () => {
     const commands = JSON.parse(mustGet(artifacts, 'spec/first100-command-registry.json')) as {
       entries: Record<string, unknown>
     }
-    expect(Object.keys(commands.entries)).toHaveLength(100)
+    expect(Object.keys(commands.entries)).toHaveLength(reg.epics.length)
   })
 
   it('honesty: the evidence schema is typed, not presence-only (constraints encode the rejection rules)', () => {
@@ -241,10 +241,14 @@ describe('first100 spec generation', () => {
     const gate = r0GateSummary(reg)
     // A (100 layers via B2), B (100 owners), Q4(a) writer-serialization, and
     // B2's layerSourceGap closure are approved via the overlay: gate counts
-    // are 0. The 4→0 conflict drop is genuine — the base registry without the
-    // overlay still reports 4 (tested separately).
+    // are 0 for the 100 canonical epics. The 4→0 conflict drop is genuine —
+    // the base registry without the overlay still reports 4 (tested
+    // separately). P3-13 (BASE-ALIGN-v2 new-gap, landed 2026-09-03) is real,
+    // additional, and genuinely unassigned — it never went through B2's
+    // historical owner-assignment round, so it honestly adds 1 here rather
+    // than being force-fit into that overlay just to keep the count at 0.
     expect(gate.conflicts).toHaveLength(0)
-    expect(gate.unassignedOwners).toBe(0)
+    expect(gate.unassignedOwners).toBe(1)
     expect(gate.pendingLayerAdjudication).toBe(0)
     expect(gate.layerSourceGap).toBe(0)
     // Thresholds are now approved (B1): 0 unapproved.
@@ -252,7 +256,7 @@ describe('first100 spec generation', () => {
     // Items B1/B2 did NOT touch are reported and keep the gate honestly red.
     expect(gate.agentBUncertainties).toBe(4)
     expect(gate.unsignedEnvelope).toBe(true)
-    expect(gate.missingCommandEpics).toBe(91)
+    expect(gate.missingCommandEpics).toBe(92)
     const pass = gate.conflicts.length === 0
       && gate.unassignedOwners === 0
       && gate.pendingLayerAdjudication === 0
@@ -274,7 +278,10 @@ describe('first100 spec generation', () => {
     expect(reg.adjudicationPending.enumerated).toBe(33)
     expect(reg.adjudicationPending.notEnumeratedFromSources.gap).toBe(1)
     for (const e of reg.epics) {
-      expect(['AGENT_A_PROPOSED', 'PENDING_MAINTAINER_ADJUDICATION']).toContain(e.layerStatus)
+      // DELEGATE_CONFIRMED is P3-13's own resolution path (BASE-ALIGN-v2
+      // new-gap, delegate-confirmed layer at creation) -- distinct from the
+      // 100 canonical epics' r0-decision-package.md-sourced statuses.
+      expect(['AGENT_A_PROPOSED', 'PENDING_MAINTAINER_ADJUDICATION', 'DELEGATE_CONFIRMED']).toContain(e.layerStatus)
       expect(['UNASSIGNED_UNTIL_APPROVAL', e.id]).toContain(e.canonicalOwner)
     }
   })
@@ -282,17 +289,22 @@ describe('first100 spec generation', () => {
   it('adjudication: the overlay records A/B/C + B1/B2 and the composed state resolves layers+owners', () => {
     const { reg } = readRegistry()
     const adj = JSON.parse(readFileSync(join(REPO_ROOT, 'tests/first100/adjudication.json'), 'utf8')) as Adjudication
+    // P3-13 (BASE-ALIGN-v2 new-gap, landed 2026-09-03) never went through
+    // this historical B2/owner-assignment round -- scoped to the 100
+    // canonical epics these overlays actually cover, same reasoning as
+    // checkLayerMapping's own canonical-only scoping.
+    const canonicalEpics = reg.epics.filter(e => !e.provenance)
     expect(adj.layerAdjudication.status).toBe('ADJUDICATED')
     // B2 (2026-09-01): expanded from the original 33-id R0-era approval to
     // the full 100-ID mapping, approved at the registry's own current values.
     expect(adj.layerAdjudication.count).toBe(100)
     expect(new Set(adj.layerAdjudication.approvedIds).size).toBe(100)
-    expect(adj.layerAdjudication.approvedIds.sort()).toEqual(reg.epics.map(e => e.id).sort())
+    expect(adj.layerAdjudication.approvedIds.sort()).toEqual(canonicalEpics.map(e => e.id).sort())
     // The original 33-id R0-era approval is preserved for history.
     expect(adj.layerAdjudication.originalR0Approval?.approvedIds33).toEqual([...reg.adjudicationPending.layerIds].sort())
     expect(adj.ownerAssignment.status).toBe('ADJUDICATED')
     expect(Object.keys(adj.ownerAssignment.canonicalOwners)).toHaveLength(100)
-    for (const e of reg.epics) {
+    for (const e of canonicalEpics) {
       expect(adj.ownerAssignment.canonicalOwners[e.id]).toBeTruthy()
       expect(adj.ownerAssignment.humanAssignees[e.id]).toBe('UNASSIGNED')
     }
@@ -420,7 +432,7 @@ describe('first100 spec generation', () => {
     const parsed = yaml.load(manifest) as {
       epics: { id: string; layerStatus: string; canonicalOwner: string; humanAssignee: string }[]
     }
-    expect(parsed.epics).toHaveLength(100)
+    expect(parsed.epics).toHaveLength(reg.epics.length)
     const rows = new Map(parsed.epics.map(r => [r.id, r]))
     for (const e of reg.epics) {
       const row = rows.get(e.id)
@@ -435,7 +447,7 @@ describe('first100 spec generation', () => {
     const ownerMap = JSON.parse(mustGet(artifacts, 'spec/first100-owner-map.json')) as {
       canonicalEpicOwners: Record<string, { layerStatus: string; canonicalOwner: string; humanAssignee: string }>
     }
-    expect(Object.keys(ownerMap.canonicalEpicOwners)).toHaveLength(100)
+    expect(Object.keys(ownerMap.canonicalEpicOwners)).toHaveLength(reg.epics.length)
     for (const id of adj.layerAdjudication.approvedIds) {
       expect(ownerMap.canonicalEpicOwners[id]?.layerStatus).toBe('ADJUDICATED')
     }
@@ -461,16 +473,20 @@ describe('layer gap resolution (Q4(b) option 2: complete 100-ID mapping)', () =>
     return rows
   }
 
-  it('overlay layerMapping covers exactly the 100 registry ids with exact layers + rationale + source', () => {
+  it('overlay layerMapping covers exactly the 100 canonical registry ids with exact layers + rationale + source', () => {
     const { reg } = readRegistry()
     const adj = readAdj()
+    // P3-13 (BASE-ALIGN-v2 new-gap) is delegate-confirmed directly, never
+    // part of this overlay's r0-decision-package.md-sourced resolution --
+    // same scoping as checkLayerMapping itself.
+    const canonicalEpics = reg.epics.filter(e => !e.provenance)
     expect(adj.layerMapping?.status).toBe('APPROVED')
     expect(adj.layerMapping?.count).toBe(100)
     const entries = adj.layerMapping?.entries ?? {}
     const ids = Object.keys(entries)
     expect(ids).toHaveLength(100)
-    expect(ids).toEqual(reg.epics.map(e => e.id))
-    for (const e of reg.epics) {
+    expect(ids).toEqual(canonicalEpics.map(e => e.id))
+    for (const e of canonicalEpics) {
       const entry = entries[e.id]
       expect(entry, `entry for ${e.id}`).toBeDefined()
       expect(entry!.primaryLayer, `${e.id} exact primaryLayer`).toBe(e.primaryLayer)
