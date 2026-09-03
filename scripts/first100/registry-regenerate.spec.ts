@@ -148,6 +148,14 @@ describe('first100 registry regeneration', () => {
       epics: { id: string; wave: number }[]
     }
     const ids = registry.epics.map(e => e.id)
+    // These 2 literals are the ONE remaining absolute anchor for the
+    // registry's epic count (delegate note, 2026-09-03): every other
+    // first100 spec file's epic-count assertion was relativized to
+    // `reg.epics.length` when P3-13 landed (101st epic) -- a real epic-count
+    // regression a self-consistency check like that can no longer catch, if
+    // the count itself silently drifted. Keep these 2 literal, not
+    // `reg.epics.length` -- relativizing them too would make every
+    // first100 epic-count assertion in the repo a tautology.
     expect(new Set(ids).size).toBe(101)
     expect(registry.epics).toHaveLength(101)
     expect(registry.waveCount).toBe(19)
