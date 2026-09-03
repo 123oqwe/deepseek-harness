@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T06:02:36.147Z",
-  "inputDigest": "424c2fba166eed9f4da2db8202428fcb03a44b13fa827c661c88f8ca1a9cbd87",
+  "lastUpdatedUtc": "2026-09-03T16:27:56.856Z",
+  "inputDigest": "398abec50ba5f6f7357c801f4b5562d13d1060673ca31519b14b986ff57763d4",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -401,7 +401,45 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
+          "observationReportPath": "/tmp/ci-run-33777363033/first100-vitest-report-75ad08e71873ed4f46c2594f0b52520250e8393c/vitest-report.json",
+          "observationSha256": "28d6103f149ac6e07fce72aaabe3164d1b89c698bb21a28b7612ea8b0ea6af29",
+          "expectCasesMatched": [
+            "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
+            "allows a downward dependency",
+            "allows a same-layer dependency",
+            "rejects an ordinary upward dependency as a layer violation",
+            "allows an upward type-only EventMap edge as the one exception to the upward-dependency rule",
+            "does not grant the narrow exception to a downward type-only EventMap edge, since layer direction alone already permits it",
+            "rejects a global-singleton edge that also runs upward",
+            "rejects a global-singleton edge that would otherwise be a legal downward dependency",
+            "rejects a global-singleton edge within the same layer",
+            "classifies the same upward violation identically when found via package-graph",
+            "classifies the same upward violation identically when found via path-alias",
+            "classifies the same upward violation identically when found via dynamic-require",
+            "fails a kernel dependency on the vendored Cordis runtime",
+            "fails a kernel dependency on a surfaces-apps (UI) package",
+            "fails a kernel dependency on a concrete model provider",
+            "does not grant the narrow event-type exception to a kernel dependency on a surfaces-apps (UI) package",
+            "does not constrain a non-kernel package depending on the vendored Cordis runtime",
+            "accepts a well-formed exemption",
+            "rejects an exemption whose cycle has fewer than two packages",
+            "rejects an exemption with a malformed recordedDate",
+            "rejects an exemption with an empty owner",
+            "rejects an exemption with an empty adrNote",
+            "reports no cycle and no exemption for an acyclic graph",
+            "finds an unexempted two-package cycle",
+            "marks a cycle exempted when it matches a declared ExemptedCycle entry",
+            "returns the shortest cycle when a longer cycle also exists in the graph",
+            "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order",
+            "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-03T16:27:55.893Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -414,7 +452,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1172,7 +1210,30 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
+          "observationReportPath": "/tmp/ci-run-33777363033/first100-vitest-report-75ad08e71873ed4f46c2594f0b52520250e8393c/vitest-report.json",
+          "observationSha256": "28d6103f149ac6e07fce72aaabe3164d1b89c698bb21a28b7612ea8b0ea6af29",
+          "expectCasesMatched": [
+            "must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted",
+            "must[0]: a claim backed by an organization offline-signing key verifies as trusted",
+            "must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch",
+            "must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle",
+            "must[3]: an ordinary caller cannot substitute a plugin-supplied trust root — registerTrustAnchor only accepts the frozen, kernel-issued signatureRoots handle",
+            "must[4]: an explicit dev-profile opt-in recognized by policy is admitted with a persistent untrusted banner",
+            "must[4]: a profile name outside the deployment's recognized dev profiles is refused, never silently admitted as unsigned-dev",
+            "a single tampered byte (a changed observed package digest) is rejected for digest mismatch",
+            "a swapped source repo (observed repo URL differs from the claimed one) is rejected for source-repo mismatch",
+            "a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch",
+            "a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch",
+            "the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter",
+            "recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-03T16:27:56.301Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -1185,7 +1246,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1360,7 +1421,26 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
+          "observationReportPath": "/tmp/ci-run-33777363033/first100-vitest-report-75ad08e71873ed4f46c2594f0b52520250e8393c/vitest-report.json",
+          "observationSha256": "28d6103f149ac6e07fce72aaabe3164d1b89c698bb21a28b7612ea8b0ea6af29",
+          "expectCasesMatched": [
+            "must[0]: a manifest declaring runtime API range, schema ranges, a satisfied required capability, and a satisfied requires-provider constraint resolves active with no disabled optional capabilities",
+            "must[0]: an excludes-provider constraint still resolves active when a different provider of the same capability remains eligible",
+            "must[1]: solving three independent manifests in one call resolves all three together, not one plugin at a time",
+            "must[2]: a direct requires-provider vs. excludes-provider contradiction over the graph's only provider yields a minimal unsat core, excluding an unrelated healthy plugin",
+            "must[3]: a missing required security-critical capability always blocks the plugin, never resolves active with the capability silently absent",
+            "solving two structurally-equal but distinct manifest/host inputs produces deep-equal load plans",
+            "a plugin missing a (non-security) required capability is blocked, never active",
+            "a plugin whose declared schema range major does not cover the host's registered major is blocked, never active",
+            "a plugin missing only an optional capability stays active, with that capability explicitly listed as disabled"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-03T16:27:56.574Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -1373,7 +1453,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1391,7 +1471,30 @@
       "wave": 4,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
+          "observationReportPath": "/tmp/ci-run-33777363033/first100-vitest-report-75ad08e71873ed4f46c2594f0b52520250e8393c/vitest-report.json",
+          "observationSha256": "28d6103f149ac6e07fce72aaabe3164d1b89c698bb21a28b7612ea8b0ea6af29",
+          "expectCasesMatched": [
+            "must[0]: a successful capability claim carries PluginIdentity, namespace, stable capability id, and a minted ownership token",
+            "must[1]: an unofficial plugin cannot claim a capability inside the dsh.* reserved namespace",
+            "must[1]: an unofficial plugin cannot claim a capability inside a dotted sub-namespace under the dsh.* reserved root",
+            "must[2]: an explicit replace contract fails closed when policy does not authorize replacement",
+            "must[2]: an explicit replace contract fails closed with replace-not-authorized when the target capability id has no existing registration to replace",
+            "must[3]: revoking with a valid ownership token removes only that token's own effects",
+            "same-name tool collision: a second plugin registering an already-claimed capability id without a replace contract fails closed",
+            "cross-plugin revocation: a token that matches no active registration revokes nothing, and the real owner's token still works afterward",
+            "load-order attack: a third party claiming a reserved-namespace capability before the official plugin ever registers still fails closed, and the official plugin can still claim it afterward",
+            "an authorized replace contract succeeds, and buildInventoryChain shows the replaced/replacing chain",
+            "buildInventoryChain on a 3-owner history reports the current owner and its immediate predecessor, not the chain's original first owner",
+            "a dynamically defined capability is subject to the same reserved-namespace and collision rules as a statically declared one",
+            "a dynamically defined capability for a fresh, non-reserved, non-colliding namespace is admitted exactly as a statically declared one would be"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-03T16:27:56.855Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -1404,7 +1507,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
