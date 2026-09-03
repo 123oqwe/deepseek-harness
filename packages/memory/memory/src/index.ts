@@ -18,9 +18,11 @@
  * @module @deepseek-ai/dsh-memory
  */
 
+import { randomUUID } from 'node:crypto'
 import { Context, Service } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type {
+  MemoryAccessContext,
   MemoryExportRequest,
   MemoryExportResult,
   MemoryForgetRequest,
@@ -33,7 +35,7 @@ import type {
   MemoryRecordView,
   MemoryReviseRequest,
 } from './types.ts'
-import { MemoryError } from './types.ts'
+import { MemoryError, MemoryRecordId } from './types.ts'
 
 export {
   MemoryError,
@@ -147,6 +149,7 @@ export class MemoryRuntime extends Service {
    * @returns matching records, capped to the caller's budget.
    */
   async query(request: MemoryQueryRequest): Promise<MemoryQueryResult> {
+    requireCompleteAccessContext(request.accessContext)
     const result = await this.resolve().query(request)
     return capRecords(result, request.accessContext.contextBudget.maxRecords)
   }
@@ -157,6 +160,7 @@ export class MemoryRuntime extends Service {
    * @returns the record, or `undefined` when no such record is visible to the access context.
    */
   async get(request: MemoryGetRequest): Promise<MemoryRecordView | undefined> {
+    requireCompleteAccessContext(request.accessContext)
     return this.resolve().get(request)
   }
 
@@ -186,6 +190,7 @@ export class MemoryRuntime extends Service {
    * @returns every visible record, capped to the caller's budget.
    */
   async export(request: MemoryExportRequest): Promise<MemoryExportResult> {
+    requireCompleteAccessContext(request.accessContext)
     const result = await this.resolve().export(request)
     return capRecords(result, request.accessContext.contextBudget.maxRecords)
   }
@@ -224,6 +229,22 @@ function resolveProvider(selection: Selection): MemoryProvider {
   return single
 }
 
+/**
+ * Reject a read whose {@link MemoryAccessContext} is missing any of the four
+ * dimensions `must[3]` requires (`principal`, `purpose`, `scope`,
+ * `contextBudget`) — enforced once here so `query`/`get`/`export` share
+ * identical scoping regardless of which provider is selected.
+ */
+function requireCompleteAccessContext(accessContext: MemoryAccessContext): void {
+  // A caller can violate MemoryAccessContext's required fields at runtime
+  // (this function's whole job); widen the local view so the checks below are
+  // not flagged as statically-impossible against the non-optional interface.
+  const candidate: Partial<MemoryAccessContext> = accessContext
+  if (!candidate.principal || !candidate.purpose || !candidate.scope || !candidate.contextBudget) {
+    throw new MemoryError('memory read rejected: access context is missing principal, purpose, scope, or contextBudget', 'MEMORY_ACCESS_CONTEXT_REQUIRED')
+  }
+}
+
 /** Enforce `maxRecords` on a read result: truncate `records[]` and flag it. */
 function capRecords<T extends { records: readonly MemoryRecordView[]; truncated: boolean }>(result: T, maxRecords: number | undefined): T {
   if (maxRecords === undefined || result.records.length <= maxRecords) return result
@@ -231,43 +252,104 @@ function capRecords<T extends { records: readonly MemoryRecordView[]; truncated:
 }
 
 /**
- * Minimal local-reference provider stub for Contract-stage conformance
- * (`acceptance[0]`). Every method is intentionally unimplemented — first100
- * registry P6-01's Provider stage replaces these bodies with a real,
- * same-host durable implementation; the id and method shapes are final.
- * @returns a {@link MemoryProvider} whose methods reject with `not implemented`.
+ * Real, in-memory `MemoryProvider` for Contract-stage conformance
+ * (`acceptance[0]`). Stores each proposed record in a `Map` keyed by a
+ * monotonically counted id (`local-reference-<n>`); `query()` matches by
+ * case-insensitive substring against the record's serialized content. Not
+ * durable across process restarts — a durable, same-host backend is a later
+ * first100 stage's job; this stage only needs a real, independent
+ * implementation of the six operations.
+ * @returns a working {@link MemoryProvider}.
  */
 export function createLocalReferenceMemoryProvider(): MemoryProvider {
+  const records = new Map<MemoryRecordId, MemoryRecordView>()
+  let counter = 0
+
   return {
     id: 'local-reference',
     available: () => true,
-    propose: () => { throw new Error('not implemented') },
-    query: () => { throw new Error('not implemented') },
-    get: () => { throw new Error('not implemented') },
-    revise: () => { throw new Error('not implemented') },
-    forget: () => { throw new Error('not implemented') },
-    export: () => { throw new Error('not implemented') },
+    propose(request) {
+      const id = MemoryRecordId(`local-reference-${++counter}`)
+      records.set(id, { id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString() })
+      return Promise.resolve({ id })
+    },
+    query(request) {
+      const needle = request.query.toLowerCase()
+      const matches = [...records.values()].filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
+      return Promise.resolve({ records: matches, truncated: false })
+    },
+    get(request) {
+      return Promise.resolve(records.get(request.id))
+    },
+    revise(request) {
+      const existing = records.get(request.id)
+      if (existing === undefined) {
+        throw new MemoryError(`memory record "${request.id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
+      }
+      records.set(request.id, { ...existing, content: request.content, updatedAt: new Date().toISOString() })
+      return Promise.resolve()
+    },
+    forget(request) {
+      records.delete(request.id)
+      return Promise.resolve()
+    },
+    export() {
+      return Promise.resolve({ records: [...records.values()], truncated: false })
+    },
   }
 }
 
 /**
- * Minimal second provider stub for Contract-stage conformance
+ * A second, independently-implemented in-memory `MemoryProvider`
  * (`acceptance[0]`'s "at least ... and a fake provider"). A distinct `id`
  * from {@link createLocalReferenceMemoryProvider} lets both register on the
- * same runtime without a duplicate-id conflict, so replaceability
- * (`must[1]`) is exercisable against two real, independent registrations.
- * @returns a {@link MemoryProvider} whose methods reject with `not implemented`.
+ * same runtime without a duplicate-id conflict, exercising real
+ * replaceability (`must[1]`). Stores records in an array under
+ * randomly-generated ids and matches `query()` by whitespace-tokenized word
+ * overlap — a deliberately different data structure, id scheme, and matching
+ * algorithm from {@link createLocalReferenceMemoryProvider}, so the
+ * conformance sweep exercises two genuinely distinct implementations, not
+ * one aliased twice.
+ * @returns a working {@link MemoryProvider}.
  */
 export function createFakeMemoryProvider(): MemoryProvider {
+  const records: MemoryRecordView[] = []
+
   return {
     id: 'fake',
     available: () => true,
-    propose: () => { throw new Error('not implemented') },
-    query: () => { throw new Error('not implemented') },
-    get: () => { throw new Error('not implemented') },
-    revise: () => { throw new Error('not implemented') },
-    forget: () => { throw new Error('not implemented') },
-    export: () => { throw new Error('not implemented') },
+    propose(request) {
+      const id = MemoryRecordId(`fake-${randomUUID()}`)
+      records.push({ id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString() })
+      return Promise.resolve({ id })
+    },
+    query(request) {
+      const words = request.query.toLowerCase().split(/\s+/).filter(word => word.length > 0)
+      const matches = records.filter((record) => {
+        const haystack = JSON.stringify(record.content).toLowerCase()
+        return words.some(word => haystack.includes(word))
+      })
+      return Promise.resolve({ records: matches, truncated: false })
+    },
+    get(request) {
+      return Promise.resolve(records.find(record => record.id === request.id))
+    },
+    revise(request) {
+      const existing = records.find(record => record.id === request.id)
+      if (existing === undefined) {
+        throw new MemoryError(`memory record "${request.id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
+      }
+      records[records.indexOf(existing)] = { ...existing, content: request.content, updatedAt: new Date().toISOString() }
+      return Promise.resolve()
+    },
+    forget(request) {
+      const index = records.findIndex(record => record.id === request.id)
+      if (index !== -1) records.splice(index, 1)
+      return Promise.resolve()
+    },
+    export() {
+      return Promise.resolve({ records: [...records], truncated: false })
+    },
   }
 }
 
