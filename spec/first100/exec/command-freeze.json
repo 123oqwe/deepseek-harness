@@ -2257,6 +2257,49 @@
         "testsDiscovered": 9
       },
       "note": "P-stage RED scaffold for P1-07, attempt/P1-07-P (branched from land-base-align-v2 @ 6684d54579). 9/9 genuinely failed on real 'is not a function' errors for not-yet-existing exports, zero module/syntax/import-resolution errors; C-stage's 11 frozen cases independently re-confirmed still green. Genuinely new at P-stage: real filesystem observation. Every workspace-trust export is pure over caller-supplied data and never stats a path, so must[0]'s 'canonical realpath + inode/volume identity' has no producer yet; P adds observeWorkspaceIdentity (fs.realpath + fs.stat dev/ino) in paths.ts and binds it to the real Workspace entity/registry, delegating every DECISION to C's bindWorkspaceTrust/reconcileWorkspaceTrust/requestTrustUpgrade rather than a second decision table. acceptance[1]'s three vectors are exercised against a real filesystem (a directory replaced in place, a real symlink retargeted, a real rename), never a hand-built WorkspaceIdentity. CLAUSE-OWNERSHIP DECISION, reported not guessed: this stage owns must[0] and acceptance[1] only. acceptance[0] (zero subprocess/network/credential read on opening a malicious repo) and must[1]'s real load-gating are NOT covered here -- their load sites are apps/cli/src/profile-boot.ts and the project plugin/hook/MCP/skill loaders, all in stages.U's declared file scope and off-limits to P; a workspace-package proxy for them would assert nothing about the real loaders. must[2]'s host-user interaction (U) and its Trust Kernel audit append (Fiber-fix-gated) likewise stay out; only the non-host-principal refusal is asserted here, as the wiring check that P's upgrade path delegates to C rather than raising trust itself. acceptance[2] (downgrade revokes) is left to U/F: C's downgradeTrust is already green and pure, and a provider wrapper around it would be a duplicate observation. BUILD-INFRASTRUCTURE EDITS, declared: packages/workspace/workspace/{package.json,tsconfig.json} gain @deepseek-ai/dsh-workspace-trust and @deepseek-ai/dsh-principal edges; no cycle (neither package depends on dsh-workspace). KNOWN GAP recorded for the maintainer: the trust record is per-entity in-memory, not durable, because durable trust would require a WorkspaceRecord field in packages/workspace/workspace/src/spec.ts, which is outside stages.P's declared 3-file scope -- flagged rather than silently patched. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P6-07",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-lifecycle/tests/store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "lists a lifecycle record reconstructed from the durable store by a fresh service",
+        "walks every page of a restored listing, visiting each durable record exactly once with no omission or duplication",
+        "starts empty on a first boot, with no store file on disk yet",
+        "reads back exactly what a separate store instance over the same path wrote, brands included",
+        "filters a restored listing by tenant, excluding another tenant's record",
+        "filters a restored listing by workspace",
+        "filters a restored listing by status, excluding a soft-deleted record from an active-only page",
+        "filters a restored listing by time range",
+        "persists an archive so a fresh service reads back the archived disposition, not the active one",
+        "persists a soft delete so a fresh service reads back the soft-deleted disposition",
+        "keeps archive and soft delete separate: an archived record is never listed under a soft-deleted status filter",
+        "persists a legal hold so a fresh service still refuses to hard-erase after a restart",
+        "leaves a held record durably intact after a refused erase, rather than partially destroying it",
+        "carries a legal hold alongside a soft-deleted disposition across a restart",
+        "propagates an authorized erase to all four dependent stores and removes the record durably",
+        "propagates a soft delete to the query index only, leaving attachments, memory and artifacts untouched",
+        "does not resurrect an erased record for a fresh service over the same path",
+        "refuses a store document written under an unsupported format version instead of reading it as empty"
+      ],
+      "files": [
+        "packages/session/session-lifecycle/tests/store.spec.ts",
+        "packages/session/session-lifecycle/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T21:55:51Z",
+      "dryRunProof": {
+        "treeSha": "ed8c7a24da2fc2ccc37b391320be5f74ae6da233",
+        "testsDiscovered": 18
+      },
+      "note": "P-stage RED scaffold for P6-07, attempt/P6-07-P (rebased onto land-base-align-v2 @ a3b681f555; RED re-confirmed 18/18 on that base, whose tree dryRunProof.treeSha names). 18/18 genuinely failed on real not-implemented errors (17 from createFileSessionLifecycleStore, 1 an assertion mismatch on the version-refusal case), zero module/syntax errors; C-stage's lifecycle.spec.ts independently re-confirmed at 28/28 green (28, not 27 -- 248c0a6cc8 added a createdAt-collision pagination case). APPROVED PATH PATCH P6-07-P-lifecycle-store: the declared deliverable packages/session/session-persistence/src/index.ts is ARCHITECTURALLY UNREALIZABLE, not merely inconveniently placed -- a materially stronger basis than P6-07.C's .e2e.ts->.spec.ts path-spelling correction, and it must not be read as the same class of deviation. A durable lifecycle registry must name SessionLifecycleRecord/SessionDisposition and call the C-stage's listSessions/assertNoLegalHold/hardErase/propagateDeletion; that import closes a real project-reference cycle session-persistence -> session-lifecycle -> workspace/workspace -> session-persistence, whose last two edges already exist, which tsc reports as TS6202. No level of effort inside the declared scope avoids it: every P6-07 clause is an assertion about lifecycle semantics (must[0]'s filters ARE listSessions, acceptance[1]'s hold IS assertNoLegalHold, acceptance[2]'s propagation IS propagateDeletion), so a record-type-generic store that cannot name a disposition observes none of them and proves only that a JSON document round-trips. A variant exploiting tsconfig.host.json's direct inclusion of packages/*/*/tests/** -- letting a test import what src/ may not -- was also rejected: it would yield real observations while no shipped code assembles the service, making a fixture read as a product surface, which is WORSE than an honest gap because it greens. The approved placement packages/session/session-lifecycle/src/store.ts adds ZERO new dependency edges: this package already references brand, principal, core/session, workspace and attachment, which is everything a durable store of its own records needs. Verified by RUNNING THE COMPILER, not by reading manifests (BLOCKED-051): `pnpm exec tsc -b packages/session/session-lifecycle/tsconfig.json` exits 0 with no TS6202. Accuracy correction to an earlier premise in this thread: it is NOT true that nothing in the repo references session-lifecycle -- apps/web/tsconfig.json does; the conclusion is unchanged because an application is a terminal consumer and does not enter the inter-package dependency graph. Genuinely new at P-stage: a SessionLifecycleStore durability seam, a real file-backed createFileSessionLifecycleStore (single versioned JSON document, write-temp-then-rename, one promise chain -- P4-01's createFileRunStore format), and a SessionLifecycleService whose ONLY constructor is static restore(store). Every durability case builds a SECOND store + SECOND service over the same path sharing no map, closure or record value, so an in-memory double cannot pass. SCOPE NOTE (acceptance[0]): P covers pagination DURABILITY across a restart -- a full page-walk at limit 7 over 64 durably reconstructed records asserting the exact ordered id list -- while acceptance[0]'s million-record SCALE half stays with C-stage's already-green listSessions sweep; the P fixture size is deliberately not presented as a scale test. SCOPE NOTE (acceptance[3]): deliberately NOT covered at P per Supervisor ruling -- the clause names the corrupted SESSION LOG, already owned by C-stage's readSessionLogWithRepair and U/F-scope packages/core/session/src/repair.ts; a second corruption-recovery surface would be a divergent second implementation of one clause. session-persistence/src/{coordinator,revision}.ts remain declared-but-unmodified: PersistenceCoordinator's storage contract is keyed on SessionId + SessionEvent under SESSION_FORMAT_VERSION, and a retention disposition is not a session-log event. Zero changes under packages/session/session-persistence/ in this commit. CASE COUNT 18: the 18th covers the unknown-store-format-version refusal the Supervisor's ruling specified; retained on Supervisor instruction over the 17 an earlier arithmetic projection assumed. package.json gains only a ./store exports entry (build infrastructure, never enumerated in a registry files list). expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }

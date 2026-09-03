@@ -26,6 +26,10 @@
       "types": "./lib/types/delete.d.ts",
       "default": "./lib/types/delete.js"
     },
+    "./store": {
+      "types": "./lib/types/store.d.ts",
+      "default": "./lib/types/store.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
