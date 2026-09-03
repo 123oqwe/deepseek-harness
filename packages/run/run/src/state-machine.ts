@@ -1,0 +1,159 @@
+/**
+ * Contract-stage RED scaffold for Epic P4-01's first-class Run Service:
+ * the legal Run-state-transition table (must[0]/acceptance[1]), Run creation
+ * and service-owned identity (must[2]), Session/Run association
+ * (acceptance[2]), and restart-time listing/resumption of non-terminal Runs
+ * (acceptance[0]).
+ *
+ * `LEGAL_RUN_TRANSITIONS`, `TERMINAL_RUN_STATES`, and `RUN_SERVICE_OWNER_ID`
+ * are real, already-correct exported data — mirroring
+ * `@deepseek-ai/dsh-plugin-ownership`'s one Contract-stage exception
+ * (`RESERVED_NAMESPACE_ROOT`/`isReservedNamespace`): declared facts a test
+ * can check expectations against, not the adjudication logic itself.
+ * `createRun`, `transition`, `attachSessionToRun`, `listNonTerminalRuns`,
+ * and `resumeRun` are real, epic-accurate signatures with placeholder
+ * (`'not implemented'`) bodies — the pure decision logic is this epic's
+ * Contract-stage deliverable to a later fix-round.
+ *
+ * None of these functions read a file, spawn a process, or construct a
+ * Cordis `Context`; every timestamp is caller-supplied so construction stays
+ * pure. Usage-stage wires `createRun`/`transition`/`listNonTerminalRuns`/
+ * `resumeRun` into a real durable Run registry
+ * (`packages/run/run/src/index.ts`, this epic's own Provider-stage file) and
+ * into `packages/session/session-persistence/src/coordinator.ts`'s restart
+ * path (acceptance[0]) — neither is this stage's job.
+ *
+ * @module @deepseek-ai/dsh-run/state-machine
+ */
+
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { RunId } from '@deepseek-ai/dsh-principal/types'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import type {
+  Run,
+  RunEntityReference,
+  RunOwnerId,
+  RunResumeDecision,
+  RunState,
+  RunTransitionDecision,
+} from './types.ts'
+
+/**
+ * must[0]/acceptance[1]'s complete legal-transition table: for each
+ * {@link RunState}, exactly the states a Run in it may legally move to next.
+ * The three terminal states (`succeeded`, `failed`, `cancelled`) map to an
+ * empty list — no legal transition ever leaves a terminal Run.
+ * `./state-machine.ts`'s `transition` accepts a `(from, to)` pair iff `to`
+ * appears in `LEGAL_RUN_TRANSITIONS[from]`; every other pair — including
+ * every self-transition, since no state lists itself — is refused
+ * fail-closed with `'illegal-transition'`.
+ */
+export const LEGAL_RUN_TRANSITIONS: Readonly<Record<RunState, readonly RunState[]>> = {
+  accepted: ['planning', 'cancelled'],
+  planning: ['waiting', 'running', 'failed', 'cancelled'],
+  waiting: ['running', 'failed', 'cancelled'],
+  running: ['paused', 'verifying', 'failed', 'cancelled'],
+  paused: ['running', 'cancelled'],
+  verifying: ['succeeded', 'reconciling', 'failed'],
+  reconciling: ['running', 'succeeded', 'failed'],
+  succeeded: [],
+  failed: [],
+  cancelled: [],
+}
+
+/**
+ * acceptance[0]'s terminal-state set, derived from {@link LEGAL_RUN_TRANSITIONS}:
+ * every {@link RunState} with no legal outgoing transition. `listNonTerminalRuns`
+ * and `resumeRun` decide "non-terminal"/"already-terminal" against this set.
+ */
+export const TERMINAL_RUN_STATES: ReadonlySet<RunState> = new Set(
+  (Object.keys(LEGAL_RUN_TRANSITIONS) as RunState[]).filter(state => LEGAL_RUN_TRANSITIONS[state].length === 0),
+)
+
+/**
+ * must[2]'s one and only Run owner: the Run Service's own fixed identity.
+ * `createRun` stamps every {@link Run.ownerId} with exactly this constant —
+ * there is no parameter through which a caller (a UI session, a request's
+ * "current turn") could supply a different value.
+ */
+export const RUN_SERVICE_OWNER_ID: RunOwnerId = brandString<RunOwnerId>('dsh-run-service')
+
+/**
+ * must[0]/must[2]'s Run-acceptance entry point: mint a new Run in its
+ * initial `'accepted'` state, owned by {@link RUN_SERVICE_OWNER_ID}, seeded
+ * with one initiating Session (acceptance[2]) and its genesis log entry
+ * (must[1], via `./events.ts`'s `genesisRunEvent`). Accepts no owner
+ * parameter — must[2]'s guarantee that a Run is never owned by a UI session
+ * or turn holder holds structurally, not by convention.
+ * @param id - the new Run's identity.
+ * @param initialSessionId - the Session that requested this Run; becomes `sessionIds[0]`.
+ * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this Run is accepted at.
+ * @returns the newly accepted {@link Run}.
+ */
+export function createRun(id: RunId, initialSessionId: SessionId, occurredAt: number): Run {
+  throw new Error(`not implemented: createRun(${String(id)}, ${String(initialSessionId)}, ${String(occurredAt)})`)
+}
+
+/**
+ * must[0]/acceptance[1]'s state-transition entry point: advance `run` to
+ * `to` when `LEGAL_RUN_TRANSITIONS[run.state]` includes it, appending one
+ * new event (`./events.ts`'s `appendRunEvent`) that carries `references`
+ * (must[1]); refuse fail-closed, naming the exact rejected pair, otherwise —
+ * including every self-transition and every transition attempted from a
+ * terminal `run.state`, since {@link TERMINAL_RUN_STATES} members list no
+ * legal outgoing transition.
+ * @param run - the Run to transition.
+ * @param to - the state `run` is asked to move to.
+ * @param references - entities this transition names (must[1]), possibly empty.
+ * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this transition is stamped with.
+ * @returns `{ accepted: true, run }` with the advanced Run, or `{ accepted: false, reason, from, to }`.
+ */
+export function transition(
+  run: Run,
+  to: RunState,
+  references: readonly RunEntityReference[],
+  occurredAt: number,
+): RunTransitionDecision {
+  throw new Error(`not implemented: transition(${String(run.id)}, ${run.state} -> ${to}, ${String(references.length)} references, ${String(occurredAt)})`)
+}
+
+/**
+ * acceptance[2]'s Session-association entry point: return a Run identical
+ * to `run` except `sessionIds` gains `sessionId` — proving a Run can span
+ * multiple Sessions/Agents. Idempotent: attaching a `sessionId` already
+ * present in `run.sessionIds` returns `run`'s session list unchanged rather
+ * than a duplicate entry.
+ * @param run - the Run to associate an additional Session with.
+ * @param sessionId - the Session/Agent to add.
+ * @returns a Run whose `sessionIds` contains every id `run.sessionIds` already had, plus `sessionId` if it was not already present.
+ */
+export function attachSessionToRun(run: Run, sessionId: SessionId): Run {
+  throw new Error(`not implemented: attachSessionToRun(${String(run.id)}, ${String(sessionId)})`)
+}
+
+/**
+ * acceptance[0]'s restart-listing entry point: every Run in `runs` whose
+ * `state` is not one of {@link TERMINAL_RUN_STATES} — the complete set a
+ * process restart must list and offer for resumption.
+ * @param runs - every Run a durable Run registry has on record (this epic's
+ * Provider-stage `packages/run/run/src/index.ts` supplies this from real
+ * storage; this function itself performs no I/O).
+ * @returns exactly the non-terminal Runs in `runs`, in the order given.
+ */
+export function listNonTerminalRuns(runs: readonly Run[]): readonly Run[] {
+  throw new Error(`not implemented: listNonTerminalRuns(${String(runs.length)} runs)`)
+}
+
+/**
+ * acceptance[0]'s restart-resumption entry point: re-affirm a non-terminal
+ * Run's service ownership (must[2]) so it is resumable, or refuse when
+ * `run.state` already reached a terminal state — a completed Run is never
+ * resumed back into activity.
+ * @param run - a Run `listNonTerminalRuns` listed as non-terminal (or any
+ * other Run to check).
+ * @returns `{ resumed: true, run }` with `run.ownerId` re-affirmed as
+ * {@link RUN_SERVICE_OWNER_ID}, or `{ resumed: false, reason: 'already-terminal' }`.
+ */
+export function resumeRun(run: Run): RunResumeDecision {
+  throw new Error(`not implemented: resumeRun(${String(run.id)}, ${run.state})`)
+}
