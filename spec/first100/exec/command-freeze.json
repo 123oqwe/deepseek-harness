@@ -1685,6 +1685,43 @@
         "testsDiscovered": 9
       },
       "note": "C-stage RED scaffold for P1-08 (plugin ABI/capability/schema compat negotiation), attempt/P1-08-C @ c3f448aca2. 9/9 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. Reviewed and ACCEPTED with no MUST-FIX: must[2] unsat-core case is a genuine multi-plugin graph-level contradiction (not merely a locally-unsatisfiable single plugin), correctly excludes an unrelated healthy plugin, checked non-gameably; must[3] (never silently degrade a security capability) is enforced by construction via a closed 2-variant PluginActivationStatus union with no partial-degraded slot, stronger than a runtime assertion. compatActivation? added to packages/host/plugin-inventory/src/types.ts is purely additive/optional, no breaking change. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted",
+        "must[0]: a claim backed by an organization offline-signing key verifies as trusted",
+        "must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch",
+        "must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle",
+        "must[3]: an ordinary caller cannot substitute a plugin-supplied trust root — registerTrustAnchor only accepts the frozen, kernel-issued signatureRoots handle",
+        "must[4]: an explicit dev-profile opt-in recognized by policy is admitted with a persistent untrusted banner",
+        "must[4]: a profile name outside the deployment's recognized dev profiles is refused, never silently admitted as unsigned-dev",
+        "a single tampered byte (a changed observed package digest) is rejected for digest mismatch",
+        "a swapped source repo (observed repo URL differs from the claimed one) is rejected for source-repo mismatch",
+        "a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch",
+        "a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch",
+        "the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter",
+        "recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T13:16:51.059Z",
+      "dryRunProof": {
+        "treeSha": "b10bb8966db8344cc7e742c2283184d09d19c77f",
+        "testsDiscovered": 13
+      },
+      "note": "C-stage RED scaffold for P1-02 (plugin signing/provenance/SBOM), attempt/P1-02-C @ 18ccb4b27f (post-corrective-round, closes 1 Reviewer-flagged gap: no case previously held repoUrl fixed while tampering commitHash alone, so a stub checking only repoUrl would have passed must[1]s source-commit verification requirement undetected; added a distinct source-commit-mismatch reason code and case). 13/13 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
