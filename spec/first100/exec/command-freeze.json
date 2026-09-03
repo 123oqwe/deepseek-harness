@@ -2094,6 +2094,91 @@
         "testsDiscovered": 36
       },
       "note": "C-stage RED scaffold for P2-02 (attenuable capability tokens + sub-agent delegation), attempt/P2-02-C @ 01c4da9b89. Shares packages/kernel/trust-kernel/src/types.ts with the already-landed P1-02 -- confirmed read-only by both epics, no write conflict. 36 cases: exact-boundary pairs for all 4 narrowable dimensions (verbs/resources/budget/expiry -- equal-to-parent accepted, one-unit-past rejected with exact toStrictEqual reason checks, spot-verified directly by the Supervisor), structural TrustKernel gating mirroring the P1-02 precedent, 4-surface consumer gate (tool/plugin-rpc/external-agent/execution-world), and a revocation-lineage cascade (root/intermediate/self revocation invalidates descendants; an unrelated digest leaves a token valid, negative control). 36/36 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P1-08",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-compat/tests/provider-resolution.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "resolves one registeredSchemaVersions entry per live registration, at that registration's current version",
+        "reads the registry rather than a mirrored list: a schemaId the real registry bootstraps resolves to its registered version, and one it never registered is absent",
+        "carries the caller's runtime API version through unchanged — the schema registry contributes no runtime API fact",
+        "a manifest whose schema range covers the real registry's registered major resolves active against the resolved host context",
+        "the registered major is admitted at both inclusive range boundaries — a range pinned exactly to it resolves active",
+        "a manifest whose schema range starts one major above the real registered major is blocked with schema-major-mismatch",
+        "an active provider produces an explicit binding naming the consumer, the capability, and the provider it resolved to",
+        "a consumer whose only required-capability provider is itself blocked is blocked too, never active against a provider that will not load",
+        "a second, still-active provider of the same capability keeps the consumer active and binds to that survivor",
+        "cascade reaches a three-plugin chain: blocking the root blocks both its direct and its indirect consumer, not only the first hop",
+        "a mutually-dependent provider pair, each satisfying the other's required capability, both resolve active — a cycle is not a cascade",
+        "must[3]: a security-critical required capability whose sole provider is blocked blocks the consumer, while a non-security optional capability with a blocked provider only disables that capability",
+        "a consumer's own excludes-provider constraint removes that provider from binding, resolving to the remaining eligible one",
+        "among several eligible active providers the binding is the lexicographically smallest pluginId, not the first in the manifests array",
+        "reordering the same graph produces a deep-equal resolved plan, planId and bindings included",
+        "must[2] still takes precedence over cascade: a direct requires/excludes contradiction over the sole provider returns the minimal unsat core, never a resolved plan"
+      ],
+      "files": [
+        "packages/plugin/plugin-compat/tests/provider-resolution.spec.ts",
+        "packages/plugin/plugin-compat/src/solver.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T20:36:18.046Z",
+      "dryRunProof": {
+        "treeSha": "42ccce893ef2c46edcca14ccf507e5d324d1ac0a",
+        "testsDiscovered": 16
+      },
+      "note": "P-stage RED scaffold for P1-08, attempt/P1-08-P @ abc683cbfb (branched from first100-exec @ 624498308c). 16/16 genuinely failed on real not-implemented errors, zero module/syntax errors; C-stages own 9 frozen cases independently re-confirmed still green by the Supervisor (src/index.ts byte-unchanged). Two real provider-stage gaps identified that C-stage did not cover: (1) resolveHostCompatContext reads the LIVE schema registry via its real listSchemas() export, where C-stage deliberately took the hosts registered majors as a plain parameter to avoid bootstrapping the registry; (2) resolveActivatedGraph closes a real soundness gap C-stages 9 cases never forced -- solveManifest treats a capability as satisfied when any manifest DECLARES it, regardless of whether that provider itself resolves active, so a consumer can activate against a provider that never loads (exactly the silent degradation must[3] forbids when the dependency is security-critical); P-stage runs the graph to a fixpoint so blocking cascades along real provider edges, and records the concrete ProviderBinding each requirement resolved to. DECLARED-SCOPE FINDING, reported not silently skipped: packages/schema/schema-registry/src/index.ts (P-stages other declared file) needed NO change and was not modified -- its already-landed listSchemas() returns exactly the schemaId+version facts must[0]s schema-range resolution needs; a bespoke second accessor over the same state would be redundant. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P4-01",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/run-service.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "lists a non-terminal Run reconstructed from the durable store by a fresh service",
+        "lists every non-terminal Run, not just the most recently written one",
+        "omits a Run that reached a terminal state before the restart from the non-terminal listing",
+        "resumes a non-terminal Run reconstructed after a restart",
+        "refuses to resume a Run that reached a terminal state before the restart",
+        "reconstructs a restored Run exactly, brands included, not an approximation of it",
+        "starts empty on a first boot, with no store file on disk yet",
+        "accepts a legal transition through the service and durably records the new state",
+        "rejects an illegal transition through the service, naming the exact rejected pair",
+        "writes nothing for a rejected transition: the restored Run keeps its state and its unextended event log",
+        "associates one Session with multiple Runs across a restart",
+        "lists no Run for a Session that never initiated or joined one",
+        "spans one Run across multiple Sessions durably: an attached Session survives a restart",
+        "appends across a restart without rewriting or reordering any earlier entry",
+        "restores a log entry's entity references, not just its state pair",
+        "owns a Run restored after a restart with RUN_SERVICE_OWNER_ID, never the initiating SessionId",
+        "reads back exactly what a separate store instance over the same path wrote",
+        "reports no Runs for a path that has never been written to, rather than failing",
+        "writes the Run to the named path, not somewhere else"
+      ],
+      "files": [
+        "packages/run/run/tests/run-service.spec.ts",
+        "packages/run/run/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T20:36:18.049Z",
+      "dryRunProof": {
+        "treeSha": "7d3cbc26e2a2da66c67c2568b939679212ee39d5",
+        "testsDiscovered": 19
+      },
+      "note": "P-stage RED scaffold for P4-01, attempt/P4-01-P @ 8f0dcac43c (branched from first100-exec @ 624498308c). 19/19 genuinely failed on real not-implemented errors, zero module/syntax errors; C-stages own 111 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: acceptance[0] (list+resume every non-terminal Run after a process restart) is UNREACHABLE from C-stages surface no matter how correct it is -- listNonTerminalRuns/resumeRun operate on a value the caller already holds, and a restart is precisely the event that destroys that value. P-stage adds a RunStore durability seam, a real file-backed createFileRunStore (not an in-memory double, so a shortcut implementation cannot pass the restart fixture), and a RunService whose ONLY constructor is static restore(store). Each restart case uses a fresh store + fresh service over the same path, sharing no value/map/closure, so a reappearing Run came from durable bytes only. DECLARED-SCOPE DEVIATION, reported for audit, NOT a path patch: packages/session/session-persistence/src/coordinator.ts (P-stages other declared file) was read thoroughly and deliberately NOT touched -- its entire storage contract is keyed on session identity (loadStored(id: SessionId), records are SessionEvents under a SessionHeader, ops serialized per-SessionId), so storing a Run there would make a Runs durable existence a function of some Sessions, which must[2] forbids outright, and a Run spanning several Sessions (acceptance[2]) cannot be a row inside any one of their logs. Recorded in the modules JSDoc, the package READMEs Known Limitations, and the commit message; git status confirms zero changes to that package. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
