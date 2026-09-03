@@ -1,5 +1,5 @@
 /**
- * Provider-stage RED scaffold for Epic P6-07: the durable registry that turns
+ * Provider stage for Epic P6-07: the durable registry that turns
  * `./index.ts`, `./retention.ts` and `./delete.ts`'s pure Contract-stage
  * decisions into a service whose lifecycle records outlive the process that
  * made them.

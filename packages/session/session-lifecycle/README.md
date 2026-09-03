@@ -193,8 +193,8 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 
 | File | Role |
 |---|---|
-| [`src/retention.ts`](src/retention.ts) | The disposition/legal-hold taxonomy (must[1]) and the structural erase gate (acceptance[1]): `SessionDisposition`, `LegalHold`, `SessionLifecycleRecord`, `NoLegalHoldProof`, `LegalHoldBlocksErasureError`, and the Contract-stage RED-scaffold transition functions |
-| [`src/delete.ts`](src/delete.ts) | Deletion propagation (must[2]) and hard erase (acceptance[1]/[2]): `PropagationTarget`, `DeletionPolicy`, `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY` (real), and the Contract-stage RED-scaffold `propagateDeletion`/`hardErase` |
+| [`src/retention.ts`](src/retention.ts) | The disposition/legal-hold taxonomy (must[1]) and the structural erase gate (acceptance[1]): `SessionDisposition`, `LegalHold`, `SessionLifecycleRecord`, `NoLegalHoldProof`, `LegalHoldBlocksErasureError`, and the transition functions `archiveSession`/`softDeleteSession`/`placeLegalHold`/`assertNoLegalHold` |
+| [`src/delete.ts`](src/delete.ts) | Deletion propagation (must[2]) and hard erase (acceptance[1]/[2]): `PropagationTarget`, `DeletionPolicy`, `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY` (real), and `propagateDeletion`/`hardErase` |
 | [`src/index.ts`](src/index.ts) | Listing/pagination (must[0]/acceptance[0]) and corrupted-log recovery (acceptance[3]); re-exports `./retention.ts` and `./delete.ts`'s public surface |
 | [`src/store.ts`](src/store.ts) | The durable registry (acceptance[0]/acceptance[1]): the `SessionLifecycleStore` seam, the file-backed `createFileSessionLifecycleStore`, and `SessionLifecycleService`, whose only constructor is `restore(store)` |
 

@@ -380,7 +380,7 @@ function findProviderConstraintContradictions(
       const requirement = manifest.capabilities.find(candidate => candidate.capabilityId === constraint.capabilityId)
       if (requirement?.necessity !== 'required') continue
 
-      const key = `${constraint.capabilityId} ${constraint.providerId}`
+      const key = `${constraint.capabilityId}\0${constraint.providerId}`
       const bucket = constraint.kind === 'requires-provider' ? requiresSites : excludesSites
       const site: ProviderConstraintSite = { manifest, constraint }
       const existing = bucket.get(key)
@@ -406,7 +406,7 @@ function findProviderConstraintContradictions(
     if (!isSoleProvider) continue
 
     for (const site of [...requirers, ...excluders]) {
-      const dedupeKey = `${site.manifest.pluginId} ${site.constraint.capabilityId} ${site.constraint.kind}`
+      const dedupeKey = `${site.manifest.pluginId}\0${site.constraint.capabilityId}\0${site.constraint.kind}`
       if (seen.has(dedupeKey)) continue
       seen.add(dedupeKey)
       entries.push({

@@ -1,5 +1,5 @@
 /**
- * Provider-stage RED scaffold for Epic P6-07's durable session-lifecycle
+ * Provider stage for Epic P6-07's durable session-lifecycle
  * registry (`../src/store.ts`): the half this package's Contract stage cannot
  * reach.
  *

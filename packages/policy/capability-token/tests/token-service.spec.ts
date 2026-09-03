@@ -1,5 +1,5 @@
 /**
- * Provider-stage RED scaffold for Epic P2-02's durable Capability Token
+ * Provider stage for Epic P2-02's durable Capability Token
  * registry: real lineage reconstruction and cascading revocation
  * (acceptance[1]), a durable nonce ledger behind the replay check, and an
  * audit trail that carries only redacted records (acceptance[2]).
