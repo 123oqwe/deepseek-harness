@@ -133,16 +133,23 @@ export interface ObservedPackageFacts {
  * Why {@link verifyPackageSignature} refused a claim (fail closed).
  * `'package-digest-mismatch'` — acceptance[0]'s "篡改一个字节" (a single
  * tampered byte changes the digest). `'source-repo-mismatch'` —
- * acceptance[0]'s "替换 source repo" (repo URL or commit hash observed does
- * not match the claim). `'builder-identity-mismatch'` — acceptance[0]'s
- * "伪造 builder" (a forged builder identity). `'evidence-invalid'` — the
- * must[0] evidence itself does not verify against the trust root (an
- * unregistered `publicKeyFingerprint`, an untrusted Sigstore issuer, or a
- * signature that does not verify).
+ * acceptance[0]'s "替换 source repo" on the repo-URL half of
+ * {@link SourceCommitReference}: `observed.observedSourceCommit.repoUrl`
+ * does not match the claim. `'source-commit-mismatch'` — must[1]'s "source
+ * commit" check on the other half of {@link SourceCommitReference}: `repoUrl`
+ * matches the claim but `commitHash` differs (a forged or colliding commit
+ * within the claimed repo) — distinct from `'source-repo-mismatch'` because
+ * {@link SourceCommitReference} binds both facts and either can diverge
+ * independently. `'builder-identity-mismatch'` — acceptance[0]'s "伪造
+ * builder" (a forged builder identity). `'evidence-invalid'` — the must[0]
+ * evidence itself does not verify against the trust root (an unregistered
+ * `publicKeyFingerprint`, an untrusted Sigstore issuer, or a signature that
+ * does not verify).
  */
 export type SignatureRejectionReason =
   | 'package-digest-mismatch'
   | 'source-repo-mismatch'
+  | 'source-commit-mismatch'
   | 'builder-identity-mismatch'
   | 'evidence-invalid'
 

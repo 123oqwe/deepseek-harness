@@ -2,7 +2,10 @@
  * Contract-stage RED scaffold for Epic P1-02's plugin signature, provenance,
  * and dependency SBOM verification. One `it()` per registry-declared
  * acceptance clause (splitting acceptance[0]'s three named fail-closed
- * scenarios into three cases) plus every must[] clause that is structurally
+ * scenarios into four cases — the "替换 source repo" scenario further splits
+ * into a repo-URL variant and a commit-hash variant, since
+ * `SourceCommitReference` binds both facts and must[1] requires checking the
+ * source commit as a whole) plus every must[] clause that is structurally
  * testable at this Contract level. Every case below calls a real exported
  * function against real branded fixture data; every function currently
  * throws `'not implemented: ...'` (`../src/signature.ts`, `../src/sbom.ts`,
@@ -177,6 +180,15 @@ describe('P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source r
     const result = verifyPluginProvenance(input, kernel.signatureRoots)
     expect(result.trust).toBe('rejected')
     if (result.trust === 'rejected') expect(result.reason).toBe('source-repo-mismatch')
+  })
+
+  it('a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch', () => {
+    const kernel = createTrustKernel()
+    const forgedCommitHash: SourceCommitReference = { ...realSourceCommit, commitHash: brandString<SourceCommitHash>('f6e5d4c3b2a1') }
+    const input = buildInput({ observed: buildObserved({ observedSourceCommit: forgedCommitHash }) })
+    const result = verifyPluginProvenance(input, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('source-commit-mismatch')
   })
 
   it('a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch', () => {
