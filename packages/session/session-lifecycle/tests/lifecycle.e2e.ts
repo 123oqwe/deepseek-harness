@@ -187,6 +187,36 @@ describe('P6-07 Contract — acceptance[0]: pagination over a large session fixt
     expect(seen.size).toBe(allIds.length)
     expect([...seen].sort()).toStrictEqual([...allIds].map(String).sort())
   })
+
+  it('paginates correctly when multiple sessions share the exact same createdAt, exercising the id tiebreak rather than relying on createdAt alone to order records', () => {
+    const collidingFixture: readonly SessionLifecycleRecord[] = Array.from({ length: 50 }, (_, index) =>
+      fixtureRecord({ id: SessionId(`collide-${String(index).padStart(3, '0')}`), createdAt: FIXED_TIME }))
+    const collidingIds = collidingFixture.map(record => record.header.id)
+
+    const seen = new Set<string>()
+    let cursor: SessionLifecycleCursor | undefined
+    let guard = 0
+    do {
+      const page = listSessions(collidingFixture, { limit: 7, ...cursor === undefined ? {} : { cursor } })
+      for (const item of page.items) {
+        const id = String(item.header.id)
+        if (seen.has(id)) throw new Error(`duplicate session ${id} returned across pages`)
+        seen.add(id)
+      }
+      cursor = page.nextCursor
+      guard += 1
+    } while (cursor !== undefined && guard <= collidingFixture.length + 1)
+    expect(seen.size).toBe(collidingIds.length)
+    expect([...seen].sort()).toStrictEqual([...collidingIds].map(String).sort())
+
+    // Iteration order is deterministic across repeated calls with an identical
+    // fixture: the id tiebreak, not incidental array/object ordering, decides it.
+    const firstPageAgain = listSessions(collidingFixture, { limit: 7 })
+    const firstPageOriginal = listSessions(collidingFixture, { limit: 7 })
+    expect(firstPageAgain.items.map(record => record.header.id)).toStrictEqual(
+      firstPageOriginal.items.map(record => record.header.id),
+    )
+  })
 })
 
 describe('P6-07 Contract — must[1]: soft delete, legal hold, hard erase, and archive are kept genuinely distinct', () => {
