@@ -2179,6 +2179,48 @@
         "testsDiscovered": 19
       },
       "note": "P-stage RED scaffold for P4-01, attempt/P4-01-P @ 8f0dcac43c (branched from first100-exec @ 624498308c). 19/19 genuinely failed on real not-implemented errors, zero module/syntax errors; C-stages own 111 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: acceptance[0] (list+resume every non-terminal Run after a process restart) is UNREACHABLE from C-stages surface no matter how correct it is -- listNonTerminalRuns/resumeRun operate on a value the caller already holds, and a restart is precisely the event that destroys that value. P-stage adds a RunStore durability seam, a real file-backed createFileRunStore (not an in-memory double, so a shortcut implementation cannot pass the restart fixture), and a RunService whose ONLY constructor is static restore(store). Each restart case uses a fresh store + fresh service over the same path, sharing no value/map/closure, so a reappearing Run came from durable bytes only. DECLARED-SCOPE DEVIATION, reported for audit, NOT a path patch: packages/session/session-persistence/src/coordinator.ts (P-stages other declared file) was read thoroughly and deliberately NOT touched -- its entire storage contract is keyed on session identity (loadStored(id: SessionId), records are SessionEvents under a SessionHeader, ops serialized per-SessionId), so storing a Run there would make a Runs durable existence a function of some Sessions, which must[2] forbids outright, and a Run spanning several Sessions (acceptance[2]) cannot be a row inside any one of their logs. Recorded in the modules JSDoc, the package READMEs Known Limitations, and the commit message; git status confirms zero changes to that package. expectExit=0 is the GREEN target per the P0-01.C precedent."
+    },
+    {
+      "epic": "P6-01",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/durable-provider.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "a second provider instance over the same directory reads back a record the first instance proposed",
+        "a provider instance over a different directory does not see the first directory's record — durability is per-directory, never process-global",
+        "a revise() by one instance is the content a later instance reads back",
+        "a forget() by one instance stays forgotten for a later instance, while a sibling record it did not forget stays readable",
+        "query() from a later instance finds an earlier instance's record by case-insensitive substring",
+        "query() from a later instance returns no records for a term absent from every stored record",
+        "a second instance mints ids distinct from every id the first instance minted, and both records remain readable",
+        "export() over a directory with no backing file yet resolves zero records rather than throwing",
+        "a record read back by a later instance is exactly {id, principal, content, updatedAt}, with the principal round-tripped unchanged",
+        "export() scoped to one tenant returns that tenant's record and never the other tenant's, from the same backing directory",
+        "get() resolves undefined for a record id proposed under a different tenant, even though the id exists in the same backing file",
+        "export() scoped to one sessionId returns only that session's record, while a tenant-wide scope naming no sessionId returns both",
+        "revise() rejects an id proposed under a different tenant with MEMORY_RECORD_NOT_FOUND, leaving the record's content untouched",
+        "revise() rejects an id that was never proposed in any tenant with MEMORY_RECORD_NOT_FOUND",
+        "query() at exactly contextBudget.maxRecords returns every match untruncated",
+        "query() one record over contextBudget.maxRecords truncates to the budget and flags truncated",
+        "with providerId pinned to durable-file alongside a registered in-memory fake, the record is written durably and read back by a later instance"
+      ],
+      "files": [
+        "packages/memory/memory/tests/durable-provider.spec.ts",
+        "packages/memory/memory/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T20:57:07.776Z",
+      "dryRunProof": {
+        "treeSha": "35e462f5c22067e907d6ba93062300b85b393199",
+        "testsDiscovered": 17
+      },
+      "note": "P-stage RED scaffold for P6-01, attempt/P6-01-P @ cdb39bc042 (branched from first100-exec @ b1803848df). 17/17 genuinely failed on real not-implemented errors or real assertion mismatches, zero module/syntax errors; C-stages own 19 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: a DURABLE file-backed provider (createDurableFileMemoryProvider). Both C-stage providers are in-memory and lose every record at process exit, which contradicts this subsystems own definition of memory as cross-session and long-lived. Every durability case constructs a SECOND provider instance over the same directory sharing no in-memory value, so an in-memory double cannot pass; durability is declared per-directory, not per-instance, and ids are uuid-based so a second instance cannot re-mint an earlier id. TWO DECLARED-SCOPE FINDINGS, both reported rather than silently acted on: (1) the memory/access durable session event was deliberately NOT implemented here despite the Supervisors own dispatch prompt naming it as a candidate -- the landed C-stage README and src/index.ts module JSDoc BOTH explicitly assign it to the Usage stage, and emitting it from a provider would put session-log wiring inside a backend when the event is MemoryRuntimes own to mint at the seam; the Writer pushed back on the prompt with that evidence, correctly. (2) packages/session-query/session-query/src/types.ts (P-stages other declared file) needs NO change and was not modified -- it is entirely session-transcript corpus vocabulary with zero memory references, and P6-01s only session-query-touching clause is acceptance[2] (Memory is NOT Session Query, boundary documented), which C-stage already discharged by keeping the two vocabularies disjoint; adding any memory-aware type there would WEAKEN that acceptance clause rather than satisfy it. expectExit=0 is the GREEN target per the P0-01.C precedent."
     }
   ]
 }
