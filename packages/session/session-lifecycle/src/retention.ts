@@ -132,7 +132,7 @@ export type NoLegalHoldProof = { readonly [NO_LEGAL_HOLD_PROOF]: true }
  * @returns `record` with `disposition` set to `{ kind: 'archived', archivedAt: occurredAt, archivedBy }`; every other field unchanged.
  */
 export function archiveSession(record: SessionLifecycleRecord, archivedBy: PrincipalId, occurredAt: number): SessionLifecycleRecord {
-  throw new Error(`not implemented: archiveSession(${String(record.header.id)}, ${String(archivedBy)}, ${String(occurredAt)})`)
+  return { ...record, disposition: { kind: 'archived', archivedAt: occurredAt, archivedBy } }
 }
 
 /**
@@ -146,7 +146,7 @@ export function archiveSession(record: SessionLifecycleRecord, archivedBy: Princ
  * @returns `record` with `disposition` set to `{ kind: 'soft-deleted', deletedAt: occurredAt, deletedBy }`; every other field unchanged.
  */
 export function softDeleteSession(record: SessionLifecycleRecord, deletedBy: PrincipalId, occurredAt: number): SessionLifecycleRecord {
-  throw new Error(`not implemented: softDeleteSession(${String(record.header.id)}, ${String(deletedBy)}, ${String(occurredAt)})`)
+  return { ...record, disposition: { kind: 'soft-deleted', deletedAt: occurredAt, deletedBy } }
 }
 
 /**
@@ -166,7 +166,7 @@ export function placeLegalHold(
   reason: string,
   occurredAt: number,
 ): SessionLifecycleRecord {
-  throw new Error(`not implemented: placeLegalHold(${String(record.header.id)}, ${String(heldBy)}, ${reason}, ${String(occurredAt)})`)
+  return { ...record, legalHold: { heldAt: occurredAt, heldBy, reason } }
 }
 
 /**
@@ -179,5 +179,8 @@ export function placeLegalHold(
  * @throws {@link LegalHoldBlocksErasureError} when `record.legalHold` is present.
  */
 export function assertNoLegalHold(record: SessionLifecycleRecord): NoLegalHoldProof {
-  throw new Error(`not implemented: assertNoLegalHold(${String(record.header.id)})`)
+  if (record.legalHold !== undefined) {
+    throw new LegalHoldBlocksErasureError(record.header.id, record.legalHold)
+  }
+  return {} as NoLegalHoldProof
 }

@@ -83,6 +83,48 @@ export interface SessionListPage {
   readonly nextCursor?: SessionLifecycleCursor
 }
 
+/** `listSessions`'s total order sort key: `(header.createdAt, header.id)` ascending, ties broken by id. */
+interface SortKey {
+  readonly createdAt: number
+  readonly id: string
+}
+
+function sortKeyOf(record: SessionLifecycleRecord): SortKey {
+  return { createdAt: record.header.createdAt, id: String(record.header.id) }
+}
+
+function compareSortKeys(a: SortKey, b: SortKey): number {
+  if (a.createdAt !== b.createdAt) return a.createdAt - b.createdAt
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+}
+
+/** Whether `record`'s sort key comes strictly after `position` in `listSessions`'s total order. */
+function isAfterPosition(record: SessionLifecycleRecord, position: SortKey): boolean {
+  return compareSortKeys(sortKeyOf(record), position) > 0
+}
+
+function encodeCursor(position: SortKey): SessionLifecycleCursor {
+  return SessionLifecycleCursor(JSON.stringify(position))
+}
+
+function decodeCursor(cursor: SessionLifecycleCursor): SortKey {
+  return JSON.parse(cursor) as SortKey
+}
+
+function matchesFilter(record: SessionLifecycleRecord, filter: SessionLifecycleFilter): boolean {
+  switch (filter.kind) {
+    case 'tenant':
+      return filter.values.includes(record.tenantId)
+    case 'workspace':
+      return record.workspaceId !== undefined && filter.values.includes(record.workspaceId)
+    case 'status':
+      return filter.values.includes(record.disposition.kind)
+    case 'time':
+      return (filter.from === undefined || record.header.createdAt >= filter.from)
+        && (filter.to === undefined || record.header.createdAt <= filter.to)
+  }
+}
+
 /**
  * must[0]/acceptance[0]'s listing entry point: apply `request.filters`
  * (ANDed) to `records`, then return one page of at most `request.limit`
@@ -101,7 +143,24 @@ export interface SessionListPage {
  * @returns one page of matching records plus a continuation cursor, absent on the final page.
  */
 export function listSessions(records: readonly SessionLifecycleRecord[], request: SessionListPageRequest): SessionListPage {
-  throw new Error(`not implemented: listSessions(${String(records.length)} records, limit=${String(request.limit)}, cursor=${String(request.cursor)})`)
+  const filters = request.filters ?? []
+  const matched = records.filter(record => filters.every(filter => matchesFilter(record, filter)))
+  matched.sort((a, b) => compareSortKeys(sortKeyOf(a), sortKeyOf(b)))
+
+  const startIndex = request.cursor === undefined
+    ? 0
+    : (() => {
+      const position = decodeCursor(request.cursor)
+      const index = matched.findIndex(record => isAfterPosition(record, position))
+      return index === -1 ? matched.length : index
+    })()
+
+  const endIndex = request.limit === undefined ? matched.length : Math.min(startIndex + request.limit, matched.length)
+  const items = matched.slice(startIndex, endIndex)
+  const lastItem = items.at(-1)
+  const nextCursor = endIndex < matched.length && lastItem !== undefined ? encodeCursor(sortKeyOf(lastItem)) : undefined
+
+  return { items, ...nextCursor === undefined ? {} : { nextCursor } }
 }
 
 /**
@@ -151,5 +210,18 @@ export type SessionLogReadResult =
  * @returns the minimal recoverable range plus evidence, per this function's doc comment; never a fabricated full recovery.
  */
 export function readSessionLogWithRepair(sessionId: SessionId, lines: readonly RawSessionLogLine[]): SessionLogReadResult {
-  throw new Error(`not implemented: readSessionLogWithRepair(${String(sessionId)}, ${String(lines.length)} lines)`)
+  void sessionId
+  const events: SessionEvent[] = []
+  for (const line of lines) {
+    if (!line.ok) {
+      const evidence: CorruptedLogEvidence = { lineNumber: line.lineNumber, raw: line.raw, parseError: line.parseError }
+      const lastEvent = events.at(-1)
+      if (lastEvent === undefined) {
+        return { recoverable: 'none', evidence }
+      }
+      return { recoverable: 'partial', events, recoveredThroughSeq: lastEvent.seq, evidence }
+    }
+    events.push(line.event)
+  }
+  return { recoverable: 'full', events }
 }

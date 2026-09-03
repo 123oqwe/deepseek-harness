@@ -146,7 +146,29 @@ export interface PropagationOutcome {
  * @returns the targets actually reached, in {@link PropagationTargetKind}'s declared order.
  */
 export function propagateDeletion(dependents: SessionDependents, policy: DeletionPolicy): PropagationOutcome {
-  throw new Error(`not implemented: propagateDeletion(${String(dependents.sessionId)}, policy=${policy.name})`)
+  const targets: PropagationTarget[] = []
+
+  const queryIndexAction = policy.targets['query-index']
+  if (queryIndexAction !== 'skip') {
+    targets.push({ kind: 'query-index', action: queryIndexAction, sessionId: dependents.sessionId })
+  }
+
+  const attachmentsAction = policy.targets.attachments
+  if (attachmentsAction !== 'skip') {
+    targets.push({ kind: 'attachments', action: attachmentsAction, attachmentIds: dependents.attachmentIds })
+  }
+
+  const memoryAction = policy.targets.memory
+  if (memoryAction !== 'skip') {
+    targets.push({ kind: 'memory', action: memoryAction, memoryRefs: dependents.memoryRefs })
+  }
+
+  const artifactsAction = policy.targets.artifacts
+  if (artifactsAction !== 'skip') {
+    targets.push({ kind: 'artifacts', action: artifactsAction, artifactRefs: dependents.artifactRefs })
+  }
+
+  return { targets }
 }
 
 /**
@@ -184,6 +206,10 @@ export function hardErase(
   proof: NoLegalHoldProof,
   occurredAt: number,
 ): EraseResult {
-  const dependentCount = dependents.attachmentIds.length + dependents.memoryRefs.length + dependents.artifactRefs.length
-  throw new Error(`not implemented: hardErase(${String(record.header.id)}, ${String(dependentCount)} dependents, ${String(occurredAt)}, proof=${typeof proof})`)
+  void proof
+  return {
+    sessionId: record.header.id,
+    erasedAt: occurredAt,
+    propagation: propagateDeletion(dependents, HARD_ERASE_POLICY),
+  }
 }
