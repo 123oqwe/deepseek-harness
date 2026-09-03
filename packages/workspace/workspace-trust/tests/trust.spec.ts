@@ -1,0 +1,167 @@
+/**
+ * Contract-stage RED scaffold for Epic P1-07's project trust boundary. One
+ * `it()` per registry-declared must[]/acceptance[] clause (must[2] split
+ * into its refuse/admit halves, acceptance[1] split into its three named
+ * identity-change vectors plus one unchanged-identity control) that is
+ * structurally testable at this Contract level. Every case below calls a
+ * real exported function from `../src/index.ts` against real fixture data;
+ * every decision function currently throws `'not implemented: ...'`, so
+ * every case fails for that reason today — the assertions themselves
+ * describe the behavior a later fix-round must satisfy.
+ */
+
+import { createServicePrincipal, createUserPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
+import { describe, expect, it } from 'vitest'
+import {
+  authorizeProjectLoad,
+  bindWorkspaceTrust,
+  downgradeTrust,
+  reconcileWorkspaceTrust,
+  requestTrustUpgrade,
+} from '../src/index.ts'
+import type { ProjectContentKind, TrustRecord, WorkspaceIdentity } from '../src/types.ts'
+
+const TENANT = TenantId('acme')
+const hostUser = createUserPrincipal(PrincipalId('harry'), TENANT)
+const serviceCaller = createServicePrincipal(PrincipalId('ci-bot'), TENANT)
+
+const PROJECT_LEVEL_EXECUTABLE_KINDS: readonly ProjectContentKind[] = [
+  'project-plugin',
+  'project-hook',
+  'mcp-server',
+  'executable-skill',
+  'home-profile-patch-override',
+]
+
+const clonedRepoIdentity: WorkspaceIdentity = {
+  canonicalPath: '/home/harry/clones/malicious-repo',
+  volume: { device: 1, inode: 1001 },
+}
+
+function trustedExecuteRecord(identity: WorkspaceIdentity): TrustRecord {
+  return {
+    identity,
+    state: 'trusted-execute',
+    at: '2026-08-31T00:00:00.000Z',
+    grantedBy: hostUser.id,
+  }
+}
+
+describe('P1-07 Contract — must clauses', () => {
+  it('must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to', () => {
+    const record = bindWorkspaceTrust(clonedRepoIdentity, '2026-08-31T00:00:00.000Z')
+    expect(record.state).toBe('untrusted')
+    expect(record.identity).toEqual(clonedRepoIdentity)
+    expect(record.grantedBy).toBeUndefined()
+  })
+
+  it('must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load', () => {
+    const safeRead = authorizeProjectLoad('untrusted', 'safe-read')
+    expect(safeRead.permitted).toBe(true)
+
+    for (const kind of PROJECT_LEVEL_EXECUTABLE_KINDS) {
+      const decision = authorizeProjectLoad('untrusted', kind)
+      expect(decision.permitted).toBe(false)
+      if (!decision.permitted) {
+        expect(decision.reason).toBe('trust-required')
+        expect(decision.requiredState).toBe('trusted-execute')
+      }
+    }
+  })
+
+  it('must[2]: a trust upgrade presented by a non-host principal is refused and produces neither a new record nor an audit entry', () => {
+    const current = bindWorkspaceTrust(clonedRepoIdentity, '2026-08-31T00:00:00.000Z')
+    const result = requestTrustUpgrade(current, 'trusted-execute', serviceCaller, '2026-08-31T00:05:00.000Z')
+    expect(result.upgraded).toBe(false)
+    if (!result.upgraded) expect(result.reason).toBe('non-host-principal')
+  })
+
+  it('must[2]: a trust upgrade presented by a genuine host user principal succeeds and writes an audit record naming the host principal and the state transition', () => {
+    const current = bindWorkspaceTrust(clonedRepoIdentity, '2026-08-31T00:00:00.000Z')
+    const result = requestTrustUpgrade(current, 'trusted-execute', hostUser, '2026-08-31T00:05:00.000Z')
+    expect(result.upgraded).toBe(true)
+    if (result.upgraded) {
+      expect(result.record.state).toBe('trusted-execute')
+      expect(result.record.identity).toEqual(clonedRepoIdentity)
+      expect(result.record.grantedBy).toBe(hostUser.id)
+      expect(result.audit.fromState).toBe('untrusted')
+      expect(result.audit.toState).toBe('trusted-execute')
+      expect(result.audit.hostPrincipalId).toBe(hostUser.id)
+      expect(result.audit.identity).toEqual(clonedRepoIdentity)
+    }
+  })
+})
+
+describe('P1-07 Contract — acceptance[0]: clone 一个含恶意配置的仓库并打开，不产生任何子进程、网络或凭证读取', () => {
+  it('a trusted-read workspace (never upgraded to trusted-execute) still denies every project-level executable load kind, so opening the clone alone can never reach a subprocess/network/credential-read path', () => {
+    for (const kind of PROJECT_LEVEL_EXECUTABLE_KINDS) {
+      const decision = authorizeProjectLoad('trusted-read', kind)
+      expect(decision.permitted).toBe(false)
+      if (!decision.permitted) expect(decision.requiredState).toBe('trusted-execute')
+    }
+  })
+})
+
+describe('P1-07 Contract — acceptance[1]: 目录被替换、symlink 改指、移动后信任不自动继承', () => {
+  it('directory replaced: the same canonical path reporting a different device/inode demotes an existing trusted-execute record to untrusted', () => {
+    const record = trustedExecuteRecord(clonedRepoIdentity)
+    const replaced: WorkspaceIdentity = {
+      canonicalPath: clonedRepoIdentity.canonicalPath,
+      volume: { device: clonedRepoIdentity.volume.device, inode: clonedRepoIdentity.volume.inode + 1 },
+    }
+    const reconciled = reconcileWorkspaceTrust(record, replaced, '2026-08-31T01:00:00.000Z')
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.identity).toEqual(replaced)
+    expect(reconciled.grantedBy).toBeUndefined()
+  })
+
+  it('symlink retargeted: a different canonical path demotes an existing trusted-execute record to untrusted even when device/inode happen to match', () => {
+    const record = trustedExecuteRecord(clonedRepoIdentity)
+    const retargeted: WorkspaceIdentity = {
+      canonicalPath: '/home/harry/clones/other-repo',
+      volume: { ...clonedRepoIdentity.volume },
+    }
+    const reconciled = reconcileWorkspaceTrust(record, retargeted, '2026-08-31T01:00:00.000Z')
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.identity).toEqual(retargeted)
+  })
+
+  it('directory moved: a different canonical path with the same device/inode still demotes an existing trusted-execute record to untrusted', () => {
+    const record = trustedExecuteRecord(clonedRepoIdentity)
+    const moved: WorkspaceIdentity = {
+      canonicalPath: '/home/harry/projects/malicious-repo',
+      volume: { ...clonedRepoIdentity.volume },
+    }
+    const reconciled = reconcileWorkspaceTrust(record, moved, '2026-08-31T01:00:00.000Z')
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.identity).toEqual(moved)
+  })
+
+  it('an unchanged identity (same canonical path, device, and inode) preserves the current trust state and grantor', () => {
+    const record = trustedExecuteRecord(clonedRepoIdentity)
+    const reconciled = reconcileWorkspaceTrust(record, { ...clonedRepoIdentity }, '2026-08-31T01:00:00.000Z')
+    expect(reconciled.state).toBe('trusted-execute')
+    expect(reconciled.grantedBy).toBe(hostUser.id)
+  })
+})
+
+describe('P1-07 Contract — acceptance[2]: 降级 trust 立即撤销项目能力', () => {
+  it('downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and updates the record to the target state', () => {
+    const record = trustedExecuteRecord(clonedRepoIdentity)
+    const result = downgradeTrust(record, 'trusted-read', '2026-08-31T02:00:00.000Z')
+    expect(result.record.state).toBe('trusted-read')
+    expect([...result.revokedKinds].sort()).toEqual([...PROJECT_LEVEL_EXECUTABLE_KINDS].sort())
+  })
+
+  it('downgrading from trusted-read to untrusted revokes nothing further, since trusted-read never granted any project-level executable kind', () => {
+    const record: TrustRecord = {
+      identity: clonedRepoIdentity,
+      state: 'trusted-read',
+      at: '2026-08-31T00:00:00.000Z',
+      grantedBy: hostUser.id,
+    }
+    const result = downgradeTrust(record, 'untrusted', '2026-08-31T02:00:00.000Z')
+    expect(result.record.state).toBe('untrusted')
+    expect(result.revokedKinds).toEqual([])
+  })
+})
