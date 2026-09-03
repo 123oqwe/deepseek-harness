@@ -1,10 +1,20 @@
 {
-  "schema": { "name": "first100-command-freeze", "version": "1.0" },
+  "schema": {
+    "name": "first100-command-freeze",
+    "version": "1.0"
+  },
   "entries": [
     {
       "epic": "P0-01",
       "stage": "C",
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/baseline-fingerprint.spec.ts", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint.spec.ts",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "captures .dsh/baseline.json with the canonical field set the MUST clause requires",
@@ -14,7 +24,9 @@
         "verify fails and names the minimal diff after a tracked bundle-row file drifts, and writes a rebase report",
         "verify passes again once the drifted file is restored"
       ],
-      "files": ["tests/release/baseline-fingerprint.spec.ts"],
+      "files": [
+        "tests/release/baseline-fingerprint.spec.ts"
+      ],
       "frozenAtUtc": "2026-08-31T22:35:48Z",
       "dryRunProof": {
         "treeSha": "65d47643489999a8a23888359a6ce0537821d733",
@@ -25,7 +37,14 @@
     {
       "epic": "P0-01",
       "stage": "F",
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/baseline-fingerprint.spec.ts", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint.spec.ts",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "verify fails and names the tampered SDK protocol types file",
@@ -33,7 +52,9 @@
         "verify fails and names the tampered pnpm-lock.yaml",
         "captures a fingerprint that never leaks the fixture checkout's absolute path or backslash-spelled paths anywhere in its content"
       ],
-      "files": ["tests/release/baseline-fingerprint.spec.ts"],
+      "files": [
+        "tests/release/baseline-fingerprint.spec.ts"
+      ],
       "frozenAtUtc": "2026-09-01T00:13:38Z",
       "dryRunProof": {
         "treeSha": "baa9f00d57363a4e9fc14b4ad092834cba88ee5e",
@@ -44,7 +65,15 @@
     {
       "epic": "P0-01",
       "stage": "U",
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/first100/fixtures/P0-01.composition.spec.ts", "packages/guard/baseline-preflight/tests/apply.spec.ts", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P0-01.composition.spec.ts",
+        "packages/guard/baseline-preflight/tests/apply.spec.ts",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "boots a clean fixture normally through the real Loader composition",
@@ -53,7 +82,10 @@
         "resolves without throwing against an unmodified captured baseline",
         "throws naming the drifted path when the fixture is tampered after capture"
       ],
-      "files": ["tests/first100/fixtures/P0-01.composition.spec.ts", "packages/guard/baseline-preflight/tests/apply.spec.ts"],
+      "files": [
+        "tests/first100/fixtures/P0-01.composition.spec.ts",
+        "packages/guard/baseline-preflight/tests/apply.spec.ts"
+      ],
       "frozenAtUtc": "2026-09-01T02:24:56Z",
       "dryRunProof": {
         "treeSha": "c429f4d4dbac905ffcc76ab0a90cb9932847e0ad",
@@ -64,20 +96,28 @@
     {
       "epic": "P0-01",
       "stage": "P",
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/baseline-fingerprint.spec.ts", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/baseline-fingerprint.spec.ts",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "wires baseline:capture/baseline:verify in package.json to the real script, and pnpm run actually executes it"
       ],
-      "files": ["tests/release/baseline-fingerprint.spec.ts"],
+      "files": [
+        "tests/release/baseline-fingerprint.spec.ts"
+      ],
       "frozenAtUtc": "2026-09-01T03:17:21Z",
       "dryRunProof": {
         "treeSha": "dc1b03c51f7283bcafcd0423501a7508edcf8257",
         "testsDiscovered": 11
       },
       "note": "BLOCKED-002 (2026-09-01, extended-trigger reading): P-stage declares two files in the wave-map (scripts/release/baseline-fingerprint.mjs, package.json), no dedicated test file of its own. scripts/release/baseline-fingerprint.mjs's coverage was already proven repeatedly by the (P0-01, C) and (P0-01, F) entries' cases (all spawn it directly). checkSharedStageCoverage() (scripts/first100/generate-specs.ts) mechanically confirmed this AND found a real gap: package.json was only ever an incidental fixture-scaffolding string in the existing tests, never exercising its actual baseline:capture/baseline:verify npm-script role. This entry's one new expectCase closes that gap with dedicated evidence (real package.json script-string assertion + a real `pnpm run baseline:capture`/`baseline:verify` invocation against an isolated fixture) -- P-stage now has genuine, direct evidence of its own, so this is an ordinary single-cell entry (no coveredStages needed): the (P0-01,P) ledger cell's greening rests on this entry's own observation, informed by (not borrowing the observation of) the already-recorded (P0-01,C)/(P0-01,F) evidence for the other declared file. Real RED at this tree (commit 1d959cd14a1147f16760178fef2125136512bc0d, package.json's two script lines temporarily removed for this commit only): 10/11 pass, 1 genuinely fails (`expected undefined to be 'node scripts/release/baseline-fingerprint.mjs capture'`), never a module/syntax error; package.json's real content is restored in the following GREEN commit."
-    }
-,
+    },
     {
       "epic": "P0-01",
       "stage": "F",
@@ -111,8 +151,7 @@
         "failureSummary": "AssertionError: expected +0 not to be +0 // Object.is equality, at tests/release/baseline-fingerprint.spec.ts:216:37 (expect(verifyResult.status).not.toBe(0)) -- verify wrongly exited 0 (no drift detected) once the covered behavior was disabled, confirming the new case is not vacuously true. Mutation reverted immediately after capturing this; git diff --stat on the script was empty before continuing. Independently reproduced by a fresh isolated Reviewer (BLOCKED-003-compliant dispatch, non-isolated worktree, branch/HEAD invariant verified unchanged before and after) with the exact same failure output, plus a SECOND, independent mutation (weakening the comparison to array-length-only, which the fixture's same-count rename would defeat under a naive implementation) -- also caught by the new case with the same genuine failure. Reviewer verdict: ACCEPT."
       },
       "note": "BLOCKED-005 supplement (2026-09-01): closes the real, honestly-discovered gap in P0-01's acceptance[1] coverage -- schema (F-stage) and bundle-row (C-stage) drift were already tested, but package-manifest drift (a workspace package.json's name changing, tracked via workspacePackages in diffCapture()) never had a named case, even though the implementation already handles it. Coverage-completion path (behavior already exists; genuine RED against the unmodified tree is unobtainable) -- the mandatory sensitivityProof above is the substitute per the BLOCKED-005 hardening clause. Never re-greens or invalidates the primary (P0-01, F) entry's own already-GREEN cell; only contributes this case's title into BLOCKED-004 predicate (i)'s coverage-closure union, recorded in spec/first100/exec/acceptance-coverage.json's acceptanceIndex 1 citation."
-    }
-,
+    },
     {
       "epic": "P0-06",
       "stage": "C",
@@ -156,8 +195,7 @@
         "testsDiscovered": 20
       },
       "note": "P0-06 C-stage (2026-09-01): real registerSchema/evolveSchema/negotiateSchema/getSchema/listSchemas for @deepseek-ai/dsh-schema-registry -- versions only individual persisted/wire-protocol leaf objects (session-event payload shapes, sdk-protocol wire types), never the session log's own container format (SESSION_FORMAT_VERSION stays untouched, zero references), per maintainer decision BLOCKED-008's scope-split ruling (reading (a)). evolveSchema enforces must[2]/must[3]: additive-only changes bump minor strictly, any breaking change bumps major by exactly 1 and resets minor to 0. negotiateSchema returns a structured SchemaCompatibilityError (never a bare string, never silent field loss) per acceptance[1]. packages/core/session/src/known-event-types.ts is left untouched (fully generated, byte-exact --check gate, zero extension point) -- the registry instead bootstraps from its real KNOWN_SESSION_EVENT_TYPES export read-only, which cannot drift from the generated catalog by construction. packages/sdk/protocol/src/types.ts gains schemaId+version doc comments on every RPC request/result/notification payload type (nested field types like SdkEncodedImageBlock ride their container's schemaId, not separately registered). Real RED at commit b89d9924c2 (stub types.ts/index.ts): 18/18 failed, all genuine on-topic assertion/compiler-diagnostic failures, never module/syntax errors. Went through two rounds of Opus-level adversarial review (mandatory for this L1_CONTRACT epic per C1): round 1 found 2 real mutation-survivor gaps in evolveSchema's version-bump enforcement (a breaking bump not resetting minor to 0, and a no-op additive bump both went undetected by the then-18-test suite) plus a doc overclaim; round 2's fix closed both gaps (independently mutation-replayed before commit) but itself introduced fresh baseline drift by editing a tracked file without recapturing -- caught by a second review pass and fixed in a third commit. Final ACCEPT confirmed via a scoped third review. P0-01's .dsh/baseline.json was re-captured (this slice edits a baseline-tracked file); pnpm baseline:verify shows zero content drift, only the structurally-unavoidable self-referential gitSha exception at the exact recapture commit (same pattern already present in P0-01's own baseline commits)."
-    }
-,
+    },
     {
       "epic": "P0-02",
       "stage": "C",
@@ -219,8 +257,7 @@
         "testsDiscovered": 38
       },
       "note": "P0-02 C-stage (2026-09-01): the TrustKernel narrow, unforgeable capability-surface type contract for @deepseek-ai/dsh-trust-kernel. Real RED at commit e95ca9e584 (stub types.ts exporting only a placeholder interface): 10/31 failed, all genuine TypeScript compiler diagnostics/structural mismatches, never module/syntax errors. Went through THREE rounds of Opus-level adversarial review (mandatory for this L0_KERNEL epic per C1): round 1 found a real gap -- the suite proved the surface was narrow and readonly but never actually tested unforgeability (2 of 5 seeded mutations, exporting a brand symbol or replacing it with an ordinary field, survived); fixed with 7 new tests (31->38), independently mutation-replayed twice before/after by two separate reviewers. Round 2 found the fix's honest package.json correction (dropping phantom main/types fields pointing at a lib/index.js this slice didn't yet produce) broke the repo-wide check-workspace-constraints.ts gate -- routed to the delegate as BLOCKED-009 (a brand-new package's C-stage-only slice structurally can't satisfy that gate without an index.ts). Delegate ruling: a pure-type-only src/index.ts (export type re-export only, zero runtime/Cordis surface) is now mandatory B4(f) scaffold for every future new-package C-stage slice, not a one-off. Round 3 found docs/module-graph (a peerDependencies-derived generated artifact) still stale on this package's own edge -- regenerated. Final ACCEPT confirmed via self-verification against the unmodified, already-reviewed gate scripts (typecheck, check-workspace-constraints.ts, verify-module-graph, publint, vitest all clean). A real, unrelated, pre-existing defect from P0-01.U's already-ACCEPTED slice was surfaced along the way (verify-cordis-config: packages/bundle/base/cordis.patch.yml references @deepseek-ai/dsh-baseline-preflight without declaring it in packages/bundle/base/package.json's dependencies) -- noted, not fixed here, out of scope for this epic."
-    }
-,
+    },
     {
       "epic": "P0-02",
       "stage": "U",
@@ -257,8 +294,7 @@
         "testsDiscovered": 11
       },
       "note": "P0-02 U-stage (2026-09-01): real boot-sequence integration. createTrustKernel() (src/index.ts) replaces the C-stage pure-type stub (BLOCKED-009) with a deep-frozen TrustKernel construction. apps/cli/src/profile-boot.ts's runProfile() constructs the kernel BEFORE calling boot() at all (boot() itself creates the Cordis Context), then the existing prepare closure pins it via ctx.provide('trustKernel', kernel) -- never ctx.plugin(...). New DSH_TRUST_KERNEL_INSECURE opt-in + enforceTrustKernelPosture realize acceptance clauses 3/4 (production fail-closed / dev insecure-opt-in warning). Real RED at commit 2b2085a409 (stub createTrustKernel/posture functions): 6/17 failed genuinely (unfrozen kernel, wrong verdicts, opt-in resolver always false), never module/syntax errors. Opus-level adversarial review (mandatory for this L0_KERNEL epic): verified Cordis's real ReflectService.provide (vendor/cordis/src/reflect.ts) genuinely throws on a second provide() for the same key -- must[3]'s 'never replaceable' guarantee is proven against real, unmodified Cordis behavior, not a wrapper this package invented. 6 seeded mutations (deep-freeze removal at 2 depths, fail-closed no-op, insecure-opt-in-always-true, pin-deletion, malicious-plugin-target-neutering) all caught. Reviewer's own extra bypass probes (ctx.set() second-write, direct mutation of the frozen value, ctx.isolate() shadowing) found no exploitable bypass of the pinned value's identity, though isolation-scope shadowing is noted as worth an explicit doc sentence once real capability providers land (non-blocking). Reviewer additionally proved via mutation D1 (deleting the ctx.provide pin) that the fail-closed throw and the insecure-opt-in warning are BOTH reachable end-to-end through the real dsh subprocess boot (apps/cli/tests/profiles/headless/tests/headless.expected.e2e.ts, real DSH_TRUST_KERNEL_INSECURE env override) -- overturning the Writer's own more pessimistic self-assessment that the fail-closed branch was unreachable through real wiring. A dedicated committed e2e test for these two integration paths (today only mutation-observable) is noted as a non-blocking follow-up."
-    }
-,
+    },
     {
       "epic": "P0-06",
       "stage": "P",
@@ -770,7 +806,14 @@
     {
       "epic": "P0-03",
       "stage": "F",
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/architecture/", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "reports a clear error, and does not throw, when families is not an array",
@@ -815,7 +858,14 @@
     {
       "epic": "P0-05",
       "stage": "F",
-      "argv": ["pnpm", "exec", "vitest", "run", "packages/migration/feature-gates/tests/", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/migration/feature-gates/tests/",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "applies a settings override moving an enforce-floor gate to off once hasKernelAdministrativeAuthority is true",
@@ -859,7 +909,14 @@
     {
       "epic": "P1-01",
       "stage": "C",
-      "argv": ["pnpm", "exec", "vitest", "run", "packages/plugin/plugin-manifest/", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-manifest/",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "accepts a fully-declared benign manifest",
@@ -956,7 +1013,14 @@
     {
       "epic": "P2-01",
       "stage": "C",
-      "argv": ["pnpm", "exec", "vitest", "run", "packages/identity/principal/", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/identity/principal/",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "brands a raw string as a TenantId without changing its value",
@@ -1027,7 +1091,14 @@
     {
       "epic": "P0-07",
       "stage": "F",
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/evidence-package.spec.ts", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "detects a completed gate's captured log file deleted entirely, distinct from a merely mutated log",
@@ -1051,8 +1122,7 @@
         "testsDiscovered": 47
       },
       "note": "P0-07 F-stage (2026-09-02), fault/qualification hardening of the release evidence verifier -- the program's own unforgeable completion gate, security-foundation-tier per BLOCKED-024 (P0-07's gate is what every other epic's --accept evidence ultimately rests on; final --accept requires delegate ruling + explicit user confirmation, not covered by this freeze). Round 1 found and fixed a real gap: a missing manifest.json sidecar let verifyAcceptedInvariant silently treat requiredArtifactPaths as [], so deleting a required build-artifact key entirely plus deleting manifest.json verified clean; fixed by making manifest absence a hard failure. Round 1 also correctly declined to self-approve fixing a second real gap it found (deleting a required GATE's key entirely, forging a matching self-consistent signature, verified clean, since no independently-persisted requiredGateIds list existed to cross-check against) because the fix required touching scripts/release/collect-evidence.mjs, a P-stage-declared file -- routed to the Supervisor per BLOCKED-012 discipline rather than self-approved. Round 2 closed it: collect-evidence.mjs's cmdInit now persists requiredGateIds symmetric to requiredArtifactPaths; verify-evidence.mjs cross-checks the bundle's own requiredGates keys against it. Precedent for touching the P-stage file without a manifest patch: this program's established rule that an F-stage fixing a real bug in an already-accepted earlier-stage file is not a BLOCKED-012 violation (set by P0-05.F, applied here even more directly since verify-evidence.mjs is independently declared in BOTH P-stage and F-stage's own files[]). Per BLOCKED-024's explicit elevated bar, the independent Reviewer personally constructed and ran (not read the Writer's self-report of) three real attacks against the actual scripts: (a) a required gate's key deleted entirely plus a forged self-consistent signature -- rejected, verified caught by the manifest cross-check specifically (no accompanying signature-mismatch message); (b) the Round-1-fixed artifact-deletion-plus-missing-manifest bypass, regression-checked -- still rejected; (c) both combined in one bundle -- both faults independently reported, the partial fix does not mask the other. RED-then-GREEN independently reproduced by the Reviewer (copied pre-fix script versions over the tree via git show, confirmed the new test's exact claimed failure, restored via byte-identical copy-back, confirmed empty git diff). Test-count arithmetic (33->41->47 it/it.each call sites across the two rounds) independently double-checked and matches both rounds' claims exactly. Independent review: ACCEPT."
-    }
-    ,
+    },
     {
       "epic": "P0-07",
       "stage": "F",
@@ -1061,7 +1131,14 @@
         "stage": "F"
       },
       "supplementSeq": 1,
-      "argv": ["pnpm", "exec", "vitest", "run", "tests/release/evidence-package.spec.ts", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "detects a required gate AND a required build artifact both silently deleted in the same self-consistently forged bundle, with both faults independently reported"
@@ -1079,12 +1156,19 @@
         "failureSummary": "AssertionError: expected 'verify-evidence: ...FAILED verification:\\n  accepted=true but required gate lint is missing from requiredGates entirely\\n' to contain 'accepted=true but required build artifact lib/index.js is not recorded in requiredBuildArtifacts' -- with the mutant applied, only the gate-deletion fault was reported; the artifact-deletion fault was silently masked, exactly the failure mode this case exists to catch. Mutation reverted immediately after capturing this (cp from a pre-mutation backup, git diff --stat on the script confirmed empty before continuing); the case was re-run and confirmed GREEN against the real, unmodified source. Independently reproduced by the Supervisor directly (not delegated to a fresh Reviewer for this specific check, given the Writer's own claimed mutation-testing round for this same case was already reported before the classifier flag surfaced) -- same genuine failure, same revert-to-GREEN outcome."
       },
       "note": "BLOCKED-005 supplement (2026-09-02): closes the real, delegate-identified gap in P0-07.F's acceptance[0] coverage -- BLOCKED-024's third required attack (a required gate's key AND a required build artifact's key both deleted from the same self-consistently forged bundle, with both faults independently reported) was verified once by an independent Reviewer's own one-off adversarial script before ACCEPT, but no permanent regression test existed for this specific combination (distinct from the pre-existing 'deleted gate LOG + mutated artifact' combined-fault test). Coverage-completion path (the covered behavior -- verifyAcceptedInvariant's two independent accumulating loops -- already exists and is already correct; genuine RED against the unmodified tree is unobtainable) -- the mandatory sensitivityProof above is the substitute per the BLOCKED-005 hardening clause, independently constructed and run by the Supervisor after a security classifier flagged the originating Writer's own git-branch-management actions as requiring independent verification before trusting any of its output (the Writer used git update-ref to force-advance the attempt/P0-07-F branch while it was checked out in another live worktree, rather than creating a sibling branch per this program's established pattern for exactly this worktree-contention situation; no data was lost -- the other worktree held only already-merged, already-safely-committed prior work -- but the action itself was a real process violation, independently investigated and the stale worktree removed before proceeding). The commit's actual content (a pure, 31-line test-only addition, diff-verified byte-for-byte against the Writer's own reported diff) was independently confirmed sound before merging. Never re-greens or invalidates the primary (P0-07, F) entry's own already-GREEN cell; only contributes this case's title into BLOCKED-004 predicate (i)'s coverage-closure union, recorded in spec/first100/exec/acceptance-coverage.json's acceptanceIndex 0 citation (added as a fourth coveredBy entry alongside the three already there)."
-    }
-    ,
+    },
     {
       "epic": "P1-01",
       "stage": "P",
-      "argv": ["pnpm", "exec", "vitest", "run", "packages/host/plugin-inventory/tests/", "packages/plugin/plugin-manifest/tests/", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/host/plugin-inventory/tests/",
+        "packages/plugin/plugin-manifest/tests/",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "builds an active permission state when observed registrations exactly match the declared manifest",
@@ -1124,7 +1208,14 @@
     {
       "epic": "P2-01",
       "stage": "P",
-      "argv": ["pnpm", "exec", "vitest", "run", "packages/identity/principal/tests/", "--reporter=json"],
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/identity/principal/tests/",
+        "--reporter=json"
+      ],
       "expectExit": 0,
       "expectCases": [
         "accepts a live identity whose actual tenant matches the request-claimed tenant",
@@ -1177,7 +1268,7 @@
         "denies a fixture with no dsh field at all as missing-manifest",
         "reports 1 and writes to stderr for an unreadable fixture path",
         "denies a schema-spoofed manifest (an invalid sideEffectClass value) as missing-manifest",
-        "denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness \u2014 not elicitation detection)",
+        "denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness — not elicitation detection)",
         "admits a well-formed MCP server whose only red flag is a suspicious prompt name (no semantic elicitation detection, by disclosed design)",
         "denies a skill manifest requesting a secret with no declared justification",
         "classifies missing, legacy, and manifest-v2 dsh fields from a real on-disk package.json",
@@ -1341,8 +1432,8 @@
         "reports a deeply nested field as an ordinary validation outcome, not a crash, and denies it production admission",
         "still detects a real wildcard finding on an otherwise-valid manifest that also carries an unrelated deeply nested field",
         "reports multiple assertJsonSerializable violations inside one array in true left-to-right index order, even when an undefined element sits before a nested violation at a later index",
-        "does not crash with an uncaught RangeError on a very wide (200,000-element) all-undefined array \u2014 past V8's spread-call argument limit",
-        "does not crash on a very wide (200,000-entry) array of well-formed content either \u2014 the spread-call limit is not undefined-specific",
+        "does not crash with an uncaught RangeError on a very wide (200,000-element) all-undefined array — past V8's spread-call argument limit",
+        "does not crash on a very wide (200,000-entry) array of well-formed content either — the spread-call limit is not undefined-specific",
         "handles a large (50,000-entry) tools array without crashing or taking unreasonable time",
         "classifies __proto__/constructor/hasOwnProperty used as ordinary tool names without prototype pollution or misbehavior",
         "does not crash on unicode, control-character, and zero-width strings in free-text fields",
@@ -1397,7 +1488,170 @@
         "failureSummary": "Mutant (1): `node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc -b tsconfig.host.json` -> exit 2, `packages/sdk/protocol/tests/types.spec.ts(12,98): error TS2344: Type 'false' does not satisfy the constraint \"Expected: literal boolean: false, Actual: literal boolean: true\"` -- pinpoints exactly the ClientInitializeParams assertion. Mutant (2): same tsc -b command -> exit 2, `packages/sdk/protocol/tests/types.spec.ts(13,101): error TS2344: ...` -- pinpoints exactly the ClientSessionPromptParams assertion. Both mutants reverted immediately after capture (git checkout -- on the scratch edit only, never committed); tsc -b re-run clean (exit 0) after each revert, confirming GREEN against the real, unmodified source. Independently reproduced by two separate Reviewer dispatches across this supplement's two review rounds, plus a third independent reproduction of mutant (1) by the union-keyof sub-reviewer as part of confirming the test's design choice -- all three produced the identical RED failure and identical revert-to-GREEN outcome."
       },
       "note": "P2-01 F-stage supplement.1 (2026-09-03), BLOCKED-005-style: closes a gap the F-stage's own primary cell left open. The primary P2-01/F cell (7 expectCases, frozen 2026-09-02) closed the empty-DelegationChain crash found via 5 real adversarial attack categories. Separately, P2-01.U's wire-boundary work (BLOCKED-025) established that identity crosses packages/sdk/protocol's wire server-to-client only -- SessionPromptResult.identity, sourced from the server's own live Agent.identity, never accepted from client input -- but that finding had no permanent regression test pinning it, only an independent Reviewer's exhaustive grep. This supplement adds packages/sdk/protocol/tests/types.spec.ts, a real structural type-assertion (expectTypeOf<'identity' extends keyof ClientInitializeParams ? true : false>().toEqualTypeOf<false>(), and the same for ClientSessionPromptParams, matching an existing repo precedent in gateway.client.spec.ts's $dispatch leak check) with real teeth only under tsc -b tsconfig.host.json (vitest's expectTypeOf is a runtime no-op, independently confirmed by two separate Reviewers). Round 1 review: REJECT -- every technical claim held (the structural assertion, the runtime-no-op/tsc-enforcement split, the union-keyof intersection-not-union TypeScript behavior proven from scratch, gates/scope) but the mutation-sensitivity sub-reviewer's own extra self-constructed mutant, beyond its dispatch instructions, proved the guard is NAME-scoped not TYPE-scoped -- a same-type field under a different name (e.g. principalContext: IdentityContext) would slip through undetected, and this limitation was disclosed nowhere. Recorded as a permanent forward-pinned requirement, BLOCKED-031: whichever epic first does real work on P8-07 (primary) or P8-06 (fallback) must upgrade this guard to type-scoped with a real mutation-verification proof, as an explicit Reviewer-checklist item. Fix round: added an honest disclosure comment (name-scoped vs type-scoped, why acceptable for this narrow purpose given the codebase's consistent identity-naming convention, explicit BLOCKED-031 citation) plus matching bilingual README Known Limitations entries -- pure documentation addition, zero change to the actual assertion logic (independently confirmed byte-identical assertion lines and identical 21/21 test-pass behavior before and after). Round 2 review: ACCEPT -- disclosure accurate and non-overselling, BLOCKED-031 citation matches the real entry content, README additions genuinely bilingual-matched. This closes P2-01's last gap before its BLOCKED-022 user-confirmation accept package. expectCases here are the 2 new titles in the supplement's own test file, cross-checked byte-exact present-and-passing (21/21 total in the same argv, the remainder being packages/sdk/protocol's pre-existing transport.spec.ts suite)."
+    },
+    {
+      "epic": "P1-09",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-ownership/tests/ownership.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a successful capability claim carries PluginIdentity, namespace, stable capability id, and a minted ownership token",
+        "must[1]: an unofficial plugin cannot claim a capability inside the dsh.* reserved namespace",
+        "must[1]: an unofficial plugin cannot claim a capability inside a dotted sub-namespace under the dsh.* reserved root",
+        "must[2]: an explicit replace contract fails closed when policy does not authorize replacement",
+        "must[2]: an explicit replace contract fails closed with replace-not-authorized when the target capability id has no existing registration to replace",
+        "must[3]: revoking with a valid ownership token removes only that token's own effects",
+        "same-name tool collision: a second plugin registering an already-claimed capability id without a replace contract fails closed",
+        "cross-plugin revocation: a token that matches no active registration revokes nothing, and the real owner's token still works afterward",
+        "load-order attack: a third party claiming a reserved-namespace capability before the official plugin ever registers still fails closed, and the official plugin can still claim it afterward",
+        "an authorized replace contract succeeds, and buildInventoryChain shows the replaced/replacing chain",
+        "buildInventoryChain on a 3-owner history reports the current owner and its immediate predecessor, not the chain's original first owner",
+        "a dynamically defined capability is subject to the same reserved-namespace and collision rules as a statically declared one",
+        "a dynamically defined capability for a fresh, non-reserved, non-colliding namespace is admitted exactly as a statically declared one would be"
+      ],
+      "files": [
+        "packages/plugin/plugin-ownership/tests/ownership.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T13:01:28.627Z",
+      "dryRunProof": {
+        "treeSha": "337419f5b550ff91f04a30933667b13698f937c5",
+        "testsDiscovered": 13
+      },
+      "note": "C-stage RED scaffold for P1-09 (Service/Tool/Event namespace and ownership conflict detection), post-corrective-round (attempt/P1-09-C @ 9a96a41b72, 2 commits: original 51988a4f67 + corrective 9a96a41b72 closing 4 Reviewer-flagged gaps -- dotted reserved sub-namespace, requestReplace no-existing-target branch, a legitimate non-colliding dynamic claim actually being admitted (the prior suite only tested rejection), and a 3-owner inventory chain defeating a first/last shortcut). 13/13 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target (today real state: 13/13 failing), corrected from an earlier mis-instructed draft that used exit=1 -- see P0-04.C note for the same fix and its rationale."
+    },
+    {
+      "epic": "P0-04",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/layer-deps.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
+        "allows a downward dependency",
+        "allows a same-layer dependency",
+        "rejects an ordinary upward dependency as a layer violation",
+        "allows an upward type-only EventMap edge as the one exception to the upward-dependency rule",
+        "does not grant the narrow exception to a downward type-only EventMap edge, since layer direction alone already permits it",
+        "rejects a global-singleton edge that also runs upward",
+        "rejects a global-singleton edge that would otherwise be a legal downward dependency",
+        "rejects a global-singleton edge within the same layer",
+        "classifies the same upward violation identically when found via package-graph",
+        "classifies the same upward violation identically when found via path-alias",
+        "classifies the same upward violation identically when found via dynamic-require",
+        "fails a kernel dependency on the vendored Cordis runtime",
+        "fails a kernel dependency on a surfaces-apps (UI) package",
+        "fails a kernel dependency on a concrete model provider",
+        "does not grant the narrow event-type exception to a kernel dependency on a surfaces-apps (UI) package",
+        "does not constrain a non-kernel package depending on the vendored Cordis runtime",
+        "accepts a well-formed exemption",
+        "rejects an exemption whose cycle has fewer than two packages",
+        "rejects an exemption with a malformed recordedDate",
+        "rejects an exemption with an empty owner",
+        "rejects an exemption with an empty adrNote",
+        "reports no cycle and no exemption for an acyclic graph",
+        "finds an unexempted two-package cycle",
+        "marks a cycle exempted when it matches a declared ExemptedCycle entry",
+        "returns the shortest cycle when a longer cycle also exists in the graph",
+        "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order",
+        "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])"
+      ],
+      "files": [
+        "tests/architecture/layer-deps.spec.ts",
+        "scripts/architecture/layer-order.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T13:01:28.624Z",
+      "dryRunProof": {
+        "treeSha": "366ec8394531fa5b4e9f9283cd6752d988f4d59e",
+        "testsDiscovered": 28
+      },
+      "note": "C-stage RED scaffold for P0-04 (static architecture layering + cycle detection), post-corrective-round (attempt/P0-04-C @ 6e7c9cbd6c, 2 commits: original 86dd3ff1d1 + corrective 6e7c9cbd6c closing 2 Reviewer-flagged gaps -- acceptance[2] timing-budget coverage on a dense 14-package cycle fixture, and an order-independence case defeating a naive first-encountered-cycle shortcut). 28/28 genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor. expectExit=0 is the GREEN target (today real state: 28/28 failing), corrected from an earlier mis-instructed draft that used exit=1 -- generate-ledger.mjs cmdGreen compares the GREEN observation exit against this field, not todays RED exit, matching the P0-01.C precedent. scripts/architecture/layer-order.ts is an undeclared-but-needed companion module (files[] named no companion at all for this epic), following the P0-03 precedent (BLOCKED-012) of adding one when genuinely required."
+    },
+    {
+      "epic": "P6-01",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/conformance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "propose() accepts a candidate record and resolves a new MemoryRecordId",
+        "query() resolves matching records honoring the caller-supplied context budget",
+        "get() resolves the record previously created by propose()",
+        "revise() updates an existing record, reflected by a later get()",
+        "forget() removes a record so a later get() resolves undefined",
+        "export() resolves every record visible to the access context",
+        "swapping the registered provider changes which provider serves the same runtime call",
+        "a provider object alone is inert -- it takes effect only once registered on ctx.memory",
+        "revise() rejects an id that was never returned by propose()",
+        "query() rejects a request whose access context is missing any of the four required fields",
+        "docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry"
+      ],
+      "files": [
+        "packages/memory/memory/src/types.ts",
+        "packages/memory/memory/src/invariant.ts",
+        "packages/memory/memory/src/index.ts",
+        "packages/memory/memory/tests/conformance.spec.ts",
+        "docs/subsystems/memory.md"
+      ],
+      "frozenAtUtc": "2026-09-03T06:16:34.170Z",
+      "dryRunProof": {
+        "treeSha": "8578ba4fb5467237e96d71e6af3337fac5ede812",
+        "testsDiscovered": 17
+      },
+      "note": "C-stage RED scaffold on attempt/P6-01-C at eae6bee074d5fd4585a4c309f7aa15dc57fa4383 (fork/first100-exec base 9d97b15653). Note the 6 conformance ops (propose/query/get/revise/forget/export) each run against 2 providers (local-reference + fake), producing 12 of the 17 real vitest titles that are byte-identical across both provider runs -- expectCases here lists each of those 6 distinct titles once (11 unique strings total covering all 4 must[] + all 3 acceptance[] clauses: the 6x2 conformance run covers must[0]+acceptance[0]; provider-swap covers must[1]; Service-Definition-only-access covers must[2]; revise-on-forged-id covers acceptance[1]; missing-access-context-field covers must[3]; doc-existence+record-shape-distinctness covers acceptance[2]), not the full 17-row vitest output; verify-frozen-titles-resolvable.mjs matches by title membership, not position, so this is a valid frozen form. Today (RED): 17/17 failing on genuine Error: not implemented behind various assertion shapes (promise-rejection mismatch, object-shape mismatch), zero module/syntax errors -- confirmed via independent supervisor-side re-run, not just the Writer self-report. expectExit=0 is the GREEN target this freeze grades a future candidate run against (matches every other entry in this file); it is NOT today RED run exit code (which is 1)."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workspace/workspace-trust/tests/trust.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to",
+        "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load",
+        "must[2]: a trust upgrade presented by a non-host principal is refused and produces neither a new record nor an audit entry",
+        "must[2]: a trust upgrade presented by a genuine host user principal succeeds and writes an audit record naming the host principal and the state transition",
+        "a trusted-read workspace (never upgraded to trusted-execute) still denies every project-level executable load kind, so opening the clone alone can never reach a subprocess/network/credential-read path",
+        "directory replaced: the same canonical path reporting a different device/inode demotes an existing trusted-execute record to untrusted",
+        "symlink retargeted: a different canonical path demotes an existing trusted-execute record to untrusted even when device/inode happen to match",
+        "directory moved: a different canonical path with the same device/inode still demotes an existing trusted-execute record to untrusted",
+        "an unchanged identity (same canonical path, device, and inode) preserves the current trust state and grantor",
+        "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and updates the record to the target state",
+        "downgrading from trusted-read to untrusted revokes nothing further, since trusted-read never granted any project-level executable kind"
+      ],
+      "files": [
+        "packages/workspace/workspace-trust/tests/trust.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-03T13:00:35.865Z",
+      "dryRunProof": {
+        "treeSha": "07ccc3de5db79b9951451c2a4fbc1a58b8a29af7",
+        "testsDiscovered": 11
+      },
+      "note": "C-stage RED scaffold for P1-07 (project trust boundary). 11/11 cases genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (not just the Writer self-report) in the Writer worktree at commit bd1cc7f198ccd8014f2a208bb898df2df408fd55. expectExit=0 is the GREEN target this freeze grades against, per the established P0-01.C precedent (today real state: 11/11 failing). Type surface reuses dsh-principal Principal/PrincipalId for host-user identity; TrustUpgradeAuditRecord deliberately package-local, not wired to the real Trust Kernel auditAppend pending the Fiber structural fix (per docs/architecture/trust-kernel-boundary.md)."
     }
-
   ]
 }
