@@ -730,7 +730,7 @@
 - **Priority / Wave / 依赖：** P0 / W5 / `P4-01`。
 - **问题 → 目标：** 当前 Agent 主状态过于简单，无法可靠表达长任务和调度器所有权。 → 支持排队、等待审批、暂停、恢复、失败、回收和失联，而不只依赖 idle/running。
 - **Files：** target `packages/core/agent/src/types.ts` [B]；`packages/core/agent/src/runtime-types.ts` [B]；`packages/core/agent/src/dispatch.ts` [B]；`packages/core/agent/src/inbox.ts` [B]；`packages/core/agent-loop/src/agent.ts` [B]；new `packages/core/agent/src/state-machine.ts` [N]；`packages/core/agent/tests/state-machine.spec.ts` [N]。
-- **MUST：** 状态 queued/starting/running/waiting_tool/waiting_human/paused/cancelling/failed/completed/orphaned。；每个转换带 reason、runId、lease epoch。；UI status 与 durable state 分离，不能用 UI disconnect 推断完成。
+- **MUST：** 状态 queued/starting/running/waiting_tool/waiting_human/paused/cancelling/failed/completed/orphaned。；每个转换带 reason、runId、lease epoch。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 非法转换和 stale worker 更新被拒绝。；等待状态不消耗 LLM/worker 资源。；重启后 orphaned Agent 可被 reclaim 或安全失败。
@@ -800,7 +800,7 @@
 - **Priority / Wave / 依赖：** P0 / W9 / `P3-10`、`P4-07`。
 - **问题 → 目标：** 当前 workflow 有 agent 数量上限基础，但缺统一 token/cost/time/resource vocabulary、全局 scheduler 和资源锁。 → 让多 Agent 并发可控，不因 1000 个子任务耗尽资源、冲突写文件或饿死其他租户。
 - **Files：** target `packages/workflow/workflow/src/types.ts` [B]；`packages/workflow/workflow-worker-thread/src/runtime.ts` [B]；`packages/core/agent/src/dispatch.ts` [B]；`packages/guard/timeout-policy/README.md` [B]；new `packages/run/scheduler/src/index.ts` [N]；`packages/run/scheduler/src/queue.ts` [N]；`packages/run/scheduler/src/locks.ts` [N]；`packages/run/scheduler/src/fairness.ts` [N]；`packages/run/scheduler/tests/scheduler.e2e.ts` [N]。
-- **MUST：** BudgetSpec 覆盖 tokens/cost/time/agents/tool calls/world resources；父子层级累计。；scheduler 支持 tenant fairness、priority aging、max concurrency、resource locks、exclusive tools。；backpressure 传播到 workflow script，禁止无限排队。
+- **MUST：** BudgetSpec 覆盖 tokens/cost/time/agents/tool calls/world resources；父子层级累计。；scheduler 支持 tenant fairness、priority aging、resource locks、exclusive tools。；backpressure 传播到 workflow script，禁止无限排队。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 50 个并发 Agent 下无死锁、无超预算、无跨租户饥饿。；两个写同一资源的任务被序列化或冲突检测。；取消会释放所有 lock/permit。
@@ -1104,7 +1104,7 @@
 - **Priority / Wave / 依赖：** P1 / W12 / `P4-03`、`P6-04`、`P2-02`。
 - **问题 → 目标：** 社区 context 插件展示了可见性价值；但核心需要稳定、只读、带来源的 projection contract，而不是把内部 Context 暴露给 UI/插件。 → 让每个 Agent 只得到完成任务所需的上下文，并支持类似 dsh-context 的可视化而不暴露内部可变对象。
 - **Files：** target `packages/core/agent-loop/src/runtime-context.ts` [B]；`packages/context/agent-instructions/src/state.ts` [B]；`packages/context/agent-instructions/src/render.ts` [B]；`packages/host/apiproxy/README.md` [B]；new `packages/context/context-topology/src/index.ts` [N]；`packages/context/context-topology/src/types.ts` [N]；`packages/context/context-telemetry/src/index.ts` [N]；`packages/context/context-telemetry/tests/isolation.spec.ts` [N]。
-- **MUST：** RunPlan 为每个 Agent 声明 shared/private/retrievable context zones。；Telemetry 只发布 source ids、token counts、selection reasons、redacted previews。；子 Agent 默认不继承全部父 history。
+- **MUST：** RunPlan 为每个 Agent 声明 shared/private/retrievable context zones。；Telemetry 只发布 source ids、token counts、selection reasons、redacted previews。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 两个 child 的 private context 互不可见。；UI 插件卸载不影响实际 context assembly。；敏感内容不会通过 telemetry 泄漏。

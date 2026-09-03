@@ -154,6 +154,10 @@ export interface Registry {
     note: string
   }
   evidenceSchema: { key: string; required: boolean; note: string; enum?: string[]; frozen?: string }[]
+  /** Only the sub-field this script consumes (BASE-ALIGN-v2 rescope tracking); the full registry.json carries more. */
+  provenance: {
+    baseAlignV2Rescope23?: { epicIds: string[]; priorMatrixSha256: string; rescopeSpec: string; note: string }
+  }
   epics: Epic[]
 }
 
@@ -1503,6 +1507,27 @@ export interface ClauseCoverageReportV11 {
     claim: 'non-canonical-sourced'
     verifiedBy: 'extract-registry.mjs --check (byte-exact re-extraction against each epic\'s own SHA-pinned provenance.source, not this report)'
   }
+  /**
+   * BASE-ALIGN-v2 23-PARTIAL rescope (registry.provenance.baseAlignV2Rescope23):
+   * these epics' `must` was deliberately narrowed in first100-requirements-matrix.md
+   * to the delta not yet covered by upstream 4e84901e -- they now diverge from
+   * the ORIGINAL, unedited v1.0 YAML by construction, same as a new-gap epic
+   * diverges by construction, but for a different reason (an evidenced, dated
+   * removal from an existing source, not a post-dated absence from it). Their
+   * per-channel unmatchedSource/invented entries are excluded from `totals`
+   * above (that fail-closed 0/0 assertion stays meaningful only for epics
+   * nobody has deliberately rescoped) and reported here instead, so the
+   * omission is never mistaken for a passing 1:1 match. `epicsMapped`/
+   * `channelsMapped` above still counts them as mapped: rescoping is a
+   * program decision, not a coverage defect. Present only once at least one
+   * epic has actually been rescoped.
+   */
+  baseAlignV2Rescope23?: {
+    count: number
+    epicIds: string[]
+    rescopeSpec: string
+    divergedClauses: Record<string, { [K in ClauseChannel]?: { unmatchedSource: string[]; invented: string[] } }>
+  }
 }
 
 /** The matrix/registry's documented injection when the YAML lacks non_goals. */
@@ -1647,6 +1672,7 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
   // makes fail-closed, not add real coverage.
   const canonicalEpics = reg.epics.filter(e => !e.provenance)
   const newGapEpics = reg.epics.filter(e => e.provenance)
+  const rescope23Ids = new Set(reg.provenance.baseAlignV2Rescope23?.epicIds ?? [])
 
   const scanned = scanYamlClauses(yamlText)
   const parsed = parseYaml(yamlText) as { issues?: Array<Record<string, unknown>> }
@@ -1683,8 +1709,10 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
   let unmatchedTotal = 0
   let undocumentedTotal = 0
   let documentedTotal = 0
+  const divergedClauses: NonNullable<ClauseCoverageReportV11['baseAlignV2Rescope23']>['divergedClauses'] = {}
 
   for (const e of canonicalEpics) {
+    const isRescoped = rescope23Ids.has(e.id)
     const channelReports = {} as { [K in ClauseChannel]: ClauseChannelReport }
     let epicFullyMapped = true
     for (const [channel, _yamlKey] of CHANNEL_YAML_KEYS) {
@@ -1737,10 +1765,28 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
         invented,
         clauses,
       }
-      unmatchedTotal += unmatchedSource.length
-      undocumentedTotal += invented.filter(i => i.classification === 'undocumented').length
+      const undocumentedInvented = invented.filter(i => i.classification === 'undocumented')
       documentedTotal += invented.filter(i => i.classification === 'documented-default-boundary').length
-      const channelMapped = unmatchedSource.length === 0 && invented.every(i => i.classification === 'documented-default-boundary')
+      // BASE-ALIGN-v2 23-PARTIAL: a rescoped epic's own unmatchedSource/
+      // undocumented divergence from the ORIGINAL v1.0 YAML is the deliberate
+      // narrowing this program approved (spec/first100/sources/base-align-v2/
+      // 23-partial-rescope-spec.md), not a coverage defect -- excluded from
+      // the fail-closed totals/mapped counters below and reported separately
+      // instead (see baseAlignV2Rescope23.divergedClauses).
+      if (isRescoped) {
+        if (unmatchedSource.length > 0 || undocumentedInvented.length > 0) {
+          const epicDiverged = (divergedClauses[e.id] ??= {})
+          epicDiverged[channel] = {
+            unmatchedSource: unmatchedSource.map(c => c.text),
+            invented: undocumentedInvented.map(c => c.text),
+          }
+        }
+      } else {
+        unmatchedTotal += unmatchedSource.length
+        undocumentedTotal += undocumentedInvented.length
+      }
+      const channelMapped =
+        isRescoped || (unmatchedSource.length === 0 && invented.every(i => i.classification === 'documented-default-boundary'))
       if (channelMapped) channelsMapped++
       if (!channelMapped) epicFullyMapped = false
     }
@@ -1775,6 +1821,16 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
       claim: 'non-canonical-sourced',
       verifiedBy: 'extract-registry.mjs --check (byte-exact re-extraction against each epic\'s own SHA-pinned provenance.source, not this report)',
     },
+    ...(rescope23Ids.size > 0
+      ? {
+        baseAlignV2Rescope23: {
+          count: rescope23Ids.size,
+          epicIds: [...rescope23Ids].sort(),
+          rescopeSpec: reg.provenance.baseAlignV2Rescope23?.rescopeSpec ?? '',
+          divergedClauses,
+        },
+      }
+      : {}),
   }
   return JSON.stringify(report, null, 2) + '\n'
 }

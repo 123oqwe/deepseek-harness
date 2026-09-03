@@ -50,7 +50,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa'
+const MATRIX_SHA = 'e14dd98008d19afa2f5f45c994174eaca0e2f1150c9a304869b42284aa7330b6'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -76,6 +76,22 @@ const NEWGAP_WAVEMAP_SHA = 'REPLACE_ME_WHEN_DRAFT_IS_FINALIZED'
 const NEWGAP_SOURCES = [
   { matrix: 'base-align-v2/new-gap-matrix.md', matrixSha: NEWGAP_MATRIX_SHA, waveMap: 'base-align-v2/new-gap-wavemap.md', waveMapSha: NEWGAP_WAVEMAP_SHA },
 ]
+
+/**
+ * BASE-ALIGN-v2 23-PARTIAL rescope (spec/first100/sources/base-align-v2/23-partial-rescope-spec.md,
+ * delegate-approved mechanism, 2026-09-02): these canonical epics' `must`
+ * text was narrowed in-place in first100-requirements-matrix.md to only the
+ * delta not yet covered by upstream 4e84901e -- the registry stays the sole
+ * source of truth (edit the pinned source + re-extract, never a second
+ * overlay). `RESCOPE23_PRIOR_MATRIX_SHA` is the matrix doc's sha256 BEFORE
+ * this rescope, preserved so "what did the canonical spec say before
+ * BASE-ALIGN-v2" is answerable from the registry itself without git
+ * archaeology. Grows as epics are rescoped; membership here is what has
+ * ACTUALLY been edited, not the full 23-item authorization ceiling.
+ */
+const RESCOPE23_PRIOR_MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa'
+const RESCOPE23_EPIC_IDS = ['P4-05', 'P4-10', 'P6-05']
+
 /**
  * Off by default: today's committed `tests/first100/registry.json` holds
  * exactly the 100 canonical epics, and BASE-ALIGN-v2's own registry-content
@@ -612,6 +628,19 @@ const registry = {
             newGapCount: newGapEpicIds.size,
             epicIds: [...newGapEpicIds].sort(),
             note: 'These epics did not come from the 3 canonical pinned docs above -- they describe capability gaps upstream introduced after those docs were written. Each carries its own per-epic `provenance` field (source doc + SHA, rationale doc, authorization record); see decisions-approved.md#C8 for the reserved-scope authorization that permitted adding them.',
+          },
+        }
+      : {}),
+    // Present only once at least one of the 23 authorized epics has actually
+    // been rescoped (RESCOPE23_EPIC_IDS non-empty); omitted, not zeroed,
+    // otherwise -- same absence convention as newGapEpics above.
+    ...(RESCOPE23_EPIC_IDS.length > 0
+      ? {
+          baseAlignV2Rescope23: {
+            epicIds: [...RESCOPE23_EPIC_IDS].sort(),
+            priorMatrixSha256: RESCOPE23_PRIOR_MATRIX_SHA,
+            rescopeSpec: 'spec/first100/sources/base-align-v2/23-partial-rescope-spec.md',
+            note: 'These canonical epics\' `must` text was narrowed in-place in first100-requirements-matrix.md to the delta not yet covered by upstream 4e84901e, per the rescope spec\'s own per-epic evidence (BLOCKED-012 discipline: only a MUST fragment with direct, fully-covering upstream evidence was removed; a partially-covered fragment was kept in full). acceptance/files/validation/nonGoals were left untouched for every epic rescoped so far. priorMatrixSha256 is the matrix doc\'s content hash BEFORE this rescope; sourceShas above reflects the state AFTER.',
           },
         }
       : {}),

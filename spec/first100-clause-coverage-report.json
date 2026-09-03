@@ -4899,8 +4899,17 @@
     "P4-05": {
       "must": {
         "sourceCount": 3,
-        "projectedCount": 3,
-        "unmatchedSource": [],
+        "projectedCount": 2,
+        "unmatchedSource": [
+          {
+            "text": "UI status 与 durable state 分离，不能用 UI disconnect 推断完成。",
+            "digest": "4a854d2165f5b6b58f33a0a7b6efa214cc66c7f66d616c78d6bfbfc4196e3866",
+            "span": {
+              "startLine": 7360,
+              "endLine": 7360
+            }
+          }
+        ],
         "invented": [],
         "clauses": [
           {
@@ -4917,14 +4926,6 @@
             "span": {
               "startLine": 7359,
               "endLine": 7359
-            }
-          },
-          {
-            "text": "UI status 与 durable state 分离，不能用 UI disconnect 推断完成。",
-            "digest": "4a854d2165f5b6b58f33a0a7b6efa214cc66c7f66d616c78d6bfbfc4196e3866",
-            "span": {
-              "startLine": 7360,
-              "endLine": 7360
             }
           }
         ]
@@ -5423,8 +5424,23 @@
       "must": {
         "sourceCount": 4,
         "projectedCount": 4,
-        "unmatchedSource": [],
-        "invented": [],
+        "unmatchedSource": [
+          {
+            "text": "scheduler 支持 tenant fairness、priority aging、max concurrency、resource locks、exclusive tools。",
+            "digest": "7f58e6f4874a6f3029577abc7d74da17c28002277f968e48ddd048abe930a241",
+            "span": {
+              "startLine": 8088,
+              "endLine": 8088
+            }
+          }
+        ],
+        "invented": [
+          {
+            "text": "scheduler 支持 tenant fairness、priority aging、resource locks、exclusive tools。",
+            "digest": "b3bee7ef85f30278f370b1941c55a143ae1aa0bbc5b05b6c788b11cd8cbf7027",
+            "classification": "undocumented"
+          }
+        ],
         "clauses": [
           {
             "text": "BudgetSpec 覆盖 tokens/cost/time/agents/tool calls/world resources",
@@ -5443,12 +5459,9 @@
             }
           },
           {
-            "text": "scheduler 支持 tenant fairness、priority aging、max concurrency、resource locks、exclusive tools。",
-            "digest": "7f58e6f4874a6f3029577abc7d74da17c28002277f968e48ddd048abe930a241",
-            "span": {
-              "startLine": 8088,
-              "endLine": 8088
-            }
+            "text": "scheduler 支持 tenant fairness、priority aging、resource locks、exclusive tools。",
+            "digest": "b3bee7ef85f30278f370b1941c55a143ae1aa0bbc5b05b6c788b11cd8cbf7027",
+            "span": null
           },
           {
             "text": "backpressure 传播到 workflow script，禁止无限排队。",
@@ -7617,8 +7630,17 @@
     "P6-05": {
       "must": {
         "sourceCount": 3,
-        "projectedCount": 3,
-        "unmatchedSource": [],
+        "projectedCount": 2,
+        "unmatchedSource": [
+          {
+            "text": "子 Agent 默认不继承全部父 history。",
+            "digest": "3ebbccb5f9dff1dbfc94d3207c57f2186d7f75c5294622b776855af32f53bfc3",
+            "span": {
+              "startLine": 11167,
+              "endLine": 11167
+            }
+          }
+        ],
         "invented": [],
         "clauses": [
           {
@@ -7635,14 +7657,6 @@
             "span": {
               "startLine": 11166,
               "endLine": 11166
-            }
-          },
-          {
-            "text": "子 Agent 默认不继承全部父 history。",
-            "digest": "3ebbccb5f9dff1dbfc94d3207c57f2186d7f75c5294622b776855af32f53bfc3",
-            "span": {
-              "startLine": 11167,
-              "endLine": 11167
             }
           }
         ]
@@ -10550,5 +10564,42 @@
     "epicIds": [],
     "claim": "non-canonical-sourced",
     "verifiedBy": "extract-registry.mjs --check (byte-exact re-extraction against each epic's own SHA-pinned provenance.source, not this report)"
+  },
+  "baseAlignV2Rescope23": {
+    "count": 3,
+    "epicIds": [
+      "P4-05",
+      "P4-10",
+      "P6-05"
+    ],
+    "rescopeSpec": "spec/first100/sources/base-align-v2/23-partial-rescope-spec.md",
+    "divergedClauses": {
+      "P4-05": {
+        "must": {
+          "unmatchedSource": [
+            "UI status 与 durable state 分离，不能用 UI disconnect 推断完成。"
+          ],
+          "invented": []
+        }
+      },
+      "P4-10": {
+        "must": {
+          "unmatchedSource": [
+            "scheduler 支持 tenant fairness、priority aging、max concurrency、resource locks、exclusive tools。"
+          ],
+          "invented": [
+            "scheduler 支持 tenant fairness、priority aging、resource locks、exclusive tools。"
+          ]
+        }
+      },
+      "P6-05": {
+        "must": {
+          "unmatchedSource": [
+            "子 Agent 默认不继承全部父 history。"
+          ],
+          "invented": []
+        }
+      }
+    }
   }
 }
