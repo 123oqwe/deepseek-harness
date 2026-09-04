@@ -1104,3 +1104,15 @@ plus `docs/architecture/layering.md` (being touched by P0-04's Usage stage) and 
 **Two things fixed here, and one method note that matters more than either.** `docs/persistence-catalog.zh.md` was missing the whole `memory/access` section that P6-01's Usage stage added to the English side; the counterpart was written and the pair re-recorded. `docs/subsystems/README` had both sides genuinely updated together and only its record was stale, so re-recording was legitimate.
 
 **The method note.** The Supervisor first ran `--write` on **both** pairs at once, which re-recorded the catalog as consistent while its Chinese side lacked `memory/access` entirely — blessing content nobody had reviewed, the exact thing a Writer had earlier refused to do when it declined a blanket `--write`. It was caught by checking whether the Chinese side actually contained the new content, and reverted. **`--write` asserts that a human compared the two sides. Never run it to make a gate green; run it only after confirming the sides correspond**, and confirm per pair, since in this instance one of the two was legitimate and the other was not.
+
+### BLOCKED-059 — P1-02's Usage stage edits `permission-state.spec.ts`, a frozen spec of the ACCEPTED epic P1-01; why that does not disturb its green (Supervisor record, 2026-09-04)
+
+P1-02's Usage stage makes two `PluginPermissionState` fields **required** rather than optional — deliberately, because an optional field populated by nothing is the false-green shape ([BLOCKED-052](#blocked-052)) and acceptance[2] asserts that *every* permission state carries a provenance record. The consequence is that three object literals in `packages/host/plugin-inventory/tests/permission-state.spec.ts` no longer typecheck, and that file is a frozen spec of **P1-01, which is ACCEPTED**.
+
+**Why the green stands.** Three conditions, each checkable by a later reader rather than taken on trust:
+
+1. **No case title changes**, so `verify-frozen-titles-resolvable` still resolves every P1-01 frozen title — confirmed at 59 entries / 1085 titles / 0 unresolved.
+2. **No assertion changes.** Each case asserts declared-vs-observed permission composition; the edit only widens three literals through one shared `UNRECORDED_PROVENANCE` constant.
+3. **No provenance value participates in any of those assertions**, so the added field cannot influence a pass or a fail.
+
+**The general rule this establishes.** A later stage may widen a type an ACCEPTED epic's frozen spec constructs, and mechanically repair that spec, **only when the repair changes no title, no assertion, and no value any assertion reads**. If any of those three would change, it is not a repair — it is a re-freeze, and it goes through supersession the way [BLOCKED-056](#blocked-056)'s P1-07.C case did. The distinction is whether the frozen observation would still be reproducible for the same reason it originally passed.
