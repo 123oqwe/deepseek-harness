@@ -60,6 +60,10 @@
     "@deepseek-ai/dsh-cordis-client-runner": {
       "layer": "orchestration-runtime",
       "reason": "Signed composition-root table: a runner, not an assembly."
+    },
+    "@deepseek-ai/dsh-client-ui-cordis": {
+      "layer": "surfaces-apps",
+      "reason": "DIRECTORY MISFIT, and the comment is the finding: this is a UI card living under packages/extensions/. Its own description is 'Cordis dynamic-plugin definition card: the keyed cordis_define tool row with its run/stop switch' and its npm name is @deepseek-ai/dsh-client-ui-cordis, so it is a presentation surface by both its name and its own account; only its directory says otherwise, which is why the packages/client rule does not reach it. A per-package entry is used deliberately INSTEAD of moving the directory: a move touches imports, tsconfigs, the lockfile and the catalog, which is a broad refactor for a classification problem and disproportionate to P0-04. This entry is the input for whoever later does directory hygiene."
     }
   },
   "$authorship2": {
@@ -72,15 +76,20 @@
     "prediction": "If the 89 orchestration-runtime -> surfaces-apps edges largely vanish once composition-root exists, the classification was wrong and clearing them is correct. Anything that survives is a real finding, handled by a split proposal or a dated allowlist entry with a named owner. No third pass over this table."
   },
   "$authorship3": {
-    "scope": "the packages/client/ group, expressed as a RULE in scripts/architecture/check-layer-deps.mjs (CLIENT_LAYERS + the ui-* prefix), not as per-package entries here",
+    "scope": "packages/client/** -- SUPERSEDES the per-package client rule signed earlier the same day",
     "signedBy": "coordinator delegate",
     "signedAt": "2026-09-04",
-    "rule": "packages/client/ui-* -> surfaces-apps; connection -> providers; store -> capability-definitions; locale -> capability-definitions; hmr -> orchestration-runtime; modules -> orchestration-runtime; web -> orchestration-runtime",
-    "whyARule": "Hand-picking one entry per client package would be more prone to sliding toward the violation counter than a single rule a reviewer can check in one read.",
-    "webIsNotACompositionRoot": "packages/client/web is the web client's boot kernel (static module table, Cordis loader). A boot kernel is a thing that gets assembled, not the assembler; the web client's composition root is packages/bundle/web-app. The reason is duplicated as a comment at CLIENT_LAYERS so the next reader does not copy the wrong pattern.",
-    "signerHadSeenViolationCounts": false,
-    "publishedBeforeAnyRun": true,
-    "correctionToTheSignedTable": "The table said 'all 40 ui-* packages'. The real count is 38 (ls packages/client/ui-* | wc -l). The rule is a prefix match, so the count does not change its effect; recorded because a signed table should not carry a wrong number.",
-    "prediction": "If the 30 surviving orchestration-runtime -> surfaces-apps edges largely clear under this rule, the classification was wrong and clearing is correct. If what survives concentrates on edges like test-support/client-runtime -> UI, that is very likely a real finding: a test-time runtime pulling production UI into the dependency graph. Handled by a split proposal or a dated owned entry, never a table adjustment."
+    "rule": "packages/client/** -> surfaces-apps, all of it, including the six non-ui-* members",
+    "withdrawnRuleVerbatim": "The signer attempted to layer client/ by self-described role (2026-09-04); the measurement returned a net +12 upward edges. A self-description covers half of what these packages are. The group is one horizontal layer, not a vertical stack. This conclusion was produced by measurement, not chosen by the classifier.",
+    "counterexamples": "client/locale calls itself an extensible catalogue yet depends on four ui-* packages; client/connection calls itself an RPC transport yet depends on host-webserver and tool-todo; client/web calls itself a boot kernel yet depends on ui-primitives/ui-renderer/ui-slots, and something that assembles UI cannot sit beneath it.",
+    "supersededMeasurement": "The earlier per-package client rule cleared 9 edges and created 12 (143 -> 146). That refutation is what produced this ruling.",
+    "uiStarCountCorrection": "The first client table said 'all 40 ui-* packages'; the real count is 38. Recorded rather than silently corrected. The superseding rule matches the whole group, so the count no longer bears on it."
+  },
+  "$authorship4": {
+    "scope": "packages/test-support/** excluded from the ranked production dependency graph",
+    "signedBy": "coordinator delegate",
+    "signedAt": "2026-09-04",
+    "criterion": "A test-support package's job is to assemble the thing under test, so it must depend on it; and no production package depends on it. Same reasoning as composition-root, and it carries the same second half: any ranked package depending on test-support/** is a violation (test-support-inbound-dependency), proven by mutation in both directions. An exclusion without the reverse constraint would cancel a constraint rather than add one.",
+    "correctionThatProducedIt": "The Writer reported that packages/test-support/client-runtime carried 'hard dependencies (not devDependencies)' on six production UI packages. That was wrong and was checked before relaying: dependencies has 3 entries, all third-party (@testing-library/dom, @testing-library/react, vitest), and zero DSH packages; the 17 UI/API edges are peerDependencies mirrored in devDependencies per the repo's peer+dev convention. The edge is real under the declared production edge set, but the package does not bundle production UI, and with that corrected the composition-root reasoning applies unchanged."
   }
 }

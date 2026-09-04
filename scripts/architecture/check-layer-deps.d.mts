@@ -9,7 +9,7 @@ import type { ExemptedCycle, LayerDependencyEdge, PackageLayer } from './layer-o
 /** One package's resolved layer and the rule that assigned it. */
 export interface ClassifiedPackage {
   /** `composition-root` is the position outside the six-layer ranking (layering.md rule 1). */
-  readonly layer: PackageLayer | 'composition-root'
+  readonly layer: PackageLayer | 'composition-root' | 'test-support'
   /** The rule that decided the layer: `packages/kernel`, `apps`, an `architecture.layers.json` role, or a `packages/<group>` fallback. */
   readonly source: string
   /** Repo-relative package directory. */
@@ -50,6 +50,7 @@ export interface LayerViolation {
     | 'stale-kernel-edge-allowlist'
     | 'expired-kernel-edge-allowlist'
     | 'composition-root-inbound-dependency'
+    | 'test-support-inbound-dependency'
     | 'unexempted-cycle'
   readonly fromPackage: string
   readonly toPackage: string

@@ -50,26 +50,46 @@ const KERNEL_PERMITTED_CORDIS_BINDINGS = new Set(['Context'])
 const COMPOSITION_ROOT = 'composition-root'
 
 /**
- * The `packages/client/` group spans four layers, so it is resolved by a rule
- * rather than by a per-package table: every `ui-*` directory is a user-facing
- * presentation surface, and the six non-`ui-*` members are named below. A rule
- * is used deliberately in preference to 38 individual picks, which would be
- * far harder to audit for entries chosen to suit a result.
+ * `packages/client/**` is one horizontal band, not a vertical stack, so the
+ * whole group is `surfaces-apps` including its six non-`ui-*` members.
  *
- * `client/web` is deliberately NOT a composition root, and copying it as one
- * would be the wrong pattern: it is the web client's boot kernel (static
- * module table, Cordis loader), and a boot kernel is a thing that gets
- * assembled, not the assembler. The web client's actual composition root is
- * `packages/bundle/web-app`.
+ * WITHDRAWN RULE, recorded verbatim at the signer's request: "The signer
+ * attempted to layer `client/` by self-described role (2026-09-04); the
+ * measurement returned a net +12 upward edges. A self-description covers half
+ * of what these packages are. The group is one horizontal layer, not a
+ * vertical stack. This conclusion was produced by measurement, not chosen by
+ * the classifier."
+ *
+ * The three counterexamples the measurement produced: `client/locale` calls
+ * itself an extensible catalogue yet depends on four `ui-*` packages;
+ * `client/connection` calls itself an RPC transport yet depends on
+ * `dsh-host-webserver` and `dsh-tool-todo`; `client/web` calls itself a boot
+ * kernel yet depends on `ui-primitives`/`ui-renderer`/`ui-slots`, and
+ * something that assembles UI cannot sit beneath it. `client/web` is still
+ * not a composition root -- a boot kernel is a thing that gets assembled, and
+ * the web client's composition root is `packages/bundle/web-app`.
  */
-const CLIENT_LAYERS = {
-  connection: 'providers',
-  store: 'capability-definitions',
-  locale: 'capability-definitions',
-  hmr: 'orchestration-runtime',
-  modules: 'orchestration-runtime',
-  web: 'orchestration-runtime',
-}
+const CLIENT_LAYER = 'surfaces-apps'
+
+/**
+ * `packages/test-support/**` is excluded from the ranked production
+ * dependency graph, declared here rather than left as a convenient default.
+ *
+ * The exclusion criterion, stated in full: a package under
+ * `packages/test-support/` exists to assemble the thing under test, so it
+ * must be able to depend on any layer; and no production package depends on
+ * it. That is the same reasoning `COMPOSITION_ROOT` rests on, and it carries
+ * the same second half -- {@link runLayerDepsCheck} enforces that any ranked
+ * package depending on `test-support/**` is a violation. An exclusion without
+ * that reverse constraint would cancel a constraint rather than add one.
+ */
+const TEST_SUPPORT = 'test-support'
+
+/** The two positions outside the six-layer ranking: each may depend on any layer, and no ranked layer may depend on either. */
+const UNRANKED_POSITIONS = new Map([
+  [COMPOSITION_ROOT, 'composition-root-inbound-dependency'],
+  [TEST_SUPPORT, 'test-support-inbound-dependency'],
+])
 const CORDIS_PACKAGE = '@deepseek-ai/cordis'
 
 /**
@@ -115,7 +135,7 @@ const GROUP_LAYERS = {
   assurance: 'orchestration-runtime',
   experimental: 'orchestration-runtime',
   'runtime-diagnostics': 'orchestration-runtime',
-  'test-support': 'orchestration-runtime',
+  'test-support': TEST_SUPPORT,
   compaction: 'orchestration-runtime',
   feedback: 'orchestration-runtime',
   fs: 'orchestration-runtime',
@@ -292,8 +312,8 @@ export function classifyWorkspacePackages(root) {
       // The signed client-group rule outranks a capability-family role: a
       // `ui-*` package that also defines or provides a seam is still a
       // presentation surface.
-      layer = segments[2].startsWith('ui-') ? 'surfaces-apps' : CLIENT_LAYERS[segments[2]]
-      source = `packages/client rule`
+      layer = CLIENT_LAYER
+      source = 'packages/client rule'
     } else if (definitions.has(name)) {
       layer = 'capability-definitions'
       source = `${SEAMS_PATH}#definition`
@@ -551,17 +571,18 @@ export function runLayerDepsCheck(root) {
   }
 
   for (const edge of edges) {
-    // layering.md rule 1: a composition root may depend on any layer, so its
-    // own outgoing edges are unranked and never reach classifyEdge.
-    if (edge.fromLayer === COMPOSITION_ROOT) continue
-    // The half that makes the position a rule rather than an exemption: no
-    // layer may depend on a composition root.
-    if (edge.toLayer === COMPOSITION_ROOT) {
+    // An unranked position may depend on any layer, so its own outgoing edges
+    // never reach classifyEdge (layering.md rules 1 and 7).
+    if (UNRANKED_POSITIONS.has(edge.fromLayer)) continue
+    // The half that makes each position a rule rather than an exemption: no
+    // ranked layer may depend on an unranked one.
+    const inboundRule = UNRANKED_POSITIONS.get(edge.toLayer)
+    if (inboundRule !== undefined) {
       violations.push({
-        rule: 'composition-root-inbound-dependency',
+        rule: inboundRule,
         fromPackage: edge.fromPackage,
         toPackage: edge.toPackage,
-        detail: `${edge.fromLayer} -> composition root via ${edge.detectionMethod}; nothing may depend on a composition root (layering.md rule 1)`,
+        detail: `${edge.fromLayer} -> ${edge.toLayer} via ${edge.detectionMethod}; nothing may depend on a ${edge.toLayer} (layering.md rules 1 and 7)`,
       })
       continue
     }
@@ -591,7 +612,7 @@ export function runLayerDepsCheck(root) {
         rule: 'stale-kernel-edge-allowlist',
         fromPackage: entry.fromPackage,
         toPackage: entry.toPackage,
-        detail: 'allowlist entry names an edge that no longer exists — remove it (layering.md rule 6)',
+        detail: 'allowlist entry names an edge that no longer exists — remove it (layering.md rule 7)',
       })
       continue
     }
@@ -600,7 +621,7 @@ export function runLayerDepsCheck(root) {
         rule: 'expired-kernel-edge-allowlist',
         fromPackage: entry.fromPackage,
         toPackage: entry.toPackage,
-        detail: `allowlist entry expired ${entry.expires} (owner ${entry.owner}) — remove the edge or re-justify it (layering.md rule 6)`,
+        detail: `allowlist entry expired ${entry.expires} (owner ${entry.owner}) — remove the edge or re-justify it (layering.md rule 7)`,
       })
     }
   }
