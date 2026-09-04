@@ -774,6 +774,25 @@ So this is not "a red gate nobody manages" — it is **a set of gates this progr
 
 **Relationship to the trigger work in [BLOCKED-046](#blocked-046).** These are opposite failures and must not be merged: BLOCKED-046 is *a gate exists, is wired, and nobody ran it*; this is *gates exist, are wired to a path this program never travels*. Attaching a habitually-red suite to `pre-push` would install a gate everyone routes around with `--no-verify` — worse than none, because it looks like coverage. **Clear these ten first; only then widen the trigger.** The narrow, already-green pair (`verify-cordis-catalog`, `verify-cordis-inspect-catalog`) may land ahead of that, since both are green today and cover the two artifacts that produced the three-commit red streak.
 
+**Classification of the ten, by the delegate's own criterion — is the FILE wrong, or is the GATE wrong?** These gates have never run on this program's path, so the possibility that some are themselves broken is real and was checked rather than assumed. Result: **all ten are real file defects; none is a broken gate.** Each was run individually and its output read.
+
+| Gate | Verdict | What it actually reports |
+|---|---|---|
+| `verify-export-jsdoc` | **file — attributable** | 7 violations, all in two files: `plugin-provenance/src/signature.ts` (`registerTrustAnchor` has no JSDoc) and `capability-token/src/attenuate.ts` (`issueToken` missing `@param _trustRoot`, plus a stale `@param trustRoot` matching no parameter). |
+| `verify-package-paths` | **file — attributable** | One broken reference: `action-manifest/README.md:103` → `packages/core/tools/src/code-mode.ts`, which does not exist. |
+| `verify-package-readme-limitations` | **file — attributable** | `identity/principal/README.md` has no `## Known Limitations and Deferred Work`; `schema-registry/README.md` has two limitations-like headings where exactly one is allowed. |
+| `verify-config-catalog` | **file — regenerate** | `docs/config-catalog.md` stale; the generator names itself. |
+| `verify-persistence-catalog` | **file — regenerate** | `docs/persistence-catalog.md` stale; same shape. |
+| `verify-doc-budgets` | **file — one line** | `packages/README.md` at 1005 words against a 994 ceiling. |
+| `verify-subsystem-pages` | **file — structural** | Five package groups have no group README declaring subsystem ownership: `action`, `memory`, `migration`, `policy`, `run`. Every one is a group this program created. |
+| `verify-translation-pairing` | **file** | 18 findings. |
+| `verify-md-wrap` | **file — bulk** | 236 hard-wrapped paragraphs, concentrated in `.agents/notes/implemented/**` (this program's own notes) and `docs/audit/baseline-*.md`. |
+| `verify-package-readme-model-experience` | **file** | Reported against `workspace-trust/README.md` among others; a lane already confirmed this one reproduces on the base blob. |
+
+**The attribution is direct for the first three, and it is not flattering: `signature.ts` is P1-02's declared deliverable and `attenuate.ts` is P2-02's.** Both epics are mid-flight right now. So the gate this program never ran would have caught real defects in this program's own landed code — including a `@param` naming a parameter that does not exist, which is the documentation equivalent of the stale-prose class recorded throughout this queue. `action-manifest` (P2-03/P2-04/P4-12), `identity/principal` (P2-01/P2-09/P6-02) and `schema-registry` (P0-06/P1-08) are likewise all First-100-owned paths.
+
+**Sequencing consequence.** The five missing group READMEs and the two regenerate-only catalogs are mechanical and can be cleared in one pass. The `verify-md-wrap` bulk is different: 236 findings across notes this program wrote, which means the one-physical-line-per-paragraph rule was never once enforced against any Agent Note this program produced — worth deciding deliberately whether to reformat them or to exempt `docs/audit/baseline-*.md` the way vendored sources are exempted, rather than reflowing 236 paragraphs by hand.
+
 **Do not fix these ten inside an epic's lane.** Each belongs to whichever change introduced it, and folding a doc-gate repair into an unrelated epic's stage would put files outside that stage's frozen `files[]` into its commit — the precise scope violation the freeze exists to prevent. They need their own pass, sequenced by the delegate.
 
 ### BLOCKED-043 — P9's own registry-ification (Stage-0: vendor + SHA-pin + unlock the 100-epic hard count + generate machine-readable rows) is deliberately deferred, but MUST gate W20's own opening, not rest on memory (delegate ruling, 2026-09-03)
