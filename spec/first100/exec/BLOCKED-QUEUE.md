@@ -1157,4 +1157,24 @@ packages/experimental/agent-team/tests/persistence.spec.ts
 
 **Scope of exposure.** Any lane pointing `runLoaderSmoke` at an in-repo config whose entries can fail. Several W4 Usage stages do exactly this — P1-08.U, P6-01.U, P1-07.U, P4-01.U and P1-09.U all boot real profiles through it. **Each should confirm its fixture is copied rather than booted in place, and check `git status` for modified fixture YAML after a run.** A fixture whose entries cannot fail is unaffected.
 
-**Detection.** After running a composition spec, `git status --porcelain` on the fixture directory should be empty. If a `cordis.yml` shows as modified, the run disarmed it.
+**Detection recipe.** Hash the config before and after a run:
+
+```sh
+F=<the in-repo config the spec passes as configPath>
+B=$(shasum -a 256 "$F" | cut -d' ' -f1)
+pnpm exec vitest run <the composition spec>
+[ "$B" = "$(shasum -a 256 "$F" | cut -d' ' -f1)" ] || echo "the run disarmed the fixture"
+```
+
+`git status --porcelain` on the fixture directory works equally well and is cheaper.
+
+**Sweep of every W4 composition lane (2026-09-04): no current exposure beyond the lane that found it.** Measured, not assumed:
+
+| Spec | In-repo config | Result |
+|---|---|---|
+| `P1-09.composition.spec.ts` | yes, entries designed to fail | **was exposed; fixed** by copying into a git-ignored in-repo `tmp/` |
+| `P1-07.composition.spec.ts` | yes — `workspace-trust.patch.yml` passed as `configPath` | **not exposed**, verified by sha256 before/after: unchanged across a passing 2/2 run. Its entries do not throw; the untrusted workspace declines to *load* project content, which is not an `apply` failure |
+| `P0-01`, `P0-07`, `P4-01` composition specs | yes | copy the fixture before booting |
+| `cordis-host-runner/tests/composition.spec.ts` | none — in-process, no Loader boot | not applicable |
+
+**The distinction that decides exposure** is not "does the spec boot an in-repo config" but **"can one of that config's entries throw from `apply`"**. A fixture whose entries all mount successfully is untouched however it is booted; only a deliberately-failing entry triggers the write-back. That is why the hazard tracks fail-closed tests specifically — the tests most worth having.
