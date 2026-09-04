@@ -225,3 +225,111 @@ describe('an inode number reissued to a different directory does not carry trust
     expect(reconciled.state).toBe('untrusted')
   })
 })
+
+describe('P1-07 Fault — a trust transition must never grant capability outside must[2]', () => {
+  // downgradeTrust has no production caller today; requestTrustUpgrade's
+  // lowering path does, through WorkspaceEntity.upgradeTrust, which passes
+  // `target` through untouched. The reachable half manufactures exactly the
+  // input that makes the unreachable half dangerous: an untrusted record
+  // carrying a grantor, which a raising downgradeTrust call then lifts to
+  // trusted-execute while revokedKinds reports nothing revoked.
+  it('must[2]: downgradeTrust refuses a raising target, so acceptance[2] entry point can never grant trusted-execute with no host principal and no audit record', () => {
+    const untrusted = bindWorkspaceTrust(clonedRepoIdentity, '2026-09-04T00:00:00.000Z')
+    expect(() => downgradeTrust(untrusted, 'trusted-execute', '2026-09-04T00:01:00.000Z')).toThrow()
+  })
+
+  it('must[2]: downgradeTrust refuses a raising target even when the presented record still carries a grantor from an earlier grant', () => {
+    const untrustedWithStaleGrantor: TrustRecord = {
+      identity: clonedRepoIdentity,
+      state: 'untrusted',
+      at: '2026-09-04T00:00:00.000Z',
+      grantedBy: hostUser.id,
+    }
+    expect(() => downgradeTrust(untrustedWithStaleGrantor, 'trusted-execute', '2026-09-04T00:01:00.000Z')).toThrow()
+  })
+
+  it('must[2]: requestTrustUpgrade refuses a lowering target instead of reporting an upgrade and writing an audit record for a demotion', () => {
+    const result = requestTrustUpgrade(
+      trustedExecuteRecord(clonedRepoIdentity),
+      'untrusted',
+      hostUser,
+      '2026-09-04T00:01:00.000Z',
+    )
+    expect(result.upgraded).toBe(false)
+  })
+
+  it('must[2]: a refused trust upgrade returns neither a record nor an audit entry, for every refusal reason', () => {
+    const refusals = [
+      requestTrustUpgrade(
+        bindWorkspaceTrust(clonedRepoIdentity, '2026-09-04T00:00:00.000Z'),
+        'trusted-execute',
+        serviceCaller,
+        '2026-09-04T00:01:00.000Z',
+      ),
+      requestTrustUpgrade(
+        trustedExecuteRecord(clonedRepoIdentity),
+        'untrusted',
+        hostUser,
+        '2026-09-04T00:01:00.000Z',
+      ),
+    ]
+    for (const refusal of refusals) {
+      expect(refusal.upgraded).toBe(false)
+      expect('record' in refusal).toBe(false)
+      expect('audit' in refusal).toBe(false)
+    }
+  })
+})
+
+describe('P1-07 Fault — identity reconciliation faults the landed code has not been shown', () => {
+  const grantedAt: TrustRecord = {
+    identity: { canonicalPath: '/w/project', volume: { device: 1, inode: 1001, createdAtMs: 1_000 } },
+    state: 'trusted-execute',
+    at: '2026-09-04T00:00:00.000Z',
+    grantedBy: hostUser.id,
+  }
+
+  it('CHARACTERIZATION: drops trust when the creation time is recorded on one side and absent on the other, rather than falling back to a path/device/inode match', () => {
+    const reconciled = reconcileWorkspaceTrust(
+      grantedAt,
+      { canonicalPath: '/w/project', volume: { device: 1, inode: 1001, createdAtMs: 0 } },
+      '2026-09-04T01:00:00.000Z',
+    )
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.grantedBy).toBeUndefined()
+  })
+
+  it('CHARACTERIZATION: drops trust when the device id changes while the canonical path and inode do not', () => {
+    const reconciled = reconcileWorkspaceTrust(
+      grantedAt,
+      { canonicalPath: '/w/project', volume: { device: 2, inode: 1001, createdAtMs: 1_000 } },
+      '2026-09-04T01:00:00.000Z',
+    )
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.grantedBy).toBeUndefined()
+  })
+
+  // NaN > 0 is false, so an unparseable creation time lands in the
+  // unconfirmable branch and drops trust. Pinning it keeps a later refactor
+  // from turning the comparison into a fallback that matches on the inode.
+  it('CHARACTERIZATION: drops trust when the observed creation time is NaN, since an unconfirmable creation time is not an equal one', () => {
+    const reconciled = reconcileWorkspaceTrust(
+      grantedAt,
+      { canonicalPath: '/w/project', volume: { device: 1, inode: 1001, createdAtMs: Number.NaN } },
+      '2026-09-04T01:00:00.000Z',
+    )
+    expect(reconciled.state).toBe('untrusted')
+    expect(reconciled.grantedBy).toBeUndefined()
+  })
+
+  it('CHARACTERIZATION: downgrading a workspace that never granted anything revokes nothing and invents no grantor', () => {
+    const result = downgradeTrust(
+      bindWorkspaceTrust(clonedRepoIdentity, '2026-09-04T00:00:00.000Z'),
+      'untrusted',
+      '2026-09-04T01:00:00.000Z',
+    )
+    expect(result.record.state).toBe('untrusted')
+    expect(result.record.grantedBy).toBeUndefined()
+    expect(result.revokedKinds).toEqual([])
+  })
+})
