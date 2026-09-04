@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-03T23:49:55.299Z",
-  "inputDigest": "7b0b781103d9f63caced43d998defa43a0ab6915cb59d5501da4f5b68f31f645",
+  "lastUpdatedUtc": "2026-09-04T03:13:08.830Z",
+  "inputDigest": "ae8dd7d5a51c0c1efa6207aa6c32dbe9790424c859da77186f764d7eb7d93a06",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1246,7 +1246,25 @@
           "capturedAtUtc": "2026-09-03T16:27:56.301Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "0e04a4a4dc0fcb23d060061d4319c66f43e9badf",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33819864786",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-0e04/first100-evidence-0e04a4a4dc0fcb23d060061d4319c66f43e9badf/vitest-report.json",
+          "observationSha256": "5f9c99ad7722a33041e07ba266604c0e22cfb30889031df7c46cd6034ffe74ac",
+          "expectCasesMatched": [
+            "digests the exact bytes it was given, matching an independently computed sha256 of the same bytes",
+            "returns the same digest for the same bytes across separate calls, so a verdict does not depend on call order",
+            "changes the digest when a single byte of a real package payload is flipped",
+            "changes the digest when two bytes are swapped, so it depends on byte order and not only on content",
+            "changes the digest when one byte is appended, so it depends on length and not only on the leading bytes",
+            "verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture",
+            "rejects a package whose installed bytes differ from the claimed ones by a single flipped byte",
+            "rejects a tampered byte at the very first and very last positions alike, leaving no unchecked region of the artifact",
+            "reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance",
+            "rejects the same one-byte tampering offline that it rejects online, so the offline path is not the weaker one",
+            "KNOWN GAP (BLOCKED-050 hollow signature root): a tamper-and-rewrite attacker still verifies -- asserts CURRENT behavior, NOT desired behavior; giving the kernel real key material MUST break this test"
+          ],
+          "capturedAtUtc": "2026-09-04T03:13:08.821Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -1256,7 +1274,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+      "candidateSha": "0e04a4a4dc0fcb23d060061d4319c66f43e9badf",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
