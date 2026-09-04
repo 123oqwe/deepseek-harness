@@ -1343,6 +1343,9 @@ importers:
       '@deepseek-ai/dsh-workflow-worker-thread':
         specifier: workspace:^
         version: link:../../workflow/workflow-worker-thread
+      '@deepseek-ai/dsh-workspace-trust-local':
+        specifier: workspace:^
+        version: link:../../workspace/workspace-trust-local
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -4067,6 +4070,9 @@ importers:
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../../workspace/workspace-trust
 
   packages/context/file-reference:
     devDependencies:
@@ -8248,6 +8254,9 @@ importers:
       '@deepseek-ai/dsh-skill':
         specifier: workspace:^
         version: link:../skill
+      '@deepseek-ai/dsh-workspace-trust':
+        specifier: workspace:^
+        version: link:../../workspace/workspace-trust
 
   packages/skill/tool-skill:
     dependencies:

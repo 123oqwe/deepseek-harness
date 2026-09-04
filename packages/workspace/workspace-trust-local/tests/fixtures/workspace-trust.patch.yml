@@ -1,8 +1,16 @@
 # Test-only patch over the shipped headless profile for Epic P1-07's
 # acceptance[0]. The production bundle layers own agent-instructions,
 # skill-filesystem, the agent services, and persistence; this overlay only
-# supplies a keyless model, a session log to observe, and the workspace trust
-# provider whose grants the spec varies between the two runs.
+# supplies a keyless model, a session log to observe, and the grants for the
+# shipped-but-disabled workspace-trust-local row, which this overlay enables --
+# so the row this change adds to dsh-base is the one under test, not a copy.
+# The typert RPC type graph is unrelated to this fixture and imports each
+# contributor's built `lib/typert.host.js` directly, which does not exist in the
+# unit lane's unbuilt tree. Disabling it keeps this a source-mode composition
+# rather than one that silently requires a prior build.
+- id: typert-loader
+  disabled: true
+
 - id: headless-startup
   disabled: true
 
@@ -15,20 +23,20 @@
       - id: main
         provider: workspace-trust-mock
         model: workspace-trust-mock
-        cwd: !!js process.cwd()
+        cwd: !!js process.cwd() + '/clone'
 
 - id: session-persistence-jsonl
   config:
     root: './.sessions'
     compression: none
 
+- id: workspace-trust-local
+  disabled: false
+  config:
+    # The spec runs this same fixture twice: once with no grant (a freshly
+    # cloned repository) and once granting the clone trusted-execute.
+    grants: !!js "process.env.P1_07_TRUST_GRANT === undefined ? [] : [{ path: process.cwd() + '/clone', state: process.env.P1_07_TRUST_GRANT }]"
+
 - insert:
     - id: workspace-trust-mock-llm
       name: './mock-llm.ts'
-
-    - id: workspace-trust-local
-      name: '@deepseek-ai/dsh-workspace-trust-local'
-      config:
-        # The spec runs this same fixture twice: once with no grant (a freshly
-        # cloned repository) and once granting the clone trusted-execute.
-        grants: !!js "process.env.P1_07_TRUST_GRANT === undefined ? [] : [{ path: process.cwd(), state: process.env.P1_07_TRUST_GRANT }]"

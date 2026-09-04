@@ -139,11 +139,28 @@ export interface TrustRecord {
  * that would override the host's home- or profile-level patch composition
  * (`apps/cli/src/profile-boot.ts`'s `homePatchPath`/`PROFILE_PATCH_FILENAME`
  * layer). `./index.ts`'s `authorizeProjectLoad` decides each kind against a
- * {@link TrustState}; only `'trusted-execute'` admits any kind other than
- * `'safe-read'`.
+ * {@link TrustState}.
+ *
+ * `'project-instructions'` is the workspace's own instruction files
+ * (`AGENTS.md` and the local candidates beside it), and it is the one member
+ * whose decision differs between `'untrusted'` and `'trusted-read'`: the
+ * registry `gate` names instructions first among what an untrusted workspace
+ * must not load, while validation[1] requires a trusted-read workspace to
+ * inject that text as plain, prompt-injection-marked content. It is therefore
+ * what makes `'trusted-read'` a state with behavior of its own rather than a
+ * second spelling of `'untrusted'`. Every other non-`'safe-read'` member is
+ * executable and needs `'trusted-execute'`.
+ *
+ * Four of the executable members — `'project-plugin'`, `'project-hook'`,
+ * `'mcp-server'`, and `'home-profile-patch-override'` — have no
+ * project-sourced load site in this product yet, so nothing calls
+ * `authorizeProjectLoad` with them today. Building such a load site carries the
+ * obligation to route it through this gate; the boundary is not enforced for a
+ * kind merely because it is named here.
  */
 export type ProjectContentKind =
   | 'safe-read'
+  | 'project-instructions'
   | 'project-plugin'
   | 'project-hook'
   | 'mcp-server'

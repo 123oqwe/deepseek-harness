@@ -2946,6 +2946,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
       },
     ],
   },
+  {
+    key: 'workspaceTrust',
+    summary: 'The Service Definition Consumers read before loading anything a project directory supplied.',
+    description: 'The Service Definition Consumers read before loading anything a project directory supplied. A Consumer holds a session `cwd`, not a workspace id, so this is the seam rather than `@deepseek-ai/dsh-workspace`\'s `WorkspaceRegistry.workspaceTrust`, which is keyed by `WorkspaceId`.\n\n`@deepseek-ai/dsh-workspace-trust-local` is the host-local Provider. When no provider is mounted, `ctx.get(\'workspaceTrust\')` is `undefined` and each Consumer loads exactly as it did before this boundary existed; mounting a provider is what turns the boundary on.',
+    methods: [
+      {
+        signature: 'stateFor(cwd: string): Promise<TrustState>',
+        description: 'Resolve the trust state currently bound to a workspace directory, re-observing its filesystem identity so a replaced, retargeted, or moved directory never answers with the trust of the one it displaced.',
+        parameters: [{ name: 'cwd', description: 'the session working directory to resolve trust for.' }],
+        returns: 'the workspace\'s current {@link TrustState}.',
+      },
+    ],
+  },
 ]
 
 /** Every harness event, sorted by name. */

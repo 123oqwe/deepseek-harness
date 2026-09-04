@@ -53,6 +53,8 @@ skill 可以是被扫描根目录顶层的目录 bundle `<name>/SKILL.md`，也�
 
 项目根目录是包含 `.git` 的最近祖先目录；如果不存在，则使用当前 cwd。用户 DSH 根目录会跳过其 `.system` 子目录。`includeDefaultRoots: false` 会省略项目根、用户根以及 `$DSH_BUNDLED_SKILL_DIR` 默认值，使隔离提供方只看到自身配置的根；`bundledSkillDir` 会按 rank 600 添加一个内置根目录。
 
+两个 project 根受工作区信任边界的门禁约束：当挂载了 `ctx.workspaceTrust` Provider 时，只有在允许执行项目所提供内容的信任状态下才会扫描它们，因为被克隆仓库的 skill 就是它提供的可执行内容。custom、user 与 bundled 根属于宿主，永远不受门禁约束。未挂载 Provider 时不做任何门禁，所有根照旧扫描——开启该边界见 [`@deepseek-ai/dsh-workspace-trust-local`](../../workspace/workspace-trust-local/README.zh.md)。
+
 ### 挂载与配置
 
 与 skill 注册表一起加载该插件；它需要 `ctx.skills`。

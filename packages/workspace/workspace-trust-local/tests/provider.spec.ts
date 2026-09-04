@@ -12,6 +12,7 @@ import { mkdtemp, mkdir, realpath, rename, rm, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
+import type { TrustGrant } from '../src/index.ts'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as WorkspaceTrustLocal from '../src/index.ts'
 
@@ -27,7 +28,7 @@ async function makeRoot(): Promise<string> {
   return root
 }
 
-async function mount(grants: { path: string; state: string }[]): Promise<Context> {
+async function mount(grants: TrustGrant[]): Promise<Context> {
   const ctx = new Context()
   await ctx.plugin(WorkspaceTrustLocal, { grants })
   return ctx

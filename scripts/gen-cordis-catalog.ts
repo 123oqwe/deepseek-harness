@@ -123,6 +123,7 @@ export const SERVICE_PAGE: Record<string, string> = {
   workflowEngine: 'workflow.md',
   webhookRuntime: 'webhook.md',
   workspaceRegistry: 'workspace.md',
+  workspaceTrust: 'workspace.md',
   workspaceController: 'workspace.md',
   directoryPickerController: 'workspace.md',
 }

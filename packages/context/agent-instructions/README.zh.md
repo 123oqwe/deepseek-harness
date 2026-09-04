@@ -31,6 +31,8 @@ kind: "package-reference"
 
 第一次请求包含一条持久基线消息：先是用户全局 `$DSH_HOME/AGENTS.md`，再按从宽泛到具体的顺序包含项目指令链——从项目根目录到会话工作目录的每个目录中所有现有候选文件。去除空白后内容一致的同级文件只渲染一次，因此复制了 `AGENTS.md` 的 `CLAUDE.md` 不会被重复加载。当成功的 `read`、`write` 或 `edit` 调用到达更深的目录后，下一次请求会包含新适用的指令文件；已改变的文件会替换其内容，消失或成为较早候选文件重复项的文件会产生移除通知。
 
+项目链路受工作区信任边界的门禁约束：当挂载了 `ctx.workspaceTrust` Provider 时，未信任的工作区不会贡献它自己的任何 instruction 文件——无论是进入 baseline 还是经由工具触达；降级会把 baseline 重新组合为不含它们的形态，而不是让已注入的文本留在原处。用户全局的 `$DSH_HOME/AGENTS.md` 属于宿主，永远不受门禁约束。未挂载 Provider 时不做任何门禁，所有候选照旧加载——开启该边界见 [`@deepseek-ai/dsh-workspace-trust-local`](../../workspace/workspace-trust-local/README.zh.md)。
+
 ### 配置
 
 默认设置适合典型检出：`.git` 标记项目根目录，`AGENTS.md` 与 `CLAUDE.md` 是基础候选，`AGENTS.local.md` 与 `CLAUDE.local.md` 是叠加的本地 overlay。只有 `maxBytes` 必填——它限制完整渲染后的基线，让每个部署显式选择自己的提示词预算。

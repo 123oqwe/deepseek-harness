@@ -9,6 +9,8 @@ import { stat } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import type { FileSystem, FsInfo, FsTarget, FsVersion } from '@deepseek-ai/dsh-fs'
 import { dshHomeDisplay } from '@deepseek-ai/dsh-home-paths'
+import { authorizeProjectLoad } from '@deepseek-ai/dsh-workspace-trust'
+import type { TrustState } from '@deepseek-ai/dsh-workspace-trust/types'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { resolveConfig, resolveDiscoveryConfig, type ResolvedConfig } from './config.ts'
 import { trimmedInstructionDigest } from './digest.ts'
@@ -54,6 +56,14 @@ interface DiscoverOptions {
   localInstructionFileCandidates?: string[]
   projectRoot?: string
   signal?: AbortSignal
+  /**
+   * The workspace's trust state (Epic P1-07). At a state that does not permit
+   * `'project-instructions'`, the root-to-cwd chain is not walked at all and
+   * only the host's own user-global file is discovered. Omitted when no
+   * `workspaceTrust` provider is mounted, which discovers every candidate
+   * exactly as before this boundary existed.
+   */
+  trustState?: TrustState
 }
 
 interface LoadOptions extends DiscoverOptions {
@@ -293,6 +303,15 @@ async function discoverInstructionFiles(
     /* v8 ignore next 2 -- StatFileProbe is closed; this arm only makes adding a kind a compile error. */
     default:
       assertNever(userGlobalProbe, 'StatFileProbe')
+  }
+
+  // Epic P1-07's gate: an untrusted workspace's own instruction files never
+  // reach the model, while the host's user-global file above is not
+  // project-supplied and is unaffected at every state. Absent a trust state no
+  // provider is mounted, so the chain is walked as before.
+  if (options.trustState !== undefined
+    && !authorizeProjectLoad(options.trustState, 'project-instructions').permitted) {
+    return files
   }
 
   const cwd = resolve(options.cwd)

@@ -271,6 +271,17 @@
       config:
         sampleOverCapGlobResults: false
 
+    # Epic P1-07's project trust boundary. Mounted disabled: with no grants an
+    # enabled provider makes every workspace untrusted at once, which stops
+    # project skills and the project's own AGENTS.md loading for every existing
+    # user. A boundary that ships on and breaks everyone does not get adopted;
+    # this ships discoverable and one edit from on. Enable this row and add
+    # `grants` to turn the boundary on -- see
+    # @deepseek-ai/dsh-workspace-trust-local's README.
+    - id: workspace-trust-local
+      name: '@deepseek-ai/dsh-workspace-trust-local'
+      disabled: true
+
     - id: agent-instructions
       name: '@deepseek-ai/dsh-agent-instructions'
       config:
