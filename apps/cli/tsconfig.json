@@ -82,6 +82,9 @@
     },
     {
       "path": "../../packages/shell/tool-bash"
+    },
+    {
+      "path": "../../packages/plugin/plugin-compat"
     }
   ]
 }

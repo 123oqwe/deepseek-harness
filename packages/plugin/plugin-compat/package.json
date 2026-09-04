@@ -18,6 +18,10 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
+    "./solver": {
+      "types": "./lib/types/solver.d.ts",
+      "default": "./lib/types/solver.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },

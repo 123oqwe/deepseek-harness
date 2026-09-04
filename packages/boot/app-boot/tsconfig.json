@@ -37,6 +37,15 @@
     },
     {
       "path": "../../plugin/plugin-manifest"
+    },
+    {
+      "path": "../../plugin/plugin-compat"
+    },
+    {
+      "path": "../../util/brand"
+    },
+    {
+      "path": "../../schema/schema-registry"
     }
   ]
 }

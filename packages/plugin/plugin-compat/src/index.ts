@@ -61,10 +61,21 @@
  * @module @deepseek-ai/dsh-plugin-compat
  */
 
+import { brandNumber } from '@deepseek-ai/dsh-brand'
 import type { Branded, BrandedNumber } from '@deepseek-ai/dsh-brand'
 import type { SchemaId, SchemaVersion } from '@deepseek-ai/dsh-schema-registry/types'
 
 export type { SchemaId, SchemaVersion } from '@deepseek-ai/dsh-schema-registry/types'
+
+/**
+ * This build's runtime API version — the integer a boot passes as
+ * {@link HostCompatContext.runtimeApiVersion}, and the one every manifest's
+ * {@link RuntimeApiRange} is declared against. Monotonic, following this
+ * repo's `SCHEMA_VERSION`/`SESSION_FORMAT_VERSION` convention: it rises only
+ * when a change to the plugin-facing runtime makes a previously compatible
+ * plugin incompatible.
+ */
+export const DSH_RUNTIME_API_VERSION: RuntimeApiVersion = brandNumber<RuntimeApiVersion>(1)
 
 /**
  * A plugin package's stable identity for compatibility solving: its npm
@@ -586,4 +597,31 @@ export function solvePluginGraph(manifests: readonly PluginCompatManifest[], hos
     .sort((a, b) => comparePluginId(a.pluginId, b.pluginId))
 
   return { solvable: true, loadPlan: { activations, planId: computePlanId(activations) } }
+}
+
+/**
+ * must[0]'s declaration read from a real plugin package's `package.json`
+ * `dsh.compat` field: the on-disk projection of {@link PluginCompatManifest},
+ * validated here rather than in the boot glue that reads the file, because a
+ * `package.json` is an untrusted durable/file boundary and this package owns
+ * what a well-formed declaration is.
+ *
+ * A package with no `dsh.compat` field declares no compatibility constraints
+ * at all and is never blocked by this negotiation — `undefined` is returned
+ * and the caller omits it from the graph. That is the only permissive case:
+ * a `dsh.compat` that is present but malformed fails loud rather than
+ * degrading to "unconstrained", so a typo in a security-critical capability
+ * declaration can never silently admit the plugin (must[3]).
+ * @param raw - the `dsh.compat` value read from the package's `package.json`,
+ *   or `undefined` when the field is absent.
+ * @param pluginId - the package's own name, used as the manifest's
+ *   {@link PluginCompatManifest.pluginId}.
+ * @returns the validated {@link PluginCompatManifest}, or `undefined` when
+ *   `raw` is `undefined` (no declaration).
+ * @throws Error when `raw` is present but is not a well-formed declaration.
+ */
+export function parseCompatDeclaration(raw: unknown, pluginId: PluginId): PluginCompatManifest | undefined {
+  void raw
+  void pluginId
+  throw new Error('parseCompatDeclaration: not implemented')
 }

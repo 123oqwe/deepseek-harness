@@ -41,6 +41,12 @@ import {
   type PreMountDenialReason,
   type WildcardFinding,
 } from '@deepseek-ai/dsh-plugin-manifest'
+import type {
+  HostCompatContext,
+  PluginActivationStatus,
+  PluginCompatManifest,
+  UnsatCore,
+} from '@deepseek-ai/dsh-plugin-compat'
 import { resolve as resolvePackage, type Package as ResolvePackageManifest } from 'resolve.exports'
 import { loadOverlayPatches } from './index.ts'
 
@@ -926,4 +932,85 @@ export function partitionProfileLayersByAdmission(
     }
   }
   return { admitted, denied }
+}
+
+/**
+ * Read one bundle layer's own `package.json` `dsh.compat` field and validate
+ * it into Epic P1-08's {@link PluginCompatManifest} (must[0]). The same `dsh`
+ * field {@link readPluginDeclaration} classifies for P1-01's pre-mount
+ * admission, read here for its separate compatibility half — a package may
+ * carry `dsh.bundle`, `dsh.manifestVersion`, and `dsh.compat` together.
+ *
+ * A layer whose package declares no `dsh.compat` contributes no manifest and
+ * is never blocked by compatibility negotiation, which is why no shipped
+ * bundle's behavior changes; a malformed `dsh.compat` fails loud through
+ * `parseCompatDeclaration` rather than degrading to "unconstrained".
+ * @param layer - a resolved bundle layer from {@link loadProfile}.
+ * @returns the layer's validated manifest, or `undefined` when its package
+ *   declares no `dsh.compat`.
+ */
+export function readLayerCompatManifest(layer: ProfileLayer): PluginCompatManifest | undefined {
+  void layer
+  throw new Error('readLayerCompatManifest: not implemented')
+}
+
+/** One profile bundle layer a boot refuses to compose because compatibility negotiation blocked it (acceptance[1]). */
+export interface BlockedProfileLayer {
+  readonly layer: ProfileLayer
+  /** The solved `'blocked'` activation, naming the reason code and every unsatisfied required capability. */
+  readonly activation: Extract<PluginActivationStatus, { status: 'blocked' }>
+}
+
+/** One admitted profile bundle layer, with the optional capabilities the graph left unsatisfied (acceptance[2]). */
+export interface AdmittedProfileLayer {
+  readonly layer: ProfileLayer
+  /** The solved `'active'` activation; `disabledOptionalCapabilities` is empty for a layer that declared no `dsh.compat`. */
+  readonly activation: Extract<PluginActivationStatus, { status: 'active' }>
+}
+
+/**
+ * The outcome of one profile's compatibility negotiation: either every layer
+ * placed into admitted/blocked, or a graph-level contradiction no per-layer
+ * blocking can resolve (must[2]).
+ */
+export type ProfileCompatNegotiation =
+  | {
+    readonly solvable: true
+    /** Layers whose patches a boot may compose, in `dsh.profile.bundles` order. */
+    readonly admitted: readonly AdmittedProfileLayer[]
+    /** Layers whose patches a boot must not compose, so their plugin code never runs (acceptance[1]). */
+    readonly blocked: readonly BlockedProfileLayer[]
+    /** The solved plan's deterministic identity — equal profiles produce an equal `planId` (acceptance[0]). */
+    readonly planId: string
+  }
+  | { readonly solvable: false; readonly unsatCore: UnsatCore }
+
+/**
+ * Epic P1-08's boot-time negotiation point (must[1]): solve every bundle
+ * layer's declared `dsh.compat` manifest together, in one call, before any
+ * layer's patches are composed into the tree `boot()` mounts, and partition
+ * the layers by the resulting load plan.
+ *
+ * Every layer is judged, including one declaring no `dsh.compat` — such a
+ * layer contributes no {@link PluginCompatManifest} to the graph and is
+ * always admitted with no disabled optional capabilities, so an existing
+ * profile composes exactly as it did before this negotiation existed. Layers
+ * that do declare are solved through `@deepseek-ai/dsh-plugin-compat`'s
+ * `resolveActivatedGraph`, so a layer blocked on its own runtime API range or
+ * schema range also stops satisfying the capability requirements of the
+ * layers that depend on it, rather than leaving a consumer active against a
+ * provider that will never load (must[3]).
+ * @param layers - the profile's resolved bundle layers, in
+ *   `dsh.profile.bundles` order.
+ * @param host - this build's {@link HostCompatContext}, normally from
+ *   `@deepseek-ai/dsh-plugin-compat/solver`'s `resolveHostCompatContext`.
+ * @returns the partitioned negotiation outcome, or the minimal unsat core.
+ */
+export function negotiateProfileLayerCompatibility(
+  layers: readonly ProfileLayer[],
+  host: HostCompatContext,
+): ProfileCompatNegotiation {
+  void layers
+  void host
+  throw new Error('negotiateProfileLayerCompatibility: not implemented')
 }
