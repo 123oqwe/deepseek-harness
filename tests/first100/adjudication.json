@@ -1163,7 +1163,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 28,
+    "count": 31,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1414,6 +1414,33 @@
         "declaredPath": "packages/run/run/src/index.ts",
         "approvedPath": "scripts/gen-cordis-catalog.ts",
         "reason": "Generator-forced consequence of registering a real service, not an independent deliverable. Mounting RunPlugin publishes ctx.runs, and gen-cordis-catalog FAILS OUTRIGHT rather than warning when a service key has no SERVICE_PAGE entry or a referenced type has no classification -- so the choices are these two lines or a tree whose documentation gate does not pass. ctx.runs is mapped to docs/subsystems/core.md, where the sibling services agents and agentLoop already live, and Run is given a TYPE_LINK_EXEMPTIONS owner of packages/run/run/README.md, the page that actually documents it. The regenerated outputs (docs/subsystems/core.*, packages/extensions/tool-cordis/src/api-catalog.ts) follow mechanically. Same class as P6-07-U-sqlite-filter-refusal: approved without escalation because the alternative is a failing gate, and recorded here so the deviation is auditable rather than buried in a diff. The epic's must/acceptance clauses are unchanged.",
+        "approvedAt": "2026-09-04",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
+      },
+      "P1-02-U-inventory-producer": {
+        "epic": "P1-02",
+        "stage": "U",
+        "declaredPath": "packages/host/plugin-inventory/src/types.ts",
+        "approvedPath": "packages/host/plugin-inventory/src/index.ts",
+        "reason": "Scope widening: the declared types.ts is a pure type file, so acceptance[2]'s Inventory half cannot be exercised there. Adding an optional provenanceAudit field to a type nothing populates, tested by a spec that constructs the object literal itself, asserts a fact about TypeScript rather than about the product -- the BLOCKED-052 shape. buildPluginPermissionStates in index.ts is the real producer over live Loader entries (PluginInventoryGateway.list deliberately does not expose permission states). Package manifests, tsconfigs and READMEs ride along as build infrastructure. Note index.ts:341 already claims apps/cli calls this function for acceptance[1]'s display, which grep shows it does not; this stage makes that comment true. The epic's must/acceptance clauses are unchanged, and must[0]/must[2]/must[4] plus acceptance[0]'s swap-repo and forge-builder vectors remain locked under BLOCKED-050.",
+        "approvedAt": "2026-09-04",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
+      },
+      "P1-09-U-dynamic-registration-guard": {
+        "epic": "P1-09",
+        "stage": "U",
+        "declaredPath": "packages/extensions/cordis-host-runner/src/registry.ts",
+        "approvedPath": "packages/extensions/cordis-host-runner/src/guard.ts",
+        "reason": "Scope widening to the only non-vendored adjudication point for Service and Event registration. The epic's title and must[0] name Service/Tool/Event, but within the declared four files only the Tool surface can fail closed: ctx.provide and ctx.on are implemented in vendor/cordis/src/{reflect,events}.ts. guard.ts's sandbox context facade whitelists ctx.provide/ctx.on/ctx.tools.register (CTX_VERBS) and is where a dynamic plugin's registration can be refused before it reaches Cordis, which is what makes acceptance[2] non-vacuous. Static-origin Service/Event enforcement would require modifying vendored Cordis -- explicitly NOT requested and refused: those are logged local modifications under the vendoring policy, and docs/architecture/trust-kernel-boundary.md requires the vendored Fiber fix (Option A, verified unlanded) before any epic wires a real policy enforcement point consuming the kernel. must[0] is therefore scoped to Tool across all origins plus Service/Event for dynamic origin, with static-origin Service/Event recorded as a named residual against that prerequisite. Acyclicity of all three consumer edges proven by running tsc -b with real value imports, not by reading manifests. The epic's must/acceptance clauses are unchanged.",
+        "approvedAt": "2026-09-04",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
+      },
+      "P0-04-U-cycle-exemptions": {
+        "epic": "P0-04",
+        "stage": "U",
+        "declaredPath": "scripts/architecture/check-layer-deps.mjs",
+        "approvedPath": "tests/first100/architecture.layers.json",
+        "reason": "Scope widening for must[3]'s ADR-required cycle exemptions, which need a data store the declared files cannot host. layer-order.ts defines the ExemptedCycle type but no exemption data file exists anywhere in the repository. P0-03's precedent puts exactly this kind of allowlist in architecture.layers.json rather than inside the script, and adding one top-level key there mirrors the existing allowlist in the same document under the same owner. The rejected alternative -- a const inside check-layer-deps.mjs -- would make the checker own its own escape hatch. The epic's must/acceptance clauses are unchanged.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
       }
