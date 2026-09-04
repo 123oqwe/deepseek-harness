@@ -6147,7 +6147,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'TrustUpgradeDenialReason',
-    declaration: 'export type TrustUpgradeDenialReason = \'non-host-principal\';',
+    declaration: 'export type TrustUpgradeDenialReason = \'non-host-principal\' | \'not-an-upgrade\';',
   },
   {
     name: 'TrustUpgradeResult',
