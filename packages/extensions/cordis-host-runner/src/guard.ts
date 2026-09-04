@@ -833,15 +833,27 @@ export function isPlugin(value: unknown): value is Plugin {
  * Wrap a plugin so `apply` receives the sandbox context while preserving injection metadata.
  * @param plugin - the plugin the host half returned.
  * @param reportFailure - reports a guard rejection to the owning Agent.
+ * @param identity - the package's stable Plugin id; its registrations are attributed to it.
  * @returns an equivalent plugin whose `apply` sees the sandbox context façade.
  */
-export function guardedPlugin(plugin: Plugin, reportFailure: (error: Error) => void): Plugin {
+export function guardedPlugin(plugin: Plugin, reportFailure: (error: Error) => void, identity: string): Plugin {
+  const enter = (ctx: Context): Context => {
+    // Attribute this package's registrations to its stable Plugin id. Every
+    // dynamic host half hangs under one shared group fiber, so without this
+    // the tool registry resolves them all to that single owner and no
+    // collision between two dynamic packages is detectable. The other
+    // fallback -- the `name` the plugin object declares -- is written by the
+    // model in its own host-half source, so it is forgeable: a package could
+    // declare a real plugin's package name and inherit its standing.
+    ctx.get('tools')?.declareOwner(identity)
+    return sandboxContext(ctx, reportFailure)
+  }
   if (typeof plugin === 'function') {
     const functionPlugin = plugin as (ctx: Context, config?: unknown) => unknown
     return {
       name: pluginName(plugin),
       apply(ctx: Context, config?: unknown) {
-        return functionPlugin(sandboxContext(ctx, reportFailure), config)
+        return functionPlugin(enter(ctx), config)
       },
     }
   }
@@ -849,7 +861,7 @@ export function guardedPlugin(plugin: Plugin, reportFailure: (error: Error) => v
   return {
     ...plugin,
     apply(ctx: Context, config?: unknown) {
-      return objectPlugin.apply(sandboxContext(ctx, reportFailure), config)
+      return objectPlugin.apply(enter(ctx), config)
     },
   }
 }

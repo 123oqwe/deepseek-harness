@@ -26,6 +26,10 @@ Epic P1-09 的 Contract 阶段为 Service/Tool/Event 命名空间与所有权冲
 
 `packages/extensions/cordis-host-runner/src/guard.ts` 拒绝动态包在 `dsh.*` 内调用 `ctx.provide`/`ctx.on`/`ctx.once`。该 façade 是 Service 或 Event 注册在抵达 Cordis 之前被裁决的唯一非 vendored 位置。
 
+**动态包的身份属于 runner，而非它自己。** `guardedPlugin` 在 host 半的 `apply` 运行前调用 `declareOwner(pluginId)`，因此注册被归属到由 `startHostHalf` 向下穿入的 runner `CordisDynamicPluginId`。两种兜底方案对本场景都是错的，并据此被否决：`Fiber.name` 解析到模型在自己源码中写下的 `name`，一个包可以声明真实插件的包名并继承其地位；而外围 Loader 条目是共享的 `cordis-dynamic` group——所有动态半都挂在其下——会把它们坍缩为同一个拥有者，令动态对动态的冲突无法被检出。**身份绝不能绑定到主体自身可控的东西上。**
+
+**所有权拒绝必须重新教授它所挤掉的消息。** 有了各自独立的身份，动态包与不同拥有者冲突时会先被所有权门拒绝，工具注册表的重复错误不再触发，于是 `lifecycle.ts` 的 stop-then-run 配方——模型面对该冲突的实际操作指引——不再抵达模型。现在该配方在 `capability-collision` 上与在 `already registered` 上一并教授；两条消息描述的是同一处境（同包重跑，与不同拥有者），且需要同样的修复。捕获这次丢失的正是 `composition.spec.ts` 既有的 "names the replace recipe" 用例，而移除新增分支的变异会让它重新变红。
+
 `packages/host/plugin-inventory/src/index.ts` 新增 `buildToolOwnershipChain(ctx)`，与其旁边的 `buildPluginPermissionStates` 一样是普通导出。
 
 **scoped 注册的裁决方式不同，而仓库自带的测试抓住了初稿的错误。** 冲突裁决与所有权记录仅适用于全局注册：scoped 工具遮蔽全局名称正是 `agent.ctx` 注册的**用途**，初稿把它当作冲突拒绝，被本包既有的 `scoped.spec.ts` 抓住。保留命名空间规则仍适用于每一个 scope，否则 `dsh.*` 将可从任意 agent scope 被声明。
@@ -36,7 +40,7 @@ Epic P1-09 的 Contract 阶段为 Service/Tool/Event 命名空间与所有权冲
 
 **静态来源的 Service 与 Event 注册在任何地方都未设门。** `ctx.provide` 与 `ctx.on` 实现于 `vendor/cordis`；为其设门属于 vendored 改动，而 Trust Kernel 边界要求其排在尚未落地的 `Fiber` 修复之后。因此 must[0] 的强制范围是：Tool 覆盖全部来源，Service/Event 仅覆盖动态来源。对该条款采取仅限 Tool 的更窄解读会让此残留消失，该解读被拒绝，正因为它是消除障碍的那一种解读。
 
-**动态包的工具注册会落到模型撰写的名称上。** 没有显式 `declareOwner` 调用时，动态 host 半会退回 `Fiber.name`——即模型在自己源码中写下的 `name`。它可被伪造；且在带 Loader 的已引导树中，所有动态半都挂在共享的 `cordis-dynamic` group 条目之下，会把它们坍缩为同一个拥有者。修复方式是把 `plugin.pluginId` 从 `cordis-host-runner/src/index.ts` 穿到 `guardedPlugin`；该修复已实现并验证为绿，随后被回退，因为该文件不在本阶段获授的范围内。应用它还会让 `composition.spec.ts` 的 "names the replace recipe" 用例变红，因为所有权门会先行拒绝，`lifecycle.ts` 的教学消息不再被触达——该消息必须在同一次改动中于 `capability-collision` 上重新教授。
+（第二条残留——动态包的注册落到模型撰写的 `Fiber.name` 上——已在本次同一改动中关闭，见下文。）
 
 ## 考虑过的替代方案
 

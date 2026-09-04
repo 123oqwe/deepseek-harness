@@ -59,6 +59,8 @@ The façade refuses a package's `ctx.provide`, `ctx.on`, or `ctx.once` on a name
 
 This façade is the only place a Service or Event registration is adjudicated before it reaches Cordis. A STATICALLY loaded plugin's `ctx.provide`/`ctx.on` are not gated anywhere: both live in `vendor/cordis`, and gating them is a vendored change that the Trust Kernel boundary puts behind the `Fiber` fix.
 
+A package's registrations are attributed to its stable Plugin id, not to the `name` its own source declares — a declared name is written by the model and could otherwise claim another plugin's standing, and every host half hangs under one shared group fiber, which would otherwise collapse them all into a single owner.
+
 -----
 
 <a id="understand-the-implementation"></a>

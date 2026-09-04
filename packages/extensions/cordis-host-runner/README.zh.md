@@ -59,6 +59,8 @@ façade 会拒绝包对保留的 `dsh.*` 命名空间内名称调用 `ctx.provid
 
 该 façade 是 Service 或 Event 注册在抵达 Cordis 之前被裁决的唯一位置。**静态**加载插件的 `ctx.provide`/`ctx.on` 目前在任何地方都未设门：两者都位于 `vendor/cordis`，为其设门属于 vendored 改动，而 Trust Kernel 边界要求其排在 `Fiber` 修复之后。
 
+包的注册被归属到它稳定的 Plugin id，而非其源码自行声明的 `name`——声明的名称由模型写就，否则可被用来冒领其他插件的地位；且所有 host 半都挂在同一个共享 group fiber 之下，否则会把它们坍缩为同一个拥有者。
+
 -----
 
 <a id="understand-the-implementation"></a>

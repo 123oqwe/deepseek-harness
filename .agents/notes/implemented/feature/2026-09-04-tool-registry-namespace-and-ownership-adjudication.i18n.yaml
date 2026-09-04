@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-04-tool-registry-namespace-and-ownership-adjudication.md
-2026-09-04-tool-registry-namespace-and-ownership-adjudication.md: 19cc6ee135a2f5a02888bf240c91853d97d5d8d4
-2026-09-04-tool-registry-namespace-and-ownership-adjudication.zh.md: 5d026626463bd7d9b89b8a87953b6917361b9f0a
+2026-09-04-tool-registry-namespace-and-ownership-adjudication.md: d2ed50d0b391f1e8ad1a2ea5e8612843616f2cec
+2026-09-04-tool-registry-namespace-and-ownership-adjudication.zh.md: 8936a08fafe56b33870860283cee5bed268fba6f
