@@ -38,6 +38,16 @@ const VENDOR_MANIFEST_GLOB = 'vendor/*/package.json'
 
 /** The vendored runtime binding a `kernel`-layer package may import (layering.md rule 4). */
 const KERNEL_PERMITTED_CORDIS_BINDINGS = new Set(['Context'])
+
+/**
+ * The one position outside the six-layer ranking (layering.md rule 1): an
+ * assembly that composes the surfaces and everything beneath them into a
+ * runnable profile or entry binary. It may depend on any layer, and no layer
+ * may depend on it. It is deliberately not a seventh `PackageLayer` member,
+ * so P0-04's frozen Contract-stage layer sequence is unchanged: the position
+ * is resolved here, before any edge reaches `classifyEdge`.
+ */
+const COMPOSITION_ROOT = 'composition-root'
 const CORDIS_PACKAGE = '@deepseek-ai/cordis'
 
 /**
@@ -76,7 +86,7 @@ const GROUP_LAYERS = {
   run: 'orchestration-runtime',
   boot: 'orchestration-runtime',
   preset: 'orchestration-runtime',
-  bundle: 'orchestration-runtime',
+  bundle: COMPOSITION_ROOT,
   plugin: 'orchestration-runtime',
   extensions: 'orchestration-runtime',
   guard: 'orchestration-runtime',
@@ -254,7 +264,7 @@ export function classifyWorkspacePackages(root) {
       layer = 'kernel'
       source = 'packages/kernel'
     } else if (segments[0] === 'apps') {
-      layer = 'surfaces-apps'
+      layer = COMPOSITION_ROOT
       source = 'apps'
     } else if (definitions.has(name)) {
       layer = 'capability-definitions'
@@ -513,6 +523,20 @@ export function runLayerDepsCheck(root) {
   }
 
   for (const edge of edges) {
+    // layering.md rule 1: a composition root may depend on any layer, so its
+    // own outgoing edges are unranked and never reach classifyEdge.
+    if (edge.fromLayer === COMPOSITION_ROOT) continue
+    // The half that makes the position a rule rather than an exemption: no
+    // layer may depend on a composition root.
+    if (edge.toLayer === COMPOSITION_ROOT) {
+      violations.push({
+        rule: 'composition-root-inbound-dependency',
+        fromPackage: edge.fromPackage,
+        toPackage: edge.toPackage,
+        detail: `${edge.fromLayer} -> composition root via ${edge.detectionMethod}; nothing may depend on a composition root (layering.md rule 1)`,
+      })
+      continue
+    }
     const verdict = classifyEdge(edge)
     if (verdict === 'ok' || verdict === 'narrow-event-type-allowed') continue
     const key = `${edge.fromPackage} ${edge.toPackage}`
@@ -583,7 +607,7 @@ function main(argv) {
   for (const violation of result.violations) {
     process.stderr.write(`${GATE}: ${violation.rule}: ${violation.fromPackage} -> ${violation.toPackage}: ${violation.detail}\n`)
   }
-  const summary = `${GATE}: ${result.violations.length} violation(s) across ${result.scanned.packages} classified package(s), ${result.scanned.edges} dependency edge(s), ${LAYER_ORDER.length} layers, in ${elapsed}s.\n`
+  const summary = `${GATE}: ${result.violations.length} violation(s) across ${result.scanned.packages} classified package(s), ${result.scanned.edges} dependency edge(s), ${LAYER_ORDER.length} layers + composition roots, in ${elapsed}s.\n`
   process.stdout.write(summary)
   return result.violations.length === 0 ? 0 : 1
 }

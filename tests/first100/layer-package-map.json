@@ -40,6 +40,35 @@
     "@deepseek-ai/dsh-tools": {
       "layer": "capability-definitions",
       "reason": "STRADDLES LAYERS; predicted in advance like dsh-session. 'Tool registry and execution pipeline' -- the registry is a seam (capability-definitions), the pipeline is runtime (orchestration-runtime), in one package. Assigned by the same stated rule: the first-named role in the package's own description. Surviving violations are evidence of straddling, not of a table still needing tuning."
+    },
+    "@deepseek-ai/dsh-experimental-agent-team-profile": {
+      "layer": "composition-root",
+      "reason": "A profile is an assembly (signed composition-root table)."
+    },
+    "@deepseek-ai/dsh-experimental-agent-team-web-profile": {
+      "layer": "composition-root",
+      "reason": "A profile is an assembly (signed composition-root table)."
+    },
+    "@deepseek-ai/dsh-experimental-agent-team": {
+      "layer": "orchestration-runtime",
+      "reason": "Signed composition-root table: the agent-team runtime itself, not its profile."
+    },
+    "@deepseek-ai/dsh-experimental-client-ui-agent-team": {
+      "layer": "surfaces-apps",
+      "reason": "Signed composition-root table: a UI plugin."
+    },
+    "@deepseek-ai/dsh-cordis-client-runner": {
+      "layer": "orchestration-runtime",
+      "reason": "Signed composition-root table: a runner, not an assembly."
     }
+  },
+  "$authorship2": {
+    "scope": "the composition-root table: packages/bundle/*, apps/*, and the four experimental/extensions packages below",
+    "signedBy": "coordinator delegate",
+    "signedAt": "2026-09-04",
+    "basis": "which packages depend on a bundle: nothing under packages/ does except another bundle (dsh-web-app, dsh-base, dsh-acp-app are depended on only by apps/cli; dsh-sdk-app only by apps/cli and packages/bundle/sdk-minimal). Established before any violation count was consulted.",
+    "signerHadSeenViolationCounts": false,
+    "publishedBeforeAnyRun": true,
+    "prediction": "If the 89 orchestration-runtime -> surfaces-apps edges largely vanish once composition-root exists, the classification was wrong and clearing them is correct. Anything that survives is a real finding, handled by a split proposal or a dated allowlist entry with a named owner. No third pass over this table."
   }
 }
