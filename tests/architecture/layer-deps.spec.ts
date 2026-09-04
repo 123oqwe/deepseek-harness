@@ -9,7 +9,10 @@
  * `tests/architecture/capability-seams.spec.ts` (Epic P0-03).
  */
 
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { runLayerDepsCheck } from '../../scripts/architecture/check-layer-deps.mjs'
 import {
   CORDIS_PACKAGE_NAME,
   classifyEdge,
@@ -334,5 +337,145 @@ describe('findShortestCycle (must[3], acceptance[0], acceptance[2])', () => {
     const elapsedMs = Date.now() - startedAt
     expect(elapsedMs).toBeLessThan(10_000)
     expect(result.shortestCycle).toHaveLength(2)
+  })
+})
+
+describe('P0-04 Fault: the escape hatch\'s own validator (must[3], layering.md rule 5)', () => {
+  // layering.md rule 5 calls the exemption store "a data store the checker
+  // reads and never writes, so a gate cannot widen its own escape hatch." That
+  // holds for who may write it. It does not hold for what it accepts: every
+  // case below records an exemption that satisfies `validateExemptedCycle`
+  // while recording nothing a reader could act on.
+  //
+  // DEFECT cases are green because the defect is present. The fix belongs in
+  // `scripts/architecture/layer-order.ts`, which is the Contract stage's
+  // declared file, not this stage's — so these are recorded, not repaired.
+  const wellFormed: ExemptedCycle = {
+    cycle: ['@deepseek-ai/dsh-a', '@deepseek-ai/dsh-b'],
+    reason: 'a real reason',
+    owner: 'a real owner',
+    adrNote: '.agents/notes/implemented/architecture/2026-01-01-note.md',
+    recordedDate: '2026-01-01',
+  }
+
+  it('control: a well-formed exemption validates, so the refusals below measure a decision', () => {
+    expect(validateExemptedCycle(wellFormed)).toEqual([])
+  })
+
+  it('enforcement: an empty reason, owner, or adrNote is refused', () => {
+    expect(validateExemptedCycle({ ...wellFormed, reason: '' })).toContain('reason must not be empty')
+    expect(validateExemptedCycle({ ...wellFormed, owner: '' })).toContain('owner must not be empty')
+    expect(validateExemptedCycle({ ...wellFormed, adrNote: '' })).toContain('adrNote must not be empty')
+  })
+
+  it('DEFECT: a whitespace-only reason, owner, or adrNote is accepted, so an exemption can record nothing while passing', () => {
+    // `entry.reason === ''` tests one exact value. A single space defeats it,
+    // and the resulting entry suppresses a real cycle with no stated reason,
+    // no reachable owner, and no note to read.
+    expect(validateExemptedCycle({ ...wellFormed, reason: '   ' })).toEqual([])
+    expect(validateExemptedCycle({ ...wellFormed, owner: '\t' })).toEqual([])
+    expect(validateExemptedCycle({ ...wellFormed, adrNote: ' ' })).toEqual([])
+  })
+
+  it('DEFECT: a cycle naming one package twice is accepted as a two-package cycle', () => {
+    // `cycle.length < 2` counts entries, not distinct packages, so a
+    // degenerate self-edge satisfies the check that exists to require a real
+    // cycle between real packages.
+    expect(validateExemptedCycle({ ...wellFormed, cycle: ['@deepseek-ai/dsh-a', '@deepseek-ai/dsh-a'] })).toEqual([])
+  })
+
+  it('DEFECT: adrNote is documented as a repo-relative path to an Agent Note, and any non-empty string passes', () => {
+    // Nothing checks the shape of the path, and nothing checks the note
+    // exists — so the ADR requirement must[3] states is satisfied by prose.
+    expect(validateExemptedCycle({ ...wellFormed, adrNote: 'we talked about it' })).toEqual([])
+  })
+
+  it('DEFECT: an impossible calendar date validates, because Date.parse rolls it over', () => {
+    // 2026-02-31 matches the ISO shape and `Date.parse` returns a number for
+    // it (rolling to March 3) rather than NaN, so the NaN guard never fires.
+    expect(validateExemptedCycle({ ...wellFormed, recordedDate: '2026-02-31' })).toEqual([])
+  })
+
+  it('enforcement: a malformed date shape is still refused', () => {
+    expect(validateExemptedCycle({ ...wellFormed, recordedDate: 'last Tuesday' }).join(' ')).toContain('ISO calendar date')
+  })
+})
+
+describe('P0-04 Fault: classifyEdge refuses the kernel every way an exception could be claimed', () => {
+  it('enforcement: a kernel upward edge is a violation even when it is the narrow event-type kind', () => {
+    // acceptance[1] grants the kernel no exception. This is the one place the
+    // must[1] allowance must NOT apply, so it is asserted rather than assumed.
+    const edge: LayerDependencyEdge = {
+      fromPackage: KERNEL,
+      toPackage: AGENT_LOOP,
+      fromLayer: 'kernel',
+      toLayer: 'orchestration-runtime',
+      detectionMethod: 'package-graph',
+      nature: 'event-type-only',
+    }
+    expect(classifyEdge(edge)).toBe('layer-violation')
+  })
+
+  it('control: the same narrow event-type edge from a non-kernel layer IS allowed, proving the case above measures the kernel rule', () => {
+    const edge: LayerDependencyEdge = {
+      fromPackage: LLM_DEFINITION,
+      toPackage: AGENT_LOOP,
+      fromLayer: 'capability-definitions',
+      toLayer: 'orchestration-runtime',
+      detectionMethod: 'package-graph',
+      nature: 'event-type-only',
+    }
+    expect(classifyEdge(edge)).toBe('narrow-event-type-allowed')
+  })
+
+  it('enforcement: a global-singleton edge outranks every other consideration, including a downward direction', () => {
+    const edge: LayerDependencyEdge = {
+      fromPackage: CLIENT_WEB,
+      toPackage: LLM_DEFINITION,
+      fromLayer: 'surfaces-apps',
+      toLayer: 'capability-definitions',
+      detectionMethod: 'package-graph',
+      nature: 'global-singleton',
+    }
+    expect(classifyEdge(edge)).toBe('global-singleton-violation')
+  })
+})
+
+describe('P0-04 Fault: calibrating the real-repository verdict before trusting its zero', () => {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+
+  // The Usage stage asserts the real repository reports zero violations. A
+  // verdict that is always zero and a verdict that is broken produce the same
+  // report, so that assertion carries no weight until something shows the
+  // machinery actually ran against real input and could have reported more.
+  // These cases are that calibration, applied to the real scan rather than to
+  // a fixture: a fixture proves the code path exists, not that it engages with
+  // this repository.
+
+  it('calibration: the real scan reaches real input — hundreds of packages, thousands of edges', () => {
+    const result = runLayerDepsCheck(root)
+    expect(result.scanned.packages).toBeGreaterThan(200)
+    expect(result.scanned.edges).toBeGreaterThan(1000)
+    expect(result.unclassified).toEqual([])
+  })
+
+  it('calibration: the reporting path is live on real input, so an empty violations list is a measurement and not a dead path', () => {
+    const result = runLayerDepsCheck(root)
+    // `findings` and `violations` are produced by the same edge walk and the
+    // same classification; only the verdict differs. A non-empty findings list
+    // therefore proves the walk ran, classified real edges, and populated its
+    // output — which is exactly what a zero violations count cannot show on
+    // its own.
+    expect(result.findings.length).toBeGreaterThan(0)
+    expect(result.violations).toEqual([])
+  })
+
+  it('calibration: the same entry point reports a violation when one exists, so zero distinguishes this repository from a broken check', () => {
+    // Same function, same code path, different root. Without this, the case
+    // above cannot tell "this repository is clean" from "this function never
+    // reports anything".
+    const fixture = join(root, 'tests/architecture/__fixtures__/p0-04-calibration')
+    const result = runLayerDepsCheck(fixture)
+    expect(result.violations.length).toBeGreaterThan(0)
   })
 })
