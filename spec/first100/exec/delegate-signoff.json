@@ -36,6 +36,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-04T16:08:28.552Z",
       "note": "gq-92 independent four-predicate verify: (i) coverage closure re-run against the real acceptance-coverage schema, every coveredBy title checked against ITS OWN stage's cited observation; (ii) all candidate SHAs confirmed ancestors of first100-exec; (iii) all frozen case titles present-and-passing in the cited runs (254 titles across the three epics, 0 missing / 0 not-passing); lock register read from primary source — this epic carries no acceptance lock. Row digest recomputed independently and matched."
+    },
+    {
+      "epic": "P1-07",
+      "rowDigestSha256": "8d10915f5161908b83ca5774660f1d8b661fc76027d17182c003eb46ee8fa94d",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-04T17:21:35.941Z",
+      "note": "gq-92 independent verify. (i) 3/3 acceptance clauses, 20 references, each checked against the observation ITS OWN stage cites. (ii) 4 candidate SHAs all ancestors. (iii) 46 frozen titles across four cells, re-checked under the STRICT rule that EVERY occurrence of a title must be passed -- the rule the Supervisor's own fullName-Map collapse (19210 -> 19082, 128 duplicates) would have defeated; 0 titles had any non-passed occurrence. Acceptance lock lifted in the same act: (a) the mutation point exists at skill-filesystem/src/index.ts:255; (b) reconcileWorkspaceTrust demotes to untrusted on any mismatch of canonicalPath/device/inode/createdAtMs, binding the OBSERVED identity with no grantedBy, and keeps the createdAtMs>0 confirmable guard so a filesystem reporting no creation time fails closed; (c) both halves present -- files.ts:313 gates the incremental path and index.ts:139 folds trustState into the baseline identity so a downgrade recomposes. Verified by reading the source, not from the SATISFIED marker."
     }
   ]
 }
