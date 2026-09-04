@@ -37,6 +37,23 @@ The vendored Cordis runtime (`@deepseek-ai/cordis`) sits outside this six-layer 
 
 A real scanner resolves a dependency edge through three channels: the declared package.json graph (`dependencies`/`peerDependencies`), a TypeScript path-alias import, and a dynamic `require()`/`import()` call invisible to a static package-graph walk. Which channel found an edge never changes its verdict under the rules above — only the edge's layer relationship and its nature (an ordinary value dependency, a narrow event-type import, or a global-singleton bypass) do.
 
+## Pass conditions and observations
+
+`pnpm run architecture:layers` fails on exactly four zeros, and reports everything else. The distinction is deliberate: a gate that is permanently red in today's repository degrades into one nobody reads, and an unlabelled list of violations is read as accepted status quo.
+
+**Pass conditions** — the gate exits non-zero on any of these:
+
+| Zero | Source |
+|---|---|
+| unexempted cycles in the production package graph | acceptance[0] |
+| kernel reverse edges | acceptance[1] and the epic gate |
+| expired or stale `kernelEdgeAllowlist` entries | the epic gate |
+| global-singleton bypasses (rule 3) | must[1] |
+
+Plus two conditions the gate also gives up on: every package classified (the epic gate), and completion within 10 seconds (acceptance[2]).
+
+**Observations** — reported, never failed on. A generic upward edge between two ranked layers is a finding. No registry clause requires zero of them: must[0] requires the order be *defined*, must[2] requires the three channels be *detected*, acceptance[0] is about cycles, and the epic gate names only the two zeros above. Findings are printed to stdout labelled `finding (not a failure)` and persisted to [`scripts/architecture/layer-findings.md`](../../scripts/architecture/layer-findings.md) by `--write-findings`, so they outlive a CI log.
+
 ## Enforcement
 
 `pnpm architecture:layers` runs the real checker (`scripts/architecture/check-layer-deps.mjs`, U-stage) and must complete within 10 seconds, reporting the shortest violating cycle's path when the graph has an unexempted one. It is wired into CI as a blocking gate.

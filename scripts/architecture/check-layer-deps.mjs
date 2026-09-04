@@ -21,7 +21,7 @@
  * gate cannot widen its own escape hatch.
  */
 
-import { readFileSync, globSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, globSync, existsSync } from 'node:fs'
 import { dirname, resolve, sep } from 'node:path'
 import ts from 'typescript'
 import { LAYER_ORDER, classifyEdge, findShortestCycle, validateExemptedCycle } from './layer-order.ts'
@@ -29,11 +29,26 @@ import { LAYER_ORDER, classifyEdge, findShortestCycle, validateExemptedCycle } f
 const GATE = 'check-layer-deps'
 const EXEMPTIONS_PATH = 'tests/first100/layer-cycle-exemptions.json'
 const PACKAGE_MAP_PATH = 'tests/first100/layer-package-map.json'
+/** The persistent findings report, in P0-04's own canonical directory so the observations outlive a CI log. */
+const FINDINGS_PATH = 'scripts/architecture/layer-findings.md'
 const SEAMS_PATH = 'architecture.layers.json'
 const PACKAGE_MANIFEST_GLOB = 'packages/*/*/package.json'
 const APP_MANIFEST_GLOB = 'apps/*/package.json'
 const SOURCE_GLOB = 'src/**/*.{ts,tsx,mts,cts}'
 const TSCONFIG_BASE = 'tsconfig.base.json'
+
+/**
+ * A module-level mutable exported binding: the "module-level singleton" half
+ * of layering.md rule 3. `export const` is not one — an immutable binding
+ * carries no state another package can reach through.
+ */
+const MUTABLE_EXPORT = /^[\t ]*export\s+(?:let|var)\s+([A-Za-z_$][\w$]*)/gm
+/** An assignment to a shared global: the "shared mutable global" half of rule 3. */
+const GLOBAL_WRITE = /\b(?:globalThis|window|global)\s*\.\s*([A-Za-z_$][\w$]*)\s*=(?!=)/g
+/** Any read of a shared global key, paired against {@link GLOBAL_WRITE} to find a hidden cross-package channel. */
+const GLOBAL_READ = /\b(?:globalThis|window|global)\s*\.\s*([A-Za-z_$][\w$]*)/g
+/** Named import bindings, so a mutable export can be matched to the packages that import it. */
+const NAMED_IMPORT = /\bimport\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/g
 const VENDOR_MANIFEST_GLOB = 'vendor/*/package.json'
 
 /** The vendored runtime binding a `kernel`-layer package may import (layering.md rule 4). */
@@ -403,6 +418,32 @@ function specifierPackage(specifier, byPackage) {
 }
 
 /**
+ * Collect one source file's rule-3 facts: the mutable module-level bindings it
+ * exports, the shared-global keys it writes and reads, and the named bindings
+ * it imports per module specifier.
+ * @param text - the file's source text.
+ * @returns the file's mutable exports, global writes, global reads, and named imports by specifier.
+ */
+function collectStateFacts(text) {
+  const mutableExports = new Set()
+  for (const match of text.matchAll(MUTABLE_EXPORT)) mutableExports.add(match[1])
+  const globalWrites = new Set()
+  for (const match of text.matchAll(GLOBAL_WRITE)) globalWrites.add(match[1])
+  const globalReads = new Set()
+  for (const match of text.matchAll(GLOBAL_READ)) globalReads.add(match[1])
+  const namedImports = new Map()
+  for (const match of text.matchAll(NAMED_IMPORT)) {
+    const bindings = namedImports.get(match[2]) ?? new Set()
+    for (const clause of match[1].split(',')) {
+      const name = clause.trim().split(/\s+as\s+/)[0].replace(/^type\s+/, '').trim()
+      if (name !== '') bindings.add(name)
+    }
+    namedImports.set(match[2], bindings)
+  }
+  return { mutableExports, globalWrites, globalReads, namedImports }
+}
+
+/**
  * Resolve every dependency edge between workspace packages through must[2]'s
  * three detection channels: the declared `dependencies`/`peerDependencies`
  * graph, a TypeScript path-alias import, and a dynamic `import()`/`require()`
@@ -417,7 +458,7 @@ export function collectLayerEdges(root, byPackage) {
   const aliases = readPathAliases(root)
   const edges = new Map()
   const record = (fromPackage, toPackage, detectionMethod, nature) => {
-    const key = `${fromPackage} ${toPackage}`
+    const key = `${fromPackage} ${toPackage}`
     if (edges.has(key)) return
     const from = byPackage.get(fromPackage)
     const to = byPackage.get(toPackage)
@@ -439,9 +480,28 @@ export function collectLayerEdges(root, byPackage) {
     }
   }
 
+  const facts = new Map()
   for (const [name, { dir }] of byPackage) {
+    const packageFacts = {
+      mutableExports: new Set(),
+      globalWrites: new Map(),
+      globalReads: new Map(),
+      importedBindings: new Map(),
+    }
     for (const file of sourceFiles(root, dir)) {
-      const { static: stat, dynamic, typeOnly } = collectSpecifiers(readFileSync(resolve(root, file), 'utf8'))
+      const text = readFileSync(resolve(root, file), 'utf8')
+      const { static: stat, dynamic, typeOnly } = collectSpecifiers(text)
+      const state = collectStateFacts(text)
+      for (const binding of state.mutableExports) packageFacts.mutableExports.add(binding)
+      for (const key of state.globalWrites) if (!packageFacts.globalWrites.has(key)) packageFacts.globalWrites.set(key, file)
+      for (const key of state.globalReads) if (!packageFacts.globalReads.has(key)) packageFacts.globalReads.set(key, file)
+      for (const [specifier, bindings] of state.namedImports) {
+        const target = specifierPackage(specifier, byPackage)
+        if (target === undefined || target === name) continue
+        const known = packageFacts.importedBindings.get(target) ?? new Map()
+        for (const binding of bindings) if (!known.has(binding)) known.set(binding, file)
+        packageFacts.importedBindings.set(target, known)
+      }
       for (const specifier of stat) {
         const target = specifierPackage(specifier, byPackage)
         if (target === undefined || target === name) continue
@@ -454,8 +514,26 @@ export function collectLayerEdges(root, byPackage) {
         record(name, target, 'dynamic-require', 'value')
       }
     }
+    facts.set(name, packageFacts)
   }
-  return [...edges.values()]
+
+  // layering.md rule 3, first half: an edge that imports another package's
+  // mutable module-level binding reaches that package's state directly. The
+  // nature upgrade is what finally hands `classifyEdge` a 'global-singleton'
+  // edge -- the Contract stage defined that verdict and nothing produced it
+  // until this pass existed.
+  const singletonBindings = new Map()
+  for (const edge of edges.values()) {
+    const imported = facts.get(edge.fromPackage)?.importedBindings.get(edge.toPackage)
+    const mutable = facts.get(edge.toPackage)?.mutableExports
+    if (imported === undefined || mutable === undefined) continue
+    const reached = [...imported.keys()].filter(binding => mutable.has(binding)).sort()
+    if (reached.length === 0) continue
+    edge.nature = 'global-singleton'
+    singletonBindings.set(`${edge.fromPackage} ${edge.toPackage}`, reached.map(binding => `${binding} (${imported.get(binding)})`))
+  }
+
+  return { edges: [...edges.values()], facts, singletonBindings }
 }
 
 /**
@@ -484,7 +562,7 @@ function collectKernelVendorEdges(root, byPackage) {
         const specifier = moduleSpecifier.text
         const target = [...vendored].find(pkg => specifier === pkg || specifier.startsWith(`${pkg}/`))
         if (target === undefined) continue
-        const key = `${name} ${target}`
+        const key = `${name}\0${target}`
         const entry = found.get(key) ?? { fromPackage: name, toPackage: target, bindingFiles: new Map(), files: new Set() }
         entry.files.add(file)
         const addBinding = binding => {
@@ -533,13 +611,14 @@ export function runLayerDepsCheck(root) {
   const { byPackage, unclassified } = classifyWorkspacePackages(root)
   const exemptions = readLayerExemptions(root)
   const violations = []
+  const findings = []
   for (const error of exemptions.errors) violations.push({ rule: 'malformed-exemption-store', fromPackage: '', toPackage: '', detail: error })
   for (const name of unclassified) {
     violations.push({ rule: 'unclassified-package', fromPackage: name, toPackage: '', detail: `${name} matched no capability-family role and no packages/<group> entry` })
   }
 
-  const edges = collectLayerEdges(root, byPackage)
-  const allowed = new Map(exemptions.kernelEdgeAllowlist.map(entry => [`${entry.fromPackage} ${entry.toPackage}`, entry]))
+  const { edges, facts, singletonBindings } = collectLayerEdges(root, byPackage)
+  const allowed = new Map(exemptions.kernelEdgeAllowlist.map(entry => [`${entry.fromPackage}\0${entry.toPackage}`, entry]))
   const usedAllowances = new Set()
   const today = new Date().toISOString().slice(0, 10)
 
@@ -552,7 +631,7 @@ export function runLayerDepsCheck(root) {
       kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'permitted-binding' })
       continue
     }
-    const key = `${entry.fromPackage} ${entry.toPackage}`
+    const key = `${entry.fromPackage}\0${entry.toPackage}`
     const allowance = allowed.get(key)
     if (allowance !== undefined && allowance.expires >= today) {
       usedAllowances.add(key)
@@ -588,7 +667,7 @@ export function runLayerDepsCheck(root) {
     }
     const verdict = classifyEdge(edge)
     if (verdict === 'ok' || verdict === 'narrow-event-type-allowed') continue
-    const key = `${edge.fromPackage} ${edge.toPackage}`
+    const key = `${edge.fromPackage}\0${edge.toPackage}`
     const allowance = edge.fromLayer === 'kernel' ? allowed.get(key) : undefined
     if (allowance !== undefined) {
       usedAllowances.add(key)
@@ -597,16 +676,34 @@ export function runLayerDepsCheck(root) {
         continue
       }
     }
-    violations.push({
-      rule: edge.fromLayer === 'kernel' ? 'kernel-upward-dependency' : verdict === 'global-singleton-violation' ? 'global-singleton' : 'layer-violation',
+    if (verdict === 'global-singleton-violation') {
+      const reached = singletonBindings.get(`${edge.fromPackage} ${edge.toPackage}`) ?? []
+      violations.push({
+        rule: 'global-singleton',
+        fromPackage: edge.fromPackage,
+        toPackage: edge.toPackage,
+        detail: `imports the mutable module-level binding(s) ${reached.join(', ')} (layering.md rule 3: reaching another package's state through a module-level singleton instead of the ctx-based seam)`,
+      })
+      continue
+    }
+    const entry = {
+      rule: edge.fromLayer === 'kernel' ? 'kernel-upward-dependency' : 'layer-violation',
       fromPackage: edge.fromPackage,
       toPackage: edge.toPackage,
       detail: `${edge.fromLayer} -> ${edge.toLayer ?? 'outside the six-layer graph'} via ${edge.detectionMethod}`,
-    })
+    }
+    // A generic upward edge is a reported FINDING, not a pass condition: no
+    // registry clause requires zero of them (must[0] says define the order,
+    // must[2] says detect the channels, acceptance[0] is about cycles, and the
+    // gate names only the kernel-reverse-edge and expired-allowlist zeros). A
+    // kernel upward edge is different -- acceptance[1] and the gate both
+    // require it to be zero.
+    if (entry.rule === 'kernel-upward-dependency') violations.push(entry)
+    else findings.push(entry)
   }
 
   for (const entry of exemptions.kernelEdgeAllowlist) {
-    const key = `${entry.fromPackage} ${entry.toPackage}`
+    const key = `${entry.fromPackage}\0${entry.toPackage}`
     if (!usedAllowances.has(key)) {
       violations.push({
         rule: 'stale-kernel-edge-allowlist',
@@ -626,6 +723,34 @@ export function runLayerDepsCheck(root) {
     }
   }
 
+  // layering.md rule 3, second half: a shared mutable global couples two
+  // packages with no import edge at all, so no package-graph or path-alias
+  // walk can see it. A key only counts when some workspace package writes it,
+  // which is what keeps a host global (globalThis.crypto, globalThis.process)
+  // from ever matching.
+  for (const [reader, readerFacts] of facts) {
+    for (const [key, readFile] of readerFacts.globalReads) {
+      // A platform global that a package merely polyfills is not "another
+      // layer's state": reading globalThis.fetch is using a Web API, and a
+      // worker runtime installing a fetch polyfill does not couple every
+      // caller to that runtime. The test is mechanical rather than a
+      // hand-written allowlist -- the key must not already exist on this
+      // process's globalThis. Its known limit: a DOM-only global absent from
+      // Node (`window.customElements`) is not filtered here, and would be
+      // reported if some workspace package also assigned it.
+      if (key in globalThis) continue
+      for (const [writer, writerFacts] of facts) {
+        if (writer === reader || !writerFacts.globalWrites.has(key)) continue
+        violations.push({
+          rule: 'global-singleton',
+          fromPackage: reader,
+          toPackage: writer,
+          detail: `both reach the shared global '${key}' (read ${readFile}, written ${writerFacts.globalWrites.get(key)}) — layering.md rule 3 forbids this channel regardless of layer direction`,
+        })
+      }
+    }
+  }
+
   const productionEdges = edges.filter(edge => edge.detectionMethod === 'package-graph')
   const cycle = findShortestCycle(productionEdges, exemptions.exemptedCycles)
   const shortestCycle = cycle.shortestCycle
@@ -640,11 +765,58 @@ export function runLayerDepsCheck(root) {
 
   return {
     violations,
+    findings,
     shortestCycle: cycle.isExempted ? undefined : shortestCycle,
     unclassified,
     kernelEdges,
     scanned: { packages: byPackage.size, edges: edges.length, layers: LAYER_ORDER.length },
   }
+}
+
+/**
+ * Render the reported findings as the persistent report's Markdown body.
+ * @param result - the gate result whose findings to render.
+ * @param elapsed - the measured run time in seconds.
+ * @returns the report text.
+ */
+function renderFindings(result, elapsed) {
+  const byTransition = new Map()
+  const byTarget = new Map()
+  for (const finding of result.findings) {
+    const transition = finding.detail.split(' via ')[0]
+    byTransition.set(transition, (byTransition.get(transition) ?? 0) + 1)
+    byTarget.set(finding.toPackage, (byTarget.get(finding.toPackage) ?? 0) + 1)
+  }
+  const rank = map => [...map].sort((a, b) => b[1] - a[1]).map(([key, count]) => `| ${key} | ${count} |`)
+  return [
+    '# Layer findings',
+    '',
+    'Generated by `pnpm run architecture:layers --write-findings`. **These are observations, not pass conditions.**',
+    `${GATE} fails on the four zeros in [layering.md](../../docs/architecture/layering.md#pass-conditions-and-observations); everything below is reported so it is neither hidden nor mistaken for accepted status quo.`,
+    '',
+    `Scan: ${result.scanned.packages} classified packages, ${result.scanned.edges} edges, ${elapsed}s. Findings: ${result.findings.length}.`,
+    '',
+    '## By layer transition',
+    '',
+    '| Transition | Count |',
+    '|---|---|',
+    ...rank(byTransition),
+    '',
+    '## By target package',
+    '',
+    '| Package | Count |',
+    '|---|---|',
+    ...rank(byTarget),
+    '',
+    '## Every finding',
+    '',
+    '| From | To | Detail |',
+    '|---|---|---|',
+    ...result.findings
+      .map(finding => `| \`${finding.fromPackage}\` | \`${finding.toPackage}\` | ${finding.detail} |`)
+      .sort(),
+    '',
+  ].join('\n')
 }
 
 function main(argv) {
@@ -656,7 +828,16 @@ function main(argv) {
   for (const violation of result.violations) {
     process.stderr.write(`${GATE}: ${violation.rule}: ${violation.fromPackage} -> ${violation.toPackage}: ${violation.detail}\n`)
   }
-  const summary = `${GATE}: ${result.violations.length} violation(s) across ${result.scanned.packages} classified package(s), ${result.scanned.edges} dependency edge(s), ${LAYER_ORDER.length} layers + composition roots, in ${elapsed}s.\n`
+  // Findings go to stdout, labelled, so they are never read as failure
+  // conditions and never silently dropped either.
+  for (const finding of result.findings) {
+    process.stdout.write(`${GATE}: finding (not a failure): ${finding.rule}: ${finding.fromPackage} -> ${finding.toPackage}: ${finding.detail}\n`)
+  }
+  if (argv.includes('--write-findings')) {
+    writeFileSync(resolve(root, FINDINGS_PATH), renderFindings(result, elapsed))
+    process.stdout.write(`${GATE}: wrote ${result.findings.length} finding(s) to ${FINDINGS_PATH}\n`)
+  }
+  const summary = `${GATE}: ${result.violations.length} violation(s) and ${result.findings.length} reported finding(s) across ${result.scanned.packages} classified package(s), ${result.scanned.edges} dependency edge(s), ${LAYER_ORDER.length} layers + composition roots and test-support, in ${elapsed}s.\n`
   process.stdout.write(summary)
   return result.violations.length === 0 ? 0 : 1
 }

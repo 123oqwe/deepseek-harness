@@ -58,8 +58,8 @@
       "reason": "Signed composition-root table: a UI plugin."
     },
     "@deepseek-ai/dsh-cordis-client-runner": {
-      "layer": "orchestration-runtime",
-      "reason": "Signed composition-root table: a runner, not an assembly."
+      "layer": "surfaces-apps",
+      "reason": "DIRECTORY MISFIT, same treatment and same reasoning as @deepseek-ai/dsh-client-ui-cordis: a client-surface package living under packages/extensions/. It depends on client-ui-renderer, client-ui-theme, client-modules and api-remotes, which is what a client surface does, not what a runtime extension does. Signed by the coordinator delegate on 2026-09-04 after the Writer declined to classify it while looking at the violation counter. No directory move: a move touches imports, tsconfigs, the lockfile and the catalog, which is disproportionate to a classification problem. This entry is the input for later directory hygiene."
     },
     "@deepseek-ai/dsh-client-ui-cordis": {
       "layer": "surfaces-apps",

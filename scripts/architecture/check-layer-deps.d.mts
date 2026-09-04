@@ -71,6 +71,8 @@ export interface KernelEdge {
 /** The gate's full result for one repository or fixture root. */
 export interface LayerDepsResult {
   readonly violations: LayerViolation[]
+  /** Reported observations, not pass conditions: generic upward edges no registry clause requires to be zero. */
+  readonly findings: LayerViolation[]
   /** The shortest cycle in the production package graph, or `undefined` when acyclic or exempted. */
   readonly shortestCycle: readonly string[] | undefined
   readonly unclassified: string[]
@@ -99,7 +101,13 @@ export function classifyWorkspacePackages(root: string): ClassificationResult
  * @param byPackage - the classified workspace packages.
  * @returns one resolved edge per distinct package pair.
  */
-export function collectLayerEdges(root: string, byPackage: Map<string, ClassifiedPackage>): LayerDependencyEdge[]
+export function collectLayerEdges(root: string, byPackage: Map<string, ClassifiedPackage>): {
+  readonly edges: LayerDependencyEdge[]
+  /** Per-package rule-3 state facts: mutable exports, shared-global writes/reads, and imported bindings. */
+  readonly facts: Map<string, unknown>
+  /** `"<from> <to>"` to the mutable bindings that made the edge a global-singleton, each with the file that imports it. */
+  readonly singletonBindings: Map<string, string[]>
+}
 
 /**
  * Run the full layer-dependency gate against a repository or fixture root.
