@@ -984,6 +984,14 @@ The inode assertion is replaced by `expect(record.state).toBe('untrusted')` — 
 
 **One root cause.** The registry's stage `files[]` were written without verifying that those files can actually exercise the clause assigned to them. That is a property of how the registry was authored, not a defect in any epic, and it will keep recurring.
 
+**Generalized to classification data (Writer finding, 2026-09-04, standing form of the rule).** Condition 1 of P0-04's acceptance[1] adjudication was "write the definition first, then run — do not derive it from what passes." Its Writer generalized that correctly, and stopped mid-task to say so:
+
+> *"a third adjustment would be me tuning a 269-entry table against a violation counter, which is condition 1's failure mode at data scale."*
+
+**At data scale the failure is much harder to detect**: no reviewer of a 269-row classification table can tell which rows were written from the architecture and which were written from the counter. The rule therefore applies to **any input that determines what a gate reports**, not only to prose definitions — a layer map, an allowlist, a severity table, a fixture corpus. Write it from the source of truth, publish it, then run. **A published classification cannot be quietly fitted to its results; an unpublished one always can.**
+
+The signed `packages/core/` classification for P0-04 was consequently authored and published by someone who had not seen the violation counts, with the expected outcome for the ambiguous packages recorded **in advance**, so that surviving violations would be readable as a finding rather than as unfinished tuning.
+
 **Pre-dispatch checkpoint, effective now.** Before dispatching any stage, answer in one line: **"using only the declared files, can this clause really be exercised?"** If the answer is not clearly yes, report before a Writer is sent, not after one hits the wall.
 
 **And when the answer is no, the question is not finished.** A second answer is mandatory: **"then which files would suffice?"** Stopping at "not within the declared scope" conflates *cannot be done here* with *cannot be done*, and those have opposite remedies — the first is a path patch, the second is a genuine BLOCKED. The Supervisor made exactly this error on P6-07.U, proposing to mark the whole stage BLOCKED; the delegate refused it, and the file set turned out to exist (`session-query/src/{types,corpus}.ts`, projecting the `identity/attached` event P2-01 already lands, no `SessionHeader` change and no other epic first).
