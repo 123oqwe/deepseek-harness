@@ -1037,6 +1037,8 @@ Instructions — named first in the epic's own `gate` line — are the other rea
 
 Fixed by stripping block and line comments before the check. That immediately caught two packages it had been silently passing: `dsh-run` (nine stale claims, reported by a Writer the gate had cleared) and **`dsh-plugin-ownership` — fully implemented, 13/13 passing, documented from front matter to source docstring as an unimplemented scaffold, and reported by nobody.** How long it had been skipped is unknown.
 
+**Corollary on mutation testing (Writer finding, 2026-09-04).** A lane's two mutations — removing a refusal, and weakening its reason — could not show that a *newly added branch* was live rather than dead code, because neither mutation reached it. The Writer noticed and added a third mutation targeting that branch alone; it turned exactly one case red. **The purpose of mutation testing is not only to show that a suite can fail, but that every branch the change introduces is covered by some case.** A branch no mutation can reach is a branch no test is watching.
+
 **Rule.** *A check that recognises a problem by text pattern will be fooled by text discussing that problem. Any such check must first strip meta-layer text — comments and documentation — and evaluate only the subject itself.*
 
 Applies beyond this gate: any scan keying on a marker string (`TODO`, `FIXME`, `not implemented`, a deprecated identifier) must decide what counts as the subject and exclude prose about it, or it will read its own warning label as the condition.
@@ -1128,6 +1130,13 @@ P1-02's Usage stage makes two `PluginPermissionState` fields **required** rather
 ### BLOCKED-060 — a validator crashed on malformed data instead of naming the entry at fault (Supervisor defect, delegate-caught, 2026-09-04)
 
 Three CI cases failed with `TypeError: p.reason.trim is not a function`. Cause: the Supervisor corrected the `P0-04-U-cycle-exemptions` path patch with a stray trailing comma in the generating script, making `reason` a **one-element tuple** rather than a string. `checkDeliverablePathPatches` did `p.reason.trim().length === 0` with no type check, so a malformed entry killed the checker outright.
+
+**A gate that fails without saying why is the same defect however it happens.** Two instances so far, and they belong together:
+
+1. **Malformed data crashed the checker** — a `reason` that was an array rather than a string produced `TypeError: p.reason.trim is not a function` instead of naming the entry (this entry).
+2. **Noise on stdout broke a parser** — `verify-frozen-titles-resolvable.mjs` parses a subprocess's stdout as JSON, and pnpm writes platform warnings there, producing `Unexpected token 'a', "native/land"... is not valid JSON`. Transient, clean on re-run, **not yet fixed**: recorded rather than patched while the gate is otherwise doing its job.
+
+**The family: a gate that fails without reporting what it was built to report.** Whether it crashes on bad input, dies on unexpected output, or passes silently ([BLOCKED-055](#blocked-055)), the result is the same — the check ran and you learned nothing. A gate must distinguish "the subject is bad" from "I could not evaluate the subject", and say which.
 
 **The defect worth recording is the second one, not the first.** A typo in a data edit is ordinary. A gate that **dies** on bad input rather than reporting it is not: the crash replaced "which entry is malformed" with a stack trace, so the checker withheld exactly the information it exists to produce. **A gate that crashes on bad data fails the same way as one that admits it — in both cases you do not learn what it was built to tell you.**
 
