@@ -150,6 +150,13 @@ export function buildSessionWhere(filters: readonly SessionResultFilter[]): SqlW
       case 'id':
         addList(clauses, params, 'session_id', filter.values)
         break
+      case 'tenant':
+      case 'workspace':
+        // This index stores no tenant or workspace column, so the clause
+        // cannot be compiled into the ranked search. Refusing is the only safe
+        // outcome: dropping a tenant clause here would return another tenant's
+        // sessions to a caller that asked to be scoped to its own.
+        unsupportedSearchFilter(filter.kind)
       case 'cwd':
         addNullableList(clauses, params, 'cwd', filter.values)
         break
@@ -464,6 +471,19 @@ function compareNullable(a: string | null, b: string | null): number {
 function unknownAvailability(value: never): never {
   throw new SessionQueryError(
     `session availability filter contains unknown value "${String(value)}"`,
+    'SESSION_QUERY_INVALID_FILTER',
+  )
+}
+
+/**
+ * Refuse a logical-session clause this index has no column for, rather than
+ * compiling a query that silently ignores it.
+ * @param kind - the clause kind this index cannot compile.
+ * @returns never; always throws.
+ */
+function unsupportedSearchFilter(kind: 'tenant' | 'workspace'): never {
+  throw new SessionQueryError(
+    `session ${kind} filter is not supported by the sqlite full-text search index`,
     'SESSION_QUERY_INVALID_FILTER',
   )
 }

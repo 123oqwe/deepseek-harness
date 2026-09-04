@@ -50,6 +50,10 @@ export function materializeSessionResultFilters(
     switch (filter.kind) {
       case 'id':
         return { kind: filter.kind, values: copyStrings(filter.kind, filter.values) }
+      case 'tenant':
+        return { kind: filter.kind, values: copyStrings(filter.kind, filter.values) }
+      case 'workspace':
+        return { kind: filter.kind, values: copyStrings(filter.kind, filter.values) }
       case 'cwd':
         return { kind: filter.kind, values: copyNullableStrings(filter.kind, filter.values) }
       case 'created-at':
@@ -121,6 +125,13 @@ function sessionPredicate(filter: SessionResultFilter): (record: SessionRecord) 
   switch (filter.kind) {
     case 'id':
       return record => filter.values.includes(record.header.id)
+    case 'tenant':
+      // An absent tenant is never a wildcard: a session whose identity this
+      // observation could not attribute is excluded from every tenant's
+      // listing rather than appearing in the wrong one.
+      return record => record.tenantId !== undefined && filter.values.includes(record.tenantId)
+    case 'workspace':
+      return record => record.workspaceId !== undefined && filter.values.includes(record.workspaceId)
     case 'cwd':
       return record => filter.values.includes(record.header.cwd ?? null)
     case 'created-at': {

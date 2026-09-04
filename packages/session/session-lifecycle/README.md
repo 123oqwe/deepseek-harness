@@ -22,9 +22,9 @@ evidence, never a fabricated full recovery (acceptance[3]).
 The package has two halves. `src/retention.ts`, `src/delete.ts` and
 `src/index.ts` hold the decisions — `archiveSession`, `softDeleteSession`,
 `placeLegalHold`, `assertNoLegalHold`, `propagateDeletion`, `hardErase`,
-`listSessions`, `readSessionLogWithRepair` — as pure functions over
-caller-supplied data, performing no I/O. `src/store.ts` holds the durability
-those decisions need to mean anything past process exit: a
+`listSessions`, `projectLifecycleRecords`, `readSessionLogWithRepair` — as
+pure functions over caller-supplied data, performing no I/O. `src/store.ts`
+holds the durability those decisions need to mean anything past process exit: a
 `SessionLifecycleStore` seam, a file-backed store over it, and a
 `SessionLifecycleService` that writes every accepted change through and
 reconstructs the whole registry from the store on the next boot. Without it a
@@ -34,6 +34,8 @@ erase-blocking hold out of reach — a restart is precisely the event that
 destroys an in-memory record set. The service delegates every decision to the
 pure half and adds no second, divergent filter, sort order, hold check, or
 propagation policy of its own.
+
+`projectLifecycleRecords` supplies the records the rest of the package acts on. It joins `@deepseek-ai/dsh-session-query`'s real live-preferred corpus to this registry, so a filtered listing runs against the sessions a harness actually has rather than an array a caller assembled by hand. A registered session keeps its durable disposition and legal hold verbatim — a corpus sighting says only that the session exists and can never promote a soft-deleted or held session back to `active`. An unregistered one projects as `active`. One that is neither registered nor tenant-attributable is reported in `unattributed` and yields no record, rather than being handed an invented owner.
 
 No invariant companion is published. The durable store records lifecycle
 dispositions and nothing else — this package still constructs no query index,
@@ -65,9 +67,12 @@ data — it reads no file, spawns no process, and constructs no Cordis
 inventories calls these to decide each lifecycle operation:
 
 ```ts
-import { listSessions } from '@deepseek-ai/dsh-session-lifecycle'
+import { listSessions, projectLifecycleRecords } from '@deepseek-ai/dsh-session-lifecycle'
 import { archiveSession, assertNoLegalHold, placeLegalHold } from '@deepseek-ai/dsh-session-lifecycle/retention'
 import { hardErase, propagateDeletion, HARD_ERASE_POLICY } from '@deepseek-ai/dsh-session-lifecycle/delete'
+
+// `records` comes from the real corpus, joined to whatever the registry holds:
+const { records, unattributed } = projectLifecycleRecords(await ctx.sessionQuery.listSessions(), registered)
 
 const page = listSessions(records, { filters: [{ kind: 'tenant', values: [tenantId] }], limit: 100 })
 // page.nextCursor is absent once the walk has visited every matching record exactly once
@@ -195,7 +200,7 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 |---|---|
 | [`src/retention.ts`](src/retention.ts) | The disposition/legal-hold taxonomy (must[1]) and the structural erase gate (acceptance[1]): `SessionDisposition`, `LegalHold`, `SessionLifecycleRecord`, `NoLegalHoldProof`, `LegalHoldBlocksErasureError`, and the transition functions `archiveSession`/`softDeleteSession`/`placeLegalHold`/`assertNoLegalHold` |
 | [`src/delete.ts`](src/delete.ts) | Deletion propagation (must[2]) and hard erase (acceptance[1]/[2]): `PropagationTarget`, `DeletionPolicy`, `SOFT_DELETE_POLICY`/`HARD_ERASE_POLICY` (real), and `propagateDeletion`/`hardErase` |
-| [`src/index.ts`](src/index.ts) | Listing/pagination (must[0]/acceptance[0]) and corrupted-log recovery (acceptance[3]); re-exports `./retention.ts` and `./delete.ts`'s public surface |
+| [`src/index.ts`](src/index.ts) | Listing/pagination (must[0]/acceptance[0]), the `projectLifecycleRecords` corpus join that supplies its records, and corrupted-log recovery (acceptance[3]); re-exports `./retention.ts` and `./delete.ts`'s public surface |
 | [`src/store.ts`](src/store.ts) | The durable registry (acceptance[0]/acceptance[1]): the `SessionLifecycleStore` seam, the file-backed `createFileSessionLifecycleStore`, and `SessionLifecycleService`, whose only constructor is `restore(store)` |
 
 </details>
@@ -251,9 +256,10 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **Nothing wires `SessionLifecycleService` into a live session path.** A
   real harness run still persists no lifecycle record: no plugin constructs
   the service, no session creation registers a record with it, and it is
-  registered on no Cordis `Context`. The store is durable and correct in
-  isolation, and reaching it requires a caller that does not exist yet —
-  that wiring is a later stage's job.
+  registered on no Cordis `Context`. `projectLifecycleRecords` closes the
+  input half — the decisions now run over a real corpus rather than a
+  hand-built array — but the registry that would record a disposition back is
+  still assembled by a caller, and no shipped composition assembles one.
 - **Deletion propagation is decided, not executed.** `propagateDeletion`
   returns which targets a deletion reaches and with what action; no code here
   calls the query index, attachment store, memory store, or artifact store to
@@ -271,6 +277,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   string with one mint function) fully informed this package's own
   `SessionLifecycleCursor` — see this README's Design philosophy above for
   why the two are deliberately separate brands rather than one shared type.
+- **A status filter distinguishes only what the registry recorded.** `projectLifecycleRecords` gives every unregistered corpus session the `active` disposition, because a real session carries no disposition until something registers one. So `archived` and `soft-deleted` are only ever reachable through this package's own registry: filtering for `active` over a corpus nothing has registered returns every session in it.
+- **A cold session cannot be tenant-attributed.** The corpus observes a session's tenant from the last `identity/attached` event in its log, and a session listed from a persistence header alone has no events in hand. Those sessions land in `unattributed` unless a durable record already exists for them. Closing this needs a durable tenant fact outside the log, which does not exist yet.
 - **`NoLegalHoldProof` is compile-time-only, like `AdminGrant`.** It is
   defeatable by an explicit `as` cast, the same documented limit
   `@deepseek-ai/dsh-principal`'s `AdminGrant` already carries. Real

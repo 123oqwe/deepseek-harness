@@ -31,7 +31,7 @@ kind: "package-reference"
 
 | 操作 | 你得到什么 |
 |---|---|
-| `listSessions()` | 每个逻辑会话，最新的在前，带 `live` 与 `persisted` 可用性标志 |
+| `listSessions()` | 每个逻辑会话，最新的在前，带 `live` 与 `persisted` 可用性标志，以及本次观察能够归属到的租户与工作区 |
 | `readSession(id)` | 经过回放校验的完整原始事件日志，且不会让该会话变为实时 |
 | `filterSessions(filters)` | 匹配 AND 连接的元数据与可用性谓词的会话 |
 | `filterEvents(id, filters)` | 匹配元数据与字面文本谓词的语义事件文档 |
@@ -46,7 +46,9 @@ kind: "package-reference"
 
 ### 过滤器
 
-`SessionResultFilter` 按 id、可空 cwd、创建时间范围、可空父级或来源可用性缩小会话范围；`SessionEventResultFilter` 按 seq/时间范围、事件类型、表层或字面文本缩小事件范围。过滤器数组使用 AND 连接，同一子句内的列表值使用 OR；空列表值不匹配任何内容，范围包含端点，格式错误的范围或未知的封闭联合值以 `SESSION_QUERY_INVALID_FILTER` 失败。
+`SessionResultFilter` 按 id、租户、工作区、可空 cwd、创建时间范围、可空父级或来源可用性缩小会话范围；`SessionEventResultFilter` 按 seq/时间范围、事件类型、表层或字面文本缩小事件范围。过滤器数组使用 AND 连接，同一子句内的列表值使用 OR；空列表值不匹配任何内容，范围包含端点，格式错误的范围或未知的封闭联合值以 `SESSION_QUERY_INVALID_FILTER` 失败。
+
+`tenant` 或 `workspace` 子句永远不会接纳对应 `SessionRecord` 字段缺失的记录。无法归属的会话会被排除在每个租户的列表之外，而不是出现在错误的租户里——该子句宁可漏掉也不会泄漏。sqlite 后端的排序搜索无法回答这两个子句，会直接拒绝；参见该包的 README。
 
 文本子句是对所提取语义文本的字面、不区分大小写、空白灵活的扫描——而非全文查询。需要任意子字符串召回时使用它；需要排序后的全文结果时使用挂载后端的搜索方法。
 
@@ -101,6 +103,8 @@ kind: "package-reference"
 
 ### 语料库解析
 
+列表还会为每条记录做归属。租户来自观察到的日志中最后一个 `identity/attached` 事件——与 `@deepseek-ai/dsh-agent-loop` 的 `lastAttachedIdentity` 使用同一规则，绝不来自 `user/message` 或任何其他模型可编辑的内容。工作区来自一次同步的 `ctx.workspaceRegistry.list()`，反转为会话到工作区的查找表，因此归属的代价是遍历一次工作区，而不是每个会话读取一次。无法观察到的值会省略其属性，而不是设为 `undefined`。
+
 `SessionCorpus` 通过 fiber 绑定可选的 `ctx.sessionPersistence`，并实时优先解析每次读取：已知实时目标直接快照，不查询持久化；否则先列出会话，再以不修改日志的方式检查，并在克隆前重新检查是否出现实时挂载。列表与加载观察之间会断言 header 兼容性。批量标题读取执行一次元数据列表与有界并发检查，把逐会话失败隔离，而取消会拒绝整个批次。
 
 ### 读取与追踪
@@ -144,6 +148,8 @@ kind: "package-reference"
 - **无提供方协调器或回退**——服务在搜索上是抽象的，组合必须挂载具体后端；没有搜索提供方注册表或回退实现。
 - **精确读取回放整个日志**——`readSession`、`readSurface`、`filterEvents` 与事件追踪会加载并校验完整逻辑日志，因此非常大的历史每次调用都要付出完整检查；`listSessions` 保持轻量。
 - **字面文本扫描，而非全文搜索**——`text` 过滤器用正则表达式扫描提取出的文档且不排序；排序搜索需要挂载后端。
+- **仅持久化的会话没有可观察的租户**——列表从持久化 header 解析它，而 header 不携带事件，因此没有 `identity/attached` 事件可用于归属。恢复它意味着为每个被列出的会话读取一次日志，而列表不做这件事。因此 `tenant` 子句只匹配当前实时的会话。归属一个冷会话需要日志之外的持久租户事实，而它尚不存在。
+- **工作区归属需要挂载注册表**——没有 `ctx.workspaceRegistry` 时，每条记录的 `workspaceId` 都缺失，`workspace` 子句不匹配任何内容。
 
 <a id="dev-note"></a>
 ### 开发备注

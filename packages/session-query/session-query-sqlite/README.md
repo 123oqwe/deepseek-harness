@@ -57,6 +57,8 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 `searchSessions` searches the whole corpus and groups results by each session's strongest matching event; `searchEvents` searches one logical session. Queries are literal phrases: they are trimmed and whitespace-normalized, and FTS5 syntax such as quotes, `OR`, `NEAR`, and `*` is treated as data, never as executable query syntax. Metadata filters (session id, cwd, created-at, parent, availability, event seq/time/type/surface) narrow results before ranking. All `current`, `shadowed`, and `log-only` events are searchable by default; pass a surface filter to narrow.
 
+This index stores no tenant or workspace column, so it cannot answer a `tenant` or `workspace` clause. Passing one fails with `SESSION_QUERY_INVALID_FILTER` rather than returning results that ignore it: a dropped tenant clause would hand a caller that asked to be scoped to its own tenant another tenant's sessions. Scope by tenant or workspace through `ctx.sessionQuery.filterSessions()`, which reads the attributed corpus records directly.
+
 Ranking is deterministic: more actual FTS5 highlighted-match spans first, then shorter documents, with event time, session id, and seq breaking ties. Results carry plain-text snippets bounded by `snippetChars` Unicode code points, with no provider-specific numeric score. Pages continue through an opaque `SessionSearchCursor` bound to the exact normalized request; a cursor becomes stale when its relevant corpus changes (`SESSION_QUERY_STALE_CURSOR`), and a within-session cursor survives changes to unrelated sessions while a cross-session cursor does not.
 
 The `unicode61` tokenizer matches tokens and phrases, not arbitrary substrings: `AI` does not match the token `BRAID`. Use `ctx.sessionQuery.filterEvents()` with a `text` clause when a literal whitespace-flexible substring scan is required.
@@ -144,6 +146,7 @@ These limits define when this package is a poor fit or needs special operational
 - **Synchronous query execution** — `DatabaseSync` blocks the JavaScript thread during MATCH execution and cannot interrupt a statement already running.
 - **Token recall, not arbitrary substrings** — the `unicode61` tokenizer does not match substrings inside a larger token; use `filterEvents()` for literal scans.
 - **Single-owner derived index** — one service in one process must own each index path; external writers and multi-process sharing are unsupported.
+- **No tenant or workspace column** — ranked search refuses those clauses rather than answering them partially. Indexing them would mean an attribution the index cannot keep current: a session's tenant comes from its log and its workspace from the registry, and neither has a change signal this derived index observes.
 
 <a id="dev-note"></a>
 ### Dev Note

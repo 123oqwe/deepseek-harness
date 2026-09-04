@@ -15,7 +15,9 @@ import type {
   OptionalSessionSeq,
   SurfaceEvent,
 } from '@deepseek-ai/dsh-session'
+import type { TenantId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionTitleSnapshot } from '@deepseek-ai/dsh-session-title'
+import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import type { SessionSearchCursor } from './cursor.ts'
 
 export type { SessionSearchCursor } from './cursor.ts'
@@ -31,6 +33,31 @@ export interface SessionRecord {
   live: boolean
   /** Whether the active persistence backend currently materializes the id. */
   persisted: boolean
+  /**
+   * The tenant this session's identity was durably anchored to, from the LAST
+   * `identity/attached` event in the observed log (first100 registry P2-01;
+   * that event's own doc in `@deepseek-ai/dsh-session/types` records why the
+   * last occurrence is authoritative, and `@deepseek-ai/dsh-agent-loop`'s
+   * `lastAttachedIdentity` applies the same rule to a live `Session`).
+   *
+   * Absent — the property itself omitted, never present-and-`undefined` — when
+   * the corpus observation carries no identity to project. That includes every
+   * session the listing resolved from a persistence header alone: a header
+   * carries no events, and reading a log per listed session to recover one is
+   * not something a corpus listing does. Never derived from `user/message` or
+   * any other model-editable content (P2-01 must[2]).
+   */
+  tenantId?: TenantId
+  /**
+   * The workspace this session is a member of, from the workspace registry
+   * mounted now (`ctx.workspaceRegistry`).
+   *
+   * Absent — the property itself omitted, never present-and-`undefined` — when
+   * no registry is mounted or no workspace accounts for this session. The
+   * registry owns membership: a session appears here exactly when a workspace
+   * entity's header-validated `sessionIds` lists it.
+   */
+  workspaceId?: WorkspaceId
 }
 
 /** One atomic live-preferred observation of a session's current model surface. */
@@ -199,9 +226,17 @@ export type SessionAvailability = 'live' | 'persisted'
 /**
  * One logical-session predicate. A filter array is ANDed; `values` within a
  * clause are ORed.
+ *
+ * A `'tenant'` or `'workspace'` clause never admits a record whose
+ * corresponding {@link SessionRecord} field is absent: an unobservable tenant
+ * is not a wildcard. That direction omits rather than leaks — a session whose
+ * identity the corpus could not observe is excluded from every tenant's
+ * listing rather than appearing in the wrong one.
  */
 export type SessionResultFilter =
   | { kind: 'id'; values: readonly SessionId[] }
+  | { kind: 'tenant'; values: readonly TenantId[] }
+  | { kind: 'workspace'; values: readonly WorkspaceId[] }
   | { kind: 'cwd'; values: readonly (string | null)[] }
   | ({ kind: 'created-at' } & SessionResultRange)
   | { kind: 'parent'; values: readonly (SessionId | null)[] }

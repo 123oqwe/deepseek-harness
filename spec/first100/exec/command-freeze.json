@@ -2425,6 +2425,59 @@
         "testsDiscovered": 12
       },
       "note": "U-stage RED for P1-08 (compatibility negotiation at real profile boot), attempt/P1-08-U @ tree ceda8830db77ca4efa301d67010df5067e8d4851. 12/12 genuinely failed, zero module/syntax errors, repo-wide `pnpm run typecheck` exit 0 with the RED stubs and both spec files present (package tsconfigs set rootDir: src and exclude tests/, so a package-only `tsc -b` cannot see a spec's type errors). Eleven app-boot cases fail on real not-implemented errors from readLayerCompatManifest/negotiateProfileLayerCompatibility; the twelfth is the real-composition case and fails on the clause's own property being observably false -- the real `dsh --profile` bin boots a real two-bundle profile through the Cordis Loader and stdout contains BOTH 'P1-08-BLOCKED-PLUGIN-MOUNTED' and 'P1-08-HEALTHY-PLUGIN-MOUNTED', i.e. the unsatisfiable bundle's plugin code does run today. The fixture path was verified end to end before freezing (a first attempt staged bare patch rows instead of `- insert:` lists and mounted nothing; corrected, both markers now appear). expectExit=0 is the GREEN target, per the P0-01.C precedent -- it is not the RED exit code, which is 1. Scope beyond stages.U.files is coordinator-adjudicated: apps/cli/src/profile-boot.ts is recorded as a deliverablePathPatches entry (acceptance[1] is only provable on a real boot path and there is exactly one); plugin-compat/package.json gains a ./solver export because resolveActivatedGraph (all of P's cascade) is otherwise unreachable from the artifact plane -- re-exporting solver from src/index.ts was rejected because it creates a real module cycle (solver.ts imports ./index.ts) and would make the package root import listSchemas() at load, breaking index.ts's documented guarantee that constructing a HostCompatContext never bootstraps the real schema registry; root-only solvePluginGraph was rejected because losing the cascade would activate a consumer against a provider that never loads, the silent degradation must[3] forbids. app-boot and apps/cli package.json + tsconfig.json + pnpm-lock.yaml are build infrastructure for that edge, proven acyclic by `pnpm exec tsc -b --force packages/boot/app-boot/tsconfig.json` (exit 0) across the two-hop closure app-boot -> plugin-compat -> schema-registry (which itself peer-depends on dsh-session). validation[2] (--dump-config and plugin inventory) stays with F."
+    },
+    {
+      "epic": "P6-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session-query/session-query/tests/lifecycle-projection.spec.ts",
+        "packages/session/session-lifecycle/tests/projection.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "projects an unregistered corpus session as active under its observed tenant",
+        "carries an observed workspaceId through, and omits the property when the corpus observed none",
+        "keeps a registered record's durable disposition rather than projecting it back to active",
+        "keeps a registered record's legal hold, which a corpus observation can never clear",
+        "reports an unregistered, tenant-less corpus session as unattributed and emits no record for it",
+        "projects a registered session even when the corpus observed no tenant for it",
+        "preserves the corpus listing order",
+        "feeds listSessions, so a tenant-filtered page walk over the real corpus omits and duplicates nothing",
+        "feeds a status-filtered listing, so a soft-deleted session is excluded from an active listing",
+        "projects tenantId from a live session's identity/attached event",
+        "takes the LAST identity/attached event, so a re-attached identity supersedes an earlier one",
+        "omits the tenantId property entirely for a session with no identity/attached event, while projecting its attributed sibling",
+        "never derives a tenant from user/message content (P2-01 must[2])",
+        "projects workspaceId from the mounted workspace registry",
+        "omits workspaceId entirely when no workspace registry is mounted, while still projecting the tenant",
+        "admits only records whose projected tenant matches a tenant clause",
+        "never admits a record with no projected tenant into a tenant clause",
+        "admits only workspace members, and never a record with no projected workspace",
+        "ANDs a tenant clause with a workspace clause",
+        "ORs the values within one tenant clause",
+        "copies tenant and workspace clause values immediately, so a later caller mutation cannot change the filter",
+        "rejects a tenant or workspace clause whose values are not an array of strings",
+        "filters the real corpus by tenant end to end through filterSessions"
+      ],
+      "files": [
+        "packages/session-query/session-query/tests/lifecycle-projection.spec.ts",
+        "packages/session/session-lifecycle/tests/projection.spec.ts",
+        "packages/session-query/session-query/src/types.ts",
+        "packages/session-query/session-query/src/filters.ts",
+        "packages/session-query/session-query/src/corpus.ts",
+        "packages/session/session-lifecycle/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-04T03:39:46Z",
+      "dryRunProof": {
+        "treeSha": "5f46b14f9bade3ce55c96a29fac3fffa184334bc",
+        "testsDiscovered": 23
+      },
+      "note": "Usage-stage RED for Epic P6-07 must[0]. 23/23 fail on a clean tree, zero module or syntax errors: 15 on real not-implemented errors (projectLifecycleRecords, and the tenant/workspace branches of filterSessionResults/materializeSessionResultFilters), 8 on assertion mismatch because src/corpus.ts is deliberately left unmodified at RED -- adding a throwing projection call there would have broken the four landed session-query suites that list the corpus, so the projection cases assert through the real listSessions and fail on the absent tenantId/workspaceId instead. No case passes at RED: each negative-space assertion (an omitted tenantId, an omitted workspaceId, a tenant never derived from prompt text) is paired in the same case with a positive sibling that must be projected, so the case cannot pass vacuously against unimplemented code. expectExit=0 is the GREEN target per the P0-01.C precedent. Scope note: cursor.ts and core/session/src/repair.ts are declared U files left unmodified -- cursor encoding stays provider-owned (the Contract stage's recorded decision), and acceptance[3] is locked out of this stage pending the independent session-persistence-jsonl format.ts evidence fix. packages/session-query/session-query-sqlite/src/query.ts plus a two-case tests/tenant-filter-refusal.spec.ts are a typecheck-forced adjacent guard outside the approved six-file scope and outside this frozen command: widening SessionResultFilter turned that provider's exhaustive switch into a compile error, and a dropped tenant clause in ranked search would leak another tenant's sessions, so the clause is refused. Needs its own adjudication entry."
     }
   ]
 }

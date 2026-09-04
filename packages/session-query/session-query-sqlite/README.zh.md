@@ -57,6 +57,8 @@ kind: "package-reference"
 
 `searchSessions` 搜索整个语料库，并按每个会话匹配最强的事件分组结果；`searchEvents` 搜索一个逻辑会话。查询是字面短语：首尾空白会被移除、内部空白会被规范化，引号、`OR`、`NEAR` 和 `*` 等 FTS5 语法被视为数据，绝不作为可执行查询语法。元数据过滤器（会话 id、cwd、创建时间、父级、可用性、事件 seq/时间/类型/表层）在排序前缩小结果。默认搜索全部 `current`、`shadowed` 与 `log-only` 事件；传入表层过滤器可缩小范围。
 
+本索引不存储租户或工作区列，因此无法回答 `tenant` 或 `workspace` 子句。传入其一会以 `SESSION_QUERY_INVALID_FILTER` 失败，而不是返回忽略了该子句的结果：丢弃租户子句会把另一个租户的会话交给一个要求限定在自己租户内的调用方。请通过 `ctx.sessionQuery.filterSessions()` 按租户或工作区限定范围，它直接读取已归属的语料库记录。
+
 排序是确定性的：实际 FTS5 高亮匹配 span 更多的在前，然后文档更短的在前，事件时间、会话 id 与 seq 打破平局。结果携带按 `snippetChars` 个 Unicode 码点截断的纯文本摘录，没有提供方专用数值分数。分页通过不透明 `SessionSearchCursor` 延续，游标绑定到规范化后的确切请求；相关语料库变化时游标变为陈旧（`SESSION_QUERY_STALE_CURSOR`），会话内游标可在不相关会话变化后延续，跨会话游标则不能。
 
 `unicode61` tokenizer 匹配 token 与短语，而非任意子字符串：`AI` 不匹配 token `BRAID`。需要执行字面、空白灵活的字符串子串扫描时，使用带 `text` 子句的 `ctx.sessionQuery.filterEvents()`。
@@ -144,6 +146,7 @@ kind: "package-reference"
 - **同步查询执行**——`DatabaseSync` 在 MATCH 执行期间会阻塞 JavaScript 线程，且无法中断已运行的语句。
 - **Token 召回，而非任意子字符串**——`unicode61` tokenizer 不会匹配更大 token 中的子字符串；对字面扫描使用 `filterEvents()`。
 - **单一所有者的派生索引**——每个索引路径必须仅归一个进程中的一个服务所有；不支持外部写入者与多进程共享。
+- **没有租户或工作区列**——排序搜索会拒绝这两个子句，而不是给出部分答案。索引它们意味着一份本索引无法保持最新的归属：会话的租户来自它的日志，工作区来自注册表，两者都没有这个派生索引能观察到的变更信号。
 
 <a id="dev-note"></a>
 ### 开发备注
