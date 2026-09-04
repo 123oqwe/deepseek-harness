@@ -172,6 +172,10 @@ observable type contract is fully covered in [Use this package](#use-this-packag
   one case per remaining must[]/acceptance[] clause.
 - [`tests/plugin.spec.ts`](tests/plugin.spec.ts) — `RunPlugin` mounted on a
   real `Context` with the real agent registry and agent loop.
+- [`tests/first100/fixtures/P4-01.fault.spec.ts`](../../../tests/first100/fixtures/P4-01.fault.spec.ts) —
+  the registry under fault rather than on the happy path: concurrent writers
+  over one Run, two stores over one path, and store documents that are damaged
+  rather than clean.
 - [`@deepseek-ai/dsh-principal`](../../identity/principal/README.md) — this
   package's source for `RunId` (Epic P2-01, already accepted).
 - [`@deepseek-ai/dsh-session`](../../core/session/README.md) — this
@@ -196,6 +200,31 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
+
+- **Concurrent Run writers are serialized within one process only.**
+  `createFileRunStore` chains every read and write on the store's resolved
+  path, shared by every store instance over that path in this process, and
+  `RunService` chains every mutation of one Run on that Run's id. Two separate
+  *processes* writing one store path still interleave their read-modify-write
+  cycles and can lose a Run; closing that needs filesystem locking, which this
+  store does not take. A deployment that wants several processes over one store
+  path is not supported today.
+- **`RunService.advance` decides against the Run as of its turn, not as of the
+  call.** Concurrent transitions on one Run are decided one after another, each
+  seeing the previous one's accepted result. This is what stops two callers
+  both being told `accepted: true` for mutually exclusive transitions, but it
+  is an observable change for a caller that assumed its decision was computed
+  the moment it called. There is no way back to the older behavior, and
+  reproducing it by reading `get` first and acting on the result is exactly the
+  stale-snapshot race the ordering exists to close.
+- **A damaged store document is refused whole, never repaired.**
+  `createFileRunStore` rejects a store carrying a Run whose state is outside
+  must[0]'s closed set, whose `ownerId` is not `RUN_SERVICE_OWNER_ID`, or whose
+  event log has a `seq` gap — the whole boot fails rather than restoring a
+  registry that silently omits the damaged Run. There is no salvage path that
+  recovers the undamaged Runs from such a document; a corrupt store is an
+  operator problem, and the epic's `rollback` (restore the journal checkpoint)
+  is the intended response.
 
 - **`RunPlugin` mounts on request; it is not a shared-base default, so a
   default `dsh` boot still creates no Run.** `packages/bundle/base`'s `run`

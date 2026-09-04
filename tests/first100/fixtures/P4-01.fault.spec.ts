@@ -87,14 +87,18 @@ describe('P4-01 Fault — must[1]/acceptance[1]: concurrent writers never lose a
     expect(accepted).toHaveLength(1)
     const rejected = decisions.filter(decision => !decision.accepted)
     expect(rejected).toHaveLength(1)
-    const [only] = rejected
-    if (only !== undefined && !only.accepted) {
-      expect(only.reason).toBe('illegal-transition')
-      expect(only.from).toBe('verifying')
-    }
 
     const winner = accepted[0]
     if (winner === undefined || !winner.accepted) return
+    const [loser] = rejected
+    if (loser !== undefined && !loser.accepted) {
+      expect(loser.reason).toBe('illegal-transition')
+      // The refusal names the state the winner had already moved the Run to,
+      // which is the observable evidence that the loser was decided after the
+      // winner was applied rather than against the same pre-transition value.
+      expect(loser.from).toBe(winner.run.state)
+    }
+
     const restarted = await boot()
     const run = restarted.get(RUN_A)
     expect(run?.state).toBe(winner.run.state)

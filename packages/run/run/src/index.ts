@@ -42,6 +42,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { readFile, rename, writeFile } from 'node:fs/promises'
+import { resolve as resolvePath } from 'node:path'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
@@ -57,8 +58,10 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import {
   attachSessionToRun,
   createRun,
+  LEGAL_RUN_TRANSITIONS,
   listNonTerminalRuns,
   resumeRun,
+  RUN_SERVICE_OWNER_ID,
   transition,
 } from './state-machine.ts'
 import type {
@@ -116,16 +119,22 @@ export interface RunStore {
  * @returns a store over `path`.
  */
 export function createFileRunStore(path: string): RunStore {
-  /**
-   * Every read and write of `path` is chained onto this promise, so a `put`
-   * never interleaves its read-modify-write with another one and loses a Run.
-   */
-  let queue: Promise<unknown> = Promise.resolve()
+  // The chain is keyed on the resolved path rather than held per store
+  // instance, so two stores over one path share it. A per-instance chain
+  // serialized each store against itself only: two of them interleaved their
+  // read-modify-write cycles and lost a Run, and — because the temporary file
+  // below is named per process, not per store — collided on that name and
+  // failed the rename outright.
+  const key = resolvePath(path)
   const enqueue = <T>(operation: () => Promise<T>): Promise<T> => {
+    const queue = pathQueues.get(key) ?? Promise.resolve()
     const next = queue.then(operation, operation)
-    queue = next.then(
-      () => undefined,
-      () => undefined,
+    pathQueues.set(
+      key,
+      next.then(
+        () => undefined,
+        () => undefined,
+      ),
     )
     return next
   }
@@ -147,6 +156,7 @@ export function createFileRunStore(path: string): RunStore {
         `unsupported Run store format version ${String(document.version)} at ${path}, expected ${RUN_STORE_FORMAT_VERSION}`,
       )
     }
+    for (const run of document.runs) assertRestorable(run, path)
     return [...document.runs]
   }
 
@@ -174,6 +184,45 @@ export function createFileRunStore(path: string): RunStore {
   }
 }
 
+/**
+ * The read/write chain for each resolved store path in this process, shared by
+ * every {@link createFileRunStore} over that path.
+ *
+ * Scope: one process. Two processes writing one store path still interleave
+ * their read-modify-write cycles and can lose a Run; closing that needs
+ * filesystem locking, which this store does not take.
+ */
+const pathQueues = new Map<string, Promise<unknown>>()
+
+/**
+ * Refuse a stored Run this service could not have written, so a damaged or
+ * hand-edited store document never reaches the registry as a live Run.
+ * Nothing downstream re-checks these: `listNonTerminalRuns` treats any state
+ * outside {@link TERMINAL_RUN_STATES} as resumable, `resumeRun` re-stamps
+ * `ownerId` (masking a foreign one), and `appendRunEvent` derives the next
+ * `seq` from the log's length, so a gap makes it mint a `seq` a prior entry
+ * already holds. The store is the only place these can still be caught.
+ * @param run - one Run as read back from the store document.
+ * @param path - the store document's path, named in the rejection.
+ */
+function assertRestorable(run: Run, path: string): void {
+  if (!Object.hasOwn(LEGAL_RUN_TRANSITIONS, run.state)) {
+    throw new Error(`run ${run.id} in Run store ${path} has state ${run.state}, which is not a Run state`)
+  }
+  if (run.ownerId !== RUN_SERVICE_OWNER_ID) {
+    throw new Error(
+      `run ${run.id} in Run store ${path} is owned by ${String(run.ownerId)}, not the Run Service (${RUN_SERVICE_OWNER_ID})`,
+    )
+  }
+  run.events.forEach((event, index) => {
+    if (Number(event.seq) !== index) {
+      throw new Error(
+        `run ${run.id} in Run store ${path} has an event log seq gap: entry ${String(index)} carries seq ${String(event.seq)}`,
+      )
+    }
+  })
+}
+
 /** The on-disk format version {@link createFileRunStore} reads and writes. */
 const RUN_STORE_FORMAT_VERSION = 1
 
@@ -199,6 +248,46 @@ export class RunService {
    * {@link RunService.restore} supplies the reconstructed contents of `store`.
    */
   private constructor(private readonly store: RunStore, private readonly runs: Map<RunId, Run>) {}
+
+  /**
+   * The read-decide-write chain for each registered Run, so two callers
+   * mutating one Run never both decide against the same pre-mutation value.
+   */
+  private readonly chains = new Map<RunId, Promise<unknown>>()
+
+  /**
+   * Run `mutate` against the registered Run `id` with no other mutation of
+   * that same Run interleaved: `mutate` observes the Run as of its turn in
+   * `id`'s chain, and its result is durable before the next turn begins.
+   * Mutations of different Runs stay concurrent — the chain is per Run, never
+   * one lock over the whole registry.
+   * @param id - the registered Run to mutate; rejects when unregistered.
+   * @param mutate - decides the Run's next value from its current one; a
+   * `undefined` result records nothing and leaves the registry untouched.
+   * @returns whatever `mutate` returned, once any resulting write is durable.
+   */
+  private async serialize<T>(id: RunId, mutate: (run: Run) => { run?: Run | undefined; result: T }): Promise<T> {
+    const apply = async (): Promise<T> => {
+      const { run, result } = mutate(this.registered(id))
+      if (run !== undefined) {
+        await this.store.put(run)
+        this.runs.set(id, run)
+      }
+      return result
+    }
+    const queue = this.chains.get(id) ?? Promise.resolve()
+    // A rejected predecessor must not strand its Run's chain: the second
+    // handler takes the same turn after a failed one.
+    const next = queue.then(apply, apply)
+    this.chains.set(
+      id,
+      next.then(
+        () => undefined,
+        () => undefined,
+      ),
+    )
+    return await next
+  }
 
   /**
    * acceptance[0]'s restart entry point: build a service whose registry is
@@ -271,6 +360,17 @@ export class RunService {
    * @param references - entities this transition names (must[1]), possibly empty.
    * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this transition is stamped with.
    * @returns `./state-machine.ts`'s decision, unchanged.
+   *
+   * **Ordering.** The decision is computed against the Run as of this call's
+   * turn in `id`'s serialization chain, not as of the call. Concurrent calls
+   * for one Run are therefore decided one after another, each seeing the
+   * previous one's accepted result — so two callers can never both be told
+   * `accepted: true` for mutually exclusive transitions out of one state, and
+   * no accepted transition is overwritten in the append-only log by a decision
+   * made against a value that predates it. A caller that needs a decision
+   * against the Run as of the call has no way back to that behavior: reading
+   * {@link RunService.get} first and acting on it is exactly the stale-snapshot
+   * race this ordering exists to close.
    */
   async advance(
     id: RunId,
@@ -278,11 +378,12 @@ export class RunService {
     references: readonly RunEntityReference[],
     occurredAt: number,
   ): Promise<RunTransitionDecision> {
-    const decision = transition(this.registered(id), to, references, occurredAt)
-    if (!decision.accepted) return decision
-    await this.store.put(decision.run)
-    this.runs.set(id, decision.run)
-    return decision
+    return await this.serialize(id, (run) => {
+      const decision = transition(run, to, references, occurredAt)
+      // A refused transition writes nothing, so its Run keeps the event log it
+      // had — the chain simply hands the next caller the unchanged Run.
+      return { run: decision.accepted ? decision.run : undefined, result: decision }
+    })
   }
 
   /**
@@ -293,12 +394,16 @@ export class RunService {
    * @param id - the registered Run to associate an additional Session with; rejects when unregistered.
    * @param sessionId - the Session/Agent to add.
    * @returns the Run with `sessionId` present in `sessionIds`.
+   *
+   * **Ordering.** Serialized with {@link RunService.advance} on the same Run's
+   * chain, so two Sessions attaching concurrently both appear rather than one
+   * overwriting the other's `sessionIds`.
    */
   async attachSession(id: RunId, sessionId: SessionId): Promise<Run> {
-    const run = attachSessionToRun(this.registered(id), sessionId)
-    await this.store.put(run)
-    this.runs.set(id, run)
-    return run
+    return await this.serialize(id, (current) => {
+      const run = attachSessionToRun(current, sessionId)
+      return { run, result: run }
+    })
   }
 
   /**
