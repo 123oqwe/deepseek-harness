@@ -1146,3 +1146,15 @@ packages/experimental/agent-team/tests/persistence.spec.ts
 **Falsified as related to this program's work, in the required order.** The package's three most recent commits (`a9e185f205` release, `27bf1039db` session refactor, `4093ce465b` an upstream merge) all predate W4, and no First-100 lane has touched `packages/experimental/agent-team/`. Re-run in isolation on the same tree: **5/5 passed.** The assertion is a state-transition ordering claim (`queued` vs `accepted`), which is the shape a concurrency or load-sensitive case fails under.
 
 **Not registered as a flake.** The registry requires **two occurrences on distinct SHAs** plus an unrelatedness note, and this is one. Recorded here so a second occurrence can be registered against this entry rather than investigated from scratch — and so that, if it instead reproduces deterministically, the "passes alone" observation above is on record as the thing that was wrong.
+
+### BLOCKED-062 — the Cordis Loader writes `disabled: true` back into the `cordis.yml` it boots, silently disarming any composition fixture whose entry is meant to fail (Writer finding, 2026-09-04) — **AFFECTS EVERY LANE USING `runLoaderSmoke`**
+
+**The mechanism.** When a Loader entry's `apply` throws, the Loader **persists `disabled: true` into the config file it booted**. A composition fixture that deliberately contains a failing entry — which is exactly what a fail-closed test needs — is therefore **edited by the first run**. Every later run reads a tree in which the entry under test is already switched off.
+
+**The symptom, and why it is dangerous.** One green run followed by consistently red ones, or the reverse: a fixture that passes because the thing it was supposed to reject was never mounted at all. The checked-in fixture is modified as a side effect, so the contamination survives across runs and can be committed without anyone noticing. **This is the sharpest form of the failure this program keeps meeting — a green that certifies the absence of the test rather than the presence of the property.**
+
+**The fix.** Copy the fixture directory into a git-ignored `tmp/` **inside the repository** before each boot. Outside the repository does not work: workspace packages do not resolve there.
+
+**Scope of exposure.** Any lane pointing `runLoaderSmoke` at an in-repo config whose entries can fail. Several W4 Usage stages do exactly this — P1-08.U, P6-01.U, P1-07.U, P4-01.U and P1-09.U all boot real profiles through it. **Each should confirm its fixture is copied rather than booted in place, and check `git status` for modified fixture YAML after a run.** A fixture whose entries cannot fail is unaffected.
+
+**Detection.** After running a composition spec, `git status --porcelain` on the fixture directory should be empty. If a `cordis.yml` shows as modified, the run disarmed it.
