@@ -253,6 +253,14 @@
       // this entry the source plane cannot resolve the subpath and
       // gen-cordis-catalog fails outright.
       "@deepseek-ai/dsh-workspace-trust/types": ["./packages/workspace/workspace-trust/src/types.ts"],
+      // Same reason as the two entries above, and the FOURTH recurrence of this
+      // class: dsh-plugin-compat publishes a ./solver subpath that
+      // packages/boot/app-boot/src/profile.ts imports (first100 registry P1-08.U),
+      // but the generator emits no such alias. Without this the source plane
+      // resolves it to unbuilt lib/, so every real-composition boot from source
+      // dies on ERR_MODULE_NOT_FOUND -- a failure that looks like a broken test
+      // fixture rather than a missing alias.
+      "@deepseek-ai/dsh-plugin-compat/solver": ["./packages/plugin/plugin-compat/src/solver.ts"],
       // Same reason as dsh-evidence-format/types above: dsh-plugin-manifest's
       // /types and /validate subpaths (both real, README-documented public
       // usage) are not a shape the generator emits, so they must stay
