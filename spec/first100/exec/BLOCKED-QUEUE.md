@@ -1039,4 +1039,13 @@ Two separate defects, found when a lane superseded a `(P1-07, C)` freeze entry.
 
 **2. It is already failing on the integration branch, independent of any lane's change.** Verified directly: `node scripts/first100/verify-frozen-titles-resolvable.mjs` exits 1, with unresolvable titles across roughly nine cells (P0-01.C/F/P, P0-02.F/U, P0-05.U, P1-01.U, P1-08.U, P6-07.C). **A gate that is already red is gating nothing** — every lane that runs it sees a failure it correctly attributes to the base, so a real regression introduced later would be indistinguishable from the existing noise.
 
-That second point is the more serious one and belongs to [BLOCKED-046](#blocked-046)'s blind-spot family: a check reporting failure for reasons nobody is acting on has the same practical effect as a check that is skipped. Both defects are the Supervisor's to fix, not any epic's, and neither blocks the lanes that surfaced them.
+**3. It was in no gate set at all** (delegate, 2026-09-04). `package.json` defines `first100:verify-frozen-titles-resolvable`, but `first100:slice-gate-registry` runs `slice-gate`, `verify-specs`, `test-specs`, and `verify-baseline-file-references` — **not this one**. So it was never "red and unattended"; it was **never plugged in**, and would have stayed red without anyone learning so. This is the second gate found built-but-unwired (the first was `verify-baseline-file-references`, since connected).
+
+**Rule (delegate, recording this against their own request).** *Asking for a gate is not the same as having one running. Delivering an executable script and having it enter a mandatory gate set are two different things; a gate is accepted when **it is in the gate set and currently green**, never when the script exists.* The frozen-titles gate was requested in BLOCKED-040, delivered, and never ran.
+
+**Resolved 2026-09-04**, in the delegate's required order:
+
+1. **Supersession skip added.** Isolated rather than assumed: reverting only that skip turns the gate red on P6-07.C's superseded entry; restoring it turns it green. So the supersession blindness was the **sole** cause on the current tree.
+2. **No genuine pre-existing drift remains.** The gate now reports 56 entries, 46 unique commands, **1057 frozen titles, 0 unresolved**. The larger failure count observed earlier was from an older tree state, before that day's lanes merged the tests their entries name.
+3. **Wired into `first100:slice-gate-registry`.**
+4. **Proven able to fail.** Injecting a bogus title into a live `P4-01.U` entry yields exit 1 and `1 UNRESOLVED`; removing it returns exit 0. **A gate never shown to go red is equivalent to no gate** — the same standard applied to the `format.ts` fix and required of P1-07's authorization case.
