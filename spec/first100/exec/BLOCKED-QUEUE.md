@@ -1251,3 +1251,20 @@ A check that manufactures a false crisis is worse than one that fails silently, 
 **3. A `control:`-style title prefix has no F-stage precedent, contrary to a Supervisor instruction.** The Supervisor cited "the `control:` precedent" while ruling on F-stage freezes. Grepping all 63 freeze entries, `control:` appears in exactly **three** titles, all from `P1-09.U`. No landed F entry marks such cases at all — `P0-02.F` and `P2-01.F` both freeze passing-at-RED cases with the explanation in prose inside the title instead.
 
 **This was a correction issued to fix a false premise, which itself carried a false premise.** The instruction had told three lanes that F had never run; a Writer disproved that (eight F cells are GREEN), and a second Writer then disproved the replacement claim about where the prefix convention came from. Marking such cases is still the better practice and is being adopted — but as a **new** convention, recorded as such, not as an inherited one.
+
+### BLOCKED-066 — where the freeze boundary actually falls: a case body may be refined between RED and GREEN, a case property may not (2026-09-04)
+
+P4-01's Fault stage raised this first, and it needed a line drawn rather than a case-by-case answer.
+
+**A freeze entry pins the `argv`, the `expectExit`, and the `expectCases` titles — the properties claimed. It does not pin case bodies.** So the test is whether the *property* changed.
+
+**The instance.** A RED case asserted that a refused concurrent transition reports `from: 'verifying'`. After the fix serialized decisions per `RunId`, the losing caller is decided *after* the winner applied, so it correctly reports `from: 'succeeded'`. **The original assertion encoded the defect's own behaviour** — `from: 'verifying'` is only correct while decisions are computed against a stale snapshot, which is precisely what the case exists to eliminate. It was replaced with `expect(loser.from).toBe(winner.run.state)`, which is strictly stronger: that line is now positive evidence the loser was decided after the winner rather than against the same value.
+
+**The rule.**
+
+- **Refinement (permitted):** the title stays true, and the body becomes a better witness of it. Correcting an assertion that only held under the defect is the clearest case — leaving it would have failed GREEN *for the right reason*, which is a worse outcome than editing it.
+- **Supersession (required):** the property itself changes. Then the entry is superseded with reciprocal `supersedes`/`supersededBy`, as `P1-07.C` was when its frozen assertion turned out to contradict the epic's own validation text ([BLOCKED-056](#blocked-056)).
+
+**The obligation either way is disclosure.** A body edit across the freeze boundary must be recorded in the freeze note and the report, never allowed to pass as an implementation detail. What makes this reviewable is that a later reader can see the case changed and why; what would make it unreviewable is silence.
+
+**Corollary, from the same lane.** A repo-wide `pnpm run typecheck` caught a real `exactOptionalPropertyTypes` error (`TS2345`) while all 148 tests were green — a spec suite cannot see a type error the package build excludes. That is why repo-wide typecheck is mandated over the package-level `tsc -b`, and it now has a concrete instance behind it rather than only a rule.
