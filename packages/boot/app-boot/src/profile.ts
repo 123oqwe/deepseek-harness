@@ -41,12 +41,16 @@ import {
   type PreMountDenialReason,
   type WildcardFinding,
 } from '@deepseek-ai/dsh-plugin-manifest'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { parseCompatDeclaration } from '@deepseek-ai/dsh-plugin-compat'
 import type {
   HostCompatContext,
   PluginActivationStatus,
   PluginCompatManifest,
+  PluginId,
   UnsatCore,
 } from '@deepseek-ai/dsh-plugin-compat'
+import { resolveActivatedGraph } from '@deepseek-ai/dsh-plugin-compat/solver'
 import { resolve as resolvePackage, type Package as ResolvePackageManifest } from 'resolve.exports'
 import { loadOverlayPatches } from './index.ts'
 
@@ -950,8 +954,10 @@ export function partitionProfileLayersByAdmission(
  *   declares no `dsh.compat`.
  */
 export function readLayerCompatManifest(layer: ProfileLayer): PluginCompatManifest | undefined {
-  void layer
-  throw new Error('readLayerCompatManifest: not implemented')
+  const manifest = JSON.parse(
+    readFileSync(join(layer.packageDir, 'package.json'), 'utf8'),
+  ) as { dsh?: { compat?: unknown } }
+  return parseCompatDeclaration(manifest.dsh?.compat, brandString<PluginId>(layer.packageName))
 }
 
 /** One profile bundle layer a boot refuses to compose because compatibility negotiation blocked it (acceptance[1]). */
@@ -1010,7 +1016,31 @@ export function negotiateProfileLayerCompatibility(
   layers: readonly ProfileLayer[],
   host: HostCompatContext,
 ): ProfileCompatNegotiation {
-  void layers
-  void host
-  throw new Error('negotiateProfileLayerCompatibility: not implemented')
+  const declared = new Map<string, PluginCompatManifest>()
+  for (const layer of layers) {
+    const manifest = readLayerCompatManifest(layer)
+    if (manifest !== undefined) declared.set(layer.packageName, manifest)
+  }
+
+  // One solve over every declared manifest at once (must[1]), through the
+  // cascading resolver rather than the one-pass solve: a layer blocked on its
+  // own runtime API or schema range must stop satisfying its consumers'
+  // required capabilities, or a consumer would compose against a provider
+  // that never mounts (must[3]).
+  const solution = resolveActivatedGraph([...declared.values()], host)
+  if (!solution.solvable) return solution
+
+  const byPluginId = new Map(solution.loadPlan.activations.map(row => [row.pluginId as string, row.activation]))
+  const admitted: AdmittedProfileLayer[] = []
+  const blocked: BlockedProfileLayer[] = []
+  for (const layer of layers) {
+    // A layer that declared no `dsh.compat` contributed no manifest and so
+    // has no activation row: unconstrained, always admitted, which is why an
+    // existing profile composes exactly as it did before this negotiation.
+    const activation = byPluginId.get(layer.packageName)
+      ?? { status: 'active' as const, disabledOptionalCapabilities: [] }
+    if (activation.status === 'active') admitted.push({ layer, activation })
+    else blocked.push({ layer, activation })
+  }
+  return { solvable: true, admitted, blocked, planId: solution.loadPlan.planId }
 }

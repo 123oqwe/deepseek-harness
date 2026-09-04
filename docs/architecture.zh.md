@@ -46,6 +46,8 @@ dsh --profile web --dump-config
 
 Vendored CLI、仅用于构建和测试的可执行文件、进程内直接挂载插件以及私有浏览器 WebWorker 预览都不属于 Harness 应用启动器。[`verify-application-entrypoints`](../scripts/verify-application-entrypoints.ts)将每个包 bin、可执行源码与根 demo 归入显式类别，并拒绝任何绕过 `dsh` 的 Node 应用路径。
 
+在任何 patch 到达 `boot()` 之前，有两道关卡判定 profile 的组合包层，两者都位于 `composeProfile`（`apps/cli/src/profile-boot.ts`）内，因此被拒绝的层其插件代码根本不会挂载。预挂载准入对每个层自己的 `package.json` `dsh` 字段做分类，仅在 `DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce` 下生效。随后兼容性协商通过 [`plugin/plugin-compat`](../packages/plugin/plugin-compat/README.md) 把每个已准入层声明的 `dsh.compat` manifest 作为一整张图求解——runtime API range、schema range、必需与可选 capability、以及 provider 约束——只组合求解出的 load plan 标记为 active 的层。因自身 range 被阻断的层同时不再满足其消费者所需的 capability，因此不会有插件被组合到一个永不挂载的 provider 之上；而无解的图会带着最小冲突约束集中止启动，而不是擅自选边。协商不需要任何 opt-in：未声明 `dsh.compat` 的组合包不受约束、始终 active，而已声明但格式非法的 `dsh.compat` 会大声失败。
+
 Python SDK 遵循相同的应用架构。其运行时 wheel 把普通 `dsh` CLI 打包为 `deepseek-harness-sdk-runtime-<platform>-<arch>`，客户端默认以显式 Harness home 启动 `dsh --profile sdk`。极简示例选择随附的 `sdk-minimal` profile。Python 暴露 profile 选择与有序 patch 文件，而不是完整 Cordis 树；持久外部插件通过 `dsh plugin` 安装。已删除的私有直读配置载体没有兼容 bin 或回退 parser。
 
 ## 核心包

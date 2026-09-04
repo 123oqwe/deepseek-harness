@@ -61,7 +61,7 @@
  * @module @deepseek-ai/dsh-plugin-compat
  */
 
-import { brandNumber } from '@deepseek-ai/dsh-brand'
+import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 import type { Branded, BrandedNumber } from '@deepseek-ai/dsh-brand'
 import type { SchemaId, SchemaVersion } from '@deepseek-ai/dsh-schema-registry/types'
 
@@ -621,7 +621,137 @@ export function solvePluginGraph(manifests: readonly PluginCompatManifest[], hos
  * @throws Error when `raw` is present but is not a well-formed declaration.
  */
 export function parseCompatDeclaration(raw: unknown, pluginId: PluginId): PluginCompatManifest | undefined {
-  void raw
-  void pluginId
-  throw new Error('parseCompatDeclaration: not implemented')
+  if (raw === undefined) return undefined
+  const declaration = requireRecord(raw, pluginId, 'dsh.compat')
+  return {
+    pluginId,
+    runtimeApiRange: parseRuntimeApiRange(declaration.runtimeApiRange, pluginId),
+    schemaRanges: requireArray(declaration.schemaRanges, pluginId, 'dsh.compat.schemaRanges')
+      .map((entry, index) => parseSchemaRange(entry, pluginId, index)),
+    capabilities: requireArray(declaration.capabilities, pluginId, 'dsh.compat.capabilities')
+      .map((entry, index) => parseCapabilityRequirement(entry, pluginId, index)),
+    providerConstraints: requireArray(declaration.providerConstraints, pluginId, 'dsh.compat.providerConstraints')
+      .map((entry, index) => parseProviderConstraint(entry, pluginId, index)),
+    providedCapabilities: requireArray(declaration.providedCapabilities, pluginId, 'dsh.compat.providedCapabilities')
+      .map((entry, index) => brandString<CapabilityId>(
+        requireNonEmptyString(entry, pluginId, `dsh.compat.providedCapabilities[${index}]`),
+      )),
+  }
+}
+
+/** Reject a `dsh.compat` value that is not a plain JSON object, naming the package and the exact field path. */
+function requireRecord(value: unknown, pluginId: PluginId, path: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${pluginId}: ${path} must be an object, received ${JSON.stringify(value)}`)
+  }
+  return value as Record<string, unknown>
+}
+
+/** Reject a `dsh.compat` list field that is absent or not an array, naming the package and the exact field path. */
+function requireArray(value: unknown, pluginId: PluginId, path: string): readonly unknown[] {
+  if (!Array.isArray(value)) {
+    throw new Error(`${pluginId}: ${path} must be an array, received ${JSON.stringify(value)}`)
+  }
+  return value
+}
+
+/** Reject a `dsh.compat` identifier field that is absent or not a non-empty string. */
+function requireNonEmptyString(value: unknown, pluginId: PluginId, path: string): string {
+  if (typeof value !== 'string' || value.length === 0) {
+    throw new Error(`${pluginId}: ${path} must be a non-empty string, received ${JSON.stringify(value)}`)
+  }
+  return value
+}
+
+/** Reject a `dsh.compat` version field that is not a non-negative integer — every version in this module is a monotonic integer. */
+function requireVersionInteger(value: unknown, pluginId: PluginId, path: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw new Error(`${pluginId}: ${path} must be a non-negative integer, received ${JSON.stringify(value)}`)
+  }
+  return value
+}
+
+/** Reject a `dsh.compat` enum field whose value is not one of the declared members, listing what was allowed. */
+function requireMember<T extends string>(
+  value: unknown, allowed: readonly T[], pluginId: PluginId, path: string,
+): T {
+  if (typeof value !== 'string' || !(allowed as readonly string[]).includes(value)) {
+    throw new Error(`${pluginId}: ${path} must be one of ${allowed.join('|')}, received ${JSON.stringify(value)}`)
+  }
+  return value as T
+}
+
+/** Parse must[0]'s declared runtime API range, rejecting an inverted band a solver could never satisfy. */
+function parseRuntimeApiRange(value: unknown, pluginId: PluginId): RuntimeApiRange {
+  const range = requireRecord(value, pluginId, 'dsh.compat.runtimeApiRange')
+  const min = requireVersionInteger(range.min, pluginId, 'dsh.compat.runtimeApiRange.min')
+  const max = requireVersionInteger(range.max, pluginId, 'dsh.compat.runtimeApiRange.max')
+  if (min > max) {
+    throw new Error(`${pluginId}: dsh.compat.runtimeApiRange.min ${min} exceeds max ${max}`)
+  }
+  return { min: brandNumber<RuntimeApiVersion>(min), max: brandNumber<RuntimeApiVersion>(max) }
+}
+
+/** Parse one declared `{ major, minor }` schema version at `path`. */
+function parseSchemaVersion(value: unknown, pluginId: PluginId, path: string): SchemaVersion {
+  const version = requireRecord(value, pluginId, path)
+  return {
+    major: requireVersionInteger(version.major, pluginId, `${path}.major`),
+    minor: requireVersionInteger(version.minor, pluginId, `${path}.minor`),
+  }
+}
+
+/** Parse one of must[0]'s declared schema ranges, rejecting an inverted major band. */
+function parseSchemaRange(value: unknown, pluginId: PluginId, index: number): SchemaRangeRequirement {
+  const path = `dsh.compat.schemaRanges[${index}]`
+  const entry = requireRecord(value, pluginId, path)
+  const minVersion = parseSchemaVersion(entry.minVersion, pluginId, `${path}.minVersion`)
+  const maxVersion = parseSchemaVersion(entry.maxVersion, pluginId, `${path}.maxVersion`)
+  if (minVersion.major > maxVersion.major) {
+    throw new Error(`${pluginId}: ${path}.minVersion.major ${minVersion.major} exceeds maxVersion.major ${maxVersion.major}`)
+  }
+  return {
+    schemaId: brandString<SchemaId>(requireNonEmptyString(entry.schemaId, pluginId, `${path}.schemaId`)),
+    minVersion,
+    maxVersion,
+  }
+}
+
+/**
+ * Parse one of must[0]'s declared capability dependencies. `securityCritical`
+ * is required rather than defaulted, and an `'optional'` capability declared
+ * security-critical is rejected: {@link CapabilityRequirement} defines that
+ * combination as meaningless, and silently coercing it to `false` would hide
+ * a declaration whose author believed it was fail-closed (must[3]).
+ */
+function parseCapabilityRequirement(value: unknown, pluginId: PluginId, index: number): CapabilityRequirement {
+  const path = `dsh.compat.capabilities[${index}]`
+  const entry = requireRecord(value, pluginId, path)
+  const necessity = requireMember<CapabilityNecessity>(
+    entry.necessity, ['required', 'optional'], pluginId, `${path}.necessity`,
+  )
+  if (typeof entry.securityCritical !== 'boolean') {
+    throw new Error(`${pluginId}: ${path}.securityCritical must be a boolean, received ${JSON.stringify(entry.securityCritical)}`)
+  }
+  if (necessity === 'optional' && entry.securityCritical) {
+    throw new Error(`${pluginId}: ${path} declares an optional capability as securityCritical; an optional capability's absence is a feature-disable, never a fail-closed security concern`)
+  }
+  return {
+    capabilityId: brandString<CapabilityId>(requireNonEmptyString(entry.capabilityId, pluginId, `${path}.capabilityId`)),
+    necessity,
+    securityCritical: entry.securityCritical,
+  }
+}
+
+/** Parse one of must[0]'s declared provider constraints. */
+function parseProviderConstraint(value: unknown, pluginId: PluginId, index: number): ProviderConstraint {
+  const path = `dsh.compat.providerConstraints[${index}]`
+  const entry = requireRecord(value, pluginId, path)
+  return {
+    capabilityId: brandString<CapabilityId>(requireNonEmptyString(entry.capabilityId, pluginId, `${path}.capabilityId`)),
+    kind: requireMember<ProviderConstraintKind>(
+      entry.kind, ['requires-provider', 'excludes-provider'], pluginId, `${path}.kind`,
+    ),
+    providerId: brandString<PluginId>(requireNonEmptyString(entry.providerId, pluginId, `${path}.providerId`)),
+  }
 }
