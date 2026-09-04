@@ -236,12 +236,40 @@ describe('first100 readiness gate', () => {
     expect(output).not.toContain('BLOCKED_DEP')
   })
 
-  it('reproduces the three real cross-epic file conflicts in the live registry and ledger', () => {
-    // P1-03 is the epic all three recorded conflicts converge on; the gate must
-    // name each one from the real inputs, not from a hand-maintained list.
+  it('names every shared path when two in-flight epics overlap, however many there are', () => {
+    // The mechanism case for cross-epic conflicts. It was previously written
+    // against the live registry and ledger, asserting two specific paths — a
+    // hand-maintained list in everything but name, inside a case whose own
+    // comment claimed not to be one. Program progress (an epic accepted, its
+    // predecessor satisfied) legitimately changed those inputs, the gate
+    // stopped at the predecessor condition before reaching the file check, and
+    // CI went red on a correct gate. The shape is what this pins; the live
+    // inputs are covered by the smoke case below, which asserts no specific
+    // path.
+    const root = fixture(
+      [
+        { id: 'X', wave: 1, predecessors: [], files: ['a.ts'], stages: { P: { files: ['b.ts', 'c.ts'] } } },
+        { id: 'B', wave: 2, predecessors: [], files: ['c.ts'], stages: { C: { files: ['a.ts'] } } },
+      ],
+      { X: inFlight, B: notStarted },
+    )
+    const { code, output } = run(root, 'B')
+    expect(code).toBe(1)
+    expect(output).toContain('shares 2 file(s) with in-flight X')
+    expect(output).toContain('a.ts')
+    expect(output).toContain('c.ts')
+    // `b.ts` belongs to X alone, so naming it would be over-reporting.
+    expect(output).not.toContain('b.ts')
+  })
+
+  it('smoke: runs against the live registry and ledger without crashing, and refuses an epic it cannot admit', () => {
+    // Deliberately asserts no specific epic, path, or count: every one of those
+    // changes as the program advances, and pinning them turns ordinary progress
+    // into a red gate. What must stay true is that the real inputs parse, the
+    // gate reaches a verdict, and a refusal explains itself.
     const { code, output } = run(REPO, 'P1-03')
     expect(code).toBe(1)
-    expect(output).toContain('apps/cli/src/profile-boot.ts')
-    expect(output).toContain('packages/bundle/base/cordis.patch.yml')
+    expect(output).toContain('NOT READY')
+    expect(output).toMatch(/ {2}- \S/u)
   })
 })
