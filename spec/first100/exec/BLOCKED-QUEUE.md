@@ -940,6 +940,14 @@ There is nothing to sign or verify *with*. Epic P2-02's Contract stage consequen
 - read a **comment** as if it were the **legend** (a JSDoc description of layer mapping vs. the real gate);
 - read a **manifest** as if it were the **dependency graph** (this case).
 
+**Refinement, learned by the rule failing on its own terms (delegate + Supervisor, 2026-09-04).** This rule was followed — a `grep` count, an evaluation rather than a reading — and **still produced a false conclusion**: "the scanner contains zero occurrences of `singleton`, so the Contract stage defined a bucket it never fills." The file carried five literal NUL bytes, so `file(1)` classified it as `data` and `grep` skipped it **without saying so**. The detection was there all along, at lines 47–532, and fires on two real violations.
+
+> **A measurement needs its own premises verified.** A measurement whose input was silently skipped or truncated returns a **confident wrong number that is indistinguishable from a real one**. *"I measured it"* is no safer than *"I read it"* unless you also confirmed the subject actually entered the measurement.
+
+Concretely: a search returning zero is two different claims — *the pattern is absent* and *the file was never searched* — and the tools do not distinguish them. Before trusting a zero, confirm the corpus was non-empty and every intended file was readable: `file` on the target, a positive control pattern known to be present, or a line count.
+
+**Attribution:** the false conclusion was drawn by the Supervisor, who had by then documented the NUL hazard twice, and was accepted downstream by the delegate before either checked. Third occurrence of that hazard, first to cause a wrong conclusion.
+
 **Rule.** Where a tool can actually evaluate a relation, evaluate it — do not substitute reading a description of it. Descriptions drift from what they describe, and the drift is invisible from inside the description. Concretely:
 
 | Claim about | Evaluate with | Never substitute |
