@@ -14,19 +14,21 @@
  * None of these functions read a file, spawn a process, stat a path, or
  * construct a Cordis `Context` — every `WorkspaceIdentity`,
  * `TrustRecord`, and `Principal` input is a plain value the caller already
- * resolved, matching this repo's pure-function Contract-stage convention
- * (see `@deepseek-ai/dsh-plugin-ownership`). Usage-stage wires
- * `bindWorkspaceTrust`/`authorizeProjectLoad`/`reconcileWorkspaceTrust` into
- * `packages/workspace/workspace/src/{entity,index,paths}.ts` (real
- * `fs.stat`/`fs.realpath` observation) and
- * `packages/context/agent-instructions/src/{index,files}.ts` /
- * `apps/cli/src/profile-boot.ts` (real project plugin/hook/MCP-server/skill/
- * patch-override load sites) — none of those files are this stage's job.
+ * resolved, matching this repo's pure-function convention (see
+ * `@deepseek-ai/dsh-plugin-ownership`). Real `fs.stat`/`fs.realpath`
+ * observation lives in `@deepseek-ai/dsh-workspace`; resolving a session `cwd`
+ * to a state lives in `@deepseek-ai/dsh-workspace-trust-local`, the provider
+ * behind {@link WorkspaceTrustService}. The load gate has two real callers:
+ * `@deepseek-ai/dsh-skill-filesystem`'s project skill roots and
+ * `@deepseek-ai/dsh-agent-instructions`' project instruction discovery. The
+ * remaining four `ProjectContentKind` members have no project-sourced load site
+ * in this product yet, so nothing calls this gate with them
  *
  * @module @deepseek-ai/dsh-workspace-trust
  */
 export type * from './types.ts'
 
+import type {} from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal/types'
 import type {
   LoadDecision,
@@ -38,9 +40,38 @@ import type {
   WorkspaceIdentity,
 } from './types.ts'
 
+/**
+ * The Service Definition Consumers read before loading anything a project
+ * directory supplied. A Consumer holds a session `cwd`, not a workspace id, so
+ * this is the seam rather than `@deepseek-ai/dsh-workspace`'s
+ * `WorkspaceRegistry.workspaceTrust`, which is keyed by `WorkspaceId`.
+ *
+ * `@deepseek-ai/dsh-workspace-trust-local` is the host-local Provider. When no
+ * provider is mounted, `ctx.get('workspaceTrust')` is `undefined` and each
+ * Consumer loads exactly as it did before this boundary existed; mounting a
+ * provider is what turns the boundary on.
+ */
+export interface WorkspaceTrustService {
+  /**
+   * Resolve the trust state currently bound to a workspace directory,
+   * re-observing its filesystem identity so a replaced, retargeted, or moved
+   * directory never answers with the trust of the one it displaced.
+   * @param cwd - the session working directory to resolve trust for.
+   * @returns the workspace's current {@link TrustState}.
+   */
+  stateFor(cwd: string): Promise<TrustState>
+}
+
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    workspaceTrust: WorkspaceTrustService
+  }
+}
+
 /** {@link ProjectContentKind}'s declared member order, used to walk every kind when computing `downgradeTrust`'s `revokedKinds`. */
 const PROJECT_CONTENT_KINDS: readonly ProjectContentKind[] = [
   'safe-read',
+  'project-instructions',
   'project-plugin',
   'project-hook',
   'mcp-server',
@@ -86,12 +117,22 @@ export function bindWorkspaceTrust(identity: WorkspaceIdentity, at: string): Tru
  * is what makes acceptance[0]'s "clone and open a malicious repo produces
  * zero subprocess/network/credential-read activity" hold: none of those
  * activities has a load site this function admits before `'trusted-execute'`.
+ * `'project-instructions'` is the one kind whose answer differs between
+ * `'untrusted'` and `'trusted-read'`: an untrusted workspace's own instruction
+ * files never reach the model, while a trusted-read one may contribute them as
+ * plain text. That single difference is what gives `'trusted-read'` behavior of
+ * its own, and it is decided here rather than by a second function beside this
+ * one, so the gate and `downgradeTrust`'s revocation set can never disagree.
  * @param state - the workspace's current {@link TrustState}.
  * @param kind - the {@link ProjectContentKind} a caller wants to load.
  * @returns `{ permitted: true }`, or `{ permitted: false, reason, requiredState }` naming the minimum state that would admit `kind`.
  */
 export function authorizeProjectLoad(state: TrustState, kind: ProjectContentKind): LoadDecision {
   if (kind === 'safe-read' || state === 'trusted-execute') return { permitted: true }
+  if (kind === 'project-instructions') {
+    if (state === 'trusted-read') return { permitted: true }
+    return { permitted: false, reason: 'trust-required', requiredState: 'trusted-read' }
+  }
   return { permitted: false, reason: 'trust-required', requiredState: 'trusted-execute' }
 }
 

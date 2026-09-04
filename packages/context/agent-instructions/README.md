@@ -31,6 +31,8 @@ Mount this plugin when agents should work from the workspace's own instruction f
 
 The first request includes one durable baseline message with the user-global `$DSH_HOME/AGENTS.md` followed by the project chain — every existing candidate file from the project root down to the session working directory, in broad-to-specific order. Sibling files whose content matches after trimming render once, so a `CLAUDE.md` that duplicates its `AGENTS.md` is not repeated. After a successful `read`, `write`, or `edit` call reaches a deeper directory, the next request includes the newly applicable instruction file; a changed file replaces its content, and a file that disappears or duplicates an earlier candidate produces a removal notice.
 
+The project chain is gated by the workspace trust boundary: when a `ctx.workspaceTrust` provider is mounted, an untrusted workspace contributes none of its own instruction files, to the baseline or through a tool touch, and a downgrade recomposes the baseline without them rather than leaving injected text in place. The user-global `$DSH_HOME/AGENTS.md` is host-owned and is never gated. With no provider mounted nothing is gated and every candidate loads as before — see [`@deepseek-ai/dsh-workspace-trust-local`](../../workspace/workspace-trust-local/README.md) for turning the boundary on.
+
 ### Configuration
 
 The defaults suit a typical checkout: `.git` marks the project root, `AGENTS.md` and `CLAUDE.md` are the base candidates, and `AGENTS.local.md` and `CLAUDE.local.md` are additive local overlays. Only `maxBytes` is required — it caps the complete rendered baseline so each deployment chooses its prompt budget explicitly.

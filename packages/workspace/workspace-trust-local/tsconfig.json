@@ -12,7 +12,16 @@
       "path": "../../../vendor/cordis"
     },
     {
+      "path": "../../../vendor/schemastery"
+    },
+    {
       "path": "../../identity/principal"
+    },
+    {
+      "path": "../workspace"
+    },
+    {
+      "path": "../workspace-trust"
     }
   ]
 }

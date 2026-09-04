@@ -20,6 +20,7 @@ import type Schema from '@deepseek-ai/schemastery'
 import { parse as parseYaml } from 'yaml'
 import type { FileSystem, FsDirEntry, FsTarget } from '@deepseek-ai/dsh-fs'
 import { canonicalizeWatchPath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
+import { authorizeProjectLoad } from '@deepseek-ai/dsh-workspace-trust'
 import {
   BUNDLED_SKILL_RANK,
   isSkillName,
@@ -238,14 +239,37 @@ export class FileSystemSkillProvider implements SkillProvider {
     return this.disposal
   }
 
+  /**
+   * Decide whether this workspace's own skill directories may contribute
+   * executable content (Epic P1-07 must[1]).
+   *
+   * When no `workspaceTrust` provider is mounted the project roots are scanned
+   * exactly as they were before this boundary existed. Mounting a provider is
+   * what turns the boundary on; see this package's README.
+   * @param projectRoot - the resolved project root whose trust is being read.
+   * @returns whether the project skill roots may be scanned.
+   */
+  private async projectLoadPermitted(projectRoot: string): Promise<boolean> {
+    const trust = this.ctx.get('workspaceTrust')
+    if (trust === undefined) return true
+    return authorizeProjectLoad(await trust.stateFor(projectRoot), 'executable-skill').permitted
+  }
+
   private async roots(cwd: string | undefined): Promise<SkillRoot[]> {
     const roots: SkillRoot[] = []
     if (this.includeDefaultRoots && cwd !== undefined) {
       const projectRoot = await findProjectRoot(resolve(cwd), optionalFileSystem(this.ctx))
-      roots.push(
-        { path: join(projectRoot, '.dsh/skills'), source: 'project-dsh', rank: PROJECT_DSH_RANK, projectRoot },
-        { path: join(projectRoot, '.agents/skills'), source: 'project-agents', rank: PROJECT_AGENTS_RANK, projectRoot },
-      )
+      // Epic P1-07 must[1]: a project's own skill directories are executable
+      // content supplied by the workspace, so they enter the catalog only at a
+      // trust state that admits executing what the project supplied. This is the
+      // only load site in the product where project-supplied executable content
+      // reaches the model, which is why the gate lives here.
+      if (await this.projectLoadPermitted(projectRoot)) {
+        roots.push(
+          { path: join(projectRoot, '.dsh/skills'), source: 'project-dsh', rank: PROJECT_DSH_RANK, projectRoot },
+          { path: join(projectRoot, '.agents/skills'), source: 'project-agents', rank: PROJECT_AGENTS_RANK, projectRoot },
+        )
+      }
     }
     roots.push(...this.customSkillDirs.map(path => ({ path, source: 'custom' as const, rank: CUSTOM_RANK })))
     if (this.includeDefaultRoots) {

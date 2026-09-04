@@ -354,4 +354,25 @@ async resolveByPath(path: string): Promise<Workspace | undefined>
 Types: [SessionId](core.zh.md)
 
 Source: [`packages/workspace/workspace/src/index.ts`](../../packages/workspace/workspace/src/index.ts)
+
+<a id="ctxworkspacetrust--workspacetrustservice"></a>
+
+### `ctx.workspaceTrust` — `WorkspaceTrustService`
+
+The Service Definition Consumers read before loading anything a project directory supplied. A Consumer holds a session `cwd`, not a workspace id, so this is the seam rather than `@deepseek-ai/dsh-workspace`'s `WorkspaceRegistry.workspaceTrust`, which is keyed by `WorkspaceId`.
+
+`@deepseek-ai/dsh-workspace-trust-local` is the host-local Provider. When no provider is mounted, `ctx.get('workspaceTrust')` is `undefined` and each Consumer loads exactly as it did before this boundary existed; mounting a provider is what turns the boundary on.
+
+```ts cordis-catalog
+/**
+ * Resolve the trust state currently bound to a workspace directory,
+ * re-observing its filesystem identity so a replaced, retargeted, or moved
+ * directory never answers with the trust of the one it displaced.
+ * @param cwd - the session working directory to resolve trust for.
+ * @returns the workspace's current {@link TrustState}.
+ */
+stateFor(cwd: string): Promise<TrustState>
+```
+
+Source: [`packages/workspace/workspace-trust/src/index.ts`](../../packages/workspace/workspace-trust/src/index.ts)
 <!-- END GENERATED cordis-surface -->

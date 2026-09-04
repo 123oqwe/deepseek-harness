@@ -53,6 +53,8 @@ Default roots are scanned in this provider's rank order:
 
 The project root is the nearest ancestor containing `.git`; without one, the current cwd is used. The user DSH root skips its `.system` child. `includeDefaultRoots: false` omits the project and user rows plus the `$DSH_BUNDLED_SKILL_DIR` default so an isolated provider sees only its own configured roots; `bundledSkillDir` adds a bundled root at rank 600.
 
+The two project roots are gated by the workspace trust boundary: when a `ctx.workspaceTrust` provider is mounted, they are scanned only at a trust state that permits executing what the project supplied, since a cloned repository's skills are executable content it supplied. The custom, user, and bundled roots are host-owned and are never gated. With no provider mounted nothing is gated and all roots are scanned as before — see [`@deepseek-ai/dsh-workspace-trust-local`](../../workspace/workspace-trust-local/README.md) for turning the boundary on.
+
 ### Mount and configure
 
 Load the plugin alongside the skill registry; it requires `ctx.skills`.

@@ -25,6 +25,7 @@ The workspace group provides the durable project list behind a host UI: one prod
 | Package | Role | ctx key |
 |---|---|---|
 | [`workspace`](workspace/README.md) | Provides named, ordered projects with the sessions that ran in each directory | `ctx.workspaceRegistry` |
+| [`workspace-trust-local`](workspace-trust-local/README.md) | Resolves a session cwd to a trust state against the real filesystem | `ctx.workspaceTrust` |
 
 -----
 

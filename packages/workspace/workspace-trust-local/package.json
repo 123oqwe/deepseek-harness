@@ -1,6 +1,6 @@
 {
-  "name": "@deepseek-ai/dsh-skill-filesystem",
-  "description": "Local filesystem skill provider for the DeepSeek Harness",
+  "name": "@deepseek-ai/dsh-workspace-trust-local",
+  "description": "Host-local provider for the workspace trust capability: binds a workspace's identity from the real filesystem, reconciles it on every read so a replaced, retargeted, or moved directory never inherits trust, and answers the project-load gate for the session cwd",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
-    "directory": "packages/skill/skill-filesystem"
+    "directory": "packages/workspace/workspace-trust-local"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -23,26 +23,28 @@
   },
   "files": [
     "lib/index.js",
+    "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-fs": "workspace:^",
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
-    "@deepseek-ai/dsh-skill": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-workspace": "workspace:^",
     "@deepseek-ai/dsh-workspace-trust": "workspace:^"
   },
   "dependencies": {
-    "chokidar": "^5.0.0",
-    "@deepseek-ai/schemastery": "workspace:^",
-    "yaml": "^2.4.2"
+    "@deepseek-ai/schemastery": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-fs": "workspace:^",
-    "@deepseek-ai/dsh-home-paths": "workspace:^",
+    "@deepseek-ai/dsh-app-boot": "workspace:^",
+    "@deepseek-ai/dsh-llm": "workspace:^",
+    "@deepseek-ai/dsh-loader-smoke": "workspace:^",
+    "@deepseek-ai/dsh-principal": "workspace:^",
+    "@deepseek-ai/dsh-session": "workspace:^",
     "@deepseek-ai/dsh-skill": "workspace:^",
+    "@deepseek-ai/dsh-workspace": "workspace:^",
     "@deepseek-ai/dsh-workspace-trust": "workspace:^"
   }
 }
