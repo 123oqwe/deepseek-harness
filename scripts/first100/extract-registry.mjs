@@ -78,6 +78,37 @@ const NEWGAP_SOURCES = [
 ]
 
 /**
+ * BLOCKED-043: vendored sources this extractor cites but never parses.
+ *
+ * `upstream-status-COMPLETE.md` carries the P9-01..09 upstream-coverage
+ * verdict, and it is the sole evidence for the program's terminal-state
+ * requirement that all nine P9 items be VERIFIED or scheduled-BLOCKED. It is
+ * referenced below only as a `rationaleDoc` string, so before this pin nothing
+ * verified it: appending a fabricated verdict left extraction at exit 0, while
+ * the same append to the SHA-pinned `new-gap-matrix.md` beside it failed
+ * closed. A record that decides a terminal-state answer must not be editable
+ * without any gate reporting it.
+ *
+ * Kept out of `NEWGAP_SOURCES` deliberately: entries there are PARSED into
+ * epic rows, and this document has no matrix or wave-map structure. It is
+ * verified and never read for content, which is why it needs its own list.
+ */
+const CITED_SOURCE_SHAS = [
+  {
+    path: 'base-align-v2/upstream-status-COMPLETE.md',
+    sha256: '2858c273340502af8819d8493cad6cc8854b63e19914d0b5dd38e4f42465f57c',
+  },
+]
+for (const cited of CITED_SOURCE_SHAS) {
+  const actual = sha256(readFileSync(join(SOURCES_DIR, cited.path), 'utf8'))
+  if (actual !== cited.sha256) {
+    throw new Error(
+      `${cited.path}: sha mismatch (got ${actual}, expected ${cited.sha256}) -- cited-but-unparsed sources are fail-closed SHA-pinned exactly like the parsed ones`,
+    )
+  }
+}
+
+/**
  * BASE-ALIGN-v2 23-PARTIAL rescope (spec/first100/sources/base-align-v2/23-partial-rescope-spec.md,
  * delegate-approved mechanism, 2026-09-02): these canonical epics' `must`
  * text was narrowed in-place in first100-requirements-matrix.md to only the
