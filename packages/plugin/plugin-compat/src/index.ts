@@ -375,9 +375,10 @@ function indexProvidedCapabilities(manifests: readonly PluginCompatManifest[]): 
  * {@link UnsatCore} rather than blocking one manifest and activating the
  * other — {@link solvePluginGraph} never silently picks a side. A
  * capability whose provider constraints do not fit this exact shape (no
- * opposing manifest, or a contested provider that is not the capability's
- * sole one) is left to the per-manifest solve in {@link solveManifest},
- * which blocks only the manifest whose own requirement fails.
+ * opposing manifest, both opposing constraints declared by the same
+ * manifest, or a contested provider that is not the capability's sole one)
+ * is left to the per-manifest solve in {@link solveManifest}, which blocks
+ * only the manifest whose own requirement fails.
  */
 function findProviderConstraintContradictions(
   manifests: readonly PluginCompatManifest[],
@@ -407,16 +408,30 @@ function findProviderConstraintContradictions(
   const seen = new Set<string>()
 
   for (const [key, requirers] of requiresSites) {
-    const excluders = excludesSites.get(key)
+    const excluders = excludesSites.get(key) ?? []
     const anchor = requirers[0]
-    if (!excluders || excluders.length === 0 || !anchor) continue
+    if (excluders.length === 0 || !anchor) continue
 
     const { capabilityId, providerId } = anchor.constraint
     const providers = providedBy.get(capabilityId) ?? []
     const isSoleProvider = providers.length === 1 && providers[0] === providerId
     if (!isSoleProvider) continue
 
-    for (const site of [...requirers, ...excluders]) {
+    // Only opposing constraints declared by two *different* manifests make
+    // this a graph-level contradiction. One manifest declaring both against
+    // the same provider contradicts nothing but itself, and
+    // `admissibleProviders` already leaves it no admissible provider, so
+    // `solveManifest` blocks that manifest alone — reporting it here instead
+    // would deny every unrelated plugin a plan over one plugin's own
+    // declaration, and would attribute the conflict to "another manifest"
+    // that does not exist.
+    const opposedRequirers = requirers.filter(requirer =>
+      excluders.some(excluder => excluder.manifest.pluginId !== requirer.manifest.pluginId))
+    const opposedExcluders = excluders.filter(excluder =>
+      requirers.some(requirer => requirer.manifest.pluginId !== excluder.manifest.pluginId))
+    if (opposedRequirers.length === 0 || opposedExcluders.length === 0) continue
+
+    for (const site of [...opposedRequirers, ...opposedExcluders]) {
       const dedupeKey = `${site.manifest.pluginId}\0${site.constraint.capabilityId}\0${site.constraint.kind}`
       if (seen.has(dedupeKey)) continue
       seen.add(dedupeKey)
@@ -537,9 +552,44 @@ function solveManifest(
 }
 
 /**
+ * Reject a graph that names one {@link PluginId} more than once, before any
+ * solving happens.
+ *
+ * Two manifests under one identity have no unique solved plan, which the
+ * epic's own gate ("only a unique solved plan activates") does not admit:
+ * they can disagree — one active, one blocked — and {@link comparePluginId}
+ * cannot order them, so a stable sort lets `manifests` array order decide
+ * which row comes first and acceptance[0]'s "same input, same load plan"
+ * becomes false. Ordering the pair by content instead would restore
+ * acceptance[0] while still emitting a plan carrying two contradictory rows
+ * for one plugin, so the ambiguity is rejected rather than ordered.
+ *
+ * This fails loud because manifests reach the solver from `package.json`
+ * parsing (see {@link parseCompatDeclaration}), an untrusted file boundary:
+ * one package name declared twice in a single boot is misconfiguration, not
+ * a constraint that could be satisfied, so it is not an {@link UnsatCore}.
+ * @param manifests - the graph as supplied to {@link solvePluginGraph}.
+ * @throws Error naming the duplicated {@link PluginId}.
+ */
+function requireDistinctPluginIds(manifests: readonly PluginCompatManifest[]): void {
+  const seen = new Set<PluginId>()
+  for (const manifest of manifests) {
+    if (seen.has(manifest.pluginId)) {
+      throw new Error(
+        `plugin compatibility graph declares '${manifest.pluginId}' more than once; one pluginId must name one plugin`,
+      )
+    }
+    seen.add(manifest.pluginId)
+  }
+}
+
+/**
  * Stable, content-only ordering for two {@link PluginId}s — sorts
  * {@link LoadPlan.activations} and {@link UnsatCore} entries so the result
- * never depends on `manifests` array order (acceptance[0]).
+ * never depends on `manifests` array order (acceptance[0]). Every
+ * {@link PluginId} in a solved graph is distinct
+ * (see {@link requireDistinctPluginIds}), so this order is total and no tie
+ * is ever broken by array position.
  */
 function comparePluginId(a: PluginId, b: PluginId): number {
   if (a < b) return -1
@@ -583,8 +633,12 @@ function computePlanId(activations: readonly PluginActivation[]): string {
  * @returns a {@link PluginGraphSolution}: `solvable: true` with one
  *   {@link PluginActivation} per `manifests` entry, or `solvable: false`
  *   with the minimal {@link UnsatCore}.
+ * @throws Error when two `manifests` entries declare the same
+ *   {@link PluginId} — an ambiguous plugin identity has no unique solved
+ *   plan (see {@link requireDistinctPluginIds}).
  */
 export function solvePluginGraph(manifests: readonly PluginCompatManifest[], host: HostCompatContext): PluginGraphSolution {
+  requireDistinctPluginIds(manifests)
   const providedBy = indexProvidedCapabilities(manifests)
 
   const unsatCore = findProviderConstraintContradictions(manifests, providedBy)
