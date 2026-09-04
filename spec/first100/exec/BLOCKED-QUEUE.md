@@ -1056,7 +1056,24 @@ Two separate defects, found when a lane superseded a `(P1-07, C)` freeze entry.
 
 **3. It was in no gate set at all** (delegate, 2026-09-04). `package.json` defines `first100:verify-frozen-titles-resolvable`, but `first100:slice-gate-registry` runs `slice-gate`, `verify-specs`, `test-specs`, and `verify-baseline-file-references` — **not this one**. So it was never "red and unattended"; it was **never plugged in**, and would have stayed red without anyone learning so. This is the second gate found built-but-unwired (the first was `verify-baseline-file-references`, since connected).
 
-**Rule (delegate, recording this against their own request).** *Asking for a gate is not the same as having one running. Delivering an executable script and having it enter a mandatory gate set are two different things; a gate is accepted when **it is in the gate set and currently green**, never when the script exists.* The frozen-titles gate was requested in BLOCKED-040, delivered, and never ran.
+**Rule, second and corrected form (2026-09-04).** The first version of this rule was stated by mechanism and was wrong; see the correction below. The rule that stands:
+
+> **A gate is accepted when it evaluates the real subject, in a mandatory lane, and has been shown to go red.** An npm aggregate and a `*.spec.ts` both count as wiring. The script existing does not count. **Evaluating only fixtures does not count either — that tests the checker, not the repository.**
+
+**The superseded first form, and why it failed** (delegate, recorded against their own rule). It read: *a gate is accepted when it is in the gate set and currently green, never when the script exists.* That was generalized from two instances that had genuinely never evaluated anything (`verify-baseline-file-references`, `verify-frozen-titles-resolvable`) into a criterion phrased by **mechanism** — "is it in an npm gate set" — rather than by **effect** — "does it evaluate the real subject". **That phrasing misses this repository's main enforcement path entirely**, since a great deal is enforced by `*.spec.ts` files evaluated against the real tree and reached by CI's plain `vitest run`, never by an aggregate.
+
+It is the same error as [BLOCKED-051](#blocked-051) and [BLOCKED-055](#blocked-055), one level up: *a name is a description, going red is an evaluation* — and here a gate's **mounting mechanism** was substituted for **whether it actually evaluates**. Fifth instance of that family, this time inside the rule written to prevent it.
+
+**Retroactive audit of all 8 ACCEPTED rows (2026-09-04), recorded although it found no action.** Question asked of each: did it deliver a script, and if so does that script evaluate the real repository in a mandatory lane?
+
+| Epic | Script | npm aggregate | Evaluates the real repo in CI |
+|---|---|---|---|
+| P0-01 | `scripts/release/baseline-fingerprint.mjs` | none | **Yes** — `tests/release/baseline-fingerprint.spec.ts` reads the real `repoRoot` and the repository's own `.dsh/baseline.json` |
+| P0-03 | `scripts/architecture/check-capability-seams.mjs` | none | **Yes** — `check-capability-seams.spec.ts:87-90` runs `runCapabilitySeamsCheck(root)` over the real tree asserting zero violations, and was observed going red when an unclassified probe package was added |
+| P0-07 | `scripts/release/{collect,verify}-evidence.mjs` | none | **No, and correctly so** — release-time tooling, not a repository invariant; there is no "run once against the current repo" semantics for it |
+| P0-02, P0-05, P0-06, P1-01, P2-01 | — | — | delivered no script |
+
+**Conclusion: no ACCEPTED row needs a lock.** A proposal to lock P0-03 was made and **withdrawn** on this evidence. Its acceptance was sound at the time and remains sound under the corrected rule. Not every checker should have a real subject — distinguishing P0-07's release tooling from P0-03's repository invariant is part of the rule, not an exception to it.
 
 **Resolved 2026-09-04**, in the delegate's required order:
 
