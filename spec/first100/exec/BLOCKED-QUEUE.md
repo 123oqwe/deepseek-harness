@@ -11,6 +11,8 @@ responds; append-only.
 
 ### BLOCKED-068 — the program's own predicate (iv) was self-certifying: `--accept` demands a `guanjieqiao-92` sign-off entry, but under BLOCKED-036 the party that writes that entry is the party the gate exists to stop; resolved by carving `--record-signoff` (and only it) out of the delegate's no-execution rule (delegate-initiated and delegate-executed, 2026-09-04, user notified)
 
+
+**Cross-reference:** one of five distinct guarantee failures catalogued in [BLOCKED-072](#blocked-072); see its table for the other four, and do not read them as instances of one another.
 - **When:** 2026-09-04, while signing P1-08/P1-09/P4-01 — the first sign-offs since the predicate was built.
 - **The defect:** `checkDelegateSignoff` requires an entry in `delegate-signoff.json` whose `rowDigestSha256` equals the row's current digest. Its entire value rests on that entry being producible only by the delegate. BLOCKED-036 §1 says the delegate "never runs anything directly", so in practice the Supervisor writes the entry from the delegate's relayed conclusion — the arrangement BLOCKED-036 itself describes (「我核后把签署记录给你」). The single pre-existing entry (P2-01, 2026-09-02) was produced that way. **A gate whose key is minted by the party being gated is not a gate**, and this is the exact defect class the program exists to find, sitting in the program's own machinery. It is also precisely [BLOCKED-034](#blocked-034)'s rule (a constraint held up by good intentions is itself a defect) applied to the evidence system rather than to the product.
 - **Why this outranks the role boundary on this one command:** the boundary's purpose (the delegate plans and verifies, the Supervisor executes) is served everywhere else and is not in question. But a signature is the one act that cannot be delegated without destroying the thing it certifies. Keeping the letter of §1 here would keep the *appearance* of a fourth predicate while removing its substance — worse than having no predicate (iv), because the ledger would record independent verification that never happened.
@@ -20,6 +22,8 @@ responds; append-only.
 
 ### BLOCKED-067 — false-green class, found by P6-01's F stage: a clause guarded only by a check on the INPUT's shape and a clause with no guard at all are indistinguishable in a test report; bounded re-examination of the 8 already-ACCEPTED rows required (Supervisor-found, delegate-elevated to a standing rule, 2026-09-04)
 
+
+**Cross-reference:** one of five distinct guarantee failures catalogued in [BLOCKED-072](#blocked-072); see its table for the other four, and do not read them as instances of one another.
 - **What was found:** P6-01's `must[3]` (memory access is scoped) read as covered. `requireCompleteAccessContext` asserts an access context is *present and complete*; `capRecords` asserts a *count*. Neither asserts that a complete context actually **constrains the result**. Probing with only the public exports, two shipped production factories — `createLocalReferenceMemoryProvider` and `createFakeMemoryProvider`, both exported from `src/index.ts`, neither a test double — returned another tenant's records to a `tenant-b` context, and `forget()` called with `tenant-b` **destroyed `tenant-a`'s records**. Cross-tenant data destruction, not merely a read leak. Only `durable-file` filtered.
 - **The rule this becomes:** *a clause guarded by a shape-check on its input looks exactly like a covered clause and exactly like an uncovered one.* Both produce green reports; neither proves the effect. This is [BLOCKED-052](#blocked-052)'s "a test that cannot fail proves nothing" sharpened into the specific mechanism that manufactures it, and it is now the first question every F stage must answer for each clause it touches: **does any case assert on the EFFECT, or do they all assert on the shape of the input?**
 - **Why it reaches rows already ACCEPTED:** all 8 ACCEPTED rows carry a GREEN F cell, but those F stages predate this question being asked. **Bounded action, not a general sweep:** re-examine those 8 rows against this one question only. Every clause whose cases assert solely on input shape gets a new effect-asserting case; if it then fails, that is the finding, and it must be recognized as the unlock signal rather than patched back to green.
@@ -143,6 +147,8 @@ for why an accurate Open section matters mechanically.
 
 ### BLOCKED-034 — standing rule: this program's invariants must be mechanically gated, never held by agent diligence alone; `spec/first100/exec/invariants-gates.md` is the durable register of every invariant, its enforcing gate (or GAP), and priority for closing each GAP (ANSWERED-BY-DELEGATE(gq-92))
 
+
+**Cross-reference:** one of five distinct guarantee failures catalogued in [BLOCKED-072](#blocked-072); see its table for the other four, and do not read them as instances of one another.
 - **When:** 2026-09-03, after `guanjieqiao-92` noticed the same failure shape recurring across BLOCKED-016 (a re-anchor decision existing only in a chat message until vendored), BLOCKED-020 (a derived-artifact byte-drift undetected until CI), BLOCKED-023 (a flake-evidence standard that had to be hardened against gaming), BLOCKED-029 (a typecheck gap that shipped past 4 U-stage + 2 F-stage reviews), BLOCKED-030 (a scope-reservation rule that almost got satisfied by a paraphrased relay instead of a verbatim quote), BLOCKED-033 (9 stale file references undetected through the last re-anchor). Every instance: an invariant held by "someone remembers to check" → missed → a gate bolted on after the incident.
 - **Delegate directive (verbatim, `guanjieqiao-92`, cross-session message, 2026-09-03, C7①"证据与账本机制的先例细化"scope):** 「同一形状已出现至少五次...每次都是：某个不变量靠"人/agent 认真检查"维持 → 被漏掉 → 事后补一道机械门。凡本程序依赖的不变量，必须由不可跳过的机械门执行，而不是由 agent 的自觉执行。推论：发现某个不变量当前靠巡查维持，这本身就是缺陷——修法不是"再查一遍"，是"机械化它"。在 spec/first100/exec/ 建一份 invariants-gates.md，每个不变量一行：不变量是什么/由哪道机械门执行/何时跑/若为"靠自觉"则标 GAP...我看至少这三条现在还是纯靠自觉，而且每一条都已经真造成过一轮 REJECT：①Agent Note 缺失...②surgical diff/范围蔓延...③分支争用...投入最小、回报立现的先做。」
 - **Resolution, effective immediately:**
@@ -758,6 +764,52 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-072 — **Verdict divorced from subject**: a mechanism produces a plausible verdict without evaluating the thing it claims to evaluate. Five instances in one day, three sub-forms, and one executable rule that catches all five (delegate-named, Supervisor-recorded, 2026-09-04)
+
+**This is a lens, not a parent node.** It absorbs nothing. The neighbouring entries each name a *different* way a guarantee fails, and folding them together would destroy that distinction:
+
+| Entry | What fails |
+|---|---|
+| [BLOCKED-034](#blocked-034) | there is no mechanical gate at all |
+| [BLOCKED-052](#blocked-052) | a gate exists but can never go red |
+| [BLOCKED-067](#blocked-067) | a gate exists and can go red, but red means something else |
+| [BLOCKED-068](#blocked-068) | a gate exists, but the party it stops mints its own key |
+| **BLOCKED-072** | a verdict is produced, but it never looked at the subject |
+
+**The five instances, and the three distinct sub-forms.** The kernel is one; the failure point is not. Recording only the kernel would make a fourth sub-form read as a new discovery.
+
+*Sub-form A — a description substituted for an evaluation:*
+1. `api-catalog.ts`'s generated header named `verify-cordis-api` as its `doc-sync` gate. That gate is not in `doc-sync`; `verify-cordis-catalog` is. **It misled two readers independently** — the delegate and the Supervisor both concluded no covering gate existed, and the remedy was inverted toward building one that was already installed.
+5. `verify-no-stale-red-claims` was switched off, for a whole package, by the stale prose it exists to catch: a stale JSDoc mentioning `not implemented` counted as proof the package really was unimplemented. `dsh-run` carried nine such claims undetected.
+
+*Sub-form B — a real evaluation whose subject was silently reduced:*
+2. Test counts read from a `Map` keyed by `fullName`: 19210 assertions collapsed to 19082 distinct names, and — the part that mattered — the non-passing filter ran over the collapsed map, so a duplicate-named pair with one pass and one failure would have reported clean. (Supervisor's.)
+3. A large file hashed through a pipe returned two different digests for one unchanged blob; the git object id `491298bc…` was identical throughout. Two measurements disagreed and neither was believed until the authoritative one was consulted. (Delegate's.)
+
+*Sub-form C — a real evaluation whose verdict was never consumed:*
+4. `checkDeliverablePathPatches` computed unknown-epic, stale-`declaredPath`, empty-`approvedPath` and empty-`reason` verdicts, and was called **only from its own spec file**. A patch naming a path the registry never declared generated *and* verified at exit 0.
+
+**How #4 was found, which is the load-bearing fact.** No instruction asked for it. Before adding a patch through that channel, the Supervisor deliberately broke a patch to confirm the gate would reject it — and it did not. **The delegate's ruling that patches are the machine-checked route (and supersession the honour-system one) therefore rested on a premise that was false when the ruling was made, and holds now only because that unrequested check happened.** Two of these five instances are the delegate's own; this entry is written by the party who produced two of the others.
+
+**The rule this yields, which is executable rather than hortatory:**
+
+> **Before trusting any mechanism's verdict, break its subject and confirm the verdict changes.**
+
+This is mutation testing with the instrument, not the product, as the target. Checked against all five:
+
+| # | Break the subject | If the verdict does not move |
+|---|---|---|
+| 1 | delete the gate the header names | the sentence is unchanged → it was never a gate |
+| 2 | inject a same-named failing case into the report | the count is unchanged → the measure is broken |
+| 3 | re-measure a small file both ways | the two methods agree → the tool breaks on large input |
+| 4 | point `declaredPath` at an undeclared path | still exit 0 → the verdict is unwired |
+| 5 | add a stale claim to the file under test | still green → the gate is switched off |
+
+**Two binding requirements follow.**
+
+1. **Every new gate, checker, or measurement script ships with a demonstration that breaking its subject turns it red.** A checker without that demonstration counts as absent. This pairs with [BLOCKED-034](#blocked-034): 034 says a rule with no gate is a defect; 072 says a gate never shown to go red is the same defect wearing a gate's clothes.
+2. **Every number cited as evidence must name the raw collection it was computed from.** Both sub-form B instances were an intermediate representation quietly replacing the subject.
+
 ### BLOCKED-071 — R10's real status, measured against the authoritative registry for the first time: 13/13 preparation contracts are READY but **0 of 23 declared paths exist in this repository**, and the registry self-declares as a planning candidate, not execution authorization (Supervisor, 2026-09-04)
 
 **Read directly, not relayed.** `first100-r10-slice-registry.json` in the maintainer's planning repo, the source `SONNET-EXECUTOR-START-PROMPT.txt` points at. [BLOCKED-039](#blocked-039) previously verified R10's *scope*; this entry establishes its *build state*, which no prior entry did.
@@ -789,6 +841,8 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 Supersession is rejected as the primary route for a specific reason: it leaves a path declared in the registry that no freeze ever used, **with nothing anywhere explaining the gap**. That is the exact shape that misled three separate readings in one day — the catalog header naming a gate not in `doc-sync`, a test count from a Map that collapsed duplicate names, and a `shasum` through a truncating pipe. In each, something appeared to account for something else and did not.
 
 **Add patches on demand, never in bulk — and the reason is safety, not bookkeeping.** The other 48 epics get their patch when their stage is dispatched, not now. Bulk-writing 99 entries would pre-commit paths whose `stageFiles` may still change, and would make a batch failure undiagnosable. **But the load-bearing reason is that dispatch is exactly when the Supervisor must classify the stage as local-behaviour or genuinely real-API, and a stage classified real-API must NOT receive a patch — it must stop and report.** Pre-writing patches would silently answer that question "local" for all 99 sites in advance, which is precisely the judgement the guard below exists to keep away from the party that benefits from it.
+
+**The ruling above stands because of an unrequested check, not because of the reasoning that produced it.** The premise "patches are machine-checked, supersession is the honour system" was false when the ruling was made — see the defect below and [BLOCKED-072](#blocked-072). It became true only because the deviation was verified before being relied on.
 
 **Gate defect found while applying this ruling, and fixed in the same change.** The ruling above rests on patches being the mechanically-validated path. **They were not.** `checkDeliverablePathPatches` computed a complete verdict — unknown epic ids, `declaredPath` values absent from the stage's files, empty `approvedPath`, empty `reason` — and **was called only from its own spec file**; nothing in the generator's run path consumed it. A patch naming a nonexistent epic, or a `declaredPath` the registry never declared, generated *and verified* at exit 0. It is now enforced inside `renderArtifacts`, which both the generate and the verify path route through, so a check only one of them ran cannot recur. Proven by mutation: the clean tree generates normally, and breaking `declaredPath`, `epic`, or `reason` each exits non-zero; all 33 pre-existing patches pass unchanged, so the wiring closed a hole without moving any existing verdict. **Until this fix, "the patches channel is validated" was itself an unverified claim** — the same class as everything else this entry records.
 
@@ -1090,6 +1144,8 @@ This subsumes the narrower rule already in force ("verify claimed SHAs, runs, an
 
 ### BLOCKED-052 — a test that can only pass on one platform certifies that platform, not the code; P1-07's acceptance[1] was green on macOS while false on Linux, and P1-07.C must be re-greened (Supervisor finding, delegate-ruled, 2026-09-03)
 
+
+**Cross-reference:** one of five distinct guarantee failures catalogued in [BLOCKED-072](#blocked-072); see its table for the other four, and do not read them as instances of one another.
 **The defect.** `reconcileWorkspaceTrust` compared only `(canonicalPath, device, inode)`. An inode number is a reusable allocation slot: delete a trusted project directory, create one at the same path, and ext4 hands back the inode it just freed, so all three fields are byte-identical and **trust transfers to the attacker's directory**. This is the exact inverse of P1-07 acceptance[1] ("目录被替换、symlink 改指、移动后信任不自动继承").
 
 **Why it stayed hidden.** The test asserted `expect(after.volume.inode).not.toBe(before.volume.inode)` — a claim about the *filesystem's allocation behavior*, not about trust. Measured directly: **macOS/APFS reused an inode 0 times in 200 delete-rebuild cycles; Linux/ext4 reused on the first attempt** (CI reported `expected 2106031 not to be 2106031`). The case passed locally every time while the property it existed to prove was false in CI.
