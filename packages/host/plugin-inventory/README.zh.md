@@ -13,6 +13,8 @@ kind: "package-reference"
 
 Epic P1-01.U 为本包新增了第一个真实的活跃 `Context` 走查:`buildObservedPluginCapabilities` 走查一个插件条目自己的 Cordis Fiber 子树(services 用全局 `ReflectService` store,tools/skills/events 用 `Fiber.getEffects()` 标签,MCP servers 用一个活跃 MCP-client 条目已解析的 `config.serverName`),并以 `@deepseek-ai/dsh-plugin-manifest` 的声明词汇报告它实际注册了什么;`buildPluginPermissionStates` 把它与每个条目自己的 `package.json` `dsh` 字段(`classifyPluginDeclaration`)组合,并对 `'manifest-v2'` 声明给出真实的 `compareDeclaredToObserved`/`decidePluginTrust` 结果——每个存活、非组、包可解析的 Loader 条目对应一个 `PluginPermissionState`。`apps/cli/src/profile-boot.ts` 在真实 profile 启动时调用二者,用于 acceptance[0] 的强制执行与 acceptance[1] 的声明/实际观察展示;二者为何尚未作为 `pluginInventory` Remote 方法暴露,参见[已知限制与延期工作](#known-limitations-and-deferred-work)。
 
+Epic P1-02.U 补上 acceptance[2] 要求 Inventory 携带的验证状态记录（“Inventory 和审计事件记录验证结果而不记录密钥”）。每个 `PluginPermissionState` 现在携带两个刻意分开命名的事实。`manifestDigest` 是**本地重新计算，不是 attestation**：对该条目自身 `package.json` 的确切字节做 sha256，与解析 identity 和 declaration 用的是同一次读取，因此它能发现被改动的 manifest，却完全说明不了来源。它不是 `@deepseek-ai/dsh-plugin-provenance` 的 `PackageDigest`——后者绑定的是安装之后不会留在磁盘上的包 tarball。`provenanceAudit` 就是该包的 `ProvenanceAuditRecord`，目前它一律报告 `trust: 'unverified'`、`reason: 'no-provenance-claim'`——这是此处每个已安装包的真实状态，因为没有任何一个附带 `PackageProvenanceClaim`。这不是拒绝；把它记为拒绝就会写下一个对它们都不成立的 rejection reason。从条目 `package.json` 读出的任何内容——尤其是原始 `dsh` 字段——都不会进入该记录，任何嵌套层级都不会。
+
 ## 目录
 
 - [使用本包](#use-this-package)
@@ -62,7 +64,7 @@ Fiber 状态映射到公共阶段词汇，其中 `disposed` 折叠为 `null`—�
 | 文件 | 职责 |
 |---|---|
 | [`src/index.ts`](src/index.ts) | `PluginInventoryGateway`：`pluginInventory` Remote 服务与 Loader 投影;以及 Epic P1-01.U 的纯函数导出 `buildObservedPluginCapabilities`、`buildPluginPermissionStates`、`mcpServerNameOf`、`resolveEntryPackageDir` |
-| [`src/types.ts`](src/types.ts) | 公共 payload 类型：`PluginInventoryEntry`、`PluginInventorySnapshot`、`PluginFiberPhase`;以及 Epic P1-01 的声明/实际观察权限类型——`PluginPermissionState`、`PluginPackageIdentity`、`PluginProvenance` |
+| [`src/types.ts`](src/types.ts) | 公共 payload 类型：`PluginInventoryEntry`、`PluginInventorySnapshot`、`PluginFiberPhase`;以及 Epic P1-01 的声明/实际观察权限类型——`PluginPermissionState`、`PluginPackageIdentity`、`PluginProvenance`——与 Epic P1-02.U 的 `PluginManifestDigest` |
 | — | 不发布运行时不变式伴生入口；每个快照都投影 Loader 持有的状态。 |
 
 Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产物。
@@ -99,8 +101,9 @@ Typert 生成由 `./typert` 与 `./remote` 导出的 Host 和 Client Remote 产�
 这些限制说明一个点时刻清单无法告诉客户端什么。它们是当前包约束，不是任务积压。
 
 - **仅表示调用当下**——结果不包含持久的失败历史或订阅；只要不存在存活的根 Fiber，就会报告 `null`，而不区分其原因。
-- **`pluginInventory/list` 仍不携带权限状态**——`buildPluginPermissionStates` 已存在且真实（Epic P1-01.U），但尚未作为 `pluginInventory` Remote 方法暴露：typert 的 Zod schema 生成器无法序列化 `PluginManifestV2` 的非空元组字段（`readonly [X, ...X[]]`，例如 `CapabilityEffectDeclaration.authAudience`）——本类携带一个返回该类型的 `@Remote('permissions')` 方法时，一次真实构建失败（`tuple rest element must retain an array type`）证实了这一点。`apps/cli/src/plugin.ts`/`profile-boot.ts` 直接调用这个纯函数，用于真实的 CLI 侧展示与启动时强制执行（acceptance[0]/[1]）；未来的 Remote 界面需要一次 typert 生成器修复或 `PluginPermissionState` 的可序列化投影，二者都不是本阶段的工作。
+- **`pluginInventory/list` 仍不携带权限状态**——`buildPluginPermissionStates` 已存在且真实（Epic P1-01.U），但尚未作为 `pluginInventory` Remote 方法暴露：typert 的 Zod schema 生成器无法序列化 `PluginManifestV2` 的非空元组字段（`readonly [X, ...X[]]`，例如 `CapabilityEffectDeclaration.authAudience`）——本类携带一个返回该类型的 `@Remote('permissions')` 方法时，一次真实构建失败（`tuple rest element must retain an array type`）证实了这一点。`apps/cli/src/profile-boot.ts` 在真实 profile 启动时直接调用这个纯函数，用于启动时强制执行与声明/实测权限展示（acceptance[0]/[1]）；`apps/cli/src/plugin.ts` 没有、也无法调用它——它是一个 pnpm 转发器，不持有 Cordis `Context`；未来的 Remote 界面需要一次 typert 生成器修复或 `PluginPermissionState` 的可序列化投影，二者都不是本阶段的工作。
 - **来源信息是尽力而为的，来自调用方自己的启动组合，而非本包自身的知识**——`buildPluginPermissionStates` 的 `provenance` 字段只在调用方在 `bundlePackageNames`（`apps/cli/src/profile-boot.ts` 已接纳的 profile 层）里提供了该模块名时才标记 `'bundle'`；其余一律报告 `'built-in'`，包括一个真实的 Agent 预设组合行——这个函数完全不与之交叉引用（那个粒度仍留在 `PluginInventorySnapshot.agentPresets` 上，本阶段未改变）。
+- **此处没有插件出示了 provenance claim，因此实际上什么都没验证**——`provenanceAudit` 对每个条目记录 `'unverified'`，因为没有任何已安装包附带 `PackageProvenanceClaim`。即使有，`@deepseek-ai/dsh-plugin-provenance` 也只是把 claim 与调用方供给的 observed 事实相比，背后没有任何密钥材料（BLOCKED-050），所以一条 `'trusted'` 记录并不意味着 Trust Kernel 背书了什么。acceptance[2] 的审计事件一半在这里完全未处理：真正的审计事件需要一个 `SessionEventMap` 成员与 `known-event-types.ts` 注册，二者都不在本包内。
 - **预设仅随 roster 出现**——未装 `dsh-agent-presets` 的部署只提供 Loader 条目；`agentPresets` 字段缺席而非为空。
 
 <a id="dev-note"></a>

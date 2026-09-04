@@ -182,7 +182,10 @@ export function recordUnverifiedProvenance(
   reason: ProvenanceUnverifiedReason,
   verifiedAt: string,
 ): ProvenanceAuditRecord {
-  throw new Error(`not implemented: recordUnverifiedProvenance(${reason}, ${verifiedAt})`)
+  // Neither `packageDigest` nor `trustAnchorId` is set at all, rather than set
+  // to a placeholder: no claim was presented, so there is no claimed digest
+  // and no anchor, and an absent field is the only honest report of that.
+  return { trust: 'unverified', reason, verifiedAt }
 }
 
 /**

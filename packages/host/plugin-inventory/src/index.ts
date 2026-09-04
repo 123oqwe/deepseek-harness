@@ -5,9 +5,11 @@
  * actually observed permissions (acceptance[1]).
  */
 
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Context, Fiber, FiberState } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/cordis-plugin-loader'
 // Type-only: the optional agent-preset roster resolved through `ctx.get`.
@@ -33,6 +35,7 @@ import type {
   PluginPermissionState,
   PluginProvenance,
 } from './types.ts'
+import { recordUnverifiedProvenance } from '@deepseek-ai/dsh-plugin-provenance'
 import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 
 export type * from './types.ts'
@@ -192,36 +195,57 @@ export function resolveEntryPackageDir(moduleName: string): string | undefined {
   return undefined
 }
 
-/** One Loader entry's package identity and classified declaration, resolved from its on-disk `package.json`. */
+/**
+ * One Loader entry's package identity, classified declaration, and manifest
+ * digest, resolved from its on-disk `package.json`. The digest is taken over
+ * the same buffer the identity and declaration are parsed from, in one read,
+ * so it always describes exactly the bytes the other two facts came from.
+ */
 function resolveEntryPackage(
   moduleName: string,
   resolvePackageDir: (moduleName: string) => string | undefined,
-): { identity: PluginPackageIdentity; declaration: PluginDeclaration } | undefined {
+): {
+  identity: PluginPackageIdentity
+  declaration: PluginDeclaration
+  manifestDigest: PluginManifestDigest
+} | undefined {
   const dir = resolvePackageDir(moduleName)
   if (dir === undefined) return undefined
+  let bytes: Buffer
   let manifest: { name?: unknown; version?: unknown; dsh?: unknown }
   try {
-    manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8')) as typeof manifest
+    bytes = readFileSync(join(dir, 'package.json'))
+    manifest = JSON.parse(bytes.toString('utf8')) as typeof manifest
   } catch {
     return undefined
   }
   const name = typeof manifest.name === 'string' ? manifest.name : moduleName
   const version = typeof manifest.version === 'string' ? manifest.version : '0.0.0'
-  return { identity: { name, version }, declaration: classifyPluginDeclaration(manifest.dsh) }
+  return {
+    identity: { name, version },
+    declaration: classifyPluginDeclaration(manifest.dsh),
+    manifestDigest: brandString<PluginManifestDigest>(`sha256:${createHash('sha256').update(bytes).digest('hex')}`),
+  }
 }
 
 /**
- * Epic P1-02's acceptance[2] Inventory half: recompute one entry's manifest
- * digest from the exact bytes of its own `package.json` and record the
- * plugin-provenance verification state that package actually has.
- * @param moduleName - the Loader entry's module name, for the error message only.
- * @returns the entry's manifest digest and its provenance audit record.
+ * Epic P1-02's acceptance[2] Inventory half ("Inventory 和审计事件记录验证结果
+ * 而不记录密钥"): the plugin-provenance verification state one entry actually
+ * has. No package installed in this repository ships a
+ * `PackageProvenanceClaim`, so there is nothing to verify and the honest
+ * record is `'unverified'` / `'no-provenance-claim'` — not a refusal, which
+ * would name a rejection reason none of which is true of these packages.
+ *
+ * The record is built solely from `recordUnverifiedProvenance`'s return value.
+ * Nothing read out of the entry's `package.json` — the raw `dsh` field above
+ * all, which is where a signature and key fingerprint would live — reaches it,
+ * which is what keeps acceptance[2]'s "而不记录密钥" true at every nesting
+ * depth and not merely at the record's top-level field names.
+ * @param verifiedAt - ISO 8601 timestamp of when the state was decided.
+ * @returns the entry's provenance audit record.
  */
-function recordEntryProvenance(moduleName: string): {
-  manifestDigest: PluginManifestDigest
-  provenanceAudit: ProvenanceAuditRecord
-} {
-  throw new Error(`not implemented: recordEntryProvenance(${moduleName})`)
+function recordEntryProvenance(verifiedAt: string): ProvenanceAuditRecord {
+  return recordUnverifiedProvenance('no-provenance-claim', verifiedAt)
 }
 
 /** Options for {@link buildPluginPermissionStates}. */
@@ -278,7 +302,8 @@ export function buildPluginPermissionStates(
     const provenance: PluginProvenance = bundleNames.has(entry.options.name)
       ? { kind: 'bundle', source: entry.options.name }
       : { kind: 'built-in' }
-    const { manifestDigest, provenanceAudit } = recordEntryProvenance(entry.options.name)
+    const provenanceAudit = recordEntryProvenance(new Date().toISOString())
+    const { manifestDigest } = resolved
     if (resolved.declaration.kind === 'manifest-v2') {
       const comparison = compareDeclaredToObserved(resolved.declaration.manifest, observed)
       states.push({
@@ -359,7 +384,7 @@ export class PluginInventoryGateway extends TypertRemoteService {
   // `CapabilityEffectDeclaration.authAudience`) — confirmed by a real build
   // failure (`tuple rest element must retain an array type`) when this class
   // carried one. `buildPluginPermissionStates` stays a plain export;
-  // `apps/cli/src/plugin.ts`/`profile-boot.ts` call it directly for
+  // `apps/cli/src/profile-boot.ts` calls it directly for
   // acceptance[1]'s real CLI-facing display, and a future Remote surface
   // needs either a typert-generator fix or a serialization-friendly
   // projection of `PluginPermissionState`, neither of which is this stage's job.

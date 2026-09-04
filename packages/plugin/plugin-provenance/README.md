@@ -9,7 +9,7 @@ kind: "package-library"
 
 `dsh-plugin-provenance` fixes the type surface and function signatures for Epic P1-02's plugin signature, source provenance, and dependency SBOM verification: every claim carries Sigstore-style keyless identity/provenance or an organization's offline-signing evidence (must[0]); verification checks package digest, source commit, builder identity, and dependency SBOM together (must[1]); and an `unsigned-dev` fallback is admitted only for an explicit, policy-recognized development profile, always carrying a persistent untrusted-status banner (must[4]).
 
-Ten working decision functions ship: `computePackageDigest`, `verifyPackageSignature`, `registerTrustAnchor`, and `admitUnsignedDevMode` in `src/signature.ts`; `generateSbom`, `verifySbomCoverage`, and `computeSbomDigest` in `src/sbom.ts`; and `verifyPluginProvenance`, `verifyLockedPackageOffline`, and `recordProvenanceAudit` in `src/index.ts`. `tests/provenance.spec.ts` covers the decision surface in 13 cases and `tests/package-digest.spec.ts` covers real-byte digest behavior in 11.
+Eleven working decision functions ship: `computePackageDigest`, `verifyPackageSignature`, `registerTrustAnchor`, and `admitUnsignedDevMode` in `src/signature.ts`; `generateSbom`, `verifySbomCoverage`, and `computeSbomDigest` in `src/sbom.ts`; and `verifyPluginProvenance`, `verifyLockedPackageOffline`, `recordProvenanceAudit`, and `recordUnverifiedProvenance` in `src/index.ts`. `tests/provenance.spec.ts` covers the decision surface in 13 cases, `tests/package-digest.spec.ts` covers real-byte digest behavior in 11, and `tests/audit-record.spec.ts` covers the recorded verification state in 4.
 
 `computePackageDigest` is the only cryptographic operation in the package: a sha256 over a package's actual bytes, which is what makes a single tampered byte a real rejection. **It detects modification of the artifact relative to a claim held fixed; it does not detect an attacker who also rewrites the claim.** Every other comparison here is structural, and **must[2] ("TrustKernel 持有可信根") is not satisfied by this package** — see [Known Limitations](#known-limitations-and-deferred-work), which states each gap in full. No invariant companion is published because this package constructs no registry or `Context` to check an owned relation over.
 
@@ -65,6 +65,7 @@ This section explains the design decisions behind the package; the observable ty
 - **`unsigned-dev` cannot silently become the default.** `UnsignedDevProfileDeclaration.explicitDevOptIn` is typed as the literal `true`, and `UntrustedStatusBanner.persistent` is likewise a literal `true` — there is no constructible admitted state that omits the opt-in or the continuously-shown untrusted marker (must[4]).
 - **Offline replay reuses the online input shape verbatim.** `verifyLockedPackageOffline` accepts the identical `PluginProvenanceInput` `verifyPluginProvenance` does, with no network-shaped parameter added — acceptance[1]'s "同一锁定包在离线模式可验证" is structural, not a special case to remember to add later.
 - **The audit record cannot carry a key.** `ProvenanceAuditRecord` has no field for `OfflineSignedProvenanceEvidence.signature`, a `publicKeyFingerprint`, or any other key material — only a package digest, verdict, reason, and an opaque `trustAnchorId` (acceptance[2]).
+- **The record can say that nothing was verified.** `recordUnverifiedProvenance` (Epic P1-02.U) reports `trust: 'unverified'`, `reason: 'no-provenance-claim'` for a package that presented no claim, carrying neither a package digest nor a trust anchor id. That is the true state of every package installed in this repository, and it is not a refusal: recording it as `'rejected'` would name a `ProvenanceRejectionReason` none of which is true of them. `packageDigest` is therefore optional — absent exactly when there was no claimed digest to check anything against.
 
 ### Source map
 
@@ -72,7 +73,7 @@ This section explains the design decisions behind the package; the observable ty
 |---|---|
 | [`src/signature.ts`](src/signature.ts) | must[0]/must[1]'s digest, source-commit, and builder-identity checks; must[2]/must[3]'s trust-anchor registration under a real `TrustKernelSignatureRoots`; must[4]'s `unsigned-dev` admission |
 | [`src/sbom.ts`](src/sbom.ts) | must[1]'s dependency-SBOM generation, digest binding, and coverage check |
-| [`src/index.ts`](src/index.ts) | `verifyPluginProvenance`/`verifyLockedPackageOffline` (the combined must[1] check, online and offline) and `recordProvenanceAudit` (acceptance[2]'s key-free record) |
+| [`src/index.ts`](src/index.ts) | `verifyPluginProvenance`/`verifyLockedPackageOffline` (the combined must[1] check, online and offline), `recordProvenanceAudit` (acceptance[2]'s key-free record), and `recordUnverifiedProvenance` (the state of a package that presented no claim) |
 
 </details>
 
@@ -85,7 +86,7 @@ This section explains the design decisions behind the package; the observable ty
 - [`tests/package-digest.spec.ts`](tests/package-digest.spec.ts) — 11 cases over real bytes: a sha256 cross-checked against an independent `node:crypto` computation, a one-bit flip, a two-byte swap and an appended byte (so a length- or sum-based digest could not pass), an untampered control, first- and last-position tampering, an offline replay through a separately loaded module instance, and the attacker who rewrites the claim and still verifies.
 - [`packages/kernel/trust-kernel/README.md`](../../kernel/trust-kernel/README.md) — the real, already-implemented `TrustKernel` this package's trust-root parameter comes from (Epic P0-02, predecessor).
 - [`apps/cli/src/plugin.ts`](../../../apps/cli/src/plugin.ts) — the real install/verify flow this epic's Usage stage wires `verifyPluginProvenance`/`admitUnsignedDevMode` into (Usage-stage wiring, not this package's job).
-- [`packages/host/plugin-inventory/src/types.ts`](../../host/plugin-inventory/src/types.ts) — the real Inventory surface acceptance[2]'s `recordProvenanceAudit` output is meant to feed (Usage-stage wiring, not this package's job).
+- [`packages/host/plugin-inventory/src/types.ts`](../../host/plugin-inventory/src/types.ts) — the real Inventory surface acceptance[2]'s records feed. Epic P1-02.U wired it: `buildPluginPermissionStates` attaches a `ProvenanceAuditRecord` to every permission state it builds, and `apps/cli/src/profile-boot.ts` calls that builder at real profile boot.
 - [`@deepseek-ai/dsh-plugin-manifest`](../plugin-manifest/README.md) — this repo's other Contract-stage plugin-capability package, followed here for package layout and pure-function conventions.
 
 -----
