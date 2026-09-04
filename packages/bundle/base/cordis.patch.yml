@@ -276,6 +276,20 @@
       config:
         maxBytes: 65536
 
+    # Durable cross-session memory (P6-01): the provider-neutral seam and its
+    # recall consumer. Both are disabled by default, matching `hmr` above.
+    # `dsh-memory` registers no provider on its own, so an enabled row here
+    # would leave every `pnpm dsh` boot with a `ctx.memory` that fails
+    # `MEMORY_PROVIDER_UNAVAILABLE` on each pre-step; a profile opts in by
+    # enabling both rows and naming a provider directory.
+    - id: memory
+      name: '@deepseek-ai/dsh-memory'
+      disabled: true
+
+    - id: memory-context
+      name: '@deepseek-ai/dsh-memory-context'
+      disabled: true
+
     - id: skill
       name: '@deepseek-ai/dsh-skill'
 

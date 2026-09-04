@@ -2478,6 +2478,51 @@
         "testsDiscovered": 23
       },
       "note": "Usage-stage RED for Epic P6-07 must[0]. 23/23 fail on a clean tree, zero module or syntax errors: 15 on real not-implemented errors (projectLifecycleRecords, and the tenant/workspace branches of filterSessionResults/materializeSessionResultFilters), 8 on assertion mismatch because src/corpus.ts is deliberately left unmodified at RED -- adding a throwing projection call there would have broken the four landed session-query suites that list the corpus, so the projection cases assert through the real listSessions and fail on the absent tenantId/workspaceId instead. No case passes at RED: each negative-space assertion (an omitted tenantId, an omitted workspaceId, a tenant never derived from prompt text) is paired in the same case with a positive sibling that must be projected, so the case cannot pass vacuously against unimplemented code. expectExit=0 is the GREEN target per the P0-01.C precedent. Scope note: cursor.ts and core/session/src/repair.ts are declared U files left unmodified -- cursor encoding stays provider-owned (the Contract stage's recorded decision), and acceptance[3] is locked out of this stage pending the independent session-persistence-jsonl format.ts evidence fix. packages/session-query/session-query-sqlite/src/query.ts plus a two-case tests/tenant-filter-refusal.spec.ts are a typecheck-forced adjacent guard outside the approved six-file scope and outside this frozen command: widening SessionResultFilter turned that provider's exhaustive switch into a compile error, and a dropped tenant clause in ranked search would leak another tenant's sessions, so the clause is refused. Needs its own adjudication entry."
+    },
+    {
+      "epic": "P6-01",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/context/memory-context/tests/render.spec.ts",
+        "packages/context/memory-context/tests/memory-context.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries all four read-scoping dimensions from config when the agent has no attached identity",
+        "prefers the agent's durably attached principal over the configured fallback id",
+        "never reads across tenants: the scope tenant is the configured one, not the attached principal's",
+        "returns undefined for an empty recall so no empty snapshot is ever injected",
+        "renders each recalled record's content as text the model can read",
+        "states that the recall was cut to the caller's budget when the seam truncated it",
+        "boots the shipped profile with the base bundle memory rows enabled and no unhandled failure",
+        "memory/access is a known session event type, so a real log carrying it replays",
+        "recalled memory reaches the model as a durable, source-attributed user message",
+        "the same run records a memory/access read event carrying the complete access context",
+        "model-visible memory is logged: every recalled record the model saw is reconstructable from the log alone",
+        "memory content never reaches the model outside a logged injection"
+      ],
+      "files": [
+        "packages/context/memory-context/src/index.ts",
+        "packages/context/memory-context/tests/render.spec.ts",
+        "packages/context/memory-context/tests/memory-context.spec.ts",
+        "packages/context/memory-context/tests/fixtures/driver.ts",
+        "packages/context/memory-context/tests/fixtures/mock-llm.ts",
+        "packages/context/memory-context/tests/fixtures/memory-context.patch.yml",
+        "packages/memory/memory/src/index.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/context/README.md"
+      ],
+      "frozenAtUtc": "2026-09-04T04:37:32.679Z",
+      "dryRunProof": {
+        "treeSha": "aa5f443135c801f447d04df0106cec7facf1d24c",
+        "testsDiscovered": 12
+      },
+      "note": "U-stage RED scaffold for P6-01 (Memory seam Usage stage: live consumer + memory/access emitter + real-profile mount), attempt/P6-01-U branched from land-base-align-v2 @ 1647cd41f4; treeSha is that base tree before the RED commit. expectExit=0 is the GREEN target per the P6-01 C/P precedent, never the RED exit code (RED exits 1). PATH PATCH GRANTED by the coordinator to Option B: the registry's stages.U.files names packages/context/README.md, which has no legal edit unless the Consumer is a packages/context/* package -- a declared file editable under only one design is evidence about the design the registry intended, so the new packages/context/memory-context/ package recovers the shape the file list points at rather than widening scope for convenience. Option A (Consumer inside dsh-memory/src/index.ts) was rejected: it puts the Consumer in the same module as the Service Definition, making must[2] ('consumer 通过 Service Definition, 不 direct import') unfalsifiable by inspection. RED VERIFIED BY PARSING THE JSON REPORTER, not console output: 12 discovered, 6 failed, 6 pending, 0 passed, 5/5 suites failed. render.spec.ts's 6 fail on real not-implemented errors from the stubs (resolveMemoryAccessContext/renderMemoryContext), zero module or syntax errors. memory-context.spec.ts's 6 report 'pending' because the failure is suite-level in beforeAll: the loader smoke boots the real shipped headless profile and dies with 'failed to apply loader entry memory-context (@deepseek-ai/dsh-memory-context): memory-context: apply is not implemented' -- i.e. the whole composition resolved every bare plugin name, mounted the base bundle's new memory row, accepted its durableFileDirectory config, and failed exactly at this stage's unimplemented consumer. That is the right reason; a first attempt produced a WRONG-reason RED (ERR_MODULE_NOT_FOUND) which was diagnosed and fixed before freezing rather than frozen as a false RED. DEPENDENCY EDGE PROVEN ACYCLIC BY BUILD, not by manifest read: tsc -b packages/context/memory-context/tsconfig.json exits 0 and tsc -b packages/memory/memory/tsconfig.json exits 0, so the new edges (memory-context -> dsh-agent, dsh-memory, dsh-principal, dsh-session, dsh-llm) close no cycle; tsc -b walks the full project-reference graph and would raise TS6202 on one. The premise was independently checked: no package imports dsh-memory in code anywhere in the tree, so it cannot be on a cycle. INCIDENTAL OUT-OF-SCOPE FIX, reported for audit: tsconfig.base.json gained '@deepseek-ai/dsh-plugin-compat/solver' -> src/solver.ts. This is a PRE-EXISTING bug on land-base-align-v2, not one this change introduced -- packages/boot/app-boot/src/profile.ts:53 imports that subpath, the paths map had only the bare alias, so every source-plane composition boot resolved it to unbuilt lib/ and died ERR_MODULE_NOT_FOUND. It is exactly the missing-subpath-alias class the coordinator warned has bitten this repo three times. Without it no real-composition test in this repo can boot from source. SEPARATE PRE-EXISTING BUG FOUND AND DELIBERATELY NOT FIXED (affects published artifacts, out of scope): packages/plugin/plugin-compat/package.json exports './solver' default points at './lib/types/solver.js' (the types directory) instead of './lib/solver.js'. DECLARED-SCOPE NON-EDIT, approved in advance: packages/core/agent-loop/src/runtime-context.ts is untouched -- RuntimeContextProjection.project already carries arbitrary ContextSnapshotSection values, so a memory-sourced section flows through unmodified; changing it would trip 'Plugins, not loop changes' and imply a docs/architecture.md update for zero gain. STILL OPEN FOR GREEN: memory/access is NOT yet in packages/core/session/src/known-event-types.ts (one RED case asserts exactly this, enforcing registration-before-emission so a real log carrying the event still replays); MemoryRuntimeConfig.durableFileDirectory does not exist yet; packages/context/README.md group table has no memory-context row yet; dsh-memory's README Known Limitations still claim 'No live session-log wiring' and 'No model-facing tool' and its Model Experience still says 'None', all of which this stage makes false and all of which must be corrected in the GREEN commit."
     }
   ]
 }
