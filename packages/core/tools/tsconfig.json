@@ -40,6 +40,9 @@
     },
     {
       "path": "../../plugin/plugin-ownership"
+    },
+    {
+      "path": "../../policy/capability-token"
     }
   ]
 }

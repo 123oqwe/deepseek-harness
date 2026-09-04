@@ -213,7 +213,7 @@ describe('tool-surface capability token gate (P2-02 must[3])', () => {
 
   it('control: an agent whose scope registered no requirement is unaffected', async () => {
     const ctx = await mount()
-    const { scope, key } = await mintAgentScope(ctx, 'a')
+    const { scope } = await mintAgentScope(ctx, 'a')
     const { key: other } = await mintAgentScope(ctx, 'b')
     ctx.tools.register(tool('read_file'))
     scope.ctx.tools.requireCapabilityToken()
