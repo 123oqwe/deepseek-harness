@@ -2633,6 +2633,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the exact disposer that unregisters the guard.',
       },
       {
+        signature: 'requireCapabilityToken(): () => void',
+        description: 'Epic P2-02 must[3]: require every tool call in this context\'s scope to present a Capability Token authorizing that tool. A plain-context registration arms the requirement for every call the registry receives; one registered through `agent.ctx` arms it for that agent\'s calls only.\n\nThe gate runs inside ToolRuntime.execute\'s own preparation, BEFORE the `tools/pre-execute` waterfall and the guard stage — the same placement as the `ptc` collapse and for the same reason: a call that cannot be authorized must never be observed, let alone approved, by extensible policy. Because preparation is the single funnel both `execute` and the agent loop\'s staged scheduler pass through, and because a transport sub-dispatch (a `parent` token set) funnels through it too, there is no alternate caller that reaches a tool body around this check.',
+        parameters: [],
+        returns: 'the exact disposer that lifts this registration\'s requirement.',
+      },
+      {
         signature: 'get(name: string, scope?: ScopeKey): ToolDefinition | undefined',
         description: 'Look up a tool as one scope sees it (scoped shadows global; a restricted-away global reads as absent). Presenters pass the calling agent so the rendered card matches the definition that actually executed.',
         parameters: [{ name: 'name', description: 'the tool name as registered.' }, { name: 'scope', description: 'the viewing scope (the agent); omitted = the global view.' }],
@@ -3763,12 +3769,28 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CapabilityKind = \'service\' | \'tool\' | \'event\';',
   },
   {
+    name: 'CapabilityName',
+    declaration: 'export type CapabilityName = Branded<\'CapabilityName\'>;',
+  },
+  {
     name: 'CapabilityOrigin',
     declaration: 'export type CapabilityOrigin = \'static\' | \'dynamic\';',
   },
   {
     name: 'CapabilityRegistration',
     declaration: 'export interface CapabilityRegistration {\n    readonly pluginIdentity: PluginIdentity;\n    readonly namespace: Namespace;\n    readonly capabilityId: StableCapabilityId;\n    readonly kind: CapabilityKind;\n    readonly origin: CapabilityOrigin;\n    readonly ownershipToken: OwnershipToken;\n}',
+  },
+  {
+    name: 'CapabilityToken',
+    declaration: 'export interface CapabilityToken {\n    readonly subject: PrincipalId;\n    readonly tenant: TenantId;\n    readonly capability: CapabilityName;\n    readonly verbs: readonly string[];\n    readonly resources: readonly string[];\n    readonly constraints: TokenConstraints;\n    readonly expiresAt: number;\n    readonly nonce: CapabilityTokenNonce;\n    readonly delegationDepth: number;\n    readonly parentDigest: CapabilityTokenDigest | null;\n}',
+  },
+  {
+    name: 'CapabilityTokenDigest',
+    declaration: 'export type CapabilityTokenDigest = Branded<\'CapabilityTokenDigest\'>;',
+  },
+  {
+    name: 'CapabilityTokenNonce',
+    declaration: 'export type CapabilityTokenNonce = Branded<\'CapabilityTokenNonce\'>;',
   },
   {
     name: 'ChunkRow',
@@ -5607,6 +5629,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ShellSandboxInfo {\n    mode: SandboxMode;\n    denied: boolean;\n    enforcement?: SandboxEnforcement;\n    runnerFailed?: boolean;\n}',
   },
   {
+    name: 'SignedCapabilityToken',
+    declaration: 'export interface SignedCapabilityToken {\n    readonly token: CapabilityToken;\n    readonly signature: Uint8Array;\n}',
+  },
+  {
     name: 'SkillCandidate',
     declaration: 'export interface SkillCandidate extends SkillSummary {\n    readonly rank: number;\n    readonly locator: unknown;\n    readonly path?: string;\n    readonly metadata?: Readonly<Record<string, unknown>>;\n}',
   },
@@ -6011,6 +6037,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type TerminalWaitReason = \'stdin_read\' | \'inferred_idle\' | \'timeout\' | \'session_exit\';',
   },
   {
+    name: 'TokenBudget',
+    declaration: 'export type TokenBudget = BrandedNumber<\'TokenBudget\'>;',
+  },
+  {
+    name: 'TokenConstraints',
+    declaration: 'export interface TokenConstraints {\n    readonly budget?: TokenBudget;\n}',
+  },
+  {
     name: 'TokenMeasurement',
     declaration: 'export interface TokenMeasurement {\n    readonly logRevision: SessionLogOffset;\n    readonly baseline: TokenMeasurementBaseline;\n    readonly surfaceDeltaTokens: number;\n    readonly totalTokens: number;\n    readonly surfaceTokens: number;\n    readonly nodes: readonly TokenSurfaceNode[];\n}',
   },
@@ -6056,7 +6090,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolExecutionInput',
-    declaration: 'export interface ToolExecutionInput {\n    readonly callId: ToolCallId;\n    readonly rootCallId?: ToolCallId;\n    readonly name: string;\n    readonly arguments: unknown;\n    readonly agent?: Agent;\n    readonly parent?: ToolExecutionToken;\n    readonly signal: AbortSignal;\n}',
+    declaration: 'export interface ToolExecutionInput {\n    readonly callId: ToolCallId;\n    readonly rootCallId?: ToolCallId;\n    readonly name: string;\n    readonly arguments: unknown;\n    readonly agent?: Agent;\n    readonly parent?: ToolExecutionToken;\n    readonly signal: AbortSignal;\n    readonly capabilityToken?: SignedCapabilityToken;\n}',
   },
   {
     name: 'ToolExecutionMode',
@@ -6124,7 +6158,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolRuntime',
-    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    replace(definition: ToolDefinition): () => void;\n    declareOwner(identity: string): () => void;\n    ownershipOf(name: string): CapabilityRegistration | undefined;\n    ownershipHistory(): readonly CapabilityRegistration[];\n    revokeOwned(token: OwnershipToken): RevocationResult;\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
+    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    replace(definition: ToolDefinition): () => void;\n    declareOwner(identity: string): () => void;\n    ownershipOf(name: string): CapabilityRegistration | undefined;\n    ownershipHistory(): readonly CapabilityRegistration[];\n    revokeOwned(token: OwnershipToken): RevocationResult;\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    requireCapabilityToken(): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
   },
   {
     name: 'ToolRuntimeScheduler',
