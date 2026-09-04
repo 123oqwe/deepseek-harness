@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-04T03:13:08.830Z",
-  "inputDigest": "ae8dd7d5a51c0c1efa6207aa6c32dbe9790424c859da77186f764d7eb7d93a06",
+  "lastUpdatedUtc": "2026-09-04T04:23:04.122Z",
+  "inputDigest": "33f558247477721a0a44008e2ff79bcc4e02e769470ffa7af75ad5ea974ebb0a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1531,14 +1531,33 @@
           "capturedAtUtc": "2026-09-03T21:03:12.558Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33835720646",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-e212/first100-evidence-e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84/vitest-report.json",
+          "observationSha256": "5c1ca834b9306519dded8c9f7686523144b345dfbc3f2c70bd2456cc33c2b315",
+          "expectCasesMatched": [
+            "mounts the healthy bundle and never the blocked one, and says why on stderr",
+            "reads runtime API range, schema ranges, required/optional capabilities, and provider constraints from a real package.json",
+            "returns undefined for a bundle package that declares no dsh.compat -- no declaration is not a constraint",
+            "must[3]: a malformed dsh.compat fails loud rather than degrading to unconstrained",
+            "admits every layer of a profile whose bundles declare no dsh.compat -- an existing profile composes unchanged",
+            "acceptance[1]: a layer whose required capability no layer provides is blocked, never admitted",
+            "acceptance[1]: a layer whose declared schema major does not cover the host registration is blocked",
+            "acceptance[1]: a layer outside this build's runtime API range is blocked",
+            "acceptance[2]: a layer missing only an optional capability stays admitted, with that capability shown explicitly",
+            "must[3]: cascade reaches the consumer -- a layer whose sole provider is itself blocked is blocked too, not admitted against a provider that never loads",
+            "must[2]: a graph-level requires/excludes contradiction over the sole provider returns the minimal unsat core, never a partition",
+            "acceptance[0]: the same profile negotiated twice produces the same planId and the same partition"
+          ],
+          "capturedAtUtc": "2026-09-04T04:23:03.877Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
+      "candidateSha": "e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4007,14 +4026,44 @@
           "capturedAtUtc": "2026-09-03T23:49:55.088Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33835720646",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-e212/first100-evidence-e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84/vitest-report.json",
+          "observationSha256": "5c1ca834b9306519dded8c9f7686523144b345dfbc3f2c70bd2456cc33c2b315",
+          "expectCasesMatched": [
+            "projects an unregistered corpus session as active under its observed tenant",
+            "carries an observed workspaceId through, and omits the property when the corpus observed none",
+            "keeps a registered record's durable disposition rather than projecting it back to active",
+            "keeps a registered record's legal hold, which a corpus observation can never clear",
+            "reports an unregistered, tenant-less corpus session as unattributed and emits no record for it",
+            "projects a registered session even when the corpus observed no tenant for it",
+            "preserves the corpus listing order",
+            "feeds listSessions, so a tenant-filtered page walk over the real corpus omits and duplicates nothing",
+            "feeds a status-filtered listing, so a soft-deleted session is excluded from an active listing",
+            "projects tenantId from a live session's identity/attached event",
+            "takes the LAST identity/attached event, so a re-attached identity supersedes an earlier one",
+            "omits the tenantId property entirely for a session with no identity/attached event, while projecting its attributed sibling",
+            "never derives a tenant from user/message content (P2-01 must[2])",
+            "projects workspaceId from the mounted workspace registry",
+            "omits workspaceId entirely when no workspace registry is mounted, while still projecting the tenant",
+            "admits only records whose projected tenant matches a tenant clause",
+            "never admits a record with no projected tenant into a tenant clause",
+            "admits only workspace members, and never a record with no projected workspace",
+            "ANDs a tenant clause with a workspace clause",
+            "ORs the values within one tenant clause",
+            "copies tenant and workspace clause values immediately, so a later caller mutation cannot change the filter",
+            "rejects a tenant or workspace clause whose values are not an array of strings",
+            "filters the real corpus by tenant end to end through filterSessions"
+          ],
+          "capturedAtUtc": "2026-09-04T04:23:04.121Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
+      "candidateSha": "e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
