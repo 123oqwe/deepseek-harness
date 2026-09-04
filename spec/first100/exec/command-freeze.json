@@ -3210,6 +3210,55 @@
         "testsDiscovered": 16
       },
       "note": "P6-07 F-stage. Written at the approved path from the BLOCKED-070 patch: the registry declares lifecycle.e2e.ts, which vitest.e2e.config.ts routes into the real-API suite while first100-exact-sha.yml runs the default config, so a .e2e.ts freeze names cases CI can never observe. These clauses are local session-log behaviour with zero model calls, so the archival correction applies and .e2e.spec.ts enters the default channel without double-running.\n\nSubjects are this stage's two declared files: readSessionLogWithRepair (acceptance[3]'s corrupted-log entry point, reached through the package root) and repair.ts's interruptedTurnClosers. Every case declares its category in its title -- enforcement / control / DEFECT / CHARACTERIZATION -- because a passing DEFECT case means the defect is still present, which is a different fact from a passing enforcement case, and the distinction is not recoverable from a count.\n\nMUTATION PROOF, three directions, source restored byte-exact after each. M1 (skip the corrupt row and keep reading): 3 red -- both stop-at-first-corruption enforcement cases plus the DEFECT case that depends on evidence being returned at all. M2 (collapse started/not-started to always-started): exactly 1 red, the not-started case, and only that one. M3, THE OVER-BROAD DIRECTION (emit closers even for a balanced log): exactly 1 red, and it is the CONTROL. A repair function that always fabricates closers satisfies every enforcement case here; only the control separates it from a correct one -- the same result P6-01.F measured for an over-broad scope filter.\n\nTWO DEFECTS RECORDED, NOT FIXED, because both fixes lie outside this stage's declared files. (1) readSessionLogWithRepair copies the caller-supplied raw row into evidence with no bound of its own; CorruptedLogEvidence.raw is documented as truncated to 512, but that truncation exists only in the JSONL scanner, so any other producer hands through an unbounded row -- a 100KB corrupt row is retained whole. (2) The entry point opens with `void sessionId`, so evidence can never name which session was corrupt. Separately, and outside this stage entirely: the JSONL scanner's own 512 limit is applied with String.slice, which cuts UTF-16 code units rather than bytes -- 512 units of CJK is 1536 bytes, 3x the documented cap, and a cut can strand a lone surrogate that becomes U+FFFD when re-encoded, corrupting the corruption evidence. Owner is packages/session/session-persistence-jsonl."
+    },
+    {
+      "epic": "P2-02",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/tools/tests/capability-token.spec.ts",
+        "packages/subagent/subagent/tests/capability-token-delegation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[3]: a scope requiring a capability token refuses a call that presents none, before the tool body runs",
+        "control: the same call succeeds and reaches the tool body when an authorizing token is presented",
+        "must[3]: a token that does not name the called tool among its resources is refused",
+        "must[3]: a token lacking the tool-invocation verb is refused even for a tool it names",
+        "validation (过期): an expired token is refused for a tool it otherwise authorizes",
+        "must[3]: a transport sub-dispatch (a `parent` token set) is gated too, so PTC is not a bypass",
+        "must[3]: no `tools/pre-execute` listener observes an unauthorized call, so none can approve it",
+        "control: an agent whose scope registered no requirement is unaffected",
+        "must[3]: the requirement lifts only when its own disposer runs, and a global registration gates every scope",
+        "acceptance[2]: a refusal reaching the model quotes no token material",
+        "acceptance[0]: a child `allow` filter naming a tool the parent never held gains nothing",
+        "acceptance[0]: `delegatedChildResources` never returns a name outside the parent set, for allow, deny, and none",
+        "acceptance[0]: a delegation requesting an expiry past the parent's is refused, not clamped",
+        "acceptance[0]: a delegation requesting a budget above the parent's is refused",
+        "acceptance[0]: dropping a budget-constrained parent's ceiling entirely is refused as a widening",
+        "must[0]: the child token records its own delegation hop — depth+1 and the parent's digest",
+        "acceptance[2]: the durable descriptor records the delegation digest and no other token material",
+        "control: a legitimately delegated child token still executes the tools it kept, and only those"
+      ],
+      "files": [
+        "packages/core/tools/src/index.ts",
+        "packages/subagent/subagent/src/child-agent.ts",
+        "packages/subagent/subagent/src/descriptor.ts",
+        "packages/core/tools/tests/capability-token.spec.ts",
+        "packages/subagent/subagent/tests/capability-token-delegation.spec.ts",
+        "packages/core/tools/package.json",
+        "packages/subagent/subagent/package.json"
+      ],
+      "frozenAtUtc": "2026-09-05T00:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "c7ce93c99567986de5a0b968258f982c3201f69c",
+        "testsDiscovered": 18
+      },
+      "note": "U (Usage) for P2-02, under the BLOCKED-050 acceptance lock. The frozen cases prove only what is decidable WITHOUT key material: token presence, expiry, verb, and per-tool resource scope enforced inside ToolRuntime's own preparation funnel (before the tools/pre-execute waterfall, and on transport sub-dispatches too), plus delegation minting a child token through the Contract stage's attenuateToken so a child is never wider than its parent. No case asserts a token was kernel-signed or kernel-verified, and the tool gate deliberately does NOT call verifyToken: the Trust Kernel's signatureRoots is Object.freeze({}), so a signature check there would refuse nothing an attacker would present. must[1] stays BLOCKED; acceptance[1] (cascading revocation) is exercised at the Provider stage's durable service, not at these three declared Usage files."
     }
   ]
 }

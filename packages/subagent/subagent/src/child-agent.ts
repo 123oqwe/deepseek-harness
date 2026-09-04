@@ -14,6 +14,16 @@ import type { SandboxMode } from '@deepseek-ai/dsh-sandbox'
 import type { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-system-prompt'
 import type { ToolRestriction } from '@deepseek-ai/dsh-tools'
+import { attenuateToken, digestToken } from '@deepseek-ai/dsh-capability-token'
+import type {
+  CapabilityTokenDigest,
+  CapabilityTokenNonce,
+  PrincipalId,
+  SignedCapabilityToken,
+  TokenAttenuationDenialReason,
+  TokenConstraints,
+} from '@deepseek-ai/dsh-capability-token'
+import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
 // Type-only: make `ctx.get('sandboxPolicy')` / `ctx.get('approval')` resolve
 // to the policy services when composed — delegation consumes both
 // opportunistically (the documented `ctx.get` pattern), never as a hard dep —
@@ -215,6 +225,112 @@ export function applyChildComposition(
     })
   }
   if (composition.toolFilter !== undefined) childCtx.tools.restrict(composition.toolFilter)
+}
+
+/**
+ * Epic P2-02 acceptance[0]: the delegation refused because the requested child
+ * authority would have been wider than the parent's on the named dimension.
+ * Carries `@deepseek-ai/dsh-capability-token`'s own denial reason unchanged,
+ * so the refusal a caller sees is the one `attenuateToken` made, never a
+ * re-derived summary of it.
+ */
+export class DelegatedCapabilityError extends Error {
+  constructor(public readonly reason: TokenAttenuationDenialReason) {
+    super(`delegated capability token refused: ${reason}`)
+    this.name = 'DelegatedCapabilityError'
+  }
+}
+
+/**
+ * The per-delegation values a child's token needs that its parent's token
+ * cannot supply: who the child is, a fresh anti-replay nonce, and the child's
+ * own requested ceilings. Every one of these is still checked against the
+ * parent by {@link attenuateDelegatedToken} — supplying them is a request, not
+ * a grant.
+ */
+export interface DelegatedTokenRequest {
+  /** The child agent's own principal, which becomes the child token's `subject`. */
+  readonly subject: PrincipalId
+  /** A fresh, caller-generated nonce for the child token. */
+  readonly nonce: CapabilityTokenNonce
+  /** The child's requested expiry; never accepted beyond the parent's. */
+  readonly expiresAt: number
+  /** The child's requested constraints; never accepted above the parent's budget. */
+  readonly constraints: TokenConstraints
+}
+
+/**
+ * Project a parent token's authorized tool resources through one child's tool
+ * restriction — the intersection {@link ToolRestriction} already means when
+ * the registry applies it to visibility, applied to authority so the two
+ * cannot disagree.
+ *
+ * Fail-closed in both directions: `allow` INTERSECTS with the parent's set
+ * rather than replacing it, so a child allowed a tool its parent never held
+ * gains nothing; `deny` then removes. A child with no restriction inherits
+ * the parent's resources verbatim — equal, never wider.
+ * @param parentResources - the parent token's authorized tool names.
+ * @param filter - the child's declared tool restriction, or `undefined` for none.
+ * @returns the child's resources, always a subset of `parentResources`.
+ */
+export function delegatedChildResources(
+  parentResources: readonly string[],
+  filter: ToolRestriction | undefined,
+): readonly string[] {
+  if (filter === undefined) return [...parentResources]
+  const allow = filter.allow === undefined ? undefined : new Set(filter.allow)
+  const deny = filter.deny === undefined ? undefined : new Set(filter.deny)
+  return parentResources.filter(name => (allow === undefined || allow.has(name)) && deny?.has(name) !== true)
+}
+
+/**
+ * Epic P2-02's delegation boundary: mint the Capability Token one child agent
+ * runs under, by attenuating its parent's. The child's tool resources are the
+ * parent's projected through {@link ChildComposition.toolFilter}; its verbs are
+ * the parent's verbatim (this seam narrows WHICH tools, never which operations
+ * on them); its expiry and budget are the caller's request, which
+ * `attenuateToken` accepts only when it does not exceed the parent's.
+ *
+ * Every narrowing decision stays inside `attenuateToken` — this function
+ * computes a request and never a grant, so the two ways a child could widen
+ * (a `toolFilter` naming a tool the parent lacks, a request raising budget or
+ * expiry) are both refused by the same checked code path the Contract stage
+ * proved, not by a second copy of the rule here.
+ * @param trustRoot - the `TrustKernelSignatureRoots` handle the child token is minted under.
+ * @param parent - the parent agent's already-held token.
+ * @param composition - the child's declared composition, whose `toolFilter` scopes its resources.
+ * @param request - the child's subject, nonce, and requested ceilings.
+ * @returns the freshly minted child token, never wider than `parent` on any dimension.
+ * @throws {DelegatedCapabilityError} when the requested child authority would widen the parent's.
+ */
+export function attenuateDelegatedToken(
+  trustRoot: TrustKernelSignatureRoots,
+  parent: SignedCapabilityToken,
+  composition: ChildComposition,
+  request: DelegatedTokenRequest,
+): SignedCapabilityToken {
+  const decision = attenuateToken(trustRoot, parent, {
+    subject: request.subject,
+    verbs: [...parent.token.verbs],
+    resources: delegatedChildResources(parent.token.resources, composition.toolFilter),
+    constraints: request.constraints,
+    expiresAt: request.expiresAt,
+    nonce: request.nonce,
+  })
+  if (!decision.accepted) throw new DelegatedCapabilityError(decision.reason)
+  return decision.child
+}
+
+/**
+ * The parent token's digest, as the child's durable descriptor records it
+ * (acceptance[2]: a log carries the digest and security metadata, never the
+ * token). Reading it back does NOT reconstitute authority — see
+ * `./descriptor.ts`'s {@link SubagentDescriptorBase.parentTokenDigest}.
+ * @param parent - the parent token whose digest identifies this delegation hop.
+ * @returns the parent token's content digest.
+ */
+export function delegationParentDigest(parent: SignedCapabilityToken): CapabilityTokenDigest {
+  return digestToken(parent.token)
 }
 
 /** Policy seeded onto a child session's log at the delegation boundary. */

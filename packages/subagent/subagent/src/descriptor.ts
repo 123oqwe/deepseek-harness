@@ -25,6 +25,7 @@ import { snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { ToolRestriction } from '@deepseek-ai/dsh-tools'
+import { CapabilityTokenDigest } from '@deepseek-ai/dsh-capability-token'
 
 declare module '@deepseek-ai/dsh-session/types' {
   interface SessionEventMap {
@@ -55,6 +56,24 @@ interface SubagentDescriptorBase {
   readonly mode: 'one-shot' | 'continuable'
   /** The `ctx.subagents` provider name that established the child. */
   readonly provider: string
+  /**
+   * Epic P2-02 acceptance[2]: the digest of the Capability Token this child
+   * was delegated under, and nothing else drawn from that token — no `verbs`,
+   * `resources`, `constraints`, `nonce`, or signature has a field here, so a
+   * descriptor cannot carry token material by accident. Absent for a
+   * delegation that ran under no Capability Token.
+   *
+   * Security metadata, NOT a composition input, which is why recording it
+   * needs no {@link SUBAGENT_DESCRIPTOR_VERSION} change: cold resume does not
+   * read it and must not. Reconstituting a child's authority from a
+   * deserialized digest would mean trusting a persisted field the runtime
+   * cannot verify — the Trust Kernel ships no key material to verify it with
+   * — which is the forgery-at-the-rehydration-boundary class this program has
+   * already recorded. The digest identifies which delegation an audit record
+   * belongs to; live authority always comes from the live token the parent
+   * hands the child.
+   */
+  readonly parentTokenDigest?: CapabilityTokenDigest
 }
 
 /** A session-backed subagent that cannot be cold-resumed after its run. */
@@ -96,6 +115,8 @@ interface SubagentDescriptorInputBase {
   readonly mode: 'one-shot' | 'continuable'
   /** The `ctx.subagents` provider name that will establish the child. */
   readonly provider: string
+  /** Digest of the Capability Token this delegation ran under, when one was held. */
+  readonly parentTokenDigest?: CapabilityTokenDigest
 }
 
 /** Input for a one-shot child's durable identity. */
@@ -132,6 +153,7 @@ const DESCRIPTOR_BASE_KEYS = [
   'mode',
   'provider',
   'label',
+  'parentTokenDigest',
 ] as const
 const ONE_SHOT_DESCRIPTOR_KEYS = new Set(DESCRIPTOR_BASE_KEYS)
 const CONTINUABLE_DESCRIPTOR_KEYS = new Set([
@@ -222,6 +244,8 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
   if (typeof provider !== 'string') {
     throw new Error('persisted subagent descriptor provider must be a string')
   }
+  const rawParentTokenDigest = optionalString(value, 'parentTokenDigest')
+  const parentTokenDigest = rawParentTokenDigest === undefined ? undefined : CapabilityTokenDigest(rawParentTokenDigest)
   if (mode === 'one-shot') {
     const label = optionalString(value, 'label')
     return {
@@ -229,6 +253,7 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
       mode,
       provider,
       ...label !== undefined ? { label } : {},
+      ...parentTokenDigest !== undefined ? { parentTokenDigest } : {},
     }
   }
   const label = value['label']
@@ -252,6 +277,7 @@ function parseSubagentDescriptor(value: unknown): SubagentDescriptorData | undef
     ...agentReasoningEffort !== undefined ? { agentReasoningEffort } : {},
     ...persona !== undefined ? { persona } : {},
     ...toolFilter !== undefined ? { toolFilter } : {},
+    ...parentTokenDigest !== undefined ? { parentTokenDigest } : {},
   }
 }
 
@@ -283,6 +309,7 @@ export function snapshotSubagentDescriptor(input: SubagentDescriptorInput): Suba
       mode: input.mode,
       provider: input.provider,
       ...input.label !== undefined ? { label: input.label } : {},
+      ...input.parentTokenDigest !== undefined ? { parentTokenDigest: input.parentTokenDigest } : {},
     }
     : {
       version: SUBAGENT_DESCRIPTOR_VERSION,
@@ -294,6 +321,7 @@ export function snapshotSubagentDescriptor(input: SubagentDescriptorInput): Suba
       ...input.agentReasoningEffort !== undefined ? { agentReasoningEffort: input.agentReasoningEffort } : {},
       ...input.persona !== undefined ? { persona: input.persona } : {},
       ...input.toolFilter !== undefined ? { toolFilter: input.toolFilter } : {},
+      ...input.parentTokenDigest !== undefined ? { parentTokenDigest: input.parentTokenDigest } : {},
     }
   const snapshot = snapshotJsonValue(candidate)
   if (snapshot === undefined) {

@@ -22,6 +22,8 @@ import type { UserMessage } from '@deepseek-ai/dsh-session'
 import { assertNever, deepFreeze, snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
 import type { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
+import { assertTokenPresented } from '@deepseek-ai/dsh-capability-token'
+import type { SignedCapabilityToken } from '@deepseek-ai/dsh-capability-token'
 // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
 // augmentation. The seam stays optional at runtime — see `serviceAsk`.
 import type {} from '@deepseek-ai/dsh-user-approval'
@@ -335,6 +337,16 @@ export interface ToolExecutionInput {
   readonly parent?: ToolExecutionToken
   /** Required caller-owned cancellation for this invocation. */
   readonly signal: AbortSignal
+  /**
+   * Epic P2-02 must[3]: the Capability Token this call acts under. Optional on
+   * the type because a deployment that has registered no
+   * {@link ToolRuntime.requireCapabilityToken} scope authorizes tool calls by
+   * other means; inside a scope that HAS registered one, a call omitting it is
+   * refused before any policy listener runs, so the field's absence is never
+   * a silent allow. The token is never rendered into a tool result, a session
+   * event, or the model-facing prompt (acceptance[2]).
+   */
+  readonly capabilityToken?: SignedCapabilityToken
 }
 
 /**
@@ -540,6 +552,96 @@ export class ToolOwnershipError extends HarnessError {
     this.reason = reason
     this.pluginIdentity = pluginIdentity
   }
+}
+
+/**
+ * The verb a Capability Token must carry for its holder to invoke a tool at
+ * all (Epic P2-02 must[0]'s `verbs`, as the tool surface names it). A fixed
+ * protocol constant, not a tunable: a deployment that could rename it could
+ * mint a token whose verbs read as authorizing invocation while this registry
+ * checks for something else.
+ */
+export const TOOL_CAPABILITY_VERB = 'call'
+
+/**
+ * Epic P2-02 must[3]'s refusal at the tool surface: a call that reached a
+ * scope requiring a Capability Token without presenting one that authorizes
+ * this tool. Extends {@link HarnessError} (`code: 'TOOL_TOKEN_DENIED'`) so the
+ * refusal is as routable as any other tool failure, and distinct from
+ * `UNKNOWN_TOOL` — the tool exists and is visible; only the presented
+ * authority is missing or too narrow.
+ *
+ * The message names the tool and the failed check and NOTHING drawn from the
+ * token itself — never its `nonce`, `resources`, `verbs`, `subject`, or
+ * signature (acceptance[2]: a denial is a model-visible string, so a message
+ * quoting the token's contents would be the exact leak that clause forbids).
+ */
+export class ToolCapabilityTokenError extends HarnessError {
+  /** Which check refused: no token at all, expired, wrong verb, or out of resource scope. */
+  readonly reason: ToolCapabilityDenialReason
+
+  constructor(toolName: string, reason: ToolCapabilityDenialReason) {
+    super(`tool "${toolName}" refused: ${TOOL_CAPABILITY_DENIAL_MESSAGES[reason]}`, 'TOOL_TOKEN_DENIED')
+    this.name = 'ToolCapabilityTokenError'
+    this.reason = reason
+  }
+}
+
+/**
+ * Why {@link ToolRuntime}'s Capability Token gate refused a call.
+ * `'token-required'` — no token was presented (the value
+ * `@deepseek-ai/dsh-capability-token`'s `assertTokenPresented` returns for the
+ * `'tool'` surface). `'expired'` — the presented token's `expiresAt` has
+ * passed. `'verb-not-authorized'` — its `verbs` omit
+ * {@link TOOL_CAPABILITY_VERB}. `'tool-not-in-scope'` — its `resources` do not
+ * name this tool.
+ */
+export type ToolCapabilityDenialReason =
+  | 'token-required'
+  | 'expired'
+  | 'verb-not-authorized'
+  | 'tool-not-in-scope'
+
+/** Model-facing wording per denial reason, carrying no token-derived value. */
+const TOOL_CAPABILITY_DENIAL_MESSAGES: Record<ToolCapabilityDenialReason, string> = {
+  'token-required': 'this scope requires a capability token and none was presented',
+  'expired': 'the presented capability token has expired',
+  'verb-not-authorized': `the presented capability token does not carry the "${TOOL_CAPABILITY_VERB}" verb`,
+  'tool-not-in-scope': 'the presented capability token does not authorize this tool',
+}
+
+/**
+ * The complete gate one required-token scope applies to one call, in refusal
+ * order: presence, expiry, verb, then resource scope. Pure and total — every
+ * input it needs is a parameter, so the decision cannot differ between the
+ * `execute` path and the scheduler path that share it.
+ *
+ * Signature verification is deliberately NOT part of this gate. The Trust
+ * Kernel ships structural non-replaceability and no key material (all six
+ * capabilities are `Object.freeze({})`/always-deny/no-op), so
+ * `verifyToken`'s signature check accepts a four-byte marker any caller can
+ * construct. Calling it here would put a check in the code path that refuses
+ * nothing an attacker would present — worse than its absence, because the
+ * absence is visible. When real key material reaches the kernel, kernel
+ * verification belongs at the front of this function.
+ * @param name - the tool being called.
+ * @param presented - the token the call presented, or `undefined`.
+ * @param now - Unix epoch milliseconds to check the token's expiry against.
+ * @returns the refusal reason, or `undefined` when the token authorizes this call.
+ */
+function capabilityDenialReason(
+  name: string,
+  presented: SignedCapabilityToken | undefined,
+  now: number,
+): ToolCapabilityDenialReason | undefined {
+  const presence = assertTokenPresented('tool', presented)
+  if (!presence.presented) return presence.reason
+  // `assertTokenPresented` narrowed presence, not the local binding.
+  const token = (presented as SignedCapabilityToken).token
+  if (now >= token.expiresAt) return 'expired'
+  if (!token.verbs.includes(TOOL_CAPABILITY_VERB)) return 'verb-not-authorized'
+  if (!token.resources.includes(name)) return 'tool-not-in-scope'
+  return undefined
 }
 
 /** One live tool ownership record plus the disposal state the replace path needs. */
@@ -804,6 +906,14 @@ class ToolLayer implements ScopeLayer {
   readonly restrictions = new AnonymousEntries<CompiledToolRestriction>()
   readonly guards = new AnonymousEntries<ToolGuard>()
   /**
+   * Live `tools.requireCapabilityToken()` registrations owned by this scope.
+   * A table rather than a boolean so two independent registrations dispose
+   * independently — the requirement lifts only when the LAST one is gone,
+   * which is what keeps one plugin's teardown from silently disarming
+   * another's gate.
+   */
+  readonly tokenRequirements = new AnonymousEntries<true>()
+  /**
    * Presentation this scope's agent declared for itself, shadowing the
    * deployment default. One cell rather than an entry table: two answers to
    * "which form does the model see" is a contradiction, not a merge.
@@ -819,7 +929,7 @@ class ToolLayer implements ScopeLayer {
   /** Whether every contribution table in this aggregate layer is empty. */
   isEmpty(): boolean {
     return this.tools.isEmpty() && this.restrictions.isEmpty() && this.guards.isEmpty()
-      && this.mode === undefined
+      && this.tokenRequirements.isEmpty() && this.mode === undefined
   }
 
   /** Whether every compiled restriction in this layer admits a global tool name. */
@@ -1413,6 +1523,40 @@ export class ToolRuntime extends Service {
     )
   }
 
+  /**
+   * Epic P2-02 must[3]: require every tool call in this context's scope to
+   * present a Capability Token authorizing that tool. A plain-context
+   * registration arms the requirement for every call the registry receives;
+   * one registered through `agent.ctx` arms it for that agent's calls only.
+   *
+   * The gate runs inside {@link ToolRuntime.execute}'s own preparation, BEFORE
+   * the `tools/pre-execute` waterfall and the guard stage — the same placement
+   * as the `ptc` collapse and for the same reason: a call that cannot be
+   * authorized must never be observed, let alone approved, by extensible
+   * policy. Because preparation is the single funnel both `execute` and the
+   * agent loop's staged scheduler pass through, and because a transport
+   * sub-dispatch (a `parent` token set) funnels through it too, there is no
+   * alternate caller that reaches a tool body around this check.
+   * @returns the exact disposer that lifts this registration's requirement.
+   */
+  requireCapabilityToken(): () => void {
+    return this.layers.effect(
+      this.ctx,
+      layer => layer.tokenRequirements.append(true),
+      { label: 'tools.requireCapabilityToken()', notify: false },
+    )
+  }
+
+  /** Whether the global layer or any layer in this call's scope chain requires a Capability Token. */
+  private requiresCapabilityToken(scope: ScopeKey | undefined): boolean {
+    if (!this.layers.global.tokenRequirements.isEmpty()) return true
+    if (scope === undefined) return false
+    for (const layer of this.layers.chainLayers(scope)) {
+      if (!layer.tokenRequirements.isEmpty()) return true
+    }
+    return false
+  }
+
   /** First monotonic denial from the global then the scope chain's guard layers, farthest first. */
   private guardReason(exec: ToolExecution): string | undefined {
     const globalReason = this.layers.global.guardReason(exec)
@@ -1767,6 +1911,16 @@ export class ToolRuntime extends Service {
     const exec = created.exec
     if (this.callerCancelled(exec)) {
       return next({ kind: 'final-result', exec, result: toolAbortedBeforeDispatchResult() })
+    }
+    if (this.requiresCapabilityToken(exec.agent)) {
+      const reason = capabilityDenialReason(exec.name, input.capabilityToken, Date.now())
+      if (reason !== undefined) {
+        return next({
+          kind: 'final-result',
+          exec,
+          result: toolErrorResult(new ToolCapabilityTokenError(exec.name, reason)),
+        })
+      }
     }
     try {
       const carrier = scopeTarget(this, exec.agent)
