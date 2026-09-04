@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface and state-machine signatures plus the Provider-stage durable Run registry for Epic P4-01's first-class Run Service and Run event log, for maintainers picking up the RED-scaffold fix-round."
+description: "The type surface, state machine, durable registry, and mounted Cordis plugin for Epic P4-01's first-class Run Service and Run event log."
 kind: "package-library"
 ---
 
@@ -7,8 +7,7 @@ kind: "package-library"
 
 ## Summary
 
-`dsh-run` fixes the type surface and state-machine signatures for Epic
-P4-01's first-class Run Service: the closed `accepted`/`planning`/`waiting`/
+`dsh-run` owns Epic P4-01's first-class Run Service: the closed `accepted`/`planning`/`waiting`/
 `running`/`paused`/`verifying`/`reconciling`/`succeeded`/`failed`/`cancelled`
 Run-state set and its legal-transition table (must[0]); the append-only Run
 event log, whose entries reference Session, Workflow, Action, Artifact,
@@ -16,29 +15,27 @@ Approval, and Verification entities (must[1]); and a Run owned by the Run
 Service's own fixed identity, never a UI session or "current turn" pointer
 (must[2]).
 
-This package ships this epic's Contract and Provider stages, both real and
-green: `src/types.ts`'s types, `src/events.ts`'s append-only event-log
+This package's type, state-machine, and registry layers are real and green:
+`src/types.ts`'s types, `src/events.ts`'s append-only event-log
 mechanics, and `src/state-machine.ts`'s Run-lifecycle decisions
 (`createRun`, `transition`, `attachSessionToRun`, `listNonTerminalRuns`,
 `resumeRun`) are implemented and proven by `tests/state-machine.spec.ts`'s
 111 cases — an exhaustive 10x10 state-pair sweep derived from the real
 `LEGAL_RUN_TRANSITIONS` table, so every legal edge has a passing-direction
 case and every illegal pair a rejected one. `src/index.ts` adds the
-Provider-stage durable registry (`RunStore`, `createFileRunStore`,
-`RunService`), proven by `tests/run-service.spec.ts`'s 19 cases, each
-restart case using a fresh store and service over the same path so a Run
-can only reappear from durable bytes.
+durable registry (`RunStore`, `createFileRunStore`, `RunService`), proven by
+`tests/run-service.spec.ts`'s 19 cases, each restart case using a fresh
+store and service over the same path so a Run can only reappear from durable
+bytes, and `RunPlugin`, the mounted Cordis plugin that opens a Run for every
+agent session a real harness boot starts.
 
-No invariant companion is published because this Contract-stage slice
-constructs no Run registry or Cordis `Context` value yet to check an owned
-relation over: there is no live Session/Workflow/Action/Artifact/Approval/
-Verification store this stage could cross-reference a Run event log entry's
-reference against. A real invariant — "no Run event log entry references a
-nonexistent Session/Workflow/Action/Artifact/Approval/Verification" — needs
-this epic's Provider-stage registry (`src/index.ts`) and the real stores
-those five entity kinds' own owning packages eventually publish; minting one
-here would either be empty or re-derive a fact only this package's own
-in-memory fixtures produce, not an independent second source.
+No invariant companion is published: there is no live Workflow/Action/
+Artifact/Approval/Verification store to cross-reference a Run event log
+entry's reference against. A real invariant — "no Run event log entry
+references a nonexistent Session/Workflow/Action/Artifact/Approval/
+Verification" — needs the real stores those entity kinds' own owning
+packages eventually publish; minting one here would re-derive a fact only
+this package's own registry produces, not an independent second source.
 
 ## Table of Contents
 
@@ -53,8 +50,8 @@ in-memory fixtures produce, not an independent second source.
 <a id="use-this-package"></a>
 ## Use this package
 
-The Run lifecycle surface, once implemented, is called with plain data — no
-file, process, or Cordis `Context` access:
+The Run lifecycle surface is called with plain data — no file, process, or
+Cordis `Context` access:
 
 ```ts
 import { createRun, transition, attachSessionToRun, listNonTerminalRuns, resumeRun } from '@deepseek-ai/dsh-run/state-machine'
@@ -75,9 +72,9 @@ Every `./state-machine` and `./events` export is a pure function over
 already-computed data: none of them reads a file, spawns a process, or
 constructs a Cordis `Context`.
 
-The package root adds the Provider-stage durable registry that supplies
-those functions with real Run storage, so a Run survives the process that
-accepted it (acceptance[0]):
+The package root adds the durable registry that supplies those functions
+with real Run storage, so a Run survives the process that accepted it
+(acceptance[0]):
 
 ```ts
 import { createFileRunStore, RunService } from '@deepseek-ai/dsh-run'
@@ -88,6 +85,24 @@ await service.accept(RunId('run-1'), SessionId('session-1'), Date.now())
 
 // After a restart, a fresh service over the same path lists the same Runs.
 for (const run of service.listNonTerminal()) service.resume(run.id)
+```
+
+Mounted as a plugin, the service acquires a real caller: every agent session
+the harness starts opens a Run, and the live `Agent` handle carries its id.
+The `packages/bundle/base` row is `disabled: true`, so a profile opts in and
+supplies the store path:
+
+```yml
+- id: run
+  name: '@deepseek-ai/dsh-run'
+  config:
+    storePath: !!js dshHomePath('runs.json')
+```
+
+```ts
+// Anywhere holding the booted Context and a live agent:
+const run = ctx.runs.runFor(agent)
+// agent.runId === run.id, and run.ownerId === RUN_SERVICE_OWNER_ID
 ```
 
 -----
@@ -109,14 +124,15 @@ observable type contract is fully covered in [Use this package](#use-this-packag
   `Principal`/`IdentityContext`/`Session` already carries, so this package
   never creates a second, incompatible identity universe for either.
 - **The other five entity kinds get package-local `*Ref` brands, not
-  `*Id` brands.** No branded id exists yet in this epic's Contract-stage
-  scope for Workflow/Action/Artifact/Approval/Verification (`WorkflowRunId`
-  in `@deepseek-ai/dsh-workflow/types` is a different concept — one workflow
-  *execution* — and that package is this epic's Usage-stage scope, not
-  Contract-stage's). `WorkflowRef`/`ActionRef`/`ArtifactRef`/`ApprovalRef`/
-  `VerificationRef` deliberately avoid the `*Id` suffix so a later
-  Usage-stage reconciliation is a distinguishable, greppable rename rather
-  than a same-named type silently swapped for a different one.
+  `*Id` brands.** No branded id exists in this repository for
+  Action/Artifact/Approval/Verification, and `WorkflowRunId`
+  (`@deepseek-ai/dsh-workflow/types`) is a different concept — one workflow
+  *execution*. `WorkflowRef`/`ActionRef`/`ArtifactRef`/`ApprovalRef`/
+  `VerificationRef` deliberately avoid the `*Id` suffix so reconciling one
+  against a real id is a distinguishable, greppable step rather than a
+  same-named type silently swapped for a different one. `workflowRefOf`
+  (`src/index.ts`) is that step for Workflow, and the single place the two
+  brands meet.
 - **Service ownership is structural, not conventional.** `createRun` accepts
   no owner parameter at all — there is no argument position through which a
   UI session id or "whichever turn is currently active" could reach
@@ -136,9 +152,9 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 | File | Role |
 |---|---|
 | [`src/types.ts`](src/types.ts) | The Run/RunEvent/RunEntityReference type surface: `RunState`, `RunEvent`, `Run`, `RunEntityReference`, `RunTransitionDecision`, `RunResumeDecision`, plus the `*Ref` brands |
-| [`src/events.ts`](src/events.ts) | The append-only event-log mechanics (Contract-stage RED scaffold): `genesisRunEvent`, `appendRunEvent`, `referencesByKind` |
-| [`src/state-machine.ts`](src/state-machine.ts) | `LEGAL_RUN_TRANSITIONS`/`TERMINAL_RUN_STATES`/`RUN_SERVICE_OWNER_ID` (real), and `createRun`/`transition`/`attachSessionToRun`/`listNonTerminalRuns`/`resumeRun` (Contract-stage RED scaffold) |
-| [`src/index.ts`](src/index.ts) | The Provider-stage durable Run registry (RED scaffold): the `RunStore` durability seam, `createFileRunStore`, and `RunService`, plus the package barrel re-exporting the three modules above |
+| [`src/events.ts`](src/events.ts) | The append-only event-log mechanics: `genesisRunEvent`, `appendRunEvent`, `referencesByKind` |
+| [`src/state-machine.ts`](src/state-machine.ts) | `LEGAL_RUN_TRANSITIONS`/`TERMINAL_RUN_STATES`/`RUN_SERVICE_OWNER_ID`, and the pure decisions over them: `createRun`/`transition`/`attachSessionToRun`/`listNonTerminalRuns`/`resumeRun` |
+| [`src/index.ts`](src/index.ts) | The durable Run registry (the `RunStore` durability seam, `createFileRunStore`, `RunService`), the mounted `RunPlugin` and `workflowRefOf`, plus the package barrel re-exporting the three modules above |
 
 </details>
 
@@ -147,15 +163,15 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/run-service.spec.ts`](tests/run-service.spec.ts) — the
-  Provider-stage RED scaffold: `RunService` and `createFileRunStore`
-  exercised over a real on-disk store, with a "process restart" modelled as
-  a fresh store and a fresh `RunService.restore` sharing nothing but the
-  file (acceptance[0]).
-- [`tests/state-machine.spec.ts`](tests/state-machine.spec.ts) — the
-  Contract-stage RED scaffold: an exhaustive 10x10 Run-state transition
-  sweep (must[0]/acceptance[1]) plus one case per remaining must[]/
-  acceptance[] clause.
+- [`tests/run-service.spec.ts`](tests/run-service.spec.ts) — `RunService`
+  and `createFileRunStore` exercised over a real on-disk store, with a
+  "process restart" modelled as a fresh store and a fresh
+  `RunService.restore` sharing nothing but the file (acceptance[0]).
+- [`tests/state-machine.spec.ts`](tests/state-machine.spec.ts) — an
+  exhaustive 10x10 Run-state transition sweep (must[0]/acceptance[1]) plus
+  one case per remaining must[]/acceptance[] clause.
+- [`tests/plugin.spec.ts`](tests/plugin.spec.ts) — `RunPlugin` mounted on a
+  real `Context` with the real agent registry and agent loop.
 - [`@deepseek-ai/dsh-principal`](../../identity/principal/README.md) — this
   package's source for `RunId` (Epic P2-01, already accepted).
 - [`@deepseek-ai/dsh-session`](../../core/session/README.md) — this
@@ -182,13 +198,29 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **The Provider-stage registry is a RED scaffold, and nothing mounts it
-  into a Cordis `Context` yet.** `src/index.ts`'s `RunStore`,
-  `createFileRunStore`, and `RunService` carry real signatures with
-  `'not implemented: ...'` bodies, proven by `tests/run-service.spec.ts`'s
-  assertions against that (currently failing) behavior. No plugin registers
-  a `RunService` on a `Context`, and no product surface calls one, so a real
-  harness run still creates no Run.
+- **`RunPlugin` mounts on request; it is not a shared-base default, so a
+  default `dsh` boot still creates no Run.** `packages/bundle/base`'s `run`
+  row is `disabled: true`, matching `baseline-preflight`: `storePath` names a
+  real write target with no neutral value, so a profile that wants
+  first-class Runs enables the row and supplies that path. A profile that
+  does not enable it mounts no Run Service and opens no Run — the plugin
+  exists and works, but nothing in the shipped default profiles turns it on
+  yet. `tests/first100/fixtures/P4-01.composition.spec.ts` is the proof that
+  enabling it does open a Run for a real agent session; it enables the row in
+  its own fixture `cordis.yml`.
+- **A Run's lifecycle is not yet recorded in the session log.** `RunPlugin`
+  keeps its Runs only in its own `RunStore` document; it registers no
+  `SessionEventMap` member, so a session log carries no trace of the Run its
+  agent ran inside. Adding one requires registering the event type in
+  `packages/core/session/src/known-event-types.ts` first — an unregistered
+  type makes replay refuse the log — and is deferred with the state
+  transitions that would populate it.
+- **`RunPlugin` opens a Run and advances nothing.** A Run is accepted at
+  `agent/session-start` and stays in `accepted`; the transitions through
+  `planning`/`running`/`verifying` to a terminal state, and the
+  `workflow/*`-driven references that would accompany them, are deferred.
+  `workflowRefOf` reconciles the brands those references need, but no mounted
+  listener calls it yet.
 - **`packages/session/session-persistence/src/coordinator.ts` was read, not
   modified.** Runs are deliberately not stored through
   `PersistenceCoordinator`: its storage contract is keyed on session

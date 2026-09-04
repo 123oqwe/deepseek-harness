@@ -400,6 +400,21 @@
       name: '@deepseek-ai/dsh-baseline-preflight'
       disabled: true
 
+    # First-class Run Service (P4-01): opens a durable Run for every agent
+    # session the harness starts, owned by the service itself rather than by
+    # a UI session or turn holder, and keeps its append-only event log at
+    # `config.storePath`.
+    #
+    # Disabled by default, matching `baseline-preflight` above: opt-in per
+    # profile, not a shared-base default. `storePath` names a real write
+    # target with no neutral value — a shared-base default would have every
+    # profile writing Runs to one inherited path it never chose — so a
+    # profile that wants first-class Runs enables this row and supplies that
+    # path explicitly.
+    - id: run
+      name: '@deepseek-ai/dsh-run'
+      disabled: true
+
     - id: spill-local
       name: '@deepseek-ai/dsh-spill-local'
 

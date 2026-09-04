@@ -2478,6 +2478,56 @@
         "testsDiscovered": 23
       },
       "note": "Usage-stage RED for Epic P6-07 must[0]. 23/23 fail on a clean tree, zero module or syntax errors: 15 on real not-implemented errors (projectLifecycleRecords, and the tenant/workspace branches of filterSessionResults/materializeSessionResultFilters), 8 on assertion mismatch because src/corpus.ts is deliberately left unmodified at RED -- adding a throwing projection call there would have broken the four landed session-query suites that list the corpus, so the projection cases assert through the real listSessions and fail on the absent tenantId/workspaceId instead. No case passes at RED: each negative-space assertion (an omitted tenantId, an omitted workspaceId, a tenant never derived from prompt text) is paired in the same case with a positive sibling that must be projected, so the case cannot pass vacuously against unimplemented code. expectExit=0 is the GREEN target per the P0-01.C precedent. Scope note: cursor.ts and core/session/src/repair.ts are declared U files left unmodified -- cursor encoding stays provider-owned (the Contract stage's recorded decision), and acceptance[3] is locked out of this stage pending the independent session-persistence-jsonl format.ts evidence fix. packages/session-query/session-query-sqlite/src/query.ts plus a two-case tests/tenant-filter-refusal.spec.ts are a typecheck-forced adjacent guard outside the approved six-file scope and outside this frozen command: widening SessionResultFilter turned that provider's exhaustive switch into a compile error, and a dropped tenant clause in ranked search would leak another tenant's sessions, so the clause is refused. Needs its own adjudication entry."
+    },
+    {
+      "epic": "P4-01",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/plugin.spec.ts",
+        "tests/first100/fixtures/P4-01.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "opens a durable Run for the agent session a real harness boot starts",
+        "owns that Run with RUN_SERVICE_OWNER_ID, never the agent session that started it",
+        "associates the Run with the exact session the harness started, as its initiating Session",
+        "mints the Run's genesis log entry with no prior state, at seq 0",
+        "references the initiating Session in the Run's append-only log, not just in sessionIds",
+        "opens a second, independent Run on the next boot over the same store, keeping the first",
+        "lists the Run a previous boot left behind as non-terminal, so a restart can resume it",
+        "registers the Run Service on the Context it is mounted into",
+        "unregisters the service when the mounting fiber unloads",
+        "opens no Run before any agent session starts",
+        "opens exactly one Run for one started agent session",
+        "owns that Run with RUN_SERVICE_OWNER_ID, never the starting session id",
+        "records the opened Run on the live Agent handle as Agent.runId",
+        "finds the Run for a live agent through runFor",
+        "opens an independent Run per agent session, so one Session never joins another Session's Run",
+        "writes the Run through to the store, so a fresh service over the same path lists it",
+        "restores the Runs an earlier mount left behind, rather than starting empty",
+        "reconciles a real WorkflowRunId into the Run event log's Workflow reference brand"
+      ],
+      "files": [
+        "packages/run/run/tests/plugin.spec.ts",
+        "tests/first100/fixtures/P4-01.composition.spec.ts",
+        "tests/first100/fixtures/loader/p4-01-run/cordis.yml",
+        "tests/first100/fixtures/loader/p4-01-run/driver.ts",
+        "packages/run/run/src/index.ts",
+        "packages/core/agent/src/types.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/bundle/base/package.json"
+      ],
+      "frozenAtUtc": "2026-09-04T04:49:15.989Z",
+      "dryRunProof": {
+        "treeSha": "1e18e13aec81cff88986001b5fc46b9c98a490a1",
+        "testsDiscovered": 18
+      },
+      "note": "U-stage RED for P4-01 (the Run Service acquires a real caller), attempt/P4-01-U rebased onto land-base-align-v2 @ 40043e5d47. 18/18 genuinely failed on real not-implemented errors from this stage's own scaffold, zero module/syntax errors; repo-wide `pnpm run typecheck` exit 0 with the RED stubs and both spec files present (package tsconfigs set rootDir: src and exclude tests/, so a package-only `tsc -b` cannot see a spec's type errors). C+P's 130 frozen cases re-confirmed still green on this tree. Genuinely new at U: C proved the state machine and P the durable registry, but nothing produced a Run from real work -- the package README said so outright ('No plugin registers a RunService on a Context, and no product surface calls one, so a real harness run still creates no Run'). U adds RunPlugin, the mounted Cordis plugin that opens a Run at `agent/session-start`, records it on the live Agent handle as the new `Agent.runId`, and reconciles `WorkflowRef` against the real `WorkflowRunId` via `workflowRefOf`. The 7 composition cases boot a REAL Cordis Loader tree through `@deepseek-ai/dsh-app-boot` (tests/first100/fixtures/loader/p4-01-run/), mounting the real agent registry + agent loop with one configured root agent and the real `@deepseek-ai/dsh-run` row; they are keyless because a configured agent is created at boot before any model request. At RED all 7 fail inside RunPlugin's own Service.init ('failed to apply loader entry run (@deepseek-ai/dsh-run): not implemented'), which proves the fixture path is wired end to end rather than broken. FIXTURE-PATH TRAP CHECKED AND CLEARED: the first RED run failed on ERR_MODULE_NOT_FOUND for dsh-plugin-compat/lib/types/solver.js, i.e. an unbuilt artifact plane, NOT on this stage's code. The landed, already-accepted P0-01.composition.spec.ts failed identically on the same clean tree, proving it pre-existing and environmental; after `pnpm run build` (exit 0) P0-01 is 2/2 green and this stage's RED is the on-topic one above. These loader smokes are artifact-plane gates and require a build first. BASE-BUNDLE MOUNT: packages/bundle/base/cordis.patch.yml gains a `run` row that is `disabled: true`, matching the `baseline-preflight` precedent (opt-in per profile, never a shared-base default) -- `storePath` names a real write target with no neutral value. packages/bundle/base/package.json gains the matching dependency, which verify-cordis-config requires for a bare plugin name in that patch file. The composition fixture enables the row in its own cordis.yml, which is where the product-visible assertion belongs. A default `dsh` boot therefore still creates no Run, and the README now says exactly that instead of the old claim. NO SessionEventMap MEMBER at U, deliberately: an event absent from packages/core/session/src/known-event-types.ts makes replay refuse the log, so registration plus a proven round trip must come first. Deferred to F and recorded in the README's Known Limitations. STALE-RED PROSE CORRECTED in the same commit (coordinator-assigned): packages/run/run/README.md's nine lines describing landed GREEN Contract/Provider code as a RED scaffold, plus the two JSDoc module headers in src/state-machine.ts and src/events.ts whose literal 'not implemented' text had silenced verify-no-stale-red-claims itself before that gate's 40043e5d47 fix. SCOPE DEVIATIONS, reported for adjudication, NOT taken as granted: (1) packages/workflow/workflow/src/types.ts, a declared U file, is left UNMODIFIED -- its only producer is packages/workflow/workflow-worker-thread/src/index.ts (out of scope), so any field added there would be permanently unwritten; the file is instead consumed as a type import so `workflowRefOf` reconciles against the real `WorkflowRunId`, which is the reconciliation the C-stage README deferred to this stage. (2) scripts/gen-cordis-catalog.ts is a generator-forced adjacent edit outside the approved set: `ctx.runs` needs a SERVICE_PAGE entry (mapped to core.md, where `agents`/`agentLoop` already live) and `Run` a TYPE_LINK_EXEMPTIONS owner, or the generator fails outright rather than warning; docs/subsystems/core.* and packages/extensions/tool-cordis/src/api-catalog.ts are its regenerated output. Both need their own adjudication entries. expectExit=0 is the GREEN target per the P0-01.C precedent -- it is not the RED exit code, which is 1."
     }
   ]
 }

@@ -5,7 +5,7 @@
  */
 
 import type { UserMessage } from '@deepseek-ai/dsh-llm/types'
-import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
+import type { IdentityContext, RunId } from '@deepseek-ai/dsh-principal/types'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 
@@ -22,6 +22,19 @@ export interface Agent {
    * `resolveSessionIdentity` (`@deepseek-ai/dsh-agent-loop/runtime-context`).
    */
   readonly identity?: IdentityContext
+  /**
+   * Which Run this agent's session is doing work inside (first100 registry
+   * P4-01 acceptance[2]). Optional: absent when no Run Service is mounted.
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * assigning it from its `agent/session-start` listener before any turn
+   * runs. Deliberately not `readonly`: the Run Service owns the Run, not the
+   * agent (P4-01 must[2]), so the association is attached by that service
+   * rather than minted in the agent's own constructor the way `identity` is.
+   * Readers treat an absent value as capability absence, never as a Run that
+   * failed to open.
+   */
+  runId?: RunId
 }
 
 declare module '@deepseek-ai/dsh-typert-protocol' {

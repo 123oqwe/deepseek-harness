@@ -1,7 +1,8 @@
 /**
- * Provider-stage Run Service for Epic P4-01: the durable Run registry that
- * turns `./state-machine.ts`'s pure Contract-stage decisions into a
- * first-class service whose Runs outlive the process that accepted them.
+ * Epic P4-01's Run Service: the durable Run registry that
+ * turns `./state-machine.ts`'s pure decisions into a
+ * first-class service whose Runs outlive the process that accepted them,
+ * plus the Cordis plugin that opens a Run for a real agent session.
  *
  * Contract stage landed the decisions themselves — which transitions are
  * legal (`transition`), which Runs are non-terminal (`listNonTerminalRuns`),
@@ -26,12 +27,25 @@
  * what must[2] forbids: the Run is owned by the service itself, never a UI
  * session or turn holder. A Run outliving, preceding, and spanning several
  * Sessions (acceptance[2]) cannot be a row inside any one of their logs.
- * That package is therefore left untouched by this stage.
+ * That package is therefore left untouched.
+ *
+ * **The real caller.** {@link RunPlugin} is the Cordis plugin that gives the
+ * registry one: mounted on a `Context` that also carries an agent registry,
+ * it opens a Run for every agent session the harness starts
+ * (`agent/session-start`), records the Run on the live {@link Agent} handle
+ * (`Agent.runId`), and references each workflow execution the session runs
+ * (`workflow/start`) in that Run's append-only log. Without it the registry
+ * is reachable only from a caller that constructs it by hand.
  *
  * @module @deepseek-ai/dsh-run
  */
 
 import { readFile, rename, writeFile } from 'node:fs/promises'
+import { Service } from '@deepseek-ai/cordis'
+import type { Context } from '@deepseek-ai/cordis'
+import type { Agent } from '@deepseek-ai/dsh-agent/types'
+import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow/types'
+import z from '@deepseek-ai/schemastery'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import {
@@ -47,6 +61,7 @@ import type {
   RunResumeDecision,
   RunState,
   RunTransitionDecision,
+  WorkflowRef,
 } from './types.ts'
 
 export * from './types.ts'
@@ -305,5 +320,101 @@ export class RunService {
     const run = this.runs.get(id)
     if (run === undefined) throw new Error(`run ${id} is not registered`)
     return run
+  }
+}
+
+/**
+ * The Run Service's Cordis face, registered as `ctx.runs` by
+ * {@link RunPlugin}.
+ */
+declare module '@deepseek-ai/cordis' {
+  interface Context {
+    runs: RunPlugin
+  }
+}
+
+/**
+ * must[1]'s Workflow-reference reconciliation. The Contract stage minted
+ * {@link WorkflowRef} as a forward reference because no Workflow identity was
+ * in its file scope; `@deepseek-ai/dsh-workflow`'s `WorkflowRunId` (one
+ * workflow execution) is that identity. This function is the single, greppable
+ * place the two brands meet, so a Run event log entry naming a Workflow always
+ * names a real, running workflow execution rather than a parallel id universe.
+ * @param id - the workflow execution's real id, as carried by every `workflow/*` event's `WorkflowRunInfo.id`.
+ * @returns the same value as the Run event log's Workflow reference brand.
+ */
+export function workflowRefOf(id: WorkflowRunId): WorkflowRef {
+  throw new Error(`not implemented: workflowRefOf does not yet reconcile WorkflowRunId ${id} with WorkflowRef`)
+}
+
+/** Deployment-varying configuration of {@link RunPlugin}. */
+export interface Config {
+  /**
+   * Filesystem path of the durable Run store document this plugin's
+   * {@link RunService} reads and writes (see {@link createFileRunStore}).
+   */
+  readonly storePath: string
+}
+
+/**
+ * Epic P4-01's Run Service as a mounted Cordis plugin: the one place a real
+ * harness run becomes a Run.
+ *
+ * On mount it restores the durable registry from {@link Config.storePath}
+ * (acceptance[0]'s restart path, executed on every boot including the first),
+ * then subscribes to the agent registry's own extension points. Every agent
+ * session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID`
+ * (must[2]) whose `sessionIds` begins with that session (acceptance[2]), and
+ * every workflow execution that session runs is referenced in that Run's
+ * append-only log (must[1]).
+ *
+ * `inject` names the agent registry, so the plugin activates only where the
+ * events it subscribes to are actually emitted rather than sitting inert.
+ */
+export default class RunPlugin extends Service {
+  /** Cordis service dependencies; the plugin activates once these are available. */
+  static inject = ['agents']
+
+  /** Runtime configuration schema, validated at mount from the profile's `cordis.yml` row. */
+  static Config = z.object({
+    storePath: z.string().required(),
+  }) as z<Config>
+
+  /**
+   * @param ctx - the mounting context; the plugin registers itself as `ctx.runs`.
+   * @param config - the validated configuration, naming the durable store's path.
+   */
+  constructor(ctx: Context, public readonly config: Config) {
+    super(ctx, 'runs')
+  }
+
+  /**
+   * The durable registry this plugin restored at mount, for a caller that
+   * needs the Run Service's full surface rather than this plugin's
+   * agent-shaped lookups.
+   * @returns the mounted {@link RunService}.
+   */
+  get service(): RunService {
+    throw new Error('not implemented: RunPlugin does not yet restore a RunService at mount')
+  }
+
+  /**
+   * The Run the harness opened for `agent`'s session.
+   * @param agent - a live agent handle from the agent registry.
+   * @returns the {@link Run} that agent's session is doing work inside, or
+   * `undefined` when this plugin mounted after that session started.
+   */
+  runFor(agent: Agent): Run | undefined {
+    throw new Error(`not implemented: RunPlugin does not yet open a Run for agent session ${agent.id}`)
+  }
+
+  /**
+   * Restore the durable registry and subscribe to the agent registry's
+   * session and workflow extension points, yielding the disposer that
+   * unsubscribes them.
+   * @returns the plugin's own teardown steps, in Cordis's `Service.init` protocol.
+   */
+  async* [Service.init](): AsyncGenerator<() => Promise<void> | void, void, void> {
+    throw new Error('not implemented: RunPlugin does not yet open a Run for a real agent session')
   }
 }

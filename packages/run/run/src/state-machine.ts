@@ -1,27 +1,20 @@
 /**
- * Contract-stage RED scaffold for Epic P4-01's first-class Run Service:
+ * Epic P4-01's first-class Run Service decisions:
  * the legal Run-state-transition table (must[0]/acceptance[1]), Run creation
  * and service-owned identity (must[2]), Session/Run association
  * (acceptance[2]), and restart-time listing/resumption of non-terminal Runs
  * (acceptance[0]).
  *
  * `LEGAL_RUN_TRANSITIONS`, `TERMINAL_RUN_STATES`, and `RUN_SERVICE_OWNER_ID`
- * are real, already-correct exported data — mirroring
- * `@deepseek-ai/dsh-plugin-ownership`'s one Contract-stage exception
- * (`RESERVED_NAMESPACE_ROOT`/`isReservedNamespace`): declared facts a test
- * can check expectations against, not the adjudication logic itself.
+ * are exported data a caller may check its own expectations against;
  * `createRun`, `transition`, `attachSessionToRun`, `listNonTerminalRuns`,
- * and `resumeRun` are real, epic-accurate signatures with placeholder
- * (`'not implemented'`) bodies — the pure decision logic is this epic's
- * Contract-stage deliverable to a later fix-round.
+ * and `resumeRun` are the pure decisions over them.
  *
  * None of these functions read a file, spawn a process, or construct a
  * Cordis `Context`; every timestamp is caller-supplied so construction stays
- * pure. Usage-stage wires `createRun`/`transition`/`listNonTerminalRuns`/
- * `resumeRun` into a real durable Run registry
- * (`packages/run/run/src/index.ts`, this epic's own Provider-stage file) and
- * into `packages/session/session-persistence/src/coordinator.ts`'s restart
- * path (acceptance[0]) — neither is this stage's job.
+ * pure. `packages/run/run/src/index.ts` wires them into the durable Run
+ * registry (`RunService`) and into the Cordis plugin that opens a Run for a
+ * real agent session.
  *
  * @module @deepseek-ai/dsh-run/state-machine
  */
