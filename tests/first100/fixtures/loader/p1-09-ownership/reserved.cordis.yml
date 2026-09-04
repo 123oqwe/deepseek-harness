@@ -9,7 +9,7 @@
   config:
     ownership:
       officialPluginIdentities:
-        - p1-09-first-owner
+        - ./first-owner.ts
 
 - id: third-party
   name: './reserved-claimant.ts'

@@ -17,16 +17,23 @@
  * filesystem behavior or a temp path, so each property is evaluated
  * identically on every platform.
  */
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { afterEach, describe, expect, it } from 'vitest'
 
+// A Loader-mounted plugin's PluginIdentity is its ENTRY MODULE SPECIFIER --
+// the registrant's stable on-disk identity -- not the `name` the plugin
+// object declares for diagnostics. For these fixture entries that specifier is
+// the relative path in the cordis.yml; for a shipped plugin it is its package
+// name.
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url))
-const binScript = fileURLToPath(new URL('./loader/p1-09-ownership/driver.ts', import.meta.url))
+const fixtureDir = fileURLToPath(new URL('./loader/p1-09-ownership/', import.meta.url))
 const tsconfigPath = join(repoRoot, 'tsconfig.json')
+
+mkdirSync(join(fixtureDir, 'tmp'), { recursive: true })
 
 /** What the driver writes after booting one composition. */
 interface Report {
@@ -41,10 +48,38 @@ interface Report {
 }
 
 const reportRoots: string[] = []
+const runDirs: string[] = []
 
 afterEach(() => {
   for (const root of reportRoots.splice(0)) rmSync(root, { recursive: true, force: true })
+  for (const dir of runDirs.splice(0)) rmSync(dir, { recursive: true, force: true })
 })
+
+/**
+ * Copy the fixture tree into a fresh per-run directory and return it.
+ *
+ * The Cordis Loader WRITES BACK to the config file it booted: an entry whose
+ * `apply` throws is persisted with `disabled: true`. Two of these compositions
+ * are designed to fail, so booting the checked-in file would edit the
+ * repository and make every later run read a tree with the failing entry
+ * already switched off — a green that means nothing. Each boot therefore gets
+ * its own copy.
+ *
+ * The copy stays INSIDE the repository (under a git-ignored `tmp/`) rather
+ * than in the platform temp directory, because the fixture plugins import real
+ * workspace packages, which only resolve from within the workspace. The
+ * directory is uniquely named and removed in teardown, so concurrently forked
+ * workers never share one.
+ */
+function copyFixture(): string {
+  const runDir = mkdtempSync(join(fixtureDir, 'tmp', 'run-'))
+  runDirs.push(runDir)
+  for (const file of readdirSync(fixtureDir)) {
+    if (statSync(join(fixtureDir, file)).isDirectory()) continue
+    copyFileSync(join(fixtureDir, file), join(runDir, file))
+  }
+  return runDir
+}
 
 /**
  * Boot one of the fixture compositions and return the report it wrote. The
@@ -55,12 +90,13 @@ async function bootFixture(configName: string, label: string): Promise<Report> {
   const root = mkdtempSync(join(tmpdir(), 'dsh-p1-09-ownership-'))
   reportRoots.push(root)
   const reportPath = join(root, 'report.json')
+  const runDir = copyFixture()
   await runLoaderSmoke({
     label,
     tempDirPrefix: 'p1-09-ownership-',
-    binScript,
-    libBinScript: binScript,
-    configPath: fileURLToPath(new URL(`./loader/p1-09-ownership/${configName}`, import.meta.url)),
+    binScript: join(runDir, 'driver.ts'),
+    libBinScript: join(runDir, 'driver.ts'),
+    configPath: join(runDir, configName),
     tsconfigPath,
     env: { P1_09_REPORT: reportPath },
   })
@@ -73,14 +109,14 @@ describe('P1-09 ownership gate composition (U-stage)', () => {
     expect(report.booted).toBe(true)
     expect(report.inspectError).toBeUndefined()
     expect(report.toolNames).toEqual(['collide_tool'])
-    expect(report.owners?.collide_tool).toBe('p1-09-first-owner')
+    expect(report.owners?.collide_tool).toBe('./first-owner.ts')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('validation[0]/gate: the two-plugin collision is rejected before the second plugin activates', async () => {
     const report = await bootFixture('collision.cordis.yml', 'p1-09 collision boot')
     expect(report.booted).toBe(false)
     expect(report.message).toContain('capability-collision')
-    expect(report.message).toContain('p1-09-second-owner')
+    expect(report.message).toContain('./second-owner.ts')
     // Not the pre-existing per-layer duplicate message: a case that accepted
     // that text would stay green with the entire ownership gate deleted.
     expect(report.message).not.toContain('is already registered')
@@ -90,16 +126,16 @@ describe('P1-09 ownership gate composition (U-stage)', () => {
     const report = await bootFixture('reserved.cordis.yml', 'p1-09 reserved boot')
     expect(report.booted).toBe(false)
     expect(report.message).toContain('namespace-reserved')
-    expect(report.message).toContain('p1-09-third-party')
+    expect(report.message).toContain('./reserved-claimant.ts')
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 
   it('acceptance[1]: an authorized replacement is admitted and the Inventory shows the replaced/replacing chain', async () => {
     const report = await bootFixture('replace.cordis.yml', 'p1-09 replace boot')
     expect(report.booted).toBe(true)
     expect(report.inspectError).toBeUndefined()
-    expect(report.owners?.collide_tool).toBe('p1-09-replacer')
+    expect(report.owners?.collide_tool).toBe('./replacer.ts')
     expect(report.chain).toEqual([
-      { capabilityId: 'collide_tool', current: 'p1-09-replacer', replaces: 'p1-09-first-owner' },
+      { capabilityId: 'collide_tool', current: './replacer.ts', replaces: './first-owner.ts' },
     ])
   }, LOADER_SMOKE_TEST_TIMEOUT_MS)
 

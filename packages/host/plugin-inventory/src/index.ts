@@ -21,6 +21,7 @@ import {
   type ObservedPluginCapabilities,
   type PluginDeclaration,
 } from '@deepseek-ai/dsh-plugin-manifest'
+import { buildInventoryChain } from '@deepseek-ai/dsh-plugin-ownership'
 import type { InventoryChainEntry } from '@deepseek-ai/dsh-plugin-ownership'
 import { TypertRemoteService, Remote } from '@deepseek-ai/dsh-typert-protocol'
 // Type-only: makes `ctx.tools` resolve to the tool registry the ownership
@@ -347,8 +348,9 @@ export function buildPluginPermissionStates(
  * @returns one chain entry per tool name with a live ownership record.
  */
 export function buildToolOwnershipChain(ctx: Context): readonly InventoryChainEntry[] {
-  void ctx
-  throw new Error('P1-09 U: buildToolOwnershipChain is not implemented')
+  const tools = ctx.get('tools')
+  if (tools === undefined) return []
+  return buildInventoryChain(tools.ownershipHistory())
 }
 
 /** Remote-only service exposing the Loader's current non-group entry state. */

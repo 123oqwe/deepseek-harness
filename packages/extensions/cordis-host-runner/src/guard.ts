@@ -15,6 +15,9 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { Plugin } from '@deepseek-ai/cordis'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { isReservedNamespace, RESERVED_NAMESPACE_ROOT } from '@deepseek-ai/dsh-plugin-ownership'
+import type { Namespace } from '@deepseek-ai/dsh-plugin-ownership'
 import { scopeOf } from '@deepseek-ai/dsh-scope'
 import { assertSupportedJsonSchema, defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
@@ -635,6 +638,38 @@ export function sandboxRegisterTool(ctx: Context, tool: unknown): () => void {
  */
 const CTX_VERBS = new Set(['effect', 'on', 'once', 'provide', 'timeout', 'interval', 'setTimeout', 'setInterval', 'throttle', 'debounce'])
 const TIMER_VERBS = new Set(['timeout', 'interval', 'setTimeout', 'setInterval', 'throttle', 'debounce'])
+/**
+ * The façade verbs that CLAIM A NAME rather than merely scheduling work:
+ * `provide` publishes a service key, `on`/`once` claim an event name. Epic
+ * P1-09 must[1] reserves the `dsh.*` namespace on all three, and this façade
+ * is the only non-vendored point at which a dynamic package's Service and
+ * Event registrations are adjudicated before they reach Cordis — `ctx.provide`
+ * and `ctx.on` themselves live in `vendor/cordis`, so a STATICALLY loaded
+ * plugin's are not gated anywhere (recorded in this package's README).
+ */
+const NAMESPACED_VERBS = new Set(['on', 'once', 'provide'])
+
+/**
+ * Refuse a dynamic package's claim on a name inside the officially reserved
+ * `dsh.*` namespace. A dynamically defined package is a third party under
+ * must[1] by construction — it is authored at runtime and carries no package
+ * identity a deployment could have named in `officialPluginIdentities` — so
+ * there is no policy lookup here and no way for one to become official.
+ * @param verb - the façade verb making the claim, named in the refusal.
+ * @param args - the verb's arguments; only a leading string name is inspected.
+ * @param reportFailure - reports the guard rejection to the owning Agent.
+ */
+function denyReservedNamespace(verb: string, args: unknown[], reportFailure: (error: Error) => void): void {
+  const name = args[0]
+  if (typeof name !== 'string') return
+  const cut = name.lastIndexOf('.')
+  const namespace = brandString<Namespace>(cut === -1 ? name : name.slice(0, cut))
+  if (!isReservedNamespace(namespace)) return
+  rejectGuard(reportFailure,
+    `ctx.${verb}("${name}") claims the reserved "${RESERVED_NAMESPACE_ROOT}.*" namespace, which is `
+    + 'withheld from dynamically defined packages. Choose a name outside it.',
+  )
+}
 
 /**
  * The tool-registry façade: `register` (marker-guarded) plus READ-ONLY
@@ -760,6 +795,7 @@ function sandboxContext(ctx: Context, reportFailure: (error: Error) => void): Co
       if (CTX_VERBS.has(prop)) {
         return (...args: unknown[]): unknown => {
           if (TIMER_VERBS.has(prop) && !declared.has('timer')) return denyRead('timer')
+          if (NAMESPACED_VERBS.has(prop)) denyReservedNamespace(prop, args, reportFailure)
           const method = ctx[prop as keyof Context]
           return Reflect.apply(method as (...a: unknown[]) => unknown, ctx, args)
         }

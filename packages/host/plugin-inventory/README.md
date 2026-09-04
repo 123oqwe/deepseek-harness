@@ -43,6 +43,10 @@ With a roster composed, `agentPresets` carries one group per preset in roster or
 
 The inventory is a snapshot for display and diagnostics: a client can render the roster, flag failed entries, and detect changes by comparing snapshots. It cannot enable, disable, add, or remove plugins, and it carries no history — a fiber that already failed and was removed is absent. Because the service reads the Loader on every call, the answer always reflects the current composition rather than a cached view.
 
+### Tool ownership chains
+
+`buildToolOwnershipChain(ctx)` is a plain export, not a `@Remote` method: it reads the live tool registry's ownership history and returns one entry per tool name — its current owner, and the owner a legitimate replacement displaced. A tool whose first owner still holds it reports no `replaces`. An unloaded plugin's records are gone, so the chain never names an owner that is no longer mounted. It returns an empty list when no tool registry is composed.
+
 -----
 
 <a id="understand-the-implementation"></a>

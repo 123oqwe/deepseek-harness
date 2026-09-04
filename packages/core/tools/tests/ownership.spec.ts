@@ -24,6 +24,9 @@
  * behavior, so each property is evaluated identically on every platform.
  */
 import { Context, type Fiber } from '@deepseek-ai/cordis'
+import type { Agent } from '@deepseek-ai/dsh-agent'
+import { createScope, type Scope } from '@deepseek-ai/dsh-scope'
+import type { SessionId } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineTool, ToolOwnershipError, type ToolDefinition } from '@deepseek-ai/dsh-tools'
 import type { OwnershipToken } from '@deepseek-ai/dsh-plugin-ownership'
@@ -156,6 +159,37 @@ describe('P1-09 U: the real tool registry adjudicates namespace and ownership', 
     // Registering first bought the attacker nothing: the official plugin still gets the name.
     await mountPlugin(ctx, 'plugin-official', ['dsh.core.bash'])
     expect(ctx.tools.ownershipOf('dsh.core.bash')?.pluginIdentity).toBe('plugin-official')
+  })
+
+  // Added at GREEN, not in the RED freeze: implementing must[1] revealed that
+  // the reserved-namespace rule has to hold in an agent scope too, or `dsh.*`
+  // would be claimable from any `agent.ctx`. The neighbouring behaviour — a
+  // scoped tool deliberately SHADOWING a global name — must survive, and is
+  // pinned by this package's own `scoped.spec.ts`, which caught a first draft
+  // of this gate that wrongly refused it as a collision.
+  it('must[1]: an agent scope is not a way around the reserved namespace, though it still shadows a global name', async () => {
+    const ctx = await setup({ officialPluginIdentities: ['plugin-official'] })
+    await mountPlugin(ctx, 'plugin-a', ['shadowed'])
+    const agent = { id: 'agent-1' as SessionId } as Agent
+    let scope!: Scope
+    await ctx.plugin(Object.assign(
+      (inner: Context) => { scope = createScope(inner, agent) },
+      { inject: ['tools', 'systemPrompt'] },
+    ))
+
+    // Shadowing a global name from an agent scope stays legal.
+    scope.ctx.tools.register(tool('shadowed'))
+    expect(scope.ctx.tools.get('shadowed', agent)).toBeDefined()
+
+    // Claiming the reserved namespace from that same scope does not.
+    let denial: unknown
+    try {
+      scope.ctx.tools.register(tool('dsh.core.scoped_claim'))
+    } catch (error) {
+      denial = error
+    }
+    expect(denial).toBeInstanceOf(ToolOwnershipError)
+    expect((denial as ToolOwnershipError).reason).toBe('namespace-reserved')
   })
 
   it('must[2]: replacing an owned tool fails closed when policy does not authorize replacement', async () => {

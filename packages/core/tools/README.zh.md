@@ -59,6 +59,24 @@ ctx.tools.register(defineTool({
 
 统一 schema DSL 支持 `string`、`number`、`integer`、`boolean`、`null`、`array`、`object`、仅供作者使用的 `json` 与恰好匹配一个分支的 `oneOf`；`InferValue` 在 16 层容器内保留精确类型，之后加宽为 `JsonValue`。原始 JSON Schema（`JsonSchemaNode`）是与 subagent、工作流和 MCP 共享的协议级对应类型。
 
+### 命名空间与所有权
+
+每一次全局注册在落地前都会先被裁决。`register` 解析注册方的 `PluginIdentity`——即其 Loader 条目的模块说明符，或宿主通过 `declareOwner` 声明的身份——并为准入的声明铸造 `OwnershipToken`。两条规则 fail closed，均抛出带有拒绝 `reason` 的 `ToolOwnershipError`：
+
+- 位于保留的 `dsh.*` 命名空间内的工具名，除非注册方已列入 `ownership.officialPluginIdentities`，否则一律拒绝。该规则在 agent scope 内同样成立，且与加载顺序无关：抢在官方插件之前注册不会带来任何优势。
+- 已被**其他**插件拥有的名称以 `capability-collision` 拒绝。同一插件重复注册自己的名称行为不变，仍走既有的重复注册错误，该错误会指明 per-agent 变体的正确路径。scoped 注册遮蔽全局名称同样保持不变；遮蔽正是 `agent.ctx` 注册的用途。
+
+接管已被拥有的名称必须使用显式的 `replace`，且其本身受 `ownership.allowReplace` 约束。即便策略允许替换，普通的 `register` 也绝不构成覆盖。`ownershipOf` 读取某名称的当前拥有者，`ownershipHistory` 返回准入历史（含被取代的拥有者，这正是 `@deepseek-ai/dsh-host-plugin-inventory` 的 `buildToolOwnershipChain` 渲染 replaced/replacing 链所依据的数据），`revokeOwned` 则精确注销所出示 token 所拥有的工具。`revokeOwned` 只接受 token——不接受名称或身份——因此调用方没有任何可替换的参数去触及其他插件的注册。插件卸载时，其工具与所有权记录一并移除。
+
+```yaml
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+  config:
+    ownership:
+      officialPluginIdentities: ['@deepseek-ai/dsh-tool-bash']
+      allowReplace: false
+```
+
 ### 配置呈现模式
 
 `mode` 配置决定模型看到什么：`native`（每个可见 schema）、`ptc`（只有 `run_code` 加一份生成 SDK）或 `both`。

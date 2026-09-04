@@ -9,7 +9,7 @@ kind: "package-library"
 
 `dsh-plugin-ownership` fixes the type surface and function signatures for Epic P1-09's Service/Tool/Event namespace and ownership conflict detection: every registration carries a `PluginIdentity`, `Namespace`, `StableCapabilityId`, and a registry-minted `OwnershipToken` (must[0]); the officially reserved `dsh.*` namespace tree cannot be claimed by a plugin outside `RegistryPolicy.officialPluginIdentities` (must[1]); overriding an existing registration requires an explicit `ReplaceContract`, itself gated by `RegistryPolicy.allowReplace` (must[2]); and unloading a plugin revokes only the effects whose stored `OwnershipToken` matches the one presented (must[3]).
 
-This package ships this epic's Contract stage: `src/types.ts`'s types and `src/index.ts`'s decision functions — `claimCapability`, `requestReplace`, `revokeByOwnershipToken`, `buildInventoryChain`, `mintOwnershipToken`, plus the `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT` predicate — are implemented and proven by `tests/ownership.spec.ts`'s 13 cases, one per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause. Every export is a pure function over caller-supplied data: none reads a file, spawns a process, or constructs a Cordis `Context`. No invariant companion is published because this Contract-stage slice constructs no registry or `Context` value yet to check an owned relation over.
+This package ships this epic's Contract stage, and its decisions now run on the real registration path — see [Known Limitations](#known-limitations-and-deferred-work) for what that does and does not cover: `src/types.ts`'s types and `src/index.ts`'s decision functions — `claimCapability`, `requestReplace`, `revokeByOwnershipToken`, `buildInventoryChain`, `mintOwnershipToken`, plus the `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT` predicate — are implemented and proven by `tests/ownership.spec.ts`'s 13 cases, one per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause. Every export is a pure function over caller-supplied data: none reads a file, spawns a process, or constructs a Cordis `Context`. No invariant companion is published because this Contract-stage slice constructs no registry or `Context` value yet to check an owned relation over.
 
 ## Table of Contents
 
@@ -44,7 +44,7 @@ const decision = claimCapability(
 // or when capabilityId already has a different active owner
 ```
 
-Every export is a pure function over already-computed data: no export in this package reads a file, spawns a process, or constructs a Cordis `Context` — a later Usage-stage caller supplies `existing`/`policy` from a real registry and Cordis `Fiber` state.
+Every export is a pure function over already-computed data: no export in this package reads a file, spawns a process, or constructs a Cordis `Context`. `@deepseek-ai/dsh-tools` is the real caller — it supplies `existing` from its live ownership records and `policy` from its validated `ownership` config.
 
 -----
 
@@ -77,9 +77,10 @@ This section explains the design decisions behind the package; the observable ty
 <a id="further-exploration"></a>
 ## Further Exploration
 
+- [`packages/core/tools/README.md`](../../core/tools/README.md) — the real tool registry that calls `claimCapability`/`requestReplace`/`revokeByOwnershipToken` on every registration.
 - [`tests/ownership.spec.ts`](tests/ownership.spec.ts) — 13 cases: one case per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause.
-- [`packages/extensions/cordis-host-runner/src/registry.ts`](../../extensions/cordis-host-runner/src/registry.ts) — the dynamic Cordis plugin/package registry acceptance[2] requires this epic's rules to also cover (Usage-stage wiring, not this package's job).
-- [`packages/host/plugin-inventory/src/index.ts`](../../host/plugin-inventory/src/index.ts) — the real Inventory surface acceptance[1]'s replaced/replacing chain (`buildInventoryChain`) is meant to feed (Usage-stage wiring, not this package's job).
+- [`packages/extensions/cordis-host-runner/src/guard.ts`](../../extensions/cordis-host-runner/src/guard.ts) — the sandbox context façade that applies the reserved-namespace rule to a dynamically defined package's `ctx.provide`/`ctx.on`.
+- [`packages/host/plugin-inventory/src/index.ts`](../../host/plugin-inventory/src/index.ts) — `buildToolOwnershipChain`, the real Inventory surface `buildInventoryChain` feeds.
 - [`@deepseek-ai/dsh-plugin-manifest`](../plugin-manifest/README.md) — this repo's other Contract-stage plugin-capability package, followed here for package layout and pure-function conventions.
 
 -----
@@ -97,8 +98,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- **No wiring into real Cordis registration exists yet.** `packages/extensions/cordis-host-runner/src/registry.ts`/`lifecycle.ts`, `packages/core/tools/src/index.ts`, and `packages/host/plugin-inventory/src/index.ts` do not call into this package (registry's own `stages.U.files`) — this package alone cannot reject a real tool/service/event registration or enforce anything at a real plugin boot or unload.
-- **`StableCapabilityId`'s exact string grammar is unfixed.** This Contract stage does not commit to a concrete `${Namespace}:${string}` separator or a validation regex for it — the Usage-stage integration, once it has a real `ctx` key/tool name/event name to namespace, decides that grammar and any format validation.
+- **Service and Event registration is enforced for the dynamic origin only.** The Usage stage wired these decisions into `packages/core/tools/src/index.ts` (every tool registration, both origins), `packages/extensions/cordis-host-runner/src/guard.ts` (a dynamically defined package's `ctx.provide`/`ctx.on`), and `packages/host/plugin-inventory/src/index.ts` (the replaced/replacing chain). A STATICALLY loaded plugin's `ctx.provide`/`ctx.on` are still ungated: both are implemented in `vendor/cordis`, and the Trust Kernel boundary puts a vendored enforcement point behind the `Fiber` fix. Closing that residual belongs to whoever lands it.
+- **`StableCapabilityId`'s string grammar is fixed by its callers, not here.** The Usage-stage integration settled on a dotted grammar — a name's namespace is everything before its last `.`, so `dsh.core.read_file` sits under `dsh.core` — matching this epic's own `dsh.*` validation text. This package still commits to no separator or validation regex of its own.
 - **`buildInventoryChain` never populates `replacedBy`.** It reports only each capability id's terminal (current-owner) state, consistent with the type's "absent while current still owns it" contract — no frozen case exercises the non-terminal, already-superseded shape.
 
 -----

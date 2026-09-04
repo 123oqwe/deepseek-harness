@@ -2590,6 +2590,36 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the exact disposer that unregisters the tool.',
       },
       {
+        signature: 'replace(definition: ToolDefinition): () => void',
+        description: 'Epic P1-09 must[2]: hand an already-owned tool name to a new owner through the EXPLICIT replace entry point, gated by ToolOwnershipConfig.allowReplace. A plain register of an owned name is never an override — it stays a `\'capability-collision\'` refusal even when policy permits replacement.',
+        parameters: [{ name: 'definition', description: 'the replacing tool\'s schema, execution, and presentation callbacks.' }],
+        returns: 'the exact disposer that unregisters the replacing tool.',
+      },
+      {
+        signature: 'declareOwner(identity: string): () => void',
+        description: 'Epic P1-09 must[0]: bind the calling fiber\'s subtree to an explicit plugin identity, for a registrant whose stable identity no Loader entry carries. A dynamically defined Cordis package is the case this exists for: every one of them hangs under a single shared group fiber, so without an explicit declaration they would all resolve to one owner and no collision between two of them could ever be detected.',
+        parameters: [{ name: 'identity', description: 'the stable identity to attribute this subtree\'s registrations to.' }],
+        returns: 'the disposer that unbinds it, held by the calling fiber.',
+      },
+      {
+        signature: 'ownershipOf(name: string): CapabilityRegistration | undefined',
+        description: 'Epic P1-09 must[0]: the ownership record the registry admitted for `name`.',
+        parameters: [{ name: 'name', description: 'a global tool name.' }],
+        returns: 'the live registration, or `undefined` when no plugin owns `name`.',
+      },
+      {
+        signature: 'ownershipHistory(): readonly CapabilityRegistration[]',
+        description: 'Epic P1-09 acceptance[1]: every ownership record this registry currently holds, oldest first, including the superseded owners a legitimate replacement left behind. An unloaded plugin\'s records are absent — the gate\'s "effects after unload = 0" covers this history too.',
+        parameters: [],
+        returns: 'the live ownership history in admission order.',
+      },
+      {
+        signature: 'revokeOwned(token: OwnershipToken): RevocationResult',
+        description: 'Epic P1-09 must[3]: unregister exactly the tools whose stored ownership token equals `token`, and no others. Takes only a token — never a name or a plugin identity a caller could substitute — so cross-plugin revocation has no API surface to attempt through.',
+        parameters: [{ name: 'token', description: 'the ownership token presented at unload time.' }],
+        returns: 'which capability ids were revoked, or why nothing was.',
+      },
+      {
         signature: 'restrict(filter: ToolRestriction): () => void',
         description: 'Restrict global tools for the calling agent scope. Empty filters, unknown names, scope-local names, and reserved transport names fail. Restrictions intersect; scoped registrations remain visible.',
         parameters: [{ name: 'filter', description: 'global-tool mask: `allow` (keep only) and/or `deny` (remove).' }],
@@ -3728,6 +3758,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type BrandedNumber<B extends string> = number & {\n    readonly [BRAND]: B;\n};',
   },
   {
+    name: 'CapabilityKind',
+    declaration: 'export type CapabilityKind = \'service\' | \'tool\' | \'event\';',
+  },
+  {
+    name: 'CapabilityOrigin',
+    declaration: 'export type CapabilityOrigin = \'static\' | \'dynamic\';',
+  },
+  {
+    name: 'CapabilityRegistration',
+    declaration: 'export interface CapabilityRegistration {\n    readonly pluginIdentity: PluginIdentity;\n    readonly namespace: Namespace;\n    readonly capabilityId: StableCapabilityId;\n    readonly kind: CapabilityKind;\n    readonly origin: CapabilityOrigin;\n    readonly ownershipToken: OwnershipToken;\n}',
+  },
+  {
     name: 'ChunkRow',
     declaration: 'export type ChunkRow = {\n    type: \'text-chunks\';\n    seq0: SessionSeqType;\n    time0: number;\n    data: TextRunData;\n} | {\n    type: \'reasoning-chunks\';\n    seq0: SessionSeqType;\n    time0: number;\n    data: TextRunData;\n} | {\n    type: \'tool-call-chunks\';\n    seq0: SessionSeqType;\n    time0: number;\n    data: ToolCallRunData;\n};',
   },
@@ -4704,8 +4746,16 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type OptionalSessionSeq = SessionSeq | null;',
   },
   {
+    name: 'OwnershipToken',
+    declaration: 'export type OwnershipToken = Branded<\'OwnershipToken\'>;',
+  },
+  {
     name: 'PermissionSelect',
     declaration: 'export interface PermissionSelect {\n    options: PresetOption[];\n    currentValue: string;\n}',
+  },
+  {
+    name: 'PluginIdentity',
+    declaration: 'export type PluginIdentity = Branded<\'PluginIdentity\'>;',
   },
   {
     name: 'PostToolDecision',
@@ -4910,6 +4960,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ResumeAgentOptions',
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
+  },
+  {
+    name: 'RevocationDenialReason',
+    declaration: 'export type RevocationDenialReason = \'unknown-token\';',
+  },
+  {
+    name: 'RevocationResult',
+    declaration: 'export type RevocationResult = {\n    readonly revoked: true;\n    readonly revokedCapabilityIds: readonly StableCapabilityId[];\n} | {\n    readonly revoked: false;\n    readonly reason: RevocationDenialReason;\n};',
   },
   {
     name: 'Run',
@@ -5636,6 +5694,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface SpillSource {\n    toolName: string;\n    callId: ToolCallId;\n    label: string;\n}',
   },
   {
+    name: 'StableCapabilityId',
+    declaration: 'export type StableCapabilityId = Branded<\'StableCapabilityId\'>;',
+  },
+  {
     name: 'StorageBackend',
     declaration: 'export interface StorageBackend {\n    readonly kv?: KvFacet;\n    close(): Promise<void>;\n}',
   },
@@ -6061,7 +6123,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ToolRuntime',
-    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
+    declaration: 'export class ToolRuntime extends Service {\n    static inject;\n    static Config: z<Config>;\n    readonly [TOOL_RUNTIME_SCHEDULER]: ToolRuntimeScheduler;\n    constructor(ctx: Context, config: Config = {});\n    presentAs(mode: ToolPresentationMode): () => void;\n    register(definition: ToolDefinition): () => void;\n    replace(definition: ToolDefinition): () => void;\n    declareOwner(identity: string): () => void;\n    ownershipOf(name: string): CapabilityRegistration | undefined;\n    ownershipHistory(): readonly CapabilityRegistration[];\n    revokeOwned(token: OwnershipToken): RevocationResult;\n    restrict(filter: ToolRestriction): () => void;\n    guard(guard: ToolGuard): () => void;\n    get(name: string, scope?: ScopeKey): ToolDefinition | undefined;\n    schemas(scope?: ScopeKey): ToolSchema[];\n    executionMode(exec: ToolExecutionInput): ToolExecutionMode;\n    async execute(exec: ToolExecutionInput): Promise<ToolExecutionResult>;\n}',
   },
   {
     name: 'ToolRuntimeScheduler',
