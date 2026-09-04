@@ -1,0 +1,20 @@
+# acceptance[1]: a legitimate provider replacement is admitted under policy,
+# and the Inventory shows the replaced/replacing chain. Driven by
+# P1-09.composition.spec.ts.
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+  config:
+    ownership:
+      allowReplace: true
+
+- id: plugin-inventory
+  name: '@deepseek-ai/dsh-host-plugin-inventory'
+
+- id: first-owner
+  name: './first-owner.ts'
+
+- id: replacer
+  name: './replacer.ts'

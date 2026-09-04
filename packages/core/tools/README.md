@@ -59,6 +59,24 @@ ctx.tools.register(defineTool({
 
 The unified schema DSL supports `string`, `number`, `integer`, `boolean`, `null`, `array`, `object`, author-only `json`, and exact-one `oneOf`; `InferValue` preserves exact types through 16 container levels before widening to `JsonValue`. A raw JSON Schema (`JsonSchemaNode`) is the wire-level counterpart shared with subagents, workflows, and MCP.
 
+### Namespace and ownership
+
+Every global registration is adjudicated before it lands. `register` resolves the registrant's `PluginIdentity` — its Loader entry's module specifier, or an identity a host declared through `declareOwner` — and mints an `OwnershipToken` for the admitted claim. Two rules fail closed, both raising `ToolOwnershipError` with the denying `reason`:
+
+- A tool name inside the reserved `dsh.*` namespace is refused unless the registrant is named in `ownership.officialPluginIdentities`. This holds in an agent scope too, and does not depend on load order: registering before the official plugin does buys nothing.
+- A name a DIFFERENT plugin already owns is refused as `capability-collision`. One plugin registering its own name twice is unchanged — that stays the pre-existing duplicate error, which names the per-agent-variant route. A scoped registration shadowing a global name is also unchanged; shadowing is what `agent.ctx` registration is for.
+
+Taking over an owned name requires the explicit `replace`, itself gated by `ownership.allowReplace`. A plain `register` is never an override, even when policy permits replacement. `ownershipOf` reads a name's live owner, `ownershipHistory` returns the admission history (superseded owners included, which is what `@deepseek-ai/dsh-host-plugin-inventory`'s `buildToolOwnershipChain` renders as a replaced/replacing chain), and `revokeOwned` unregisters exactly the tools a presented token owns. `revokeOwned` takes only a token — never a name or an identity — so there is no argument a caller could substitute to reach another plugin's registrations. Unloading a plugin removes its tools and its ownership records together.
+
+```yaml
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+  config:
+    ownership:
+      officialPluginIdentities: ['@deepseek-ai/dsh-tool-bash']
+      allowReplace: false
+```
+
 ### Configure the presentation mode
 
 The `mode` config decides what the model sees: `native` (every visible schema), `ptc` (only `run_code` plus a generated SDK), or `both`.

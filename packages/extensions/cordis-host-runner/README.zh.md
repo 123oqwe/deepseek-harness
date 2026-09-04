@@ -53,6 +53,14 @@ kind: "package-reference"
 
 沙箱隔离全局变量，但不是安全边界：Node 全局变量不存在，或重定向到 Cordis 服务（`ctx.fs`、`ctx.web`、`ctx.bash` 与定时器 helper），host 半收到的是不含框架内部机制的 façade，但它声明的服务仍会触达存活运行时。对待动态包要像对待 bash 访问一样，参见[自引用工具集 Agent Note](../../../.agents/notes/implemented/feature/2026-07-08-self-referential-cordis-toolset.zh.md)。
 
+### 保留命名空间
+
+façade 会拒绝包对保留的 `dsh.*` 命名空间内名称调用 `ctx.provide`、`ctx.on` 或 `ctx.once`。动态定义的包在构造上就是第三方——它在运行时被撰写，不携带任何部署方可以事先审定的包身份——因此没有任何策略能让它成为官方。它的工具注册在 `@deepseek-ai/dsh-tools` 内部同样受这条规则约束，并额外受该注册表的跨插件冲突检查约束。
+
+该 façade 是 Service 或 Event 注册在抵达 Cordis 之前被裁决的唯一位置。**静态**加载插件的 `ctx.provide`/`ctx.on` 目前在任何地方都未设门：两者都位于 `vendor/cordis`，为其设门属于 vendored 改动，而 Trust Kernel 边界要求其排在 `Fiber` 修复之后。
+
+包的注册被归属到它稳定的 Plugin id，而非其源码自行声明的 `name`——声明的名称由模型写就，否则可被用来冒领其他插件的地位；且所有 host 半都挂在同一个共享 group fiber 之下，否则会把它们坍缩为同一个拥有者。
+
 -----
 
 <a id="understand-the-implementation"></a>

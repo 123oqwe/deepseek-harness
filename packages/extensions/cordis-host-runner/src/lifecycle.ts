@@ -17,15 +17,17 @@ import { guardedPlugin } from './guard.ts'
  * @param group - the `cordis-dynamic` group fiber every host half hangs under.
  * @param plugin - the plugin the sandbox returned; wrapped with the registration guard before starting.
  * @param reportGuardFailure - reports post-activation Host guard rejections to the owning Agent.
+ * @param identity - the package's stable Plugin id; its registrations are attributed to it.
  * @returns the settled child fiber (possibly pending on unsatisfied `inject`).
  */
 export async function startHostHalf(
   group: Fiber,
   plugin: Plugin,
   reportGuardFailure: (error: Error) => void,
+  identity: string,
 ): Promise<Fiber> {
   await group.await()
-  const fiber = group.ctx.plugin(guardedPlugin(plugin, reportGuardFailure))
+  const fiber = group.ctx.plugin(guardedPlugin(plugin, reportGuardFailure, identity))
   try {
     await fiber.await()
   } catch (error) {
@@ -33,7 +35,16 @@ export async function startHostHalf(
     const message = error instanceof Error ? error.message : String(error)
     // The commonest startup collision is running a NEW version of a package
     // while the old run still holds the name — teach the replace recipe.
-    if (message.includes('already registered')) {
+    //
+    // Two different messages reach here for that one situation. A package
+    // colliding with ITS OWN earlier run registers under the same Plugin id,
+    // so the tool registry's per-layer duplicate error fires ("already
+    // registered"). A package colliding with a DIFFERENT owner is refused
+    // first by the ownership gate ("capability-collision"), which never
+    // reaches the duplicate error. The recipe is the fix in both cases, so
+    // both are taught it; without the second arm the ownership gate would
+    // silently cost the model this guidance.
+    if (message.includes('already registered') || message.includes('capability-collision')) {
       throw new Error(
         `${message} — to REPLACE something an earlier dynamic package registered, first cordis_stop that package's id `
         + '(find it with cordis_runtime_inspect what:"temporary"), then run the new version.',

@@ -5,6 +5,13 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
+import type { Fiber } from '@deepseek-ai/cordis'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { claimCapability, requestReplace, revokeByOwnershipToken } from '@deepseek-ai/dsh-plugin-ownership'
+import type {
+  CapabilityOrigin, CapabilityRegistration, Namespace, OwnershipToken, PluginIdentity,
+  RegistrationDenialReason, RegistryPolicy, RevocationResult, StableCapabilityId,
+} from '@deepseek-ai/dsh-plugin-ownership'
 import z from '@deepseek-ai/schemastery'
 import { AnonymousEntries, NamedEntries, ScopedLayers, scopeOf, scopeTarget } from '@deepseek-ai/dsh-scope'
 import type { ScopeKey, ScopeLayer, Scoped } from '@deepseek-ai/dsh-scope'
@@ -514,6 +521,70 @@ export class ToolOutputError extends HarnessError {
   }
 }
 
+/**
+ * Epic P1-09's registration refusal: a tool registration the registry refused
+ * on namespace or ownership grounds, never on schema or duplicate-name
+ * grounds. Distinct from the pre-existing per-layer duplicate error, which
+ * fires when ONE plugin registers one name twice — a caller (and a test) must
+ * be able to tell "you registered this twice" from "another plugin owns this".
+ */
+export class ToolOwnershipError extends HarnessError {
+  /** Which of `@deepseek-ai/dsh-plugin-ownership`'s denial reasons applies. */
+  readonly reason: RegistrationDenialReason
+  /** The plugin identity whose registration was refused. */
+  readonly pluginIdentity: PluginIdentity
+
+  constructor(toolName: string, pluginIdentity: PluginIdentity, reason: RegistrationDenialReason) {
+    super(`tool "${toolName}" refused for plugin "${pluginIdentity}": ${reason}`, 'TOOL_OWNERSHIP_DENIED')
+    this.name = 'ToolOwnershipError'
+    this.reason = reason
+    this.pluginIdentity = pluginIdentity
+  }
+}
+
+/** One live tool ownership record plus the disposal state the replace path needs. */
+interface HeldOwnership {
+  readonly registration: CapabilityRegistration
+  /**
+   * Whether a legitimate replacement took this record's capability id over.
+   * A superseded record keeps its place in the history so the Inventory can
+   * still show the replaced/replacing chain; an unloaded one does not.
+   */
+  superseded: boolean
+  /** The registration's own Cordis disposer, filled in once the effect is attached. */
+  dispose?: () => void
+}
+
+/**
+ * The {@link Namespace} a tool name claims: everything before its last `.`,
+ * matching this epic's own `dsh.*` grammar. A name with no `.` is unqualified
+ * and takes its registrant's identity as its namespace, which is never
+ * reserved — a plugin cannot reach the reserved tree without spelling it.
+ * @param name - the registered tool name.
+ * @param identity - the registrant, used as the namespace of an unqualified name.
+ * @returns the namespace the reserved-namespace rule is decided against.
+ */
+function namespaceOf(name: string, identity: PluginIdentity): Namespace {
+  const cut = name.lastIndexOf('.')
+  return cut === -1 ? brandString<Namespace>(identity) : brandString<Namespace>(name.slice(0, cut))
+}
+
+/**
+ * Resolve Epic P1-09's registry policy at the owning config boundary, the way
+ * {@link resolveMaxParallelSubCalls} does: direct construction bypasses the
+ * Loader schema, so the defaults are applied here too rather than assumed.
+ * @param ownership - the deployment's declared ownership policy, absent under direct construction.
+ * @returns the policy `claimCapability`/`requestReplace` decide every registration against.
+ */
+function resolveOwnershipPolicy(ownership: ToolOwnershipConfig | undefined): RegistryPolicy {
+  return {
+    officialPluginIdentities: new Set(
+      (ownership?.officialPluginIdentities ?? []).map(identity => brandString<PluginIdentity>(identity)),
+    ),
+    allowReplace: ownership?.allowReplace ?? false,
+  }
+}
+
 /** Convert one projector exception into the canonical invalid-output failure. */
 function projectionError(toolName: string, projector: 'render' | 'presentationMeta', error: unknown): ToolOutputError {
   return new ToolOutputError(toolName, [`output.${projector} failed: ${errorMessage(error)}`])
@@ -664,6 +735,30 @@ export interface Config {
    * restores strictly serial dispatch. Must be a positive integer.
    */
   maxParallelSubCalls?: number
+  /**
+   * Epic P1-09's namespace and ownership policy for this registry. A
+   * deployment supplies both fields from its `cordis.yml`; neither is
+   * hardcoded here, because which plugins count as official and whether
+   * replacement is permitted vary per deployment.
+   */
+  ownership?: ToolOwnershipConfig
+}
+
+/** Epic P1-09's registry policy, as a deployment declares it in `cordis.yml`. */
+export interface ToolOwnershipConfig {
+  /**
+   * Plugin identities trusted to register a tool inside the reserved `dsh.*`
+   * namespace (must[1]). An identity absent from this list is a third party
+   * for every reserved-namespace check, whatever its load order.
+   */
+  officialPluginIdentities?: string[]
+  /**
+   * Whether `ToolRuntime.replace` may hand an owned tool name to a new owner
+   * (must[2]'s policy gate). A well-formed replace request is still refused
+   * when this is `false`; a plain `register` of an owned name is a collision
+   * either way.
+   */
+  allowReplace?: boolean
 }
 
 /**
@@ -783,6 +878,10 @@ export class ToolRuntime extends Service {
   static Config: z<Config> = z.object({
     mode: z.union(['native', 'ptc', 'both'] as const).default('native'),
     maxParallelSubCalls: z.natural().min(1).default(10),
+    ownership: z.object({
+      officialPluginIdentities: z.array(z.string()).default([]),
+      allowReplace: z.boolean().default(false),
+    }).default({ officialPluginIdentities: [], allowReplace: false }),
   })
 
   /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
@@ -792,6 +891,13 @@ export class ToolRuntime extends Service {
     finalize: (exec, result) => this.finalizeScheduledExecution(exec, result),
     finish: (exec, result) => this.finishScheduledExecution(exec, result),
   }
+
+  /** Epic P1-09: the live owner of each globally registered tool name. */
+  private readonly ownerships = new Map<string, HeldOwnership>()
+  /** Epic P1-09: every live ownership record in admission order, superseded owners included. */
+  private readonly ownershipRecords: HeldOwnership[] = []
+  /** Epic P1-09: fiber uid → the identity {@link declareOwner} bound that subtree to. */
+  private readonly declaredOwners = new Map<number, PluginIdentity>()
 
   /** Context deferred by a running tool body, keyed by its scheduler-owned execution. */
   private deferredContexts = new WeakMap<ToolRunContext, UserMessage[]>()
@@ -816,8 +922,12 @@ export class ToolRuntime extends Service {
    */
   private ptcTransport: ToolDefinition | undefined
 
+  /** Epic P1-09's resolved registry policy (see {@link resolveOwnershipPolicy}). */
+  private readonly ownershipPolicy: RegistryPolicy
+
   constructor(ctx: Context, config: Config = {}) {
     super(ctx, 'tools')
+    this.ownershipPolicy = resolveOwnershipPolicy(config.ownership)
     // The schema already defaulted an omitted mode; the ?? narrows the
     // optional-input type for direct (non-Loader) construction in tests.
     this.defaultMode = config.mode ?? 'native'
@@ -1027,6 +1137,116 @@ export class ToolRuntime extends Service {
    */
   register(definition: ToolDefinition): () => void {
     const name = definition.name
+    this.assertRegistrable(definition)
+    const owner = this.resolveOwner()
+    const scope = scopeOf(this.ctx)
+    const held = scope === undefined ? this.ownerships.get(name) : undefined
+    // A plugin re-registering its OWN name is a duplicate, not an ownership
+    // conflict: it falls through to the layer's own duplicate error, which
+    // teaches the per-agent-variant fix. Only a claim by a DIFFERENT identity
+    // is adjudicated here.
+    //
+    // A SCOPED registration is never a collision either: shadowing a global
+    // name for one agent is what `agent.ctx` registration is for, and the
+    // duplicate error above names it as the supported route. `held` is left
+    // undefined in that case so only the reserved-namespace rule applies —
+    // which it must, or `dsh.*` would be claimable from any agent scope.
+    const contested = held !== undefined && held.registration.pluginIdentity !== owner.identity
+      ? [held.registration]
+      : []
+    const decision = claimCapability(
+      {
+        pluginIdentity: owner.identity,
+        namespace: namespaceOf(name, owner.identity),
+        capabilityId: brandString<StableCapabilityId>(name),
+        kind: 'tool',
+        origin: owner.origin,
+      },
+      contested,
+      this.ownershipPolicy,
+    )
+    if (!decision.admitted) throw new ToolOwnershipError(name, owner.identity, decision.reason)
+    // Only a global registration claims a capability id the whole deployment
+    // shares, so only a global one takes an ownership record.
+    if (scope !== undefined) {
+      return this.layers.effect(
+        this.ctx,
+        layer => layer.tools.insert(name, definition),
+        { label: `tools.register(${JSON.stringify(name)})` },
+      )
+    }
+    return this.insertOwned(name, definition, decision.registration)
+  }
+
+  /**
+   * Register `definition` and record `registration` as its live owner, both
+   * undone by the one disposer Cordis holds for the effect. Keeping the
+   * bookkeeping inside the layer action is what makes "effects after unload =
+   * 0" true of the ownership records too, not only of the tools themselves.
+   */
+  private insertOwned(name: string, definition: ToolDefinition, registration: CapabilityRegistration): () => void {
+    const held: HeldOwnership = { registration, superseded: false }
+    const dispose = this.layers.effect(
+      this.ctx,
+      (layer) => {
+        const undo = layer.tools.insert(name, definition)
+        this.ownerships.set(name, held)
+        this.ownershipRecords.push(held)
+        return () => {
+          undo()
+          if (this.ownerships.get(name) === held) this.ownerships.delete(name)
+          // A record a legitimate replacement superseded stays in the history
+          // so the Inventory can still show the replaced/replacing chain; only
+          // the plugin's own unload removes its record.
+          if (held.superseded) return
+          const at = this.ownershipRecords.indexOf(held)
+          if (at !== -1) this.ownershipRecords.splice(at, 1)
+        }
+      },
+      { label: `tools.register(${JSON.stringify(name)})` },
+    )
+    held.dispose = dispose
+    return dispose
+  }
+
+  /**
+   * Epic P1-09 must[2]: hand an already-owned tool name to a new owner through
+   * the EXPLICIT replace entry point, gated by
+   * {@link ToolOwnershipConfig.allowReplace}. A plain {@link register} of an
+   * owned name is never an override — it stays a `'capability-collision'`
+   * refusal even when policy permits replacement.
+   * @param definition - the replacing tool's schema, execution, and presentation callbacks.
+   * @returns the exact disposer that unregisters the replacing tool.
+   */
+  replace(definition: ToolDefinition): () => void {
+    const name = definition.name
+    this.assertRegistrable(definition)
+    const owner = this.resolveOwner()
+    const held = this.ownerships.get(name)
+    const decision = requestReplace(
+      { targetCapabilityId: brandString<StableCapabilityId>(name), replacingPluginIdentity: owner.identity },
+      held === undefined ? [] : [held.registration],
+      this.ownershipPolicy,
+    )
+    if (!decision.admitted) throw new ToolOwnershipError(name, owner.identity, decision.reason)
+    // Retire the prior owner's registration before inserting, so the layer's
+    // duplicate check never sees two live entries for one name. Marking it
+    // superseded first keeps its record in the history for the chain.
+    if (held !== undefined) {
+      held.superseded = true
+      held.dispose?.()
+    }
+    return this.insertOwned(name, definition, decision.registration)
+  }
+
+  /**
+   * The checks a registration must pass before any ownership question is
+   * asked: a well-formed `output`, a usable `timeoutMs`, and a name that is
+   * not the PTC transport's. Shared by {@link register} and {@link replace} so
+   * a replacement cannot smuggle in a definition `register` would refuse.
+   */
+  private assertRegistrable(definition: ToolDefinition): void {
+    const name = definition.name
     const output = (definition as Partial<ToolDefinition>).output
     if (output === undefined || typeof output !== 'object'
       || typeof output.render !== 'function'
@@ -1045,11 +1265,98 @@ export class ToolRuntime extends Service {
     if (name === RUN_CODE_NAME) {
       throw new Error(`tool name "${RUN_CODE_NAME}" is reserved for the PTC mode presentation transport and cannot be registered or shadowed`)
     }
-    return this.layers.effect(
-      this.ctx,
-      layer => layer.tools.insert(name, definition),
-      { label: `tools.register(${JSON.stringify(name)})` },
-    )
+  }
+
+  /**
+   * Epic P1-09 must[0]: bind the calling fiber's subtree to an explicit plugin
+   * identity, for a registrant whose stable identity no Loader entry carries.
+   * A dynamically defined Cordis package is the case this exists for: every
+   * one of them hangs under a single shared group fiber, so without an
+   * explicit declaration they would all resolve to one owner and no collision
+   * between two of them could ever be detected.
+   * @param identity - the stable identity to attribute this subtree's registrations to.
+   * @returns the disposer that unbinds it, held by the calling fiber.
+   */
+  declareOwner(identity: string): () => void {
+    const fiber = this.ctx.fiber
+    return this.ctx.effect(function* (this: ToolRuntime) {
+      const uid = fiber.uid
+      if (uid === null) return
+      this.declaredOwners.set(uid, brandString<PluginIdentity>(identity))
+      yield () => { this.declaredOwners.delete(uid) }
+    }.bind(this), `tools.declareOwner(${JSON.stringify(identity)})`)
+  }
+
+  /**
+   * The {@link PluginIdentity} the calling context registers under. An
+   * explicit {@link declareOwner} on the fiber chain wins (and marks the
+   * registration `'dynamic'`); otherwise the innermost enclosing Loader
+   * entry's module specifier is the identity, because that is the registrant's
+   * stable on-disk identity. Only a tree with no Loader at all falls back to
+   * `Fiber.name`, which is a diagnostic display name rather than an identity —
+   * it is never reached in a booted product tree.
+   */
+  private resolveOwner(): { identity: PluginIdentity; origin: CapabilityOrigin } {
+    const chain: Fiber[] = []
+    for (let current = this.ctx.fiber; ;) {
+      chain.push(current)
+      const parent = current.parent.fiber
+      if (parent.uid === current.uid) break
+      current = parent
+    }
+    for (const fiber of chain) {
+      const declared = fiber.uid === null ? undefined : this.declaredOwners.get(fiber.uid)
+      if (declared !== undefined) return { identity: declared, origin: 'dynamic' }
+    }
+    const loader = this.ctx.get('loader')
+    if (loader !== undefined) {
+      for (const fiber of chain) {
+        for (const entry of loader.entries()) {
+          if (entry.fiber !== undefined && entry.fiber.uid === fiber.uid) {
+            return { identity: brandString<PluginIdentity>(entry.options.name), origin: 'static' }
+          }
+        }
+      }
+    }
+    return { identity: brandString<PluginIdentity>(this.ctx.fiber.name), origin: 'static' }
+  }
+
+  /**
+   * Epic P1-09 must[0]: the ownership record the registry admitted for `name`.
+   * @param name - a global tool name.
+   * @returns the live registration, or `undefined` when no plugin owns `name`.
+   */
+  ownershipOf(name: string): CapabilityRegistration | undefined {
+    return this.ownerships.get(name)?.registration
+  }
+
+  /**
+   * Epic P1-09 acceptance[1]: every ownership record this registry currently
+   * holds, oldest first, including the superseded owners a legitimate
+   * replacement left behind. An unloaded plugin's records are absent — the
+   * gate's "effects after unload = 0" covers this history too.
+   * @returns the live ownership history in admission order.
+   */
+  ownershipHistory(): readonly CapabilityRegistration[] {
+    return this.ownershipRecords.map(held => held.registration)
+  }
+
+  /**
+   * Epic P1-09 must[3]: unregister exactly the tools whose stored ownership
+   * token equals `token`, and no others. Takes only a token — never a name or
+   * a plugin identity a caller could substitute — so cross-plugin revocation
+   * has no API surface to attempt through.
+   * @param token - the ownership token presented at unload time.
+   * @returns which capability ids were revoked, or why nothing was.
+   */
+  revokeOwned(token: OwnershipToken): RevocationResult {
+    const live = [...this.ownerships.values()]
+    const result = revokeByOwnershipToken(token, live.map(held => held.registration))
+    if (!result.revoked) return result
+    for (const held of live) {
+      if (held.registration.ownershipToken === token) held.dispose?.()
+    }
+    return result
   }
 
   /**

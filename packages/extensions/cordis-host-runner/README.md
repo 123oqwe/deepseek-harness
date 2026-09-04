@@ -53,6 +53,14 @@ Definitions are session-scoped and process-local: a package is visible only to t
 
 The sandbox isolates globals but is not a security boundary: Node globals are absent or redirect to Cordis services (`ctx.fs`, `ctx.web`, `ctx.bash`, the timer helpers), and a host half receives a façade without framework internals, yet the services it declares reach the live runtime. Treat a dynamic package like bash access — see the [self-referential toolset Agent Note](../../../.agents/notes/implemented/feature/2026-07-08-self-referential-cordis-toolset.md).
 
+### Reserved namespaces
+
+The façade refuses a package's `ctx.provide`, `ctx.on`, or `ctx.once` on a name inside the reserved `dsh.*` namespace. A dynamically defined package is a third party by construction — it is authored at runtime and carries no package identity a deployment could have vetted — so there is no policy that makes one official. Its tool registrations meet the same rule inside `@deepseek-ai/dsh-tools`, along with that registry's cross-plugin collision check.
+
+This façade is the only place a Service or Event registration is adjudicated before it reaches Cordis. A STATICALLY loaded plugin's `ctx.provide`/`ctx.on` are not gated anywhere: both live in `vendor/cordis`, and gating them is a vendored change that the Trust Kernel boundary puts behind the `Fiber` fix.
+
+A package's registrations are attributed to its stable Plugin id, not to the `name` its own source declares — a declared name is written by the model and could otherwise claim another plugin's standing, and every host half hangs under one shared group fiber, which would otherwise collapse them all into a single owner.
+
 -----
 
 <a id="understand-the-implementation"></a>

@@ -1,0 +1,14 @@
+# The control composition: one plugin claiming one uncontested, unreserved
+# name boots cleanly, so a red collision case cannot be an artifact of the
+# fixture tree failing to boot at all. Driven by P1-09.composition.spec.ts.
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: plugin-inventory
+  name: '@deepseek-ai/dsh-host-plugin-inventory'
+
+- id: first-owner
+  name: './first-owner.ts'
