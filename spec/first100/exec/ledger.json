@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-04T16:14:39.807Z",
-  "inputDigest": "6aa639da257515fff9bb03ed8a0ae32a4ca0c309c80f66dc456a6da7721872d9",
+  "lastUpdatedUtc": "2026-09-04T17:11:42.989Z",
+  "inputDigest": "122d6e55c948aa2be5a98e87aaa44c867262f238fd6d484e666e8d7a34279830",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1503,11 +1503,26 @@
           "capturedAtUtc": "2026-09-04T06:31:03.186Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d13ac831dba8ac883ea389f39af69ac7b916a772",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33897371649",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-d13a/first100-evidence-d13ac831dba8ac883ea389f39af69ac7b916a772/vitest-report.json",
+          "observationSha256": "73d80ad01eb026102f5297f23406dd0030f48e5e7e5c99fe2f75dd6a4d9ce095",
+          "expectCasesMatched": [
+            "must[2]: downgradeTrust refuses a raising target, so acceptance[2] entry point can never grant trusted-execute with no host principal and no audit record",
+            "must[2]: downgradeTrust refuses a raising target even when the presented record still carries a grantor from an earlier grant",
+            "must[2]: requestTrustUpgrade refuses a lowering target instead of reporting an upgrade and writing an audit record for a demotion",
+            "must[2]: a refused trust upgrade returns neither a record nor an audit entry, for every refusal reason",
+            "CHARACTERIZATION: drops trust when the creation time is recorded on one side and absent on the other, rather than falling back to a path/device/inode match",
+            "CHARACTERIZATION: drops trust when the device id changes while the canonical path and inode do not",
+            "CHARACTERIZATION: drops trust when the observed creation time is NaN, since an unconfirmable creation time is not an equal one",
+            "CHARACTERIZATION: downgrading a workspace that never granted anything revokes nothing and invents no grantor"
+          ],
+          "capturedAtUtc": "2026-09-04T17:11:34.087Z"
         }
       },
       "supplements": {},
-      "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+      "candidateSha": "d13ac831dba8ac883ea389f39af69ac7b916a772",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4035,11 +4050,45 @@
           "capturedAtUtc": "2026-09-04T06:31:02.922Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d13ac831dba8ac883ea389f39af69ac7b916a772",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33897371649",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-d13a/first100-evidence-d13ac831dba8ac883ea389f39af69ac7b916a772/vitest-report.json",
+          "observationSha256": "73d80ad01eb026102f5297f23406dd0030f48e5e7e5c99fe2f75dd6a4d9ce095",
+          "expectCasesMatched": [
+            "local-reference: export() under tenant-b returns no record proposed under tenant-a",
+            "local-reference: query() under tenant-b matches no record proposed under tenant-a, even on an exact content term",
+            "local-reference: get() under tenant-b resolves undefined for an id proposed under tenant-a",
+            "local-reference: forget() under tenant-b leaves the tenant-a record it names intact",
+            "local-reference: revise() under tenant-b rejects a tenant-a id and leaves its content unchanged",
+            "control: local-reference: a same-tenant read still sees the record, so the scope filter bounds rather than blocks",
+            "local-reference: a read scoped to one sessionId does not see a sibling session's record in the same tenant",
+            "fake: export() under tenant-b returns no record proposed under tenant-a",
+            "fake: query() under tenant-b matches no record proposed under tenant-a, even on an exact content term",
+            "fake: get() under tenant-b resolves undefined for an id proposed under tenant-a",
+            "fake: forget() under tenant-b leaves the tenant-a record it names intact",
+            "fake: revise() under tenant-b rejects a tenant-a id and leaves its content unchanged",
+            "control: fake: a same-tenant read still sees the record, so the scope filter bounds rather than blocks",
+            "fake: a read scoped to one sessionId does not see a sibling session's record in the same tenant",
+            "a maxRecords of -1 returns zero records rather than all but the last one",
+            "every negative maxRecords returns the same zero records, so the result does not depend on the budget's magnitude",
+            "CHARACTERIZATION: a maxRecords of 0 already returns zero records and flags truncated",
+            "CHARACTERIZATION: maxTokens is declared but inert — a tiny token budget bounds nothing",
+            "a corrupt backing document rejects with a MemoryError carrying a machine-routable code",
+            "a document truncated mid-record rejects with the same MemoryError code, not a parser error",
+            "CHARACTERIZATION: a document declaring an unknown format version already rejects with MEMORY_UNSUPPORTED_FORMAT_VERSION",
+            "CHARACTERIZATION: a well-formed document that is not an object rejects rather than reading as zero records",
+            "CHARACTERIZATION: an empty backing document reads as zero records, since a never-written store is a first boot rather than damage",
+            "CHARACTERIZATION: registering a second provider under an already-registered id rejects with MEMORY_DUPLICATE_PROVIDER",
+            "CHARACTERIZATION: a first registration still succeeds after a duplicate is rejected, so the registry is not left poisoned",
+            "CHARACTERIZATION: a provider that rejects mid-query surfaces its own rejection, not a seam-invented one",
+            "CHARACTERIZATION: a hostile provider still returns out-of-scope records, because the seam has no tenant on the record to check"
+          ],
+          "capturedAtUtc": "2026-09-04T17:11:42.988Z"
         }
       },
       "supplements": {},
-      "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+      "candidateSha": "d13ac831dba8ac883ea389f39af69ac7b916a772",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
