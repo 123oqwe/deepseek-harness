@@ -341,7 +341,39 @@ interface SessionLogScan {
   inheritedEventCount: SessionLogOffsetType
   events: SessionEvent[]
   committedBytes: number
+  /**
+   * Evidence naming the first committed row this build could not read, or
+   * `undefined` when the whole committed region was recovered.
+   *
+   * Present alongside a non-empty `events`: the scanner keeps the recoverable
+   * prefix and reports why it stopped, rather than choosing between the two.
+   * A caller that ignores this field silently presents a truncated log as a
+   * complete one, which is why it is returned rather than only thrown — the
+   * scanner throws only when a `turn/end` proves the damage falls inside a
+   * region that must be contiguous.
+   */
+  corruption?: CorruptedLogEvidence
 }
+
+/**
+ * The exact failure that ended the recoverable prefix. Mirrors
+ * `@deepseek-ai/dsh-session-lifecycle`'s type of the same name by structure
+ * rather than by import, so the two packages stay independent.
+ */
+export interface CorruptedLogEvidence {
+  /** 1-based index of the offending row among event rows, header excluded. */
+  readonly lineNumber: number
+  /** The row's raw bytes as UTF-8, truncated to `CORRUPTION_RAW_LIMIT`. */
+  readonly raw: string
+  /** Why this build could not read the row. */
+  readonly parseError: string
+}
+
+/**
+ * Bytes of a corrupt row retained as evidence. A corrupt row has no trustworthy
+ * length, so the whole of it is never copied into an error path.
+ */
+const CORRUPTION_RAW_LIMIT = 512
 
 /** Parse one complete header record supplied independently from event rows. */
 /**
@@ -393,6 +425,12 @@ export class SessionLogScanner {
   private committedBytes: number
   private eventLine = 0
   private issue: Error | undefined
+
+  /** Structured form of {@link issue}, returned by {@link finish}. */
+  private corruption: CorruptedLogEvidence | undefined
+
+  /** Whether the recorded corruption is a seq gap rather than an unreadable row. */
+  private seqGap = false
   private finished = false
 
   /**
@@ -466,6 +504,32 @@ export class SessionLogScanner {
       inheritedEventCount: this.inheritedEventCount,
       events: this.events,
       committedBytes: this.committedBytes,
+      ...(this.corruption === undefined ? {} : { corruption: this.corruption }),
+    }
+  }
+
+  /**
+   * Record why the recoverable prefix ends here, keeping both the throwable
+   * form and the structured evidence {@link finish} returns. First writer wins:
+   * the first unreadable row is what bounds the prefix, and every later row is
+   * already outside it.
+   * @param line - the offending row's raw bytes.
+   * @param reason - why this build could not read it.
+   */
+  private recordCorruption(line: Buffer, reason: string, seqGap = false): void {
+    if (this.issue !== undefined) return
+    this.seqGap = seqGap
+    // The thrown message is unchanged from before this field existed: callers
+    // and tests match on it, and the detail now lives in `corruption` instead.
+    this.issue = new Error(
+      this.seqGap
+        ? `corrupt session log: seq gap in committed region at line ${this.eventLine} (${reason})`
+        : `corrupt session log: unparsable committed event at line ${this.eventLine}`,
+    )
+    this.corruption = {
+      lineNumber: this.eventLine,
+      raw: line.toString('utf8').slice(0, CORRUPTION_RAW_LIMIT),
+      parseError: reason,
     }
   }
 
@@ -475,8 +539,8 @@ export class SessionLogScanner {
     let parsed: unknown
     try {
       parsed = JSON.parse(line.toString('utf8'))
-    } catch {
-      this.issue ??= new Error(`corrupt session log: unparsable committed event at line ${this.eventLine}`)
+    } catch (error) {
+      this.recordCorruption(line, `unparsable JSON: ${(error as Error).message}`)
       return
     }
     // Schema incompatibility is a structured, machine-readable refusal, not
@@ -486,8 +550,8 @@ export class SessionLogScanner {
     let decoded: SessionEvent[]
     try {
       decoded = decodeStorageRecord(expandProvenanceFromStorage(parsed))
-    } catch {
-      this.issue ??= new Error(`corrupt session log: unparsable committed event at line ${this.eventLine}`)
+    } catch (error) {
+      this.recordCorruption(line, `undecodable event record: ${(error as Error).message}`)
       return
     }
 
@@ -501,10 +565,7 @@ export class SessionLogScanner {
       if (event.seq !== this.events.length) {
         const expected = this.events.length
         this.events.length = rowStart
-        this.issue = new Error(
-          `corrupt session log: seq gap in committed region at line ${this.eventLine} `
-          + `(expected ${expected}, got ${event.seq})`,
-        )
+        this.recordCorruption(line, `expected seq ${expected}, got ${event.seq}`, true)
         if (decoded.some(candidate => candidate.type === 'turn/end')) throw this.issue
         return
       }

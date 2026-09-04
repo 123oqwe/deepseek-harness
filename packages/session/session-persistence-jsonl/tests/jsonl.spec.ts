@@ -1087,6 +1087,50 @@ describe('JsonlSessionPersistence: scanLog unit', () => {
     }
   })
 
+  it('returns the recoverable prefix AND the evidence naming the row it stopped at, rather than discarding one', () => {
+    // The corrupt row is followed by no turn/end, so nothing forces a throw --
+    // which is exactly the path that used to record the failure and then drop
+    // it, handing a caller a truncated log indistinguishable from a complete
+    // one. Both halves of acceptance[3] are asserted together on purpose.
+    const log = [
+      JSON.stringify({ type: 'session', version: 0, id: 'ev', createdAt: 1, delegationDepth: 0 }),
+      JSON.stringify({ type: 'user/message', seq: 0, time: 1, data: { message: { id: 'm0', role: 'user', content: 'kept' } } }),
+      '{not json',
+      JSON.stringify({ type: 'user/message', seq: 1, time: 2, data: { message: { id: 'm1', role: 'user', content: 'lost' } } }),
+    ].join('\n') + '\n'
+
+    const scanned = scanLog(Buffer.from(log))
+
+    expect(scanned.events).toHaveLength(1)
+    expect(scanned.corruption).toBeDefined()
+    expect(scanned.corruption?.lineNumber).toBe(2)
+    expect(scanned.corruption?.raw).toBe('{not json')
+    expect(scanned.corruption?.parseError).toMatch(/unparsable JSON/)
+  })
+
+  it('reports no corruption for a fully recovered log, so the field distinguishes damage from its absence', () => {
+    const log = [
+      JSON.stringify({ type: 'session', version: 0, id: 'ok', createdAt: 1, delegationDepth: 0 }),
+      JSON.stringify({ type: 'user/message', seq: 0, time: 1, data: { message: { id: 'm0', role: 'user', content: 'kept' } } }),
+    ].join('\n') + '\n'
+
+    expect(scanLog(Buffer.from(log)).corruption).toBeUndefined()
+  })
+
+  it('names the seq-gap row as evidence, not only the unreadable-row case', () => {
+    const log = [
+      JSON.stringify({ type: 'session', version: 0, id: 'gap', createdAt: 1, delegationDepth: 0 }),
+      JSON.stringify({ type: 'user/message', seq: 0, time: 1, data: { message: { id: 'm0', role: 'user', content: 'kept' } } }),
+      JSON.stringify({ type: 'user/message', seq: 7, time: 2, data: { message: { id: 'm7', role: 'user', content: 'gap' } } }),
+    ].join('\n') + '\n'
+
+    const scanned = scanLog(Buffer.from(log))
+
+    expect(scanned.events).toHaveLength(1)
+    expect(scanned.corruption?.lineNumber).toBe(2)
+    expect(scanned.corruption?.parseError).toMatch(/expected seq 1, got 7/)
+  })
+
   it('a header-only log (no event lines at all) preserves nothing — committedBytes is the header', () => {
     const log = JSON.stringify({ type: 'session', version: 0, id: 'h0', createdAt: 1, delegationDepth: 0 }) + '\n'
     const scanned = scanLog(Buffer.from(log))
