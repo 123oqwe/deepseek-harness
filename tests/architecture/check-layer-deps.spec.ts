@@ -129,7 +129,7 @@ describe('the exemption store (rules 5 and 6)', () => {
       name: '@deepseek-ai/dsh-k',
       peerDependencies: { '@deepseek-ai/dsh-ui': 'workspace:^' },
     })
-    writeManifest(fixture, 'packages/client/ui', { name: '@deepseek-ai/dsh-ui' })
+    writeManifest(fixture, 'packages/client/ui-fixture', { name: '@deepseek-ai/dsh-ui' })
     writeExemptions(fixture, {
       $schemaVersion: 1,
       exemptedCycles: [],
@@ -200,7 +200,7 @@ describe('rule 4: the kernel Cordis binding rule is measured per binding', () =>
       name: '@deepseek-ai/dsh-k',
       peerDependencies: { '@deepseek-ai/dsh-ui': 'workspace:^', '@deepseek-ai/dsh-llm-x': 'workspace:^' },
     })
-    writeManifest(fixture, 'packages/client/ui', { name: '@deepseek-ai/dsh-ui' })
+    writeManifest(fixture, 'packages/client/ui-fixture', { name: '@deepseek-ai/dsh-ui' })
     writeManifest(fixture, 'packages/llm/llm-x', { name: '@deepseek-ai/dsh-llm-x' })
     const violations = runLayerDepsCheck(fixture).violations
     expect(violations.map(v => v.toPackage).sort()).toEqual(['@deepseek-ai/dsh-llm-x', '@deepseek-ai/dsh-ui'])
