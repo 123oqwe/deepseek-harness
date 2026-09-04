@@ -40,6 +40,9 @@
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../plugin/plugin-ownership"
     }
   ]
 }

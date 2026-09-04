@@ -5,6 +5,9 @@
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
+import type {
+  CapabilityRegistration, OwnershipToken, PluginIdentity, RegistrationDenialReason, RevocationResult,
+} from '@deepseek-ai/dsh-plugin-ownership'
 import z from '@deepseek-ai/schemastery'
 import { AnonymousEntries, NamedEntries, ScopedLayers, scopeOf, scopeTarget } from '@deepseek-ai/dsh-scope'
 import type { ScopeKey, ScopeLayer, Scoped } from '@deepseek-ai/dsh-scope'
@@ -514,6 +517,27 @@ export class ToolOutputError extends HarnessError {
   }
 }
 
+/**
+ * Epic P1-09's registration refusal: a tool registration the registry refused
+ * on namespace or ownership grounds, never on schema or duplicate-name
+ * grounds. Distinct from the pre-existing per-layer duplicate error, which
+ * fires when ONE plugin registers one name twice — a caller (and a test) must
+ * be able to tell "you registered this twice" from "another plugin owns this".
+ */
+export class ToolOwnershipError extends HarnessError {
+  /** Which of `@deepseek-ai/dsh-plugin-ownership`'s denial reasons applies. */
+  readonly reason: RegistrationDenialReason
+  /** The plugin identity whose registration was refused. */
+  readonly pluginIdentity: PluginIdentity
+
+  constructor(toolName: string, pluginIdentity: PluginIdentity, reason: RegistrationDenialReason) {
+    super(`tool "${toolName}" refused for plugin "${pluginIdentity}": ${reason}`, 'TOOL_OWNERSHIP_DENIED')
+    this.name = 'ToolOwnershipError'
+    this.reason = reason
+    this.pluginIdentity = pluginIdentity
+  }
+}
+
 /** Convert one projector exception into the canonical invalid-output failure. */
 function projectionError(toolName: string, projector: 'render' | 'presentationMeta', error: unknown): ToolOutputError {
   return new ToolOutputError(toolName, [`output.${projector} failed: ${errorMessage(error)}`])
@@ -664,6 +688,30 @@ export interface Config {
    * restores strictly serial dispatch. Must be a positive integer.
    */
   maxParallelSubCalls?: number
+  /**
+   * Epic P1-09's namespace and ownership policy for this registry. A
+   * deployment supplies both fields from its `cordis.yml`; neither is
+   * hardcoded here, because which plugins count as official and whether
+   * replacement is permitted vary per deployment.
+   */
+  ownership?: ToolOwnershipConfig
+}
+
+/** Epic P1-09's registry policy, as a deployment declares it in `cordis.yml`. */
+export interface ToolOwnershipConfig {
+  /**
+   * Plugin identities trusted to register a tool inside the reserved `dsh.*`
+   * namespace (must[1]). An identity absent from this list is a third party
+   * for every reserved-namespace check, whatever its load order.
+   */
+  officialPluginIdentities?: string[]
+  /**
+   * Whether `ToolRuntime.replace` may hand an owned tool name to a new owner
+   * (must[2]'s policy gate). A well-formed replace request is still refused
+   * when this is `false`; a plain `register` of an owned name is a collision
+   * either way.
+   */
+  allowReplace?: boolean
 }
 
 /**
@@ -783,6 +831,10 @@ export class ToolRuntime extends Service {
   static Config: z<Config> = z.object({
     mode: z.union(['native', 'ptc', 'both'] as const).default('native'),
     maxParallelSubCalls: z.natural().min(1).default(10),
+    ownership: z.object({
+      officialPluginIdentities: z.array(z.string()).default([]),
+      allowReplace: z.boolean().default(false),
+    }).default({ officialPluginIdentities: [], allowReplace: false }),
   })
 
   /** Internal staged view consumed by `dsh-agent-loop`'s parallel scheduler. */
@@ -1050,6 +1102,54 @@ export class ToolRuntime extends Service {
       layer => layer.tools.insert(name, definition),
       { label: `tools.register(${JSON.stringify(name)})` },
     )
+  }
+
+  /**
+   * Epic P1-09 must[2]: hand an already-owned tool name to a new owner through
+   * the EXPLICIT replace entry point, gated by
+   * {@link ToolOwnershipConfig.allowReplace}. A plain {@link register} of an
+   * owned name is never an override — it stays a `'capability-collision'`
+   * refusal even when policy permits replacement.
+   * @param definition - the replacing tool's schema, execution, and presentation callbacks.
+   * @returns the exact disposer that unregisters the replacing tool.
+   */
+  replace(definition: ToolDefinition): () => void {
+    void definition
+    throw new Error('P1-09 U: ToolRuntime.replace is not implemented')
+  }
+
+  /**
+   * Epic P1-09 must[0]: the ownership record the registry admitted for `name`.
+   * @param name - a global tool name.
+   * @returns the live registration, or `undefined` when no plugin owns `name`.
+   */
+  ownershipOf(name: string): CapabilityRegistration | undefined {
+    void name
+    throw new Error('P1-09 U: ToolRuntime.ownershipOf is not implemented')
+  }
+
+  /**
+   * Epic P1-09 acceptance[1]: every ownership record this registry currently
+   * holds, oldest first, including the superseded owners a legitimate
+   * replacement left behind. An unloaded plugin's records are absent — the
+   * gate's "effects after unload = 0" covers this history too.
+   * @returns the live ownership history in admission order.
+   */
+  ownershipHistory(): readonly CapabilityRegistration[] {
+    throw new Error('P1-09 U: ToolRuntime.ownershipHistory is not implemented')
+  }
+
+  /**
+   * Epic P1-09 must[3]: unregister exactly the tools whose stored ownership
+   * token equals `token`, and no others. Takes only a token — never a name or
+   * a plugin identity a caller could substitute — so cross-plugin revocation
+   * has no API surface to attempt through.
+   * @param token - the ownership token presented at unload time.
+   * @returns which capability ids were revoked, or why nothing was.
+   */
+  revokeOwned(token: OwnershipToken): RevocationResult {
+    void token
+    throw new Error('P1-09 U: ToolRuntime.revokeOwned is not implemented')
   }
 
   /**

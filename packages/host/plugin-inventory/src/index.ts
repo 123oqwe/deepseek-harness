@@ -21,7 +21,11 @@ import {
   type ObservedPluginCapabilities,
   type PluginDeclaration,
 } from '@deepseek-ai/dsh-plugin-manifest'
+import type { InventoryChainEntry } from '@deepseek-ai/dsh-plugin-ownership'
 import { TypertRemoteService, Remote } from '@deepseek-ai/dsh-typert-protocol'
+// Type-only: makes `ctx.tools` resolve to the tool registry the ownership
+// chain is read from. The seam stays optional at runtime.
+import type {} from '@deepseek-ai/dsh-tools'
 // Typert-generated ./typert and ./remote artifacts import Zod at runtime.
 import type {} from 'zod'
 import type {
@@ -330,6 +334,21 @@ export function buildPluginPermissionStates(
     }
   }
   return states
+}
+
+/**
+ * Epic P1-09 acceptance[1]'s Inventory surface: the replaced/replacing chain
+ * for every tool name the live registry holds an ownership record for, derived
+ * from that registry's admission history through
+ * `@deepseek-ai/dsh-plugin-ownership`'s `buildInventoryChain`. A capability
+ * whose first and only owner still holds it reports no `replaces`; one a
+ * legitimate replacement took over reports the owner it displaced.
+ * @param ctx - the live, booted root context whose `tools` registry holds the ownership history.
+ * @returns one chain entry per tool name with a live ownership record.
+ */
+export function buildToolOwnershipChain(ctx: Context): readonly InventoryChainEntry[] {
+  void ctx
+  throw new Error('P1-09 U: buildToolOwnershipChain is not implemented')
 }
 
 /** Remote-only service exposing the Loader's current non-group entry state. */
