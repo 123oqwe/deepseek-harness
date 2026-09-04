@@ -5,6 +5,13 @@
  * scenarios into three cases) plus every must[] clause that is structurally
  * testable at this Contract level. Every case calls a real exported function
  * against real branded fixture data.
+ *
+ * The final `describe` block is this epic's Fault stage over the same
+ * functions: conditions the adjudication core had never been given — an
+ * override contract aimed at a reserved namespace, a token forged to carry
+ * the real owner's mint prefix, a token replayed after its registration is
+ * gone, and one plugin's token presented against its own second capability.
+ * The Contract cases above are unchanged.
  */
 
 import { brandString } from '@deepseek-ai/dsh-brand'
@@ -12,6 +19,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildInventoryChain,
   claimCapability,
+  mintOwnershipToken,
   requestReplace,
   revokeByOwnershipToken,
   RESERVED_NAMESPACE_ROOT,
@@ -275,6 +283,133 @@ describe('P1-09 Contract — acceptance[2]: 动态 Cordis 定义同样受规则�
       expect(decision.registration.origin).toBe('dynamic')
       expect(typeof decision.registration.ownershipToken).toBe('string')
       expect(decision.registration.ownershipToken.length).toBeGreaterThan(0)
+    }
+  })
+})
+
+describe('P1-09 Fault — adversarial conditions the adjudication core has not seen', () => {
+  it('must[1]/must[2]: an unofficial plugin cannot take a reserved dsh.* capability through a replace contract, even when policy allows replacement', () => {
+    // must[1] is stated unconditionally, and must[2] requires an override to
+    // carry an explicit contract AND pass policy. Neither says `allowReplace`
+    // suspends must[1], so the replace path owes the same reserved-namespace
+    // refusal the claim path already enforces.
+    const capabilityId = brandString<StableCapabilityId>('dsh.core.read_file')
+    const reservedSubNamespace = brandString<Namespace>('dsh.core')
+    const officialClaim = claimCapability(
+      { pluginIdentity: officialPlugin, namespace: reservedSubNamespace, capabilityId, kind: 'tool', origin: 'static' },
+      [],
+      policy,
+    )
+    expect(officialClaim.admitted).toBe(true)
+    if (!officialClaim.admitted) return
+
+    const takeover = requestReplace(
+      { targetCapabilityId: capabilityId, replacingPluginIdentity: attackerPlugin },
+      [officialClaim.registration],
+      policy,
+    )
+    expect(takeover.admitted).toBe(false)
+    if (!takeover.admitted) expect(takeover.reason).toBe('namespace-reserved')
+  })
+
+  it('must[1]: an official plugin may still replace its own reserved dsh.* capability, so the refusal is scoped to third parties', () => {
+    const capabilityId = brandString<StableCapabilityId>('dsh.core.write_file')
+    const reservedSubNamespace = brandString<Namespace>('dsh.core')
+    const existing = [fixtureRegistration(officialPlugin, capabilityId, brandString<OwnershipToken>('official-token'), {
+      namespace: reservedSubNamespace,
+    })]
+
+    const decision = requestReplace(
+      { targetCapabilityId: capabilityId, replacingPluginIdentity: officialPlugin },
+      existing,
+      policy,
+    )
+    expect(decision.admitted).toBe(true)
+    if (decision.admitted) {
+      expect(decision.registration.pluginIdentity).toBe(officialPlugin)
+      expect(decision.registration.namespace).toBe(reservedSubNamespace)
+    }
+  })
+
+  it('must[1] outranks collision: a third party claiming a reserved capability id the official plugin ALREADY owns is refused namespace-reserved, not capability-collision', () => {
+    // The Contract stage's load-order case ran against an EMPTY registry, so
+    // the order of the two checks was never exercised. Reversing them would
+    // report a mere naming clash where the real refusal is a namespace one,
+    // and the reason is what the Usage stage's registrants assert on.
+    const capabilityId = brandString<StableCapabilityId>('dsh.core:boot_hook')
+    const existing = [fixtureRegistration(officialPlugin, capabilityId, brandString<OwnershipToken>('official-token'), {
+      namespace: reservedNamespace,
+      kind: 'service',
+    })]
+
+    const decision = claimCapability(
+      { pluginIdentity: attackerPlugin, namespace: reservedNamespace, capabilityId, kind: 'service', origin: 'static' },
+      existing,
+      policy,
+    )
+    expect(decision.admitted).toBe(false)
+    if (!decision.admitted) expect(decision.reason).toBe('namespace-reserved')
+  })
+
+  it('must[3]: a forged ownership token carrying the real owner\'s identity prefix revokes nothing', () => {
+    // `mintOwnershipToken` builds `${pluginIdentity}:${randomUUID()}`, and a
+    // plugin identity is public. An attacker that reproduces the prefix
+    // exactly still holds no token the registry minted, so revocation must
+    // compare the whole token rather than the identity it names.
+    const capabilityId = brandString<StableCapabilityId>('friendly-tools:owned_tool')
+    const realToken = mintOwnershipToken(friendlyPluginA)
+    const existing = [fixtureRegistration(friendlyPluginA, capabilityId, realToken)]
+    const forgedToken = brandString<OwnershipToken>(`${friendlyPluginA}:00000000-0000-4000-8000-000000000000`)
+
+    expect(forgedToken.startsWith(`${friendlyPluginA}:`)).toBe(true)
+    const forgedAttempt = revokeByOwnershipToken(forgedToken, existing)
+    expect(forgedAttempt.revoked).toBe(false)
+    if (!forgedAttempt.revoked) expect(forgedAttempt.reason).toBe('unknown-token')
+  })
+
+  it('must[3]: a real ownership token replayed after its own registration is gone revokes nothing', () => {
+    const capabilityId = brandString<StableCapabilityId>('friendly-tools:unloaded_tool')
+    const realToken = mintOwnershipToken(friendlyPluginA)
+    const existing = [fixtureRegistration(friendlyPluginA, capabilityId, realToken)]
+
+    const firstUnload = revokeByOwnershipToken(realToken, existing)
+    expect(firstUnload.revoked).toBe(true)
+    if (firstUnload.revoked) expect(firstUnload.revokedCapabilityIds).toEqual([capabilityId])
+
+    // The registry that survives the unload no longer holds the registration.
+    const replay = revokeByOwnershipToken(realToken, [])
+    expect(replay.revoked).toBe(false)
+    if (!replay.revoked) expect(replay.reason).toBe('unknown-token')
+  })
+
+  it('must[3]: one plugin holding two capabilities gets two distinct tokens, so its first token cannot revoke its second capability', () => {
+    // The Contract stage's must[3] case scoped a token against a DIFFERENT
+    // plugin's registration. A token is minted per admitted claim, not per
+    // plugin, so an unload presenting one token must leave the same plugin's
+    // other capabilities alone.
+    const capabilityIdA = brandString<StableCapabilityId>('friendly-tools:tool-a')
+    const capabilityIdB = brandString<StableCapabilityId>('friendly-tools:tool-b')
+    const claimA = claimCapability(
+      { pluginIdentity: friendlyPluginA, namespace: friendlyNamespace, capabilityId: capabilityIdA, kind: 'tool', origin: 'static' },
+      [],
+      policy,
+    )
+    expect(claimA.admitted).toBe(true)
+    if (!claimA.admitted) return
+    const claimB = claimCapability(
+      { pluginIdentity: friendlyPluginA, namespace: friendlyNamespace, capabilityId: capabilityIdB, kind: 'tool', origin: 'static' },
+      [claimA.registration],
+      policy,
+    )
+    expect(claimB.admitted).toBe(true)
+    if (!claimB.admitted) return
+
+    expect(claimA.registration.ownershipToken).not.toBe(claimB.registration.ownershipToken)
+    const result = revokeByOwnershipToken(claimA.registration.ownershipToken, [claimA.registration, claimB.registration])
+    expect(result.revoked).toBe(true)
+    if (result.revoked) {
+      expect(result.revokedCapabilityIds).toEqual([capabilityIdA])
+      expect(result.revokedCapabilityIds).not.toContain(capabilityIdB)
     }
   })
 })

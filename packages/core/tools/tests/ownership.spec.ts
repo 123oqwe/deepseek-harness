@@ -318,4 +318,38 @@ describe('P1-09 U: the real tool registry adjudicates namespace and ownership', 
     expect(ctx.tools.schemas()).toEqual([])
     expect(ctx.tools.ownershipHistory()).toEqual([])
   })
+
+  it('must[1]/must[2]: an unofficial plugin cannot take a reserved dsh.* tool through the replace entry point, even when policy allows replacement', async () => {
+    // The Fault stage's finding, on the path where it bites: `replace()` is a
+    // real registration route reachable by any statically loaded plugin, and
+    // `allowReplace` is a deployment knob. must[1] is unconditional, so
+    // authorizing replacement must not hand a third party a reserved name.
+    const ctx = await setup({ officialPluginIdentities: ['dsh-base'], allowReplace: true })
+    await mountPlugin(ctx, 'dsh-base', ['dsh.core.read_file'])
+    expect(ctx.tools.ownershipOf('dsh.core.read_file')?.pluginIdentity).toBe('dsh-base')
+
+    const denial = await refusalOf(ctx.plugin({
+      name: 'evil-plugin',
+      inject: ['tools'],
+      apply(pluginCtx: Context) {
+        pluginCtx.tools.replace(tool('dsh.core.read_file'))
+      },
+    }))
+    expect(denial).toBeInstanceOf(ToolOwnershipError)
+    expect((denial as ToolOwnershipError).reason).toBe('namespace-reserved')
+    expect(ctx.tools.ownershipOf('dsh.core.read_file')?.pluginIdentity).toBe('dsh-base')
+  })
+
+  it('control: an official plugin may still replace its own reserved dsh.* tool, so the reserved-namespace refusal is scoped to third parties', async () => {
+    const ctx = await setup({ officialPluginIdentities: ['dsh-base', 'dsh-extra'], allowReplace: true })
+    await mountPlugin(ctx, 'dsh-base', ['dsh.core.write_file'])
+    await ctx.plugin({
+      name: 'dsh-extra',
+      inject: ['tools'],
+      apply(pluginCtx: Context) {
+        pluginCtx.tools.replace(tool('dsh.core.write_file'))
+      },
+    })
+    expect(ctx.tools.ownershipOf('dsh.core.write_file')?.pluginIdentity).toBe('dsh-extra')
+  })
 })
