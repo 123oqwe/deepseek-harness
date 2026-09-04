@@ -805,6 +805,107 @@
         }
       ],
       "note": "acceptance[2]: '一个 Session 可关联多个 Run,一个 Run 可跨多个 Session/Agent.' Both directions of the many-to-many relation are covered, and both are proven to survive a restart rather than only holding in memory -- which matters because the clause is about durable association, not a transient one. The Usage case adds the negative half the positive cases cannot establish: a real boot opens an INDEPENDENT Run per agent session, so the relation is genuinely many-to-many rather than one Run silently collecting every session."
+    },
+    {
+      "epic": "P1-07",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load"
+        },
+        {
+          "stage": "C",
+          "title": "gate: an untrusted workspace denies project instructions, so opening a clone never reads the repository's own AGENTS.md"
+        },
+        {
+          "stage": "C",
+          "title": "a trusted-read workspace (never upgraded to trusted-execute) still denies every project-level executable load kind, so opening the clone alone can never reach a subprocess/network/credential-read path"
+        },
+        {
+          "stage": "U",
+          "title": "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted"
+        },
+        {
+          "stage": "U",
+          "title": "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill"
+        }
+      ],
+      "note": "acceptance[0]: 'cloning a repository carrying malicious configuration and opening it produces no subprocess, no network access, and no credential read.' Evidenced by denial at the load decision rather than by observing the absence of a syscall: a freshly opened clone binds at untrusted (P-stage), and untrusted denies every project-level executable load kind -- plugins, hooks, MCP servers, executable skills, and home/profile patch overrides -- which are the only paths by which opening a workspace could reach a subprocess, the network, or a credential. The C-stage case names that closure explicitly for trusted-read, the state one step above untrusted, so the guarantee is not an artefact of the lowest state alone. The two U-stage cases prove the denial at the model-visible surface: the clone's skills and instructions are absent from what the model is offered. NEGATIVE-SPACE CONTROL: the U-stage pair is load-bearing only because its positive twin ('offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute', cited under acceptance[2]) proves the fixture can offer them at all, so the absence measures a trust decision rather than an empty fixture."
+    },
+    {
+      "epic": "P1-07",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "directory replaced: the same canonical path reporting a different device/inode demotes an existing trusted-execute record to untrusted"
+        },
+        {
+          "stage": "C",
+          "title": "symlink retargeted: a different canonical path demotes an existing trusted-execute record to untrusted even when device/inode happen to match"
+        },
+        {
+          "stage": "C",
+          "title": "directory moved: a different canonical path with the same device/inode still demotes an existing trusted-execute record to untrusted"
+        },
+        {
+          "stage": "P",
+          "title": "drops trust when the workspace directory is replaced in place under the same canonical path"
+        },
+        {
+          "stage": "P",
+          "title": "drops trust when the symlink the workspace was opened through is retargeted to another directory"
+        },
+        {
+          "stage": "P",
+          "title": "does not carry trust to the new canonical path of a moved directory that kept its inode"
+        },
+        {
+          "stage": "U",
+          "title": "drops a granted workspace to untrusted once the directory at that path is replaced, and does not re-grant it from configuration"
+        },
+        {
+          "stage": "U",
+          "title": "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory"
+        },
+        {
+          "stage": "F",
+          "title": "CHARACTERIZATION: drops trust when the device id changes while the canonical path and inode do not"
+        }
+      ],
+      "note": "acceptance[1]: 'trust is not inherited automatically after the directory is replaced, the symlink is retargeted, or the directory is moved.' All three named mutations are covered at three independent layers: the C-stage reconciliation decision, the P-stage provider observing a real filesystem, and the U-stage resolution that a Consumer sees. The three are not redundant -- each mutation defeats a different subset of the identity tuple (canonical path, device, inode, creation time), and the case titles state which, so a reconciliation that checked only one component would still fail at least one of them. The U-stage replacement case additionally asserts the workspace is NOT re-granted from configuration, closing the path where trust returns through a config read rather than through inheritance. POSITIVE CONTROL: 'an unchanged identity (same canonical path, device, and inode) preserves the current trust state and grantor' (C) and 'keeps host-granted trust across a re-observation of an unchanged directory' (P) prove reconciliation is not simply dropping trust unconditionally -- without them, a reconcile that always returned untrusted would satisfy every case above."
+    },
+    {
+      "epic": "P1-07",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and keeps project instructions, which trusted-read still injects"
+        },
+        {
+          "stage": "C",
+          "title": "downgrading from trusted-read to untrusted revokes exactly project-instructions, the one kind trusted-read granted that untrusted does not"
+        },
+        {
+          "stage": "U",
+          "title": "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute"
+        },
+        {
+          "stage": "F",
+          "title": "must[2]: downgradeTrust refuses a raising target, so acceptance[2] entry point can never grant trusted-execute with no host principal and no audit record"
+        },
+        {
+          "stage": "F",
+          "title": "must[2]: downgradeTrust refuses a raising target even when the presented record still carries a grantor from an earlier grant"
+        },
+        {
+          "stage": "F",
+          "title": "CHARACTERIZATION: downgrading a workspace that never granted anything revokes nothing and invents no grantor"
+        }
+      ],
+      "note": "acceptance[2]: 'downgrading trust immediately revokes project capabilities.' The two C-stage cases assert EXACT revocation sets at both downgrade steps, not merely that something was revoked: trusted-execute to trusted-read revokes the five executable kinds and keeps project instructions, and trusted-read to untrusted revokes exactly project-instructions. An over-broad implementation that revoked everything on any downgrade would fail both. The F-stage pair closes the direction of this same entry point -- BEFORE that stage, downgradeTrust accepted a RAISING target, so acceptance[2]'s own entry point could mint a trusted-execute record with no host principal and no audit, bypassing must[2]; the second case proves the refusal holds even when the presented record carries a grantor from an earlier legitimate grant. The characterization case fixes the no-op boundary so a downgrade of a never-granted workspace cannot fabricate a grantor. POSITIVE CONTROL: the U-stage case proves the capabilities being revoked are genuinely offered at trusted-execute, so revocation is measured against a real grant."
     }
   ]
 }
