@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-04T08:09:22.754Z",
-  "inputDigest": "ac8db97c517c6ff13d6df7894e4e9211998c4edd97f015d773e7a3caf924c44b",
+  "lastUpdatedUtc": "2026-09-04T15:57:14.091Z",
+  "inputDigest": "6276ef814ab69dad08c845b2f6df417afa296f78bc302762c57de393e3a7e3ef",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1595,11 +1595,33 @@
           "capturedAtUtc": "2026-09-04T04:23:03.877Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33890642950",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-1e42/first100-evidence-1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228/vitest-report.json",
+          "observationSha256": "e31eb7a05d1c439dfb7843ce1d7949041e56e10191af7b161fbabef746cc098a",
+          "expectCasesMatched": [
+            "fault[A]: two manifests sharing a pluginId fail loud, naming the duplicated id, rather than producing an order-dependent plan",
+            "fault[A]: the provider stage inherits the same rejection, so no cascade ever runs over a graph with an ambiguous plugin identity",
+            "fault[B]: a single manifest declaring both requires-provider and excludes-provider on the same sole provider is blocked alone, leaving the graph solvable",
+            "fault[B]: an unrelated healthy plugin still receives an activation when another manifest contradicts itself — an incompatible candidate stays inactive, it does not take the graph down",
+            "control: a genuine two-manifest contradiction is still a graph-level unsat core, and every entry names a manifest that really declared one of the opposing constraints",
+            "characterization: every node of a healthy diamond resolves active, and the sink binds to both arms rather than to the shared root",
+            "characterization: blocking a diamond's shared root cascades down both arms and reaches the sink, which reports both arms missing, not only the first",
+            "characterization: in a version-conflict graph only the manifest whose declared major band covers the host registration resolves active; the two disjoint bands are each blocked with schema-major-mismatch",
+            "characterization: an optional capability whose sole provider is itself blocked disables only that capability — cascade never propagates through an optional edge",
+            "characterization: an empty graph solves to an empty plan rather than failing, and both stages agree on that",
+            "characterization: a provider whose capability nothing consumes resolves active and contributes no binding",
+            "characterization: a requires-provider naming a plugin absent from the graph blocks the consumer with provider-constraint-violation, never binds to the provider that does exist",
+            "characterization: over 500 generated graphs, every permutation of the same manifest set yields an identical planId at the contract stage",
+            "characterization: the same property holds through the provider stage, so cascade and provider bindings are order-independent too",
+            "characterization: solving the same graph twice is referentially stable — a solve never depends on state carried between calls"
+          ],
+          "capturedAtUtc": "2026-09-04T15:57:13.625Z"
         }
       },
       "supplements": {},
-      "candidateSha": "e212aa0eb66e5eda89b9dc64d307c6fd1e77ea84",
+      "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1681,11 +1703,27 @@
           "capturedAtUtc": "2026-09-04T08:09:22.754Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33890642950",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-1e42/first100-evidence-1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228/vitest-report.json",
+          "observationSha256": "e31eb7a05d1c439dfb7843ce1d7949041e56e10191af7b161fbabef746cc098a",
+          "expectCasesMatched": [
+            "must[1]/must[2]: an unofficial plugin cannot take a reserved dsh.* capability through a replace contract, even when policy allows replacement",
+            "must[1]: an official plugin may still replace its own reserved dsh.* capability, so the refusal is scoped to third parties",
+            "must[1] outranks policy: a third party is told namespace-reserved, not replace-not-authorized, when replacement is ALSO disallowed",
+            "must[1] outranks collision: a third party claiming a reserved capability id the official plugin ALREADY owns is refused namespace-reserved, not capability-collision",
+            "must[3]: a forged ownership token carrying the real owner's identity prefix revokes nothing",
+            "must[3]: a real ownership token replayed after its own registration is gone revokes nothing",
+            "must[3]: one plugin holding two capabilities gets two distinct tokens, so its first token cannot revoke its second capability",
+            "must[1]/must[2]: an unofficial plugin cannot take a reserved dsh.* tool through the replace entry point, even when policy allows replacement",
+            "control: an official plugin may still replace its own reserved dsh.* tool, so the reserved-namespace refusal is scoped to third parties"
+          ],
+          "capturedAtUtc": "2026-09-04T15:57:14.091Z"
         }
       },
       "supplements": {},
-      "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
+      "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -3014,11 +3052,25 @@
           "capturedAtUtc": "2026-09-04T06:31:02.608Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33890642950",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-1e42/first100-evidence-1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228/vitest-report.json",
+          "observationSha256": "e31eb7a05d1c439dfb7843ce1d7949041e56e10191af7b161fbabef746cc098a",
+          "expectCasesMatched": [
+            "two concurrent transitions out of one state never both succeed, and the durable log records exactly the accepted one",
+            "two services over one store path both durably record their Run, losing neither",
+            "a store document naming a Run state outside the closed set is refused, never restored and offered for resumption",
+            "a store document whose event log has a seq gap is refused, never appended onto with a backwards seq",
+            "CHARACTERIZATION: a corrupt store document is refused loudly, never read as an empty registry",
+            "CHARACTERIZATION: a store document written under an unsupported format version is refused, naming the version",
+            "CHARACTERIZATION: a leftover temp file from an interrupted write is ignored, and the complete document still restores"
+          ],
+          "capturedAtUtc": "2026-09-04T15:57:13.860Z"
         }
       },
       "supplements": {},
-      "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+      "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",

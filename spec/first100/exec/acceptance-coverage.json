@@ -222,205 +222,195 @@
         }
       ],
       "note": "acceptance[3]: '开发 profile 可显式启用 insecure 模式并显示永久警告' (a development profile may explicitly enable an insecure mode, displaying a permanent warning). The DSH_TRUST_KERNEL_INSECURE opt-in resolver (stays opted out by default, opts in on any non-empty value) plus the permanent (not one-time) warning behavior are both proven directly."
-    }
-    ,
+    },
     {
       "epic": "P0-03",
       "acceptanceIndex": 0,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "reports zero schema errors and zero unsuppressed violations under the controlled allowlist"
-       },
-       {
-        "stage": "C",
-        "title": "reports zero missing-provider violations under the controlled allowlist (acceptance[0])"
-       }
+        {
+          "stage": "U",
+          "title": "reports zero schema errors and zero unsuppressed violations under the controlled allowlist"
+        },
+        {
+          "stage": "C",
+          "title": "reports zero missing-provider violations under the controlled allowlist (acceptance[0])"
+        }
       ],
       "note": "acceptance[0]: '现有仓库在受控 allowlist 下通过' (the existing repo passes under the controlled allowlist). U-stage's real live workspace scan is the authoritative proof (4175 real cross-package import edges, 0 unsuppressed violations); C-stage's pure-detector test independently proves the same zero-violations property against the same real architecture.layers.json content, one layer down the stack."
-    }
-    ,
+    },
     {
       "epic": "P0-03",
       "acceptanceIndex": 1,
       "coveredBy": [
-       {
-        "stage": "C",
-        "title": "requires every allowlist entry to carry a removalDate in YYYY-MM-DD form"
-       },
-       {
-        "stage": "C",
-        "title": "requires every allowlist entry to carry a non-empty owner"
-       },
-       {
-        "stage": "C",
-        "title": "gives every allowlist entry a removalDate and an owner"
-       }
+        {
+          "stage": "C",
+          "title": "requires every allowlist entry to carry a removalDate in YYYY-MM-DD form"
+        },
+        {
+          "stage": "C",
+          "title": "requires every allowlist entry to carry a non-empty owner"
+        },
+        {
+          "stage": "C",
+          "title": "gives every allowlist entry a removalDate and an owner"
+        }
       ],
       "note": "acceptance[1]: 'allowlist 每项必须带删除日期和负责人' (every allowlist entry must carry a removal date and an owner). The first two cases prove the schema validator genuinely rejects an entry missing either field; the third proves the real, committed architecture.layers.json allowlist entries actually comply, not just that a hypothetical violator would be rejected."
-    }
-    ,
+    },
     {
       "epic": "P0-03",
       "acceptanceIndex": 2,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "fails with a deep-import violation when a real fixture consumer imports a real fixture provider's src/*"
-       },
-       {
-        "stage": "U",
-        "title": "fails with a missing-provider violation when a real fixture family declares zero providers"
-       },
-       {
-        "stage": "U",
-        "title": "fails with a non-reversible-registration violation when a real fixture family has no consumer composition or unload/rollback test"
-       }
+        {
+          "stage": "U",
+          "title": "fails with a deep-import violation when a real fixture consumer imports a real fixture provider's src/*"
+        },
+        {
+          "stage": "U",
+          "title": "fails with a missing-provider violation when a real fixture family declares zero providers"
+        },
+        {
+          "stage": "U",
+          "title": "fails with a non-reversible-registration violation when a real fixture family has no consumer composition or unload/rollback test"
+        }
       ],
       "note": "acceptance[2]: '构造违规 deep import、缺 provider、不可逆注册三类夹具时门禁均失败' (constructing deep-import, missing-provider, and non-reversible-registration fixtures each fails the gate) -- the registry names exactly these three violation kinds; each is an independently necessary sub-fact (AND), proven against a real, independently-constructed fixture at the U-stage real-workspace-scan level, not the pure detector alone."
-    }
-    ,
+    },
     {
       "epic": "P0-03",
       "acceptanceIndex": 3,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "prints the dependency edge, source file, and remediation for a real fixture violation, and exits non-zero"
-       },
-       {
-        "stage": "C",
-        "title": "names the offending dependency edge, source file, and a remediation suggestion on every violation kind"
-       }
+        {
+          "stage": "U",
+          "title": "prints the dependency edge, source file, and remediation for a real fixture violation, and exits non-zero"
+        },
+        {
+          "stage": "C",
+          "title": "names the offending dependency edge, source file, and a remediation suggestion on every violation kind"
+        }
       ],
       "note": "acceptance[3]: 'CI 输出具体依赖边、源文件和修复建议' (CI output names the specific dependency edge, source file, and remediation). U-stage proves this through the real pnpm-script CLI subprocess path (the one this session's flake investigation independently re-verified genuinely flakes only in the reported acceptance[3] sense, never silently); C-stage's detector-level test proves the same naming guarantee holds for every violation kind, not only the one U-stage's fixture exercises."
-    }
-    ,
+    },
     {
       "epic": "P0-05",
       "acceptanceIndex": 0,
       "coveredBy": [
-       {
-        "stage": "P",
-        "title": "acceptance[0]: the same request produces the IDENTICAL applied value under off and under shadow, even though legacy and candidate disagree"
-       },
-       {
-        "stage": "F",
-        "title": "applies legacy's value when candidate throws during shadow evaluation, matching what off mode returns for the same legacy"
-       }
+        {
+          "stage": "P",
+          "title": "acceptance[0]: the same request produces the IDENTICAL applied value under off and under shadow, even though legacy and candidate disagree"
+        },
+        {
+          "stage": "F",
+          "title": "applies legacy's value when candidate throws during shadow evaluation, matching what off mode returns for the same legacy"
+        }
       ],
       "note": "acceptance[0]: '同一请求在 legacy 与 shadow 模式得到相同用户可见结果' (the same request gets the same user-visible result under legacy vs. shadow mode). P-stage's case (which literally cites acceptance[0] in its own title) proves the general case; F-stage's fault-hardening case proves the same result-equivalence invariant survives even when the candidate decision path throws -- an edge case the original P-stage submission did not cover, closed by the independently-reviewed fix round."
-    }
-    ,
+    },
     {
       "epic": "P0-05",
       "acceptanceIndex": 1,
       "coveredBy": [
-       {
-        "stage": "P",
-        "title": "records a shadowRecord with the redacted legacy/candidate summaries and the real gateId"
-       },
-       {
-        "stage": "P",
-        "title": "differs reflects the RAW decision summaries, including a field the allowlist later strips -- shadow mode must not under-report real behavioral drift"
-       },
-       {
-        "stage": "P",
-        "title": "never lets a field outside the allowlist reach legacySummary/shadowSummary -- a real redaction call, not a bare cast"
-       },
-       {
-        "stage": "F",
-        "title": "never lets a \"__proto__\" allowlist entry hijack the returned object's prototype, even when summary carries its own JSON-parsed __proto__ property"
-       }
+        {
+          "stage": "P",
+          "title": "records a shadowRecord with the redacted legacy/candidate summaries and the real gateId"
+        },
+        {
+          "stage": "P",
+          "title": "differs reflects the RAW decision summaries, including a field the allowlist later strips -- shadow mode must not under-report real behavioral drift"
+        },
+        {
+          "stage": "P",
+          "title": "never lets a field outside the allowlist reach legacySummary/shadowSummary -- a real redaction call, not a bare cast"
+        },
+        {
+          "stage": "F",
+          "title": "never lets a \"__proto__\" allowlist entry hijack the returned object's prototype, even when summary carries its own JSON-parsed __proto__ property"
+        }
       ],
       "note": "acceptance[1]: 'shadow 决策与 legacy 决策差异被完整记录且不泄露敏感参数' (the shadow/legacy decision diff is fully recorded and never leaks sensitive parameters). P-stage's three cases prove the diff is recorded against the real gateId, that 'differs' reflects genuine drift rather than an allowlist-narrowed view, and that redaction is a real per-field filter rather than a cosmetic cast; F-stage's case independently closes a redaction bypass an adversarial JSON-sourced summary could otherwise exploit (prototype hijack), proving the no-leak guarantee holds under adversarial input, not only well-formed input."
-    }
-    ,
+    },
     {
       "epic": "P0-05",
       "acceptanceIndex": 2,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "fails, naming the gate, when a declared gate has passed its removalVersion"
-       },
-       {
-        "stage": "P",
-        "title": "is expired for a release exactly at removalVersion (boundary)"
-       },
-       {
-        "stage": "P",
-        "title": "is expired for a release strictly after removalVersion"
-       }
+        {
+          "stage": "U",
+          "title": "fails, naming the gate, when a declared gate has passed its removalVersion"
+        },
+        {
+          "stage": "P",
+          "title": "is expired for a release exactly at removalVersion (boundary)"
+        },
+        {
+          "stage": "P",
+          "title": "is expired for a release strictly after removalVersion"
+        }
       ],
       "note": "acceptance[2]: '过期 gate 在 release gate 中失败' (an expired gate fails the release gate) -- a BLOCKED-012-class deviation (scripts/release/feature-gate-expiry.ts wired into the real, pre-existing scripts/release/verify.ts release gate, independently re-verified by a live mutation of a scratch expired gate). U-stage's case proves the real release-gate wiring genuinely fails and names the gate; P-stage's two boundary cases prove the underlying SemVer expiry determination itself is correct exactly at and after the removal version, not merely 'eventually expires'."
-    }
-    ,
+    },
     {
       "epic": "P0-07",
       "acceptanceIndex": 0,
       "coveredBy": [
-       {
-        "stage": "P",
-        "title": "detects a mutated byte in a completed gate's captured log file"
-       },
-       {
-        "stage": "P",
-        "title": "detects a mutated byte in a required build artifact after collection"
-       },
-       {
-        "stage": "P",
-        "title": "detects a hand-edited evidence.json itself: recordDigest, package signature, and the re-derived must[2] check all fail"
-       },
-       {
-        "stage": "F",
-        "title": "detects a completed gate's captured log file deleted entirely, distinct from a merely mutated log"
-       },
-       {
-        "stage": "F",
-        "title": "detects a required build artifact's file deleted entirely, distinct from a merely mutated one"
-       },
-       {
-        "stage": "F",
-        "title": "detects the manifest sidecar deleted entirely -- must[2] cannot be re-derived without its required-gate-id and required-artifact-path lists"
-       },
-       {
-        "stage": "F",
-        "title": "detects a required gate silently deleted from requiredGates entirely, self-consistently forged so only the manifest cross-check catches it"
-       },
-       {
-        "stage": "F",
-        "title": "detects and reports multiple independent fault types together in one bundle: a deleted gate log and a separately mutated build artifact"
-       },
-       {
-        "stage": "F",
-        "supplementSeq": 1,
-        "title": "detects a required gate AND a required build artifact both silently deleted in the same self-consistently forged bundle, with both faults independently reported"
-       }
+        {
+          "stage": "P",
+          "title": "detects a mutated byte in a completed gate's captured log file"
+        },
+        {
+          "stage": "P",
+          "title": "detects a mutated byte in a required build artifact after collection"
+        },
+        {
+          "stage": "P",
+          "title": "detects a hand-edited evidence.json itself: recordDigest, package signature, and the re-derived must[2] check all fail"
+        },
+        {
+          "stage": "F",
+          "title": "detects a completed gate's captured log file deleted entirely, distinct from a merely mutated log"
+        },
+        {
+          "stage": "F",
+          "title": "detects a required build artifact's file deleted entirely, distinct from a merely mutated one"
+        },
+        {
+          "stage": "F",
+          "title": "detects the manifest sidecar deleted entirely -- must[2] cannot be re-derived without its required-gate-id and required-artifact-path lists"
+        },
+        {
+          "stage": "F",
+          "title": "detects a required gate silently deleted from requiredGates entirely, self-consistently forged so only the manifest cross-check catches it"
+        },
+        {
+          "stage": "F",
+          "title": "detects and reports multiple independent fault types together in one bundle: a deleted gate log and a separately mutated build artifact"
+        },
+        {
+          "stage": "F",
+          "supplementSeq": 1,
+          "title": "detects a required gate AND a required build artifact both silently deleted in the same self-consistently forged bundle, with both faults independently reported"
+        }
       ],
       "note": "acceptance[0]: '篡改任一测试日志、二进制或配置后 evidence verify 失败' (tampering any test log, binary, or config makes evidence verify fail). P-stage's three cases prove byte-level mutation detection (log, artifact, and the evidence.json/recordDigest/signature triple itself). F-stage's cases prove the stronger deletion-class tampering (not just corrupted, but entirely absent) across every required-entry kind: gate log, artifact file, the manifest sidecar itself, and -- BLOCKED-024's specific elevated-bar requirement -- a required GATE's key deleted entirely from requiredGates with a forged self-consistent signature ('detects a required gate silently deleted...'), independently reproduced by the Reviewer via their own adversarial script (not just re-running this test) before ACCEPT. BLOCKED-024's other two required attacks: the artifact-key-deletion-plus-missing-manifest regression the Reviewer re-verified is covered jointly by the manifest-sidecar-deleted and artifact-file-deleted titles above (both real, both already covered here). The Reviewer's third attack (gate-key deletion AND artifact-key deletion combined in one bundle) was originally verified only via the Reviewer's own standalone adversarial script, with no dedicated permanent regression test -- flagged as a real gap rather than glossed over, per the delegate's request to verify all three attacks are genuinely reflected in this epic's own green cells' expectCasesMatched. The delegate ruled this gap must close before P0-07's acceptance, given P0-07 is the ledger's own trust anchor: a BLOCKED-005 supplement (supplementSeq 1) now provides a permanent regression test for exactly this combination, with a mandatory sensitivity (mutation) proof -- since the covered behavior already existed and was already correct, a genuine RED against the unmodified tree was unobtainable, so a real mutant (an early-return that would mask the second fault) was independently constructed and applied by the Supervisor, confirmed to drive the new case RED, then reverted to confirm GREEN -- proving the case is not vacuously true."
-    }
-    ,
+    },
     {
       "epic": "P0-07",
       "acceptanceIndex": 1,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "pnpm run evidence:collect/evidence:verify actually execute the real scripts end-to-end against a throwaway fixture"
-       }
+        {
+          "stage": "U",
+          "title": "pnpm run evidence:collect/evidence:verify actually execute the real scripts end-to-end against a throwaway fixture"
+        }
       ],
       "note": "acceptance[1]: '同一次执行的 evidence 可离线验证' (evidence from one execution can be verified offline). Proven via a real subprocess round-trip against a throwaway fixture -- the real collect script's output is verified by the real verify script with no network/live dependency, the concrete meaning of 'offline' this acceptance clause names."
-    }
-    ,
+    },
     {
       "epic": "P0-07",
       "acceptanceIndex": 2,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "AGENTS.md states the evidence-gate reporting convention (acceptance[2]: cite package path and accepted status)"
-       }
+        {
+          "stage": "U",
+          "title": "AGENTS.md states the evidence-gate reporting convention (acceptance[2]: cite package path and accepted status)"
+        }
       ],
       "note": "acceptance[2]: 'Agent 最终回答必须引用 package path 和 accepted 状态' (the agent's final answer must cite the package path and accepted status) -- a documented reporting convention, not runtime/agent-loop code, per this epic's own U-stage note. Wired into AGENTS.md's Conventions section."
     },
@@ -428,18 +418,18 @@
       "epic": "P1-01",
       "acceptanceIndex": 0,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "denies a missing declaration in production as missing-manifest"
-       },
-       {
-        "stage": "U",
-        "title": "quarantines a plugin that registered a tool its manifest never declared"
-       },
-       {
-        "stage": "U",
-        "title": "denies the overprivileged fixture with the real wildcard findings (acceptance[0])"
-       }
+        {
+          "stage": "U",
+          "title": "denies a missing declaration in production as missing-manifest"
+        },
+        {
+          "stage": "U",
+          "title": "quarantines a plugin that registered a tool its manifest never declared"
+        },
+        {
+          "stage": "U",
+          "title": "denies the overprivileged fixture with the real wildcard findings (acceptance[0])"
+        }
       ],
       "note": "acceptance[0]: 缺少 manifest、声明与实际注册不一致、申请通配权限时安装失败或进入明确 quarantine (missing manifest / declared-vs-observed mismatch / wildcard permission request -> install fails or explicit quarantine) decomposes into 3 independently-required sub-facts, each proven by a real U-stage enforcement test (not the pure P-stage decision function alone): missing manifest -> real profile-boot denial ('denies a missing declaration in production as missing-manifest'); declared/observed mismatch -> real post-mount quarantine disposal of the plugin's live Cordis fiber ('quarantines a plugin that registered a tool its manifest never declared'); wildcard permission request -> real pre-mount denial with the actual wildcard findings surfaced ('denies the overprivileged fixture with the real wildcard findings (acceptance[0])', the U-stage Writer's own explicit acceptance[0] citation in the test title). All three are gated behind DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce (off by default, disclosed) -- the U-stage tests exercise the enforce path directly, not the default-off no-op path."
     },
@@ -447,18 +437,18 @@
       "epic": "P1-01",
       "acceptanceIndex": 1,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "builds an active permission state for a manifest-v2 plugin whose registrations exactly match"
-       },
-       {
-        "stage": "U",
-        "title": "marks bundle provenance for a module named in bundlePackageNames"
-       },
-       {
-        "stage": "U",
-        "title": "falls back to the module name and version 0.0.0 when package.json omits them"
-       }
+        {
+          "stage": "U",
+          "title": "builds an active permission state for a manifest-v2 plugin whose registrations exactly match"
+        },
+        {
+          "stage": "U",
+          "title": "marks bundle provenance for a module named in bundlePackageNames"
+        },
+        {
+          "stage": "U",
+          "title": "falls back to the module name and version 0.0.0 when package.json omits them"
+        }
       ],
       "note": "acceptance[1]: Plugin Inventory 能展示声明权限、实际观察权限、版本与来源 (Plugin Inventory can show declared permissions, actually-observed permissions, version, and provenance) decomposes into the 4 named PluginPermissionState fields. 'builds an active permission state for a manifest-v2 plugin whose registrations exactly match' proves the declared+observed pairing is built from real, live Cordis registrations (not a mocked comparison). 'marks bundle provenance for a module named in bundlePackageNames' proves the provenance field is populated from a real bundle-membership check. 'falls back to the module name and version 0.0.0 when package.json omits them' proves the version field is read from real on-disk package.json data (with a defined fallback, not silently absent). Declared/observed permissions themselves are additionally covered end-to-end by acceptance[0]'s citations above (the same permission-state construction path), not re-cited here to avoid double-counting the identical underlying fact."
     },
@@ -466,14 +456,14 @@
       "epic": "P1-01",
       "acceptanceIndex": 2,
       "coveredBy": [
-       {
-        "stage": "C",
-        "title": "agrees with the hand-written TypeScript validator on every fixture"
-       },
-       {
-        "stage": "C",
-        "title": "classifies a legacy dsh.bundle field as legacy-untrusted"
-       }
+        {
+          "stage": "C",
+          "title": "agrees with the hand-written TypeScript validator on every fixture"
+        },
+        {
+          "stage": "C",
+          "title": "classifies a legacy dsh.bundle field as legacy-untrusted"
+        }
       ],
       "note": "acceptance[2]: manifest schema 有 golden fixture 与向后兼容测试 (the manifest schema has golden fixtures and backward-compatibility tests) decomposes into 2 sub-facts: golden-fixture agreement between the JSON Schema document and the hand-written TypeScript validator ('agrees with the hand-written TypeScript validator on every fixture', which cross-checks all 4 golden fixtures -- benign/overprivileged/undeclared-tool/undeclared-network -- against both validators in one case), and backward-compatibility with the pre-existing legacy dsh.bundle format ('classifies a legacy dsh.bundle field as legacy-untrusted', proving the old format is still readable and correctly classified, not silently broken by the new manifest-v2 schema)."
     },
@@ -481,18 +471,18 @@
       "epic": "P1-01",
       "acceptanceIndex": 3,
       "coveredBy": [
-       {
-        "stage": "U",
-        "title": "denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness — not elicitation detection)"
-       },
-       {
-        "stage": "U",
-        "title": "denies the undeclared-network fixture (acceptance[3]: a remote provider with no declared destination fails schema)"
-       },
-       {
-        "stage": "C",
-        "title": "rejects a tool capability missing must[1] effect fields"
-       }
+        {
+          "stage": "U",
+          "title": "denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness — not elicitation detection)"
+        },
+        {
+          "stage": "U",
+          "title": "denies the undeclared-network fixture (acceptance[3]: a remote provider with no declared destination fails schema)"
+        },
+        {
+          "stage": "C",
+          "title": "rejects a tool capability missing must[1] effect fields"
+        }
       ],
       "note": "acceptance[3]: Skill/MCP Provider 未声明 transport、auth、network destination 或副作用时不能进入 production profile (a Skill/MCP Provider missing transport, auth, network destination, or side-effect declarations cannot enter a production profile) decomposes into the 4 named missing-declaration kinds, proven at the real U-stage enforcement point (not just C-stage's pure schema validation): transport/auth -> 'denies a manifest whose second, unrelated MCP server is missing transport/auth (acceptance[3] structural completeness -- not elicitation detection)', the U-stage Writer's own explicit acceptance[3] citation, honestly reframed by the F-stage fast-follow to state precisely what it proves; network destination -> 'denies the undeclared-network fixture (acceptance[3]: a remote provider with no declared destination fails schema)', also an explicit acceptance[3] citation; side-effect declaration -> C-stage's 'rejects a tool capability missing must[1] effect fields' (must[1] is exactly the side-effect/auth-audience/destination/data-classification declaration set), carried through to production denial via the same schema-validation-failure -> missing-manifest -> real profile-boot-denial path acceptance[0]'s citations already prove."
     },
@@ -500,26 +490,26 @@
       "epic": "P2-01",
       "acceptanceIndex": 0,
       "coveredBy": [
-       {
-        "stage": "C",
-        "title": "keeps rootPrincipal fixed across every extension"
-       },
-       {
-        "stage": "U",
-        "title": "a fresh session with a supplied identity attaches it and durably logs it exactly once"
-       },
-       {
-        "stage": "U",
-        "title": "logs a same-tenant resupply when the actually-attached principal genuinely differs from what is recorded (a real principal swap, not just \"something was already recorded\")"
-       },
-       {
-        "stage": "U",
-        "title": "logs a same-terminal-principal resupply when the chain shape differs -- a different root/depth/provenance underneath an identical terminal principal"
-       },
-       {
-        "stage": "U",
-        "title": "logs a resupply when chain shape and every kind/id/tenantId match but the terminal agent principal's delegatedBy differs (Reviewer round-3 finding, closed in fix4)"
-       }
+        {
+          "stage": "C",
+          "title": "keeps rootPrincipal fixed across every extension"
+        },
+        {
+          "stage": "U",
+          "title": "a fresh session with a supplied identity attaches it and durably logs it exactly once"
+        },
+        {
+          "stage": "U",
+          "title": "logs a same-tenant resupply when the actually-attached principal genuinely differs from what is recorded (a real principal swap, not just \"something was already recorded\")"
+        },
+        {
+          "stage": "U",
+          "title": "logs a same-terminal-principal resupply when the chain shape differs -- a different root/depth/provenance underneath an identical terminal principal"
+        },
+        {
+          "stage": "U",
+          "title": "logs a resupply when chain shape and every kind/id/tenantId match but the terminal agent principal's delegatedBy differs (Reviewer round-3 finding, closed in fix4)"
+        }
       ],
       "note": "acceptance[0]: 任何 action 都能追溯 root user/tenant 与完整委托链 (any action traceable to root user/tenant and the FULL delegation chain) decomposes into: a stable root anchor ('keeps rootPrincipal fixed across every extension', C-stage -- the root never drifts as a chain is built) and real, durable session-log traceability of every genuine authority-relevant change, proven incrementally across 4 U-stage review rounds each closing a narrower gap in what 'full chain' actually requires: first-attachment logging (basic traceability), a terminal-principal swap being logged (not just 'something changed'), a same-terminal-but-different-chain-shape swap being logged (root/depth/provenance, not just the endpoint), and a same-shape-but-different-delegatedBy swap being logged (who authorized the delegation, not just who is acting). Each citation represents a distinct authority-relevant fact this epic's own review process proved was NOT caught by the weaker checks that preceded it -- omitting any one would silently re-open a gap 3 independent Reviewers each specifically found and required closed."
     },
@@ -527,14 +517,14 @@
       "epic": "P2-01",
       "acceptanceIndex": 1,
       "coveredBy": [
-       {
-        "stage": "C",
-        "title": "rejects a cross-tenant principal with TenantMismatchError"
-       },
-       {
-        "stage": "U",
-        "title": "rejects a cross-tenant re-supplied identity via the runtime-policy layer (assertRuntimeTenantPolicy), distinct from extendChain's construction-time check"
-       }
+        {
+          "stage": "C",
+          "title": "rejects a cross-tenant principal with TenantMismatchError"
+        },
+        {
+          "stage": "U",
+          "title": "rejects a cross-tenant re-supplied identity via the runtime-policy layer (assertRuntimeTenantPolicy), distinct from extendChain's construction-time check"
+        }
       ],
       "note": "acceptance[1]: 跨租户 ID 混用在类型验证和 runtime policy 两层被拒绝 (cross-tenant ID confusion rejected at BOTH the type-validation AND runtime-policy layers) decomposes cleanly 1:1 into the 2 named layers: type-validation layer -> 'rejects a cross-tenant principal with TenantMismatchError' (C-stage's extendChain, construction-time); runtime-policy layer -> 'rejects a cross-tenant re-supplied identity via the runtime-policy layer (assertRuntimeTenantPolicy), distinct from extendChain's construction-time check' (U-stage's real resolveSessionIdentity caller, whose own test title explicitly names this as a genuinely distinct check from the type-validation layer, not a duplicate assertion of the same fact)."
     },
@@ -542,17 +532,279 @@
       "epic": "P2-01",
       "acceptanceIndex": 2,
       "coveredBy": [
-       {
-        "stage": "C",
-        "title": "creates an anonymous-dev principal with no adminGrant field"
-       },
-       {
-        "stage": "C",
-        "title": "never treats an anonymous-dev principal as admin"
-       }
+        {
+          "stage": "C",
+          "title": "creates an anonymous-dev principal with no adminGrant field"
+        },
+        {
+          "stage": "C",
+          "title": "never treats an anonymous-dev principal as admin"
+        }
       ],
       "note": "acceptance[2]: 匿名开发模式有独立受限 principal，不等价于管理员 (anonymous-dev mode has its own independent, restricted principal, never equivalent to admin) decomposes into 2 sub-facts: an independent, structurally-restricted construction path exists ('creates an anonymous-dev principal with no adminGrant field' -- the type itself carries no admin-capable field, not merely a runtime flag left unset) and that path is never treated as admin-equivalent by the real admin check ('never treats an anonymous-dev principal as admin' -- isAdminPrincipal's switch routes this kind to false unconditionally, before ever reading any adminGrant-shaped field, independently re-verified via adversarial bypass attempts during F-stage fault-testing, all defeated)."
+    },
+    {
+      "epic": "P1-08",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "solving two structurally-equal but distinct manifest/host inputs produces deep-equal load plans"
+        },
+        {
+          "stage": "P",
+          "title": "reordering the same graph produces a deep-equal resolved plan, planId and bindings included"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: the same profile negotiated twice produces the same planId and the same partition"
+        },
+        {
+          "stage": "F",
+          "title": "characterization: over 500 generated graphs, every permutation of the same manifest set yields an identical planId at the contract stage"
+        },
+        {
+          "stage": "F",
+          "title": "fault[A]: two manifests sharing a pluginId fail loud, naming the duplicated id, rather than producing an order-dependent plan"
+        }
+      ],
+      "note": "acceptance[0]: '兼容图可确定性求解,同一输入产生同一 load plan.' Covered at every stage and, critically, MADE TRUE by the F case. Before the Fault stage this clause was literally false: two manifests sharing a pluginId produced two different planIds from one input set, because comparePluginId returns 0 and Array.prototype.sort is stable, so input order survived into the output. The C/P/U cases prove determinism over well-formed graphs; the F case closes the input class that broke it. The 500-permutation property case is the strongest single witness, and its seed and run count are pinned so it cannot pass or fail differently between runs or platforms."
+    },
+    {
+      "epic": "P1-08",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "a plugin missing a (non-security) required capability is blocked, never active"
+        },
+        {
+          "stage": "C",
+          "title": "a plugin whose declared schema range major does not cover the host's registered major is blocked, never active"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a layer whose required capability no layer provides is blocked, never admitted"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: a layer whose declared schema major does not cover the host registration is blocked"
+        },
+        {
+          "stage": "U",
+          "title": "mounts the healthy bundle and never the blocked one, and says why on stderr"
+        }
+      ],
+      "note": "acceptance[1]: '缺少必需 capability 或 major schema 不匹配时不执行插件代码.' The C and U cases cover both named conditions -- missing required capability, and schema major mismatch -- as decisions. The clause's operative words are 不执行插件代码 (the plugin's code is not executed), which a decision alone does not establish: the real-composition case is the one that proves it, booting a two-bundle profile through the real Loader and asserting the blocked bundle's plugin produced no output while the healthy one did. That case is what distinguishes 'the solver said no' from 'the code never ran'."
+    },
+    {
+      "epic": "P1-08",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "a plugin missing only an optional capability stays active, with that capability explicitly listed as disabled"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: a layer missing only an optional capability stays admitted, with that capability shown explicitly"
+        },
+        {
+          "stage": "F",
+          "title": "characterization: an optional capability whose sole provider is itself blocked disables only that capability — cascade never propagates through an optional edge"
+        }
+      ],
+      "note": "acceptance[2]: '可选 capability 缺失时只禁用对应功能并明确展示.' Two halves, both required: the plugin stays active (only the feature is disabled), and the disablement is explicitly shown rather than silent. The C and U cases assert both halves at the contract and the real-profile level. The F case covers the harder variant the others do not reach -- an optional capability whose sole provider is itself blocked -- proving cascade does not propagate through an optional edge, which is what stops a missing optional from silently escalating into a blocked plugin."
+    },
+    {
+      "epic": "P1-09",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "same-name tool collision: a second plugin registering an already-claimed capability id without a replace contract fails closed"
+        },
+        {
+          "stage": "C",
+          "title": "cross-plugin revocation: a token that matches no active registration revokes nothing, and the real owner's token still works afterward"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: a SECOND plugin claiming an owned tool name is denied for ownership, not by the legacy duplicate check"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: a load-order attack — claiming a reserved name BEFORE the official plugin loads — still fails closed"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: cross-plugin revocation fails closed — another plugin's real token revokes nothing of this one's"
+        },
+        {
+          "stage": "F",
+          "title": "must[3]: a forged ownership token carrying the real owner's identity prefix revokes nothing"
+        },
+        {
+          "stage": "F",
+          "title": "must[3]: a real ownership token replayed after its own registration is gone revokes nothing"
+        }
+      ],
+      "note": "acceptance[0]: '同名工具、跨插件撤销、加载顺序攻击均 fail closed.' All three named attacks are covered as decisions at C and against the real ToolRuntime at U. The U same-name case is the load-bearing one and was deliberately rebuilt: the obvious form of this test was measured GREEN with zero new code, because NamedEntries throws on any duplicate, so a naive case would have survived deleting the entire ownership gate. It therefore requires the specific capability-collision reason and asserts the message is NOT the legacy 'already registered' string. The two F cases extend cross-plugin revocation past what C reached -- a forged token carrying the real owner's identity prefix, and a real token replayed after its registration is gone -- both of which the C case's different-plugin token could not exercise."
+    },
+    {
+      "epic": "P1-09",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "an authorized replace contract succeeds, and buildInventoryChain shows the replaced/replacing chain"
+        },
+        {
+          "stage": "C",
+          "title": "buildInventoryChain on a 3-owner history reports the current owner and its immediate predecessor, not the chain's original first owner"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: an authorized replacement succeeds and the registry records the replaced/replacing chain"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[1]: an authorized replacement is admitted and the Inventory shows the replaced/replacing chain"
+        },
+        {
+          "stage": "F",
+          "title": "must[1]: an official plugin may still replace its own reserved dsh.* capability, so the refusal is scoped to third parties"
+        },
+        {
+          "stage": "F",
+          "title": "control: an official plugin may still replace its own reserved dsh.* tool, so the reserved-namespace refusal is scoped to third parties"
+        }
+      ],
+      "note": "acceptance[1]: '允许合法 provider replacement,但 Inventory 显示 replaced/replacing chain.' Both halves are required and both are covered: a legitimate replacement is admitted, and the chain is visible in the Inventory -- at C over the pure history, and at U through the real registry and the real Inventory. The two F entries are the over-refusal controls, and the mutation proof shows why they are not decoration: dropping the officialPluginIdentities condition refuses EVERY reserved-namespace replacement, under which all three security cases still pass. Without these two controls that wrong fix would have looked correct while silently breaking the legitimate replacement this clause guarantees."
+    },
+    {
+      "epic": "P1-09",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "a dynamically defined capability is subject to the same reserved-namespace and collision rules as a statically declared one"
+        },
+        {
+          "stage": "C",
+          "title": "a dynamically defined capability for a fresh, non-reserved, non-colliding namespace is admitted exactly as a statically declared one would be"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: a dynamic package cannot provide a service in the reserved dsh.* namespace"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: a dynamic package cannot listen on an event in the reserved dsh.* namespace"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: a dynamic package cannot register a tool name a statically loaded plugin already owns"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: two dynamic packages carry distinct plugin identities, so one cannot claim the other's tool"
+        }
+      ],
+      "note": "acceptance[2]: '动态 Cordis 定义同样受规则约束.' Covered across tools, services and events for the dynamic origin, through the real runner's guard facade rather than a hand-built context. The distinct-identities case is load-bearing rather than incidental: registrations previously resolved to Fiber.name -- the name the model wrote in its own source -- which is forgeable, and under a Loader every dynamic half hangs beneath one shared cordis-dynamic group entry, collapsing every dynamic package into a single owner and making dynamic-vs-dynamic collision undetectable. KNOWN RESIDUAL, recorded rather than covered: static-origin service and event registration remains ungated, since ctx.provide and ctx.on live in vendor/cordis behind the unlanded Fiber fix. must[0] is enforced as Tool across all origins, Service/Event for the dynamic origin only. This clause's coverage is therefore complete for dynamic definitions, which is what it names, and the static residual belongs to whoever lands that fix."
+    },
+    {
+      "epic": "P4-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "lists a non-terminal Run reconstructed from the durable store by a fresh service"
+        },
+        {
+          "stage": "P",
+          "title": "lists every non-terminal Run, not just the most recently written one"
+        },
+        {
+          "stage": "P",
+          "title": "omits a Run that reached a terminal state before the restart from the non-terminal listing"
+        },
+        {
+          "stage": "P",
+          "title": "resumes a non-terminal Run reconstructed after a restart"
+        },
+        {
+          "stage": "U",
+          "title": "lists the Run a previous boot left behind as non-terminal, so a restart can resume it"
+        },
+        {
+          "stage": "F",
+          "title": "a store document naming a Run state outside the closed set is refused, never restored and offered for resumption"
+        },
+        {
+          "stage": "F",
+          "title": "CHARACTERIZATION: a corrupt store document is refused loudly, never read as an empty registry"
+        }
+      ],
+      "note": "acceptance[0]: '进程重启后可列出所有非终态 Run 并恢复.' The Provider stage proves the happy path with a restart modelled as a fresh store AND a fresh service over the same path, sharing nothing but the file, so an in-memory double cannot pass. The Usage case proves it on a real harness boot. The Fault stage adds what a clean restart cannot: a DAMAGED store must not satisfy this clause by restoring a Run in a state outside must[0]'s closed set and offering it for resumption -- listNonTerminalRuns treats any non-terminal state as resumable and resumeRun re-stamps ownerId, MASKING a foreign owner, so nothing downstream would have caught it. The characterization case pins that a corrupt document is refused loudly rather than read as an empty registry, which would satisfy 'listed every non-terminal Run' vacuously by listing none."
+    },
+    {
+      "epic": "P4-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "accepted -> waiting is rejected"
+        },
+        {
+          "stage": "C",
+          "title": "succeeded -> running is rejected"
+        },
+        {
+          "stage": "C",
+          "title": "cancelled -> cancelled is rejected"
+        },
+        {
+          "stage": "P",
+          "title": "rejects an illegal transition through the service, naming the exact rejected pair"
+        },
+        {
+          "stage": "P",
+          "title": "writes nothing for a rejected transition: the restored Run keeps its state and its unextended event log"
+        },
+        {
+          "stage": "F",
+          "title": "two concurrent transitions out of one state never both succeed, and the durable log records exactly the accepted one"
+        }
+      ],
+      "note": "acceptance[1]: '非法状态转换被拒绝.' The Contract stage settles it exhaustively -- a 10x10 sweep over every ordered state pair, derived from the real LEGAL_RUN_TRANSITIONS table, so every legal edge has a passing case and every illegal pair a rejected one; three representatives are cited here rather than all 100. The Provider stage proves the rejection survives the durable boundary and, critically, that a refused transition WRITES NOTHING. The Fault case closes the gap none of those reach: two CONCURRENT transitions out of one state. Before the fix both were accepted -- one to planning and one to cancelled -- and the append-only log ended holding only the second, so an accepted transition vanished and the service admitted two mutually exclusive exits from one state. A per-state-pair table cannot express that; only concurrency can."
+    },
+    {
+      "epic": "P4-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "the same Session id seeds two independently created Runs"
+        },
+        {
+          "stage": "C",
+          "title": "attachSessionToRun appends an additional Session/Agent, so one Run spans multiple Sessions"
+        },
+        {
+          "stage": "P",
+          "title": "associates one Session with multiple Runs across a restart"
+        },
+        {
+          "stage": "P",
+          "title": "spans one Run across multiple Sessions durably: an attached Session survives a restart"
+        },
+        {
+          "stage": "U",
+          "title": "opens an independent Run per agent session, so one Session never joins another Session's Run"
+        }
+      ],
+      "note": "acceptance[2]: '一个 Session 可关联多个 Run,一个 Run 可跨多个 Session/Agent.' Both directions of the many-to-many relation are covered, and both are proven to survive a restart rather than only holding in memory -- which matters because the clause is about durable association, not a transient one. The Usage case adds the negative half the positive cases cannot establish: a real boot opens an INDEPENDENT Run per agent session, so the relation is genuinely many-to-many rather than one Run silently collecting every session."
     }
-
   ]
 }
