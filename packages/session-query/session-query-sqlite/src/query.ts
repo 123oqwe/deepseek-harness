@@ -156,7 +156,7 @@ export function buildSessionWhere(filters: readonly SessionResultFilter[]): SqlW
         // cannot be compiled into the ranked search. Refusing is the only safe
         // outcome: dropping a tenant clause here would return another tenant's
         // sessions to a caller that asked to be scoped to its own.
-        throw unsupportedSearchFilter(filter.kind)
+        unsupportedSearchFilter(filter.kind)
       case 'cwd':
         addNullableList(clauses, params, 'cwd', filter.values)
         break

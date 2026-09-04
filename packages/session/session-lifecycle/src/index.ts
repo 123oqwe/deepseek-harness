@@ -204,9 +204,29 @@ export function projectLifecycleRecords(
   records: readonly SessionRecord[],
   registered: ReadonlyMap<SessionId, SessionLifecycleRecord>,
 ): LifecycleProjection {
-  void records
-  void registered
-  throw new Error('projectLifecycleRecords is not implemented')
+  const projected: SessionLifecycleRecord[] = []
+  const unattributed: SessionId[] = []
+  for (const record of records) {
+    const durable = registered.get(record.header.id)
+    if (durable !== undefined) {
+      // The durable record's disposition and hold are the authoritative facts.
+      // A corpus observation says only that the session exists, which can
+      // never promote a soft-deleted or held session back to `active`.
+      projected.push(durable)
+      continue
+    }
+    if (record.tenantId === undefined) {
+      unattributed.push(record.header.id)
+      continue
+    }
+    projected.push({
+      header: record.header,
+      tenantId: record.tenantId,
+      ...record.workspaceId === undefined ? {} : { workspaceId: record.workspaceId },
+      disposition: { kind: 'active' },
+    })
+  }
+  return { records: projected, unattributed }
 }
 
 /**

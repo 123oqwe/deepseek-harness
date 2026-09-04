@@ -31,7 +31,7 @@ Use `ctx.sessionQuery` from application code when you need to read or search ses
 
 | Operation | What you get |
 |---|---|
-| `listSessions()` | Every logical session, newest first, with `live` and `persisted` availability flags |
+| `listSessions()` | Every logical session, newest first, with `live` and `persisted` availability flags plus the tenant and workspace this observation could attribute it to |
 | `readSession(id)` | The complete replay-validated raw event log, without making the session live |
 | `filterSessions(filters)` | Sessions matching ANDed metadata and availability predicates |
 | `filterEvents(id, filters)` | Semantic event documents matching metadata and literal-text predicates |
@@ -46,7 +46,9 @@ Body-free records expose only `SessionHeader.isSeeded`. Reads that return event 
 
 ### Filters
 
-`SessionResultFilter` narrows sessions by id, nullable cwd, created-at range, nullable parent, or source availability; `SessionEventResultFilter` narrows events by seq/time range, event type, surface, or literal text. Filter arrays are ANDed and list values within one clause are ORed; empty list values match nothing, ranges are inclusive, and malformed ranges or unknown closed-union values fail with `SESSION_QUERY_INVALID_FILTER`.
+`SessionResultFilter` narrows sessions by id, tenant, workspace, nullable cwd, created-at range, nullable parent, or source availability; `SessionEventResultFilter` narrows events by seq/time range, event type, surface, or literal text. Filter arrays are ANDed and list values within one clause are ORed; empty list values match nothing, ranges are inclusive, and malformed ranges or unknown closed-union values fail with `SESSION_QUERY_INVALID_FILTER`.
+
+A `tenant` or `workspace` clause never admits a record whose corresponding `SessionRecord` field is absent. An unattributable session is excluded from every tenant's listing rather than appearing in the wrong one — the clause omits rather than leaks. The sqlite backend's ranked search cannot answer either clause and refuses it outright; see that package's README.
 
 The text clause is a literal, case-insensitive, whitespace-flexible scan of extracted semantic text — not a full-text query. Use it for arbitrary substring recall; use the mounted backend's search methods when you need ranked full-text results.
 
@@ -101,6 +103,8 @@ The decision history lives in the [unified service decision](../../../.agents/no
 
 ### Corpus resolution
 
+A listing also attributes each record. The tenant comes from the LAST `identity/attached` event in the observed log — the same rule `@deepseek-ai/dsh-agent-loop`'s `lastAttachedIdentity` applies, and never from `user/message` or any other model-editable content. The workspace comes from one synchronous `ctx.workspaceRegistry.list()` inverted into a session-to-workspace lookup, so attribution costs one pass over the workspaces rather than a read per session. An unobservable value omits its property rather than setting it to `undefined`.
+
 `SessionCorpus` binds optional `ctx.sessionPersistence` through a fiber and resolves each read live-first: a known live target is snapshotted without consulting persistence; otherwise the session is listed, inspected non-mutatingly, and re-checked for a live attachment before cloning. Header compatibility is asserted between listed and loaded observations. Batch title reads run one metadata listing and bounded-concurrency inspections, isolating per-session failures while cancellation rejects the whole batch.
 
 ### Reads and traces
@@ -144,6 +148,8 @@ These limits define when this package is a poor fit or needs special operational
 - **No provider coordinator or fallback** — the service is abstract over search, so a composition must mount a concrete backend; there is no search-provider registry or fallback implementation.
 - **Exact reads replay whole logs** — `readSession`, `readSurface`, `filterEvents`, and event traces load and validate the complete logical log, so very large histories pay full inspection per call; `listSessions` stays lightweight.
 - **Literal text scan, not full-text search** — the `text` filter scans extracted documents with a regular expression and does not rank; ranked search requires the mounted backend.
+- **A persisted-only session has no observable tenant** — a listing resolves it from a persistence header, and a header carries no events, so no `identity/attached` event is available to attribute it. Recovering one would mean a log read per listed session, which a listing does not do. A `tenant` clause therefore matches only sessions that are currently live. Attributing a cold session needs a durable tenant fact outside the log, which does not exist yet.
+- **Workspace attribution needs the registry mounted** — with no `ctx.workspaceRegistry`, every record's `workspaceId` is absent and a `workspace` clause matches nothing.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -9,6 +9,9 @@ import type {
   SessionLogOffset,
 } from '@deepseek-ai/dsh-session'
 import type SessionPersistence from '@deepseek-ai/dsh-session-persistence'
+import type { TenantId } from '@deepseek-ai/dsh-principal/types'
+import type {} from '@deepseek-ai/dsh-workspace'
+import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import type { SessionRecord } from './types.ts'
 import { SessionQueryError } from './config.ts'
 import { assertSessionHeadersCompatible } from './sources.ts'
@@ -38,10 +41,21 @@ export type LogicalProjectionResult<Value> =
   | { sessionId: SessionId; status: 'fulfilled'; value: Value }
   | { sessionId: SessionId; status: 'rejected'; reason: unknown }
 
+/**
+ * The workspace-registry surface a corpus listing reads membership through.
+ * Only the synchronous projection is used: a listing performs no durable
+ * workspace read and never mutates the registry.
+ */
+interface WorkspaceMembershipSource {
+  list(): readonly { readonly id: WorkspaceId; readonly sessionIds: readonly SessionId[] }[]
+}
+
 /** Resolves a live-preferred corpus against the persistence service mounted now. */
 export class SessionCorpus {
   private _persistence: SessionPersistence | undefined
   private readonly _optionalPersistenceFiber: Fiber
+  private _workspaces: WorkspaceMembershipSource | undefined
+  private readonly _optionalWorkspaceFiber: Fiber
 
   constructor(
     private readonly _ctx: Context,
@@ -58,10 +72,29 @@ export class SessionCorpus {
     _ctx.effect(() => {
       return () => this._optionalPersistenceFiber.dispose()
     }, 'sessionQuery.optionalPersistence')
+
+    this._optionalWorkspaceFiber = _ctx.inject(['workspaceRegistry'], (childCtx: Context) => {
+      const registry = childCtx.workspaceRegistry
+      this._workspaces = registry
+      childCtx.effect(() => () => {
+        /* v8 ignore next -- a stale optional-service disposer cannot clear a replacement */
+        if (this._workspaces === registry) this._workspaces = undefined
+      }, 'sessionQuery.workspaceBinding')
+    })
+    _ctx.effect(() => {
+      return () => this._optionalWorkspaceFiber.dispose()
+    }, 'sessionQuery.optionalWorkspaceRegistry')
   }
 
   /**
    * List the complete logical corpus with live precedence and cloned headers.
+   *
+   * Each record also carries what this observation can attribute it to without
+   * a per-session log read: its tenant, from a live session's own events, and
+   * its workspace, from the registry mounted now. A session resolved from a
+   * persistence header alone gets no `tenantId` — a header carries no events —
+   * so the listing stays one persistence call rather than one log read per
+   * listed session. {@link SessionRecord} documents both absences.
    * @param signal - optional cancellation for persistence listing.
    * @returns records in deterministic newest-first order.
    */
@@ -70,9 +103,15 @@ export class SessionCorpus {
     const persistence = this._persistence
     const persisted = persistence === undefined ? [] : await listPersisted(persistence, signal)
     signal?.throwIfAborted()
+    const workspaces = workspaceMembership(this._workspaces)
     const records = new Map<SessionId, SessionRecord>()
     for (const header of persisted) {
-      records.set(header.id, { header: structuredClone(header), live: false, persisted: true })
+      records.set(header.id, {
+        header: structuredClone(header),
+        live: false,
+        persisted: true,
+        ...attribution(undefined, workspaces.get(header.id)),
+      })
     }
     for (const session of this._ctx.sessions.list()) {
       const durable = records.get(session.id)
@@ -81,6 +120,7 @@ export class SessionCorpus {
         header: structuredClone(session.header),
         live: true,
         persisted: durable !== undefined,
+        ...attribution(lastAttachedTenantId(session.snapshotEvents()), workspaces.get(session.id)),
       })
     }
     return [...records.values()].sort(compareSessions)
@@ -310,6 +350,47 @@ function snapshotLive(session: Session): LogicalSession {
     header: structuredClone(session.header),
     inheritedEventCount: session.inheritedEventCount,
     events: session.snapshotEvents().map(event => structuredClone(event)),
+  }
+}
+
+/**
+ * The tenant a session durably anchored its identity to, from the LAST
+ * `identity/attached` event. That event's own doc records why the last
+ * occurrence is authoritative; `@deepseek-ai/dsh-agent-loop`'s
+ * `lastAttachedIdentity` applies the identical rule to a live `Session`, and
+ * this one reads an already-selected event array instead. Nothing else in the
+ * log is consulted, so no prompt text can claim a tenant.
+ */
+function lastAttachedTenantId(events: readonly SessionEvent[]): TenantId | undefined {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]
+    if (event?.type === 'identity/attached') return event.data.identity.principal.tenantId
+  }
+  return undefined
+}
+
+/** Invert the registry's per-workspace session accounts into one session-to-workspace lookup. */
+function workspaceMembership(registry: WorkspaceMembershipSource | undefined): ReadonlyMap<SessionId, WorkspaceId> {
+  const membership = new Map<SessionId, WorkspaceId>()
+  if (registry === undefined) return membership
+  for (const workspace of registry.list()) {
+    for (const sessionId of workspace.sessionIds) membership.set(sessionId, workspace.id)
+  }
+  return membership
+}
+
+/**
+ * The attribution fields to spread onto a record. An unobservable value omits
+ * its property rather than setting it to `undefined`, so a record carries only
+ * facts this observation established.
+ */
+function attribution(
+  tenantId: TenantId | undefined,
+  workspaceId: WorkspaceId | undefined,
+): Partial<Pick<SessionRecord, 'tenantId' | 'workspaceId'>> {
+  return {
+    ...tenantId === undefined ? {} : { tenantId },
+    ...workspaceId === undefined ? {} : { workspaceId },
   }
 }
 
