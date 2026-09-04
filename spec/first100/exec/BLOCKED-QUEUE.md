@@ -764,6 +764,30 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-073 — the terminal state's P9 clause was recorded as already satisfied, but no P9 item carried a status anywhere; all nine are hereby **scheduled-BLOCKED**, with the blocker, owner and unblock signal named per item (Supervisor, 2026-09-04)
+
+**[BLOCKED-043](#blocked-043) claimed this bar was already met**: *"the terminal-state requirement 'P9 九项全部 VERIFIED 或 scheduled-BLOCKED 在案' is satisfied by this record as it stands; no further action was needed to reach that bar."* **Tested rather than accepted, and it is false.** Grepping `VERIFIED` and `scheduled-BLOCKED` across `upstream-status-COMPLETE.md`, the extension matrix, and every file under `spec/first100/exec/` returns **zero P9 status hits**. What the vendored record actually carries is a **scope triage** — P9-02 "major shrink", P9-01/P9-03 "partial", P9-04 through P9-09 "fully missing, do as planned". A scope verdict answers *how much work each item is*; the terminal clause asks *what state each item is in*. They are different questions, and one was mistaken for the other. This is [BLOCKED-072](#blocked-072)'s pattern applied to a terminal-state clause: a record described as satisfying a condition, with nobody evaluating whether it does.
+
+**Status recorded now — `scheduled-BLOCKED` for all nine, which is the truthful status, not a convenient one.** The blocker is identical and concrete for every item: **no P9 item has a registry row**, because Stage-0 registry-ification is deliberately deferred ([BLOCKED-043](#blocked-043)). Without a row an item cannot be gated by `check-ready.mjs`, cannot hold ledger cells, cannot be greened by `first100-exact-sha.yml`, and cannot be ACCEPTED. Not one of the nine can begin, whatever its scope triage says.
+
+| Item | Wave | Declared dependencies | Scope triage | Status |
+|---|---|---|---|---|
+| P9-01 LLM Provider Conformance Kit | W20 | P0-06 | partial — narrows to a reusable kit + registration gate + fault injection | scheduled-BLOCKED |
+| P9-02 activate pi-ai multi-protocol routing | W20 | P9-01 | major shrink — routing already ships; needs a default template + conformance gate | scheduled-BLOCKED |
+| P9-03 Provider/Model selection, `--model` | W20 | P9-02 | partial — headless `--model` flag + a CLI-selection session event | scheduled-BLOCKED |
+| P9-04 edit-tool graded fallback | W20 | none | fully missing | scheduled-BLOCKED |
+| P9-05 token-meter real tokenizer | W20 | none | fully missing | scheduled-BLOCKED |
+| P9-06 headless scripting | W20 | none | fully missing | scheduled-BLOCKED |
+| P9-07 agent-loop hard budget | W20 | none | fully missing | scheduled-BLOCKED |
+| P9-08 task success-rate benchmark v1 | W21 | P0-08, P7-09, P9-06 | fully missing | scheduled-BLOCKED |
+| P9-09 system-prompt guidelines v1 + A/B | W22 | P9-08, P5-03, P7-10 | fully missing | scheduled-BLOCKED |
+
+**Unblock signal, mechanical and identical for all nine:** a P9 item leaves `scheduled-BLOCKED` when it has a real registry row — which requires Stage-0 in full: vendoring the extension matrix and a wave-map under `spec/first100/sources/` with SHA pins, removing `extract-registry.mjs`'s three hard locks (`matrix.size !== 100`, `waveMap.size !== 100`, waves exactly `1..19`), and generating the rows. BLOCKED-043's binding requirement already makes Stage-0 completion a checked precondition of W20's own opening gate; this entry supplies the per-item status that requirement assumed existed.
+
+**Four of the nine have no dependency on any other P9 item** (P9-04, P9-05, P9-06, P9-07 declare none), so the chain is not serial the way R10's preparation is ([BLOCKED-071](#blocked-071)). That is a fact about their declared dependencies only. **It is deliberately not a claim that they can start once Stage-0 lands** — R10's ordering was misread today by exactly that inference, taking a listing for a dependency graph, and each item's real start condition must be evaluated from `check-ready.mjs` against its generated row, not inferred here.
+
+**Numerator/denominator, restated because this entry makes it concrete.** `totals.totalEpics` is 110 (`registry.epics.length` + `P9_EXTENSION_ITEM_COUNT = 9`), while `totals.acceptedEpics` counts only real ledger ACCEPTED rows, which no P9 item can ever populate today. **The counter cannot exceed 101/110 until Stage-0 lands**, and that ceiling is arithmetic, not a matter of remaining effort.
+
 ### BLOCKED-072 — **Verdict divorced from subject**: a mechanism produces a plausible verdict without evaluating the thing it claims to evaluate. Five instances in one day, three sub-forms, and one executable rule that catches all five (delegate-named, Supervisor-recorded, 2026-09-04)
 
 **This is a lens, not a parent node.** It absorbs nothing. The neighbouring entries each name a *different* way a guarantee fails, and folding them together would destroy that distinction:
