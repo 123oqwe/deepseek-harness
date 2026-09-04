@@ -1207,3 +1207,23 @@ P0-04's Usage stage was run against three tables, each signed by a party who had
 **The durable rule.** A classification exercise that only ever confirms its author has produced no evidence. Build the check so it *can* contradict the table, publish the table first so the contradiction cannot be absorbed, and **treat a refuted prediction as the run that proved the instrument.**
 
 **Also recorded from the same lane:** a Writer corrected a signed table's "all 40 `ui-*` packages" to the real 38 **in the authorship record** rather than silently using the right number. A discrepancy that small is precisely the kind that gets swallowed, and swallowing it would have left a signed artifact carrying a false count.
+
+### BLOCKED-064 — RESUMPTION STATE: weekly API rate limit reached 2026-09-04, two lanes stopped mid-task
+
+**Hard stop, not a defect.** Both remaining Writers terminated with HTTP 429 (`You've hit your weekly limit · resets 6pm America/New_York`). Nothing is broken; the integration branch is clean and pushed. This entry is the handoff.
+
+**Program state: 55 GREEN cells, 8/101 ACCEPTED. W4 — C 11/11, P 7/7 applicable, U 7/11, F 0/11.**
+
+**`attempt/P0-04-U` @ `2583a5a552` — closest to done, work-in-progress preserved by the Supervisor, NOT reviewed and NOT green.**
+
+Current scanner output: `3 violation(s) and 119 reported finding(s) across 269 classified packages, 1655 edges, in 1.25s`. The three violations are two `global-singleton` (`__ModuleLoader__`) and one `composition-root-inbound-dependency` (`dsh-sdk-client → apps/cli`).
+
+Outstanding for that lane:
+1. **The mutation proof for both halves of rule 3** — global-singleton and dynamic-require. The lane's last words were "Both `__ModuleLoader__` findings are genuine. Now the mutation proof for both halves of rule 3."
+2. Rewrite the real-repo assertion to **four zeros plus two conditions** (unexempted cycles, kernel reverse edges, expired allowlist entries, global-singleton bypasses; all packages classified; under 10s) — approved as *alignment with the registry, not loosening*, since must[0] says "define", must[2] says "detect", acceptance[0] is about cycles, and the gate names only two zeros.
+3. The 119 findings printed, written to a persistent file, and the pass-condition/observation distinction stated in `layering.md`.
+4. `slice-gate-registry` wiring still on the branch — **must not merge while the gate is red.**
+
+**`attempt/P2-03-U` — clean at base, holding for a ruling it never received.** Its Step 0 stands: `prepareExecution` is the single funnel for all three origins with policy and approval after it; the granted `code-mode.ts` → `ptc.ts` patch is unapplied. Approved but unstarted: the default-off `Config` switch with its acceptance lock, and option (c) using `packages/identity/anonymous-user-id` for a real anonymous identity rather than a synthesized one.
+
+**A Supervisor error worth carrying forward.** I reported that `check-layer-deps.mjs` contained zero occurrences of `singleton`, and concluded the Contract stage had defined a classification the scanner never produces. **That was false.** The file carried five literal NUL bytes, so `grep` skipped it silently and I read "nothing found" as "nothing there". The scanner implements the detection at lines 514–736 and it fires on two real violations. **Third occurrence of the NUL hazard, and the first to produce a wrong conclusion — by me, about a defect I had documented twice.** Fixed to `\0` in the WIP commit; the file is now greppable and its diffs reviewable.
