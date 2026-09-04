@@ -73,7 +73,7 @@ function writeSource(fixture: string, relPath: string, content: string): void {
  * @param document - the exemption document to write.
  */
 function writeExemptions(fixture: string, document: unknown): void {
-  const filePath = join(fixture, 'tests/first100/architecture.layers.json')
+  const filePath = join(fixture, 'tests/first100/layer-cycle-exemptions.json')
   mkdirSync(join(filePath, '..'), { recursive: true })
   writeFileSync(filePath, `${JSON.stringify(document, null, 2)}\n`)
 }

@@ -1,0 +1,13 @@
+{
+  "$schemaVersion": 1,
+  "exemptedCycles": [],
+  "kernelEdgeAllowlist": [
+    {
+      "fromPackage": "@deepseek-ai/dsh-trust-kernel",
+      "toPackage": "@deepseek-ai/dsh-invariants",
+      "owner": "P0-04",
+      "reason": "Real rule-4 violation, recorded rather than reclassified away. @deepseek-ai/dsh-invariants lives in packages/runtime-diagnostics and is itself a Cordis Service (it imports { Context, Service }), so it is orchestration-runtime and this is a genuine upward kernel edge. The only import is type-only -- InvariantInstaller at packages/kernel/trust-kernel/src/invariant.ts:7 -- inside the package's ./invariant companion, which is a plugin of the diagnostics layer colocated in the kernel package. A module-level carve-out exempting every package's ./invariant companion would make the edge legal repo-wide and would generalize, but it was rejected: an invisible carve-out is worse than a dated visible entry, and building a per-module layer mechanism whose first job is to legalize the one edge that would otherwise fail is what layering.md rule 4's own construction order exists to prevent. Removing the edge means changing packages/kernel/trust-kernel, which is P0-02's ACCEPTED territory and outside this stage's file scope.",
+      "expires": "2026-12-31"
+    }
+  ]
+}
