@@ -5,11 +5,13 @@ kind: "package-reference"
 
 # @deepseek-ai/dsh-memory
 
+English | [中文](README.zh.md)
+
 ## Summary
 
 `dsh-memory` (`ctx.memory`) is the provider-neutral durable Memory capability seam (first100 registry P6-01): propose a candidate write, query or get existing records, revise or forget one, and export everything visible to a caller — all without naming a vector database, graph database, or any other retrieval mechanism. A concrete provider (local-reference, embedding-backed, graph-backed, ...) plugs in as a backend, and the service resolves one usable provider per call, so consumers never bind to a specific vendor. Every read carries a complete access context (`principal`, `purpose`, `scope`, `contextBudget`); the seam enforces the size bound itself. `propose()` is the only mutation entry point — there is no `write`/`set`/`put` verb — so a durable record can never originate outside it.
 
-Contract and Provider stages (first100 registry P6-01, C+P): the provider registry, selection logic, and `must[3]` access-context enforcement are real, mirroring `dsh-web`'s `WebRuntime`. Three providers ship: `createLocalReferenceMemoryProvider()` and `createFakeMemoryProvider()` are deliberately independent in-memory implementations (different data structure, id minting, and search algorithm) that prove provider-swap conformance, and `createDurableFileMemoryProvider()` persists across processes.
+The provider registry, selection logic, and `must[3]` access-context enforcement are real, mirroring `dsh-web`'s `WebRuntime`. Three providers ship: `createLocalReferenceMemoryProvider()` and `createFakeMemoryProvider()` are deliberately independent in-memory implementations (different data structure, id minting, and search algorithm) that prove provider-swap conformance, and `createDurableFileMemoryProvider()` persists across processes. The seam has one shipped consumer, [`@deepseek-ai/dsh-memory-context`](../../context/memory-context/README.md), which recalls records into real requests and records each read.
 
 ## Table of Contents
 
@@ -42,6 +44,9 @@ Load the service and let a single mounted provider auto-select, or pin a provide
 | Field | Default | Meaning |
 |---|---|---|
 | `providerId` | (unset) | Pinned provider id; unset auto-selects when exactly one is usable |
+| `durableFileDirectory` | (unset) | Directory for a self-registered `durable-file` provider; unset registers none |
+
+The service registers no provider on its own, so a composition that mounts it without either `durableFileDirectory` or a `registerProvider()` call fails every call with `MEMORY_PROVIDER_UNAVAILABLE`. `durableFileDirectory` is the only route that works from `cordis.yml` alone.
 
 ### Operations
 
@@ -113,30 +118,30 @@ This section explains the design decisions behind the service; the observable be
 ## Further Exploration
 
 - [Memory subsystem](../../../docs/subsystems/memory.md) — the exhaustive request/result vocabulary, the read-scoping and no-bypass rationale, and the Memory vs. Session Query boundary.
-- [Identity/Principal](../../identity/principal/README.md) — the `Principal`/`TenantId` vocabulary this seam reuses.
+- [`@deepseek-ai/dsh-memory-context`](../../context/memory-context/README.md) — the shipped consumer that injects recalled records and records each read.
 
 -----
 
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as this Contract-stage seam ships no model-facing tool and contributes no prompt or schema of its own; a later consumer package would render its own model-facing surface over `ctx.memory`.
+Indirectly, through `@deepseek-ai/dsh-memory-context`, which appends recalled records to the request as a durable user-role message; this seam registers no prompt, schema, or tool of its own.
 
 #### KV Cache effect
 
-No direct invalidation; a named future consumer would own any request-prefix changes.
+No direct invalidation from this package; a consumer that injects recalled records owns the resulting request-prefix changes.
 
 ## Known Limitations and Deferred Work
 
 <a id="known-limitations-and-deferred-work"></a>
 
-These limits define when the service is incomplete on its own. They are current package constraints for the Contract stage.
+These limits define when the service is incomplete on its own.
 
 - **The two in-memory providers lose everything at process exit** — `createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()` are real and conformance-tested, but exist to prove provider replaceability, not to retain records. Use `createDurableFileMemoryProvider()` when records must survive the process.
 - **The durable provider keeps one JSON document per directory** — `createDurableFileMemoryProvider({ directory })` rewrites `memory.json` in full on every mutation, serialized on one per-instance chain and committed write-temp-then-rename, so it suits a single host's record counts rather than large or highly concurrent stores; a multi-writer store across processes is out of scope.
-- **No live session-log wiring** — nothing yet emits the `memory/access` durable event this package declares; a live call site is the Usage stage's job.
+- **The seam itself emits nothing** — `memory/access` now has a real emitter, but it belongs to the consumer, not to this package: `@deepseek-ai/dsh-memory-context` records one event per read it performs. Another caller of `ctx.memory` records nothing unless it appends the event itself, so the log is complete only for reads made through a consumer that writes one.
 - **`must[3]` enforcement lives at the seam, not in providers** — `MemoryRuntime.query()`/`get()`/`export()` reject an incomplete `MemoryAccessContext` with `MEMORY_ACCESS_CONTEXT_REQUIRED` before any provider is reached, so a provider cannot be handed an unscoped read; a provider registered outside the seam would not inherit that check.
-- **No model-facing tool** — `ctx.memory` has no consumer yet; a `dsh-tool-memory`-shaped package is out of this epic's scope.
+- **No model-facing tool** — the model cannot call memory; it only reads what `@deepseek-ai/dsh-memory-context` recalled for it. A `dsh-tool-memory`-shaped package that lets the model query or propose on its own is out of this epic's scope.
 
 <a id="dev-note"></a>
 ### Dev Note
@@ -146,10 +151,8 @@ These limits define when the service is incomplete on its own. They are current 
 
 This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior, limits, and rationale live in the sections above.
 
-#### Follow-up registrations this Contract-stage PR left open
+#### Follow-up registrations still open
 
-- `scripts/verify-package-readme-model-experience.ts` does not yet list `@deepseek-ai/dsh-memory` in its audited sentence map; `pnpm run doc-sync` needs that entry before it passes for this package.
-- `packages/core/session/src/known-event-types.ts` is generated (`pnpm run gen-persistence-catalog`) and does not yet list `memory/access`; regenerate it once this package's `SessionEventMap` addition is ready to ship.
-- No group README exists yet at `packages/memory/README.md` (subsystem-page ownership link); `scripts/verify-subsystem-pages.ts` needs either that page or a justified exemption entry.
+- No group README exists yet at `packages/memory/README.md`; if `scripts/verify-subsystem-pages.ts` starts requiring one, it needs either that page or a justified exemption entry.
 
 </details>

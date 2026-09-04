@@ -1,0 +1,51 @@
+# Test-only patch over the shipped headless profile. The production bundle
+# layers own the agent services, tools, persistence plugin, and defaults.
+#
+# `memory` and `memory-context` ship `disabled: true` in the base bundle
+# (a composition with no mounted provider would fail every read), so this
+# fixture is also the proof that those two rows are real and opt-in.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+# The typert loader imports each contributor's built `./typert` subpath, so it
+# is the one row in this profile that cannot boot from an unbuilt source tree.
+# Nothing under test reaches it: this fixture asserts on memory recall and on
+# the session log, never on the RPC type graph.
+- id: typert-loader
+  disabled: true
+
+- id: typert-gateway
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: memory-context-mock
+        model: memory-context-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- id: memory
+  disabled: false
+  config:
+    durableFileDirectory: './.memory'
+
+- id: memory-context
+  disabled: false
+  config:
+    tenantId: 't-fixture'
+    principalId: 'p-fixture'
+    purpose: 'recall'
+    maxRecords: 5
+
+- insert:
+    - id: memory-context-mock-llm
+      name: './mock-llm.ts'

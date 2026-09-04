@@ -523,6 +523,30 @@ Source: [`packages/llm/llm-retry/src/types.ts:9`](../packages/llm/llm-retry/src/
 
 Source: [`packages/llm/llm-retry/src/types.ts:11`](../packages/llm/llm-retry/src/types.ts)
 
+### `memory/*`
+
+<a id="memoryaccess--log-only"></a>
+
+#### `memory/access` — log-only
+
+```ts persistence-catalog
+/**
+ * Records one operation performed through the Memory seam (`ctx.memory`).
+ * Log-only: it does not participate in message reconstruction. The
+ * payload is a {@link MemoryAccessEvent}, discriminated on `operation` —
+ * `query`/`get`/`export` carry the complete {@link MemoryAccessContext}
+ * (`principal`, `purpose`, `scope`, `contextBudget`) plus how much the
+ * read returned, while `propose`/`revise`/`forget` carry the acting
+ * principal and the record id. A read whose result reached a model
+ * request is always accompanied by this event, so memory content the
+ * model saw stays reconstructable from the log alone (first100 registry
+ * P6-01 validation[3]).
+ */
+'memory/access': MemoryAccessEvent
+```
+
+Source: [`packages/memory/memory/src/types.ts:204`](../packages/memory/memory/src/types.ts)
+
 ### `model/*`
 
 <a id="modelselection--log-only"></a>

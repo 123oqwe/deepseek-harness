@@ -6,6 +6,8 @@
 
 源码:[`packages/memory/memory/src/types.ts`](../../packages/memory/memory/src/types.ts)
 
+<a id="memory-vs-session-query"></a>
+
 ## Memory 与 Session Query
 
 Memory 不是 [Session Query](session-query.zh.md),两者从不可互换:
@@ -90,6 +92,14 @@ interface MemoryAccessContext {
 ## 消费方必须经由 Service Definition(`must[2]`)
 
 `ctx.memory` 是唯一预期的入口点。单独存在的 `MemoryProvider` 对象是惰性的 —— 构造它不产生任何效果,直到 `ctx.memory.registerProvider()` 使其可达为止;不存在可绕过本接缝直接调用的独立 `proposeMemory()`/`queryMemory()` 导出。
+
+随包提供的消费方是 [`@deepseek-ai/dsh-memory-context`](../../packages/context/memory-context/README.zh.md),它在每个步骤召回记录并追加到请求中。它注入 `memory` 服务并调用之;它不 import 任何提供方,也不 import `MemoryRuntime` 类,因此替换已挂载的提供方会改变它召回的内容,而消费方本身无需改动。
+
+### 模型可见之处即被记录之处(`validation[3]`)
+
+进入模型请求的 memory 记录,必须仅凭会话日志就能重建。消费方由构造而非事后审计满足这一点:注入的 `user/message` 与其 `memory/access` 事件由同一次读取结果在同一条代码路径上产生,因此二者不可能只出现其一。`memory/access` 是已登记的 `SessionEventMap` 成员,因此携带它的日志能通过持久化读取路径完成回放,而不会被当作未知类型拒绝。
+
+接缝自身不发出任何事件。除本消费方以外的 `ctx.memory` 调用方,除非自己追加事件,否则不会记录任何内容;因此日志对经由会写入事件的消费方所做的读取是完整的,而非对任何可设想的调用方都完整。
 
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
@@ -176,4 +186,8 @@ Source: [`packages/memory/memory/src/index.ts`](../../packages/memory/memory/src
 
 ## 状态
 
-仅 Contract 阶段(first100 registry P6-01,C)。`MemoryRuntime` 的提供方注册表/选择逻辑、两个 Contract 阶段提供方(`createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()`),以及 `query()`/`get()`/`export()` 中的 `must[3]` 读取范围限定强制执行均已真实实现(`packages/memory/memory/src/index.ts`)—— [`packages/memory/memory/tests/conformance.spec.ts`](../../packages/memory/memory/tests/conformance.spec.ts) 已针对它们通过。将真实的 `ctx.memory` 调用接入持久会话日志,使本页读取范围限定小节所述的 `memory/access` 事件拥有真实的发出方,是 Usage 阶段的工作;本包未发布 `./invariant` 伴生模块(见[包 README](../../packages/memory/memory/README.md#understand-the-implementation))。
+Contract、Provider 与 Usage 阶段(first100 registry P6-01,C+P+U)。`MemoryRuntime` 的提供方注册表/选择逻辑、三个提供方(`createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()`/`createDurableFileMemoryProvider()`),以及 `query()`/`get()`/`export()` 中的 `must[3]` 读取范围限定强制执行均已真实实现(`packages/memory/memory/src/index.ts`),由 [`conformance.spec.ts`](../../packages/memory/memory/tests/conformance.spec.ts) 与 [`durable-provider.spec.ts`](../../packages/memory/memory/tests/durable-provider.spec.ts) 覆盖。
+
+Usage 阶段补上了真实调用点:[`@deepseek-ai/dsh-memory-context`](../../packages/context/memory-context/README.zh.md) 把 memory 召回进真实请求并发出 `memory/access`,而 `dsh-base` bundle 以 `disabled: true` 的行携带它与 `dsh-memory`,供 profile 主动启用。[`memory-context.spec.ts`](../../packages/context/memory-context/tests/memory-context.spec.ts) 通过 Loader 启动已发布的 headless profile,针对该次运行写下的持久 JSONL 日志断言召回及其事件,随后再经持久化读取路径重新加载该日志以证明它可以回放。
+
+本包未发布 `./invariant` 伴生模块(见[包 README](../../packages/memory/memory/README.zh.md#understand-the-implementation))。
