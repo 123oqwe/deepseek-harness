@@ -1859,6 +1859,25 @@ export interface RenderResult {
 }
 
 export function renderArtifacts(reg: Registry, registryBytes: string, adj: Adjudication = readAdjudication(repoRoot)): RenderResult {
+  // BLOCKED-070: `checkDeliverablePathPatches` computed a full verdict that
+  // nothing consumed -- it was called only from its own spec, so a patch naming
+  // an epic that does not exist, or a `declaredPath` the registry never declared
+  // for that stage, generated and verified at exit 0. A patch is the sanctioned
+  // record of a deviation from a byte-locked path; one pointing at a path that
+  // was never declared records a deviation from nothing. Enforced here rather
+  // than at either caller because generate and verify both route through this
+  // function, and a check only one of them runs is the gap this closes.
+  const patches = checkDeliverablePathPatches(reg, adj)
+  if (!patches.valid) {
+    const detail = [
+      ...patches.unknownIds.map(k => `unknown epic id: ${k}`),
+      ...patches.declaredPathMismatches,
+      ...patches.emptyApprovedPath.map(k => `empty approvedPath: ${k}`),
+      ...patches.emptyReason.map(k => `empty reason: ${k}`),
+    ]
+    throw new Error(`deliverablePathPatches: ${detail.length} invalid patch(es)\n  ${detail.join('\n  ')}`)
+  }
+
   const yamlBytes = readBytesOrThrow(repoRoot, V10_MANIFEST_YAML)
   const yamlText = Buffer.from(yamlBytes).toString('utf8')
   const artifacts: Record<string, string> = {
