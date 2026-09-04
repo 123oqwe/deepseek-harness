@@ -1655,7 +1655,8 @@
         "treeSha": "07ccc3de5db79b9951451c2a4fbc1a58b8a29af7",
         "testsDiscovered": 11
       },
-      "note": "C-stage RED scaffold for P1-07 (project trust boundary). 11/11 cases genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (not just the Writer self-report) in the Writer worktree at commit bd1cc7f198ccd8014f2a208bb898df2df408fd55. expectExit=0 is the GREEN target this freeze grades against, per the established P0-01.C precedent (today real state: 11/11 failing). Type surface reuses dsh-principal Principal/PrincipalId for host-user identity; TrustUpgradeAuditRecord deliberately package-local, not wired to the real Trust Kernel auditAppend pending the Fiber structural fix (per docs/architecture/trust-kernel-boundary.md)."
+      "note": "C-stage RED scaffold for P1-07 (project trust boundary). 11/11 cases genuinely failed on real not-implemented errors, zero module/syntax errors, independently re-verified by the Supervisor (not just the Writer self-report) in the Writer worktree at commit bd1cc7f198ccd8014f2a208bb898df2df408fd55. expectExit=0 is the GREEN target this freeze grades against, per the established P0-01.C precedent (today real state: 11/11 failing). Type surface reuses dsh-principal Principal/PrincipalId for host-user identity; TrustUpgradeAuditRecord deliberately package-local, not wired to the real Trust Kernel auditAppend pending the Fiber structural fix (per docs/architecture/trust-kernel-boundary.md).",
+      "supersededBy": "2026-09-04T05:05:00Z"
     },
     {
       "epic": "P1-08",
@@ -2528,6 +2529,96 @@
         "testsDiscovered": 18
       },
       "note": "U-stage RED for P4-01 (the Run Service acquires a real caller), attempt/P4-01-U rebased onto land-base-align-v2 @ 40043e5d47. 18/18 genuinely failed on real not-implemented errors from this stage's own scaffold, zero module/syntax errors; repo-wide `pnpm run typecheck` exit 0 with the RED stubs and both spec files present (package tsconfigs set rootDir: src and exclude tests/, so a package-only `tsc -b` cannot see a spec's type errors). C+P's 130 frozen cases re-confirmed still green on this tree. Genuinely new at U: C proved the state machine and P the durable registry, but nothing produced a Run from real work -- the package README said so outright ('No plugin registers a RunService on a Context, and no product surface calls one, so a real harness run still creates no Run'). U adds RunPlugin, the mounted Cordis plugin that opens a Run at `agent/session-start`, records it on the live Agent handle as the new `Agent.runId`, and reconciles `WorkflowRef` against the real `WorkflowRunId` via `workflowRefOf`. The 7 composition cases boot a REAL Cordis Loader tree through `@deepseek-ai/dsh-app-boot` (tests/first100/fixtures/loader/p4-01-run/), mounting the real agent registry + agent loop with one configured root agent and the real `@deepseek-ai/dsh-run` row; they are keyless because a configured agent is created at boot before any model request. At RED all 7 fail inside RunPlugin's own Service.init ('failed to apply loader entry run (@deepseek-ai/dsh-run): not implemented'), which proves the fixture path is wired end to end rather than broken. FIXTURE-PATH TRAP CHECKED AND CLEARED: the first RED run failed on ERR_MODULE_NOT_FOUND for dsh-plugin-compat/lib/types/solver.js, i.e. an unbuilt artifact plane, NOT on this stage's code. The landed, already-accepted P0-01.composition.spec.ts failed identically on the same clean tree, proving it pre-existing and environmental; after `pnpm run build` (exit 0) P0-01 is 2/2 green and this stage's RED is the on-topic one above. These loader smokes are artifact-plane gates and require a build first. BASE-BUNDLE MOUNT: packages/bundle/base/cordis.patch.yml gains a `run` row that is `disabled: true`, matching the `baseline-preflight` precedent (opt-in per profile, never a shared-base default) -- `storePath` names a real write target with no neutral value. packages/bundle/base/package.json gains the matching dependency, which verify-cordis-config requires for a bare plugin name in that patch file. The composition fixture enables the row in its own cordis.yml, which is where the product-visible assertion belongs. A default `dsh` boot therefore still creates no Run, and the README now says exactly that instead of the old claim. NO SessionEventMap MEMBER at U, deliberately: an event absent from packages/core/session/src/known-event-types.ts makes replay refuse the log, so registration plus a proven round trip must come first. Deferred to F and recorded in the README's Known Limitations. STALE-RED PROSE CORRECTED in the same commit (coordinator-assigned): packages/run/run/README.md's nine lines describing landed GREEN Contract/Provider code as a RED scaffold, plus the two JSDoc module headers in src/state-machine.ts and src/events.ts whose literal 'not implemented' text had silenced verify-no-stale-red-claims itself before that gate's 40043e5d47 fix. SCOPE DEVIATIONS, reported for adjudication, NOT taken as granted: (1) packages/workflow/workflow/src/types.ts, a declared U file, is left UNMODIFIED -- its only producer is packages/workflow/workflow-worker-thread/src/index.ts (out of scope), so any field added there would be permanently unwritten; the file is instead consumed as a type import so `workflowRefOf` reconciles against the real `WorkflowRunId`, which is the reconciliation the C-stage README deferred to this stage. (2) scripts/gen-cordis-catalog.ts is a generator-forced adjacent edit outside the approved set: `ctx.runs` needs a SERVICE_PAGE entry (mapped to core.md, where `agents`/`agentLoop` already live) and `Run` a TYPE_LINK_EXEMPTIONS owner, or the generator fails outright rather than warning; docs/subsystems/core.* and packages/extensions/tool-cordis/src/api-catalog.ts are its regenerated output. Both need their own adjudication entries. expectExit=0 is the GREEN target per the P0-01.C precedent -- it is not the RED exit code, which is 1."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workspace/workspace-trust/tests/trust.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to",
+        "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load",
+        "gate: an untrusted workspace denies project instructions, so opening a clone never reads the repository's own AGENTS.md",
+        "validation[1]: a trusted-read workspace permits project instructions as plain text while still denying every project-level executable kind",
+        "must[2]: a trust upgrade presented by a non-host principal is refused and produces neither a new record nor an audit entry",
+        "must[2]: a trust upgrade presented by a genuine host user principal succeeds and writes an audit record naming the host principal and the state transition",
+        "a trusted-read workspace (never upgraded to trusted-execute) still denies every project-level executable load kind, so opening the clone alone can never reach a subprocess/network/credential-read path",
+        "directory replaced: the same canonical path reporting a different device/inode demotes an existing trusted-execute record to untrusted",
+        "symlink retargeted: a different canonical path demotes an existing trusted-execute record to untrusted even when device/inode happen to match",
+        "directory moved: a different canonical path with the same device/inode still demotes an existing trusted-execute record to untrusted",
+        "an unchanged identity (same canonical path, device, and inode) preserves the current trust state and grantor",
+        "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and keeps project instructions, which trusted-read still injects",
+        "downgrading from trusted-read to untrusted revokes exactly project-instructions, the one kind trusted-read granted that untrusted does not",
+        "drops trust when the path, device, and inode all match but the creation time does not",
+        "refuses to confirm identity when the filesystem reports no creation time, rather than matching on the inode alone"
+      ],
+      "files": [
+        "packages/workspace/workspace-trust/tests/trust.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-04T05:05:00Z",
+      "dryRunProof": {
+        "treeSha": "d0d680232266040c49beead5de2ca9e5ebbae963",
+        "testsDiscovered": 15
+      },
+      "supersedes": "2026-09-03T13:00:35.865Z",
+      "note": "Supersedes the 2026-09-03T13:00:35.865Z P1-07.C freeze. WHY, precisely: two of its cases asserted that 'trusted-read' and 'untrusted' are behaviourally indistinguishable -- 'downgrading from trusted-read to untrusted revokes nothing further' pinned revokedKinds to [], which is only true while NO ProjectContentKind differs between those two states. That contradicts the epic's own gate line ('Untrusted workspace cannot load instructions/hooks/skills/MCP or execute', which names instructions FIRST) and validation[1] ('verify trusted-read injects only plain text, prompt-injection marked', which presupposes trusted-read DOES inject project text). A state with no behaviour of its own is not a state; the frozen assertion encoded that defect rather than constraining it. The replacement adds 'project-instructions' to the EXISTING authorizeProjectLoad table (denied at 'untrusted', permitted at 'trusted-read'), rather than a second parallel decision function beside the first, which would have been a divergent second table. Path patch P1-07-U-instruction-kind grants workspace-trust/src/types.ts for exactly this. CHANGED COUNT STATED HONESTLY: the trusted-execute -> trusted-read downgrade still revokes FIVE kinds, not six -- 'project-instructions' stays permitted at trusted-read, so it is correctly absent from that revocation set; the case that gains it is the trusted-read -> untrusted downgrade, which now revokes exactly ['project-instructions'] instead of nothing. Two new cases pin the gate and validation[1] halves directly. 15 cases total (was 11). At freeze time on the unmodified tree 13/15 pass and exactly 2 fail on real assertion diffs (expected [] to deeply equal ['project-instructions']; expected false to be true), confirmed by parsing the JSON reporter, zero module/syntax errors. This entry greens from the same CI observation as P1-07.U. This is P1-07.C's second re-green today; the first corrected a case asserting a filesystem behaviour rather than the security property."
+    },
+    {
+      "epic": "P1-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+        "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+        "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+        "tests/first100/fixtures/P1-07.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted",
+        "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute",
+        "discovers only the host-owned user-global instructions while the workspace is untrusted",
+        "discovers the project instructions once the workspace reaches trusted-read, alongside the host-owned ones",
+        "discovers the project instructions at trusted-execute as well, since a higher state never loads less",
+        "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill",
+        "still offers no skill from the repository at trusted-read, because reading a project is not executing it",
+        "offers both project skills once the workspace reaches trusted-execute, proving the fixture is real and the difference is the trust decision",
+        "resolves an ungranted workspace to untrusted, so a freshly cloned repository is never trusted by default",
+        "resolves a granted workspace to its granted state",
+        "resolves a granted path spelled through a symlink to the same state, since the grant is canonicalized before it is bound",
+        "drops a granted workspace to untrusted once the directory at that path is replaced, and does not re-grant it from configuration",
+        "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory",
+        "drops a granted workspace to untrusted once the directory is moved out from under the path it was granted at"
+      ],
+      "files": [
+        "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+        "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+        "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+        "tests/first100/fixtures/P1-07.composition.spec.ts",
+        "packages/workspace/workspace-trust-local/src/index.ts",
+        "packages/skill/skill-filesystem/src/index.ts",
+        "packages/context/agent-instructions/src/files.ts",
+        "packages/context/agent-instructions/src/index.ts",
+        "packages/workspace/workspace-trust/src/types.ts",
+        "packages/workspace/workspace-trust/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-04T05:05:30Z",
+      "dryRunProof": {
+        "treeSha": "d0d680232266040c49beead5de2ca9e5ebbae963",
+        "testsDiscovered": 14
+      },
+      "note": "U-stage RED scaffold for P1-07, attempt/P1-07-U branched from land-base-align-v2 @ abd09244a4. 14 discovered; 11 fail on real not-implemented errors and real gate-absent assertion diffs, 3 PASS ALREADY AND ARE MEANT TO -- they are the controls proving each fixture is genuinely read, so the absences the other cases assert cannot be an unread fixture. Confirmed by parsing the JSON reporter, not console output; zero module/syntax/import-resolution errors. One false RED was caught and fixed during this freeze: the composition spec's repo tsconfig path resolved to tests/tsconfig.json instead of the repository root, so tsx failed to parse it and vitest reported both cases PENDING behind an unrelated source-map error -- the fixture, not the gate, was broken. VACUITY, RECORDED SO FOUR ABSENT LOAD SITES ARE NEVER READ AS FOUR ENFORCED GATES (BLOCKED-054): four of must[1]'s five content kinds have NO project-sourced load site in this product. composeProfile stacks only host-owned layers (bundle layers, <profile.dir>/cordis.patch.yml, $DSH_HOME/cordis.patch.yml, --patch argv overlays) so there is no project plugin or home/profile patch override to gate; hooks-claude-code's configPath is process-level and carries an explicit TODO(per-session-hook-config), and no shipped profile mounts either hook bridge; mcp-client reads only its own cordis.yml plugin config, with no .mcp.json or project discovery anywhere. A case over any of those four would pass because nothing loads them under ANY trust state, and would keep passing if the gate were deleted. This stage therefore enforces only the two kinds that exist -- executable skills (skill-filesystem's roots() pushing <projectRoot>/.dsh/skills and <projectRoot>/.agents/skills, the only real executable project-content load site) and instructions (agent-instructions' discoverInstructionFiles, named first in the epic's gate line). Wiring a project-sourced plugin, hook, MCP-server, or patch-override load site through authorizeProjectLoad is the obligation of whoever later builds one; it is NOT covered by this green. REGRESSION PROTECTION: skill-filesystem/tests/trust-gate.spec.ts holds fixture, mount config, and query fixed and varies only the TrustState the workspaceTrust seam reports, so the catalog difference is produced by the authorizeProjectLoad decision and nothing else; removing or short-circuiting that call must turn the untrusted and trusted-read cases red. That is verified by mutation at GREEN and reported in both directions, per the acceptance condition on this epic. CLAUSE OWNERSHIP: this stage owns must[1] and acceptance[0] at their real load sites, and acceptance[2]'s instruction half. must[0] and acceptance[1] were greened at C/P and are re-exercised here only through the provider's own real-filesystem reconciliation. must[2]'s host-user INTERACTION (no approval/interaction seam is in scope) and its Trust Kernel audit append (gated on the vendored Cordis Fiber structural fix, verified unlanded) stay with F/BLOCKED; no audit sink is faked. apps/cli/src/profile-boot.ts is declared in stages.U.files but is deliberately NOT modified: all four of its patch layers are host-owned and no project-sourced patch layer exists, so a third gate there would be invented over a threat that does not exist. acceptance[0] SCOPE STATED HONESTLY: its 'no subprocess / no network / no credential read' half is true today largely because nothing loads project-sourced executable configuration at all, so asserting it would describe the repository. The composition fixture asserts the load gate instead, booting the SHIPPED headless profile (real agent-instructions and skill-filesystem rows from packages/bundle/base/cordis.patch.yml) over a hostile clone and observing the skill catalog plus the session log, which is authoritative for what reached the model under this repo's model-visible <=> logged rule."
     }
   ]
 }

@@ -66,6 +66,27 @@ describe('P1-07 Contract — must clauses', () => {
     }
   })
 
+  // The registry `gate` names instructions FIRST among what an untrusted
+  // workspace cannot load ("Untrusted workspace cannot load
+  // instructions/hooks/skills/MCP or execute"), while validation[1] requires a
+  // trusted-read workspace to inject project text as marked plain text. Those
+  // two sentences are what make 'project-instructions' a kind of its own: it is
+  // the only member whose decision differs between 'untrusted' and
+  // 'trusted-read', and so the only reason 'trusted-read' is a distinct state
+  // rather than a second spelling of 'untrusted'.
+  it("gate: an untrusted workspace denies project instructions, so opening a clone never reads the repository's own AGENTS.md", () => {
+    const decision = authorizeProjectLoad('untrusted', 'project-instructions')
+    expect(decision.permitted).toBe(false)
+    if (!decision.permitted) expect(decision.reason).toBe('trust-required')
+  })
+
+  it('validation[1]: a trusted-read workspace permits project instructions as plain text while still denying every project-level executable kind', () => {
+    expect(authorizeProjectLoad('trusted-read', 'project-instructions').permitted).toBe(true)
+    for (const kind of PROJECT_LEVEL_EXECUTABLE_KINDS) {
+      expect(authorizeProjectLoad('trusted-read', kind).permitted).toBe(false)
+    }
+  })
+
   it('must[2]: a trust upgrade presented by a non-host principal is refused and produces neither a new record nor an audit entry', () => {
     const current = bindWorkspaceTrust(clonedRepoIdentity, '2026-08-31T00:00:00.000Z')
     const result = requestTrustUpgrade(current, 'trusted-execute', serviceCaller, '2026-08-31T00:05:00.000Z')
@@ -147,14 +168,15 @@ describe('P1-07 Contract — acceptance[1]: 目录被替换、symlink 改指、�
 })
 
 describe('P1-07 Contract — acceptance[2]: 降级 trust 立即撤销项目能力', () => {
-  it('downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and updates the record to the target state', () => {
+  it('downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and keeps project instructions, which trusted-read still injects', () => {
     const record = trustedExecuteRecord(clonedRepoIdentity)
     const result = downgradeTrust(record, 'trusted-read', '2026-08-31T02:00:00.000Z')
     expect(result.record.state).toBe('trusted-read')
     expect([...result.revokedKinds].sort()).toEqual([...PROJECT_LEVEL_EXECUTABLE_KINDS].sort())
+    expect(result.revokedKinds).not.toContain('project-instructions')
   })
 
-  it('downgrading from trusted-read to untrusted revokes nothing further, since trusted-read never granted any project-level executable kind', () => {
+  it('downgrading from trusted-read to untrusted revokes exactly project-instructions, the one kind trusted-read granted that untrusted does not', () => {
     const record: TrustRecord = {
       identity: clonedRepoIdentity,
       state: 'trusted-read',
@@ -163,7 +185,7 @@ describe('P1-07 Contract — acceptance[2]: 降级 trust 立即撤销项目能�
     }
     const result = downgradeTrust(record, 'untrusted', '2026-08-31T02:00:00.000Z')
     expect(result.record.state).toBe('untrusted')
-    expect(result.revokedKinds).toEqual([])
+    expect(result.revokedKinds).toEqual(['project-instructions'])
   })
 })
 

@@ -1,0 +1,34 @@
+# Test-only patch over the shipped headless profile for Epic P1-07's
+# acceptance[0]. The production bundle layers own agent-instructions,
+# skill-filesystem, the agent services, and persistence; this overlay only
+# supplies a keyless model, a session log to observe, and the workspace trust
+# provider whose grants the spec varies between the two runs.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: workspace-trust-mock
+        model: workspace-trust-mock
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: workspace-trust-mock-llm
+      name: './mock-llm.ts'
+
+    - id: workspace-trust-local
+      name: '@deepseek-ai/dsh-workspace-trust-local'
+      config:
+        # The spec runs this same fixture twice: once with no grant (a freshly
+        # cloned repository) and once granting the clone trusted-execute.
+        grants: !!js "process.env.P1_07_TRUST_GRANT === undefined ? [] : [{ path: process.cwd(), state: process.env.P1_07_TRUST_GRANT }]"

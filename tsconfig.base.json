@@ -482,7 +482,8 @@
       "@deepseek-ai/dsh-workflow-worker-thread": ["./packages/workflow/workflow-worker-thread/src"],
       "@deepseek-ai/dsh-workspace": ["./packages/workspace/workspace/src"],
       "@deepseek-ai/dsh-workspace/invariant": ["./packages/workspace/workspace/src/invariant.ts"],
-      "@deepseek-ai/dsh-workspace-trust": ["./packages/workspace/workspace-trust/src"]
+      "@deepseek-ai/dsh-workspace-trust": ["./packages/workspace/workspace-trust/src"],
+      "@deepseek-ai/dsh-workspace-trust-local": ["./packages/workspace/workspace-trust-local/src"]
       // END generated package aliases
     }
   }
