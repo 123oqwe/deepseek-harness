@@ -982,3 +982,21 @@ This is the single place to check at wave close. A lock means the ledger row can
 | **P6-01** | model-visible memory ⟺ logged projection event (`validation[3]`) | `memory/access` is declared in `SessionEventMap` but **absent from `packages/core/session/src/known-event-types.ts`**, and it carries no `ignorable: true`. Harmless while nothing emits it — but the moment the Usage stage appends it to a real JSONL log, replay refuses the unknown type. The stage would then be manufacturing the corrupt logs it is supposed to prevent. The Contract stage's own Dev Note flagged this as unregistered and it was never acted on. | P6-01's Usage stage, before it greens. | The type is registered **and** a case proves the round trip: a log written with the event is read back by replay. Registration alone does not lift this lock — delegate condition, 2026-09-03. |
 
 **Rule.** Four of W4's eleven epics carry a lock. `generate-ledger.mjs --accept` does not know about them, so a locked row must not be accepted by hand either. When a lock's condition is met, remove the lock and its BLOCKED entry in the same change that satisfies it.
+
+### BLOCKED-054 — four of P1-07 must[1]'s five content kinds have no load site in the product; a test over them asserts a fact about the repository, not a behavior (Writer finding, Supervisor-recorded, 2026-09-04)
+
+must[1] requires that an untrusted workspace load no project plugin, hook, MCP server, executable skill, or home/profile patch override. Enumerating every project-directory-sourced load site in the repository found that **only two of those five exist at all**:
+
+| Kind | Real load site today |
+|---|---|
+| project plugin | **None.** `composeProfile` stacks bundle layers, `<profile.dir>/cordis.patch.yml`, `$DSH_HOME/cordis.patch.yml`, and `--patch` argv overlays. Nothing is workspace-derived. |
+| hooks | **None.** `hooks-claude-code`'s `configPath` is process-level and read once at load, carrying an explicit `TODO(per-session-hook-config)`. No shipped profile mounts either hook bridge. |
+| MCP server | **None.** `mcp-client` config comes from its cordis.yml plugin config; no `.mcp.json` or project discovery exists. |
+| home/profile patch override | **None** — no project-sourced patch layer exists. |
+| **executable skill** | **Real.** `skill-filesystem`'s `roots()` pushes `<projectRoot>/.dsh/skills` and `<projectRoot>/.agents/skills`, derived from the session `cwd`. The only genuine executable project-content load site in the product. |
+
+Instructions — named first in the epic's own `gate` line — are the other real surface, via `agent-instructions`' `discoverInstructionFiles`.
+
+**Why this is recorded rather than quietly satisfied.** A case asserting that an untrusted workspace loads no MCP server would pass today because **nothing loads an MCP server from a project directory under any trust state**. That green describes the current repository, not an enforced boundary, and it would keep passing if the gate were deleted. It is the same class as every other false green here: a test that cannot fail proves nothing. See [BLOCKED-052](#blocked-052).
+
+**Consequence.** P1-07's Usage stage enforces the two kinds that exist and states the vacuity of the other four explicitly in its freeze note and README. **When a project-sourced plugin, hook, MCP-server, or patch-override load site is later built, wiring it through `authorizeProjectLoad` is that epic's obligation** — it must not be assumed covered by P1-07's green. Whoever builds one of those load sites owns extending the gate to it.
