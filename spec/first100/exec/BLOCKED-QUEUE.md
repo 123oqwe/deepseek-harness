@@ -811,6 +811,20 @@ Members found so far, each of which produced a real CI failure or a silent exemp
 
 A build may be required before step 3, since some generators resolve published subpaths through built `lib/`.
 
+**Measured, not guessed (2026-09-04).** The list above was assembled by hitting one gate at a time, which is the same error this program keeps catching: **enumerating gates by searching their names is using description in place of evaluation.** The delegate's correction — *the right way to enumerate which gates exist is to make a change that triggers them and observe which go red; a name is a description, going red is an evaluation* — was carried out as an experiment: a throwaway `packages/experimental/gate-probe` (minimal `package.json` + one exported function + `tsconfig.json`), full suite with and without it, differenced.
+
+**Deterministically caused by adding a bare workspace package** (reproducible, present with the probe and absent without it, distinguished from the load-dependent watcher flakes that dominate a full run):
+
+| Spec | Case |
+|---|---|
+| `scripts/gen-tsconfig-paths.spec.ts` | covers every workspace package in the committed config |
+| `scripts/publint-all.spec.ts` | lints recursively declared files; rejects an export not in the workspace |
+| `scripts/oxlint-contract.spec.ts` | preserved TypeGraph syntax; final-diagnostics-only on fix retry |
+| `scripts/change-scope.spec.ts` | configured filesystem monitor; missing/ambiguous ref rejection |
+| `tests/architecture/check-capability-seams.spec.ts` | reports zero schema errors |
+
+**Limits of this measurement, stated so it is not over-trusted.** The probe carried **no README**, so every README-shaped gate (`doc-standard`'s `kind`/`PACKAGE_LIBRARIES`/Dev Note, `verify-package-readme-limitations`, `verify-package-readme-model-experience`, `verify-translation-pairing`) could not fire and is absent from the table above though known-real from the list below. It also declared no plugin entry, so the library-to-plugin gates did not fire. **A full run's raw failure count is not usable for this** — 49 failed with the probe and 38 without, dominated by load-dependent watcher flakes (`hmr-config`, `user-patches`, `skill-filesystem`, `settings-file`, `terminal-bash`, `session-snapshot`) whose membership varies run to run. The control must re-run *the same specs*, and even then flakes must be separated from deterministic differences.
+
 **The rule these share**: any artifact that describes the repository from one file must be recomputed before pushing whatever it describes. A stale one does not warn — it fails a byte-identical comparison later, in a run whose subject is something else entirely.
 
 **Generalized rule, recorded per the delegate's request, not built as a new mechanism now (freeze still in effect)**: any file that describes repo-wide state as a single point of truth (`pnpm-lock.yaml` confirmed; workspace manifests, `architecture.layers.json`, the owner-map, and any future api-catalog are the same shape by the same test — "one file describing the whole repository, not one epic's own slice") must be recomputed once, AFTER a merge that combines multiple parallel lanes' new packages/files, never generated inside a single lane and trusted to still be correct post-merge. A lane's own local regeneration is correct for that lane in isolation and can still go stale the moment a sibling lane's parallel addition merges alongside it.
