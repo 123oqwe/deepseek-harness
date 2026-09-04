@@ -50,6 +50,9 @@ export function materializeSessionResultFilters(
     switch (filter.kind) {
       case 'id':
         return { kind: filter.kind, values: copyStrings(filter.kind, filter.values) }
+      case 'tenant':
+      case 'workspace':
+        throw new Error(`materializeSessionResultFilters does not implement the "${filter.kind}" clause yet`)
       case 'cwd':
         return { kind: filter.kind, values: copyNullableStrings(filter.kind, filter.values) }
       case 'created-at':
@@ -121,6 +124,9 @@ function sessionPredicate(filter: SessionResultFilter): (record: SessionRecord) 
   switch (filter.kind) {
     case 'id':
       return record => filter.values.includes(record.header.id)
+    case 'tenant':
+    case 'workspace':
+      throw new Error(`filterSessionResults does not implement the "${filter.kind}" clause yet`)
     case 'cwd':
       return record => filter.values.includes(record.header.cwd ?? null)
     case 'created-at': {

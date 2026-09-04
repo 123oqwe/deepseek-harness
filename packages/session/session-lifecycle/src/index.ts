@@ -27,6 +27,7 @@
 
 import { brandString, type Branded } from '@deepseek-ai/dsh-brand'
 import type { TenantId } from '@deepseek-ai/dsh-principal/types'
+import type { SessionRecord } from '@deepseek-ai/dsh-session-query'
 import type { SessionEvent, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { WorkspaceId } from '@deepseek-ai/dsh-workspace/types'
 import type { SessionDisposition, SessionLifecycleRecord } from './retention.ts'
@@ -160,6 +161,52 @@ export function listSessions(records: readonly SessionLifecycleRecord[], request
   const nextCursor = endIndex < matched.length && lastItem !== undefined ? encodeCursor(sortKeyOf(lastItem)) : undefined
 
   return { items, ...nextCursor === undefined ? {} : { nextCursor } }
+}
+
+/**
+ * must[0]'s outcome of projecting a real session corpus into lifecycle
+ * records: the records `listSessions` can page over, plus the corpus sessions
+ * that produced none.
+ */
+export interface LifecycleProjection {
+  /** One record per projected session, in the input order of the corpus records. */
+  readonly records: readonly SessionLifecycleRecord[]
+  /**
+   * Corpus sessions that carry no durable lifecycle record and whose
+   * {@link SessionRecord.tenantId} the corpus could not observe, so no
+   * tenant-scoped record could be built for them without inventing an owner.
+   * These are omitted from `records` rather than defaulted, and a caller that
+   * needs them listed must first make their identity observable (register a
+   * lifecycle record, or attach an identity to the session).
+   */
+  readonly unattributed: readonly SessionId[]
+}
+
+/**
+ * must[0]'s corpus join: turn `@deepseek-ai/dsh-session-query`'s real
+ * live-preferred session corpus into the {@link SessionLifecycleRecord} array
+ * `listSessions` pages over, so a filtered listing runs against the sessions a
+ * harness actually has rather than an array a caller assembled by hand.
+ *
+ * A session that `registered` already knows keeps its durable record verbatim
+ * — its disposition and any {@link LegalHold} are the authoritative facts, and
+ * a corpus observation never overwrites them, so a soft-deleted or held
+ * session cannot be projected back to `active` by being seen in the corpus. A
+ * session `registered` does not know is projected as `active`: it exists and
+ * no retention decision was ever recorded for it. A session that is neither
+ * registered nor tenant-attributable is reported in
+ * {@link LifecycleProjection.unattributed} and yields no record.
+ * @param records - the corpus records to project, in the order the listing returned them.
+ * @param registered - durable lifecycle records by session id, from a {@link SessionLifecycleRecord} registry.
+ * @returns the projected records in input order, plus the ids no record could be built for.
+ */
+export function projectLifecycleRecords(
+  records: readonly SessionRecord[],
+  registered: ReadonlyMap<SessionId, SessionLifecycleRecord>,
+): LifecycleProjection {
+  void records
+  void registered
+  throw new Error('projectLifecycleRecords is not implemented')
 }
 
 /**
