@@ -1,6 +1,6 @@
 ---
 description: "The host-local provider for the workspace trust capability: binds a workspace to the filesystem identity it first resolved to, reconciles that binding on every read, and answers the project-load gate for a session cwd."
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-workspace-trust-local
@@ -81,3 +81,18 @@ None from this package directly. A change in trust state changes the instruction
 - **Records live for the process lifetime.** Trust is not persisted across restarts, so a granted workspace re-binds on the next boot.
 
 -----
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+A granted path is resolved once and memoized. Re-canonicalizing it per call
+made retargeting a granted symlink move the grant onto whatever the link now
+points at, which then matched as a first binding and was trusted — the trust
+inheritance `acceptance[1]` exists to prevent. The memoization is a correctness
+requirement, not a performance choice.
+
+</details>

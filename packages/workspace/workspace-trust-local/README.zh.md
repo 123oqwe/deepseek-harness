@@ -1,6 +1,6 @@
 ---
 description: "workspace trust 能力的宿主本地 Provider：把工作区绑定到它首次解析到的文件系统身份，在每次读取时重新核对该绑定，并为会话 cwd 回答项目加载门禁。"
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-workspace-trust-local
@@ -81,3 +81,17 @@ kind: "package-library"
 - **记录只存活于进程生命周期。** 信任不跨重启持久化，因此被授权的工作区会在下次启动时重新绑定。
 
 -----
+
+-----
+
+### 开发备注
+
+<details>
+<summary>面向维护者的工作上下文 —— 点击展开</summary>
+
+已授予的路径只解析一次并被记忆。若每次调用都重新规范化,改指一个已授予的
+符号链接会把授权移到它当前指向的目录上,而后者会被当作首次绑定并被信任 ——
+这正是 `acceptance[1]` 要防止的信任继承。这里的记忆化是正确性要求,不是性能
+取舍。
+
+</details>
