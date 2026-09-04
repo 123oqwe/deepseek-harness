@@ -1116,3 +1116,25 @@ P1-02's Usage stage makes two `PluginPermissionState` fields **required** rather
 3. **No provenance value participates in any of those assertions**, so the added field cannot influence a pass or a fail.
 
 **The general rule this establishes.** A later stage may widen a type an ACCEPTED epic's frozen spec constructs, and mechanically repair that spec, **only when the repair changes no title, no assertion, and no value any assertion reads**. If any of those three would change, it is not a repair — it is a re-freeze, and it goes through supersession the way [BLOCKED-056](#blocked-056)'s P1-07.C case did. The distinction is whether the frozen observation would still be reproducible for the same reason it originally passed.
+
+### BLOCKED-060 — a validator crashed on malformed data instead of naming the entry at fault (Supervisor defect, delegate-caught, 2026-09-04)
+
+Three CI cases failed with `TypeError: p.reason.trim is not a function`. Cause: the Supervisor corrected the `P0-04-U-cycle-exemptions` path patch with a stray trailing comma in the generating script, making `reason` a **one-element tuple** rather than a string. `checkDeliverablePathPatches` did `p.reason.trim().length === 0` with no type check, so a malformed entry killed the checker outright.
+
+**The defect worth recording is the second one, not the first.** A typo in a data edit is ordinary. A gate that **dies** on bad input rather than reporting it is not: the crash replaced "which entry is malformed" with a stack trace, so the checker withheld exactly the information it exists to produce. **A gate that crashes on bad data fails the same way as one that admits it — in both cases you do not learn what it was built to tell you.**
+
+Fixed on both sides: `reason` restored to a string, and `checkDeliverablePathPatches` now type-checks `approvedPath` and `reason` before trimming. Proven by mutation — reintroducing the array makes the checker report `emptyReason: ['P0-04-U-cycle-exemptions']`, naming the entry, where it previously threw.
+
+**Related, same round:** the generated `spec/` artifacts drifted again (`adjudication.json: bytes 94095 != manifest 93626`) because three path patches landed before the regenerate-every-push checklist item existed. That item is now in [BLOCKED-046](#blocked-046) and this was the last push predating it.
+
+### BLOCKED-061 — `agent-team/persistence.spec.ts` failed once in CI; not ours, and below the flake-registry threshold (Supervisor finding, 2026-09-04)
+
+```
+packages/experimental/agent-team/tests/persistence.spec.ts
+  "reconciles a persisted child to active and a ..."
+  AssertionError: expected 'queued' to be 'accepted'
+```
+
+**Falsified as related to this program's work, in the required order.** The package's three most recent commits (`a9e185f205` release, `27bf1039db` session refactor, `4093ce465b` an upstream merge) all predate W4, and no First-100 lane has touched `packages/experimental/agent-team/`. Re-run in isolation on the same tree: **5/5 passed.** The assertion is a state-transition ordering claim (`queued` vs `accepted`), which is the shape a concurrency or load-sensitive case fails under.
+
+**Not registered as a flake.** The registry requires **two occurrences on distinct SHAs** plus an unrelatedness note, and this is one. Recorded here so a second occurrence can be registered against this entry rather than investigated from scratch — and so that, if it instead reproduces deterministically, the "passes alone" observation above is on record as the thing that was wrong.

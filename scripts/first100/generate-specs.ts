@@ -314,8 +314,13 @@ export function checkDeliverablePathPatches(reg: Registry, adj: Adjudication): D
     if (!stageFiles.includes(p.declaredPath)) {
       declaredPathMismatches.push(`${key} (${epicId}.${p.stage}): declaredPath ${p.declaredPath} not in registry stage files`)
     }
-    if (p.approvedPath.trim().length === 0) emptyApprovedPath.push(key)
-    if (p.reason.trim().length === 0) emptyReason.push(key)
+    // Type-check before trimming. A malformed entry -- a `reason` that is an
+    // array rather than a string, say -- otherwise crashes this checker with
+    // `p.reason.trim is not a function`, which reports a TypeError instead of
+    // naming the entry at fault. A gate that dies on bad data withholds the
+    // same information as one that admits it.
+    if (typeof p.approvedPath !== 'string' || p.approvedPath.trim().length === 0) emptyApprovedPath.push(key)
+    if (typeof p.reason !== 'string' || p.reason.trim().length === 0) emptyReason.push(key)
   }
   const valid = unknownIds.length === 0 && declaredPathMismatches.length === 0 && emptyApprovedPath.length === 0 && emptyReason.length === 0
   return { valid, unknownIds, declaredPathMismatches, emptyApprovedPath, emptyReason }

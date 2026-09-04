@@ -1159,8 +1159,8 @@ adjudication:
         epic: "P0-04"
         stage: "U"
         declaredPath: "scripts/architecture/check-layer-deps.mjs"
-        approvedPath: "tests/first100/architecture.layers.json"
-        reason: "Scope widening for must[3]'s ADR-required cycle exemptions, which need a data store the declared files cannot host. layer-order.ts defines the ExemptedCycle type but no exemption data file exists anywhere in the repository. P0-03's precedent puts exactly this kind of allowlist in architecture.layers.json rather than inside the script, and adding one top-level key there mirrors the existing allowlist in the same document under the same owner. The rejected alternative -- a const inside check-layer-deps.mjs -- would make the checker own its own escape hatch. The epic's must/acceptance clauses are unchanged."
+        approvedPath: "tests/first100/layer-cycle-exemptions.json"
+        reason: "Scope widening for must[3]'s ADR-required cycle exemptions, which need a data store the declared files cannot host: layer-order.ts defines the ExemptedCycle type but no exemption data file exists anywhere in the repository. A separate file is required rather than a key in the root architecture.layers.json, even though that document already carries P0-03's structurally similar allowlist: spec/first100-owner-map.json records architecture.layers.json as SOLE-owned by P0-03, so P0-04 writing into it would be a cross-epic write into another epic's exclusively owned file. (An earlier draft of this patch's prose said the opposite and was corrected; the Writer flagged the contradiction between the prose and the approvedPath rather than picking one silently.) The file is named for its purpose rather than shadowing architecture.layers.json's name, so the two are never confused. The rejected in-scope alternative -- a const inside check-layer-deps.mjs -- would make the checker own its own escape hatch. The epic's must/acceptance clauses are unchanged."
         approvedAt: "2026-09-04"
         basis: "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-053"
 remainingPending:
