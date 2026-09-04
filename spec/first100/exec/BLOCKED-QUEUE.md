@@ -935,3 +935,22 @@ The inode assertion is replaced by `expect(record.state).toBe('untrusted')` — 
 **A rule in mind did not prevent the same mistake an hour later.** The strengthened probe written to gather Linux evidence for this very finding asserted `birthtimeMs > 0` *inside* the inode-reuse branch — which macOS never enters — so on the development machine it passed while proving nothing. Same silent-pass shape, written by the person documenting it, while documenting it. The fix was not to remember harder: the assertion moved to a position **every platform can evaluate**, where it has nowhere to hide. **What a rule cannot prevent, structure can.** Prefer placing an assertion where no environment can skip it over relying on the author to notice which branch a given machine never reaches.
 
 **Standing lesson.** *A test that can only pass in one class of environment proves a property of that environment, not of the code under test.* This widens [BLOCKED-038](#blocked-038)'s cross-platform scope: it previously recorded that some epics **cannot** be verified on the development machine; it now also covers epics that **appear** verifiable there and yield a false green. Which other acceptance clauses depend on a local pass whose real property is only falsifiable on another OS or filesystem is an open question to answer before R10, not now.
+
+### BLOCKED-053 — four times now, a stage's declared `files[]` could not actually exercise its own clause; the fix is one question asked before dispatch, not four discoveries after (delegate generalization, 2026-09-03)
+
+**The four instances, all found by a Writer hitting the wall rather than by review:**
+
+| Stage | What the declaration got wrong | Remedy |
+|---|---|---|
+| P6-07.C | the declared test file was named `.e2e.ts`, which CI's default vitest config never discovers (`*.spec.{ts,tsx}` only) — the cell's GREEN had never run those cases | rename via path patch |
+| P6-07.P | the declared location cannot import what it must call: `session-persistence → session-lifecycle → workspace → session-persistence` is a real project-reference cycle (TS6202) | repoint via path patch |
+| P1-08.U | the declared scope reaches no real caller — only `apps/cli/src/profile-boot.ts` runs the solver at a real launch, and it is not in the list | widen via path patch |
+| P6-07.U | the declared scope reaches no real corpus — `SessionRecord` drops the events the corpus already reads, so tenant never reaches `filterSessions` | widen via path patch |
+
+**One root cause.** The registry's stage `files[]` were written without verifying that those files can actually exercise the clause assigned to them. That is a property of how the registry was authored, not a defect in any epic, and it will keep recurring.
+
+**Pre-dispatch checkpoint, effective now.** Before dispatching any stage, answer in one line: **"using only the declared files, can this clause really be exercised?"** If the answer is not clearly yes, report before a Writer is sent, not after one hits the wall.
+
+**And when the answer is no, the question is not finished.** A second answer is mandatory: **"then which files would suffice?"** Stopping at "not within the declared scope" conflates *cannot be done here* with *cannot be done*, and those have opposite remedies — the first is a path patch, the second is a genuine BLOCKED. The Supervisor made exactly this error on P6-07.U, proposing to mark the whole stage BLOCKED; the delegate refused it, and the file set turned out to exist (`session-query/src/{types,corpus}.ts`, projecting the `identity/attached` event P2-01 already lands, no `SessionHeader` change and no other epic first).
+
+**A BLOCKED entry that is really a dependency must name its owner.** Recording "cannot be done now" when the truth is "someone else must go first" discards the dependency, and nobody later knows the unlock condition. Every blocker of that shape names the owning epic and the ordering, the way [BLOCKED-050](#blocked-050) names its unlock signal.
