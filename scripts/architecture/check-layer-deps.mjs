@@ -389,9 +389,25 @@ function collectSpecifiers(text) {
   const dynamic = new Set()
   for (const match of text.matchAll(/(?:\bimport|\brequire)\s*\(\s*['"]([^'"]+)['"]\s*\)/g)) dynamic.add(match[1])
   const typeOnly = new Set()
+  // Records the specifier AND the bindings the type-only import names, because
+  // must[1]'s narrow-event-type allowance is decided by WHAT is imported, not
+  // by the module path. Testing /EventMap/ against the specifier can never
+  // match: no module in this repository is named `*EventMap*`, while 13 files
+  // import an `*EventMap` binding, so the allowance was unreachable and a
+  // type-only event-map import was classified `value` like any other.
+  const typeOnlyBindings = new Map()
+  for (const match of text.matchAll(/\bimport\s+type\s+(\{[^}]*\}|[A-Za-z_$][\w$]*)\s+from\s*['"]([^'"]+)['"]/g)) {
+    typeOnly.add(match[2])
+    const named = typeOnlyBindings.get(match[2]) ?? new Set()
+    for (const binding of match[1].replace(/[{}]/g, '').split(',')) {
+      const cleaned = binding.trim().split(/\s+as\s+/u)[0]?.trim()
+      if (cleaned) named.add(cleaned)
+    }
+    typeOnlyBindings.set(match[2], named)
+  }
   for (const match of text.matchAll(/\bimport\s+type\s[^'"]*['"]([^'"]+)['"]/g)) typeOnly.add(match[1])
   const stat = new Set(all.filter(specifier => !dynamic.has(specifier)))
-  return { static: stat, dynamic, typeOnly }
+  return { static: stat, dynamic, typeOnly, typeOnlyBindings }
 }
 
 /**
@@ -424,13 +440,76 @@ function specifierPackage(specifier, byPackage) {
  * @param text - the file's source text.
  * @returns the file's mutable exports, global writes, global reads, and named imports by specifier.
  */
+/**
+ * Blank out comments and string/template literal contents, preserving offsets
+ * and line structure so every other pattern in this file keeps matching the
+ * same way. Quote characters are kept and their contents replaced with spaces,
+ * so a specifier scan still sees an empty literal rather than a syntax change.
+ * @param text - a source file's text.
+ * @returns the same text with comment and literal contents blanked.
+ */
+function stripNonCode(text) {
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    const two = text.slice(i, i + 2)
+    if (two === '//') {
+      const end = text.indexOf('\n', i)
+      const stop = end === -1 ? text.length : end
+      out += ' '.repeat(stop - i)
+      i = stop
+      continue
+    }
+    if (two === '/*') {
+      const end = text.indexOf('*/', i + 2)
+      const stop = end === -1 ? text.length : end + 2
+      out += text.slice(i, stop).replace(/[^\n]/gu, ' ')
+      i = stop
+      continue
+    }
+    const ch = text[i]
+    if (ch === '"' || ch === "'" || ch === '`') {
+      out += ch
+      i += 1
+      while (i < text.length) {
+        if (text[i] === '\\') {
+          out += '  '
+          i += 2
+          continue
+        }
+        if (text[i] === ch) break
+        out += text[i] === '\n' ? '\n' : ' '
+        i += 1
+      }
+      if (i < text.length) {
+        out += ch
+        i += 1
+      }
+      continue
+    }
+    out += ch
+    i += 1
+  }
+  return out
+}
+
 function collectStateFacts(text) {
+  // Match executable code only. A package that EMITS source text — the web
+  // module system returns `<script>` rows for an HTML head, with
+  // `window.__ModuleLoader__ = {...}` inside a template literal — writes no
+  // global in its own process, and rule 3 forbids *reaching another layer's
+  // state*, not containing characters that resemble a write. Scanning raw text
+  // reported two such violations that were never violations: the checker's
+  // stated verdict ("this package writes a shared global") and what it actually
+  // evaluated ("this file's bytes match a write pattern") were different
+  // claims.
+  const code = stripNonCode(text)
   const mutableExports = new Set()
-  for (const match of text.matchAll(MUTABLE_EXPORT)) mutableExports.add(match[1])
+  for (const match of code.matchAll(MUTABLE_EXPORT)) mutableExports.add(match[1])
   const globalWrites = new Set()
-  for (const match of text.matchAll(GLOBAL_WRITE)) globalWrites.add(match[1])
+  for (const match of code.matchAll(GLOBAL_WRITE)) globalWrites.add(match[1])
   const globalReads = new Set()
-  for (const match of text.matchAll(GLOBAL_READ)) globalReads.add(match[1])
+  for (const match of code.matchAll(GLOBAL_READ)) globalReads.add(match[1])
   const namedImports = new Map()
   for (const match of text.matchAll(NAMED_IMPORT)) {
     const bindings = namedImports.get(match[2]) ?? new Set()
@@ -490,7 +569,7 @@ export function collectLayerEdges(root, byPackage) {
     }
     for (const file of sourceFiles(root, dir)) {
       const text = readFileSync(resolve(root, file), 'utf8')
-      const { static: stat, dynamic, typeOnly } = collectSpecifiers(text)
+      const { static: stat, dynamic, typeOnly, typeOnlyBindings } = collectSpecifiers(text)
       const state = collectStateFacts(text)
       for (const binding of state.mutableExports) packageFacts.mutableExports.add(binding)
       for (const key of state.globalWrites) if (!packageFacts.globalWrites.has(key)) packageFacts.globalWrites.set(key, file)
@@ -505,7 +584,10 @@ export function collectLayerEdges(root, byPackage) {
       for (const specifier of stat) {
         const target = specifierPackage(specifier, byPackage)
         if (target === undefined || target === name) continue
-        const nature = typeOnly.has(specifier) && /EventMap/.test(specifier) ? 'event-type-only' : 'value'
+        const eventTypeOnly = typeOnly.has(specifier)
+          && [...(typeOnlyBindings.get(specifier) ?? [])].length > 0
+          && [...(typeOnlyBindings.get(specifier) ?? [])].every(binding => /EventMap$/u.test(binding))
+        const nature = eventTypeOnly ? 'event-type-only' : 'value'
         record(name, target, aliases.has(specifier) ? 'path-alias' : 'package-graph', nature)
       }
       for (const specifier of dynamic) {
