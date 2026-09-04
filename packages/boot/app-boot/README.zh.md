@@ -9,7 +9,7 @@ kind: "package-library"
 
 ## 概述
 
-`dsh-app-boot` 是 `dsh` profile（包括 Python 运行时 wheel 所打包的 CLI）背后的共享 Loader 启动库。它加载环境层、组合 profile bundle 与 patch、启动每个插件，再返回运行中的应用，或指出失败插件与原因。产品应用使用 `dsh` launcher 而不发布单独 bin；直接配置 helper 只保留给低层嵌入方与测试。你还可以在启动前预览生效配置，按 profile 选择实时或仅启动时应用 patch，并让持有终端的应用在致命退出前恢复终端。
+`dsh-app-boot` 是 `dsh` profile（包括 Python 运行时 wheel 所打包的 CLI）背后的共享 Loader 启动库。它加载环境层、组合 profile bundle 与 patch、在组合每个组合包层之前先判定其声明的插件 manifest 与兼容性 manifest、启动每个插件，再返回运行中的应用，或指出失败插件与原因。产品应用使用 `dsh` launcher 而不发布单独 bin；直接配置 helper 只保留给低层嵌入方与测试。你还可以在启动前预览生效配置，按 profile 选择实时或仅启动时应用 patch，并让持有终端的应用在致命退出前恢复终端。
 
 ## 目录
 
@@ -137,8 +137,8 @@ profile 是同一套 dsh 安装提供不同应用界面的方式：`web`、`head
 - **快照回放替换仅识别特定 basename**——只有以 `cordis.yml` 或 `cordis.yaml` 结尾的配置会映射到同级 `cordis.snapshot.yml`；自定义配置名称需要调用方自行选择。
 - **环境发现以启动为界**——`loadLayeredEnv` 只读取一次调用目录与 harness home 中的 `.env`；它不搜索父目录，也不跟随之后选择的 workspace。`loadEnv` 仍是非产品 bin 使用的单目录 helper。
 - **用户 patch 会替换匹配到的整个配置**——按 id 定位的 patch 不做深度合并，因此 profile 覆盖必须重述需要保留的组合包字段。
-- **`packages/experimental/webworker-runtime` 启动时不经过插件准入**——其 worker host（`packages/experimental/webworker-runtime/src/worker-host.ts`）直接调用本包的 `boot()`，从不经过 `composeProfile`/`partitionProfileLayersByAdmission`，因此 `DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce` 在那里不起作用。这是按设计属于范围内的情形，而非强制执行漏洞：`packages/experimental/` 是本仓库文档明确记载的“私有原型，不纳入正式发行”（根目录 `AGENTS.md` 的仓库布局）。
-- **准入只覆盖 `dsh.profile.bundles` 组合包层，不覆盖 profile 自身的 patch overlay**——`partitionProfileLayersByAdmission` 只对每个组合包层自己的 `package.json` `dsh` 字段做分类；`composeProfile`（`apps/cli/src/profile-boot.ts`）会无条件地组合 `profile.patches`（profile 自身的 `cordis.patch.yml`）、home 级 `cordis.patch.yml` 与 `--patch` overlay 文件，不做任何准入检查，因此其中任何一个都能直接插入任意 Loader row。这是被接受的，而非被忽视的：在本系统既有设计中，编辑 `cordis.patch.yml` 的人已经拥有等同于代码执行的信任，这是一个不同的、更早存在的信任边界，有别于一个已安装的 npm 组合包。
+- **`packages/experimental/webworker-runtime` 启动时不经过插件准入**——其 worker host（`packages/experimental/webworker-runtime/src/worker-host.ts`）直接调用本包的 `boot()`，从不经过 `composeProfile`/`partitionProfileLayersByAdmission`/`negotiateProfileLayerCompatibility`，因此 `DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce` 与 `dsh.compat` 协商在那里都不起作用。这是按设计属于范围内的情形，而非强制执行漏洞：`packages/experimental/` 是本仓库文档明确记载的“私有原型，不纳入正式发行”（根目录 `AGENTS.md` 的仓库布局）。
+- **准入与兼容性协商都只覆盖 `dsh.profile.bundles` 组合包层，不覆盖 profile 自身的 patch overlay**——`partitionProfileLayersByAdmission` 只对每个组合包层自己的 `package.json` `dsh` 字段做分类，`negotiateProfileLayerCompatibility` 只求解每个层自己的 `dsh.compat`；`composeProfile`（`apps/cli/src/profile-boot.ts`）会无条件地组合 `profile.patches`（profile 自身的 `cordis.patch.yml`）、home 级 `cordis.patch.yml` 与 `--patch` overlay 文件，绕过这两道关卡，因此其中任何一个都能直接插入任意 Loader row。这是被接受的，而非被忽视的：在本系统既有设计中，编辑 `cordis.patch.yml` 的人已经拥有等同于代码执行的信任，这是一个不同的、更早存在的信任边界，有别于一个已安装的 npm 组合包。
 
 <a id="dev-note"></a>
 ### 开发备注

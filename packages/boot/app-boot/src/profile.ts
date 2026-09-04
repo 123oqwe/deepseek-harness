@@ -41,6 +41,16 @@ import {
   type PreMountDenialReason,
   type WildcardFinding,
 } from '@deepseek-ai/dsh-plugin-manifest'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { parseCompatDeclaration } from '@deepseek-ai/dsh-plugin-compat'
+import type {
+  HostCompatContext,
+  PluginActivationStatus,
+  PluginCompatManifest,
+  PluginId,
+  UnsatCore,
+} from '@deepseek-ai/dsh-plugin-compat'
+import { resolveActivatedGraph } from '@deepseek-ai/dsh-plugin-compat/solver'
 import { resolve as resolvePackage, type Package as ResolvePackageManifest } from 'resolve.exports'
 import { loadOverlayPatches } from './index.ts'
 
@@ -926,4 +936,111 @@ export function partitionProfileLayersByAdmission(
     }
   }
   return { admitted, denied }
+}
+
+/**
+ * Read one bundle layer's own `package.json` `dsh.compat` field and validate
+ * it into Epic P1-08's {@link PluginCompatManifest} (must[0]). The same `dsh`
+ * field {@link readPluginDeclaration} classifies for P1-01's pre-mount
+ * admission, read here for its separate compatibility half — a package may
+ * carry `dsh.bundle`, `dsh.manifestVersion`, and `dsh.compat` together.
+ *
+ * A layer whose package declares no `dsh.compat` contributes no manifest and
+ * is never blocked by compatibility negotiation, which is why no shipped
+ * bundle's behavior changes; a malformed `dsh.compat` fails loud through
+ * `parseCompatDeclaration` rather than degrading to "unconstrained".
+ * @param layer - a resolved bundle layer from {@link loadProfile}.
+ * @returns the layer's validated manifest, or `undefined` when its package
+ *   declares no `dsh.compat`.
+ */
+export function readLayerCompatManifest(layer: ProfileLayer): PluginCompatManifest | undefined {
+  const manifest = JSON.parse(
+    readFileSync(join(layer.packageDir, 'package.json'), 'utf8'),
+  ) as { dsh?: { compat?: unknown } }
+  return parseCompatDeclaration(manifest.dsh?.compat, brandString<PluginId>(layer.packageName))
+}
+
+/** One profile bundle layer a boot refuses to compose because compatibility negotiation blocked it (acceptance[1]). */
+export interface BlockedProfileLayer {
+  readonly layer: ProfileLayer
+  /** The solved `'blocked'` activation, naming the reason code and every unsatisfied required capability. */
+  readonly activation: Extract<PluginActivationStatus, { status: 'blocked' }>
+}
+
+/** One admitted profile bundle layer, with the optional capabilities the graph left unsatisfied (acceptance[2]). */
+export interface AdmittedProfileLayer {
+  readonly layer: ProfileLayer
+  /** The solved `'active'` activation; `disabledOptionalCapabilities` is empty for a layer that declared no `dsh.compat`. */
+  readonly activation: Extract<PluginActivationStatus, { status: 'active' }>
+}
+
+/**
+ * The outcome of one profile's compatibility negotiation: either every layer
+ * placed into admitted/blocked, or a graph-level contradiction no per-layer
+ * blocking can resolve (must[2]).
+ */
+export type ProfileCompatNegotiation =
+  | {
+    readonly solvable: true
+    /** Layers whose patches a boot may compose, in `dsh.profile.bundles` order. */
+    readonly admitted: readonly AdmittedProfileLayer[]
+    /** Layers whose patches a boot must not compose, so their plugin code never runs (acceptance[1]). */
+    readonly blocked: readonly BlockedProfileLayer[]
+    /** The solved plan's deterministic identity — equal profiles produce an equal `planId` (acceptance[0]). */
+    readonly planId: string
+  }
+  | { readonly solvable: false; readonly unsatCore: UnsatCore }
+
+/**
+ * Epic P1-08's boot-time negotiation point (must[1]): solve every bundle
+ * layer's declared `dsh.compat` manifest together, in one call, before any
+ * layer's patches are composed into the tree `boot()` mounts, and partition
+ * the layers by the resulting load plan.
+ *
+ * Every layer is judged, including one declaring no `dsh.compat` — such a
+ * layer contributes no {@link PluginCompatManifest} to the graph and is
+ * always admitted with no disabled optional capabilities, so an existing
+ * profile composes exactly as it did before this negotiation existed. Layers
+ * that do declare are solved through `@deepseek-ai/dsh-plugin-compat`'s
+ * `resolveActivatedGraph`, so a layer blocked on its own runtime API range or
+ * schema range also stops satisfying the capability requirements of the
+ * layers that depend on it, rather than leaving a consumer active against a
+ * provider that will never load (must[3]).
+ * @param layers - the profile's resolved bundle layers, in
+ *   `dsh.profile.bundles` order.
+ * @param host - this build's {@link HostCompatContext}, normally from
+ *   `@deepseek-ai/dsh-plugin-compat/solver`'s `resolveHostCompatContext`.
+ * @returns the partitioned negotiation outcome, or the minimal unsat core.
+ */
+export function negotiateProfileLayerCompatibility(
+  layers: readonly ProfileLayer[],
+  host: HostCompatContext,
+): ProfileCompatNegotiation {
+  const declared = new Map<string, PluginCompatManifest>()
+  for (const layer of layers) {
+    const manifest = readLayerCompatManifest(layer)
+    if (manifest !== undefined) declared.set(layer.packageName, manifest)
+  }
+
+  // One solve over every declared manifest at once (must[1]), through the
+  // cascading resolver rather than the one-pass solve: a layer blocked on its
+  // own runtime API or schema range must stop satisfying its consumers'
+  // required capabilities, or a consumer would compose against a provider
+  // that never mounts (must[3]).
+  const solution = resolveActivatedGraph([...declared.values()], host)
+  if (!solution.solvable) return solution
+
+  const byPluginId = new Map(solution.loadPlan.activations.map(row => [row.pluginId as string, row.activation]))
+  const admitted: AdmittedProfileLayer[] = []
+  const blocked: BlockedProfileLayer[] = []
+  for (const layer of layers) {
+    // A layer that declared no `dsh.compat` contributed no manifest and so
+    // has no activation row: unconstrained, always admitted, which is why an
+    // existing profile composes exactly as it did before this negotiation.
+    const activation = byPluginId.get(layer.packageName)
+      ?? { status: 'active' as const, disabledOptionalCapabilities: [] }
+    if (activation.status === 'active') admitted.push({ layer, activation })
+    else blocked.push({ layer, activation })
+  }
+  return { solvable: true, admitted, blocked, planId: solution.loadPlan.planId }
 }

@@ -25,12 +25,16 @@ import {
   loadOptionalPatches,
   loadOverlayPatches,
   loadProfile,
+  negotiateProfileLayerCompatibility,
   partitionProfileLayersByAdmission,
   PROFILE_PATCH_FILENAME,
   watchUserPatches,
+  type BlockedProfileLayer,
   type DeniedProfileLayer,
   type Profile,
 } from '@deepseek-ai/dsh-app-boot'
+import { DSH_RUNTIME_API_VERSION } from '@deepseek-ai/dsh-plugin-compat'
+import { resolveHostCompatContext } from '@deepseek-ai/dsh-plugin-compat/solver'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import { provideCmdline, type AppReady } from '@deepseek-ai/dsh-cmdline'
@@ -145,6 +149,12 @@ interface ComposedProfile {
   admittedLayerNames: readonly string[]
   /** Every bundle layer a production boot refused to compose, and why; empty outside production. */
   deniedLayers: readonly DeniedProfileLayer[]
+  /**
+   * Every bundle layer Epic P1-08's compatibility negotiation blocked, with
+   * the activation naming why. Its patches are absent from `bundlePatches`,
+   * so its plugin code never mounts (acceptance[1]).
+   */
+  compatBlockedLayers: readonly BlockedProfileLayer[]
 }
 
 /** The full patch stack of one composed profile, in application order. */
@@ -173,10 +183,22 @@ function allPatches(composed: ComposedProfile): PatchOptions[] {
  * `DSH_PLUGIN_MANIFEST_ENFORCEMENT=enforce` opt-in) admits every layer
  * unconditionally, so an existing profile boots exactly as it did before
  * this policy existed.
+ *
+ * Epic P1-08's compatibility negotiation (must[1]/acceptance[1]) runs on the
+ * admitted layers immediately after, and likewise before any patch reaches
+ * `boot()`: {@link negotiateProfileLayerCompatibility} solves every layer's
+ * declared `package.json` `dsh.compat` manifest as one graph, and only a
+ * layer the solved load plan marks `'active'` contributes patches. Unlike
+ * admission this needs no production opt-in, because a bundle that declares
+ * no `dsh.compat` is unconstrained and always active — no shipped profile's
+ * composition changes. A graph-level contradiction no per-layer blocking can
+ * resolve (must[2]) aborts the boot with the minimal unsat core rather than
+ * silently picking a side.
  * @param name - the profile name.
  * @param patchFiles - `--patch` overlay paths, in argv order.
  * @param production - whether this boot enforces production plugin admission.
- * @returns the profile, its patch layers, and the admission outcome.
+ * @returns the profile, its patch layers, and the admission and compatibility outcomes.
+ * @throws Error when compatibility negotiation reports a graph-level contradiction.
  */
 export async function composeProfile(
   name: string,
@@ -193,9 +215,35 @@ export async function composeProfile(
       + `${JSON.stringify(name)} (${reason}${detail})\n`,
     )
   }
+  const negotiation = negotiateProfileLayerCompatibility(admitted, resolveHostCompatContext(DSH_RUNTIME_API_VERSION))
+  if (!negotiation.solvable) {
+    const core = negotiation.unsatCore
+      .map(entry => `  ${entry.pluginId}: ${entry.reasonCode} (${entry.constraintRef}) — ${entry.detail}`)
+      .join('\n')
+    throw new Error(
+      `${NAME}: plugin compatibility: profile ${JSON.stringify(name)} has no solvable plugin graph.\n`
+      + `Minimal conflicting constraint set:\n${core}`,
+    )
+  }
+  for (const { layer, activation } of negotiation.blocked) {
+    process.stderr.write(
+      `${NAME}: plugin compatibility: excluding bundle ${JSON.stringify(layer.packageName)} from profile `
+      + `${JSON.stringify(name)} (${activation.reasonCode}`
+      + `${activation.missingCapabilities.length > 0 ? `: ${activation.missingCapabilities.join(', ')}` : ''})\n`,
+    )
+  }
+  for (const { layer, activation } of negotiation.admitted) {
+    if (activation.disabledOptionalCapabilities.length === 0) continue
+    // acceptance[2]: an unsatisfied optional capability disables that feature
+    // only, and is shown rather than left for the user to infer from absence.
+    process.stderr.write(
+      `${NAME}: plugin compatibility: bundle ${JSON.stringify(layer.packageName)} is active with disabled optional `
+      + `capabilities: ${activation.disabledOptionalCapabilities.join(', ')}\n`,
+    )
+  }
   const homePatches = loadOptionalPatches(NAME, homePatchPath()) ?? []
   const overlays = patchFiles.flatMap(file => loadOverlayPatches(NAME, resolve(file)))
-  const bundlePatches = admitted.flatMap(layer => layer.patches)
+  const bundlePatches = negotiation.admitted.flatMap(entry => entry.layer.patches)
   const rows = new Map<string, EntryOptions>()
   for (const row of composeEntries([bundlePatches, profile.patches, homePatches, overlays])) {
     if (typeof row.id === 'string') rows.set(row.id, row)
@@ -208,8 +256,9 @@ export async function composeProfile(
     bundlePatches,
     homePatches,
     overlays: composedOverlays,
-    admittedLayerNames: admitted.map(layer => layer.packageName),
+    admittedLayerNames: negotiation.admitted.map(entry => entry.layer.packageName),
     deniedLayers: denied,
+    compatBlockedLayers: negotiation.blocked,
   }
 }
 
