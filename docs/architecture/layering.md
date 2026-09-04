@@ -54,6 +54,15 @@ Plus two conditions the gate also gives up on: every package classified (the epi
 
 **Observations** — reported, never failed on. A generic upward edge between two ranked layers is a finding. No registry clause requires zero of them: must[0] requires the order be *defined*, must[2] requires the three channels be *detected*, acceptance[0] is about cycles, and the epic gate names only the two zeros above. Findings are printed to stdout labelled `finding (not a failure)` and persisted to [`scripts/architecture/layer-findings.md`](../../scripts/architecture/layer-findings.md) by `--write-findings`, so they outlive a CI log.
 
+8. **A spawn-target dependency is not a code dependency.** Rules 1 and 6 forbid a ranked package from depending on an unranked position. That prohibition is about *code coupling*: it was written with `import` in mind, and the Detection section below names three code channels only — the declared package graph, a TypeScript path alias, and a dynamic `require()`/`import()`. A process boundary was never in its range. A package that resolves another's manifest path in order to **spawn it as a subprocess**, while importing none of its symbols, is not coupled to its code, and `@deepseek-ai/dsh-sdk-client` → `@deepseek-ai/dsh` is exactly that: `launch.ts` calls `import.meta.resolve('@deepseek-ai/dsh/package.json')` to locate the harness executable and check version agreement before spawning it. The dependency cannot be removed — `import.meta.resolve` fails without the declaration — so "it does not import, therefore it is not a dependency" is false here; the distinction that holds is **importing a symbol versus resolving a path**.
+
+   Two conditions, both decided mechanically, and an edge failing either is an ordinary violation:
+
+   1. **Zero imported bindings from the target** — no `import`, `import type`, `require`, or dynamic `import` of any symbol. This is the entire safety of the exception. A package that both spawns and imports falls through to the violation path with nobody's judgement involved, so the exception cannot be widened by argument.
+   2. **The dependency is declared** in `package.json`, so it can never rest on hoisting — an undeclared dependency reached through hoisting is the genuinely invisible coupling. The edge arriving through the `package-graph` channel *is* that declaration.
+
+   This rule does not weaken rules 1 and 6; it states a boundary they always implied and never wrote down. Recorded because an unwritten boundary and a quietly loosened assertion are indistinguishable to the next reader — the same reason rule 6 declares its own exclusion instead of leaving it a convenient default.
+
 ## Enforcement
 
 `pnpm architecture:layers` runs the real checker (`scripts/architecture/check-layer-deps.mjs`, U-stage) and must complete within 10 seconds, reporting the shortest violating cycle's path when the graph has an unexempted one. It is wired into CI as a blocking gate.

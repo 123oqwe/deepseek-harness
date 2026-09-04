@@ -479,3 +479,34 @@ describe('P0-04 Fault: calibrating the real-repository verdict before trusting i
     expect(result.violations.length).toBeGreaterThan(0)
   })
 })
+
+describe('P0-04 Fault: rule 8, the spawn-target exception, and the condition that closes it', () => {
+  const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
+
+  it('the real spawn-target edge is admitted: dsh-sdk-client resolves dsh to spawn it and imports none of its symbols', () => {
+    // This edge is real and cannot be removed: `import.meta.resolve` fails
+    // without the declaration. Rule 8 admits it because no symbol crosses.
+    const result = runLayerDepsCheck(root)
+    expect(result.violations.map(v => v.rule)).not.toContain('composition-root-inbound-dependency')
+  })
+
+  it('control: the exception is withdrawn the moment a symbol is imported, so condition (i) is a criterion and not a declaration', () => {
+    // The whole safety of rule 8 rests on "zero imported bindings". A rule
+    // stated but never shown to close is indistinguishable from a name-based
+    // exemption list. This builds a fixture whose ranked package BOTH declares
+    // the unranked dependency AND imports a symbol from it, and requires the
+    // violation to come back.
+    const fixture = join(root, 'tests/architecture/__fixtures__/p0-04-spawn-and-import')
+    const result = runLayerDepsCheck(fixture)
+    expect(result.violations.map(v => v.rule)).toContain('composition-root-inbound-dependency')
+  })
+
+  it('control: the same fixture WITHOUT the symbol import is admitted, isolating the import as the deciding fact', () => {
+    // Identical package graph and identical declaration; the only difference is
+    // whether a symbol is imported. Without this pair, the case above could be
+    // passing for any other reason the fixture happens to carry.
+    const fixture = join(root, 'tests/architecture/__fixtures__/p0-04-spawn-only')
+    const result = runLayerDepsCheck(fixture)
+    expect(result.violations.map(v => v.rule)).not.toContain('composition-root-inbound-dependency')
+  })
+})

@@ -116,6 +116,9 @@
     "scripts/*.client.spec.ts",
     "scripts/client-bundle-css.spec.ts",
     "packages/typert/generator/tests/fixtures/**",
+    // Synthetic workspaces the layer checker scans as file trees, never compiled:
+    // their manifests name packages that do not exist, which is the point.
+    "tests/architecture/__fixtures__/**",
     "scripts/client-bundle-purity.spec.ts"
   ],
   "references": [

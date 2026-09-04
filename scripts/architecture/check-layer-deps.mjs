@@ -731,6 +731,7 @@ export function runLayerDepsCheck(root) {
     })
   }
 
+  const spawnTargets = []
   for (const edge of edges) {
     // An unranked position may depend on any layer, so its own outgoing edges
     // never reach classifyEdge (layering.md rule 1).
@@ -739,6 +740,25 @@ export function runLayerDepsCheck(root) {
     // ranked layer may depend on an unranked one.
     const inbound = UNRANKED_POSITIONS.get(edge.toLayer)
     if (inbound !== undefined) {
+      // layering.md rule 8: a spawn-target dependency. The rule against
+      // depending on an unranked position is about CODE coupling -- rule 1 was
+      // written with `import` in mind and the Detection section lists three
+      // code channels only, so a process boundary was never in its range. A
+      // package that resolves a manifest path to spawn an executable, and
+      // imports no symbol from it, is not coupled to its code.
+      //
+      // Condition (i) is the whole safety of this exception and is decided
+      // here, not by a name list: zero imported bindings. A package that both
+      // spawns and imports falls straight through to the violation below, with
+      // nobody's judgement involved. (ii) the dependency is declared, so it can
+      // never rest on hoisting; the edge reaching this point via
+      // `package-graph` IS that declaration.
+      const importedFromTarget = facts.get(edge.fromPackage)?.importedBindings.get(edge.toPackage)
+      const importsNoSymbol = importedFromTarget === undefined || importedFromTarget.size === 0
+      if (importsNoSymbol && edge.detectionMethod === 'package-graph') {
+        spawnTargets.push({ fromPackage: edge.fromPackage, toPackage: edge.toPackage })
+        continue
+      }
       violations.push({
         rule: inbound.rule,
         fromPackage: edge.fromPackage,

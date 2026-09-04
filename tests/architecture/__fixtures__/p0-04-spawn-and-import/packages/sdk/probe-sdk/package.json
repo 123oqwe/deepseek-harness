@@ -1,0 +1,1 @@
+{ "name": "@deepseek-ai/dsh-sdk-probe", "dependencies": { "@deepseek-ai/dsh-probe-bundle-root": "workspace:*" } }
