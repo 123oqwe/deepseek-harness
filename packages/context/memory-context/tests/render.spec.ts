@@ -25,7 +25,7 @@ function recordOf(content: unknown): MemoryRecordView {
 
 describe('resolveMemoryAccessContext', () => {
   it('carries all four read-scoping dimensions from config when the agent has no attached identity', () => {
-    const context = resolveMemoryAccessContext({ identity: undefined } as Agent, config)
+    const context = resolveMemoryAccessContext({ identity: undefined } as unknown as Agent, config)
     expect(context.purpose).toBe('recall')
     expect(context.scope).toEqual({ tenantId: TenantId('t-1') })
     expect(context.contextBudget).toEqual({ maxRecords: 3 })
@@ -34,14 +34,14 @@ describe('resolveMemoryAccessContext', () => {
 
   it('prefers the agent\'s durably attached principal over the configured fallback id', () => {
     const attached = createUserPrincipal(PrincipalId('real-user'), TenantId('t-1'))
-    const agent = { identity: { chain: createChain(attached, 0) } } as Agent
+    const agent = { identity: { chain: createChain(attached, 0) } } as unknown as Agent
     const context = resolveMemoryAccessContext(agent, config)
     expect(context.principal).toMatchObject({ kind: 'user', id: 'real-user' })
   })
 
   it('never reads across tenants: the scope tenant is the configured one, not the attached principal\'s', () => {
     const attached = createUserPrincipal(PrincipalId('real-user'), TenantId('t-other'))
-    const agent = { identity: { chain: createChain(attached, 0) } } as Agent
+    const agent = { identity: { chain: createChain(attached, 0) } } as unknown as Agent
     expect(() => resolveMemoryAccessContext(agent, config)).toThrow(/tenant/i)
   })
 })

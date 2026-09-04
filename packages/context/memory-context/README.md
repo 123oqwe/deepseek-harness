@@ -5,6 +5,8 @@ kind: "package-reference"
 
 # @deepseek-ai/dsh-memory-context
 
+English | [中文](README.zh.md)
+
 ## Summary
 
 `dsh-memory-context` is the Consumer role of the provider-neutral Memory capability seam (first100 registry P6-01, Usage stage). On each eligible step it takes the open turn's user text, asks `ctx.memory` for the durable records that text recalls, appends them to the request as a source-attributed user message, and records one `memory/access` event for that read. It reaches memory only through the Service Definition — it never imports a provider or the `MemoryRuntime` class (`must[2]`). The injection and its event are produced from the same read result on the same path, so a memory record the model saw is always reconstructable from the session log alone.
@@ -61,6 +63,7 @@ Every field is required. `must[3]` puts `principal`, `purpose`, `scope`, and `co
 - **Model-visible and logged are one act.** The injected `user/message` and its `memory/access` event come from the same read result on the same path, satisfying this repository's model-visible ⟺ logged rule by construction rather than by a separate audit step.
 - **The consumer holds no provider reference.** It injects `memory` and calls the service; swapping the mounted provider changes what it recalls with no change here (`must[1]`, `must[2]`).
 - **Identity is resolved, never defaulted.** The principal is the agent's own when a prior run durably attached an `IdentityContext`; otherwise it is an `anonymous-dev` principal built from the declared `principalId` and `tenantId`. Nothing in a shipped profile attaches an `IdentityContext` today, so a consumer that simply required one could never read at all.
+- **Recall runs against user-authored text only.** The request history at pre-step time also holds other context plugins' injected snapshots (runtime context, sandbox and approval policy prose, this plugin's own prior recall). Folding those into the query would make what memory recalls depend on unrelated policy text, and would let one recall's output become the next recall's input.
 
 ### Source map
 
@@ -83,11 +86,35 @@ Every field is required. `must[3]` puts `principal`, `purpose`, `scope`, and `co
 <a id="model-experience"></a>
 ## Model Experience
 
-The model reads recalled memory as an ordinary user-role message appended to the request, attributed to the `memory-context` plugin with `form: 'snapshot'` and one named section. It defines no tool and contributes no prompt or schema, so the model never calls this package — it only reads what the package recalled.
+### Recalled durable memory
+
+#### What the model sees
+
+One user-role message per step that recalled at least one record. A step that recalled nothing injects nothing, though the read is still recorded.
+
+##### Recall within the record budget
+
+```markdown
+Recalled <count> durable memory record(s):
+- (<updated-at>) <json-serialized-content>
+- (<updated-at>) <json-serialized-content>
+```
+
+##### Recall cut to the record budget
+
+```markdown
+Recalled <count> durable memory record(s):
+- (<updated-at>) <json-serialized-content>
+This recall was truncated to the configured record budget; more records may exist.
+```
+
+#### Token effect
+
+Each recall adds one message that accumulates until compaction shadows it, bounded per step by `maxRecords` and by each record's own content size. A step whose query recalls nothing costs no tokens.
 
 #### KV Cache effect
 
-Each injection appends to the request tail, so a turn whose recall differs from the previous turn's invalidates the request suffix from that point. A composition that recalls the same records every turn keeps the prefix stable.
+Append-only within a step, so a recall follows the reusable request prefix. Because the recalled set is re-read every step, a turn whose recall differs from the previous turn's invalidates the request suffix from the point the recall text changed.
 
 ## Known Limitations and Deferred Work
 

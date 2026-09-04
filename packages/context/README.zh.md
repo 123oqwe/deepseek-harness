@@ -9,7 +9,7 @@ kind: "package-group"
 
 ## 概述
 
-context 组提供不定义任何工具、为每次请求添加模型可见上下文的插件：工作区指令文件成为指引，`@file` mention 提供路径补全，其他会话可以作为有界快照被引用，模型还能看到当前时间与 agent 的 tmux 位置。除 `agent-instructions`（`dsh-base` 默认包含它，profile patch 可以禁用）外，其余全部需主动启用。上下文是持久的：注入的指令与引用以 user 角色消息进入会话历史，因此与其他对话内容一样持久、可回放、可压缩。本页是组的映射；包级约定由各包 README 负责。
+context 组提供不定义任何工具、为每次请求添加模型可见上下文的插件：工作区指令文件成为指引，`@file` mention 提供路径补全，其他会话可以作为有界快照被引用，跨会话的持久 memory 被召回进请求，模型还能看到当前时间与 agent 的 tmux 位置。除 `agent-instructions`（`dsh-base` 默认包含它，profile patch 可以禁用）外，其余全部需主动启用。上下文是持久的：注入的指令与引用以 user 角色消息进入会话历史，因此与其他对话内容一样持久、可回放、可压缩。本页是组的映射；包级约定由各包 README 负责。
 
 ## 目录
 
@@ -28,6 +28,7 @@ context 组提供不定义任何工具、为每次请求添加模型可见上下
 | [`session-reference/`](session-reference/README.zh.md) | 引用其他会话：提及一个会话，其有界只读快照即成为上下文 | `ctx.sessionReferenceResolver` |
 | [`file-reference/`](file-reference/README.zh.md) | `@file` mention 发现与供宿主驱动 UI 使用的共享 mention 语法 | `ctx.fileReferences` |
 | [`file-reference-local/`](file-reference-local/README.zh.md) | `@file` mention 的本地工作区补全提供方 | — |
+| [`memory-context/`](memory-context/README.zh.md) | 通过 `ctx.memory` 召回跨会话持久 memory，并记录每次读取 | — |
 | [`time-context/`](time-context/README.zh.md) | 每个步骤的当前时间、浏览器时区与经过时长 | — |
 | [`tmux-context/`](tmux-context/README.zh.md) | agent 所在的 tmux session、window 与 pane 位置 | — |
 

@@ -34,6 +34,7 @@ async function jsonlFiles(dir: string): Promise<string[]> {
 }
 
 let events: SessionEvent[] = []
+let replayedTypes: string[] = []
 let stderr = ''
 
 describe('memory-context through the production headless profile', () => {
@@ -50,6 +51,8 @@ describe('memory-context through the production headless profile', () => {
         expect(logs).toHaveLength(1)
         const lines = (await readFile(logs[0] as string, 'utf8')).trimEnd().split('\n')
         events = lines.slice(1).map(line => JSON.parse(line) as SessionEvent)
+        const replay = JSON.parse(await readFile(join(cwd, 'replay.json'), 'utf8')) as { types: string[] }
+        replayedTypes = replay.types
       },
     })
     stderr = result.stderr
@@ -65,6 +68,16 @@ describe('memory-context through the production headless profile', () => {
     // Registration must precede emission: a log holding an unregistered,
     // non-ignorable type is refused wholesale by the persistence read path.
     expect(KNOWN_SESSION_EVENT_TYPES.has('memory/access')).toBe(true)
+  })
+
+  it('a log written with memory/access is read back by replay, not refused', () => {
+    // The round trip, not merely the registration: the driver reloaded the
+    // session it had just written through `sessionPersistence.load`, the path
+    // that throws SessionFormatUnsupportedError on an event type this build
+    // does not know. Reaching this assertion at all means the load succeeded,
+    // and the event survives the trip rather than being silently dropped.
+    expect(replayedTypes).toContain('memory/access')
+    expect(replayedTypes.filter(type => type === 'memory/access')).toHaveLength(1)
   })
 
   it('recalled memory reaches the model as a durable, source-attributed user message', () => {

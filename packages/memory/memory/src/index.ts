@@ -85,6 +85,15 @@ interface Selection {
 export interface MemoryRuntimeConfig {
   /** Explicit provider id. Omitted = auto-select when exactly one usable. */
   readonly providerId?: string
+  /**
+   * Directory for a self-registered {@link createDurableFileMemoryProvider}.
+   * Omitted = register nothing, leaving every provider to arrive through
+   * {@link MemoryRuntime.registerProvider}. This is the only route by which a
+   * composition gets a usable provider from `cordis.yml` alone: the service
+   * registers none on its own, so a profile that mounts it without either
+   * route fails every call with `MEMORY_PROVIDER_UNAVAILABLE`.
+   */
+  readonly durableFileDirectory?: string
 }
 
 /**
@@ -104,6 +113,7 @@ export class MemoryRuntime extends Service {
   /** Provider selection config. `$DSH_MEMORY_PROVIDER` is equivalent to `providerId`, not a hidden priority chain. */
   static Config: z<MemoryRuntimeConfig> = z.object({
     providerId: z.string(),
+    durableFileDirectory: z.string(),
   })
 
   private providers = new Map<string, MemoryProvider>()
@@ -112,6 +122,9 @@ export class MemoryRuntime extends Service {
   constructor(ctx: Context, config: MemoryRuntimeConfig = {}) {
     super(ctx, 'memory')
     this.providerId = config.providerId ?? process.env.DSH_MEMORY_PROVIDER
+    if (config.durableFileDirectory !== undefined) {
+      this.registerProvider(createDurableFileMemoryProvider({ directory: config.durableFileDirectory }))
+    }
   }
 
   /**

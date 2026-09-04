@@ -1,8 +1,12 @@
 # Memory
 
+English | [中文](memory.zh.md)
+
 Provider-neutral durable Memory capability seam (first100 registry P6-01). The [Service Definition package](../../packages/memory/memory) owns propose/query/get/revise/forget/export vocabulary, provider selection, and the `memory/access` durable session event; a concrete provider (embedding-backed, graph-backed, plain-text, or otherwise) is a separate, swappable package this page's vocabulary never names.
 
 Source: [`packages/memory/memory/src/types.ts`](../../packages/memory/memory/src/types.ts)
+
+<a id="memory-vs-session-query"></a>
 
 ## Memory vs. Session Query
 
@@ -89,6 +93,14 @@ interface MemoryAccessContext {
 
 `ctx.memory` is the only intended entry point. A `MemoryProvider` object is inert on its own — constructing one has no effect until `ctx.memory.registerProvider()` makes it reachable; there is no free-standing `proposeMemory()`/`queryMemory()` export a consumer could call while skipping the seam.
 
+The shipped consumer is [`@deepseek-ai/dsh-memory-context`](../../packages/context/memory-context/README.md), which recalls records on each step and appends them to the request. It injects the `memory` service and calls it; it imports no provider and no `MemoryRuntime` class, so swapping the mounted provider changes what it recalls with no change to the consumer.
+
+### Recall is logged wherever it is model-visible (`validation[3]`)
+
+A memory record that reaches a model request must be reconstructable from the session log alone. The consumer satisfies this by construction rather than by audit: the injected `user/message` and its `memory/access` event are produced from the same read result on the same code path, so neither can occur without the other. `memory/access` is a registered `SessionEventMap` member, so a log carrying it survives replay through the persistence read path instead of being refused as an unknown type.
+
+The seam itself emits nothing. A caller of `ctx.memory` other than this consumer records no event unless it appends one, so the log is complete for reads made through a consumer that writes one, not for every conceivable caller.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -174,4 +186,8 @@ Source: [`packages/memory/memory/src/index.ts`](../../packages/memory/memory/src
 
 ## Status
 
-Contract stage only (first100 registry P6-01, C). `MemoryRuntime`'s provider registry/selection logic, both Contract-stage providers (`createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()`), and `must[3]` read-scoping enforcement in `query()`/`get()`/`export()` are all real (`packages/memory/memory/src/index.ts`) — [`packages/memory/memory/tests/conformance.spec.ts`](../../packages/memory/memory/tests/conformance.spec.ts) passes against them. Wiring a live `ctx.memory` call into the durable session log, so the `memory/access` event this page's read-scoping section describes has a real emitter, is the Usage stage's job; the package publishes no `./invariant` companion for it (see the [package README](../../packages/memory/memory/README.md#understand-the-implementation)).
+Contract, Provider, and Usage stages (first100 registry P6-01, C+P+U). `MemoryRuntime`'s provider registry/selection logic, all three providers (`createLocalReferenceMemoryProvider()`/`createFakeMemoryProvider()`/`createDurableFileMemoryProvider()`), and `must[3]` read-scoping enforcement in `query()`/`get()`/`export()` are real (`packages/memory/memory/src/index.ts`), covered by [`conformance.spec.ts`](../../packages/memory/memory/tests/conformance.spec.ts) and [`durable-provider.spec.ts`](../../packages/memory/memory/tests/durable-provider.spec.ts).
+
+The Usage stage adds the live call site: [`@deepseek-ai/dsh-memory-context`](../../packages/context/memory-context/README.md) recalls memory into real requests and emits `memory/access`, and the `dsh-base` bundle carries both it and `dsh-memory` as `disabled: true` rows a profile opts into. [`memory-context.spec.ts`](../../packages/context/memory-context/tests/memory-context.spec.ts) boots the shipped headless profile through the Loader and asserts the recall and its event over the durable JSONL log the run wrote, then reloads that log through the persistence read path to prove it replays.
+
+The package publishes no `./invariant` companion (see the [package README](../../packages/memory/memory/README.md#understand-the-implementation)).

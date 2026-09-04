@@ -18,8 +18,11 @@
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
+import { createAnonymousDevPrincipal, currentPrincipal, PrincipalId, TenantId } from '@deepseek-ai/dsh-principal'
 import type { MemoryAccessContext, MemoryRecordView } from '@deepseek-ai/dsh-memory'
+import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-llm'
+import { SessionSeq } from '@deepseek-ai/dsh-session'
 
 /** Cordis plugin name used by loader diagnostics and as this plugin's `user/message` source attribution. */
 export const name = 'memory-context'
@@ -63,14 +66,31 @@ export const Config: z<Config> = z.object({
  * config, never a hidden default: nothing in a shipped profile attaches an
  * `IdentityContext` today, so a consumer that simply required one could never
  * read at all.
+ *
+ * An attached principal from a tenant other than the configured one is
+ * refused rather than silently widening or narrowing the read boundary —
+ * `must[3]` makes the scope part of the read's meaning, so disagreement about
+ * it is a misconfiguration, not something to settle by preference.
  * @param agent - the agent whose step is being prepared; supplies the attached identity when it has one.
  * @param config - this plugin's validated configuration.
+ * @throws when the agent's attached identity names a tenant other than `config.tenantId`.
  * @returns the access context every read this consumer performs is scoped by.
  */
 export function resolveMemoryAccessContext(agent: Agent, config: Config): MemoryAccessContext {
-  void agent
-  void config
-  throw new Error('memory-context: resolveMemoryAccessContext is not implemented')
+  const tenantId = TenantId(config.tenantId)
+  const attached = agent.identity === undefined ? undefined : currentPrincipal(agent.identity.chain)
+  if (attached !== undefined && attached.tenantId !== tenantId) {
+    throw new Error(
+      `memory-context: the agent's attached principal belongs to tenant "${attached.tenantId}", `
+      + `but this plugin is configured to read within tenant "${config.tenantId}"`,
+    )
+  }
+  return {
+    principal: attached ?? createAnonymousDevPrincipal(PrincipalId(config.principalId), tenantId),
+    purpose: config.purpose,
+    scope: { tenantId },
+    contextBudget: { maxRecords: config.maxRecords },
+  }
 }
 
 /**
@@ -80,24 +100,41 @@ export function resolveMemoryAccessContext(agent: Agent, config: Config): Memory
  * @returns the model-visible snapshot text, or `undefined` when there is nothing to recall.
  */
 export function renderMemoryContext(records: readonly MemoryRecordView[], truncated: boolean): string | undefined {
-  void records
-  void truncated
-  throw new Error('memory-context: renderMemoryContext is not implemented')
+  if (records.length === 0) return undefined
+  const lines = records.map(record => `- (${record.updatedAt}) ${JSON.stringify(record.content)}`)
+  const header = `Recalled ${String(records.length)} durable memory record(s):`
+  const footer = truncated
+    ? '\nThis recall was truncated to the configured record budget; more records may exist.'
+    : ''
+  return `${header}\n${lines.join('\n')}${footer}`
 }
 
 /**
- * Collect the text of the open turn's user messages — the query this
+ * Collect the text of the open turn's user-authored messages — the query this
  * consumer recalls against.
+ *
+ * Plugin-sourced messages are excluded. The request history at pre-step time
+ * also holds other context plugins' injected snapshots (runtime context,
+ * sandbox and approval policy prose, this plugin's own prior recall); folding
+ * those into the query would make what memory recalls depend on unrelated
+ * policy text, and would let one recall's output become the next recall's
+ * input.
  * @param agent - the agent whose open turn is being prepared.
  * @param turn - the open turn number.
  * @param proposed - user messages this step has proposed but not yet entered.
- * @returns the concatenated user text of the open turn.
+ * @returns the concatenated user-authored text of the open turn, empty when the turn has none.
  */
 export function openTurnQuery(agent: Agent, turn: number, proposed: readonly UserMessage[]): string {
-  void agent
-  void turn
-  void proposed
-  throw new Error('memory-context: openTurnQuery is not implemented')
+  const entered: UserMessage[] = []
+  for (let seq = agent.session.seq - 1; seq >= 0; seq -= 1) {
+    const event = agent.session.eventAt(SessionSeq(seq))
+    if (event?.type === 'turn/start' && event.data.turn === turn) break
+    if (event?.type === 'user/message') entered.push(event.data)
+  }
+  return [...entered.reverse(), ...proposed]
+    .filter(message => message.source.kind !== 'plugin')
+    .flatMap(message => message.content.filter(block => block.type === 'text').map(block => block.text))
+    .join('\n')
 }
 
 /**
@@ -107,8 +144,33 @@ export function openTurnQuery(agent: Agent, turn: number, proposed: readonly Use
  * @returns Nothing.
  */
 export function apply(ctx: Context, config: Config): void {
-  void ctx
-  void config
-  void ((): PreStepDecision | undefined => undefined)
-  throw new Error('memory-context: apply is not implemented')
+  ctx.on('agent/pre-step', async ({ agent, turn, signal }, next): Promise<PreStepDecision> => {
+    const decision = await next()
+    if (decision.kind === 'reject' || signal.aborted) return decision
+    const query = openTurnQuery(agent, turn, decision.messages)
+    if (query.trim() === '') return decision
+    const accessContext = resolveMemoryAccessContext(agent, config)
+    const { records, truncated } = await ctx.memory.query({ accessContext, query })
+    // Recorded whether or not anything was recalled: a read that returned
+    // nothing is still a read of durable memory, and a log that omitted it
+    // would misrepresent what this consumer did.
+    agent.session.append('memory/access', {
+      operation: 'query',
+      accessContext,
+      resultCount: records.length,
+      truncated,
+    })
+    const text = renderMemoryContext(records, truncated)
+    if (text === undefined) return decision
+    return {
+      ...decision,
+      messages: [
+        ...decision.messages,
+        createUserMessage({
+          content: [{ type: 'text', text }],
+          source: { kind: 'plugin', plugin: name, form: 'snapshot', sections: [{ name, text }] },
+        }),
+      ],
+    }
+  }, { prepend: true })
 }
