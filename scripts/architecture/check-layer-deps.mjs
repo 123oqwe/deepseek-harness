@@ -48,6 +48,28 @@ const KERNEL_PERMITTED_CORDIS_BINDINGS = new Set(['Context'])
  * is resolved here, before any edge reaches `classifyEdge`.
  */
 const COMPOSITION_ROOT = 'composition-root'
+
+/**
+ * The `packages/client/` group spans four layers, so it is resolved by a rule
+ * rather than by a per-package table: every `ui-*` directory is a user-facing
+ * presentation surface, and the six non-`ui-*` members are named below. A rule
+ * is used deliberately in preference to 38 individual picks, which would be
+ * far harder to audit for entries chosen to suit a result.
+ *
+ * `client/web` is deliberately NOT a composition root, and copying it as one
+ * would be the wrong pattern: it is the web client's boot kernel (static
+ * module table, Cordis loader), and a boot kernel is a thing that gets
+ * assembled, not the assembler. The web client's actual composition root is
+ * `packages/bundle/web-app`.
+ */
+const CLIENT_LAYERS = {
+  connection: 'providers',
+  store: 'capability-definitions',
+  locale: 'capability-definitions',
+  hmr: 'orchestration-runtime',
+  modules: 'orchestration-runtime',
+  web: 'orchestration-runtime',
+}
 const CORDIS_PACKAGE = '@deepseek-ai/cordis'
 
 /**
@@ -266,6 +288,12 @@ export function classifyWorkspacePackages(root) {
     } else if (segments[0] === 'apps') {
       layer = COMPOSITION_ROOT
       source = 'apps'
+    } else if (segments[0] === 'packages' && group === 'client') {
+      // The signed client-group rule outranks a capability-family role: a
+      // `ui-*` package that also defines or provides a seam is still a
+      // presentation surface.
+      layer = segments[2].startsWith('ui-') ? 'surfaces-apps' : CLIENT_LAYERS[segments[2]]
+      source = `packages/client rule`
     } else if (definitions.has(name)) {
       layer = 'capability-definitions'
       source = `${SEAMS_PATH}#definition`

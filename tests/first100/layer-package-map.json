@@ -70,5 +70,17 @@
     "signerHadSeenViolationCounts": false,
     "publishedBeforeAnyRun": true,
     "prediction": "If the 89 orchestration-runtime -> surfaces-apps edges largely vanish once composition-root exists, the classification was wrong and clearing them is correct. Anything that survives is a real finding, handled by a split proposal or a dated allowlist entry with a named owner. No third pass over this table."
+  },
+  "$authorship3": {
+    "scope": "the packages/client/ group, expressed as a RULE in scripts/architecture/check-layer-deps.mjs (CLIENT_LAYERS + the ui-* prefix), not as per-package entries here",
+    "signedBy": "coordinator delegate",
+    "signedAt": "2026-09-04",
+    "rule": "packages/client/ui-* -> surfaces-apps; connection -> providers; store -> capability-definitions; locale -> capability-definitions; hmr -> orchestration-runtime; modules -> orchestration-runtime; web -> orchestration-runtime",
+    "whyARule": "Hand-picking one entry per client package would be more prone to sliding toward the violation counter than a single rule a reviewer can check in one read.",
+    "webIsNotACompositionRoot": "packages/client/web is the web client's boot kernel (static module table, Cordis loader). A boot kernel is a thing that gets assembled, not the assembler; the web client's composition root is packages/bundle/web-app. The reason is duplicated as a comment at CLIENT_LAYERS so the next reader does not copy the wrong pattern.",
+    "signerHadSeenViolationCounts": false,
+    "publishedBeforeAnyRun": true,
+    "correctionToTheSignedTable": "The table said 'all 40 ui-* packages'. The real count is 38 (ls packages/client/ui-* | wc -l). The rule is a prefix match, so the count does not change its effect; recorded because a signed table should not carry a wrong number.",
+    "prediction": "If the 30 surviving orchestration-runtime -> surfaces-apps edges largely clear under this rule, the classification was wrong and clearing is correct. If what survives concentrates on edges like test-support/client-runtime -> UI, that is very likely a real finding: a test-time runtime pulling production UI into the dependency graph. Handled by a split proposal or a dated owned entry, never a table adjustment."
   }
 }
