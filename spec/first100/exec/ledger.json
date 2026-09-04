@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-04T04:23:04.122Z",
-  "inputDigest": "33f558247477721a0a44008e2ff79bcc4e02e769470ffa7af75ad5ea974ebb0a",
+  "lastUpdatedUtc": "2026-09-04T06:31:03.435Z",
+  "inputDigest": "20dd0ea3b0d7d4a9245d2c5628877b1e2e7692bb272550c2651680e5ef0f91a1",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1419,13 +1419,15 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3a5e/first100-evidence-3a5e0692948c78418011204e8d847266a2410a68/vitest-report.json",
-          "observationSha256": "91e834ae7ef7e24af7e90005fa39c4e0c543966ed10601fb7e3f525f2e742fde",
+          "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8f49/first100-evidence-8f4988bf0bf4332a359a8f251ee6e5d8c44752dd/vitest-report.json",
+          "observationSha256": "d5cd55c5e6e6d2f96e7934b5006efbfef6ef833bb72f35b0e45071bff6448040",
           "expectCasesMatched": [
             "must[0]: a freshly bound workspace trust record starts untrusted and carries the full canonical-realpath-plus-inode/volume binding it was bound to",
             "must[1]: an untrusted workspace permits only safe reads and denies every project plugin/hook/MCP-server/executable-skill/home-profile-patch-override load",
+            "gate: an untrusted workspace denies project instructions, so opening a clone never reads the repository's own AGENTS.md",
+            "validation[1]: a trusted-read workspace permits project instructions as plain text while still denying every project-level executable kind",
             "must[2]: a trust upgrade presented by a non-host principal is refused and produces neither a new record nor an audit entry",
             "must[2]: a trust upgrade presented by a genuine host user principal succeeds and writes an audit record naming the host principal and the state transition",
             "a trusted-read workspace (never upgraded to trusted-execute) still denies every project-level executable load kind, so opening the clone alone can never reach a subprocess/network/credential-read path",
@@ -1433,10 +1435,12 @@
             "symlink retargeted: a different canonical path demotes an existing trusted-execute record to untrusted even when device/inode happen to match",
             "directory moved: a different canonical path with the same device/inode still demotes an existing trusted-execute record to untrusted",
             "an unchanged identity (same canonical path, device, and inode) preserves the current trust state and grantor",
-            "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and updates the record to the target state",
-            "downgrading from trusted-read to untrusted revokes nothing further, since trusted-read never granted any project-level executable kind"
+            "downgrading from trusted-execute to trusted-read revokes exactly the five project-level executable kinds and keeps project instructions, which trusted-read still injects",
+            "downgrading from trusted-read to untrusted revokes exactly project-instructions, the one kind trusted-read granted that untrusted does not",
+            "drops trust when the path, device, and inode all match but the creation time does not",
+            "refuses to confirm identity when the filesystem reports no creation time, rather than matching on the inode alone"
           ],
-          "capturedAtUtc": "2026-09-03T23:49:55.292Z"
+          "capturedAtUtc": "2026-09-04T06:31:03.434Z"
         },
         "P": {
           "status": "GREEN",
@@ -1458,14 +1462,35 @@
           "capturedAtUtc": "2026-09-03T23:49:54.652Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8f49/first100-evidence-8f4988bf0bf4332a359a8f251ee6e5d8c44752dd/vitest-report.json",
+          "observationSha256": "d5cd55c5e6e6d2f96e7934b5006efbfef6ef833bb72f35b0e45071bff6448040",
+          "expectCasesMatched": [
+            "offers the model neither the clone's executable skills nor its instructions while the workspace is untrusted",
+            "offers the model both the clone's executable skills and its instructions once that same clone is granted trusted-execute",
+            "discovers only the host-owned user-global instructions while the workspace is untrusted",
+            "discovers the project instructions once the workspace reaches trusted-read, alongside the host-owned ones",
+            "discovers the project instructions at trusted-execute as well, since a higher state never loads less",
+            "offers no skill from a cloned repository while the workspace is untrusted, and still offers the host-owned skill",
+            "still offers no skill from the repository at trusted-read, because reading a project is not executing it",
+            "offers both project skills once the workspace reaches trusted-execute, proving the fixture is real and the difference is the trust decision",
+            "resolves an ungranted workspace to untrusted, so a freshly cloned repository is never trusted by default",
+            "resolves a granted workspace to its granted state",
+            "resolves a granted path spelled through a symlink to the same state, since the grant is canonicalized before it is bound",
+            "drops a granted workspace to untrusted once the directory at that path is replaced, and does not re-grant it from configuration",
+            "drops a granted workspace to untrusted once the symlink it was opened through is retargeted to another directory",
+            "drops a granted workspace to untrusted once the directory is moved out from under the path it was granted at"
+          ],
+          "capturedAtUtc": "2026-09-04T06:31:03.186Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
+      "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -2912,14 +2937,39 @@
           "capturedAtUtc": "2026-09-03T21:03:12.918Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8f49/first100-evidence-8f4988bf0bf4332a359a8f251ee6e5d8c44752dd/vitest-report.json",
+          "observationSha256": "d5cd55c5e6e6d2f96e7934b5006efbfef6ef833bb72f35b0e45071bff6448040",
+          "expectCasesMatched": [
+            "opens a durable Run for the agent session a real harness boot starts",
+            "owns that Run with RUN_SERVICE_OWNER_ID, never the agent session that started it",
+            "associates the Run with the exact session the harness started, as its initiating Session",
+            "mints the Run's genesis log entry with no prior state, at seq 0",
+            "references the initiating Session in the Run's append-only log, not just in sessionIds",
+            "opens a second, independent Run on the next boot over the same store, keeping the first",
+            "lists the Run a previous boot left behind as non-terminal, so a restart can resume it",
+            "registers the Run Service on the Context it is mounted into",
+            "unregisters the service when the mounting fiber unloads",
+            "opens no Run before any agent session starts",
+            "opens exactly one Run for one started agent session",
+            "owns that Run with RUN_SERVICE_OWNER_ID, never the starting session id",
+            "records the opened Run on the live Agent handle as Agent.runId",
+            "finds the Run for a live agent through runFor",
+            "opens an independent Run per agent session, so one Session never joins another Session's Run",
+            "writes the Run through to the store, so a fresh service over the same path lists it",
+            "restores the Runs an earlier mount left behind, rather than starting empty",
+            "reconciles a real WorkflowRunId into the Run event log's Workflow reference brand"
+          ],
+          "capturedAtUtc": "2026-09-04T06:31:02.608Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
+      "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -3775,14 +3825,34 @@
           "capturedAtUtc": "2026-09-03T21:34:49.832Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33842580751",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8f49/first100-evidence-8f4988bf0bf4332a359a8f251ee6e5d8c44752dd/vitest-report.json",
+          "observationSha256": "d5cd55c5e6e6d2f96e7934b5006efbfef6ef833bb72f35b0e45071bff6448040",
+          "expectCasesMatched": [
+            "carries all four read-scoping dimensions from config when the agent has no attached identity",
+            "prefers the agent's durably attached principal over the configured fallback id",
+            "never reads across tenants: the scope tenant is the configured one, not the attached principal's",
+            "returns undefined for an empty recall so no empty snapshot is ever injected",
+            "renders each recalled record's content as text the model can read",
+            "states that the recall was cut to the caller's budget when the seam truncated it",
+            "boots the shipped profile with the base bundle memory rows enabled and no unhandled failure",
+            "memory/access is a known session event type, so a real log carrying it replays",
+            "a log written with memory/access is read back by replay, not refused",
+            "recalled memory reaches the model as a durable, source-attributed user message",
+            "the same run records a memory/access read event carrying the complete access context",
+            "model-visible memory is logged: every recalled record the model saw is reconstructable from the log alone",
+            "memory content never reaches the model outside a logged injection"
+          ],
+          "capturedAtUtc": "2026-09-04T06:31:02.922Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "491acfd8eb9cd40330eb52bfe0c74220697a36e8",
+      "candidateSha": "8f4988bf0bf4332a359a8f251ee6e5d8c44752dd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
