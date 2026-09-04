@@ -1,5 +1,5 @@
 /**
- * Provider-stage RED scaffold for Epic P4-01's first-class Run Service:
+ * Epic P4-01's durable Run registry:
  * `../src/index.ts`'s `RunService` and its `createFileRunStore` durability
  * seam, exercised through the real registered API only — every case below
  * constructs the service the one way production does
@@ -13,10 +13,6 @@
  * exactly the claim Contract stage could not make: `listNonTerminalRuns`
  * and `resumeRun` there take a plain array a caller already holds, which a
  * restart is precisely the event that destroys.
- *
- * Every function under test currently throws `'not implemented: ...'`
- * (`../src/index.ts`), so every case fails on that today; the assertions
- * describe the behavior a later fix-round must satisfy.
  */
 
 import { brandString } from '@deepseek-ai/dsh-brand'

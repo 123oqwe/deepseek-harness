@@ -16,6 +16,18 @@
     },
     {
       "path": "../../core/session"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../core/agent"
+    },
+    {
+      "path": "../../workflow/workflow"
     }
   ]
 }

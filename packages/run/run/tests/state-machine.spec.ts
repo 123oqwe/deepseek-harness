@@ -1,5 +1,5 @@
 /**
- * Contract-stage RED scaffold for Epic P4-01's first-class Run Service and
+ * Epic P4-01's first-class Run Service state machine and
  * Run event log. One case per registry-declared must[]/acceptance[] clause —
  * must[0]'s closed Run-state set and acceptance[1]'s legal/illegal
  * transitions are covered together by an exhaustive 10x10 state-pair sweep

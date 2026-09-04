@@ -1,5 +1,5 @@
 /**
- * Contract-stage RED scaffold for Epic P4-01's append-only Run event log
+ * Epic P4-01's append-only Run event log
  * (must[1]). This module owns the log's own mechanics — minting the genesis
  * entry, appending a new entry while leaving every prior one untouched, and
  * querying which entities a log references — separately from
@@ -9,11 +9,9 @@
  * prior entry, monotonic `seq`) is a property of the log, not of which
  * transitions happen to be legal.
  *
- * Every exported function below has a real, epic-accurate signature but a
- * placeholder body (`'not implemented'`) — the pure append-only/query logic
- * itself is this epic's Contract-stage deliverable to a later fix-round, not
- * this scaffold's, matching `@deepseek-ai/dsh-plugin-ownership`'s own
- * Contract-stage convention.
+ * Every exported function below is a pure function over already-computed
+ * data: none reads a file, spawns a process, or constructs a Cordis
+ * `Context`.
  *
  * @module @deepseek-ai/dsh-run/events
  */

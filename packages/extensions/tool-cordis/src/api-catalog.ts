@@ -1337,6 +1337,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'runs',
+    summary: 'Epic P4-01\'s Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.',
+    description: 'Epic P4-01\'s Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.\n\nOn mount it restores the durable registry from Config.storePath (acceptance[0]\'s restart path, executed on every boot including the first), then subscribes to the agent registry\'s own extension points. Every agent session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID` (must[2]) whose `sessionIds` begins with that session (acceptance[2]), and every workflow execution that session runs is referenced in that Run\'s append-only log (must[1]).\n\n`inject` names the agent registry, so the plugin activates only where the events it subscribes to are actually emitted rather than sitting inert.',
+    methods: [
+      {
+        signature: 'runFor(agent: Agent): Run | undefined',
+        description: 'The Run the harness opened for `agent`\'s session.',
+        parameters: [{ name: 'agent', description: 'a live agent handle from the agent registry.' }],
+        returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when no Run was opened for it — a subagent session started outside the agent registry this plugin observes, for instance.',
+      },
+    ],
+  },
+  {
     key: 'sandbox',
     summary: 'Abstract process-sandbox service.',
     description: 'Abstract process-sandbox service. confine must return enforcing argv or fail closed at wrap or runner-execution time; silent unconfined passthrough is forbidden. Functional probes arbitrate multi-runner chains and may be skipped for a sole candidate, whose own refusal remains the fail-closed end.',
@@ -3462,6 +3475,10 @@ export const EVENT_API: readonly EventApiEntry[] = [
 /** Shapes of every exported type the Service and Event signatures reference (transitively), sorted by name. */
 export const TYPE_API: readonly TypeApiEntry[] = [
   {
+    name: 'ActionRef',
+    declaration: 'export type ActionRef = Branded<\'ActionRef\'>;',
+  },
+  {
     name: 'AdapterRegistrationHandle',
     declaration: 'export interface AdapterRegistrationHandle {\n    (): void;\n    replace(providers: string[]): void;\n}',
   },
@@ -3471,7 +3488,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Agent',
-    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n}',
+    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n}',
   },
   {
     name: 'AgentCancelCause',
@@ -3556,6 +3573,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ApprovalPolicy',
     declaration: 'export type ApprovalPolicy = \'ask\' | \'never\';',
+  },
+  {
+    name: 'ApprovalRef',
+    declaration: 'export type ApprovalRef = Branded<\'ApprovalRef\'>;',
   },
   {
     name: 'ApprovalRequest',
@@ -4878,12 +4899,36 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ResumeAgentOptions {\n    readonly resumeSessionId: SessionId;\n    readonly agentOptions?: AgentOptions;\n    readonly signal?: AbortSignal;\n    readonly setup?: AgentSetup;\n}',
   },
   {
+    name: 'Run',
+    declaration: 'export interface Run {\n    readonly id: RunId;\n    readonly state: RunState;\n    readonly ownerId: RunOwnerId;\n    readonly sessionIds: readonly [\n        SessionId,\n        ...SessionId[]\n    ];\n    readonly createdAt: number;\n    readonly events: readonly [\n        RunEvent,\n        ...RunEvent[]\n    ];\n}',
+  },
+  {
+    name: 'RunEntityReference',
+    declaration: 'export type RunEntityReference = {\n    readonly kind: \'session\';\n    readonly id: SessionId;\n} | {\n    readonly kind: \'workflow\';\n    readonly id: WorkflowRef;\n} | {\n    readonly kind: \'action\';\n    readonly id: ActionRef;\n} | {\n    readonly kind: \'artifact\';\n    readonly id: ArtifactRef;\n} | {\n    readonly kind: \'approval\';\n    readonly id: ApprovalRef;\n} | {\n    readonly kind: \'verification\';\n    readonly id: VerificationRef;\n};',
+  },
+  {
+    name: 'RunEvent',
+    declaration: 'export interface RunEvent {\n    readonly seq: RunEventSeq;\n    readonly runId: RunId;\n    readonly occurredAt: number;\n    readonly fromState: RunState | null;\n    readonly toState: RunState;\n    readonly references: readonly RunEntityReference[];\n}',
+  },
+  {
+    name: 'RunEventSeq',
+    declaration: 'export type RunEventSeq = BrandedNumber<\'RunEventSeq\'>;',
+  },
+  {
     name: 'RunId',
     declaration: 'export type RunId = Branded<\'RunId\'>;',
   },
   {
     name: 'RunnerFailureRule',
     declaration: 'export interface RunnerFailureRule {\n    allowedExitCodes?: readonly number[];\n    fatalSignatures: readonly string[];\n    informationalLines?: readonly string[];\n}',
+  },
+  {
+    name: 'RunOwnerId',
+    declaration: 'export type RunOwnerId = Branded<\'RunOwnerId\'>;',
+  },
+  {
+    name: 'RunState',
+    declaration: 'export type RunState = \'accepted\' | \'planning\' | \'waiting\' | \'running\' | \'paused\' | \'verifying\' | \'reconciling\' | \'succeeded\' | \'failed\' | \'cancelled\';',
   },
   {
     name: 'SandboxEnforcement',
@@ -6154,6 +6199,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface UserPrincipal {\n    readonly kind: \'user\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly adminGrant?: AdminGrant;\n}',
   },
   {
+    name: 'VerificationRef',
+    declaration: 'export type VerificationRef = Branded<\'VerificationRef\'>;',
+  },
+  {
     name: 'VerifiedWebhookDelivery',
     declaration: 'export interface VerifiedWebhookDelivery<K extends string = string> {\n    readonly kind: K;\n    readonly source: WebhookSourceId;\n    readonly deliveryId: WebhookDeliveryId;\n    readonly event: WebhookEventOf<K>;\n    readonly receivedAt: number;\n}',
   },
@@ -6284,6 +6333,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkflowPhase',
     declaration: 'export interface WorkflowPhase {\n    title: string;\n    detail?: string;\n    provider?: string;\n    model?: string;\n}',
+  },
+  {
+    name: 'WorkflowRef',
+    declaration: 'export type WorkflowRef = Branded<\'WorkflowRef\'>;',
   },
   {
     name: 'WorkflowResult',

@@ -820,6 +820,29 @@ roots(): Agent[]
 
 Source: [`packages/core/agent/src/index.ts`](../../packages/core/agent/src/index.ts)
 
+<a id="ctxruns--runplugin"></a>
+
+### `ctx.runs` — `RunPlugin`
+
+Epic P4-01's Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.
+
+On mount it restores the durable registry from Config.storePath (acceptance[0]'s restart path, executed on every boot including the first), then subscribes to the agent registry's own extension points. Every agent session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID` (must[2]) whose `sessionIds` begins with that session (acceptance[2]), and every workflow execution that session runs is referenced in that Run's append-only log (must[1]).
+
+`inject` names the agent registry, so the plugin activates only where the events it subscribes to are actually emitted rather than sitting inert.
+
+```ts cordis-catalog
+/**
+ * The Run the harness opened for `agent`'s session.
+ * @param agent - a live agent handle from the agent registry.
+ * @returns the {@link Run} that agent's session is doing work inside, or
+ * `undefined` when no Run was opened for it — a subagent session started
+ * outside the agent registry this plugin observes, for instance.
+ */
+runFor(agent: Agent): Run | undefined
+```
+
+Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)
+
 <a id="agent-events"></a>
 
 ### `agent/*` events

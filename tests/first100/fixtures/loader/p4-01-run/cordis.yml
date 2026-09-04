@@ -1,0 +1,35 @@
+# Minimal composition proving `@deepseek-ai/dsh-run` opens a real Run for a
+# real agent session: the agent registry, the agent loop with one configured
+# root agent, and the Run Service plugin. Driven by P4-01.composition.spec.ts.
+#
+# The configured agent needs no provider/model: `dsh-agent-loop` creates it at
+# boot and emits `agent/session-start` before any model request, so this
+# composition is keyless.
+- id: llm
+  name: '@deepseek-ai/dsh-llm'
+
+- id: session
+  name: '@deepseek-ai/dsh-session'
+
+- id: session-projections
+  name: '@deepseek-ai/dsh-session-projection'
+
+- id: system-prompt
+  name: '@deepseek-ai/dsh-system-prompt'
+
+- id: tools
+  name: '@deepseek-ai/dsh-tools'
+
+- id: agents
+  name: '@deepseek-ai/dsh-agent'
+
+- id: agent-loop
+  name: '@deepseek-ai/dsh-agent-loop'
+  config:
+    agents:
+      - id: p4-01-root
+
+- id: run
+  name: '@deepseek-ai/dsh-run'
+  config:
+    storePath: !!js process.env.P4_01_RUN_STORE
