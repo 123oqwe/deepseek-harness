@@ -261,10 +261,19 @@ function requireCompleteAccessContext(accessContext: MemoryAccessContext): void 
   }
 }
 
-/** Enforce `maxRecords` on a read result: truncate `records[]` and flag it. */
+/**
+ * Enforce `maxRecords` on a read result: truncate `records[]` and flag it. A
+ * budget below zero bounds the read to nothing rather than to a count taken
+ * from the end: `slice(0, negative)` counts back from the array's end, so an
+ * unclamped negative budget returned every record but the last while still
+ * reporting `truncated: true` — a flag asserting a bound that had not been
+ * applied, over a result whose size depended on the budget's magnitude.
+ */
 function capRecords<T extends { records: readonly MemoryRecordView[]; truncated: boolean }>(result: T, maxRecords: number | undefined): T {
-  if (maxRecords === undefined || result.records.length <= maxRecords) return result
-  return { ...result, records: result.records.slice(0, maxRecords), truncated: true }
+  if (maxRecords === undefined) return result
+  const limit = Math.max(0, maxRecords)
+  if (result.records.length <= limit) return result
+  return { ...result, records: result.records.slice(0, limit), truncated: true }
 }
 
 /**
@@ -278,39 +287,52 @@ function capRecords<T extends { records: readonly MemoryRecordView[]; truncated:
  * @returns a working {@link MemoryProvider}.
  */
 export function createLocalReferenceMemoryProvider(): MemoryProvider {
-  const records = new Map<MemoryRecordId, MemoryRecordView>()
+  const records = new Map<MemoryRecordId, ScopedMemoryRecord>()
   let counter = 0
+
+  /** The stored record `id` names, but only when `scope` may see it. */
+  const visible = (id: MemoryRecordId, scope: MemoryScope): ScopedMemoryRecord | undefined => {
+    const record = records.get(id)
+    return record !== undefined && inScope(record, scope) ? record : undefined
+  }
 
   return {
     id: 'local-reference',
     available: () => true,
     propose(request) {
       const id = MemoryRecordId(`local-reference-${++counter}`)
-      records.set(id, { id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString() })
+      records.set(id, {
+        id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString(), scope: request.scope,
+      })
       return Promise.resolve({ id })
     },
     query(request) {
       const needle = request.query.toLowerCase()
-      const matches = [...records.values()].filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
-      return Promise.resolve({ records: matches, truncated: false })
+      const matches = [...records.values()]
+        .filter(record => inScope(record, request.accessContext.scope))
+        .filter(record => JSON.stringify(record.content).toLowerCase().includes(needle))
+      return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
     },
     get(request) {
-      return Promise.resolve(records.get(request.id))
+      const found = visible(request.id, request.accessContext.scope)
+      return Promise.resolve(found === undefined ? undefined : toRecordView(found))
     },
     revise(request) {
-      const existing = records.get(request.id)
+      const existing = visible(request.id, request.scope)
       if (existing === undefined) {
+        // An out-of-scope id is indistinguishable from one never proposed.
         throw new MemoryError(`memory record "${request.id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
       }
       records.set(request.id, { ...existing, content: request.content, updatedAt: new Date().toISOString() })
       return Promise.resolve()
     },
     forget(request) {
-      records.delete(request.id)
+      if (visible(request.id, request.scope) !== undefined) records.delete(request.id)
       return Promise.resolve()
     },
-    export() {
-      return Promise.resolve({ records: [...records.values()], truncated: false })
+    export(request) {
+      const matches = [...records.values()].filter(record => inScope(record, request.accessContext.scope))
+      return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
     },
   }
 }
@@ -329,42 +351,54 @@ export function createLocalReferenceMemoryProvider(): MemoryProvider {
  * @returns a working {@link MemoryProvider}.
  */
 export function createFakeMemoryProvider(): MemoryProvider {
-  const records: MemoryRecordView[] = []
+  const records: ScopedMemoryRecord[] = []
+
+  /** Index of the stored record `id` names, but only when `scope` may see it. */
+  const visibleIndex = (id: MemoryRecordId, scope: MemoryScope): number =>
+    records.findIndex(record => record.id === id && inScope(record, scope))
 
   return {
     id: 'fake',
     available: () => true,
     propose(request) {
       const id = MemoryRecordId(`fake-${randomUUID()}`)
-      records.push({ id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString() })
+      records.push({
+        id, principal: request.principal, content: request.content, updatedAt: new Date().toISOString(), scope: request.scope,
+      })
       return Promise.resolve({ id })
     },
     query(request) {
       const words = request.query.toLowerCase().split(/\s+/).filter(word => word.length > 0)
       const matches = records.filter((record) => {
+        if (!inScope(record, request.accessContext.scope)) return false
         const haystack = JSON.stringify(record.content).toLowerCase()
         return words.some(word => haystack.includes(word))
       })
-      return Promise.resolve({ records: matches, truncated: false })
+      return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
     },
     get(request) {
-      return Promise.resolve(records.find(record => record.id === request.id))
+      const index = visibleIndex(request.id, request.accessContext.scope)
+      const found = records[index]
+      return Promise.resolve(index === -1 || found === undefined ? undefined : toRecordView(found))
     },
     revise(request) {
-      const existing = records.find(record => record.id === request.id)
+      const index = visibleIndex(request.id, request.scope)
+      const existing = records[index]
       if (existing === undefined) {
+        // An out-of-scope id is indistinguishable from one never proposed.
         throw new MemoryError(`memory record "${request.id}" was never proposed`, 'MEMORY_RECORD_NOT_FOUND')
       }
-      records[records.indexOf(existing)] = { ...existing, content: request.content, updatedAt: new Date().toISOString() }
+      records[index] = { ...existing, content: request.content, updatedAt: new Date().toISOString() }
       return Promise.resolve()
     },
     forget(request) {
-      const index = records.findIndex(record => record.id === request.id)
+      const index = visibleIndex(request.id, request.scope)
       if (index !== -1) records.splice(index, 1)
       return Promise.resolve()
     },
-    export() {
-      return Promise.resolve({ records: [...records], truncated: false })
+    export(request) {
+      const matches = records.filter(record => inScope(record, request.accessContext.scope))
+      return Promise.resolve({ records: matches.map(toRecordView), truncated: false })
     },
   }
 }
@@ -441,7 +475,16 @@ export function createDurableFileMemoryProvider(options: DurableFileMemoryProvid
       throw error
     }
     if (text.trim() === '') return []
-    const document = JSON.parse(text) as DurableMemoryDocument
+    let document: DurableMemoryDocument
+    try {
+      document = JSON.parse(text) as DurableMemoryDocument
+    } catch (error) {
+      // A damaged document is the same failure class as an unrecognized
+      // version below, and is reported the same way: a MemoryError naming the
+      // file, not the parser's own error, whose message text varies with the
+      // V8 version and names nothing a caller can route on.
+      throw new MemoryError(`durable memory store at ${path} is corrupt and could not be parsed`, 'MEMORY_CORRUPT_STORE', { cause: error })
+    }
     if (document.version !== DURABLE_FILE_MEMORY_FORMAT_VERSION) {
       throw new MemoryError(
         `unsupported durable memory format version ${String(document.version)} at ${path}, expected ${DURABLE_FILE_MEMORY_FORMAT_VERSION}`,
@@ -540,10 +583,19 @@ const DURABLE_FILE_MEMORY_FILENAME = 'memory.json'
 /** The on-disk format version {@link createDurableFileMemoryProvider} reads and writes. */
 const DURABLE_FILE_MEMORY_FORMAT_VERSION = 1
 
-/** One persisted record: the reader's projection plus the scope its `propose()` carried. */
-interface DurableMemoryRecord extends MemoryRecordView {
+/**
+ * One stored record: the reader's projection plus the scope its `propose()`
+ * carried. Every provider in this module stores the proposing scope, because
+ * scope enforcement lives inside the provider: `MemoryRecordView` carries no
+ * tenant, so {@link MemoryRuntime} has nothing to filter a returned record
+ * against and cannot bound a read on the provider's behalf.
+ */
+interface ScopedMemoryRecord extends MemoryRecordView {
   readonly scope: MemoryScope
 }
+
+/** One persisted record. Identical to {@link ScopedMemoryRecord}; named apart for the on-disk document. */
+type DurableMemoryRecord = ScopedMemoryRecord
 
 /** The JSON document {@link createDurableFileMemoryProvider} keeps at its path. */
 interface DurableMemoryDocument {
@@ -552,14 +604,14 @@ interface DurableMemoryDocument {
 }
 
 /** Whether a read or write confined to `scope` may see `record` (`must[3]`). */
-function inScope(record: DurableMemoryRecord, scope: MemoryScope): boolean {
+function inScope(record: ScopedMemoryRecord, scope: MemoryScope): boolean {
   if (record.scope.tenantId !== scope.tenantId) return false
   // A scope naming no sessionId sees every session within the tenant.
   return scope.sessionId === undefined || record.scope.sessionId === scope.sessionId
 }
 
-/** Strip the persisted scope, leaving exactly the reader-visible projection. */
-function toRecordView(record: DurableMemoryRecord): MemoryRecordView {
+/** Strip the stored scope, leaving exactly the reader-visible projection. */
+function toRecordView(record: ScopedMemoryRecord): MemoryRecordView {
   return { id: record.id, principal: record.principal, content: record.content, updatedAt: record.updatedAt }
 }
 
