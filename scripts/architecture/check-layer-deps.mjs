@@ -418,16 +418,21 @@ function collectKernelVendorEdges(root, byPackage) {
         const target = [...vendored].find(pkg => specifier === pkg || specifier.startsWith(`${pkg}/`))
         if (target === undefined) continue
         const key = `${name} ${target}`
-        const entry = found.get(key) ?? { fromPackage: name, toPackage: target, bindings: new Set(), files: new Set() }
+        const entry = found.get(key) ?? { fromPackage: name, toPackage: target, bindingFiles: new Map(), files: new Set() }
         entry.files.add(file)
+        const addBinding = binding => {
+          const files = entry.bindingFiles.get(binding) ?? new Set()
+          files.add(file)
+          entry.bindingFiles.set(binding, files)
+        }
         const clause = isImport ? statement.importClause : statement.exportClause
-        if (isImport && clause?.name !== undefined) entry.bindings.add('default')
+        if (isImport && clause?.name !== undefined) addBinding('default')
         const bindings = isImport ? clause?.namedBindings : clause
         if (bindings !== undefined && ts.isNamedImports(bindings)) {
-          for (const element of bindings.elements) entry.bindings.add((element.propertyName ?? element.name).text)
-        } else if (bindings !== undefined && ts.isNamespaceImport(bindings)) entry.bindings.add('*')
+          for (const element of bindings.elements) addBinding((element.propertyName ?? element.name).text)
+        } else if (bindings !== undefined && ts.isNamespaceImport(bindings)) addBinding('*')
         else if (bindings !== undefined && ts.isNamedExports(bindings)) {
-          for (const element of bindings.elements) entry.bindings.add((element.propertyName ?? element.name).text)
+          for (const element of bindings.elements) addBinding((element.propertyName ?? element.name).text)
         }
         found.set(key, entry)
       }
@@ -436,9 +441,20 @@ function collectKernelVendorEdges(root, byPackage) {
   return [...found.values()].map(entry => ({
     fromPackage: entry.fromPackage,
     toPackage: entry.toPackage,
-    bindings: [...entry.bindings].sort(),
+    bindings: [...entry.bindingFiles.keys()].sort(),
+    bindingFiles: entry.bindingFiles,
     files: [...entry.files].sort(),
   }))
+}
+
+/**
+ * Drop the per-binding file index, which exists only so a forbidden-binding
+ * violation can name the files that actually contain the forbidden import.
+ * @param entry - one kernel/vendored package edge.
+ * @returns the edge without its `bindingFiles` index.
+ */
+function withoutBindingFiles({ bindingFiles, ...entry }) {
+  return entry
 }
 
 /**
@@ -466,23 +482,24 @@ export function runLayerDepsCheck(root) {
       ? entry.bindings.filter(binding => !KERNEL_PERMITTED_CORDIS_BINDINGS.has(binding))
       : entry.bindings
     if (forbidden.length === 0) {
-      kernelEdges.push({ ...entry, verdict: 'permitted-binding' })
+      kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'permitted-binding' })
       continue
     }
     const key = `${entry.fromPackage} ${entry.toPackage}`
     const allowance = allowed.get(key)
     if (allowance !== undefined && allowance.expires >= today) {
       usedAllowances.add(key)
-      kernelEdges.push({ ...entry, verdict: 'allowlisted' })
+      kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'allowlisted' })
       continue
     }
     if (allowance !== undefined) usedAllowances.add(key)
-    kernelEdges.push({ ...entry, verdict: 'violation' })
+    kernelEdges.push({ ...withoutBindingFiles(entry), verdict: 'violation' })
+    const forbiddenFiles = [...new Set(forbidden.flatMap(binding => [...entry.bindingFiles.get(binding) ?? []]))].sort()
     violations.push({
       rule: 'kernel-forbidden-cordis-binding',
       fromPackage: entry.fromPackage,
       toPackage: entry.toPackage,
-      detail: `imports ${forbidden.join(', ')} from ${entry.toPackage} (rule 4 permits only ${[...KERNEL_PERMITTED_CORDIS_BINDINGS].join(', ')}) in ${entry.files.join(', ')}`,
+      detail: `imports ${forbidden.join(', ')} from ${entry.toPackage} (rule 4 permits only ${[...KERNEL_PERMITTED_CORDIS_BINDINGS].join(', ')}) in ${forbiddenFiles.join(', ')}`,
     })
   }
 
