@@ -28,6 +28,7 @@ import { LAYER_ORDER, classifyEdge, findShortestCycle, validateExemptedCycle } f
 
 const GATE = 'check-layer-deps'
 const EXEMPTIONS_PATH = 'tests/first100/layer-cycle-exemptions.json'
+const PACKAGE_MAP_PATH = 'tests/first100/layer-package-map.json'
 const SEAMS_PATH = 'architecture.layers.json'
 const PACKAGE_MANIFEST_GLOB = 'packages/*/*/package.json'
 const APP_MANIFEST_GLOB = 'apps/*/package.json'
@@ -214,7 +215,10 @@ function readWorkspaceManifests(root) {
  * classified"). `architecture.layers.json`'s capability-family roles decide
  * first, because a family's Service Definition and its providers live in the
  * same `packages/<group>/` directory and a group name alone cannot tell them
- * apart; `definition` outranks `providers`, since a package that defines a
+ * apart. A `tests/first100/layer-package-map.json` entry outranks every
+ * other rule, because a `packages/<group>/` directory can span several
+ * layers and no group rule can separate them; `definition` outranks
+ * `providers`, since a package that defines a
  * seam sits at that seam's layer whatever else it also implements. The
  * `consumers` role is deliberately NOT layer-bearing: consuming a capability
  * says a package sits somewhere above that capability, not which layer it
@@ -234,6 +238,8 @@ export function classifyWorkspacePackages(root) {
     for (const provider of Array.isArray(family?.providers) ? family.providers : []) providers.add(provider)
   }
 
+  const overrides = readJsonIfPresent(resolve(root, PACKAGE_MAP_PATH))?.packages ?? {}
+
   const byPackage = new Map()
   const unclassified = []
   for (const [name, { dir, manifest }] of manifests) {
@@ -241,7 +247,10 @@ export function classifyWorkspacePackages(root) {
     const group = segments[0] === 'apps' ? 'apps' : segments[1]
     let layer
     let source
-    if (segments[0] === 'packages' && group === 'kernel') {
+    if (Object.hasOwn(overrides, name)) {
+      layer = overrides[name].layer
+      source = PACKAGE_MAP_PATH
+    } else if (segments[0] === 'packages' && group === 'kernel') {
       layer = 'kernel'
       source = 'packages/kernel'
     } else if (segments[0] === 'apps') {

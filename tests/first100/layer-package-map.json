@@ -1,0 +1,45 @@
+{
+  "$schemaVersion": 1,
+  "$note": "Declarative per-package layer overrides for docs/architecture/layering.md, consumed by scripts/architecture/check-layer-deps.mjs. It exists because a packages/<group>/ directory can span several layers: packages/core/ is described in packages/README.md as 'Product API spine: sessions, prompts, tools, agent services, and the concrete loop' -- the spine and the loop are different layers in the same group, and no group-directory rule can separate them. Entries here outrank the group fallback and are outranked by nothing. This file was authored and committed BEFORE the checker was next run against it, so no entry can have been chosen to make a violation count fall; a later edit that moves a package must carry its own stated reason in $changeLog.",
+  "$authorship": {
+    "signedBy": "coordinator delegate",
+    "signedAt": "2026-09-04",
+    "basis": "each package's stated purpose in packages/core/README.md and the layer definitions in docs/architecture/layering.md",
+    "signerHadSeenViolationCounts": false,
+    "publishedBeforeAnyRun": true
+  },
+  "packages": {
+    "@deepseek-ai/dsh-agent-loop": {
+      "layer": "orchestration-runtime",
+      "reason": "The layer definition names 'the agent loop' outright."
+    },
+    "@deepseek-ai/dsh-agent-tool-presentation": {
+      "layer": "orchestration-runtime",
+      "reason": "Composes one agent's tools; composition is what this layer is."
+    },
+    "@deepseek-ai/dsh-agent-default-model": {
+      "layer": "orchestration-runtime",
+      "reason": "A composition-time default choice."
+    },
+    "@deepseek-ai/dsh-system-prompt": {
+      "layer": "capability-definitions",
+      "reason": "An assembly registry -- a seam others register into."
+    },
+    "@deepseek-ai/dsh-scope": {
+      "layer": "protocol-types",
+      "reason": "A shared primitive with no capability logic and no provider."
+    },
+    "@deepseek-ai/dsh-agent": {
+      "layer": "orchestration-runtime",
+      "reason": "RECORDED ROLE CONFLICT, resolved in favour of the frozen Contract stage rather than quietly picked. By its own description -- 'Agent interface, registry, initiator scope, and event vocabulary' -- this package reads as capability-definitions: a seam implementors register into. But scripts/architecture/layer-order.ts's KNOWN_PACKAGE_LAYERS, frozen and ACCEPTED at P0-04's Contract stage, pins it at orchestration-runtime, and a Usage stage does not overturn an accepted Contract stage. The underlying fact is that the package carries both the Agent seam definition and the runtime registry, which belong to different layers; that is a split proposal for a later stage, not something this map should paper over."
+    },
+    "@deepseek-ai/dsh-session": {
+      "layer": "providers",
+      "reason": "STRADDLES LAYERS; the signer predicted in advance that no single answer is correct here. 'Event-sourced session store' is an implementation (providers), yet SessionEvent/SessionHeader are consumed repo-wide as vocabulary (protocol-types) -- definition and implementation in one package. The value here is its first-named role in that description, chosen by a stated rule rather than by result: the primary role the package's own description leads with. Violations that survive this assignment are evidence the package straddles layers, per the prediction recorded before the run, and the answer to those is a split proposal or a dated owned allowlist entry -- never another pass over this table."
+    },
+    "@deepseek-ai/dsh-tools": {
+      "layer": "capability-definitions",
+      "reason": "STRADDLES LAYERS; predicted in advance like dsh-session. 'Tool registry and execution pipeline' -- the registry is a seam (capability-definitions), the pipeline is runtime (orchestration-runtime), in one package. Assigned by the same stated rule: the first-named role in the package's own description. Surviving violations are evidence of straddling, not of a table still needing tuning."
+    }
+  }
+}
