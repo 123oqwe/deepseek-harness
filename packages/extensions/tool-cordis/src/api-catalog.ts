@@ -1345,7 +1345,7 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         signature: 'runFor(agent: Agent): Run | undefined',
         description: 'The Run the harness opened for `agent`\'s session.',
         parameters: [{ name: 'agent', description: 'a live agent handle from the agent registry.' }],
-        returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when this plugin mounted after that session started.',
+        returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when no Run was opened for it — a subagent session started outside the agent registry this plugin observes, for instance.',
       },
     ],
   },

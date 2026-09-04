@@ -179,8 +179,7 @@ observable type contract is fully covered in [Use this package](#use-this-packag
   this epic's one read-only Contract-stage reference into that package (no
   additive change was needed — see Known Limitations below).
 - [`@deepseek-ai/dsh-plugin-ownership`](../../plugin/plugin-ownership/README.md) —
-  this repo's other Contract-stage pure-decision package, followed here for
-  package layout and RED-scaffold conventions.
+  this repo's other pure-decision package, followed here for package layout.
 
 -----
 
@@ -215,11 +214,21 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `packages/core/session/src/known-event-types.ts` first — an unregistered
   type makes replay refuse the log — and is deferred with the state
   transitions that would populate it.
-- **`RunPlugin` opens a Run and advances nothing.** A Run is accepted at
-  `agent/session-start` and stays in `accepted`; the transitions through
+- **`RunPlugin` opens a Run and advances nothing.** A Run is accepted when its
+  agent session starts and stays in `accepted`; the transitions through
   `planning`/`running`/`verifying` to a terminal state, and the
   `workflow/*`-driven references that would accompany them, are deferred.
   `workflowRefOf` reconciles the brands those references need, but no mounted
+  listener calls it yet. A consequence: every Run a boot opens is still
+  non-terminal at the next boot, so `listNonTerminal` grows with each run
+  against one store path until the transitions land.
+- **One Run per agent session, opened from the agent registry only.**
+  `RunPlugin` opens a Run for each agent it observes — those started while it
+  is mounted, and those a profile configured before it mounted, which it
+  adopts at mount because Cordis load order follows service availability
+  rather than `cordis.yml` row order. A session that never enters that
+  registry gets no Run, and `Agent.runId` stays absent. Multi-session Runs
+  (acceptance[2]) are supported by `RunService.attachSession` but no mounted
   listener calls it yet.
 - **`packages/session/session-persistence/src/coordinator.ts` was read, not
   modified.** Runs are deliberately not stored through

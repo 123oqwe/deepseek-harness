@@ -825,7 +825,8 @@ On mount it restores the durable registry from Config.storePath (acceptance[0]'s
  * The Run the harness opened for `agent`'s session.
  * @param agent - a live agent handle from the agent registry.
  * @returns the {@link Run} that agent's session is doing work inside, or
- * `undefined` when this plugin mounted after that session started.
+ * `undefined` when no Run was opened for it — a subagent session started
+ * outside the agent registry this plugin observes, for instance.
  */
 runFor(agent: Agent): Run | undefined
 ```

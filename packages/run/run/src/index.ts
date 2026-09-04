@@ -40,10 +40,16 @@
  * @module @deepseek-ai/dsh-run
  */
 
+import { randomUUID } from 'node:crypto'
 import { readFile, rename, writeFile } from 'node:fs/promises'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
+// The `agent/session-start` declaration this plugin subscribes to is merged
+// into Cordis's event map by the agent package's runtime face, not its
+// type-only entry.
+import type {} from '@deepseek-ai/dsh-agent'
 import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow/types'
 import z from '@deepseek-ai/schemastery'
 import type { RunId } from '@deepseek-ai/dsh-principal/types'
@@ -228,6 +234,32 @@ export class RunService {
   }
 
   /**
+   * The Run-acceptance entry point for a caller that cannot await the durable
+   * write: register a new Run in this service's registry immediately and hand
+   * back the write it started, rather than awaiting that write first as
+   * {@link RunService.accept} does.
+   *
+   * `RunPlugin` needs this because `agent/session-start` is emitted
+   * synchronously and does not await its listeners — a Run that only became
+   * visible after an awaited write would be absent from the registry for the
+   * rest of the emitting call stack, including the code that reads
+   * `Agent.runId` back. The caller owns the returned promise and must await
+   * it before the process may exit; otherwise the Run is registered in memory
+   * and missing from the store. Prefer {@link RunService.accept} wherever the
+   * caller can await.
+   * @param id - the new Run's identity; rejects when this service already registers it.
+   * @param initialSessionId - the Session that requested this Run.
+   * @param occurredAt - non-negative safe-integer Unix epoch milliseconds this Run is accepted at.
+   * @returns the newly accepted {@link Run}, and the promise resolving when it is durably recorded.
+   */
+  openForSession(id: RunId, initialSessionId: SessionId, occurredAt: number): { run: Run; durable: Promise<void> } {
+    if (this.runs.has(id)) throw new Error(`run ${id} is already registered`)
+    const run = createRun(id, initialSessionId, occurredAt)
+    this.runs.set(id, run)
+    return { run, durable: this.store.put(run) }
+  }
+
+  /**
    * acceptance[1]'s state-transition entry point: ask `./state-machine.ts`'s
    * `transition` whether the registered Run `id` may move to `to`, and durably
    * record the advanced Run iff it may. A refused transition writes nothing —
@@ -344,7 +376,7 @@ declare module '@deepseek-ai/cordis' {
  * @returns the same value as the Run event log's Workflow reference brand.
  */
 export function workflowRefOf(id: WorkflowRunId): WorkflowRef {
-  throw new Error(`not implemented: workflowRefOf does not yet reconcile WorkflowRunId ${id} with WorkflowRef`)
+  return brandString<WorkflowRef>(id)
 }
 
 /** Deployment-varying configuration of {@link RunPlugin}. */
@@ -388,6 +420,12 @@ export default class RunPlugin extends Service {
     super(ctx, 'runs')
   }
 
+  /** The registry restored from {@link Config.storePath}; undefined until `Service.init` completes. */
+  private restored: RunService | undefined
+
+  /** In-flight durable writes this mount started, awaited by its disposer. */
+  private readonly writes: Promise<void>[] = []
+
   /**
    * The durable registry this plugin restored at mount, for a caller that
    * needs the Run Service's full surface rather than this plugin's
@@ -395,17 +433,37 @@ export default class RunPlugin extends Service {
    * @returns the mounted {@link RunService}.
    */
   get service(): RunService {
-    throw new Error('not implemented: RunPlugin does not yet restore a RunService at mount')
+    if (this.restored === undefined) {
+      throw new Error('RunPlugin.service read before the plugin finished mounting')
+    }
+    return this.restored
   }
 
   /**
    * The Run the harness opened for `agent`'s session.
    * @param agent - a live agent handle from the agent registry.
    * @returns the {@link Run} that agent's session is doing work inside, or
-   * `undefined` when this plugin mounted after that session started.
+   * `undefined` when no Run was opened for it — a subagent session started
+   * outside the agent registry this plugin observes, for instance.
    */
   runFor(agent: Agent): Run | undefined {
-    throw new Error(`not implemented: RunPlugin does not yet open a Run for agent session ${agent.id}`)
+    const runId = agent.runId
+    return runId === undefined ? undefined : this.service.get(runId)
+  }
+
+  /**
+   * Open the Run for one agent session, unless that session already has one.
+   * @param agent - the live agent whose session is doing the work.
+   */
+  private open(agent: Agent): void {
+    if (agent.runId !== undefined) return
+    const opened = this.service.openForSession(
+      brandString<RunId>(`run-${randomUUID()}`),
+      agent.id,
+      Date.now(),
+    )
+    agent.runId = opened.run.id
+    this.writes.push(opened.durable)
   }
 
   /**
@@ -415,6 +473,25 @@ export default class RunPlugin extends Service {
    * @returns the plugin's own teardown steps, in Cordis's `Service.init` protocol.
    */
   async* [Service.init](): AsyncGenerator<() => Promise<void> | void, void, void> {
-    throw new Error('not implemented: RunPlugin does not yet open a Run for a real agent session')
+    this.restored = await RunService.restore(createFileRunStore(this.config.storePath))
+    // `agent/session-start` is emitted synchronously and does not await its
+    // listeners, so each Run is registered in memory on the spot and its
+    // durable write tracked on `writes` for the disposer below to await.
+    const unsubscribe = this.ctx.on('agent/session-start', ({ agent }) => {
+      this.open(agent)
+    })
+    // Agents a profile configures are created inside the agent loop's own
+    // constructor, which may run before this plugin mounts — Cordis load
+    // order follows service availability, not `cordis.yml` row order. Their
+    // `agent/session-start` is already past, so they are adopted here rather
+    // than left as the one kind of agent session that silently gets no Run.
+    for (const agent of this.ctx.agents.list()) this.open(agent)
+    yield async () => {
+      unsubscribe()
+      // Every Run this mount opened is durable before the fiber finishes
+      // unloading, so a boot that ends immediately after starting an agent
+      // still leaves that agent's Run in the store.
+      await Promise.all(this.writes.splice(0))
+    }
   }
 }
