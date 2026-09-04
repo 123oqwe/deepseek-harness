@@ -1030,3 +1030,13 @@ P1-07.C was re-greened **twice on 2026-09-04**, for two different defects in its
 **Rule for every Contract-stage review, and for a Writer before it freezes:** for each assertion, ask whether it agrees with the epic's own `must`/`validation`/`acceptance` wording — not merely whether it agrees with the implementation. An implementation and a test can agree with each other and both disagree with the clause they exist to serve.
 
 This is the review counterpart of [BLOCKED-053](#blocked-053)'s pre-dispatch checkpoint: that one asks whether the declared *files* can exercise the clause, this one asks whether the declared *assertions* match it.
+
+### BLOCKED-057 — `verify-frozen-titles-resolvable.mjs` predates supersession and is already red on the integration branch (Writer finding, Supervisor-verified, 2026-09-04)
+
+Two separate defects, found when a lane superseded a `(P1-07, C)` freeze entry.
+
+**1. The gate does not understand supersession.** It flags a superseded entry's retired titles as unresolvable-with-no-registered-rename. **A superseded entry's titles must be exempt by construction** — being replaced is exactly what supersession means. The script predates the `supersedes`/`supersededBy` mechanism and was never taught about it. This is a real hole in [BLOCKED-040](#blocked-040)'s mechanization item 2.
+
+**2. It is already failing on the integration branch, independent of any lane's change.** Verified directly: `node scripts/first100/verify-frozen-titles-resolvable.mjs` exits 1, with unresolvable titles across roughly nine cells (P0-01.C/F/P, P0-02.F/U, P0-05.U, P1-01.U, P1-08.U, P6-07.C). **A gate that is already red is gating nothing** — every lane that runs it sees a failure it correctly attributes to the base, so a real regression introduced later would be indistinguishable from the existing noise.
+
+That second point is the more serious one and belongs to [BLOCKED-046](#blocked-046)'s blind-spot family: a check reporting failure for reasons nobody is acting on has the same practical effect as a check that is skipped. Both defects are the Supervisor's to fix, not any epic's, and neither blocks the lanes that surfaced them.
