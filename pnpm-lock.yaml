@@ -7094,6 +7094,10 @@ importers:
         version: link:../../core/session
 
   packages/sdk/client:
+    dependencies:
+      '@deepseek-ai/dsh':
+        specifier: workspace:*
+        version: link:../../../apps/cli
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
