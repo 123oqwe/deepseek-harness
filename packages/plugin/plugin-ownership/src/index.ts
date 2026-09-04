@@ -1,14 +1,12 @@
 /**
- * Package entry point. Contract-stage RED scaffold for Epic P1-09's
- * Service/Tool/Event namespace and ownership conflict detection: this
- * module's exported functions have real, epic-accurate signatures but
- * placeholder bodies (`'not implemented'`) — the pure decision logic itself
- * is this epic's Contract-stage deliverable to a later fix-round, not this
- * scaffold's. `RESERVED_NAMESPACE_ROOT`/`isReservedNamespace` are the one
- * exception: a one-line predicate directly grounded in the registry's own
- * validation text ("验证未授权插件不能注册 `dsh.*` 保留 namespace" / verify
- * that an unauthorized plugin cannot register the `dsh.*` reserved
- * namespace), not itself the adjudication logic under test.
+ * Package entry point. Contract stage for Epic P1-09's Service/Tool/Event
+ * namespace and ownership conflict detection: this module's exported
+ * functions carry the epic's decision logic, proven by
+ * `../tests/ownership.spec.ts`. `RESERVED_NAMESPACE_ROOT`/`isReservedNamespace`
+ * is a one-line predicate grounded directly in the registry's own validation
+ * text ("验证未授权插件不能注册 `dsh.*` 保留 namespace" / verify that an
+ * unauthorized plugin cannot register the `dsh.*` reserved namespace) rather
+ * than in the adjudication the other exports perform.
  *
  * None of these functions read a file, spawn a process, or construct a
  * Cordis `Context` — every registry/policy input is a plain value the

@@ -86,14 +86,30 @@ function packageDirectories(): string[] {
 }
 
 /**
+ * Strip comments so prose is never mistaken for code.
+ *
+ * This is the whole reason the check works. Matching `not implemented` against
+ * raw file text let a stale JSDoc sentence — "throws `'not implemented'`
+ * bodies", left behind by a GREEN commit that changed only code — count as
+ * evidence that the package really was unimplemented, which silenced the check
+ * for that package entirely. The stale prose this gate exists to catch was
+ * switching the gate off. `dsh-run` carried nine such claims undetected.
+ * @param source - a TypeScript source file's text.
+ * @returns the same text with block and line comments blanked out.
+ */
+function withoutComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//gu, '').replace(/\/\/[^\n]*/gu, '')
+}
+
+/**
  * Whether a package's own `src/` still contains an unimplemented body, which is
  * what makes an unimplemented-code claim true.
  * @param packageDirectory - the package to inspect.
- * @returns true when some source file throws or returns a `not implemented` marker.
+ * @returns true when some source file has a `not implemented` marker in code.
  */
 function hasUnimplementedSource(packageDirectory: string): boolean {
   return walk(join(packageDirectory, 'src')).some(
-    file => file.endsWith('.ts') && /not implemented/u.test(readFileSync(file, 'utf8')),
+    file => file.endsWith('.ts') && /not implemented/u.test(withoutComments(readFileSync(file, 'utf8'))),
   )
 }
 

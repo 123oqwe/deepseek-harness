@@ -1,5 +1,5 @@
 ---
-description: "The Contract-stage type surface and pure decision-function signatures for Epic P1-09's Service/Tool/Event namespace and ownership conflict detection, for maintainers picking up the RED-scaffold fix-round."
+description: "The Contract-stage type surface and pure decision-function signatures for Epic P1-09's Service/Tool/Event namespace and ownership conflict detection, covering namespace claims, ownership tokens, replacement adjudication, and the inventory chain."
 kind: "package-library"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-library"
 
 `dsh-plugin-ownership` fixes the type surface and function signatures for Epic P1-09's Service/Tool/Event namespace and ownership conflict detection: every registration carries a `PluginIdentity`, `Namespace`, `StableCapabilityId`, and a registry-minted `OwnershipToken` (must[0]); the officially reserved `dsh.*` namespace tree cannot be claimed by a plugin outside `RegistryPolicy.officialPluginIdentities` (must[1]); overriding an existing registration requires an explicit `ReplaceContract`, itself gated by `RegistryPolicy.allowReplace` (must[2]); and unloading a plugin revokes only the effects whose stored `OwnershipToken` matches the one presented (must[3]).
 
-This package currently ships this epic's Contract-stage RED scaffold only: `src/types.ts`'s types and `src/index.ts`'s function signatures are real and epic-accurate, but every decision function (`claimCapability`, `requestReplace`, `revokeByOwnershipToken`, `buildInventoryChain`, `mintOwnershipToken`) throws `'not implemented: ...'` — the pure decision logic itself is a later fix-round's deliverable, proven by `tests/ownership.spec.ts`'s real assertions against that (currently failing) behavior. `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT` are the one exception: a real, already-correct one-line predicate directly grounded in the registry's own validation text, not itself the adjudication logic under test. No invariant companion is published because this Contract-stage slice constructs no registry or `Context` value yet to check an owned relation over.
+This package ships this epic's Contract stage: `src/types.ts`'s types and `src/index.ts`'s decision functions — `claimCapability`, `requestReplace`, `revokeByOwnershipToken`, `buildInventoryChain`, `mintOwnershipToken`, plus the `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT` predicate — are implemented and proven by `tests/ownership.spec.ts`'s 13 cases, one per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause. Every export is a pure function over caller-supplied data: none reads a file, spawns a process, or constructs a Cordis `Context`. No invariant companion is published because this Contract-stage slice constructs no registry or `Context` value yet to check an owned relation over.
 
 ## Table of Contents
 
@@ -68,7 +68,7 @@ This section explains the design decisions behind the package; the observable ty
 | File | Role |
 |---|---|
 | [`src/types.ts`](src/types.ts) | The registration/policy/decision type surface: `CapabilityRegistration`, `ReplaceContract`, `RegistryPolicy`, `RegistrationDecision`, `InventoryChainEntry`, `RevocationResult` |
-| [`src/index.ts`](src/index.ts) | `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT` (real), and `claimCapability`/`requestReplace`/`revokeByOwnershipToken`/`buildInventoryChain`/`mintOwnershipToken` (Contract-stage RED scaffold — real signatures, `'not implemented'` bodies) |
+| [`src/index.ts`](src/index.ts) | `isReservedNamespace`/`RESERVED_NAMESPACE_ROOT`, and the `claimCapability`/`requestReplace`/`revokeByOwnershipToken`/`buildInventoryChain`/`mintOwnershipToken` decision functions |
 
 </details>
 
@@ -77,7 +77,7 @@ This section explains the design decisions behind the package; the observable ty
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/ownership.spec.ts`](tests/ownership.spec.ts) — the Contract-stage RED scaffold: one case per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause.
+- [`tests/ownership.spec.ts`](tests/ownership.spec.ts) — 13 cases: one case per registry-declared acceptance clause (acceptance[0] split into its three named fail-closed scenarios) plus every structurally testable must[] clause.
 - [`packages/extensions/cordis-host-runner/src/registry.ts`](../../extensions/cordis-host-runner/src/registry.ts) — the dynamic Cordis plugin/package registry acceptance[2] requires this epic's rules to also cover (Usage-stage wiring, not this package's job).
 - [`packages/host/plugin-inventory/src/index.ts`](../../host/plugin-inventory/src/index.ts) — the real Inventory surface acceptance[1]'s replaced/replacing chain (`buildInventoryChain`) is meant to feed (Usage-stage wiring, not this package's job).
 - [`@deepseek-ai/dsh-plugin-manifest`](../plugin-manifest/README.md) — this repo's other Contract-stage plugin-capability package, followed here for package layout and pure-function conventions.

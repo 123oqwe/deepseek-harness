@@ -1,13 +1,10 @@
 /**
- * Contract-stage RED scaffold for Epic P1-09's Service/Tool/Event namespace
+ * Contract stage for Epic P1-09's Service/Tool/Event namespace
  * and ownership conflict detection. One `it()` per registry-declared
  * acceptance clause (splitting acceptance[0]'s three named fail-closed
  * scenarios into three cases) plus every must[] clause that is structurally
- * testable at this Contract level. Every case below calls a real exported
- * function against real branded fixture data; every function currently
- * throws `'not implemented: ...'` (`../src/index.ts`), so every case fails
- * for that reason today — the assertions themselves describe the behavior a
- * later fix-round must satisfy.
+ * testable at this Contract level. Every case calls a real exported function
+ * against real branded fixture data.
  */
 
 import { brandString } from '@deepseek-ai/dsh-brand'
