@@ -23,6 +23,14 @@ responds; append-only.
 ### BLOCKED-067 — false-green class, found by P6-01's F stage: a clause guarded only by a check on the INPUT's shape and a clause with no guard at all are indistinguishable in a test report; bounded re-examination of the 8 already-ACCEPTED rows required (Supervisor-found, delegate-elevated to a standing rule, 2026-09-04)
 
 
+**Standing rule this generalizes into (three independent measurements, 2026-09-04): a negative-space assertion set REQUIRES a positive control.** A suite that only asserts "X must not happen" cannot distinguish a correct implementation from an over-broad one that refuses or fabricates everything; the case that kills the over-broad implementation is always the one asserting "Y must still happen." Measured three times in one day, each by a different stage and each caught only because someone added a control:
+
+- **P6-01.F** — a scope filter mutated to refuse everything still passed **10 of 16** cross-tenant security cases; both `control:` cases went red.
+- **P6-07.F** — `interruptedTurnClosers` mutated to repair even a balanced log satisfied **every** enforcement case; exactly one case went red, the control.
+- **P2-02.U** — the capability gate mutated to deny everything left 14 of 18 green; **two of the four reds were `control:` cases**.
+
+**Therefore mutation proof runs in both directions**: narrow the implementation (the enforcement cases must go red) *and* widen it (a control must go red). A one-direction mutation table is incomplete evidence, not strong evidence.
+
 **Cross-reference:** one of five distinct guarantee failures catalogued in [BLOCKED-072](#blocked-072); see its table for the other four, and do not read them as instances of one another.
 - **What was found:** P6-01's `must[3]` (memory access is scoped) read as covered. `requireCompleteAccessContext` asserts an access context is *present and complete*; `capRecords` asserts a *count*. Neither asserts that a complete context actually **constrains the result**. Probing with only the public exports, two shipped production factories — `createLocalReferenceMemoryProvider` and `createFakeMemoryProvider`, both exported from `src/index.ts`, neither a test double — returned another tenant's records to a `tenant-b` context, and `forget()` called with `tenant-b` **destroyed `tenant-a`'s records**. Cross-tenant data destruction, not merely a read leak. Only `durable-file` filtered.
 - **The rule this becomes:** *a clause guarded by a shape-check on its input looks exactly like a covered clause and exactly like an uncovered one.* Both produce green reports; neither proves the effect. This is [BLOCKED-052](#blocked-052)'s "a test that cannot fail proves nothing" sharpened into the specific mechanism that manufactures it, and it is now the first question every F stage must answer for each clause it touches: **does any case assert on the EFFECT, or do they all assert on the shape of the input?**
@@ -763,6 +771,53 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 **Pitfall for whoever builds that future check (delegate correction, 2026-09-03)**: the correct assertion is `ledger row count == registry.epics.length` (101 == 101), never `ledger row count == totals.totalEpics` (101 != 110) — `totalEpics` is the whole-program count (registry epics + the 9 P9 extension items), and P9's items deliberately never get registry rows or ledger rows. Asserting equality against `totalEpics` would be permanently, unfixably red.
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
+
+### BLOCKED-075 — `session-persistence-jsonl`'s corruption-evidence bound is documented in bytes and implemented in UTF-16 code units: 512 units of CJK is 1536 bytes, and a cut can strand a lone surrogate that becomes U+FFFD (Supervisor found during P6-07.F, owner is another package, 2026-09-04)
+
+**Not a documentation ambiguity — the constant's own comment promises bytes.** `format.ts:371` reads *"Bytes of a corrupt row retained as evidence"*, and `CorruptedLogEvidence.raw`'s JSDoc says *"The row's raw bytes as UTF-8, truncated to `CORRUPTION_RAW_LIMIT`"*. The implementation (`format.ts:531`) is `line.toString('utf8').slice(0, CORRUPTION_RAW_LIMIT)`, and `String.prototype.slice` cuts **UTF-16 code units**.
+
+**Measured, both failure modes:**
+
+| Input | Units kept | Bytes kept | Against a documented cap of 512 |
+|---|---|---|---|
+| `'字'.repeat(600)` | 512 | **1536** | 3× over |
+| `'a'×511 + '😀'×10` | 512 | — | last unit is a **lone high surrogate**; re-encoding yields `ef bf bd` (U+FFFD) |
+
+The bound exists because *"a corrupt row has no trustworthy length, so the whole of it is never copied into an error path"* — a purpose a 3× overshoot defeats. The second mode is worse than the first: **the evidence about corruption is itself corrupted**, silently, at the moment it is retained.
+
+**Ownership.** `packages/session/session-persistence-jsonl`. Found while writing P6-07's Fault stage, whose declared files are `repair.ts` and its own spec — `format.ts` is in neither. Filed separately rather than inside P6-07's record **precisely because folding it in would pull a file outside that stage's frozen `files[]` into the epic's narrative**, which is what the freeze exists to prevent.
+
+**The fix is not a different number.** Changing 512 to some other value preserves the defect. Truncate on **bytes** (`Buffer.subarray`, or back off to a UTF-8 character boundary), and **the surrogate-pair cut needs its own test** — a byte-based cut can still land mid-character unless it retreats to a boundary.
+
+**Does not block P6-07's acceptance, and the reasoning is recorded so this is not mistaken for an oversight.** acceptance[3] requires the minimal recoverable range **and evidence**; the evidence is returned. This defect damages the evidence's *bound*, not its *existence*, and it sits outside the epic's declared files. Note the adjacency worth remembering: P6-07's own recorded defects are evidence being **discarded** (an unbounded `raw` passed through, a dropped `sessionId`), and this one is evidence being **polluted** — one epic's lock and a neighbouring package's defect pointing at the same failure surface from opposite sides.
+
+### BLOCKED-074 — predicate (i) is named "coverage closure" but closes only `acceptance`; all 412 `must` clauses (54% of every clause in the program) have no record connecting them to evidence (delegate found, Supervisor confirmed in code, 2026-09-04)
+
+**The finding, confirmed by reading the implementation rather than the schema alone.** `checkCoverageClosure` (`scripts/first100/generate-ledger.mjs:565`) computes `acceptanceCount = epic?.acceptance?.length` and iterates only that, matching entries by `acceptanceIndex`. `epic.must` is never read. `acceptance-coverage.json`'s entries carry no field that could hold a `must` index, and all 39 existing entries use `acceptanceIndex` alone.
+
+**Scale:** 346 `acceptance` + **412 `must`** = 758 clauses. Predicate (i) closes **46%** of them.
+
+**No second mechanism catches the rest.** `mustIndex`/`mustClause` appear nowhere in `scripts/`; `must[N]` occurs only inside JSDoc prose with no mechanical reference; `command-freeze.json` entries bind cases to a *stage*, never to a clause.
+
+**What this is NOT.** It is **not** a finding that the `must` clauses are unproven. Many are demonstrably tested — P1-07 `must[1]` was read in source three times while clearing that epic's acceptance lock, and its behaviour is covered. **The defect is that nothing records whether any given `must` was covered, so the only way to answer "is this clause proven?" is to go and look, per clause, by hand.** That distinction is the entire content of this entry, and collapsing it into "the musts are unproven" would be as wrong as the current silence.
+
+This is [BLOCKED-067](#blocked-067)'s shape raised to the mechanical layer, and a member of [BLOCKED-072](#blocked-072): predicate (i) *appears* to close an epic's requirements, closes under half of them, and **the unclosed half carries no marker saying it is unclosed**.
+
+**The clauses carrying the most weight are disproportionately `must`.** A sample from ACCEPTED rows:
+
+| Clause | Content | Row status |
+|---|---|---|
+| P0-07 `must[2]` | no skipped blocking gate or missing artifact may be marked `accepted=true` | ACCEPTED |
+| P1-07 `must[1]` | untrusted permits only safe reads; loads no project plugin/hook/MCP/executable skill | ACCEPTED |
+| P1-09 `must[1]` | reserved official namespaces cannot be claimed by third parties | ACCEPTED |
+| P6-01 `must[3]` | every read bounded by principal, purpose, scope and context budget | pending, locked |
+
+**Disposition (delegate's ruling).**
+
+1. Extend the coverage schema with a `mustIndex`, exclusive-or with `acceptanceIndex`, and require both kinds for every epic accepted from here on.
+2. **Do not backfill all 412.** Clause-by-clause backfill would consume days of lane capacity while the counter does not move.
+3. **Do not reopen the 12 ACCEPTED rows** (45 `must` clauses among them). Backfill only the **security-carrying** `must` clauses on those rows — the four above are the pattern.
+4. **If a backfill finds a clause with no evidence, that is a finding: record it.** Writing a fresh case to cover it in the same motion would convert a discovery into a silent repair, which is the failure this queue exists to prevent.
 
 ### BLOCKED-073 — the terminal state's P9 clause was recorded as already satisfied, but no P9 item carried a status anywhere; all nine are hereby **scheduled-BLOCKED**, with the blocker, owner and unblock signal named per item (Supervisor, 2026-09-04)
 
