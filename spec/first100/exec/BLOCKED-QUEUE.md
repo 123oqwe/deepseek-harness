@@ -1081,3 +1081,26 @@ It is the same error as [BLOCKED-051](#blocked-051) and [BLOCKED-055](#blocked-0
 2. **No genuine pre-existing drift remains.** The gate now reports 56 entries, 46 unique commands, **1057 frozen titles, 0 unresolved**. The larger failure count observed earlier was from an older tree state, before that day's lanes merged the tests their entries name.
 3. **Wired into `first100:slice-gate-registry`.**
 4. **Proven able to fail.** Injecting a bogus title into a live `P4-01.U` entry yields exit 1 and `1 UNRESOLVED`; removing it returns exit 0. **A gate never shown to go red is equivalent to no gate** — the same standard applied to the `format.ts` fix and required of P1-07's authorization case.
+
+### BLOCKED-058 — eight First-100 packages ship no `README.zh.md`, holding two mandatory slice gates red; the fix needs a user-invoked skill (Supervisor finding, 2026-09-04)
+
+`first100:slice-gate` — which every slice is required to run — currently fails on two members, and has been failing for some time:
+
+**1. `verify-translation-pairing`.** Eight packages this program created carry `README.md` with no counterpart at all:
+
+```
+packages/action/action-manifest      packages/plugin/plugin-compat
+packages/plugin/plugin-ownership     packages/plugin/plugin-provenance
+packages/policy/capability-token     packages/run/run
+packages/session/session-lifecycle   packages/workspace/workspace-trust
+```
+
+plus `docs/architecture/layering.md` (being touched by P0-04's Usage stage) and one wrong-locale link in `docs/architecture.zh.md:49` pointing at `plugin-compat/README.md` instead of `README.zh.md` — which cannot be fixed until that counterpart exists.
+
+**2. `verify-doc-budgets`.** `packages/README.md` is 1005 words against a 994 ceiling, introduced by P0-04's own Contract stage; its Usage stage owns the fix and must land net-shorter.
+
+**Why this is not simply done.** `CLAUDE.md` states that **only explicit user invocation may run `dsh-translate-docs`**. Hand-writing eight package READMEs in Chinese is possible but is a large, low-review-value diff for a Supervisor to author unattended. **This needs the user's decision**: authorize the skill, or accept hand-written counterparts, or record the gate as knowingly red with a scheduled fix.
+
+**Two things fixed here, and one method note that matters more than either.** `docs/persistence-catalog.zh.md` was missing the whole `memory/access` section that P6-01's Usage stage added to the English side; the counterpart was written and the pair re-recorded. `docs/subsystems/README` had both sides genuinely updated together and only its record was stale, so re-recording was legitimate.
+
+**The method note.** The Supervisor first ran `--write` on **both** pairs at once, which re-recorded the catalog as consistent while its Chinese side lacked `memory/access` entirely — blessing content nobody had reviewed, the exact thing a Writer had earlier refused to do when it declined a blanket `--write`. It was caught by checking whether the Chinese side actually contained the new content, and reverted. **`--write` asserts that a human compared the two sides. Never run it to make a gate green; run it only after confirming the sides correspond**, and confirm per pair, since in this instance one of the two was legitimate and the other was not.
