@@ -85,10 +85,10 @@ const CLIENT_LAYER = 'surfaces-apps'
  */
 const TEST_SUPPORT = 'test-support'
 
-/** The two positions outside the six-layer ranking: each may depend on any layer, and no ranked layer may depend on either. */
+/** The two positions outside the six-layer ranking: each may depend on any layer, and no ranked layer may depend on either. Each carries the rule it is reported under and the `layering.md` rule that defines it. */
 const UNRANKED_POSITIONS = new Map([
-  [COMPOSITION_ROOT, 'composition-root-inbound-dependency'],
-  [TEST_SUPPORT, 'test-support-inbound-dependency'],
+  [COMPOSITION_ROOT, { rule: 'composition-root-inbound-dependency', label: 'a composition root', reference: 'layering.md rule 1' }],
+  [TEST_SUPPORT, { rule: 'test-support-inbound-dependency', label: 'a test-support package', reference: 'layering.md rule 6' }],
 ])
 const CORDIS_PACKAGE = '@deepseek-ai/cordis'
 
@@ -572,17 +572,17 @@ export function runLayerDepsCheck(root) {
 
   for (const edge of edges) {
     // An unranked position may depend on any layer, so its own outgoing edges
-    // never reach classifyEdge (layering.md rules 1 and 7).
+    // never reach classifyEdge (layering.md rule 1).
     if (UNRANKED_POSITIONS.has(edge.fromLayer)) continue
     // The half that makes each position a rule rather than an exemption: no
     // ranked layer may depend on an unranked one.
-    const inboundRule = UNRANKED_POSITIONS.get(edge.toLayer)
-    if (inboundRule !== undefined) {
+    const inbound = UNRANKED_POSITIONS.get(edge.toLayer)
+    if (inbound !== undefined) {
       violations.push({
-        rule: inboundRule,
+        rule: inbound.rule,
         fromPackage: edge.fromPackage,
         toPackage: edge.toPackage,
-        detail: `${edge.fromLayer} -> ${edge.toLayer} via ${edge.detectionMethod}; nothing may depend on a ${edge.toLayer} (layering.md rules 1 and 7)`,
+        detail: `${edge.fromLayer} -> ${edge.toLayer} via ${edge.detectionMethod}; nothing may depend on ${inbound.label} (${inbound.reference})`,
       })
       continue
     }
