@@ -181,8 +181,16 @@ export type LoadDecision =
   | { readonly permitted: true }
   | { readonly permitted: false; readonly reason: LoadDenialReason; readonly requiredState: TrustState }
 
-/** Why `requestTrustUpgrade` refused an upgrade (must[2]). */
-export type TrustUpgradeDenialReason = 'non-host-principal'
+/**
+ * Why `requestTrustUpgrade` refused an upgrade (must[2]).
+ * `'non-host-principal'`: the requester's `Principal.kind` is not `'user'`.
+ * `'not-an-upgrade'`: the requested {@link TrustState} does not raise the
+ * current one, so the call is a demotion or a no-op wearing an upgrade's name.
+ * Admitting one wrote an audit record for a transition that was not an upgrade
+ * and left `grantedBy` on a record at `'untrusted'`, which {@link TrustRecord}
+ * states carries no grantor.
+ */
+export type TrustUpgradeDenialReason = 'non-host-principal' | 'not-an-upgrade'
 
 /**
  * must[2]'s audit record: written once a trust upgrade succeeds, naming the

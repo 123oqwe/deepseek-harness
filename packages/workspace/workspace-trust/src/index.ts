@@ -68,6 +68,19 @@ declare module '@deepseek-ai/cordis' {
   }
 }
 
+/**
+ * The three {@link TrustState}s ordered by how much project-level content they
+ * admit, so a transition can be told apart from its reverse. Raising a
+ * workspace's state is an upgrade and is `requestTrustUpgrade`'s business
+ * alone (must[2]: host-user interaction plus an audit record); lowering it is
+ * `downgradeTrust`'s. Neither function may perform the other's transition.
+ */
+const TRUST_STATE_RANK: Readonly<Record<TrustState, number>> = {
+  'untrusted': 0,
+  'trusted-read': 1,
+  'trusted-execute': 2,
+}
+
 /** {@link ProjectContentKind}'s declared member order, used to walk every kind when computing `downgradeTrust`'s `revokedKinds`. */
 const PROJECT_CONTENT_KINDS: readonly ProjectContentKind[] = [
   'safe-read',
@@ -179,6 +192,23 @@ export function reconcileWorkspaceTrust(record: TrustRecord, observed: Workspace
  * regardless of `target`. On success, returns both the new {@link TrustRecord}
  * (bound to `current.identity`, `grantedBy` set to `hostPrincipal.id`) and
  * the `TrustUpgradeAuditRecord` (`./types.ts`) must[2] requires be written.
+ *
+ * A `target` that does not raise `current.state` is refused with
+ * `'not-an-upgrade'`. Admitting one produced an `upgraded: true` result and an
+ * audit record describing a demotion, and — the part that mattered — stamped
+ * `grantedBy` onto an `'untrusted'` record, which `./types.ts` states carries
+ * no grantor. That record is exactly the input {@link downgradeTrust} must
+ * never be handed. Every refusal returns the `{ upgraded: false, reason }`
+ * member alone, carrying neither a record nor an audit entry, so no refusal
+ * reason added later can reintroduce it.
+ *
+ * This function refuses through its result while {@link downgradeTrust} throws.
+ * The asymmetry is a consequence of the already-frozen surface, not a design
+ * preference: {@link TrustUpgradeResult} is a union whose refusal member only
+ * gains a reason here, while `TrustDowngradeResult` is a plain record whose
+ * callers read `record` and `revokedKinds` directly. Making the two symmetric
+ * means widening that record into a union, which is a Contract change and
+ * needs its own re-freeze.
  * @param current - the workspace's current {@link TrustRecord}.
  * @param target - the requested {@link TrustState} to upgrade to.
  * @param hostPrincipal - the principal presented as the upgrade requester.
@@ -192,6 +222,7 @@ export function requestTrustUpgrade(
   at: string,
 ): TrustUpgradeResult {
   if (!isHostUserPrincipal(hostPrincipal)) return { upgraded: false, reason: 'non-host-principal' }
+  if (TRUST_STATE_RANK[target] <= TRUST_STATE_RANK[current.state]) return { upgraded: false, reason: 'not-an-upgrade' }
   return {
     upgraded: true,
     record: { identity: current.identity, state: target, at, grantedBy: hostPrincipal.id },
@@ -213,12 +244,35 @@ export function requestTrustUpgrade(
  * project capabilities) means the returned record already reflects `target`
  * and `revokedKinds` is computed against that same transition — no separate
  * revoke step a caller could race or skip.
+ *
+ * A `target` that raises `current.state` throws. Performing it granted a state
+ * with no {@link Principal}, no {@link isHostUserPrincipal} check and no audit
+ * record, reporting `revokedKinds: []` while doing so — must[2]'s
+ * authorization bypassed through acceptance[2]'s own entry point. Raising a
+ * workspace's trust is {@link requestTrustUpgrade}'s transition and has no
+ * second entry point here. A same-state `target` is admitted and revokes
+ * nothing: it grants no capability.
+ *
+ * This function throws while {@link requestTrustUpgrade} refuses through its
+ * result. The asymmetry is a consequence of the already-frozen surface, not a
+ * design preference: {@link TrustDowngradeResult} is a plain record whose
+ * callers read `record` and `revokedKinds` directly, so a refusal member would
+ * mean widening it into a discriminated union — a Contract change needing its
+ * own re-freeze — whereas {@link TrustUpgradeResult} is already a union that
+ * only gains a reason.
  * @param current - the workspace's current {@link TrustRecord}.
  * @param target - the {@link TrustState} to downgrade to.
  * @param at - ISO-8601 instant of the downgrade.
  * @returns the demoted {@link TrustRecord} together with the {@link ProjectContentKind}s it revokes.
+ * @throws when `target` is above `current.state`, which would be an upgrade.
  */
 export function downgradeTrust(current: TrustRecord, target: TrustState, at: string): TrustDowngradeResult {
+  if (TRUST_STATE_RANK[target] > TRUST_STATE_RANK[current.state]) {
+    throw new Error(
+      `cannot downgrade workspace '${current.identity.canonicalPath}' from '${current.state}' to '${target}': `
+      + 'that raises trust, which only requestTrustUpgrade may do',
+    )
+  }
   const revokedKinds = PROJECT_CONTENT_KINDS.filter(
     kind => authorizeProjectLoad(current.state, kind).permitted && !authorizeProjectLoad(target, kind).permitted,
   )

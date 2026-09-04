@@ -9,7 +9,7 @@ kind: "package-library"
 
 `dsh-workspace-trust` ships the type surface and decision functions for Epic P1-07's project trust boundary: every workspace holds one of three trust states — `'untrusted'`, `'trusted-read'`, `'trusted-execute'` — bound to both its canonical realpath and the `fs.Stats` device/inode identity observed at bind time, never to the path string alone (must[0]); while `'untrusted'` or `'trusted-read'`, only safe reads are permitted and no project plugin, hook, MCP server, executable skill, or home/profile patch override ever loads (must[1]); and raising trust requires a genuine host user principal and produces an audit record (must[2]).
 
-`src/types.ts` carries the types and `src/index.ts` six working functions: `isHostUserPrincipal`, `bindWorkspaceTrust`, `authorizeProjectLoad`, `reconcileWorkspaceTrust`, `requestTrustUpgrade`, and `downgradeTrust`, covered by `tests/trust.spec.ts` in 15 cases. It also declares `WorkspaceTrustService`, the `ctx.workspaceTrust` Service Definition consumers read; `@deepseek-ai/dsh-workspace-trust-local` is its host-local provider. `downgradeTrust` derives its `revokedKinds` by running `authorizeProjectLoad` over every `ProjectContentKind` under both the old and the new state, so the load gate and the revocation set can never disagree. No invariant companion is published because this package constructs no registry, table, or `Context` value to check an owned relation over — every export is a pure function over caller-supplied plain data.
+`src/types.ts` carries the types and `src/index.ts` six working functions: `isHostUserPrincipal`, `bindWorkspaceTrust`, `authorizeProjectLoad`, `reconcileWorkspaceTrust`, `requestTrustUpgrade`, and `downgradeTrust`, covered by `tests/trust.spec.ts` in 23 cases. It also declares `WorkspaceTrustService`, the `ctx.workspaceTrust` Service Definition consumers read; `@deepseek-ai/dsh-workspace-trust-local` is its host-local provider. `downgradeTrust` derives its `revokedKinds` by running `authorizeProjectLoad` over every `ProjectContentKind` under both the old and the new state, so the load gate and the revocation set can never disagree. No invariant companion is published because this package constructs no registry, table, or `Context` value to check an owned relation over — every export is a pure function over caller-supplied plain data.
 
 ## Table of Contents
 
@@ -41,8 +41,9 @@ const denied = authorizeProjectLoad(record.state, 'mcp-server')
 // denied.permitted === false, denied.requiredState === 'trusted-execute'
 
 const upgrade = requestTrustUpgrade(record, 'trusted-execute', hostPrincipal, new Date().toISOString())
-// upgrade.upgraded is false with reason 'non-host-principal' for a non-'user' principal;
-// otherwise upgrade.record and upgrade.audit are both produced together
+// upgrade.upgraded is false with reason 'non-host-principal' for a non-'user' principal,
+// or 'not-an-upgrade' when target does not raise record.state; a refusal carries
+// neither a record nor an audit entry. Otherwise both are produced together
 ```
 
 Every export is a pure function over already-resolved data: no export in this package stats a path, spawns a process, or constructs a Cordis `Context` — a later Usage-stage caller supplies `identity`/`hostPrincipal` from a real `fs.realpath`/`fs.stat` observation and a real, already-authenticated `Principal`.
@@ -79,7 +80,7 @@ This section explains the design decisions behind the package; the observable ty
 <a id="further-exploration"></a>
 ## Further Exploration
 
-- [`tests/trust.spec.ts`](tests/trust.spec.ts) — 15 cases: one per registry-declared must[]/acceptance[] clause (must[2] split into its refuse/admit halves, acceptance[1] split into its three named identity-change vectors plus an unchanged-identity control), plus the two `'project-instructions'` cases that pin the one decision separating `'trusted-read'` from `'untrusted'`.
+- [`tests/trust.spec.ts`](tests/trust.spec.ts) — 23 cases: 15 clause cases, one per registry-declared must[]/acceptance[] clause (must[2] split into its refuse/admit halves, acceptance[1] split into its three named identity-change vectors plus an unchanged-identity control) plus the two `'project-instructions'` cases that pin the one decision separating `'trusted-read'` from `'untrusted'`; and 8 fault cases covering the two transition directions and four identity-reconciliation faults. Every case is pure over hand-built values, so none depends on a filesystem's inode allocation behaviour.
 - [`packages/workspace/workspace/src/{entity,index,paths}.ts`](../workspace/src) — the real `Workspace` entity and `realpathNormalize` this epic's Usage-stage wires trust observation into (Usage-stage wiring, not this package's job).
 - [`packages/context/agent-instructions/src/{index,files}.ts`](../../context/agent-instructions/src) and [`apps/cli/src/profile-boot.ts`](../../../apps/cli/src/profile-boot.ts) — the real project-instruction/plugin/patch load sites acceptance[0]'s zero-subprocess/network/credential-read guarantee is meant to gate (Usage-stage wiring, not this package's job).
 - [`@deepseek-ai/dsh-principal`](../../identity/principal/README.md) — the identity package `isHostUserPrincipal`/`requestTrustUpgrade` build must[2]'s host-user-interaction requirement on.
@@ -103,7 +104,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **No wiring into real `fs.realpath`/`fs.stat` observation, real project plugin/hook/MCP-server/skill loaders, or `apps/cli/src/profile-boot.ts`'s home-patch layer exists yet** (registry's own `stages.P`/`stages.U` files) — this package alone cannot observe a real directory's identity or gate a real load.
 - **No real `@deepseek-ai/dsh-trust-kernel` audit-append wiring exists yet, and cannot until the vendored Cordis `Fiber` structural fix lands** (`docs/architecture/trust-kernel-boundary.md`) — `requestTrustUpgrade` returns a `TrustUpgradeAuditRecord` as plain data, and nothing appends it anywhere.
-- **`requestTrustUpgrade` does not check that `target` raises trust.** It gates on the requester being a host user principal and then writes `target` verbatim, so a host user may pass any `TrustState`, including one below `current.state`. Which transitions are legal is the caller's to decide; `downgradeTrust` is the entry point that also computes what a lowering revokes.
+- **Each transition function performs only its own direction.** `requestTrustUpgrade` refuses a `target` that does not raise `current.state` with `'not-an-upgrade'`, and `downgradeTrust` throws on a `target` that raises it. Neither is a second entry point for the other's transition, so trust cannot be granted without must[2]'s host-user check and audit record. The refusal shapes differ — a returned reason against a throw — because `TrustUpgradeResult` is already a union that gains a member while `TrustDowngradeResult` is a plain record callers read directly; both functions' JSDoc records that this follows from the frozen surface rather than from preference.
 - **`bindWorkspaceTrust` always starts at `'untrusted'`**, with no argument that could seed another state, but the headless-boot call site that must reach it does not exist — a boot that never calls it is not gated by anything here.
 
 -----
