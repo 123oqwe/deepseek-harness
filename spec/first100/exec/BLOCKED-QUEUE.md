@@ -1235,3 +1235,19 @@ Outstanding for that lane:
 **`attempt/P2-03-U` — clean at base, holding for a ruling it never received.** Its Step 0 stands: `prepareExecution` is the single funnel for all three origins with policy and approval after it; the granted `code-mode.ts` → `ptc.ts` patch is unapplied. Approved but unstarted: the default-off `Config` switch with its acceptance lock, and option (c) using `packages/identity/anonymous-user-id` for a real anonymous identity rather than a synthesized one.
 
 **A Supervisor error worth carrying forward.** I reported that `check-layer-deps.mjs` contained zero occurrences of `singleton`, and concluded the Contract stage had defined a classification the scanner never produces. **That was false.** The file carried five literal NUL bytes, so `grep` skipped it silently and I read "nothing found" as "nothing there". The scanner implements the detection at lines 514–736 and it fires on two real violations. **Third occurrence of the NUL hazard, and the first to produce a wrong conclusion — by me, about a defect I had documented twice.** Fixed to `\0` in the WIP commit; the file is now greppable and its diffs reviewable.
+
+### BLOCKED-065 — three defects in this program's own tooling and records, found by F-stage Writers (2026-09-04)
+
+**1. `grep -c $'\0'` is a banned idiom — it fails in the alarming direction.** In zsh `$'\0'` is an **empty string**, so the pattern matches every line and the "NUL count" returned is the file's line count. A Writer checking its own work for the NUL hazard got **594** and briefly believed it had produced a catastrophe. Use a byte scan:
+
+```python
+open(path,'rb').read().count(b'\x00')
+```
+
+A check that manufactures a false crisis is worse than one that fails silently, because it consumes a lane's attention and invites a "fix" for a problem that does not exist. Given that a literal NUL had already caused one wrong diagnosis here ([BLOCKED-046](#blocked-046)), the naive idiom is retired.
+
+**2. `dryRunProof.testsDiscovered` carries two different meanings across landed entries**, and the greening path reads it. `P0-02.F` records its own case count (10, equal to its `expectCases` length); `P1-01.F` records everything the frozen `argv` discovers (88, against 14 cases). One field, two semantics, no way for a reader to tell which an entry used. Until it is defined, an entry should **state the arithmetic in its note** — as `P1-08.F` did ("9 landed C-stage cases + 15 F cases = 24") — so the number cannot be misread either way. [BLOCKED-048](#blocked-048)'s proposed cross-check compares this field against observed titles and would be wrong for one of the two conventions; settle the meaning before building it.
+
+**3. A `control:`-style title prefix has no F-stage precedent, contrary to a Supervisor instruction.** The Supervisor cited "the `control:` precedent" while ruling on F-stage freezes. Grepping all 63 freeze entries, `control:` appears in exactly **three** titles, all from `P1-09.U`. No landed F entry marks such cases at all — `P0-02.F` and `P2-01.F` both freeze passing-at-RED cases with the explanation in prose inside the title instead.
+
+**This was a correction issued to fix a false premise, which itself carried a false premise.** The instruction had told three lanes that F had never run; a Writer disproved that (eight F cells are GREEN), and a second Writer then disproved the replacement claim about where the prefix convention came from. Marking such cases is still the better practice and is being adopted — but as a **new** convention, recorded as such, not as an inherited one.
