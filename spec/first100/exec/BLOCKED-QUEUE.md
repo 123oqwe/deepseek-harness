@@ -981,7 +981,9 @@ This is the single place to check at wave close. A lock means the ledger row can
 
 | **P6-01** | model-visible memory ⟺ logged projection event (`validation[3]`) | `memory/access` is declared in `SessionEventMap` but **absent from `packages/core/session/src/known-event-types.ts`**, and it carries no `ignorable: true`. Harmless while nothing emits it — but the moment the Usage stage appends it to a real JSONL log, replay refuses the unknown type. The stage would then be manufacturing the corrupt logs it is supposed to prevent. The Contract stage's own Dev Note flagged this as unregistered and it was never acted on. | P6-01's Usage stage, before it greens. | The type is registered **and** a case proves the round trip: a log written with the event is read back by replay. Registration alone does not lift this lock — delegate condition, 2026-09-03. |
 
-**Rule.** Four of W4's eleven epics carry a lock. `generate-ledger.mjs --accept` does not know about them, so a locked row must not be accepted by hand either. When a lock's condition is met, remove the lock and its BLOCKED entry in the same change that satisfies it.
+| **P1-07** | 未信任目录不加载项目级执行内容 (must[1], acceptance[0]) | Four of must[1]'s five kinds have no project-sourced load site at all ([BLOCKED-054](#blocked-054)), so acceptance[0] is true today **because there is nothing to load, not because the gate stopped it** — and the gate therefore has zero regression protection: it could be deleted or short-circuited with nothing going red. | P1-07's Usage stage, before it greens. | At least one case over `skill-filesystem` — the one real load site — **fails when `authorizeProjectLoad` is removed or bypassed**, proven by mutation in both directions with real output. A case that survives the check's removal protects nothing, however green. Delegate condition, 2026-09-04. |
+
+**Rule.** Five of W4's eleven epics carry a lock. `generate-ledger.mjs --accept` does not know about them, so a locked row must not be accepted by hand either. When a lock's condition is met, remove the lock and its BLOCKED entry in the same change that satisfies it.
 
 ### BLOCKED-054 — four of P1-07 must[1]'s five content kinds have no load site in the product; a test over them asserts a fact about the repository, not a behavior (Writer finding, Supervisor-recorded, 2026-09-04)
 
@@ -1000,3 +1002,28 @@ Instructions — named first in the epic's own `gate` line — are the other rea
 **Why this is recorded rather than quietly satisfied.** A case asserting that an untrusted workspace loads no MCP server would pass today because **nothing loads an MCP server from a project directory under any trust state**. That green describes the current repository, not an enforced boundary, and it would keep passing if the gate were deleted. It is the same class as every other false green here: a test that cannot fail proves nothing. See [BLOCKED-052](#blocked-052).
 
 **Consequence.** P1-07's Usage stage enforces the two kinds that exist and states the vacuity of the other four explicitly in its freeze note and README. **When a project-sourced plugin, hook, MCP-server, or patch-override load site is later built, wiring it through `authorizeProjectLoad` is that epic's obligation** — it must not be assumed covered by P1-07's green. Whoever builds one of those load sites owns extending the gate to it.
+
+### BLOCKED-055 — a check that recognises a problem by text pattern is fooled by text discussing that problem (delegate wording, from a Supervisor self-repair, 2026-09-04)
+
+`scripts/verify-no-stale-red-claims.spec.ts` rejects prose describing landed code as an unimplemented RED scaffold. It decided whether a package was genuinely unimplemented by grepping its `src/` for `not implemented` — **including comments**. So a leftover JSDoc sentence, `throws \`'not implemented'\` bodies`, counted as evidence the package really was unimplemented, and the package was skipped entirely.
+
+**The stale prose the gate exists to catch was switching the gate off.** Not an ordinary bug: a self-referential trap, in which the detector mistook *a description of the problem* for *the problem itself*.
+
+Fixed by stripping block and line comments before the check. That immediately caught two packages it had been silently passing: `dsh-run` (nine stale claims, reported by a Writer the gate had cleared) and **`dsh-plugin-ownership` — fully implemented, 13/13 passing, documented from front matter to source docstring as an unimplemented scaffold, and reported by nobody.** How long it had been skipped is unknown.
+
+**Rule.** *A check that recognises a problem by text pattern will be fooled by text discussing that problem. Any such check must first strip meta-layer text — comments and documentation — and evaluate only the subject itself.*
+
+Applies beyond this gate: any scan keying on a marker string (`TODO`, `FIXME`, `not implemented`, a deprecated identifier) must decide what counts as the subject and exclude prose about it, or it will read its own warning label as the condition.
+
+### BLOCKED-056 — a Contract-stage review must check each assertion against the epic's own must/validation/acceptance wording, not only against the implementation (delegate, from two P1-07.C re-greens in one day, 2026-09-04)
+
+P1-07.C was re-greened **twice on 2026-09-04**, for two different defects in its own frozen cases:
+
+1. **A case asserted a platform behaviour instead of the property.** `expect(after.volume.inode).not.toBe(before.volume.inode)` is a claim about filesystem allocation, not about trust. It passed on APFS, which never reused an inode in 200 delete-rebuild cycles, while the security property it stood for was false on ext4, which reused on the first attempt. See [BLOCKED-052](#blocked-052).
+2. **A case asserted something the epic's own text contradicts.** `"downgrading from trusted-read to untrusted revokes nothing further"` with `revokedKinds === []` locks in that `trusted-read` and `untrusted` are behaviourally identical at every kind — while validation[1] requires 「验证 trusted-read 只注入纯文本且经过 prompt injection 标记」. A state with no behaviour of its own is not a state. The assertion was frozen only because nothing had yet forced the question.
+
+**Both were findable before freezing, by reading the registry entry beside the test.** Neither needed CI, a second platform, or a later stage to expose.
+
+**Rule for every Contract-stage review, and for a Writer before it freezes:** for each assertion, ask whether it agrees with the epic's own `must`/`validation`/`acceptance` wording — not merely whether it agrees with the implementation. An implementation and a test can agree with each other and both disagree with the clause they exist to serve.
+
+This is the review counterpart of [BLOCKED-053](#blocked-053)'s pre-dispatch checkpoint: that one asks whether the declared *files* can exercise the clause, this one asks whether the declared *assertions* match it.
