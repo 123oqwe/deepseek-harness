@@ -1,0 +1,4 @@
+{
+  "name": "@deepseek-ai/dsh-trust-kernel",
+  "dependencies": { "@deepseek-ai/dsh-client-ui-probe": "workspace:^" }
+}

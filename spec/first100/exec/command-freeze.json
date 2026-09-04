@@ -3301,6 +3301,71 @@
         "testsDiscovered": 0
       },
       "note": "U-stage RED scaffold for P0-04, attempt/P0-04-U branched from land-base-align-v2 @ 012da41e6e. P0-04 has no Provider stage (registry stages.P.nOf = \"N/A\", reason \"static qualification.\"), so U follows C directly. RED CONFIRMED BY PARSING THE JSON REPORTER, NOT CONSOLE OUTPUT: numFailedTestSuites=1, numTotalTests=0, message \"Cannot find module '../../scripts/architecture/check-layer-deps.mjs'\". testsDiscovered is 0 BY CONSTRUCTION and that is the honest number: the U-stage deliverable is a whole new module, so the suite cannot collect its 14 cases until that module exists. The 14 expectCases below are the GREEN target enumerated from the committed spec source, not from a vitest collection. expectExit=0 is the GREEN target (today real state: the suite fails to load). DEFINITION COMMITTED BEFORE ANY CHECK WAS RUN (commit 2ad7505bcd, before this one, and before check-layer-deps.mjs exists): acceptance[1] as literally read is unsatisfiable, because the shipping @deepseek-ai/dsh-trust-kernel value-imports Context from @deepseek-ai/cordis (packages/kernel/trust-kernel/src/index.ts:52) and reads Context.isolate off ctx.root in pinTrustKernel (:150) -- P0-02's ACCEPTED core mechanism, not drift. The registry's acceptance text is untouched; docs/architecture/layering.md rule 4, which acceptance[1] already points at, now measures a kernel's Cordis dependency per imported binding rather than per package, permits exactly Context, and forbids every other binding as a value or as a type. New rule 6 defines the dated kernelEdgeAllowlist the epic gate's \"kernel reverse edges and expired allowlist = 0\" already presumes. FALSIFIABILITY IS AN ACCEPTANCE CONDITION ON THIS STAGE, NOT A CLAIM: at GREEN, a forbidden Cordis binding and a UI import are added to the real trust-kernel, the gate is shown red, they are removed, and it is shown green -- both directions, real output. If the definition cannot be made to go red it is empty and that is what gets reported. THE dsh-invariants EDGE IS ADJUDICATED, NOT LEFT OPEN: @deepseek-ai/dsh-trust-kernel peer-depends on @deepseek-ai/dsh-invariants (packages/runtime-diagnostics/invariants), which is itself a Cordis Service (imports { Context, Service }). Under rule 4 that is a real upward kernel edge and a real violation; it is NOT reclassified downward to make it pass. It is recorded in tests/first100/architecture.layers.json's kernelEdgeAllowlist with an owner, a reason and an expires date, so it is visible as an exception rather than laundered into a layer assignment. The only import is type-only (packages/kernel/trust-kernel/src/invariant.ts:7, InvariantInstaller) inside the package's ./invariant companion, which is a plugin of the diagnostics layer colocated in the kernel package; a principled module-level carve-out for ./invariant companions therefore exists and would make the edge legal repo-wide, but it was rejected for this stage because an invisible carve-out is worse than a dated visible allowlist entry. EXEMPTION STORE PATH: tests/first100/architecture.layers.json, per the approved path patch P0-04-U-cycle-exemptions (tests/first100/adjudication.json, approvedAt 2026-09-04). The root architecture.layers.json is P0-03's exclusive owner-map property, which is why the store is a new file rather than a new key in that document; the patch's own reason prose says \"the same document\" while its approvedPath names the new file, and approvedPath plus the owner map are what this stage follows. PRODUCTION EDGE SET DECLARED, NOT DEFAULTED: acceptance[0] scopes cycles to the production graph, so edges come from dependencies and peerDependencies and devDependencies are excluded. Measured on the base: production graph acyclic; including devDependencies produces a real 2-cycle (@deepseek-ai/dsh-client-test-runtime <-> @deepseek-ai/dsh-client-ui-conversation). The exclusion is what makes acceptance[0] green today and is asserted by its own case rather than left as a convenient silent default. NO WALL-CLOCK ASSERTION: acceptance[2]'s 10-second budget is deliberately not asserted in this spec, because a timing assertion passes on a fast CI runner and fails on a loaded machine, making the result depend on where it ran. It is evidenced by timing the real CLI at GREEN. The budget is genuinely tight: P0-03's structurally identical full-source scan measures 6.99s / 8.09s warm and 11.49s cold on this machine against a 10s ceiling. WIRING: the checker enters first100:slice-gate-registry (not the base slice-gate, whose ~8s per-slice cost is a real tax) AND is run over the real repository root by this spec, which is in the default vitest lane that first100-exact-sha.yml executes. The spec is the wiring that cannot be silently dropped from an aggregate. pnpm-workspace.yaml is a declared U-stage file left deliberately unmodified: the checker reads its workspace globs and has no reason to write it. PRE-EXISTING RED ON THE BASE, NOT CAUSED BY THIS STAGE AND NOT FIXED BY IT: at 012da41e6e with a clean tree, two members of the mandatory first100:slice-gate set already fail -- verify-translation-pairing (several packages/*/README .md/.zh.md pairs out of sync with their README.i18n.yaml, including packages/workspace/workspace, packages/workspace/workspace-trust-local, packages/test-support, packages/context/memory-context) and verify-doc-budgets (packages/README.md at 1005 words against a 994-word ceiling). Verified pre-existing by stashing this stage's only working-tree change and re-running both. The budget failure directly constrains this stage's approved packages/README.md edit, which must be net word-neutral or shorter."
+    },
+    {
+      "epic": "P0-04",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/architecture/layer-deps.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "ranks the declared kernel -> protocol/types -> capability definitions -> providers -> orchestration/runtime -> surfaces/apps sequence strictly increasing",
+        "allows a downward dependency",
+        "allows a same-layer dependency",
+        "rejects an ordinary upward dependency as a layer violation",
+        "allows an upward type-only EventMap edge as the one exception to the upward-dependency rule",
+        "does not grant the narrow exception to a downward type-only EventMap edge, since layer direction alone already permits it",
+        "rejects a global-singleton edge that also runs upward",
+        "rejects a global-singleton edge that would otherwise be a legal downward dependency",
+        "rejects a global-singleton edge within the same layer",
+        "fails a kernel dependency on the vendored Cordis runtime",
+        "fails a kernel dependency on a surfaces-apps (UI) package",
+        "fails a kernel dependency on a concrete model provider",
+        "does not grant the narrow event-type exception to a kernel dependency on a surfaces-apps (UI) package",
+        "does not constrain a non-kernel package depending on the vendored Cordis runtime",
+        "accepts a well-formed exemption",
+        "rejects an exemption whose cycle has fewer than two packages",
+        "rejects an exemption with a malformed recordedDate",
+        "rejects an exemption with an empty owner",
+        "rejects an exemption with an empty adrNote",
+        "reports no cycle and no exemption for an acyclic graph",
+        "finds an unexempted two-package cycle",
+        "marks a cycle exempted when it matches a declared ExemptedCycle entry",
+        "returns the shortest cycle when a longer cycle also exists in the graph",
+        "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order",
+        "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])",
+        "control: a well-formed exemption validates, so the refusals below measure a decision",
+        "enforcement: an empty reason, owner, or adrNote is refused",
+        "DEFECT: a whitespace-only reason, owner, or adrNote is accepted, so an exemption can record nothing while passing",
+        "DEFECT: a cycle naming one package twice is accepted as a two-package cycle",
+        "DEFECT: adrNote is documented as a repo-relative path to an Agent Note, and any non-empty string passes",
+        "DEFECT: an impossible calendar date validates, because Date.parse rolls it over",
+        "enforcement: a malformed date shape is still refused",
+        "enforcement: a kernel upward edge is a violation even when it is the narrow event-type kind",
+        "control: the same narrow event-type edge from a non-kernel layer IS allowed, proving the case above measures the kernel rule",
+        "enforcement: a global-singleton edge outranks every other consideration, including a downward direction",
+        "calibration: the real scan reaches real input — hundreds of packages, thousands of edges",
+        "calibration: the reporting path is live on real input, so an empty violations list is a measurement and not a dead path",
+        "calibration: the same entry point reports a violation when one exists, so zero distinguishes this repository from a broken check"
+      ],
+      "files": [
+        "tests/architecture/layer-deps.spec.ts",
+        "tests/architecture/__fixtures__/p0-04-calibration/pnpm-workspace.yaml",
+        "tests/architecture/__fixtures__/p0-04-calibration/packages/kernel/probe-kernel/package.json",
+        "tests/architecture/__fixtures__/p0-04-calibration/packages/client/probe-ui/package.json"
+      ],
+      "frozenAtUtc": "2026-09-04T19:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "4fd989849a2c101da6dd9e7f50e8df1708440886",
+        "testsDiscovered": 38
+      },
+      "note": "P0-04 F-stage, appended to the Contract stage's own spec file, which the registry declares as this stage's sole deliverable.\n\nTHE ESCAPE HATCH'S VALIDATOR IS WEAKER THAN THE RULE IT GUARDS. layering.md rule 5 calls the exemption store one 'a gate cannot widen its own escape hatch'. That holds for WHO may write it, not for WHAT it accepts. Five DEFECT cases record entries that satisfy validateExemptedCycle while recording nothing actionable: a whitespace-only reason, owner, or adrNote (the checks test `=== ''`, which one space defeats); a cycle naming one package twice (`cycle.length < 2` counts entries, not distinct packages); an adrNote that is prose rather than the repo-relative Agent Note path must[3] requires; and the impossible calendar date 2026-02-31, which matches the ISO shape while Date.parse returns a number for it rather than NaN, so the NaN guard never fires. Not repaired here: the fix belongs in scripts/architecture/layer-order.ts, the Contract stage's declared file.\n\nCALIBRATION OF THE REAL-REPOSITORY VERDICT. The Usage stage asserts the real repo reports zero violations. An always-zero verdict and a broken verdict produce identical reports, so three cases calibrate it: the real scan reaches real input (>200 packages, >1000 edges, zero unclassified); its reporting path is live on that input (findings non-empty, produced by the same edge walk and classification as violations, so an empty violations list is a measurement rather than a dead path); and the same entry point on a fixture root reports a real kernel-upward-dependency violation, so zero distinguishes this repository from a function that never reports.\n\nkernel refusals: acceptance[1] grants the kernel no exception, so a kernel upward edge is asserted to stay a violation even as the narrow event-type kind, with a non-kernel control on the identical edge proving the case measures the kernel rule and not the allowance.\n\nTYPECHECK CAUGHT WHAT THE GREEN RUN DID NOT: the three classifyEdge cases first used from/to/method instead of fromPackage/toPackage/detectionMethod. They passed at runtime because classifyEdge reads only nature, fromLayer and toLayer, so malformed objects produced correct verdicts. Repo-wide typecheck rejected them. A green suite over objects that do not satisfy their own interface is why the package-level build is the faster check and never the sufficient one."
     }
   ]
 }
