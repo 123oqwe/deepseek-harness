@@ -113,6 +113,12 @@ function main() {
   let entriesWithProblems = 0
 
   for (const e of freeze.entries) {
+    // A superseded entry's titles are retired by construction: supersession
+    // records that a later entry replaced this one for the same (epic, stage),
+    // which is a different fact from a title being renamed without a register
+    // record. Checking them would report every supersession as drift.
+    if (e.supersededBy !== undefined) continue
+
     const key = `${e.epic}.${e.stage}`
     const run = runResultFor(e.argv)
 

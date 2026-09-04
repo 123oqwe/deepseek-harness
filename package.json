@@ -141,7 +141,7 @@
     "first100:slice-gate-cordis": "npm run first100:slice-gate && npm run verify-cordis-catalog && npm run verify-cordis-api && npm run verify-cordis-inspect-catalog",
     "first100:verify-specs": "node scripts/first100/generate-specs.ts --check",
     "first100:test-specs": "vitest run scripts/first100/generate-specs.spec.ts",
-    "first100:slice-gate-registry": "npm run first100:slice-gate && npm run first100:verify-specs && npm run first100:test-specs && npm run first100:verify-baseline-file-references",
+    "first100:slice-gate-registry": "npm run first100:slice-gate && npm run first100:verify-specs && npm run first100:test-specs && npm run first100:verify-baseline-file-references && npm run first100:verify-frozen-titles-resolvable",
     "gen-tool-catalog": "tsx scripts/gen-tool-catalog.ts",
     "verify-tool-catalog": "tsx scripts/gen-tool-catalog.ts --check",
     "gen-config-catalog": "tsx scripts/gen-config-catalog.ts",
