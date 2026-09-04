@@ -123,3 +123,17 @@ This recall was truncated to the configured record budget; more records may exis
 - **除 provider 自身的匹配外，召回既不排序也不过滤** — Consumer 把开放轮次中用户自己写的文本原样交给 `ctx.memory.query()`，并注入返回的内容，仅以 `maxRecords` 封顶。相关性排序与整合策略是后续 first100 阶段的工作。
 - **读取边界是配置的 `tenantId`，而非 agent 的** — 当 agent 附带的身份属于另一个租户时，该次读取被拒绝，而不是悄悄放宽边界。按 agent 的租户映射不在本包范围内。
 - **没有写入路径** — 本包只读。这里没有任何代码会 propose、revise 或 forget 记录，因此它不可能成为模型写入持久 memory 的通路（`acceptance[1]`）。
+
+-----
+
+### 开发备注
+
+<details>
+<summary>面向维护者的工作上下文 —— 点击展开</summary>
+
+召回查询只由用户撰写的消息文本构成,不取整个进行中回合。早期版本会把所有
+user 角色消息一并折入,其中包含其它 context 插件注入的快照,于是召回的输入
+夹带了无关的沙箱策略文本,且一次召回的输出可能成为下一次召回的输入。放宽这
+个过滤条件会重新引入该反馈环。
+
+</details>

@@ -1,6 +1,6 @@
 ---
 description: "The type surface, state machine, durable registry, and mounted Cordis plugin for Epic P4-01's first-class Run Service and Run event log."
-kind: "package-library"
+kind: "package-reference"
 ---
 
 # @deepseek-ai/dsh-run

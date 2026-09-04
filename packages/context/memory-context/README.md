@@ -123,3 +123,18 @@ Append-only within a step, so a recall follows the reusable request prefix. Beca
 - **Recall is unranked and unfiltered beyond the provider's own matching** — the consumer passes the open turn's user text through to `ctx.memory.query()` and injects what comes back, capped to `maxRecords`. Relevance ranking and consolidation policy are later first100 stages' job.
 - **The configured `tenantId` is the read boundary, not the agent's** — when an agent carries an attached identity from a different tenant, the read is refused rather than silently widened. A per-agent tenant mapping is out of this package's scope.
 - **No write path** — this package only reads. Nothing here proposes, revises, or forgets a record, so it cannot be the route by which a model writes durable memory (`acceptance[1]`).
+
+-----
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+The recall query is built from user-authored message text only, never from the
+whole open turn. An earlier revision folded in every user-role message, which
+included the snapshots other context plugins inject, so a recall's input
+carried unrelated sandbox-policy prose and one recall's output could become the
+next recall's input. Widening that filter reintroduces the feedback loop.
+
+</details>
