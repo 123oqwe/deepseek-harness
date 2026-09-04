@@ -140,12 +140,49 @@ export function verifyLockedPackageOffline(
  * bytes reachable from it.
  */
 export interface ProvenanceAuditRecord {
-  readonly packageDigest: PackageDigest
-  readonly trust: 'trusted' | 'rejected'
-  readonly reason?: ProvenanceRejectionReason
+  /**
+   * The digest of the package a verification decided. Absent on an
+   * `'unverified'` record: no claim was presented, so there is no claimed
+   * digest anything was checked against, and naming one would invent a fact.
+   */
+  readonly packageDigest?: PackageDigest
+  readonly trust: ProvenanceRecordTrust
+  readonly reason?: ProvenanceRejectionReason | ProvenanceUnverifiedReason
   readonly trustAnchorId?: TrustAnchorId
-  /** ISO 8601 timestamp of when `verification` was decided. */
+  /** ISO 8601 timestamp of when the recorded state was decided. */
   readonly verifiedAt: string
+}
+
+/**
+ * Why no verification could be decided for a package.
+ * `'no-provenance-claim'` — the package ships no {@link PackageProvenanceClaim}
+ * at all, so there was nothing to verify. This is the true state of every
+ * package installed in this repository today, and it is distinct from every
+ * {@link ProvenanceRejectionReason}: nothing was refused, because nothing was
+ * presented.
+ */
+export type ProvenanceUnverifiedReason = 'no-provenance-claim'
+
+/**
+ * The three states a {@link ProvenanceAuditRecord} can report:
+ * `'trusted'`/`'rejected'` for the two outcomes
+ * {@link PluginProvenanceVerification} decides, and `'unverified'` for a
+ * package that presented no claim to decide on.
+ */
+export type ProvenanceRecordTrust = 'trusted' | 'rejected' | 'unverified'
+
+/**
+ * acceptance[2]'s recording entrypoint for a package that presented no claim:
+ * record the state it actually has rather than a refusal that never happened.
+ * @param reason - why no verification could be decided.
+ * @param verifiedAt - ISO 8601 timestamp of when that was decided.
+ * @returns a {@link ProvenanceAuditRecord} with `trust: 'unverified'`, carrying neither a package digest nor a trust anchor id.
+ */
+export function recordUnverifiedProvenance(
+  reason: ProvenanceUnverifiedReason,
+  verifiedAt: string,
+): ProvenanceAuditRecord {
+  throw new Error(`not implemented: recordUnverifiedProvenance(${reason}, ${verifiedAt})`)
 }
 
 /**

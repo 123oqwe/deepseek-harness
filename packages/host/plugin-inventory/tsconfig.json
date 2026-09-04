@@ -27,6 +27,9 @@
       "path": "../../plugin/plugin-compat"
     },
     {
+      "path": "../../plugin/plugin-provenance"
+    },
+    {
       "path": "../../typert/protocol"
     }
   ]

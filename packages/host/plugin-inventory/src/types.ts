@@ -6,6 +6,7 @@ import type {
   PluginTrustDecision,
 } from '@deepseek-ai/dsh-plugin-manifest'
 import type { PluginActivationStatus } from '@deepseek-ai/dsh-plugin-compat'
+import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 
 /** Stable Loader-tree identity of one configured plugin entry. */
 export type PluginEntryId = Branded<'PluginEntryId'>
@@ -148,4 +149,30 @@ export interface PluginPermissionState {
   readonly observed: ObservedPluginCapabilities
   readonly comparison?: PluginRegistrationComparison
   readonly trustDecision?: PluginTrustDecision
+  readonly manifestDigest: PluginManifestDigest
+  /**
+   * Epic P1-02's acceptance[2] ("Inventory 和审计事件记录验证结果而不记录
+   * 密钥"): the plugin-provenance verification state recorded for this entry.
+   * Always present — a package shipping no `PackageProvenanceClaim` is
+   * recorded as `trust: 'unverified'`, `reason: 'no-provenance-claim'`, which
+   * is the true state of every package installed in this repository today and
+   * is not a refusal. Carries no key or signature material at any nesting
+   * depth: `ProvenanceAuditRecord` names a verdict, an opaque `TrustAnchorId`,
+   * and digests only.
+   */
+  readonly provenanceAudit: ProvenanceAuditRecord
 }
+
+/**
+ * Content digest of the exact bytes of one plugin entry's own `package.json`,
+ * as `sha256:<hex>`.
+ *
+ * A **local recomputation, not an attestation**: it is derived from the file
+ * on disk, so it detects a modified manifest, and it says nothing whatever
+ * about where the package came from or who built it. It is deliberately NOT
+ * `@deepseek-ai/dsh-plugin-provenance`'s `PackageDigest`, which is the digest
+ * of a package tarball a `PackageProvenanceClaim` binds — no tarball survives
+ * installation, so no such digest is recomputable from an installed package
+ * directory.
+ */
+export type PluginManifestDigest = Branded<'PluginManifestDigest'>

@@ -5919,6 +5919,9 @@ importers:
       '@deepseek-ai/dsh-plugin-manifest':
         specifier: workspace:^
         version: link:../../plugin/plugin-manifest
+      '@deepseek-ai/dsh-plugin-provenance':
+        specifier: workspace:^
+        version: link:../../plugin/plugin-provenance
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol

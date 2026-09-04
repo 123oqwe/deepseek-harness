@@ -15,7 +15,23 @@ import {
   type ObservedPluginCapabilities,
   type PluginManifestV2,
 } from '@deepseek-ai/dsh-plugin-manifest'
-import type { PluginEntryId, PluginPermissionState } from '../src/types.ts'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { PluginEntryId, PluginManifestDigest, PluginPermissionState } from '../src/types.ts'
+
+/**
+ * Epic P1-02's two recorded provenance fields, fixed for these P1-01 cases:
+ * they assert declared-vs-observed permission composition, which no
+ * provenance value participates in. `packages/host/plugin-inventory/tests/provenance-record.spec.ts`
+ * owns the real recomputation and recording.
+ */
+const UNRECORDED_PROVENANCE = {
+  manifestDigest: brandString<PluginManifestDigest>(`sha256:${'0'.repeat(64)}`),
+  provenanceAudit: {
+    trust: 'unverified',
+    reason: 'no-provenance-claim',
+    verifiedAt: '2026-09-04T00:00:00.000Z',
+  },
+} as const
 
 const BENIGN_MANIFEST: PluginManifestV2 = {
   manifestVersion: 2,
@@ -61,6 +77,7 @@ describe('PluginPermissionState composition with @deepseek-ai/dsh-plugin-manifes
       observed,
       comparison,
       trustDecision,
+      ...UNRECORDED_PROVENANCE,
     }
 
     expect(state.trustDecision).toBe('active')
@@ -90,6 +107,7 @@ describe('PluginPermissionState composition with @deepseek-ai/dsh-plugin-manifes
       observed,
       comparison,
       trustDecision,
+      ...UNRECORDED_PROVENANCE,
     }
 
     expect(state.trustDecision).toBe('quarantined')
@@ -108,6 +126,7 @@ describe('PluginPermissionState composition with @deepseek-ai/dsh-plugin-manifes
       provenance: { kind: 'built-in' },
       declaration,
       observed: { ctxKeys: [], toolNames: [], skillNames: [], mcpServerNames: [], eventNames: [] },
+      ...UNRECORDED_PROVENANCE,
     }
 
     expect(state.declaration.kind).toBe('missing')

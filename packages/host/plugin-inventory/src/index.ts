@@ -28,10 +28,12 @@ import type {
   PluginFiberPhase,
   PluginInventoryEntry,
   PluginInventorySnapshot,
+  PluginManifestDigest,
   PluginPackageIdentity,
   PluginPermissionState,
   PluginProvenance,
 } from './types.ts'
+import type { ProvenanceAuditRecord } from '@deepseek-ai/dsh-plugin-provenance'
 
 export type * from './types.ts'
 
@@ -208,6 +210,20 @@ function resolveEntryPackage(
   return { identity: { name, version }, declaration: classifyPluginDeclaration(manifest.dsh) }
 }
 
+/**
+ * Epic P1-02's acceptance[2] Inventory half: recompute one entry's manifest
+ * digest from the exact bytes of its own `package.json` and record the
+ * plugin-provenance verification state that package actually has.
+ * @param moduleName - the Loader entry's module name, for the error message only.
+ * @returns the entry's manifest digest and its provenance audit record.
+ */
+function recordEntryProvenance(moduleName: string): {
+  manifestDigest: PluginManifestDigest
+  provenanceAudit: ProvenanceAuditRecord
+} {
+  throw new Error(`not implemented: recordEntryProvenance(${moduleName})`)
+}
+
 /** Options for {@link buildPluginPermissionStates}. */
 export interface BuildPluginPermissionStatesOptions {
   /**
@@ -262,6 +278,7 @@ export function buildPluginPermissionStates(
     const provenance: PluginProvenance = bundleNames.has(entry.options.name)
       ? { kind: 'bundle', source: entry.options.name }
       : { kind: 'built-in' }
+    const { manifestDigest, provenanceAudit } = recordEntryProvenance(entry.options.name)
     if (resolved.declaration.kind === 'manifest-v2') {
       const comparison = compareDeclaredToObserved(resolved.declaration.manifest, observed)
       states.push({
@@ -272,6 +289,8 @@ export function buildPluginPermissionStates(
         observed,
         comparison,
         trustDecision: decidePluginTrust(comparison),
+        manifestDigest,
+        provenanceAudit,
       })
     } else {
       states.push({
@@ -280,6 +299,8 @@ export function buildPluginPermissionStates(
         provenance,
         declaration: resolved.declaration,
         observed,
+        manifestDigest,
+        provenanceAudit,
       })
     }
   }
