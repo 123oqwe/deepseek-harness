@@ -12,6 +12,30 @@
       "signedAtUtc": "2026-09-02T16:09:57.338Z",
       "userConfirmationRef": "decisions-approved.md#C9",
       "note": "gq-92 deep-verify: predicates i-iii independently re-derived by Supervisor via real --accept dry-run (all pass); 4 hardening gates (freeze/chain-shape/delegatedBy/identity-swap logging) + wire-guard 3-point (presence/gate-pass/sensitivityProof) confirmed against CI run 33650410487 (candidate b03a9f920f, numFailed=0/18045 passed/18113 total, signature verified)"
+    },
+    {
+      "epic": "P1-08",
+      "rowDigestSha256": "31a8987dc14f1d6b5246b1cb74b77c1782186fc9406f956fa3ac92bfd2a9cd04",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-04T16:08:28.307Z",
+      "note": "gq-92 independent four-predicate verify: (i) coverage closure re-run against the real acceptance-coverage schema, every coveredBy title checked against ITS OWN stage's cited observation; (ii) all candidate SHAs confirmed ancestors of first100-exec; (iii) all frozen case titles present-and-passing in the cited runs (254 titles across the three epics, 0 missing / 0 not-passing); lock register read from primary source — this epic carries no acceptance lock. Row digest recomputed independently and matched."
+    },
+    {
+      "epic": "P1-09",
+      "rowDigestSha256": "8539d8c85398d51b6e0659002ad0ecda3cad3529fc01d544048c58e8ead4456f",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-04T16:08:28.433Z",
+      "note": "gq-92 independent four-predicate verify: (i) coverage closure re-run against the real acceptance-coverage schema, every coveredBy title checked against ITS OWN stage's cited observation; (ii) all candidate SHAs confirmed ancestors of first100-exec; (iii) all frozen case titles present-and-passing in the cited runs (254 titles across the three epics, 0 missing / 0 not-passing); lock register read from primary source — this epic carries no acceptance lock. Row digest recomputed independently and matched."
+    },
+    {
+      "epic": "P4-01",
+      "rowDigestSha256": "a30cb8ad210da725129d92040884a0c676c33e5328cebc6b7873b02bad6ad97c",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-04T16:08:28.552Z",
+      "note": "gq-92 independent four-predicate verify: (i) coverage closure re-run against the real acceptance-coverage schema, every coveredBy title checked against ITS OWN stage's cited observation; (ii) all candidate SHAs confirmed ancestors of first100-exec; (iii) all frozen case titles present-and-passing in the cited runs (254 titles across the three epics, 0 missing / 0 not-passing); lock register read from primary source — this epic carries no acceptance lock. Row digest recomputed independently and matched."
     }
   ]
 }
