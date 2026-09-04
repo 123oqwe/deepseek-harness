@@ -112,7 +112,16 @@ export function claimCapability(
 /**
  * must[2]/acceptance[1]'s explicit override entry point: admit `contract` as
  * a replacement for its `targetCapabilityId`'s current owner, gated by
- * `policy.allowReplace`. Refuses with `'replace-not-authorized'` when
+ * `policy.allowReplace`. Refuses with `'namespace-reserved'` when the target's
+ * own namespace {@link isReservedNamespace} and
+ * `contract.replacingPluginIdentity` is absent from
+ * `policy.officialPluginIdentities` — must[1] is unconditional, and must[2]
+ * requires an override to carry an explicit contract AND pass policy, so
+ * authorizing replacement never suspends the reserved-namespace rule. That
+ * namespace is read from the TARGET registration, recorded when its own claim
+ * was admitted, never re-derived from `contract`, which the replacing plugin
+ * supplies: a rule must not be bound to a value its own subject controls.
+ * Refuses with `'replace-not-authorized'` when
  * `policy.allowReplace` is `false` or `existing` carries no active
  * registration for `targetCapabilityId` to replace; on success, the returned
  * registration's `pluginIdentity` is `contract.replacingPluginIdentity`, and
@@ -129,10 +138,26 @@ export function requestReplace(
   existing: readonly CapabilityRegistration[],
   policy: RegistryPolicy,
 ): RegistrationDecision {
+  const target = existing.find(registration => registration.capabilityId === contract.targetCapabilityId)
+  // must[1] is checked BEFORE `policy.allowReplace`, and against the namespace
+  // recorded on the TARGET when its own claim was admitted — never one
+  // re-derived from `contract`, which the replacing plugin writes. A check
+  // bound to a value its own subject controls is not a check.
+  //
+  // Ordering is diagnostic, not a security difference: both branches refuse.
+  // Reporting `'replace-not-authorized'` first would tell an operator that
+  // POLICY refused them, whose natural next step is to enable `allowReplace`
+  // deployment-wide and retry — only to be refused again for the reason that
+  // was true all along. The namespace refusal names the condition that will
+  // never change.
+  if (target !== undefined
+    && isReservedNamespace(target.namespace)
+    && !policy.officialPluginIdentities.has(contract.replacingPluginIdentity)) {
+    return { admitted: false, reason: 'namespace-reserved' }
+  }
   if (!policy.allowReplace) {
     return { admitted: false, reason: 'replace-not-authorized' }
   }
-  const target = existing.find(registration => registration.capabilityId === contract.targetCapabilityId)
   if (target === undefined) {
     return { admitted: false, reason: 'replace-not-authorized' }
   }

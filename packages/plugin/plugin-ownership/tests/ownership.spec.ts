@@ -331,6 +331,25 @@ describe('P1-09 Fault — adversarial conditions the adjudication core has not s
     }
   })
 
+  it('must[1] outranks policy: a third party is told namespace-reserved, not replace-not-authorized, when replacement is ALSO disallowed', () => {
+    // Both branches refuse, so this is a diagnostic choice rather than a
+    // security one. Reporting the policy refusal first would send an operator
+    // to enable `allowReplace` deployment-wide and retry, only to be refused
+    // again for the reason that was true all along.
+    const capabilityId = brandString<StableCapabilityId>('dsh.core.delete_file')
+    const existing = [fixtureRegistration(officialPlugin, capabilityId, brandString<OwnershipToken>('official-token'), {
+      namespace: brandString<Namespace>('dsh.core'),
+    })]
+
+    const decision = requestReplace(
+      { targetCapabilityId: capabilityId, replacingPluginIdentity: attackerPlugin },
+      existing,
+      policyDenyingReplace,
+    )
+    expect(decision.admitted).toBe(false)
+    if (!decision.admitted) expect(decision.reason).toBe('namespace-reserved')
+  })
+
   it('must[1] outranks collision: a third party claiming a reserved capability id the official plugin ALREADY owns is refused namespace-reserved, not capability-collision', () => {
     // The Contract stage's load-order case ran against an EMPTY registry, so
     // the order of the two checks was never exercised. Reversing them would
