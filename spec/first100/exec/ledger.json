@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-04T06:31:03.435Z",
-  "inputDigest": "20dd0ea3b0d7d4a9245d2c5628877b1e2e7692bb272550c2651680e5ef0f91a1",
+  "lastUpdatedUtc": "2026-09-04T08:09:22.754Z",
+  "inputDigest": "ac8db97c517c6ff13d6df7894e4e9211998c4edd97f015d773e7a3caf924c44b",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1267,14 +1267,31 @@
           "capturedAtUtc": "2026-09-04T03:13:08.821Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33850765792",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3275/first100-evidence-32753707c1cfeec1739c0ecf5efe70657bf9bd77/vitest-report.json",
+          "observationSha256": "e7eea7b2bb18ddc8e6af156384fde71601fd5afb9adbf1ad2125bb2837149ef2",
+          "expectCasesMatched": [
+            "records the unverified state a package shipping no provenance claim actually has, naming no-provenance-claim and carrying no package digest",
+            "carries no trust anchor id on an unverified record, so an unverified package cannot be read as anchored to anything",
+            "distinguishes an unverified package from a rejected one, so no claim was presented is never recorded as a refusal",
+            "CONTROL (passes at RED, and is meant to): still names the anchor on a trusted record, so widening the record for the unverified state does not weaken what a real verdict reports",
+            "attaches a provenance audit record to every permission state it builds, so the inventory reports a verification state for each live plugin entry",
+            "records unverified with reason no-provenance-claim for a package shipping no claim, which is every package in this repository today",
+            "digests the exact bytes of the entry own package.json, matching an independently computed sha256 of the same file",
+            "changes the recorded manifest digest when a single byte of that package.json is changed, so the digest is over real bytes and not over the parsed identity",
+            "records the same manifest digest for two entries staged from byte-identical package.json files, so the digest does not depend on the temp path",
+            "keeps every value of a signature and key fingerprint the package own dsh field carries out of the built permission state, checked over the whole serialized state and not only its top-level field names"
+          ],
+          "capturedAtUtc": "2026-09-04T08:09:22.487Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "0e04a4a4dc0fcb23d060061d4319c66f43e9badf",
+      "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -1629,14 +1646,46 @@
           "status": "NOT_RUN"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33850765792",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3275/first100-evidence-32753707c1cfeec1739c0ecf5efe70657bf9bd77/vitest-report.json",
+          "observationSha256": "e7eea7b2bb18ddc8e6af156384fde71601fd5afb9adbf1ad2125bb2837149ef2",
+          "expectCasesMatched": [
+            "must[0]: an admitted registration carries plugin identity, namespace, capability id, and a minted ownership token",
+            "must[1]/validation[2]: an unofficial plugin cannot register a tool in the reserved dsh.* namespace",
+            "must[1]: an official plugin named by policy may register in the reserved dsh.* namespace",
+            "acceptance[0]: a SECOND plugin claiming an owned tool name is denied for ownership, not by the legacy duplicate check",
+            "control: the SAME plugin registering one name twice still takes the legacy duplicate path, so the two denials stay distinguishable",
+            "acceptance[0]: a load-order attack — claiming a reserved name BEFORE the official plugin loads — still fails closed",
+            "must[1]: an agent scope is not a way around the reserved namespace, though it still shadows a global name",
+            "must[2]: replacing an owned tool fails closed when policy does not authorize replacement",
+            "must[2]: an implicit re-registration is never an override — replacing requires the explicit replace entry point even when policy allows it",
+            "acceptance[1]: an authorized replacement succeeds and the registry records the replaced/replacing chain",
+            "must[3]: revoking with an ownership token removes exactly that token's tools and nothing else",
+            "acceptance[0]: cross-plugin revocation fails closed — another plugin's real token revokes nothing of this one's",
+            "gate: disposing a plugin's fiber leaves zero tools and zero ownership records behind for it",
+            "validation[1]: 1000 randomized load/unload orders leave the registry consistent with the live set",
+            "acceptance[2]: a dynamic package cannot provide a service in the reserved dsh.* namespace",
+            "acceptance[2]: a dynamic package cannot listen on an event in the reserved dsh.* namespace",
+            "acceptance[2]: a dynamic package cannot register a tool name a statically loaded plugin already owns",
+            "acceptance[2]: two dynamic packages carry distinct plugin identities, so one cannot claim the other's tool",
+            "control: a dynamic package claiming a fresh, unreserved, uncontested name is still admitted",
+            "gate: stopping a dynamic package leaves zero tools, services, and events behind for it",
+            "control: a single plugin claiming one uncontested, unreserved name boots and owns it",
+            "validation[0]/gate: the two-plugin collision is rejected before the second plugin activates",
+            "validation[2]: a third-party Loader entry cannot claim a tool in the reserved dsh.* namespace",
+            "acceptance[1]: an authorized replacement is admitted and the Inventory shows the replaced/replacing chain",
+            "gate: unloading one plugin entry leaves zero tools and zero ownership records for it in a still-live registry"
+          ],
+          "capturedAtUtc": "2026-09-04T08:09:22.754Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c",
+      "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
