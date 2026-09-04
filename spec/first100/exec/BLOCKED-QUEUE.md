@@ -1187,3 +1187,23 @@ pnpm exec vitest run <the composition spec>
 | `cordis-host-runner/tests/composition.spec.ts` | none — in-process, no Loader boot | not applicable |
 
 **The distinction that decides exposure** is not "does the spec boot an in-repo config" but **"can one of that config's entries throw from `apply`"**. A fixture whose entries all mount successfully is untouched however it is booted; only a deliberately-failing entry triggers the write-back. That is why the hazard tracks fail-closed tests specifically — the tests most worth having.
+
+### BLOCKED-063 — a checker that never overturns its classifier is reciting, not verifying (delegate, recording their own refuted prediction, 2026-09-04)
+
+P0-04's Usage stage was run against three tables, each signed by a party who had not seen the violation counts and published before the run ([BLOCKED-053](#blocked-053)'s generalized rule). Two predictions held; **the third was refuted by measurement**:
+
+| Table | Prediction | Result |
+|---|---|---|
+| `packages/core/*` | `session`/`tools` straddle; violations against them will survive correct classification | **Held** — 232 → 202, and 86 edges against three packages remained |
+| `packages/bundle/*` + `apps/*` as composition-root | the 89 `orchestration-runtime → surfaces-apps` edges largely clear | **Held** — 89 → 30, and the new reverse constraint immediately caught a real inversion (`dsh-sdk-client → apps/cli`) |
+| `packages/client/*` layered by self-described role | the remaining 30 largely clear | **REFUTED** — 143 → **146**: cleared 9, created 12 |
+
+**The refutation is the most valuable of the three**, and the signer recorded why in their own words:
+
+> A checker that never overturns its classifier is not verifying the classification — it is reciting it. One of three signed tables being rejected by measurement is evidence the method works, not evidence the signer was negligent. **Had all three held, the right response would have been to suspect the checker of merely echoing the table it was handed.**
+
+**What the refutation established.** `packages/client/` is a **horizontal band, not a vertical stack**: `locale` describes itself as an extensible catalogue while depending on four `ui-*` packages; `connection` describes itself as an RPC transport while depending on `host-webserver` and `tool-todo`; `web` describes itself as a boot kernel while depending on three `ui-*` packages, and an assembler cannot sit beneath what it assembles. **Each self-description covers half of what the package is** — the same shape as `session` and `tools`, but affecting the whole group, so the correct treatment is one layer for the group rather than per-package straddle marks.
+
+**The durable rule.** A classification exercise that only ever confirms its author has produced no evidence. Build the check so it *can* contradict the table, publish the table first so the contradiction cannot be absorbed, and **treat a refuted prediction as the run that proved the instrument.**
+
+**Also recorded from the same lane:** a Writer corrected a signed table's "all 40 `ui-*` packages" to the real 38 **in the authorship record** rather than silently using the right number. A discrepancy that small is precisely the kind that gets swallowed, and swallowing it would have left a signed artifact carrying a false count.
