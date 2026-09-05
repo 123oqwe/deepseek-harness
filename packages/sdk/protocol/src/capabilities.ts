@@ -43,18 +43,18 @@ export type CapabilityDenialReason =
 /** The outcome of matching a peer's declarations against local support. */
 export type CapabilityNegotiationResult =
   | {
-      readonly accepted: true
-      /** Capabilities both sides support and will use. */
-      readonly agreed: readonly CapabilityId[]
-      /** Optional capabilities the peer offered that this build ignores, recorded rather than dropped. */
-      readonly ignored: readonly CapabilityId[]
-    }
+    readonly accepted: true
+    /** Capabilities both sides support and will use. */
+    readonly agreed: readonly CapabilityId[]
+    /** Optional capabilities the peer offered that this build ignores, recorded rather than dropped. */
+    readonly ignored: readonly CapabilityId[]
+  }
   | {
-      readonly accepted: false
-      readonly reason: CapabilityDenialReason
-      /** Exactly which capability caused the refusal, so the message is actionable. */
-      readonly capability: CapabilityId
-    }
+    readonly accepted: false
+    readonly reason: CapabilityDenialReason
+    /** Exactly which capability caused the refusal, so the message is actionable. */
+    readonly capability: CapabilityId
+  }
 
 /**
  * Match a peer's declared capabilities against what this build knows and

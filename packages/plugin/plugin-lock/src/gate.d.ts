@@ -15,28 +15,28 @@
  *
  * @module @deepseek-ai/dsh-plugin-lock/gate
  */
-import type { BootAdmission, InstalledPlugin } from './index.ts';
-import type { PluginLockFile, PluginPackageName } from './types.ts';
+import type { BootAdmission, InstalledPlugin } from './index.ts'
+import type { PluginLockFile, PluginPackageName } from './types.ts'
 /** What a boot does with a profile that has no lock file. */
-export type UnlockedProfilePolicy = 
+export type UnlockedProfilePolicy =
 /** Refuse the boot. must[2]'s literal reading: no lock, nothing approved. */
 'refuse'
 /** Proceed, and report that nothing was verified. For profiles predating locking. */
- | 'warn-and-proceed';
+ | 'warn-and-proceed'
 /** Why a boot was refused before any lock comparison happened. */
-export type GateDenialReason = 'no-lock-file';
+export type GateDenialReason = 'no-lock-file'
 /** The outcome of gating one boot. */
 export type GateOutcome = {
-    readonly admitted: true;
-    readonly loadOrder: readonly PluginPackageName[];
-    readonly verified: boolean;
+  readonly admitted: true
+  readonly loadOrder: readonly PluginPackageName[]
+  readonly verified: boolean
 } | {
-    readonly admitted: false;
-    readonly gateReason: GateDenialReason;
+  readonly admitted: false
+  readonly gateReason: GateDenialReason
 } | {
-    readonly admitted: false;
-    readonly admission: BootAdmission;
-};
+  readonly admitted: false
+  readonly admission: BootAdmission
+}
 /**
  * Gate one production boot against its profile's lock.
  *
@@ -50,5 +50,9 @@ export type GateOutcome = {
  * @param policy - what to do with an unlocked profile.
  * @returns the load order to use, or the refusal.
  */
-export declare function gateProductionBoot(lock: PluginLockFile | undefined, installed: readonly InstalledPlugin[], policy: UnlockedProfilePolicy): GateOutcome;
+export declare function gateProductionBoot(
+  lock: PluginLockFile | undefined,
+  installed: readonly InstalledPlugin[],
+  policy: UnlockedProfilePolicy,
+): GateOutcome
 //# sourceMappingURL=gate.d.ts.map

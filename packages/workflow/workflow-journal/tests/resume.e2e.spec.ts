@@ -226,59 +226,59 @@ describe('P4-08 Fault — resume boundary matrix', () => {
   const FAULTS: readonly ResumeFault[] = [
     {
       boundary: '01 an in-flight step is re-run',
-      run: () => expect(decideResume(entry('s', { outcome: 'in-flight' })))
-        .toEqual({ action: 'rerun', reason: 'not-completed' }),
+      run: () =>{  expect(decideResume(entry('s', { outcome: 'in-flight' })))
+        .toEqual({ action: 'rerun', reason: 'not-completed' }) },
     },
     {
       boundary: '02 a failed step is re-run',
-      run: () => expect(decideResume(entry('s', { outcome: 'failed' })))
-        .toEqual({ action: 'rerun', reason: 'not-completed' }),
+      run: () =>{  expect(decideResume(entry('s', { outcome: 'failed' })))
+        .toEqual({ action: 'rerun', reason: 'not-completed' }) },
     },
     {
       boundary: '03 a completed but unverified step is re-run',
-      run: () => expect(decideResume(entry('s', { verified: false })))
-        .toEqual({ action: 'rerun', reason: 'completed-but-unverified' }),
+      run: () =>{  expect(decideResume(entry('s', { verified: false })))
+        .toEqual({ action: 'rerun', reason: 'completed-but-unverified' }) },
     },
     {
       boundary: '04 a completed, verified step with no output is re-run',
-      run: () => expect(decideResume(entry('s', { output: null })))
-        .toEqual({ action: 'rerun', reason: 'completed-without-output' }),
+      run: () =>{  expect(decideResume(entry('s', { output: null })))
+        .toEqual({ action: 'rerun', reason: 'completed-without-output' }) },
     },
     {
       boundary: '05 a completed, verified, pure step is skipped',
-      run: () => expect(decideResume(entry('s')).action).toBe('skip'),
+      run: () =>{  expect(decideResume(entry('s')).action).toBe('skip') },
     },
     {
       boundary: '06 a side-effecting step is reconciled even when completed and verified',
-      run: () => expect(decideResume(entry('s', { effectClass: 'side-effecting' })).action).toBe('reconcile'),
+      run: () =>{  expect(decideResume(entry('s', { effectClass: 'side-effecting' })).action).toBe('reconcile') },
     },
     {
       boundary: '07 a side-effecting step that never completed is re-run, not reconciled',
-      run: () => expect(decideResume(entry('s', { effectClass: 'side-effecting', outcome: 'in-flight' })))
-        .toEqual({ action: 'rerun', reason: 'not-completed' }),
+      run: () =>{  expect(decideResume(entry('s', { effectClass: 'side-effecting', outcome: 'in-flight' })))
+        .toEqual({ action: 'rerun', reason: 'not-completed' }) },
     },
     {
       boundary: '08 a side-effecting step with NO receipts is still reconciled',
-      run: () => expect(decideResume(entry('s', { effectClass: 'side-effecting', sideEffectReceipts: [] })))
-        .toEqual({ action: 'reconcile', receipts: [] }),
+      run: () =>{  expect(decideResume(entry('s', { effectClass: 'side-effecting', sideEffectReceipts: [] })))
+        .toEqual({ action: 'reconcile', receipts: [] }) },
     },
     {
       boundary: '09 a changed script digest refuses the whole resume',
-      run: () => expect(planResume(journal([entry('s')]), brandString<ScriptDigest>('sha256-other')))
-        .toMatchObject({ resumable: false, reason: 'script-digest-changed' }),
+      run: () =>{  expect(planResume(journal([entry('s')]), brandString<ScriptDigest>('sha256-other')))
+        .toMatchObject({ resumable: false, reason: 'script-digest-changed' }) },
     },
     {
       boundary: '10 an empty journal is resumable and resumes at zero',
-      run: () => expect(planResume(journal([]), DIGEST)).toMatchObject({ resumable: true, resumeAt: 0 }),
+      run: () =>{  expect(planResume(journal([]), DIGEST)).toMatchObject({ resumable: true, resumeAt: 0 }) },
     },
     {
       boundary: '11 a fully completed journal resumes past its last step',
-      run: () => expect(planResume(journal([entry('s1'), entry('s2')]), DIGEST)).toMatchObject({ resumeAt: 2 }),
+      run: () =>{  expect(planResume(journal([entry('s1'), entry('s2')]), DIGEST)).toMatchObject({ resumeAt: 2 }) },
     },
     {
       boundary: '12 resume stops at the first non-skippable step, not past it',
-      run: () => expect(planResume(journal([entry('s1'), entry('s2', { outcome: 'failed' }), entry('s3')]), DIGEST))
-        .toMatchObject({ resumeAt: 1 }),
+      run: () =>{  expect(planResume(journal([entry('s1'), entry('s2', { outcome: 'failed' }), entry('s3')]), DIGEST))
+        .toMatchObject({ resumeAt: 1 }) },
     },
     {
       boundary: '13 receipts are collected from AFTER the restart point too',
@@ -293,8 +293,8 @@ describe('P4-08 Fault — resume boundary matrix', () => {
     },
     {
       boundary: '14 a refused plan yields no receipts to reconcile',
-      run: () => expect(receiptsToReconcile(planResume(journal([entry('s')]), brandString<ScriptDigest>('other'))))
-        .toEqual([]),
+      run: () =>{  expect(receiptsToReconcile(planResume(journal([entry('s')]), brandString<ScriptDigest>('other'))))
+        .toEqual([]) },
     },
     {
       boundary: '15 compaction leaves a side-effecting entry untouched',

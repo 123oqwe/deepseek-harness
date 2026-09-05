@@ -9,8 +9,8 @@
  *
  * @module @deepseek-ai/dsh-plugin-lock/commit
  */
-import type { PluginLockFile } from './types.ts';
-import type { InstallDecision } from './index.ts';
+import type { PluginLockFile } from './types.ts'
+import type { InstallDecision } from './index.ts'
 /**
  * Serialize a lock to its canonical on-disk text.
  *
@@ -22,7 +22,7 @@ import type { InstallDecision } from './index.ts';
  * @param lock - the lock to serialize.
  * @returns the exact bytes to write.
  */
-export declare function serializeLock(lock: PluginLockFile): string;
+export declare function serializeLock(lock: PluginLockFile): string
 /**
  * Decide whether a candidate lock may replace the current one (must[1]).
  *
@@ -41,7 +41,7 @@ export declare function serializeLock(lock: PluginLockFile): string;
  * @param observedBase - the lock the candidate was generated from.
  * @returns the committed lock, or the refusal and its detail.
  */
-export declare function planLockCommit(current: PluginLockFile, candidate: PluginLockFile, observedBase: PluginLockFile): InstallDecision;
+export declare function planLockCommit(current: PluginLockFile, candidate: PluginLockFile, observedBase: PluginLockFile): InstallDecision
 /**
  * Replace a lock file atomically (acceptance[2]).
  *
@@ -57,5 +57,5 @@ export declare function planLockCommit(current: PluginLockFile, candidate: Plugi
  * @param path - the lock file's final path.
  * @param lock - the lock to write.
  */
-export declare function writeLockAtomically(path: string, lock: PluginLockFile): void;
+export declare function writeLockAtomically(path: string, lock: PluginLockFile): void
 //# sourceMappingURL=commit.d.ts.map

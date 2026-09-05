@@ -16,9 +16,9 @@
  *
  * @module @deepseek-ai/dsh-action-manifest/canonicalize
  */
-export type * from './types.ts';
-import type { ActionId, ActionManifest, ActionSideEffectClass, AppendedManifest, ArgumentsHash, CreateActionManifestRequest, ExecutionGateDecision, SideEffectClassification } from './types.ts';
-import type { JsonValue } from '@deepseek-ai/dsh-util-values';
+export type * from './types.ts'
+import type { ActionId, ActionManifest, ActionSideEffectClass, AppendedManifest, ArgumentsHash, CreateActionManifestRequest, ExecutionGateDecision, SideEffectClassification } from './types.ts'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 /**
  * Canonicalize an arguments value into a stable, deterministic string form:
  * object keys sorted, strings Unicode-normalized, numbers rendered in one
@@ -29,7 +29,7 @@ import type { JsonValue } from '@deepseek-ai/dsh-util-values';
  * @param args - the action's raw arguments value.
  * @returns the canonical string form of `args`.
  */
-export declare function canonicalizeArguments(args: JsonValue): string;
+export declare function canonicalizeArguments(args: JsonValue): string
 /**
  * Hash `args` into the {@link ArgumentsHash} an {@link ActionManifest}
  * carries (must[0], acceptance[1]). Two `args` values that
@@ -40,7 +40,7 @@ export declare function canonicalizeArguments(args: JsonValue): string;
  * @param args - the action's raw arguments value.
  * @returns a stable {@link ArgumentsHash} for `args`.
  */
-export declare function computeArgumentsHash(args: JsonValue): ArgumentsHash;
+export declare function computeArgumentsHash(args: JsonValue): ArgumentsHash
 /**
  * Classify an action's side effect from the underlying capability's own
  * declared class, when one is available (acceptance[2]). When `declared` is
@@ -56,7 +56,7 @@ export declare function computeArgumentsHash(args: JsonValue): ArgumentsHash;
  * @param declared - the capability's own declared side-effect class, or `undefined` when none is available.
  * @returns the resulting {@link SideEffectClassification}.
  */
-export declare function classifySideEffect(declared: ActionSideEffectClass | undefined): SideEffectClassification;
+export declare function classifySideEffect(declared: ActionSideEffectClass | undefined): SideEffectClassification
 /**
  * must[0]/must[1]'s manifest-construction entry point: build a complete
  * {@link ActionManifest} from `request`, deriving
@@ -70,7 +70,7 @@ export declare function classifySideEffect(declared: ActionSideEffectClass | und
  * @param request - the {@link CreateActionManifestRequest} to build a manifest from.
  * @returns a complete {@link ActionManifest}.
  */
-export declare function createActionManifest(request: CreateActionManifestRequest): ActionManifest;
+export declare function createActionManifest(request: CreateActionManifestRequest): ActionManifest
 /**
  * must[1]/acceptance[0]'s ordering gate: an execution attempt for
  * `actionId`/`argumentsHash` may proceed only when `appended` already
@@ -90,5 +90,9 @@ export declare function createActionManifest(request: CreateActionManifestReques
  * @param appended - every {@link AppendedManifest} durably appended so far, in append order.
  * @returns `{ admitted: true, manifest }` naming the matching manifest, or `{ admitted: false, reason }`.
  */
-export declare function assertManifestPrecedesExecution(actionId: ActionId, argumentsHash: ArgumentsHash, appended: readonly AppendedManifest[]): ExecutionGateDecision;
+export declare function assertManifestPrecedesExecution(
+  actionId: ActionId,
+  argumentsHash: ArgumentsHash,
+  appended: readonly AppendedManifest[],
+): ExecutionGateDecision
 //# sourceMappingURL=canonicalize.d.ts.map

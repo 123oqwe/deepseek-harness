@@ -4,21 +4,21 @@
  *
  * @module @deepseek-ai/dsh-plugin-lock
  */
-export { resolveLoadOrder, validateLock, } from './types.ts';
-export { planLockCommit, serializeLock, writeLockAtomically } from './commit.ts';
-export { gateProductionBoot } from './gate.ts';
-export type { GateDenialReason, GateOutcome, UnlockedProfilePolicy } from './gate.ts';
-export type { GrantedCapability, LockDefectReason, LockValidation, ManifestDigest, PackageIntegrity, PluginLockEntry, PluginLockFile, PluginPackageName, PluginVersion, SignatureIdentity, SourceCommit, } from './types.ts';
-import type { ManifestDigest, PackageIntegrity, PluginLockEntry, PluginLockFile, PluginPackageName, PluginVersion } from './types.ts';
+export { resolveLoadOrder, validateLock } from './types.ts'
+export { planLockCommit, serializeLock, writeLockAtomically } from './commit.ts'
+export { gateProductionBoot } from './gate.ts'
+export type { GateDenialReason, GateOutcome, UnlockedProfilePolicy } from './gate.ts'
+export type { GrantedCapability, LockDefectReason, LockValidation, ManifestDigest, PackageIntegrity, PluginLockEntry, PluginLockFile, PluginPackageName, PluginVersion, SignatureIdentity, SourceCommit } from './types.ts'
+import type { ManifestDigest, PackageIntegrity, PluginLockEntry, PluginLockFile, PluginPackageName, PluginVersion } from './types.ts'
 /** What boot observes about one installed plugin on disk. */
 export interface InstalledPlugin {
-    readonly name: PluginPackageName;
-    readonly version: PluginVersion;
-    readonly integrity: PackageIntegrity;
-    readonly manifestDigest: ManifestDigest;
+  readonly name: PluginPackageName
+  readonly version: PluginVersion
+  readonly integrity: PackageIntegrity
+  readonly manifestDigest: ManifestDigest
 }
 /** Why boot refused to load a plugin. */
-export type BootDenialReason = 
+export type BootDenialReason =
 /** The plugin is installed but the lock does not list it. */
 'not-in-lock'
 /** The lock lists it, but nothing is installed. */
@@ -28,20 +28,20 @@ export type BootDenialReason =
 /** The installed manifest's digest differs from the lock's. */
  | 'manifest-digest-mismatch'
 /** The installed version differs from the locked one. */
- | 'version-mismatch';
+ | 'version-mismatch'
 /** One plugin boot refused, and why. */
 export interface BootDenial {
-    readonly name: PluginPackageName;
-    readonly reason: BootDenialReason;
+  readonly name: PluginPackageName
+  readonly reason: BootDenialReason
 }
 /** The outcome of deciding what a production boot may load. */
 export type BootAdmission = {
-    readonly admitted: true;
-    readonly loadOrder: readonly PluginPackageName[];
+  readonly admitted: true
+  readonly loadOrder: readonly PluginPackageName[]
 } | {
-    readonly admitted: false;
-    readonly denials: readonly BootDenial[];
-};
+  readonly admitted: false
+  readonly denials: readonly BootDenial[]
+}
 /**
  * Decide what a production boot may load (must[2]).
  *
@@ -59,7 +59,7 @@ export type BootAdmission = {
  * @param installed - what is actually on disk.
  * @returns the load order to use, or every reason the boot is refused.
  */
-export declare function admitBoot(lock: PluginLockFile, installed: readonly InstalledPlugin[]): BootAdmission;
+export declare function admitBoot(lock: PluginLockFile, installed: readonly InstalledPlugin[]): BootAdmission
 /**
  * Whether a registry's current answer for a locked plugin differs from what
  * the lock recorded (acceptance[1]).
@@ -72,20 +72,20 @@ export declare function admitBoot(lock: PluginLockFile, installed: readonly Inst
  * @param registryVersion - the version the registry resolves that name to now.
  * @returns whether the registry has moved away from the locked version.
  */
-export declare function hasTagDrifted(entry: PluginLockEntry, registryVersion: PluginVersion): boolean;
+export declare function hasTagDrifted(entry: PluginLockEntry, registryVersion: PluginVersion): boolean
 /** Why a candidate lock was refused before replacing the current one. */
-export type InstallRefusalReason = 
+export type InstallRefusalReason =
 /** The candidate is internally inconsistent; `validateLock` names the defect. */
 'candidate-invalid'
 /** The current lock changed since the candidate was generated from it. */
- | 'concurrent-modification';
+ | 'concurrent-modification'
 /** The outcome of a transactional install (must[1]). */
 export type InstallDecision = {
-    readonly committed: true;
-    readonly lock: PluginLockFile;
+  readonly committed: true
+  readonly lock: PluginLockFile
 } | {
-    readonly committed: false;
-    readonly reason: InstallRefusalReason;
-    readonly detail: string;
-};
+  readonly committed: false
+  readonly reason: InstallRefusalReason
+  readonly detail: string
+}
 //# sourceMappingURL=index.d.ts.map

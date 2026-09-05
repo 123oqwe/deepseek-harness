@@ -64,10 +64,10 @@
  *
  * @module @deepseek-ai/dsh-capability-token
  */
-import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types';
-import type { CapabilityTokenDigest, CapabilityTokenLogRecord, CapabilityTokenNonce, SignedCapabilityToken, TokenAttenuationDecision, TokenAttenuationRequest, TokenIssuanceRequest, TokenLineage, TokenVerificationResult } from './types.ts';
-export * from './types.ts';
-export * from './attenuate.ts';
+import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
+import type { CapabilityTokenDigest, CapabilityTokenLogRecord, CapabilityTokenNonce, SignedCapabilityToken, TokenAttenuationDecision, TokenAttenuationRequest, TokenIssuanceRequest, TokenLineage, TokenVerificationResult } from './types.ts'
+export * from './types.ts'
+export * from './attenuate.ts'
 /**
  * The complete durable state one {@link CapabilityTokenStore} holds.
  *
@@ -79,12 +79,12 @@ export * from './attenuate.ts';
  * `auditRecords` is the surface that is safe to log (acceptance[2]).
  */
 export interface CapabilityTokenStoreState {
-    readonly tokens: readonly SignedCapabilityToken[];
-    readonly revokedDigests: readonly CapabilityTokenDigest[];
-    /** Nonces a successful {@link CapabilityTokenService.verify} has already spent. */
-    readonly spentNonces: readonly CapabilityTokenNonce[];
-    /** acceptance[2]'s log surface: redacted records only, never a raw token. */
-    readonly auditRecords: readonly CapabilityTokenLogRecord[];
+  readonly tokens: readonly SignedCapabilityToken[]
+  readonly revokedDigests: readonly CapabilityTokenDigest[]
+  /** Nonces a successful {@link CapabilityTokenService.verify} has already spent. */
+  readonly spentNonces: readonly CapabilityTokenNonce[]
+  /** acceptance[2]'s log surface: redacted records only, never a raw token. */
+  readonly auditRecords: readonly CapabilityTokenLogRecord[]
 }
 /**
  * The durability seam a {@link CapabilityTokenService} reads and writes its
@@ -98,17 +98,17 @@ export interface CapabilityTokenStoreState {
  * state.
  */
 export interface CapabilityTokenStore {
-    /**
+  /**
      * Read the complete durable state this store holds.
      * @returns the recorded state; an empty state on a medium never written to (a first boot), never a rejection.
      */
-    load(): Promise<CapabilityTokenStoreState>;
-    /**
+  load(): Promise<CapabilityTokenStoreState>
+  /**
      * Durably replace this store's recorded state with `state`. Resolves once
      * the write is durable.
      * @param state - the complete state to record.
      */
-    save(state: CapabilityTokenStoreState): Promise<void>;
+  save(state: CapabilityTokenStoreState): Promise<void>
 }
 /**
  * A real file-backed {@link CapabilityTokenStore}: one JSON document at
@@ -120,7 +120,7 @@ export interface CapabilityTokenStore {
  * exist yet is a first boot, not an error, and is created on the first save.
  * @returns a store over `path`.
  */
-export declare function createFileCapabilityTokenStore(path: string): CapabilityTokenStore;
+export declare function createFileCapabilityTokenStore(path: string): CapabilityTokenStore
 /**
  * The durable Capability Token registry: issues and attenuates tokens
  * through `./attenuate.ts`, records each one, reconstructs a real
@@ -133,9 +133,9 @@ export declare function createFileCapabilityTokenStore(path: string): Capability
  * `./attenuate.ts` unchanged and is not, today, evidence of a token's origin.
  */
 export declare class CapabilityTokenService {
-    #private;
-    private constructor();
-    /**
+  #private
+  private constructor()
+  /**
      * Reconstruct a service from everything `store` durably holds. The only
      * way to obtain a service — there is no constructor starting from an
      * in-memory value, so a restored service's contents always came from the
@@ -144,16 +144,16 @@ export declare class CapabilityTokenService {
      * @param trustRoot - the `TrustKernelSignatureRoots` handle passed through to `./attenuate.ts`.
      * @returns a service over `store`'s recorded state.
      */
-    static restore(store: CapabilityTokenStore, trustRoot: TrustKernelSignatureRoots): Promise<CapabilityTokenService>;
-    /**
+  static restore(store: CapabilityTokenStore, trustRoot: TrustKernelSignatureRoots): Promise<CapabilityTokenService>
+  /**
      * Mint a root token through `./attenuate.ts`'s `issueToken`, record it,
      * and append its redacted audit record.
      * @param request - the root grant's scope.
      * @param nonce - a fresh, caller-generated nonce.
      * @returns the newly issued, durably recorded token.
      */
-    issue(request: TokenIssuanceRequest, nonce: CapabilityTokenNonce): Promise<SignedCapabilityToken>;
-    /**
+  issue(request: TokenIssuanceRequest, nonce: CapabilityTokenNonce): Promise<SignedCapabilityToken>
+  /**
      * Delegate the narrowing decision to `./attenuate.ts`'s `attenuateToken`,
      * recording the child and appending its redacted audit record only when
      * that decision accepts. A refusal writes nothing at all.
@@ -161,8 +161,8 @@ export declare class CapabilityTokenService {
      * @param request - the requested child scope.
      * @returns `attenuateToken`'s own decision, unchanged.
      */
-    attenuate(parent: SignedCapabilityToken, request: TokenAttenuationRequest): Promise<TokenAttenuationDecision>;
-    /**
+  attenuate(parent: SignedCapabilityToken, request: TokenAttenuationRequest): Promise<TokenAttenuationDecision>
+  /**
      * Reconstruct the complete root-first digest chain of the recorded token
      * whose own digest is `digest`, by walking successive recorded
      * `parentDigest` hops — acceptance[1]'s missing half, and this package's
@@ -170,15 +170,15 @@ export declare class CapabilityTokenService {
      * @param digest - the digest of the token whose lineage to reconstruct.
      * @returns the lineage, root-first and ending with `digest`, or `undefined` when no recorded token has that digest.
      */
-    lineageOf(digest: CapabilityTokenDigest): TokenLineage | undefined;
-    /**
+  lineageOf(digest: CapabilityTokenDigest): TokenLineage | undefined
+  /**
      * Durably record `digest` as revoked. Revoking an ancestor's digest is
      * what invalidates every descendant (acceptance[1]) — no per-descendant
      * record is written, and none is needed.
      * @param digest - the digest to revoke.
      */
-    revoke(digest: CapabilityTokenDigest): Promise<void>;
-    /**
+  revoke(digest: CapabilityTokenDigest): Promise<void>
+  /**
      * Whether the recorded token with `digest` is revoked, by checking
      * `./attenuate.ts`'s `isTokenRevoked` against this service's reconstructed
      * lineage for it — so an ancestor's revocation counts, however many
@@ -186,8 +186,8 @@ export declare class CapabilityTokenService {
      * @param digest - the digest of the token to check.
      * @returns `true` when the token's lineage contains a revoked digest; `false` when it does not, and for a digest no recorded token has.
      */
-    isRevoked(digest: CapabilityTokenDigest): boolean;
-    /**
+  isRevoked(digest: CapabilityTokenDigest): boolean
+  /**
      * Verify `signed` through `./attenuate.ts`'s `verifyToken` against this
      * service's durable nonce ledger, spending the nonce when verification
      * succeeds so a second presentation of the same token is refused as
@@ -201,14 +201,14 @@ export declare class CapabilityTokenService {
      * @param now - Unix epoch milliseconds to check expiry against.
      * @returns `verifyToken`'s own result, against the durable nonce ledger.
      */
-    verify(signed: SignedCapabilityToken, now: number): Promise<TokenVerificationResult>;
-    /**
+  verify(signed: SignedCapabilityToken, now: number): Promise<TokenVerificationResult>
+  /**
      * acceptance[2]'s log surface: every audit record this service has
      * recorded, oldest first. Each is `redactTokenForLog`'s six-field output —
      * a digest plus already-log-safe metadata. No raw token, `nonce`, or
      * `signature` ever reaches this surface.
      * @returns the recorded audit records, oldest first.
      */
-    auditRecords(): readonly CapabilityTokenLogRecord[];
+  auditRecords(): readonly CapabilityTokenLogRecord[]
 }
 //# sourceMappingURL=index.d.ts.map

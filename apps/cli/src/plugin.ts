@@ -143,7 +143,7 @@ function observeInstalledPackages(profileDir: string): readonly ObservedPackage[
     }
     const installed = readProfileManifest(NAME, dir) as ProfileManifest & {
       version?: string
-      dsh?: { provenance?: { integrity?: string, sourceCommit?: string, signatureIdentity?: string } }
+      dsh?: { provenance?: { integrity?: string; sourceCommit?: string; signatureIdentity?: string } }
     }
     const provenance = installed.dsh?.provenance
     observed.push({

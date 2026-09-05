@@ -27,13 +27,13 @@ describe('assertRuntimeTenantPolicy (runtime-policy layer, first100 P2-01 accept
   it('accepts a live identity whose actual tenant matches the request-claimed tenant', () => {
     const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
     const identity = identityFor(createChain(root, 1000))
-    expect(() => assertRuntimeTenantPolicy(identity, TENANT_A)).not.toThrow()
+    expect(() =>{  assertRuntimeTenantPolicy(identity, TENANT_A) }).not.toThrow()
   })
 
   it('rejects a live identity whose actual tenant differs from the request-claimed tenant, throwing TenantMismatchError', () => {
     const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
     const identity = identityFor(createChain(root, 1000))
-    expect(() => assertRuntimeTenantPolicy(identity, TENANT_B)).toThrow(TenantMismatchError)
+    expect(() =>{  assertRuntimeTenantPolicy(identity, TENANT_B) }).toThrow(TenantMismatchError)
   })
 
   it('checks the tenant of the chain\'s currently-acting principal, not necessarily the root, for a delegated identity', () => {
@@ -42,8 +42,8 @@ describe('assertRuntimeTenantPolicy (runtime-policy layer, first100 P2-01 accept
     const agent = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id)
     const extended = extendChain(chain, agent, 2000)
     const identity = identityFor(extended)
-    expect(() => assertRuntimeTenantPolicy(identity, TENANT_A)).not.toThrow()
-    expect(() => assertRuntimeTenantPolicy(identity, TENANT_B)).toThrow(TenantMismatchError)
+    expect(() =>{  assertRuntimeTenantPolicy(identity, TENANT_A) }).not.toThrow()
+    expect(() =>{  assertRuntimeTenantPolicy(identity, TENANT_B) }).toThrow(TenantMismatchError)
   })
 
   it('rejects cross-tenant confusion at the runtime-policy layer even when the identity\'s own chain construction never saw a mismatch -- proving this is a genuinely distinct check from extendChain\'s construction-time TenantMismatchError', () => {
@@ -59,7 +59,7 @@ describe('assertRuntimeTenantPolicy (runtime-policy layer, first100 P2-01 accept
     const extended = extendChain(chain, agent, 2000)
     expect(extended.entries).toHaveLength(2)
     const identity = identityFor(extended)
-    expect(() => assertRuntimeTenantPolicy(identity, TENANT_B)).toThrow(TenantMismatchError)
+    expect(() =>{  assertRuntimeTenantPolicy(identity, TENANT_B) }).toThrow(TenantMismatchError)
   })
 
   it('carries the attempted and actual tenant ids on the thrown TenantMismatchError', () => {

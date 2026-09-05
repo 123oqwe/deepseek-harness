@@ -38,9 +38,9 @@
  *
  * @module @deepseek-ai/dsh-capability-token/attenuate
  */
-import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types';
-import { CapabilityTokenDigest } from './types.ts';
-import type { CapabilityConsumerSurfaceKind, CapabilityToken, CapabilityTokenLogRecord, CapabilityTokenNonce, SignedCapabilityToken, TokenAttenuationDecision, TokenAttenuationRequest, TokenIssuanceRequest, TokenLineage, TokenPresenceDecision, TokenVerificationContext, TokenVerificationResult } from './types.ts';
+import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
+import { CapabilityTokenDigest } from './types.ts'
+import type { CapabilityConsumerSurfaceKind, CapabilityToken, CapabilityTokenLogRecord, CapabilityTokenNonce, SignedCapabilityToken, TokenAttenuationDecision, TokenAttenuationRequest, TokenIssuanceRequest, TokenLineage, TokenPresenceDecision, TokenVerificationContext, TokenVerificationResult } from './types.ts'
 /**
  * must[1]'s sole root-issuance entrypoint: mint a new, unattenuated
  * {@link SignedCapabilityToken} with `delegationDepth: 0` and
@@ -54,7 +54,11 @@ import type { CapabilityConsumerSurfaceKind, CapabilityToken, CapabilityTokenLog
  * @param nonce - a fresh, caller-generated {@link CapabilityTokenNonce}.
  * @returns a freshly signed root {@link SignedCapabilityToken}.
  */
-export declare function issueToken(_trustRoot: TrustKernelSignatureRoots, request: TokenIssuanceRequest, nonce: CapabilityTokenNonce): SignedCapabilityToken;
+export declare function issueToken(
+  _trustRoot: TrustKernelSignatureRoots,
+  request: TokenIssuanceRequest,
+  nonce: CapabilityTokenNonce,
+): SignedCapabilityToken
 /**
  * must[1]'s sole verification entrypoint (validation's "过期、重放...签名篡改" —
  * expiry, replay, signature tampering). Checks, in this order, that
@@ -67,7 +71,11 @@ export declare function issueToken(_trustRoot: TrustKernelSignatureRoots, reques
  * @param context - the pure expiry/replay-check inputs (`now`, `seenNonces`).
  * @returns `{ verified: true, token }`, or `{ verified: false, reason }` naming the first failed check.
  */
-export declare function verifyToken(_trustRoot: TrustKernelSignatureRoots, signed: SignedCapabilityToken, context: TokenVerificationContext): TokenVerificationResult;
+export declare function verifyToken(
+  _trustRoot: TrustKernelSignatureRoots,
+  signed: SignedCapabilityToken,
+  context: TokenVerificationContext,
+): TokenVerificationResult
 /**
  * must[2]'s sole attenuation entrypoint (acceptance[0]): mint a new signed
  * child token whose `verbs`/`resources`/`constraints.budget`/`expiresAt`
@@ -88,7 +96,11 @@ export declare function verifyToken(_trustRoot: TrustKernelSignatureRoots, signe
  * child, or `{ accepted: false, reason }` naming the first dimension (in check
  * order) that would have widened.
  */
-export declare function attenuateToken(_trustRoot: TrustKernelSignatureRoots, parent: SignedCapabilityToken, request: TokenAttenuationRequest): TokenAttenuationDecision;
+export declare function attenuateToken(
+  _trustRoot: TrustKernelSignatureRoots,
+  parent: SignedCapabilityToken,
+  request: TokenAttenuationRequest,
+): TokenAttenuationDecision
 /**
  * Compute the content digest of a {@link CapabilityToken} — must[0]'s
  * "parent digest" field's sole real producer, and the digest every
@@ -100,7 +112,7 @@ export declare function attenuateToken(_trustRoot: TrustKernelSignatureRoots, pa
  * @param token - the token to digest.
  * @returns the token's content digest.
  */
-export declare function digestToken(token: CapabilityToken): CapabilityTokenDigest;
+export declare function digestToken(token: CapabilityToken): CapabilityTokenDigest
 /**
  * acceptance[1]'s cascading-revocation check: whether any digest in
  * `lineage` — the token's own digest or any ancestor's — appears in
@@ -115,7 +127,7 @@ export declare function digestToken(token: CapabilityToken): CapabilityTokenDige
  * @param revokedDigests - the set of digests a real revocation store has recorded as revoked.
  * @returns `true` if `lineage` contains a revoked digest anywhere, `false` otherwise.
  */
-export declare function isTokenRevoked(lineage: TokenLineage, revokedDigests: ReadonlySet<CapabilityTokenDigest>): boolean;
+export declare function isTokenRevoked(lineage: TokenLineage, revokedDigests: ReadonlySet<CapabilityTokenDigest>): boolean
 /**
  * must[3]'s presence gate: whether `presented` names an offered token at
  * all, for exactly one of the closed {@link CapabilityConsumerSurfaceKind}
@@ -126,7 +138,10 @@ export declare function isTokenRevoked(lineage: TokenLineage, revokedDigests: Re
  * @param presented - the token offered for this call, or `undefined` if none was.
  * @returns `{ presented: true }`, or `{ presented: false, reason: 'token-required', surface }`.
  */
-export declare function assertTokenPresented(surface: CapabilityConsumerSurfaceKind, presented: SignedCapabilityToken | undefined): TokenPresenceDecision;
+export declare function assertTokenPresented(
+  surface: CapabilityConsumerSurfaceKind,
+  presented: SignedCapabilityToken | undefined,
+): TokenPresenceDecision
 /**
  * acceptance[2]'s sole redaction entrypoint: project `signed` down to
  * exactly the six {@link CapabilityTokenLogRecord} fields — a real digest
@@ -138,5 +153,5 @@ export declare function assertTokenPresented(surface: CapabilityConsumerSurfaceK
  * @param signed - the signed token to redact.
  * @returns the log-safe {@link CapabilityTokenLogRecord}.
  */
-export declare function redactTokenForLog(signed: SignedCapabilityToken): CapabilityTokenLogRecord;
+export declare function redactTokenForLog(signed: SignedCapabilityToken): CapabilityTokenLogRecord
 //# sourceMappingURL=attenuate.d.ts.map

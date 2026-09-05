@@ -53,36 +53,36 @@ interface FaultRow {
 const MATRIX: readonly FaultRow[] = [
   {
     boundary: '01 deadline expired before any attempt',
-    run: () => expect(decideDelivery(record('m'), 10_001, 3))
-      .toEqual({ action: 'dead-letter', reason: 'deadline-expired' }),
+    run: () =>{  expect(decideDelivery(record('m'), 10_001, 3))
+      .toEqual({ action: 'dead-letter', reason: 'deadline-expired' }) },
   },
   {
     boundary: '02 attempt budget exhausted',
-    run: () => expect(decideDelivery(record('m', { attempts: 3 }), 0, 3))
-      .toEqual({ action: 'dead-letter', reason: 'attempts-exhausted' }),
+    run: () =>{  expect(decideDelivery(record('m', { attempts: 3 }), 0, 3))
+      .toEqual({ action: 'dead-letter', reason: 'attempts-exhausted' }) },
   },
   {
     boundary: '03 expired AND exhausted reports the expiry, pinning check order',
-    run: () => expect(decideDelivery(record('m', { attempts: 3, deadlineMs: 5 }), 6, 3))
-      .toEqual({ action: 'dead-letter', reason: 'deadline-expired' }),
+    run: () =>{  expect(decideDelivery(record('m', { attempts: 3, deadlineMs: 5 }), 6, 3))
+      .toEqual({ action: 'dead-letter', reason: 'deadline-expired' }) },
   },
   {
     boundary: '04 exactly at the deadline is still deliverable, not expired',
-    run: () => expect(decideDelivery(record('m', { deadlineMs: 100 }), 100, 3).action).toBe('deliver'),
+    run: () =>{  expect(decideDelivery(record('m', { deadlineMs: 100 }), 100, 3).action).toBe('deliver') },
   },
   {
     boundary: '05 exactly at the attempt budget is exhausted, not deliverable',
-    run: () => expect(decideDelivery(record('m', { attempts: 3 }), 0, 3).action).toBe('dead-letter'),
+    run: () =>{  expect(decideDelivery(record('m', { attempts: 3 }), 0, 3).action).toBe('dead-letter') },
   },
   {
     boundary: '06 an acked record is skipped, never re-sent',
-    run: () => expect(decideDelivery(record('m', { state: 'acked' }), 0, 3))
-      .toEqual({ action: 'skip', reason: 'already-acked' }),
+    run: () =>{  expect(decideDelivery(record('m', { state: 'acked' }), 0, 3))
+      .toEqual({ action: 'skip', reason: 'already-acked' }) },
   },
   {
     boundary: '07 a dead-lettered record is skipped, never resurrected',
-    run: () => expect(decideDelivery(record('m', { state: 'dead-letter' }), 0, 3))
-      .toEqual({ action: 'skip', reason: 'dead-lettered' }),
+    run: () =>{  expect(decideDelivery(record('m', { state: 'dead-letter' }), 0, 3))
+      .toEqual({ action: 'skip', reason: 'dead-lettered' }) },
   },
   {
     boundary: '08 acked is terminal: no transition out of it is legal',

@@ -59,22 +59,22 @@
  *
  * @module @deepseek-ai/dsh-action-manifest/types
  */
-import type { Branded } from '@deepseek-ai/dsh-brand';
-import type { Principal, RunId } from '@deepseek-ai/dsh-principal';
-import type { JsonValue } from '@deepseek-ai/dsh-util-values';
+import type { Branded } from '@deepseek-ai/dsh-brand'
+import type { Principal, RunId } from '@deepseek-ai/dsh-principal'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 /**
  * The stable identity of one ActionManifest instance (must[0]). Minted once
  * per action attempt; `./canonicalize.ts`'s `assertManifestPrecedesExecution`
  * looks up appended manifests by this id.
  */
-export type ActionId = Branded<'ActionId'>;
+export type ActionId = Branded<'ActionId'>
 /**
  * The namespaced identity of the capability an action invokes — a tool
  * name, service method, or plugin RPC endpoint (must[0]'s `capability`
  * field). Deliberately not `@deepseek-ai/dsh-plugin-ownership`'s
  * `StableCapabilityId` — see this module's top-of-file grounding note.
  */
-export type CapabilityRef = Branded<'CapabilityRef'>;
+export type CapabilityRef = Branded<'CapabilityRef'>
 /**
  * The canonicalized-and-hashed representation of an action's arguments
  * (must[0], acceptance[1]). Produced by `./canonicalize.ts`'s
@@ -83,14 +83,14 @@ export type CapabilityRef = Branded<'CapabilityRef'>;
  * normalization form, or number literal spelling — hash to the same
  * {@link ArgumentsHash} (acceptance[1], validation[2]).
  */
-export type ArgumentsHash = Branded<'ArgumentsHash'>;
+export type ArgumentsHash = Branded<'ArgumentsHash'>
 /**
  * A caller- or system-derived key that identifies one logical action
  * attempt across retries, so a manifest generated twice for the same
  * logical attempt is recognizable as the same attempt rather than two
  * independent ones (must[0]).
  */
-export type IdempotencyKey = Branded<'IdempotencyKey'>;
+export type IdempotencyKey = Branded<'IdempotencyKey'>
 /**
  * Which invocation surface produced this action attempt (must[2]): a
  * native, top-level tool call; a code-mode embedded sub-dispatch inside
@@ -102,7 +102,7 @@ export type IdempotencyKey = Branded<'IdempotencyKey'>;
  * "cannot bypass" a structural property of the gate rather than a special
  * case a future caller could forget to add.
  */
-export type ActionOrigin = 'native-tool-call' | 'code-mode-embedded' | 'plugin-rpc';
+export type ActionOrigin = 'native-tool-call' | 'code-mode-embedded' | 'plugin-rpc'
 /**
  * The taxonomy an action's side effect is classified into (must[0]'s
  * `sideEffectClass` field). Mirrors `@deepseek-ai/dsh-plugin-manifest`'s
@@ -113,7 +113,7 @@ export type ActionOrigin = 'native-tool-call' | 'code-mode-embedded' | 'plugin-r
  * `classifySideEffect` returns when it cannot classify an action at all
  * (acceptance[2]).
  */
-export type ActionSideEffectClass = 'read' | 'write' | 'network' | 'process' | 'destructive';
+export type ActionSideEffectClass = 'read' | 'write' | 'network' | 'process' | 'destructive'
 /**
  * The result of classifying an action's side effect (acceptance[2]).
  * `classified: false` means the classifier could not determine a real
@@ -124,9 +124,9 @@ export type ActionSideEffectClass = 'read' | 'write' | 'network' | 'process' | '
  * `requiresApproval: false`.
  */
 export interface SideEffectClassification {
-    readonly sideEffectClass: ActionSideEffectClass;
-    readonly classified: boolean;
-    readonly requiresApproval: boolean;
+  readonly sideEffectClass: ActionSideEffectClass
+  readonly classified: boolean
+  readonly requiresApproval: boolean
 }
 /**
  * Where an action's effect is directed (must[0]'s `target` field). Mirrors
@@ -136,18 +136,18 @@ export interface SideEffectClassification {
  * capability may target.
  */
 export type ActionTarget = {
-    readonly kind: 'filesystem';
-    readonly path: string;
+  readonly kind: 'filesystem'
+  readonly path: string
 } | {
-    readonly kind: 'network';
-    readonly host: string;
+  readonly kind: 'network'
+  readonly host: string
 } | {
-    readonly kind: 'process';
-    readonly command: string;
+  readonly kind: 'process'
+  readonly command: string
 } | {
-    readonly kind: 'other';
-    readonly ref: string;
-};
+  readonly kind: 'other'
+  readonly ref: string
+}
 /**
  * One condition the action's issuer asserts holds before execution may
  * proceed (must[0]'s `preconditions` field). This contract fixes only the
@@ -156,7 +156,7 @@ export type ActionTarget = {
  * whichever epic owns the real I/O this action performs).
  */
 export interface Precondition {
-    readonly description: string;
+  readonly description: string
 }
 /**
  * The state change the action's issuer expects execution to produce
@@ -166,9 +166,9 @@ export interface Precondition {
  * expected diff is never silently empty.
  */
 export interface ExpectedDiff {
-    readonly description: string;
-    readonly before?: JsonValue;
-    readonly after?: JsonValue;
+  readonly description: string
+  readonly before?: JsonValue
+  readonly after?: JsonValue
 }
 /**
  * How to undo an action's side effect, or an explicit declaration that it
@@ -178,14 +178,14 @@ export interface ExpectedDiff {
  * defaulted.
  */
 export type Compensation = {
-    readonly reversible: true;
-    readonly capability: CapabilityRef;
-    readonly argumentsHash: ArgumentsHash;
-    readonly description: string;
+  readonly reversible: true
+  readonly capability: CapabilityRef
+  readonly argumentsHash: ArgumentsHash
+  readonly description: string
 } | {
-    readonly reversible: false;
-    readonly reason: string;
-};
+  readonly reversible: false
+  readonly reason: string
+}
 /**
  * One piece of evidence a later execution/verification stage must capture
  * to prove this action ran as manifested (must[0]'s "evidence requirements"
@@ -193,8 +193,8 @@ export type Compensation = {
  * (`tests/first100/registry.json`'s `realTask` field for this epic).
  */
 export interface EvidenceRequirement {
-    readonly kind: 'before-state' | 'after-state' | 'external-receipt';
-    readonly description: string;
+  readonly kind: 'before-state' | 'after-state' | 'external-receipt'
+  readonly description: string
 }
 /**
  * must[0]'s complete manifest record: every field a durably appended
@@ -206,20 +206,20 @@ export interface EvidenceRequirement {
  * (must[2]).
  */
 export interface ActionManifest {
-    readonly actionId: ActionId;
-    readonly runId: RunId;
-    readonly actor: Principal;
-    readonly capability: CapabilityRef;
-    readonly origin: ActionOrigin;
-    readonly target: ActionTarget;
-    readonly argumentsHash: ArgumentsHash;
-    readonly sideEffectClass: ActionSideEffectClass;
-    readonly requiresApproval: boolean;
-    readonly idempotencyKey: IdempotencyKey;
-    readonly preconditions: readonly Precondition[];
-    readonly expectedDiff: ExpectedDiff;
-    readonly compensation: Compensation;
-    readonly evidenceRequirements: readonly EvidenceRequirement[];
+  readonly actionId: ActionId
+  readonly runId: RunId
+  readonly actor: Principal
+  readonly capability: CapabilityRef
+  readonly origin: ActionOrigin
+  readonly target: ActionTarget
+  readonly argumentsHash: ArgumentsHash
+  readonly sideEffectClass: ActionSideEffectClass
+  readonly requiresApproval: boolean
+  readonly idempotencyKey: IdempotencyKey
+  readonly preconditions: readonly Precondition[]
+  readonly expectedDiff: ExpectedDiff
+  readonly compensation: Compensation
+  readonly evidenceRequirements: readonly EvidenceRequirement[]
 }
 /**
  * The request `./canonicalize.ts`'s `createActionManifest` builds an
@@ -233,19 +233,19 @@ export interface ActionManifest {
  * `classifySideEffect` treats as unclassifiable (acceptance[2]).
  */
 export interface CreateActionManifestRequest {
-    readonly actionId: ActionId;
-    readonly runId: RunId;
-    readonly actor: Principal;
-    readonly capability: CapabilityRef;
-    readonly origin: ActionOrigin;
-    readonly target: ActionTarget;
-    readonly args: JsonValue;
-    readonly declaredSideEffectClass?: ActionSideEffectClass;
-    readonly idempotencyKey: IdempotencyKey;
-    readonly preconditions: readonly Precondition[];
-    readonly expectedDiff: ExpectedDiff;
-    readonly compensation: Compensation;
-    readonly evidenceRequirements: readonly EvidenceRequirement[];
+  readonly actionId: ActionId
+  readonly runId: RunId
+  readonly actor: Principal
+  readonly capability: CapabilityRef
+  readonly origin: ActionOrigin
+  readonly target: ActionTarget
+  readonly args: JsonValue
+  readonly declaredSideEffectClass?: ActionSideEffectClass
+  readonly idempotencyKey: IdempotencyKey
+  readonly preconditions: readonly Precondition[]
+  readonly expectedDiff: ExpectedDiff
+  readonly compensation: Compensation
+  readonly evidenceRequirements: readonly EvidenceRequirement[]
 }
 /**
  * One {@link ActionManifest} as durably appended to the event log, in
@@ -255,8 +255,8 @@ export interface CreateActionManifestRequest {
  * Usage-stage Consumer) does, and supplies them here.
  */
 export interface AppendedManifest {
-    readonly manifest: ActionManifest;
-    readonly sequence: number;
+  readonly manifest: ActionManifest
+  readonly sequence: number
 }
 /**
  * Why `assertManifestPrecedesExecution` refused an execution attempt
@@ -271,7 +271,7 @@ export interface AppendedManifest {
  * this epic's own registry `gate` text: "Every tool/process/network/secret/
  * activation call carries the same digest through later PEPs").
  */
-export type ExecutionGateDenialReason = 'no-manifest-appended' | 'manifest-argument-mismatch';
+export type ExecutionGateDenialReason = 'no-manifest-appended' | 'manifest-argument-mismatch'
 /**
  * The outcome of `assertManifestPrecedesExecution`: either a durably
  * appended manifest genuinely precedes and matches this execution attempt
@@ -280,10 +280,10 @@ export type ExecutionGateDenialReason = 'no-manifest-appended' | 'manifest-argum
  * or best-effort match.
  */
 export type ExecutionGateDecision = {
-    readonly admitted: true;
-    readonly manifest: ActionManifest;
+  readonly admitted: true
+  readonly manifest: ActionManifest
 } | {
-    readonly admitted: false;
-    readonly reason: ExecutionGateDenialReason;
-};
+  readonly admitted: false
+  readonly reason: ExecutionGateDenialReason
+}
 //# sourceMappingURL=types.d.ts.map

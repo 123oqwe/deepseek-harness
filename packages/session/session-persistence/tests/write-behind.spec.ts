@@ -28,7 +28,7 @@ describe('SessionWriteBehind', () => {
         // Hold only the FIRST write open; later ones must settle on their own,
         // or the flush below would wait on a resolver nobody holds.
         if (batches.length > 1) return
-        await new Promise<void>(resolve => { release = resolve })
+        await new Promise<void>((resolve) => { release = resolve })
       },
       reportBackgroundFailure: vi.fn(),
     })
@@ -56,7 +56,7 @@ describe('SessionWriteBehind', () => {
         // Hold only the FIRST write open; later ones must settle on their own,
         // or the flush below would wait on a resolver nobody holds.
         if (batches.length > 1) return
-        await new Promise<void>(resolve => { release = resolve })
+        await new Promise<void>((resolve) => { release = resolve })
       },
       reportBackgroundFailure: vi.fn(),
     })

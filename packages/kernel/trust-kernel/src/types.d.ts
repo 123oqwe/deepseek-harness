@@ -36,23 +36,23 @@
  *
  * @module @deepseek-ai/dsh-trust-kernel/types
  */
-declare const TRUST_KERNEL_ROOT_IDENTITY: unique symbol;
-declare const TRUST_KERNEL_SIGNATURE_ROOTS: unique symbol;
-declare const TRUST_KERNEL_SECRET_BROKER: unique symbol;
+declare const TRUST_KERNEL_ROOT_IDENTITY: unique symbol
+declare const TRUST_KERNEL_SIGNATURE_ROOTS: unique symbol
+declare const TRUST_KERNEL_SECRET_BROKER: unique symbol
 /**
  * Unforgeable reference to the process's one root identity. Opaque: no
  * exported value or function in this module can produce one; only the later
  * construction slice's single internal cast does.
  */
 export interface TrustKernelRootIdentity {
-    readonly [TRUST_KERNEL_ROOT_IDENTITY]: true;
+  readonly [TRUST_KERNEL_ROOT_IDENTITY]: true
 }
 /**
  * Unforgeable reference to the process's signature-verification trust
  * anchors. Opaque for the same reason as {@link TrustKernelRootIdentity}.
  */
 export interface TrustKernelSignatureRoots {
-    readonly [TRUST_KERNEL_SIGNATURE_ROOTS]: true;
+  readonly [TRUST_KERNEL_SIGNATURE_ROOTS]: true
 }
 /**
  * Unforgeable reference to the kernel's secret broker. Callers hold this
@@ -60,7 +60,7 @@ export interface TrustKernelSignatureRoots {
  * secret value and no method that reads one.
  */
 export interface TrustKernelSecretBrokerHandle {
-    readonly [TRUST_KERNEL_SECRET_BROKER]: true;
+  readonly [TRUST_KERNEL_SECRET_BROKER]: true
 }
 /**
  * Opaque policy query a domain-specific caller constructs. `payload` is
@@ -70,11 +70,11 @@ export interface TrustKernelSecretBrokerHandle {
  * business-domain logic that stays in the plugin that built the query.
  */
 export interface TrustKernelPolicyQuery {
-    /** Domain-owned, kernel-opaque request payload. */
-    readonly payload: unknown;
+  /** Domain-owned, kernel-opaque request payload. */
+  readonly payload: unknown
 }
 /** The enforcement entrypoint's binary verdict; no partial or advisory state. */
-export type TrustKernelPolicyVerdict = 'allow' | 'deny';
+export type TrustKernelPolicyVerdict = 'allow' | 'deny'
 /**
  * Narrow, side-effect-free policy-enforcement entrypoint (Epic P0-02
  * must[2]'s "policy enforcement entrypoint"). Domain-agnostic by
@@ -83,7 +83,7 @@ export type TrustKernelPolicyVerdict = 'allow' | 'deny';
  * signature — only the fixed allow/deny call a policy decision made
  * elsewhere already reached.
  */
-export type TrustKernelPolicyEnforcement = (query: TrustKernelPolicyQuery) => TrustKernelPolicyVerdict;
+export type TrustKernelPolicyEnforcement = (query: TrustKernelPolicyQuery) => TrustKernelPolicyVerdict
 /**
  * One entry appended to the audit chain. `payload` is opaque to the kernel
  * for the same reason as {@link TrustKernelPolicyQuery}'s: the kernel
@@ -91,8 +91,8 @@ export type TrustKernelPolicyEnforcement = (query: TrustKernelPolicyQuery) => Tr
  * chain root it owns.
  */
 export interface TrustKernelAuditEntry {
-    /** Domain-owned, kernel-opaque record content. */
-    readonly payload: unknown;
+  /** Domain-owned, kernel-opaque record content. */
+  readonly payload: unknown
 }
 /**
  * Append-only entrypoint into the audit chain root (Epic P0-02 must[2]'s
@@ -100,17 +100,17 @@ export interface TrustKernelAuditEntry {
  * member: a function type with this signature cannot expose one, so the
  * chain root can only grow.
  */
-export type TrustKernelAuditAppend = (entry: TrustKernelAuditEntry) => void;
+export type TrustKernelAuditAppend = (entry: TrustKernelAuditEntry) => void
 /** One sandbox's attestation evidence, opaque to the kernel's verifier. */
 export interface TrustKernelSandboxAttestation {
-    /** Domain-owned, kernel-opaque attestation evidence. */
-    readonly payload: unknown;
+  /** Domain-owned, kernel-opaque attestation evidence. */
+  readonly payload: unknown
 }
 /**
  * Narrow, side-effect-free sandbox-attestation verifier (Epic P0-02
  * must[2]'s "sandbox attestation verifier").
  */
-export type TrustKernelSandboxAttestationVerifier = (attestation: TrustKernelSandboxAttestation) => boolean;
+export type TrustKernelSandboxAttestationVerifier = (attestation: TrustKernelSandboxAttestation) => boolean
 /**
  * The complete Trust Kernel capability surface: exactly the six members
  * Epic P0-02 must[2] names, all `readonly`. None is replaceable by a
@@ -122,18 +122,18 @@ export type TrustKernelSandboxAttestationVerifier = (attestation: TrustKernelSan
  * unconstructible outside that later slice regardless.
  */
 export interface TrustKernel {
-    /** The process's one root identity. Never a plugin (Epic P0-02 must[4]). */
-    readonly rootIdentity: TrustKernelRootIdentity;
-    /** The process's signature-verification trust anchors. Never a plugin (Epic P0-02 must[4]). */
-    readonly signatureRoots: TrustKernelSignatureRoots;
-    /** Deny-enforcement entrypoint. Never a plugin (Epic P0-02 must[4]). */
-    readonly policyEnforcement: TrustKernelPolicyEnforcement;
-    /** Append-only entrypoint into the audit-chain root. Never a plugin (Epic P0-02 must[4]). */
-    readonly auditAppend: TrustKernelAuditAppend;
-    /** Handle to the kernel's secret broker. */
-    readonly secretBroker: TrustKernelSecretBrokerHandle;
-    /** Sandbox-attestation verifier. */
-    readonly sandboxAttestationVerifier: TrustKernelSandboxAttestationVerifier;
+  /** The process's one root identity. Never a plugin (Epic P0-02 must[4]). */
+  readonly rootIdentity: TrustKernelRootIdentity
+  /** The process's signature-verification trust anchors. Never a plugin (Epic P0-02 must[4]). */
+  readonly signatureRoots: TrustKernelSignatureRoots
+  /** Deny-enforcement entrypoint. Never a plugin (Epic P0-02 must[4]). */
+  readonly policyEnforcement: TrustKernelPolicyEnforcement
+  /** Append-only entrypoint into the audit-chain root. Never a plugin (Epic P0-02 must[4]). */
+  readonly auditAppend: TrustKernelAuditAppend
+  /** Handle to the kernel's secret broker. */
+  readonly secretBroker: TrustKernelSecretBrokerHandle
+  /** Sandbox-attestation verifier. */
+  readonly sandboxAttestationVerifier: TrustKernelSandboxAttestationVerifier
 }
-export {};
+export {}
 //# sourceMappingURL=types.d.ts.map

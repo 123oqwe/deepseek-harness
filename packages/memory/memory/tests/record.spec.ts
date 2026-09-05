@@ -207,18 +207,18 @@ describe('P6-02 Fault — record boundary matrix', () => {
   const FAULTS: readonly RecordFault[] = [
     {
       boundary: '01 confidence below zero is refused',
-      run: () => expect(validateRecord(record('m', { confidence: -0.0001 })))
-        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }),
+      run: () =>{  expect(validateRecord(record('m', { confidence: -0.0001 })))
+        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }) },
     },
     {
       boundary: '02 confidence above one is refused',
-      run: () => expect(validateRecord(record('m', { confidence: 1.0001 })))
-        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }),
+      run: () =>{  expect(validateRecord(record('m', { confidence: 1.0001 })))
+        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }) },
     },
     {
       boundary: '03 NaN confidence is refused, not admitted by two false comparisons',
-      run: () => expect(validateRecord(record('m', { confidence: Number.NaN })))
-        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }),
+      run: () =>{  expect(validateRecord(record('m', { confidence: Number.NaN })))
+        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }) },
     },
     {
       boundary: '04 confidence exactly zero and exactly one are accepted',
@@ -229,12 +229,12 @@ describe('P6-02 Fault — record boundary matrix', () => {
     },
     {
       boundary: '05 an inverted validity range is refused',
-      run: () => expect(validateRecord(record('m', { validFrom: '2026-09-02T00:00:00.000Z', validUntil: '2026-09-01T00:00:00.000Z' })))
-        .toMatchObject({ valid: false, reason: 'valid-range-inverted' }),
+      run: () =>{  expect(validateRecord(record('m', { validFrom: '2026-09-02T00:00:00.000Z', validUntil: '2026-09-01T00:00:00.000Z' })))
+        .toMatchObject({ valid: false, reason: 'valid-range-inverted' }) },
     },
     {
       boundary: '06 an instantaneous validity range is accepted',
-      run: () => expect(validateRecord(record('m', { validFrom: NOW, validUntil: NOW }))).toEqual({ valid: true }),
+      run: () =>{  expect(validateRecord(record('m', { validFrom: NOW, validUntil: NOW }))).toEqual({ valid: true }) },
     },
     {
       boundary: '07 validation[0] time validity: a record is retrievable up to, but not at, its end',
@@ -246,7 +246,7 @@ describe('P6-02 Fault — record boundary matrix', () => {
     },
     {
       boundary: '08 an open-ended record never expires',
-      run: () => expect(isDefaultRetrievable(record('m', { validUntil: null }), '2999-01-01T00:00:00.000Z')).toBe(true),
+      run: () =>{  expect(isDefaultRetrievable(record('m', { validUntil: null }), '2999-01-01T00:00:00.000Z')).toBe(true) },
     },
     {
       boundary: '09 validation[0] source deletion: a derived record left with no sources is refused',
@@ -269,8 +269,8 @@ describe('P6-02 Fault — record boundary matrix', () => {
     },
     {
       boundary: '11 validation[0] conflict chain: a relation to itself is refused',
-      run: () => expect(validateRecord(record('m', { relations: [{ kind: 'supersedes', target: brandString<MemoryRecordId>('m') }] })))
-        .toMatchObject({ valid: false, reason: 'relation-targets-self' }),
+      run: () =>{  expect(validateRecord(record('m', { relations: [{ kind: 'supersedes', target: brandString<MemoryRecordId>('m') }] })))
+        .toMatchObject({ valid: false, reason: 'relation-targets-self' }) },
     },
     {
       boundary: '12 validation[0] conflict chain: a duplicated relation is refused',
@@ -302,20 +302,20 @@ describe('P6-02 Fault — record boundary matrix', () => {
     },
     {
       boundary: '15 a revoked record is withheld even while still within its validity',
-      run: () => expect(isDefaultRetrievable(record('m', { status: 'revoked', validUntil: null }), NOW)).toBe(false),
+      run: () =>{  expect(isDefaultRetrievable(record('m', { status: 'revoked', validUntil: null }), NOW)).toBe(false) },
     },
     {
       boundary: '16 sensitive content is withheld from an index by default',
-      run: () => expect(admitToIndex(record('m', { sensitivity: 'sensitive' }), { allowSensitive: false }))
-        .toEqual({ indexable: false, reason: 'sensitive-not-permitted' }),
+      run: () =>{  expect(admitToIndex(record('m', { sensitivity: 'sensitive' }), { allowSensitive: false }))
+        .toEqual({ indexable: false, reason: 'sensitive-not-permitted' }) },
     },
     {
       boundary: '17 normal content is indexable even under the strictest policy',
-      run: () => expect(admitToIndex(record('m'), { allowSensitive: false })).toEqual({ indexable: true }),
+      run: () =>{  expect(admitToIndex(record('m'), { allowSensitive: false })).toEqual({ indexable: true }) },
     },
     {
       boundary: '18 a well-formed record validates, so the checks above refuse selectively',
-      run: () => expect(validateRecord(record('m'))).toEqual({ valid: true }),
+      run: () =>{  expect(validateRecord(record('m'))).toEqual({ valid: true }) },
     },
   ]
 

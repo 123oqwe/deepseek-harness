@@ -238,7 +238,7 @@ describe('isInChain / assertInChain', () => {
   it('throws ForgedPrincipalError for a principal id absent from the chain', () => {
     const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
     const chain = createChain(root, 1000)
-    expect(() => assertInChain(chain, PrincipalId('nobody'))).toThrow(ForgedPrincipalError)
+    expect(() =>{  assertInChain(chain, PrincipalId('nobody')) }).toThrow(ForgedPrincipalError)
   })
 })
 
@@ -248,14 +248,14 @@ describe('assertAgentDelegationValid', () => {
     const chain = createChain(root, 1000)
     const agent = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, root.id)
     const extended = extendChain(chain, agent, 2000)
-    expect(() => assertAgentDelegationValid(extended, agent)).not.toThrow()
+    expect(() =>{  assertAgentDelegationValid(extended, agent) }).not.toThrow()
   })
 
   it('rejects an agent whose id is not the chain current principal', () => {
     const root = createUserPrincipal(PrincipalId('u1'), TENANT_A)
     const chain = createChain(root, 1000)
     const forgedAgent: AgentPrincipal = createAgentPrincipal(PrincipalId('impostor'), TENANT_A, root.id)
-    expect(() => assertAgentDelegationValid(chain, forgedAgent)).toThrow(ForgedPrincipalError)
+    expect(() =>{  assertAgentDelegationValid(chain, forgedAgent) }).toThrow(ForgedPrincipalError)
   })
 
   it('rejects an agent whose delegatedBy does not appear in the chain', () => {
@@ -263,7 +263,7 @@ describe('assertAgentDelegationValid', () => {
     const chain = createChain(root, 1000)
     const agent = createAgentPrincipal(PrincipalId('agent1'), TENANT_A, PrincipalId('nobody'))
     const extended = extendChain(chain, agent, 2000)
-    expect(() => assertAgentDelegationValid(extended, agent)).toThrow(ForgedPrincipalError)
+    expect(() =>{  assertAgentDelegationValid(extended, agent) }).toThrow(ForgedPrincipalError)
   })
 
   it('rejects an agent whose tenant differs from the chain tenant', () => {
@@ -273,7 +273,7 @@ describe('assertAgentDelegationValid', () => {
     const extended = extendChain(chain, legitAgent, 2000)
     // Same id as the chain's actual current entry, but a forged tenantId claim.
     const claimedWithForgedTenant: AgentPrincipal = { ...legitAgent, tenantId: TENANT_B }
-    expect(() => assertAgentDelegationValid(extended, claimedWithForgedTenant)).toThrow(TenantMismatchError)
+    expect(() =>{  assertAgentDelegationValid(extended, claimedWithForgedTenant) }).toThrow(TenantMismatchError)
   })
 })
 
@@ -291,8 +291,8 @@ describe('sameTenant / assertSameTenantId', () => {
   })
 
   it('throws TenantMismatchError when asserted tenant ids differ', () => {
-    expect(() => assertSameTenantId(TENANT_A, TENANT_B)).toThrow(TenantMismatchError)
-    expect(() => assertSameTenantId(TENANT_A, TENANT_A)).not.toThrow()
+    expect(() =>{  assertSameTenantId(TENANT_A, TENANT_B) }).toThrow(TenantMismatchError)
+    expect(() =>{  assertSameTenantId(TENANT_A, TENANT_A) }).not.toThrow()
   })
 })
 

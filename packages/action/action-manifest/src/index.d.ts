@@ -10,9 +10,9 @@
  *
  * @module @deepseek-ai/dsh-action-manifest
  */
-export * from './canonicalize.ts';
-import type { ActionId, ActionManifest, AppendedManifest, CreateActionManifestRequest, ExecutionGateDecision } from './types.ts';
-import type { JsonValue } from '@deepseek-ai/dsh-util-values';
+export * from './canonicalize.ts'
+import type { ActionId, ActionManifest, AppendedManifest, CreateActionManifestRequest, ExecutionGateDecision } from './types.ts'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 /**
  * The durable append sink an execution path writes its manifest to before
  * running (must[1]).
@@ -23,23 +23,23 @@ import type { JsonValue } from '@deepseek-ai/dsh-util-values';
  * Consumer wires the session log in; tests wire an in-memory one.
  */
 export interface ManifestAppender {
-    /**
+  /**
      * Durably append one manifest and return it with its assigned sequence.
      * @param manifest - the manifest to append.
      * @returns the appended record, carrying the monotonic sequence it occupies.
      */
-    append(manifest: ActionManifest): AppendedManifest;
-    /**
+  append(manifest: ActionManifest): AppendedManifest
+  /**
      * Every manifest appended so far, in append order.
      * @returns the append-ordered log.
      */
-    appended(): readonly AppendedManifest[];
+  appended(): readonly AppendedManifest[]
 }
 /**
  * An in-memory {@link ManifestAppender}, assigning sequences from 1.
  * @returns a fresh appender.
  */
-export declare function createMemoryManifestAppender(): ManifestAppender;
+export declare function createMemoryManifestAppender(): ManifestAppender
 /**
  * Generate a manifest, durably append it, and only then decide whether this
  * execution may proceed — must[1]'s order, enforced in one call so no
@@ -61,9 +61,9 @@ export declare function createMemoryManifestAppender(): ManifestAppender;
  * @returns the gate decision, plus the appended record for the caller's evidence.
  */
 export declare function appendManifestThenGate(appender: ManifestAppender, request: CreateActionManifestRequest): {
-    readonly appended: AppendedManifest;
-    readonly decision: ExecutionGateDecision;
-};
+  readonly appended: AppendedManifest
+  readonly decision: ExecutionGateDecision
+}
 /**
  * Decide whether an already-manifested action may execute with the arguments
  * it is about to run with, re-hashing them rather than trusting a caller's
@@ -78,5 +78,5 @@ export declare function appendManifestThenGate(appender: ManifestAppender, reque
  * @param appended - the durable log.
  * @returns the gate decision.
  */
-export declare function gateExecution(actionId: ActionId, args: JsonValue, appended: readonly AppendedManifest[]): ExecutionGateDecision;
+export declare function gateExecution(actionId: ActionId, args: JsonValue, appended: readonly AppendedManifest[]): ExecutionGateDecision
 //# sourceMappingURL=index.d.ts.map

@@ -251,7 +251,7 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
             downgrades: [],
           },
           protocolVersions: { min: 1, max: 1 },
-          schemaFingerprint: expect.stringMatching(/^[0-9a-f]{64}$/u) as unknown as string,
+          schemaFingerprint: expect.stringMatching(/^[0-9a-f]{64}$/u),
         },
       })
       expect(harness.exits()).toEqual([])

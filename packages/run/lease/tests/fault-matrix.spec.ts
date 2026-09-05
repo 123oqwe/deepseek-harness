@@ -37,39 +37,39 @@ interface LeaseFault {
 const MATRIX: readonly LeaseFault[] = [
   {
     boundary: '01 a strictly older epoch is refused as stale',
-    run: () => expect(checkFencing(token({ epoch: 0 as LeaseEpoch }), lease()))
-      .toEqual({ admitted: false, reason: 'stale-epoch' }),
+    run: () =>{  expect(checkFencing(token({ epoch: 0 as LeaseEpoch }), lease()))
+      .toEqual({ admitted: false, reason: 'stale-epoch' }) },
   },
   {
     boundary: '02 an epoch above the current one is refused, not treated as newer authority',
-    run: () => expect(checkFencing(token({ epoch: 99 as LeaseEpoch }), lease()))
-      .toEqual({ admitted: false, reason: 'stale-epoch' }),
+    run: () =>{  expect(checkFencing(token({ epoch: 99 as LeaseEpoch }), lease()))
+      .toEqual({ admitted: false, reason: 'stale-epoch' }) },
   },
   {
     boundary: '03 the exact current epoch is admitted, so the check is not refusing everything',
-    run: () => expect(checkFencing(token(), lease())).toEqual({ admitted: true }),
+    run: () =>{  expect(checkFencing(token(), lease())).toEqual({ admitted: true }) },
   },
   {
     boundary: '04 a token for another work item is refused',
-    run: () => expect(checkFencing(token({ workItem: OTHER_ITEM }), lease()))
-      .toEqual({ admitted: false, reason: 'wrong-work-item' }),
+    run: () =>{  expect(checkFencing(token({ workItem: OTHER_ITEM }), lease()))
+      .toEqual({ admitted: false, reason: 'wrong-work-item' }) },
   },
   {
     boundary: '05 a token from another holder at the current epoch is refused',
-    run: () => expect(checkFencing(token({ holder: WORKER_B }), lease()))
-      .toEqual({ admitted: false, reason: 'holder-mismatch' }),
+    run: () =>{  expect(checkFencing(token({ holder: WORKER_B }), lease()))
+      .toEqual({ admitted: false, reason: 'holder-mismatch' }) },
   },
   {
     boundary: '06 no lease at all refuses rather than admits',
-    run: () => expect(checkFencing(token(), undefined)).toEqual({ admitted: false, reason: 'no-lease' }),
+    run: () =>{  expect(checkFencing(token(), undefined)).toEqual({ admitted: false, reason: 'no-lease' }) },
   },
   {
     boundary: '07 a lease is still held AT its expiry instant',
-    run: () => expect(isReclaimable(lease({ expiresAtMs: 1_000 }), 1_000)).toBe(false),
+    run: () =>{  expect(isReclaimable(lease({ expiresAtMs: 1_000 }), 1_000)).toBe(false) },
   },
   {
     boundary: '08 a lease one millisecond past expiry is reclaimable',
-    run: () => expect(isReclaimable(lease({ expiresAtMs: 1_000 }), 1_001)).toBe(true),
+    run: () =>{  expect(isReclaimable(lease({ expiresAtMs: 1_000 }), 1_001)).toBe(true) },
   },
   {
     boundary: '09 acquiring is refused while another holder\'s lease is live',

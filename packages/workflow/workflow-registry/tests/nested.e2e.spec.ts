@@ -229,40 +229,40 @@ describe('P4-09 Fault — registration and nesting boundary matrix', () => {
   const FAULTS: readonly RegistryFault[] = [
     {
       boundary: '01 a digest that does not match its body is refused',
-      run: () => expect(admitRegistration(definition('body', { digest: brandString<DefinitionDigest>('sha256-lie') }), []))
-        .toMatchObject({ registered: false, reason: 'digest-mismatch' }),
+      run: () =>{  expect(admitRegistration(definition('body', { digest: brandString<DefinitionDigest>('sha256-lie') }), []))
+        .toMatchObject({ registered: false, reason: 'digest-mismatch' }) },
     },
     {
       boundary: '02 a version that skips ahead is refused',
-      run: () => expect(admitRegistration(definition('v3', { version: 3 }), [definition('v1')]))
-        .toMatchObject({ registered: false, reason: 'non-monotonic-version' }),
+      run: () =>{  expect(admitRegistration(definition('v3', { version: 3 }), [definition('v1')]))
+        .toMatchObject({ registered: false, reason: 'non-monotonic-version' }) },
     },
     {
       boundary: '03 a version already issued is refused for a different body',
-      run: () => expect(admitRegistration(definition('other', { version: 1 }), [definition('v1')]))
-        .toMatchObject({ registered: false, reason: 'version-reused' }),
+      run: () =>{  expect(admitRegistration(definition('other', { version: 1 }), [definition('v1')]))
+        .toMatchObject({ registered: false, reason: 'version-reused' }) },
     },
     {
       boundary: '04 an identical body is refused rather than silently re-registered',
-      run: () => expect(admitRegistration(definition('v1', { version: 2 }), [definition('v1')]))
-        .toMatchObject({ registered: false, reason: 'already-registered' }),
+      run: () =>{  expect(admitRegistration(definition('v1', { version: 2 }), [definition('v1')]))
+        .toMatchObject({ registered: false, reason: 'already-registered' }) },
     },
     {
       boundary: '05 the first registration under a name must be version 1',
-      run: () => expect(admitRegistration(definition('v', { version: 2 }), []))
-        .toMatchObject({ registered: false, reason: 'non-monotonic-version' }),
+      run: () =>{  expect(admitRegistration(definition('v', { version: 2 }), []))
+        .toMatchObject({ registered: false, reason: 'non-monotonic-version' }) },
     },
     {
       boundary: '06 a well-formed first registration is accepted',
-      run: () => expect(admitRegistration(definition('v1'), [])).toMatchObject({ registered: true }),
+      run: () =>{  expect(admitRegistration(definition('v1'), [])).toMatchObject({ registered: true }) },
     },
     {
       boundary: '07 an unknown digest does not resolve',
-      run: () => expect(resolveDefinition(
+      run: () =>{  expect(resolveDefinition(
         { runId: brandString<WorkflowRunId>('r'), digest: brandString<DefinitionDigest>('sha256-gone'),
           name: brandString<DefinitionName>('review-changes'), version: 1 },
         new Map(),
-      )).toEqual({ resolved: false, reason: 'unknown-digest' }),
+      )).toEqual({ resolved: false, reason: 'unknown-digest' }) },
     },
     {
       boundary: '08 a digest registered under another name reports a mismatch, not a miss',
@@ -277,7 +277,7 @@ describe('P4-09 Fault — registration and nesting boundary matrix', () => {
     },
     {
       boundary: '09 validation[1]: an old run does not resume against a newer version',
-      run: () => expect(canResumeAgainst(definition('v1').digest, definition('v2', { version: 2 }))).toBe(false),
+      run: () =>{  expect(canResumeAgainst(definition('v1').digest, definition('v2', { version: 2 }))).toBe(false) },
     },
     {
       boundary: '10 validation[1]: a run resumes against the exact definition it referenced',
@@ -288,8 +288,8 @@ describe('P4-09 Fault — registration and nesting boundary matrix', () => {
     },
     {
       boundary: '11 recursion is refused before the depth limit is consulted',
-      run: () => expect(admitNestedRun(budget({ depth: 99 }), CHILD, [CHILD], LIMITS))
-        .toMatchObject({ reason: 'recursive-definition' }),
+      run: () =>{  expect(admitNestedRun(budget({ depth: 99 }), CHILD, [CHILD], LIMITS))
+        .toMatchObject({ reason: 'recursive-definition' }) },
     },
     {
       boundary: '12 recursion is detected anywhere on the ancestor chain, not only at the parent',
@@ -331,11 +331,11 @@ describe('P4-09 Fault — registration and nesting boundary matrix', () => {
     },
     {
       boundary: '16 validation[2]: a self-recursive definition is detected from its body',
-      run: () => expect(isSelfRecursive(definition('await workflow("review-changes")'))).toBe(true),
+      run: () =>{  expect(isSelfRecursive(definition('await workflow("review-changes")'))).toBe(true) },
     },
     {
       boundary: '17 validation[2]: nesting a different name is not self-recursion',
-      run: () => expect(isSelfRecursive(definition('await workflow("other")'))).toBe(false),
+      run: () =>{  expect(isSelfRecursive(definition('await workflow("other")'))).toBe(false) },
     },
     {
       boundary: '18 acceptance[0]: a hostile body registers and resolves without executing',

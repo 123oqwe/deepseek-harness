@@ -257,29 +257,29 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
   const FAULTS: readonly ProvenanceFault[] = [
     {
       boundary: '01 tampered package digest is refused for digest mismatch',
-      run: () => expect(verify({ observed: buildObserved({ observedDigest: brandString<PackageDigest>('sha256:tampered') }) }))
-        .toMatchObject({ trust: 'rejected', reason: 'package-digest-mismatch' }),
+      run: () =>{  expect(verify({ observed: buildObserved({ observedDigest: brandString<PackageDigest>('sha256:tampered') }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'package-digest-mismatch' }) },
     },
     {
       boundary: '02 swapped source repo is refused for source-repo mismatch',
-      run: () => expect(verify({
+      run: () =>{  expect(verify({
         observed: buildObserved({
           observedSourceCommit: { repoUrl: 'https://github.com/evil/plugin-a', commitHash: realSourceCommit.commitHash },
         }),
-      })).toMatchObject({ trust: 'rejected', reason: 'source-repo-mismatch' }),
+      })).toMatchObject({ trust: 'rejected', reason: 'source-repo-mismatch' }) },
     },
     {
       boundary: '03 forged commit in the same repo is refused distinctly from a repo swap',
-      run: () => expect(verify({
+      run: () =>{  expect(verify({
         observed: buildObserved({
           observedSourceCommit: { repoUrl: realSourceCommit.repoUrl, commitHash: brandString<SourceCommitHash>('deadbeef') },
         }),
-      })).toMatchObject({ trust: 'rejected', reason: 'source-commit-mismatch' }),
+      })).toMatchObject({ trust: 'rejected', reason: 'source-commit-mismatch' }) },
     },
     {
       boundary: '04 forged builder identity is refused for builder-identity mismatch',
-      run: () => expect(verify({ observed: buildObserved({ observedBuilderIdentity: brandString<BuilderIdentity>('laptop:eve') }) }))
-        .toMatchObject({ trust: 'rejected', reason: 'builder-identity-mismatch' }),
+      run: () =>{  expect(verify({ observed: buildObserved({ observedBuilderIdentity: brandString<BuilderIdentity>('laptop:eve') }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'builder-identity-mismatch' }) },
     },
     {
       boundary: '05 several mismatches at once still refuse, naming the first checked fact',
@@ -298,43 +298,43 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
     },
     {
       boundary: '06 sigstore evidence with an empty issuer is refused as invalid',
-      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, issuer: '' }) }))
-        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+      run: () =>{  expect(verify({ claim: buildClaim({ ...sigstoreEvidence, issuer: '' }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }) },
     },
     {
       boundary: '07 sigstore evidence with an empty subject is refused as invalid',
-      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, subject: '' }) }))
-        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+      run: () =>{  expect(verify({ claim: buildClaim({ ...sigstoreEvidence, subject: '' }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }) },
     },
     {
       boundary: '08 sigstore evidence with a negative transparency log index is refused',
-      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: -1 }) }))
-        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+      run: () =>{  expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: -1 }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }) },
     },
     {
       boundary: '09 sigstore evidence with a non-integer log index is refused',
-      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: 1.5 }) }))
-        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+      run: () =>{  expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: 1.5 }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }) },
     },
     {
       boundary: '10 log index zero is VALID, so the check is not an accidental truthiness test',
-      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: 0 }) }).trust)
-        .toBe('trusted'),
+      run: () =>{  expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: 0 }) }).trust)
+        .toBe('trusted') },
     },
     {
       boundary: '11 offline evidence with an empty signature is refused as invalid',
-      run: () => expect(verify({
+      run: () =>{  expect(verify({
         claim: buildClaim({
           mode: 'offline-signed',
           signature: new Uint8Array(),
           publicKeyFingerprint: brandString<PublicKeyFingerprint>('SHA256:acme-release-key'),
         }),
-      })).toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+      })).toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }) },
     },
     {
       boundary: '12 offline evidence with an empty key fingerprint is refused as invalid',
-      run: () => expect(verify({ claim: buildClaim(offlineEvidence(brandString<PublicKeyFingerprint>(''))) }))
-        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+      run: () =>{  expect(verify({ claim: buildClaim(offlineEvidence(brandString<PublicKeyFingerprint>(''))) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }) },
     },
     {
       boundary: '13 a fact mismatch is reported even when the evidence is ALSO invalid',
@@ -351,12 +351,12 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
     },
     {
       boundary: '14 an SBOM omitting an installed runtime dependency is refused',
-      run: () => expect(verify({ installedDependencyNames: new Set(['left-pad', 'undeclared-dep']) }).trust)
-        .toBe('rejected'),
+      run: () =>{  expect(verify({ installedDependencyNames: new Set(['left-pad', 'undeclared-dep']) }).trust)
+        .toBe('rejected') },
     },
     {
       boundary: '15 a declared runtime dependency that is NOT installed is refused',
-      run: () => expect(verify({ installedDependencyNames: new Set<string>() }).trust).toBe('rejected'),
+      run: () =>{  expect(verify({ installedDependencyNames: new Set<string>() }).trust).toBe('rejected') },
     },
     {
       boundary: '16 a dev-only SBOM entry absent from the installed set is NOT a fault',

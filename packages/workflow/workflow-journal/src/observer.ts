@@ -61,9 +61,9 @@ export function journalingObserver(
   recorder: JournalRecorder,
   classify: (event: AgentStartEvent) => StepEffectClass,
 ): {
-    readonly onAgentStart: (event: AgentStartEvent) => void
-    readonly onAgentEnd: (event: AgentEndEvent) => void
-  } {
+  readonly onAgentStart: (event: AgentStartEvent) => void
+  readonly onAgentEnd: (event: AgentEndEvent) => void
+} {
   return {
     onAgentStart(event) {
       recorder.stepStarted(

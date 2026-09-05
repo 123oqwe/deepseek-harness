@@ -46,12 +46,12 @@ export type VersionNegotiationDenialReason =
 export type VersionNegotiationResult =
   | { readonly agreed: true; readonly version: ProtocolVersion }
   | {
-      readonly agreed: false
-      readonly reason: VersionNegotiationDenialReason
-      /** Both ranges, so a refusal is diagnosable without re-running the handshake. */
-      readonly client: ProtocolVersionRange
-      readonly server: ProtocolVersionRange
-    }
+    readonly agreed: false
+    readonly reason: VersionNegotiationDenialReason
+    /** Both ranges, so a refusal is diagnosable without re-running the handshake. */
+    readonly client: ProtocolVersionRange
+    readonly server: ProtocolVersionRange
+  }
 
 /**
  * Negotiate one protocol version from two supported ranges.

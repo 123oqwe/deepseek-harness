@@ -133,7 +133,7 @@ describe('P5-11: a claim honours dependencies the store resolves for it', () => 
     store.submit([task('other')])
     const verified = new TaskStore()
     verified.submit([task('dep', { status: 'verified', verification: 'passed' }),
-                     task('t1', { dependsOn: [brandString<TaskId>('dep')] })])
+      task('t1', { dependsOn: [brandString<TaskId>('dep')] })])
     expect(verified.claim(brandString<TaskId>('t1'), worker('w'), 1_000, 5_000).claimed).toBe(true)
   })
 })

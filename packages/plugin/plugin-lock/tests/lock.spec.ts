@@ -249,54 +249,54 @@ describe('P1-03 Fault — rejection-boundary matrix', () => {
   const FAULTS: readonly LockFault[] = [
     {
       boundary: '01 a dangling dependency is refused',
-      run: () => expect(validateLock(lock([entry('alpha', { dependencies: [name('missing')] })], [name('alpha')])))
-        .toMatchObject({ valid: false, reason: 'dangling-dependency' }),
+      run: () =>{  expect(validateLock(lock([entry('alpha', { dependencies: [name('missing')] })], [name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'dangling-dependency' }) },
     },
     {
       boundary: '02 a duplicate entry is refused',
-      run: () => expect(validateLock(lock([entry('alpha'), entry('alpha')], [name('alpha')])))
-        .toMatchObject({ valid: false, reason: 'duplicate-entry' }),
+      run: () =>{  expect(validateLock(lock([entry('alpha'), entry('alpha')], [name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'duplicate-entry' }) },
     },
     {
       boundary: '03 unsorted entries are refused, since the file would not be byte-stable',
-      run: () => expect(validateLock(lock([entry('beta'), entry('alpha')], [name('alpha'), name('beta')])))
-        .toMatchObject({ valid: false, reason: 'entries-not-canonical' }),
+      run: () =>{  expect(validateLock(lock([entry('beta'), entry('alpha')], [name('alpha'), name('beta')])))
+        .toMatchObject({ valid: false, reason: 'entries-not-canonical' }) },
     },
     {
       boundary: '04 a load order shorter than the entries is refused',
-      run: () => expect(validateLock(lock([entry('alpha'), entry('beta')], [name('alpha')])))
-        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }),
+      run: () =>{  expect(validateLock(lock([entry('alpha'), entry('beta')], [name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }) },
     },
     {
       boundary: '05 a load order naming an unknown plugin is refused',
-      run: () => expect(validateLock(lock([entry('alpha')], [name('ghost')])))
-        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }),
+      run: () =>{  expect(validateLock(lock([entry('alpha')], [name('ghost')])))
+        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }) },
     },
     {
       boundary: '06 a load order listing one plugin twice is refused',
-      run: () => expect(validateLock(lock([entry('alpha'), entry('beta')], [name('alpha'), name('alpha')])))
-        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }),
+      run: () =>{  expect(validateLock(lock([entry('alpha'), entry('beta')], [name('alpha'), name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }) },
     },
     {
       boundary: '07 a load order placing a plugin before its dependency is refused',
-      run: () => expect(validateLock(lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')], [name('alpha'), name('beta')])))
-        .toMatchObject({ valid: false, reason: 'load-order-violates-dependency' }),
+      run: () =>{  expect(validateLock(lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')], [name('alpha'), name('beta')])))
+        .toMatchObject({ valid: false, reason: 'load-order-violates-dependency' }) },
     },
     {
       boundary: '08 a dependency cycle yields no order at all',
-      run: () => expect(resolveLoadOrder([
+      run: () =>{  expect(resolveLoadOrder([
         entry('alpha', { dependencies: [name('beta')] }),
         entry('beta', { dependencies: [name('alpha')] }),
-      ])).toBeUndefined(),
+      ])).toBeUndefined() },
     },
     {
       boundary: '09 a self-dependency is a cycle, not a no-op',
-      run: () => expect(resolveLoadOrder([entry('alpha', { dependencies: [name('alpha')] })])).toBeUndefined(),
+      run: () =>{  expect(resolveLoadOrder([entry('alpha', { dependencies: [name('alpha')] })])).toBeUndefined() },
     },
     {
       boundary: '10 a well-formed lock is accepted, so the checks above refuse selectively',
-      run: () => expect(validateLock(lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')])))
-        .toEqual({ valid: true }),
+      run: () =>{  expect(validateLock(lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')])))
+        .toEqual({ valid: true }) },
     },
     {
       boundary: '11 boot refuses an integrity drift',
@@ -351,7 +351,7 @@ describe('P1-03 Fault — rejection-boundary matrix', () => {
     },
     {
       boundary: '16 an empty lock admits an empty install rather than refusing',
-      run: () => expect(admitBoot(lock([]), [])).toEqual({ admitted: true, loadOrder: [] }),
+      run: () =>{  expect(admitBoot(lock([]), [])).toEqual({ admitted: true, loadOrder: [] }) },
     },
     {
       boundary: '17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it',

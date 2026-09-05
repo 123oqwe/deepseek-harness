@@ -17,7 +17,7 @@ import { commitWithOutbox, type AtomicBatchSink } from '../src/index.ts'
 /** Records each group handed to the sink, so splits are observable. */
 function recordingSink(): AtomicBatchSink<string> & { groups: string[][] } {
   const groups: string[][] = []
-  return { groups, enqueueAll: (entries) => void groups.push([...entries]) }
+  return { groups, enqueueAll: entries => void groups.push([...entries]) }
 }
 
 describe('P4-06 must[0]: a commit reaches the durable sink as one group', () => {
@@ -39,7 +39,7 @@ describe('P4-06 must[0]: a commit reaches the durable sink as one group', () => 
   it('refuses a commit with no records rather than appending a lone event', () => {
     const sink = recordingSink()
 
-    expect(() => commitWithOutbox(sink, 'domain/committed', [])).toThrow(RangeError)
+    expect(() =>{  commitWithOutbox(sink, 'domain/committed', []) }).toThrow(RangeError)
     // The refusal must leave nothing behind: a sink that had already received
     // the event would have committed it without the outbox the caller
     // believed it was writing.

@@ -235,28 +235,28 @@ describe('P5-11 Fault — claim and graph boundary matrix', () => {
   const FAULTS: readonly TaskFault[] = [
     {
       boundary: '01 an open task admits its first claim',
-      run: () => expect(decideClaim(task('t'), WORKER_A, 1_000, 5_000, []).claimed).toBe(true),
+      run: () =>{  expect(decideClaim(task('t'), WORKER_A, 1_000, 5_000, []).claimed).toBe(true) },
     },
     {
       boundary: '02 a live claim refuses a second worker',
-      run: () => expect(decideClaim(
+      run: () =>{  expect(decideClaim(
         task('t', { status: 'claimed', owner: WORKER_A, attempt: 1, claimExpiresAtMs: 6_000 }),
         WORKER_B, 2_000, 5_000, [],
-      )).toEqual({ claimed: false, reason: 'already-claimed' }),
+      )).toEqual({ claimed: false, reason: 'already-claimed' }) },
     },
     {
       boundary: '03 a claim is still held AT its expiry instant',
-      run: () => expect(decideClaim(
+      run: () =>{  expect(decideClaim(
         task('t', { status: 'claimed', owner: WORKER_A, attempt: 1, claimExpiresAtMs: 6_000 }),
         WORKER_B, 6_000, 5_000, [],
-      ).claimed).toBe(false),
+      ).claimed).toBe(false) },
     },
     {
       boundary: '04 one millisecond past expiry the task is claimable again',
-      run: () => expect(decideClaim(
+      run: () =>{  expect(decideClaim(
         task('t', { status: 'claimed', owner: WORKER_A, attempt: 1, claimExpiresAtMs: 6_000 }),
         WORKER_B, 6_001, 5_000, [],
-      ).claimed).toBe(true),
+      ).claimed).toBe(true) },
     },
     {
       boundary: '05 a reclaim issues a strictly greater attempt',
@@ -271,46 +271,46 @@ describe('P5-11 Fault — claim and graph boundary matrix', () => {
     },
     {
       boundary: '06 a superseded holder\'s write is refused',
-      run: () => expect(isClaimCurrent(task('t', { owner: WORKER_B, attempt: 2 }), WORKER_A, 1)).toBe(false),
+      run: () =>{  expect(isClaimCurrent(task('t', { owner: WORKER_B, attempt: 2 }), WORKER_A, 1)).toBe(false) },
     },
     {
       boundary: '07 an attempt above the current one is refused, not treated as newer',
-      run: () => expect(isClaimCurrent(task('t', { owner: WORKER_A, attempt: 2 }), WORKER_A, 99)).toBe(false),
+      run: () =>{  expect(isClaimCurrent(task('t', { owner: WORKER_A, attempt: 2 }), WORKER_A, 99)).toBe(false) },
     },
     {
       boundary: '08 the current holder at the current attempt is admitted',
-      run: () => expect(isClaimCurrent(task('t', { owner: WORKER_A, attempt: 2 }), WORKER_A, 2)).toBe(true),
+      run: () =>{  expect(isClaimCurrent(task('t', { owner: WORKER_A, attempt: 2 }), WORKER_A, 2)).toBe(true) },
     },
     {
       boundary: '09 a verified task is not claimable',
-      run: () => expect(decideClaim(task('t', { status: 'verified' }), WORKER_A, 1_000, 5_000, []))
-        .toEqual({ claimed: false, reason: 'not-claimable' }),
+      run: () =>{  expect(decideClaim(task('t', { status: 'verified' }), WORKER_A, 1_000, 5_000, []))
+        .toEqual({ claimed: false, reason: 'not-claimable' }) },
     },
     {
       boundary: '10 a failed task is not claimable',
-      run: () => expect(decideClaim(task('t', { status: 'failed' }), WORKER_A, 1_000, 5_000, []))
-        .toEqual({ claimed: false, reason: 'not-claimable' }),
+      run: () =>{  expect(decideClaim(task('t', { status: 'failed' }), WORKER_A, 1_000, 5_000, []))
+        .toEqual({ claimed: false, reason: 'not-claimable' }) },
     },
     {
       boundary: '11 a submitted-but-unverified dependency blocks the claim',
-      run: () => expect(decideClaim(
+      run: () =>{  expect(decideClaim(
         task('t', { dependsOn: [brandString<TaskId>('dep')] }), WORKER_A, 1_000, 5_000,
         [task('dep', { status: 'submitted' })],
-      )).toEqual({ claimed: false, reason: 'dependency-unmet' }),
+      )).toEqual({ claimed: false, reason: 'dependency-unmet' }) },
     },
     {
       boundary: '12 one unverified dependency among several still blocks',
-      run: () => expect(decideClaim(
+      run: () =>{  expect(decideClaim(
         task('t', { dependsOn: [brandString<TaskId>('a'), brandString<TaskId>('b')] }), WORKER_A, 1_000, 5_000,
         [task('a', { status: 'verified' }), task('b', { status: 'claimed' })],
-      )).toEqual({ claimed: false, reason: 'dependency-unmet' }),
+      )).toEqual({ claimed: false, reason: 'dependency-unmet' }) },
     },
     {
       boundary: '13 all dependencies verified admits the claim',
-      run: () => expect(decideClaim(
+      run: () =>{  expect(decideClaim(
         task('t', { dependsOn: [brandString<TaskId>('a')] }), WORKER_A, 1_000, 5_000,
         [task('a', { status: 'verified' })],
-      ).claimed).toBe(true),
+      ).claimed).toBe(true) },
     },
     {
       boundary: '14 a not-claimable status wins over an unmet dependency',
@@ -326,20 +326,20 @@ describe('P5-11 Fault — claim and graph boundary matrix', () => {
     },
     {
       boundary: '15 a two-task cycle is refused',
-      run: () => expect(validateTaskGraph([
+      run: () =>{  expect(validateTaskGraph([
         task('a', { dependsOn: [brandString<TaskId>('b')] }),
         task('b', { dependsOn: [brandString<TaskId>('a')] }),
-      ])).toMatchObject({ valid: false, reason: 'dependency-cycle' }),
+      ])).toMatchObject({ valid: false, reason: 'dependency-cycle' }) },
     },
     {
       boundary: '16 a self-dependency is refused distinctly from a cycle',
-      run: () => expect(validateTaskGraph([task('a', { dependsOn: [brandString<TaskId>('a')] })]))
-        .toMatchObject({ valid: false, reason: 'self-dependency' }),
+      run: () =>{  expect(validateTaskGraph([task('a', { dependsOn: [brandString<TaskId>('a')] })]))
+        .toMatchObject({ valid: false, reason: 'self-dependency' }) },
     },
     {
       boundary: '17 a forward reference is refused as an unknown dependency',
-      run: () => expect(validateTaskGraph([task('a', { dependsOn: [brandString<TaskId>('later')] })]))
-        .toMatchObject({ valid: false, reason: 'unknown-dependency' }),
+      run: () =>{  expect(validateTaskGraph([task('a', { dependsOn: [brandString<TaskId>('later')] })]))
+        .toMatchObject({ valid: false, reason: 'unknown-dependency' }) },
     },
     {
       boundary: '18 a diamond is accepted: a shared dependency is not a cycle',
@@ -353,7 +353,7 @@ describe('P5-11 Fault — claim and graph boundary matrix', () => {
     },
     {
       boundary: '19 an empty graph is valid',
-      run: () => expect(validateTaskGraph([])).toEqual({ valid: true }),
+      run: () =>{  expect(validateTaskGraph([])).toEqual({ valid: true }) },
     },
   ]
 

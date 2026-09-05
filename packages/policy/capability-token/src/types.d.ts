@@ -63,9 +63,9 @@
  *
  * @module @deepseek-ai/dsh-capability-token/types
  */
-import { type Branded, type BrandedNumber } from '@deepseek-ai/dsh-brand';
-import type { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types';
-export type { PrincipalId, TenantId };
+import { type Branded, type BrandedNumber } from '@deepseek-ai/dsh-brand'
+import type { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
+export type { PrincipalId, TenantId }
 /**
  * Names one capability seam this repository's plugins register (must[0]'s
  * "capability") — for example `'fs'`, `'shell'`, `'web'`, `'subprocess'`,
@@ -75,13 +75,13 @@ export type { PrincipalId, TenantId };
  * enumerable set this package could close over without becoming stale every
  * time a new capability family ships.
  */
-export type CapabilityName = Branded<'CapabilityName'>;
+export type CapabilityName = Branded<'CapabilityName'>
 /**
  * Brand a string as a {@link CapabilityName}.
  * @param name - the raw capability-seam name, e.g. `'fs'` or `'shell'`.
  * @returns the same string with the capability-name brand.
  */
-export declare function CapabilityName(name: string): CapabilityName;
+export declare function CapabilityName(name: string): CapabilityName
 /**
  * Anti-replay identifier (must[0]'s "nonce"): unique per issued or
  * attenuated token, checked by `./attenuate.ts`'s `verifyToken` against the
@@ -91,13 +91,13 @@ export declare function CapabilityName(name: string): CapabilityName;
  * `occurredAt` idiom: construction stays pure, and nonce generation is a
  * later, non-Contract-stage concern.
  */
-export type CapabilityTokenNonce = Branded<'CapabilityTokenNonce'>;
+export type CapabilityTokenNonce = Branded<'CapabilityTokenNonce'>
 /**
  * Brand a string as a {@link CapabilityTokenNonce}.
  * @param value - the raw nonce string, from a real random source (never a caller-predictable counter).
  * @returns the same string with the nonce brand.
  */
-export declare function CapabilityTokenNonce(value: string): CapabilityTokenNonce;
+export declare function CapabilityTokenNonce(value: string): CapabilityTokenNonce
 /**
  * Content digest of one {@link CapabilityToken} (must[0]'s "parent digest",
  * and acceptance[2]'s "日志只记录 digest" — logs record only the digest).
@@ -106,13 +106,13 @@ export declare function CapabilityTokenNonce(value: string): CapabilityTokenNonc
  * {@link CapabilityTokenLogRecord.digest} are always one of its outputs,
  * never a caller-supplied string.
  */
-export type CapabilityTokenDigest = Branded<'CapabilityTokenDigest'>;
+export type CapabilityTokenDigest = Branded<'CapabilityTokenDigest'>
 /**
  * Brand a string as a {@link CapabilityTokenDigest}.
  * @param value - the raw digest string, from `./attenuate.ts`'s `digestToken` (never hand-constructed).
  * @returns the same string with the token-digest brand.
  */
-export declare function CapabilityTokenDigest(value: string): CapabilityTokenDigest;
+export declare function CapabilityTokenDigest(value: string): CapabilityTokenDigest
 /**
  * A monetary spend ceiling, in the deployment's one implied smallest
  * currency unit (acceptance[0]'s "金额" — budget). A non-negative safe
@@ -121,13 +121,13 @@ export declare function CapabilityTokenDigest(value: string): CapabilityTokenDig
  * not this Contract stage's concern — a real deployment fixes one currency
  * per tenant before this type is ever compared.
  */
-export type TokenBudget = BrandedNumber<'TokenBudget'>;
+export type TokenBudget = BrandedNumber<'TokenBudget'>
 /**
  * Brand a number as a {@link TokenBudget}.
  * @param value - non-negative safe integer spend ceiling.
  * @returns the same number with the token-budget brand.
  */
-export declare function TokenBudget(value: number): TokenBudget;
+export declare function TokenBudget(value: number): TokenBudget
 /**
  * must[0]'s "constraints" field. Currently carries only
  * {@link TokenBudget}, the one constraint acceptance[0] names by itself
@@ -140,7 +140,7 @@ export declare function TokenBudget(value: number): TokenBudget;
  * "unconstrained" is itself a widening).
  */
 export interface TokenConstraints {
-    readonly budget?: TokenBudget;
+  readonly budget?: TokenBudget
 }
 /**
  * must[0]'s complete, closed token shape: subject, tenant, capability,
@@ -169,17 +169,17 @@ export interface TokenConstraints {
  * carries neither field).
  */
 export interface CapabilityToken {
-    readonly subject: PrincipalId;
-    readonly tenant: TenantId;
-    readonly capability: CapabilityName;
-    readonly verbs: readonly string[];
-    readonly resources: readonly string[];
-    readonly constraints: TokenConstraints;
-    /** Non-negative safe-integer Unix epoch milliseconds after which this token is no longer valid (must[0]'s "expiry"). */
-    readonly expiresAt: number;
-    readonly nonce: CapabilityTokenNonce;
-    readonly delegationDepth: number;
-    readonly parentDigest: CapabilityTokenDigest | null;
+  readonly subject: PrincipalId
+  readonly tenant: TenantId
+  readonly capability: CapabilityName
+  readonly verbs: readonly string[]
+  readonly resources: readonly string[]
+  readonly constraints: TokenConstraints
+  /** Non-negative safe-integer Unix epoch milliseconds after which this token is no longer valid (must[0]'s "expiry"). */
+  readonly expiresAt: number
+  readonly nonce: CapabilityTokenNonce
+  readonly delegationDepth: number
+  readonly parentDigest: CapabilityTokenDigest | null
 }
 /**
  * A {@link CapabilityToken} plus the TrustKernel signature over it
@@ -195,8 +195,8 @@ export interface CapabilityToken {
  * surface (must[3]).
  */
 export interface SignedCapabilityToken {
-    readonly token: CapabilityToken;
-    readonly signature: Uint8Array;
+  readonly token: CapabilityToken
+  readonly signature: Uint8Array
 }
 /**
  * `./attenuate.ts`'s `issueToken` input: every must[0] field a root grant
@@ -208,13 +208,13 @@ export interface SignedCapabilityToken {
  * otherwise.
  */
 export interface TokenIssuanceRequest {
-    readonly subject: PrincipalId;
-    readonly tenant: TenantId;
-    readonly capability: CapabilityName;
-    readonly verbs: readonly string[];
-    readonly resources: readonly string[];
-    readonly constraints: TokenConstraints;
-    readonly expiresAt: number;
+  readonly subject: PrincipalId
+  readonly tenant: TenantId
+  readonly capability: CapabilityName
+  readonly verbs: readonly string[]
+  readonly resources: readonly string[]
+  readonly constraints: TokenConstraints
+  readonly expiresAt: number
 }
 /**
  * Pure data `./attenuate.ts`'s `verifyToken` checks a candidate token
@@ -225,9 +225,9 @@ export interface TokenIssuanceRequest {
  * only fixes the shape of that check.
  */
 export interface TokenVerificationContext {
-    /** Non-negative safe-integer Unix epoch milliseconds to check {@link CapabilityToken.expiresAt} against. */
-    readonly now: number;
-    readonly seenNonces: ReadonlySet<CapabilityTokenNonce>;
+  /** Non-negative safe-integer Unix epoch milliseconds to check {@link CapabilityToken.expiresAt} against. */
+  readonly now: number
+  readonly seenNonces: ReadonlySet<CapabilityTokenNonce>
 }
 /**
  * Why `./attenuate.ts`'s `verifyToken` refused a candidate token
@@ -238,7 +238,7 @@ export interface TokenVerificationContext {
  * `context.now` is at or past `token.expiresAt`. `'replayed'` —
  * `token.nonce` already appears in `context.seenNonces`.
  */
-export type TokenVerificationDenialReason = 'signature-invalid' | 'expired' | 'replayed';
+export type TokenVerificationDenialReason = 'signature-invalid' | 'expired' | 'replayed'
 /**
  * The outcome of `./attenuate.ts`'s `verifyToken`: either every check
  * passes and the verified {@link CapabilityToken} is returned
@@ -247,12 +247,12 @@ export type TokenVerificationDenialReason = 'signature-invalid' | 'expired' | 'r
  * partial pass.
  */
 export type TokenVerificationResult = {
-    readonly verified: true;
-    readonly token: CapabilityToken;
+  readonly verified: true
+  readonly token: CapabilityToken
 } | {
-    readonly verified: false;
-    readonly reason: TokenVerificationDenialReason;
-};
+  readonly verified: false
+  readonly reason: TokenVerificationDenialReason
+}
 /**
  * `./attenuate.ts`'s `attenuateToken` input: acceptance[0]'s four
  * narrowable dimensions (`verbs`, `resources`, `constraints`, `expiresAt`)
@@ -263,12 +263,12 @@ export type TokenVerificationResult = {
  * from the parent it is given, never from its caller.
  */
 export interface TokenAttenuationRequest {
-    readonly subject: PrincipalId;
-    readonly verbs: readonly string[];
-    readonly resources: readonly string[];
-    readonly constraints: TokenConstraints;
-    readonly expiresAt: number;
-    readonly nonce: CapabilityTokenNonce;
+  readonly subject: PrincipalId
+  readonly verbs: readonly string[]
+  readonly resources: readonly string[]
+  readonly constraints: TokenConstraints
+  readonly expiresAt: number
+  readonly nonce: CapabilityTokenNonce
 }
 /**
  * Why `./attenuate.ts`'s `attenuateToken` refused a requested child scope
@@ -284,7 +284,7 @@ export interface TokenAttenuationRequest {
  * than one dimension always refuses naming the earliest-checked one,
  * deterministically — never a partial narrowing.
  */
-export type TokenAttenuationDenialReason = 'verbs-not-subset' | 'resources-not-subset' | 'budget-exceeds-parent' | 'expiry-exceeds-parent';
+export type TokenAttenuationDenialReason = 'verbs-not-subset' | 'resources-not-subset' | 'budget-exceeds-parent' | 'expiry-exceeds-parent'
 /**
  * The outcome of `./attenuate.ts`'s `attenuateToken`: either every
  * dimension narrows or stays equal to the parent's and a freshly signed
@@ -293,12 +293,12 @@ export type TokenAttenuationDenialReason = 'verbs-not-subset' | 'resources-not-s
  * (`accepted: false`) — never a partially narrowed child.
  */
 export type TokenAttenuationDecision = {
-    readonly accepted: true;
-    readonly child: SignedCapabilityToken;
+  readonly accepted: true
+  readonly child: SignedCapabilityToken
 } | {
-    readonly accepted: false;
-    readonly reason: TokenAttenuationDenialReason;
-};
+  readonly accepted: false
+  readonly reason: TokenAttenuationDenialReason
+}
 /**
  * The complete digest chain from a token's root ancestor (index `0`,
  * `./attenuate.ts`'s `issueToken` output) down to and including the token
@@ -311,7 +311,7 @@ export type TokenAttenuationDecision = {
  * parent immediately invalidates every descendant) — is detected no matter
  * how many attenuation hops separate the revoked ancestor from this token.
  */
-export type TokenLineage = readonly [CapabilityTokenDigest, ...CapabilityTokenDigest[]];
+export type TokenLineage = readonly [CapabilityTokenDigest, ...CapabilityTokenDigest[]]
 /**
  * must[3]'s closed set of consumer surfaces that must present a token
  * before acting: tools, plugin RPC calls, external Agents, and the
@@ -319,9 +319,9 @@ export type TokenLineage = readonly [CapabilityTokenDigest, ...CapabilityTokenDi
  * these four kinds — a fifth surface this package has not been told about
  * cannot be named at all.
  */
-export type CapabilityConsumerSurfaceKind = 'tool' | 'plugin-rpc' | 'external-agent' | 'execution-world';
+export type CapabilityConsumerSurfaceKind = 'tool' | 'plugin-rpc' | 'external-agent' | 'execution-world'
 /** Why `./attenuate.ts`'s `assertTokenPresented` refused a call: no token was presented at all. */
-export type TokenPresenceDenialReason = 'token-required';
+export type TokenPresenceDenialReason = 'token-required'
 /**
  * The outcome of `./attenuate.ts`'s `assertTokenPresented`: either a token
  * was presented (`presented: true` — `verifyToken` decides whether it is
@@ -330,12 +330,12 @@ export type TokenPresenceDenialReason = 'token-required';
  * the call (`presented: false`).
  */
 export type TokenPresenceDecision = {
-    readonly presented: true;
+  readonly presented: true
 } | {
-    readonly presented: false;
-    readonly reason: TokenPresenceDenialReason;
-    readonly surface: CapabilityConsumerSurfaceKind;
-};
+  readonly presented: false
+  readonly reason: TokenPresenceDenialReason
+  readonly surface: CapabilityConsumerSurfaceKind
+}
 /**
  * acceptance[2]'s "日志只记录 digest 和安全元数据" (logs record only the
  * digest plus security metadata) — the one shape `./attenuate.ts`'s
@@ -347,11 +347,11 @@ export type TokenPresenceDecision = {
  * this shape by accident.
  */
 export interface CapabilityTokenLogRecord {
-    readonly digest: CapabilityTokenDigest;
-    readonly subject: PrincipalId;
-    readonly tenant: TenantId;
-    readonly capability: CapabilityName;
-    readonly delegationDepth: number;
-    readonly expiresAt: number;
+  readonly digest: CapabilityTokenDigest
+  readonly subject: PrincipalId
+  readonly tenant: TenantId
+  readonly capability: CapabilityName
+  readonly delegationDepth: number
+  readonly expiresAt: number
 }
 //# sourceMappingURL=types.d.ts.map
