@@ -1902,3 +1902,32 @@ P4-01's Fault stage raised this first, and it needed a line drawn rather than a 
 **The obligation either way is disclosure.** A body edit across the freeze boundary must be recorded in the freeze note and the report, never allowed to pass as an implementation detail. What makes this reviewable is that a later reader can see the case changed and why; what would make it unreviewable is silence.
 
 **Corollary, from the same lane.** A repo-wide `pnpm run typecheck` caught a real `exactOptionalPropertyTypes` error (`TS2345`) while all 148 tests were green — a spec suite cannot see a type error the package build excludes. That is why repo-wide typecheck is mandated over the package-level `tsc -b`, and it now has a concrete instance behind it rather than only a rule.
+
+**The register was recording lighter than reality (2026-09-05).** Three occurrences of the Inspector flake had been absorbed into green cells without being appended here, so the count read 8 where the verified figure is 11.
+
+The lag is not three missing rows. **This count is the evidence that the test is unstable, and this entry's own criterion reads it** — the question "is the flake rate now high enough that a failure here stops being distinguishable from a real regression?" is answered by consulting exactly this number. **A register kept to judge its own subject's severity was systematically understating it, and in one direction only.** Where today's other findings were a verdict divorced from its subject, this is a record that stays attached to its subject but drifts consistently toward "less severe" — nothing pulls it the other way, because nobody ever forgets to *remove* an occurrence.
+
+The cause is that absorbing a flake into a green cell and appending its occurrence are **two separate acts**. The first is required to green the cell and therefore always happens; the second is required by nothing and therefore happens when remembered. **A count maintained by remembering to maintain it will be biased low, not merely noisy.** Pairing them mechanically — a green cell recording `absorbedFlakes` must append the matching occurrence — belongs here rather than as its own item.
+
+**The backfill was verified per run, not accepted from a list.** Of seven candidate runs offered, three carry this case's failure text in their failed-step log and four carry it zero times, having failed on something else. Only the three were added. Attributing the other four would have inflated the very number this entry uses to decide whether the flake has become unsafe — **an error in the direction the register was already leaning.**
+
+**Priority unchanged: still not fixed here.** It does not block a cell from greening, and the epic is the path.
+
+## BLOCKED-088 — "Claimed" is not "effected": a dedup rule that forbade a real production path
+
+**Status: OPEN. Blocks P4-06's C stage from covering its declared file `packages/core/agent/src/inbox.ts`. Needs a maintainer ruling before that half is rewritten.**
+
+P4-06 must[2] requires a consumer to deduplicate by message id and epoch. The agent inbox is a genuine consumer, and it had a real gap: pending-list uniqueness does not survive a claim, so a message that had already run a turn could be re-appended and run a second one. A claimed-set was added, tracked across replay, refusing any id that had been claimed.
+
+**It passed 551 local tests in `packages/core/agent` and broke a different package.** `goal-round-driver`'s "restores non-goal step context when a claimed reservation becomes stale" went red — deterministically, 3 of 3 runs, and green again 3 of 3 with the change reverted. The causal test was run in both directions rather than inferred from the name.
+
+**The defect is in the contract, not the test.** The goal driver deliberately **restores a claimed message to the inbox when its reservation goes stale** — the reserved turn never ran, so the message produced no effect and must be delivered again. The new rule forbade that, because it treated *claimed* as terminal.
+
+**`claimed` and `effect applied` are not the same event, and must[2] is about the second.** Deduplication exists to stop a second *business effect*; a message claimed into a turn that never committed has produced none. The rule keyed on the wrong event, and every test written for it passed because they were all written from the same wrong premise — **the assertions and the implementation shared one misreading, so agreement between them proved nothing.** No mutation would have caught this: mutation tests whether the suite can see a change in the code, not whether the code answers the right question. What caught it was a package that already depended on the correct semantics.
+
+**Reverted rather than repaired.** The correct predicate is "the turn that claimed this message committed," and nothing in the inbox observes turn commitment today. Choosing a signal — a new session event, a claim/commit pair, or restoration releasing the claim explicitly — is a design decision with a wider blast radius than this cell. **Guessing one is exactly what 「不确定即 BLOCKED 禁猜」 forbids.**
+
+**What the ruling has to settle:** the registry declares `packages/core/agent/src/inbox.ts` for P4-06's C stage, so this cell cannot green while that file is untouched. Either the epic's C stage narrows to the message-bus package via an adjudicated path patch, or the turn-commitment signal is designed first and this file is done properly. The Supervisor does not get to pick, having just demonstrated a wrong reading of the same clause.
+
+**What survives unaffected:** `packages/run/message-bus` is self-contained, and its inbox/outbox dedup is keyed on explicit receipt and effect application rather than on a claim. The confusion was specific to reusing the agent inbox's existing "claimed" vocabulary for a different event.
+

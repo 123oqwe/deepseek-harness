@@ -3765,6 +3765,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type BrandedNumber<B extends string> = number & {\n    readonly [BRAND]: B;\n};',
   },
   {
+    name: 'BusMessageId',
+    declaration: 'export type BusMessageId = Branded<\'BusMessageId\'>;',
+  },
+  {
     name: 'CapabilityKind',
     declaration: 'export type CapabilityKind = \'service\' | \'tool\' | \'event\';',
   },
@@ -4329,6 +4333,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ImageVariantId = Branded<\'ImageVariantId\'>;',
   },
   {
+    name: 'IncomingMessage',
+    declaration: 'export interface IncomingMessage {\n    readonly id: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly tenant: TenantId;\n}',
+  },
+  {
     name: 'IndexInjection',
     declaration: 'export type IndexInjection = {\n    kind: \'global\';\n    name: string;\n    value: unknown;\n} | {\n    kind: \'script\';\n    placement: IndexInjectionPlacement;\n    text: string;\n} | {\n    kind: \'script-src\';\n    placement: IndexInjectionPlacement;\n    src: string;\n} | {\n    kind: \'script-preload\';\n    src: string;\n} | {\n    kind: \'style\';\n    text: string;\n} | {\n    kind: \'html\';\n    placement: IndexInjectionPlacement;\n    html: string;\n};',
   },
@@ -4627,6 +4635,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'Message',
     declaration: 'export interface Message {\n    readonly id: MessageId;\n    readonly role: \'system\' | \'user\' | \'assistant\';\n    readonly content: ContentBlock[];\n    readonly source: MessageSource;\n}',
+  },
+  {
+    name: 'MessageEpoch',
+    declaration: 'export type MessageEpoch = BrandedNumber<\'MessageEpoch\'>;',
   },
   {
     name: 'MessageFeedbackDeleteRequest',
@@ -5951,10 +5963,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TeamWaitResult',
     declaration: 'export interface TeamWaitResult {\n    readonly timedOut: boolean;\n}',
-  },
-  {
-    name: 'TenantId',
-    declaration: 'export type TenantId = Branded<\'TenantId\'>;',
   },
   {
     name: 'TerminalBackend',
