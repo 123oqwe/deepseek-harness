@@ -1508,24 +1508,128 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
+          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "expectCasesMatched": [
+            "carries package, version, integrity, source commit, manifest digest, signature identity, dependencies and capabilities",
+            "records the signature identity WITHOUT that recording implying it was verified",
+            "refuses entries that are not in canonical order",
+            "resolves a TOTAL load order, so independent plugins do not order by chance",
+            "reports no order at all for a dependency cycle",
+            "refuses a lock whose load order places a plugin before its dependency",
+            "refuses a dangling dependency and a duplicate entry",
+            "accepts a well-formed lock, so the checks above are not refusing everything",
+            "admits an install that matches the lock exactly, and returns the locked order",
+            "refuses the WHOLE boot when one plugin's integrity drifted, not just that plugin",
+            "reports EVERY denial, so an operator repairing an install sees the whole list",
+            "refuses a plugin present on disk but absent from the lock",
+            "refuses a plugin the lock requires but disk does not have (validation[2])",
+            "acceptance[0]: the offline cold start is the same call, with no network-shaped parameter",
+            "reports drift when the registry has moved, without changing what boot loads",
+            "refuses the drifted version even once it is what is installed"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
+          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "expectCasesMatched": [
+            "marks integrity, source commit and signature identity when the package declares none",
+            "records a declared provenance fact verbatim instead of marking it",
+            "always computes the manifest digest, since that IS observable",
+            "digests a manifest independently of its key order",
+            "reports a different digest when the manifest content actually differs",
+            "emits entries in canonical order with a resolved load order",
+            "drops a dependency on a package outside the observed set",
+            "returns no candidate at all when the observed graph has a cycle",
+            "counts observed facts against unavailable ones",
+            "reports a fully-marked lock as mostly unavailable rather than as locked",
+            "marks nothing when every package declares full provenance",
+            "uses one recognizable prefix for every marker",
+            "commits a valid candidate generated from the current lock",
+            "refuses an invalid candidate and names the defect, not a base mismatch",
+            "acceptance[2]: refuses a candidate generated from a lock that has since changed",
+            "reports the candidate defect even when the base ALSO moved",
+            "produces identical bytes for locks built with different property order",
+            "ends with exactly one trailing newline",
+            "replaces an existing lock with the new content",
+            "leaves no scratch file behind, so a reader never finds a partial lock",
+            "writes a complete, re-readable lock when the target did not exist"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
+          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "expectCasesMatched": [
+            "admits a matching install and reports the boot as verified",
+            "refuses a drifted install and does not soften admitBoot's verdict",
+            "refuses when the policy is refuse, naming the gate rather than a plugin",
+            "proceeds when the policy allows it, but marks the boot UNVERIFIED",
+            "marks a locked, matching boot verified and an unlocked one not, on the same install"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
+          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "expectCasesMatched": [
+            "enumerates at least twelve boundaries, each named once",
+            "fault boundary 01 a dangling dependency is refused",
+            "fault boundary 02 a duplicate entry is refused",
+            "fault boundary 03 unsorted entries are refused, since the file would not be byte-stable",
+            "fault boundary 04 a load order shorter than the entries is refused",
+            "fault boundary 05 a load order naming an unknown plugin is refused",
+            "fault boundary 06 a load order listing one plugin twice is refused",
+            "fault boundary 07 a load order placing a plugin before its dependency is refused",
+            "fault boundary 08 a dependency cycle yields no order at all",
+            "fault boundary 09 a self-dependency is a cycle, not a no-op",
+            "fault boundary 10 a well-formed lock is accepted, so the checks above refuse selectively",
+            "fault boundary 11 boot refuses an integrity drift",
+            "fault boundary 12 boot refuses a manifest-digest drift distinctly from an integrity drift",
+            "fault boundary 13 boot refuses a version drift ahead of the digests it would also fail",
+            "fault boundary 14 boot refuses a plugin on disk that the lock does not list",
+            "fault boundary 15 boot refuses a locked plugin missing from disk (validation[2])",
+            "fault boundary 16 an empty lock admits an empty install rather than refusing",
+            "fault boundary 17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "openFindings": [
+        "BLOCKED-094 (must[2] gate has no call site)",
+        "BLOCKED-095 (C freeze is post-hoc)"
+      ],
+      "status": "BLOCKED_ON_ACCEPTANCE",
+      "acceptedEvidence": null,
+      "selfAudit": {
+        "performedAtUtc": "2026-09-06T05:00:00.000Z",
+        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
+        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P1-03', cross-checked against spec/first100/exec/command-freeze.json's non-superseded P1-03 entries. RESULT: 3 entries covering acceptanceIndex 0, 1, 2; 12 cited references; 12 verified to belong to the frozen set of the stage each names; 0 mismatches. This same check is what revealed the C stage had never been frozen (BLOCKED-095) -- an earlier run reported 4 mismatches, all C, because no C freeze existed.",
+        "ii_candidateChainConsistency": "PASS, trivially. RAN: read every cell's candidateSha from this row. RESULT: all four are f5fb9f9016, one commit, on fork/first100-exec. No ancestry comparison was needed and none is claimed.",
+        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four non-superseded freeze entries' argv and expectCases sets pairwise, and matched each set against the cited vitest-report.json. RESULT: four cells share run 33961861988; argv differ across all four; C and F share lock.spec.ts but their title sets are disjoint (16 + 18 = 34, the file's full discovery count); 16/16, 21/21, 5/5, 18/18 present-and-passing. The forbidden case -- identical frozen commands greened from one observation -- does not apply.",
+        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row; the two open findings are recorded as findings, not locks.",
+        "auditFormatNote": "Each field above states the command run and the file read, per BLOCKED-093. That requirement exists because P4-07's audit reported PASS for predicate (i) on the strength of a different check entirely, and a field containing only a verdict cannot be told apart from one that evaluated the wrong object."
+      }
     },
     "P1-04": {
       "id": "P1-04",
