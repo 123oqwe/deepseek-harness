@@ -1224,6 +1224,18 @@ Supersession is rejected as the primary route for a specific reason: it leaves a
 
 **Gate defect found while applying this ruling, and fixed in the same change.** The ruling above rests on patches being the mechanically-validated path. **They were not.** `checkDeliverablePathPatches` computed a complete verdict — unknown epic ids, `declaredPath` values absent from the stage's files, empty `approvedPath`, empty `reason` — and **was called only from its own spec file**; nothing in the generator's run path consumed it. A patch naming a nonexistent epic, or a `declaredPath` the registry never declared, generated *and verified* at exit 0. It is now enforced inside `renderArtifacts`, which both the generate and the verify path route through, so a check only one of them ran cannot recur. Proven by mutation: the clean tree generates normally, and breaking `declaredPath`, `epic`, or `reason` each exits non-zero; all 33 pre-existing patches pass unchanged, so the wiring closed a hole without moving any existing verdict. **Until this fix, "the patches channel is validated" was itself an unverified claim** — the same class as everything else this entry records.
 
+**A THIRD SUBCLASS, and its remedy applies at a different moment (2026-09-05).** The two above are corrections of an error that already exists in the tree. P4-06's `packages/run/message-bus/tests/crash.e2e.ts` is neither:
+
+| Subclass | The error | What the patch does |
+|---|---|---|
+| **archival** | a real local test filed into the paid channel | **corrects** it |
+| **never-written** | the spec names a file nobody ever wrote | **identifies** the real subject |
+| **not-yet-created** | the file does not exist because this epic is meant to create it | **prevents** the first subclass |
+
+In the third, the registry is *instructing* the creation of the defect. Building the file under its declared name would manufacture an archival error in the same commit that first writes it. So the patch is recorded **before the first line is written**, and its purpose is prevention rather than repair — which also means the deviation from the declaration is deliberate and dated rather than looking, later, like a casual rename.
+
+**Delegate-approved 2026-09-05**, with the local-behaviour classification made by the delegate from the clause text rather than by the implementing party: `acceptance[0]` kills a process at three points and replays, `acceptance[1]` queries and replays undelivered messages, `acceptance[2]` is cross-tenant refusal, and the `must` clauses are transactional writes, idempotent receipts, id/epoch dedup, and priority/deadline/dead-letter/backpressure. **None requires a model or an external API.**
+
 **Mandatory guard on every lane this touches, whichever mechanism wins.** Some `.e2e.ts` declarations are genuine — `subagent-codex/structured.e2e.ts`, `subagent-claude-code/structured.e2e.ts`, `provider-resilience/fallback.e2e.ts` name real provider behaviour. For those, renaming would disguise a test that needs the user's key as a local test, and the cheapest way to green it would be a stand-in that calls no API. **The lane must not classify its own stage.** The Supervisor decides local-vs-real-API from the epic's acceptance/must text and writes the verdict into the dispatch; the lane may only execute that verdict or stop and report it wrong. Leaving the judgement to the lane hands it to the party with the strongest incentive to answer "local".
 
 ### BLOCKED-069 — the First-100 program's own CI runs no documentation gate, so 10 doc invariants have gone unenforced for the whole program and land all at once whenever this branch meets master (Supervisor, measured 2026-09-04)
