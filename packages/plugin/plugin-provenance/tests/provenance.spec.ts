@@ -223,3 +223,194 @@ describe('P1-02 Contract — acceptance[2]: Inventory 和审计事件记录验�
     expect(fields).not.toContain('publicKeyFingerprint')
   })
 })
+
+/**
+ * P1-02 Fault stage: a systematic matrix over the rejection boundaries that
+ * actually exist.
+ *
+ * The boundaries are enumerated as data and driven by one runner, and the
+ * count is asserted against a floor, so a boundary cannot be deleted while
+ * every remaining case still passes.
+ *
+ * validation[3] ("run a revoked signing identity test") has NO case here and
+ * no case is faked for it. Revocation does not exist in this build: there is
+ * no `revoked` rejection reason, `registerTrustAnchor` returns an id rather
+ * than a disposer and nothing ever removes an anchor, and — the deeper
+ * reason — `verifyPackageSignature` trusts a first-seen issuer that was never
+ * registered at all. Revocation would therefore be a no-op even if the
+ * registry could forget a key, because being unregistered already means
+ * trusted. Recorded on P1-02's acceptance lock (BLOCKED-050's family), not
+ * papered over with a test that would assert something else and pass.
+ */
+describe('P1-02 Fault — rejection-boundary matrix', () => {
+  /** One enumerated fault boundary and the outcome it must produce. */
+  interface ProvenanceFault {
+    readonly boundary: string
+    readonly run: () => void
+  }
+
+  /** Verify one input against a real kernel-issued trust root. */
+  function verify(overrides: Partial<PluginProvenanceInput>): PluginProvenanceVerification {
+    return verifyPluginProvenance(buildInput(overrides), createTrustKernel().signatureRoots)
+  }
+
+  const FAULTS: readonly ProvenanceFault[] = [
+    {
+      boundary: '01 tampered package digest is refused for digest mismatch',
+      run: () => expect(verify({ observed: buildObserved({ observedDigest: brandString<PackageDigest>('sha256:tampered') }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'package-digest-mismatch' }),
+    },
+    {
+      boundary: '02 swapped source repo is refused for source-repo mismatch',
+      run: () => expect(verify({
+        observed: buildObserved({
+          observedSourceCommit: { repoUrl: 'https://github.com/evil/plugin-a', commitHash: realSourceCommit.commitHash },
+        }),
+      })).toMatchObject({ trust: 'rejected', reason: 'source-repo-mismatch' }),
+    },
+    {
+      boundary: '03 forged commit in the same repo is refused distinctly from a repo swap',
+      run: () => expect(verify({
+        observed: buildObserved({
+          observedSourceCommit: { repoUrl: realSourceCommit.repoUrl, commitHash: brandString<SourceCommitHash>('deadbeef') },
+        }),
+      })).toMatchObject({ trust: 'rejected', reason: 'source-commit-mismatch' }),
+    },
+    {
+      boundary: '04 forged builder identity is refused for builder-identity mismatch',
+      run: () => expect(verify({ observed: buildObserved({ observedBuilderIdentity: brandString<BuilderIdentity>('laptop:eve') }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'builder-identity-mismatch' }),
+    },
+    {
+      boundary: '05 several mismatches at once still refuse, naming the first checked fact',
+      run: () => {
+        // Fail-closed must not degrade to a partial pass when an attacker
+        // changes MORE than one fact. The reported reason is the first check
+        // in order, so this also pins that order.
+        const result = verify({
+          observed: buildObserved({
+            observedDigest: brandString<PackageDigest>('sha256:tampered'),
+            observedBuilderIdentity: brandString<BuilderIdentity>('laptop:eve'),
+          }),
+        })
+        expect(result).toMatchObject({ trust: 'rejected', reason: 'package-digest-mismatch' })
+      },
+    },
+    {
+      boundary: '06 sigstore evidence with an empty issuer is refused as invalid',
+      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, issuer: '' }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+    },
+    {
+      boundary: '07 sigstore evidence with an empty subject is refused as invalid',
+      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, subject: '' }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+    },
+    {
+      boundary: '08 sigstore evidence with a negative transparency log index is refused',
+      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: -1 }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+    },
+    {
+      boundary: '09 sigstore evidence with a non-integer log index is refused',
+      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: 1.5 }) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+    },
+    {
+      boundary: '10 log index zero is VALID, so the check is not an accidental truthiness test',
+      run: () => expect(verify({ claim: buildClaim({ ...sigstoreEvidence, transparencyLogIndex: 0 }) }).trust)
+        .toBe('trusted'),
+    },
+    {
+      boundary: '11 offline evidence with an empty signature is refused as invalid',
+      run: () => expect(verify({
+        claim: buildClaim({
+          mode: 'offline-signed',
+          signature: new Uint8Array(),
+          publicKeyFingerprint: brandString<PublicKeyFingerprint>('SHA256:acme-release-key'),
+        }),
+      })).toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+    },
+    {
+      boundary: '12 offline evidence with an empty key fingerprint is refused as invalid',
+      run: () => expect(verify({ claim: buildClaim(offlineEvidence(brandString<PublicKeyFingerprint>(''))) }))
+        .toMatchObject({ trust: 'rejected', reason: 'evidence-invalid' }),
+    },
+    {
+      boundary: '13 a fact mismatch is reported even when the evidence is ALSO invalid',
+      run: () => {
+        // Pins that the observed-fact checks run BEFORE the evidence checks.
+        // Reporting `evidence-invalid` here would tell an operator the
+        // signature was malformed when the real event was a tampered package.
+        const result = verify({
+          claim: buildClaim({ ...sigstoreEvidence, issuer: '' }),
+          observed: buildObserved({ observedDigest: brandString<PackageDigest>('sha256:tampered') }),
+        })
+        expect(result).toMatchObject({ reason: 'package-digest-mismatch' })
+      },
+    },
+    {
+      boundary: '14 an SBOM omitting an installed runtime dependency is refused',
+      run: () => expect(verify({ installedDependencyNames: new Set(['left-pad', 'undeclared-dep']) }).trust)
+        .toBe('rejected'),
+    },
+    {
+      boundary: '15 a declared runtime dependency that is NOT installed is refused',
+      run: () => expect(verify({ installedDependencyNames: new Set<string>() }).trust).toBe('rejected'),
+    },
+    {
+      boundary: '16 a dev-only SBOM entry absent from the installed set is NOT a fault',
+      run: () => {
+        // typescript is declared `dev` and is not installed. Treating it as
+        // missing would make every package with dev dependencies untrusted.
+        expect(verify({}).trust).toBe('trusted')
+      },
+    },
+    {
+      boundary: '17 unsigned-dev is refused for a profile the deployment does not call dev',
+      run: () => {
+        const policy: UnsignedDevPolicy = { allowedDevProfileNames: new Set(['dev']) }
+        expect(admitUnsignedDevMode({ profileName: 'production', explicitDevOptIn: true }, policy))
+          .toEqual({ admitted: false, reason: 'profile-not-dev' })
+      },
+    },
+    {
+      boundary: '18 an admitted unsigned-dev profile still carries a persistent untrusted banner',
+      run: () => {
+        const policy: UnsignedDevPolicy = { allowedDevProfileNames: new Set(['dev']) }
+        const admission = admitUnsignedDevMode({ profileName: 'dev', explicitDevOptIn: true }, policy)
+        expect(admission).toMatchObject({ admitted: true, banner: { persistent: true } })
+      },
+    },
+  ]
+
+  it('enumerates at least twelve rejection boundaries, each named once', () => {
+    expect(FAULTS.length).toBeGreaterThanOrEqual(12)
+    expect(new Set(FAULTS.map(fault => fault.boundary)).size).toBe(FAULTS.length)
+  })
+
+  for (const fault of FAULTS) {
+    it(`fault boundary ${fault.boundary}`, () => { fault.run() })
+  }
+
+  it('KNOWN GAP (P1-02 lock, validation[3]): an UNREGISTERED signing identity is trusted on sight', () => {
+    // This is the honest statement of why a revocation test cannot exist.
+    // Nothing registers this fingerprint, and verification still returns
+    // trusted, naming an anchor id derived from the fingerprint itself. While
+    // "never registered" verifies, "no longer registered" cannot mean
+    // anything, so revocation is unreachable rather than merely unimplemented.
+    //
+    // When the trust root stops trusting first-seen identities this case will
+    // start FAILING. That is the unlock signal, not a regression: delete it
+    // together with the lock and write the real revocation test.
+    const neverRegistered = brandString<PublicKeyFingerprint>('SHA256:attacker-key-nobody-declared')
+    const result = verify({ claim: buildClaim(offlineEvidence(neverRegistered)) })
+
+    // Narrowed rather than cast: if this build ever starts REJECTING an
+    // unregistered identity, the assertion below fails outright instead of
+    // reading a property off the refusal branch.
+    expect(result.trust).toBe('trusted')
+    if (result.trust !== 'trusted') throw new Error('unreachable: asserted trusted above')
+    expect(result.trustAnchorId).toBe(`offline:${neverRegistered}`)
+  })
+})

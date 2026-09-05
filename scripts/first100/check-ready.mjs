@@ -7,9 +7,13 @@
  * of them. This gate replaces the barrier with the two conditions that are
  * actually load-bearing, so an epic starts as soon as they hold:
  *
- *   1. Every one of the epic's own `predecessors` is ACCEPTED in the ledger.
- *      Wave membership is not consulted — it stays a bookkeeping and
- *      dependency-expression field, not a start condition.
+ *   1. Every one of the epic's own `predecessors` is ACCEPTED, or has landed
+ *      every applicable stage cell. A predecessor expresses "I need your work
+ *      to exist", not "I need your books closed", so an epic held back only by
+ *      an unproven clause no longer blocks its successors (BLOCKED-087's
+ *      confusion in its second location). Wave membership is not consulted —
+ *      it stays a bookkeeping and dependency-expression field, never a start
+ *      condition.
  *   2. The epic's declared file set is disjoint from the declared file set of
  *      every in-flight epic. Two epics writing one file concurrently would
  *      produce a merge conflict whose resolution is not covered by either
@@ -117,10 +121,25 @@ function isInFlight(row, epicId, epicStages) {
   // Checking only started cells would release an epic that finished its
   // Contract stage while its Usage and Fault stages sit at NOT_RUN -- P2-03 is
   // exactly that today, and it is genuinely mid-work.
+  return !everyApplicableCellGreen(row, epicId, epicStages)
+}
+
+/**
+ * Whether every stage cell this epic actually has is GREEN — that is, whether
+ * all of its declared work has landed.
+ *
+ * Shared by BOTH start conditions because both ask the same question about a
+ * predecessor or neighbour: has this epic finished writing? Acceptance is a
+ * separate fact, and conflating the two is the defect BLOCKED-087 records.
+ * @param row - the ledger row to classify.
+ * @param epicId - the epic's registry id, to resolve which stages are N/A.
+ * @param epicStages - registry stage declarations by epic id.
+ * @returns true when every non-N/A stage cell is GREEN.
+ */
+function everyApplicableCellGreen(row, epicId, epicStages) {
   const stages = epicStages.get(epicId) ?? {}
   const applicable = ['C', 'P', 'U', 'F'].filter(stage => stages[stage]?.nOf !== 'N/A')
-  const everyApplicableCellGreen = applicable.every(stage => row.cells?.[stage]?.status === 'GREEN')
-  return !everyApplicableCellGreen
+  return applicable.every(stage => row.cells?.[stage]?.status === 'GREEN')
 }
 
 /**
@@ -160,7 +179,22 @@ function decide(id) {
   for (const predecessorId of epic.predecessors ?? []) {
     const row = ledgerRows[predecessorId]
     if (row === undefined) fail(`epic ${id}'s predecessor ${predecessorId} has no ledger row`)
-    if (row.status !== 'ACCEPTED') reasons.push(`predecessor ${predecessorId} is ${row.status}, not ACCEPTED`)
+    // ACCEPTED, or every applicable cell GREEN. A predecessor expresses "I
+    // need your work to exist", never "I need your books closed" -- and an
+    // epic held back only by an unproven clause has nonetheless delivered
+    // every file its successor reads.
+    //
+    // This is BLOCKED-087's confusion in its SECOND location. That entry
+    // separated "unaccepted" from "still writing" in condition 2 (the file
+    // lock) and left condition 1 carrying the same conflation, which was
+    // found only when it produced two circular dependencies: P6-01's lock is
+    // owned by P6-02 while P6-02 waits on P6-01 being ACCEPTED, and P4-05's
+    // lock is owned by P4-07 while P4-07 waits on P4-06, whose own lock has
+    // no assigned owner. Neither cycle is anyone's mistake; both follow from
+    // one field carrying two meanings.
+    if (row.status !== 'ACCEPTED' && !everyApplicableCellGreen(row, predecessorId, stagesById)) {
+      reasons.push(`predecessor ${predecessorId} is ${row.status} and has not landed every applicable stage cell`)
+    }
   }
 
   // Condition 2 — no declared-file overlap with any in-flight epic.

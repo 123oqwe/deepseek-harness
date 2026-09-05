@@ -99,7 +99,7 @@ describe('first100 readiness gate', () => {
     )
     const { code, output } = run(root, 'B')
     expect(code).toBe(1)
-    expect(output).toContain('predecessor A is NOT_RUN, not ACCEPTED')
+    expect(output).toContain('predecessor A is NOT_RUN and has not landed every applicable stage cell')
   })
 
   it('refuses on a declared-file overlap with an in-flight epic even when every predecessor is ACCEPTED', () => {
@@ -227,6 +227,54 @@ describe('first100 readiness gate', () => {
     const { code, output } = run(root, 'B')
     expect(code).toBe(1)
     expect(output).toContain('no "rows"')
+  })
+
+  it('starts an epic whose predecessor is fully GREEN but not yet ACCEPTED', () => {
+    // BLOCKED-087's confusion in its second location. A predecessor expresses
+    // "I need your work to exist", never "I need your books closed" -- and an
+    // epic held back only by an unproven clause has still delivered every file.
+    const root = fixture(
+      [
+        {
+          id: 'LANDED',
+          wave: 1,
+          predecessors: [],
+          files: ['a.ts'],
+          stages: { C: { nOf: null }, P: { nOf: 'N/A' }, U: { nOf: 'N/A' }, F: { nOf: 'N/A' } },
+        },
+        { id: 'NEXT', wave: 2, predecessors: ['LANDED'], files: ['n.ts'], stages: {} },
+      ],
+      { LANDED: { ...notStarted, cells: { C: { status: 'GREEN' } } }, NEXT: notStarted },
+    )
+    const { code, output } = run(root, 'NEXT')
+
+    expect(code).toBe(0)
+    expect(output).toContain('READY: NEXT')
+  })
+
+  it('still refuses when the predecessor has only SOME cells GREEN', () => {
+    // The other direction, so the change is a separation of two facts and not
+    // a relaxation: a predecessor genuinely mid-work still blocks.
+    const root = fixture(
+      [
+        {
+          id: 'PARTIAL',
+          wave: 1,
+          predecessors: [],
+          files: ['a.ts'],
+          stages: { C: { nOf: null }, P: { nOf: null }, U: { nOf: 'N/A' }, F: { nOf: 'N/A' } },
+        },
+        { id: 'NEXT', wave: 2, predecessors: ['PARTIAL'], files: ['n.ts'], stages: {} },
+      ],
+      {
+        PARTIAL: { ...notStarted, cells: { C: { status: 'GREEN' }, P: { status: 'NOT_RUN' } } },
+        NEXT: notStarted,
+      },
+    )
+    const { code, output } = run(root, 'NEXT')
+
+    expect(code).toBe(1)
+    expect(output).toContain('has not landed every applicable stage cell')
   })
 
   it('separates a zero count into its causes, so the listing can be read without the ledger', () => {

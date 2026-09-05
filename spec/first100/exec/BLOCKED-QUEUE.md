@@ -801,6 +801,21 @@ This is not a new capability but an existing output explaining its own basis. Th
 
 That guard has no reachable failure while the buckets are correct, and no test claims otherwise — its coverage is indirect, through mutations that delete a bucket. It exists for the next edit that adds a sixth state and forgets to print it, which is the omission that made this defect invisible in the first place.
 
+**The same confusion had a SECOND location, found 2026-09-05 when it produced two circular dependencies.** This entry separated "unaccepted" from "still writing" in condition 2, the file lock. Condition 1 — the predecessor check — kept the conflation: it required a predecessor to be `ACCEPTED`.
+
+That produced two cycles, neither of which is anyone's mistake:
+
+| Cycle | Shape |
+|---|---|
+| **P6** | P6-01's lock is owned by *P6-02*; P6-02's predecessor is *P6-01*, required ACCEPTED. Each waits on the other. |
+| **P4** | P4-05's lock is owned by *P4-07*; P4-07's predecessor is *P4-06*, whose own lock has **no assigned owner**. The chain ends at an ownerless node. |
+
+**A predecessor expresses "I need your work to exist", never "I need your books closed".** An epic with every applicable cell GREEN has delivered every file its successors read; what is withheld is a judgment about an unproven clause, which no successor consumes by reading a file. Condition 1 now accepts `ACCEPTED` **or** every applicable cell GREEN, and both conditions share one predicate rather than two copies of it.
+
+**Not a relaxation, and proved in both directions**: a fully-landed predecessor must release, and a predecessor with only *some* cells GREEN must still block. Reverting the change reddens 1 case; widening it to "any cell GREEN" reddens 12.
+
+Measured result: startable epics went from **0 to exactly 2** — P4-07 and P6-02 — matching the delegate's independently computed expectation. **One of those, P6-02, is the named owner of P6-01's own lock**, so the fix dissolves the P6 cycle at its source and removes the need for a planned Contract-stage supersession.
+
 **RESOLVED 2026-09-05, delegate-authorized, with an independent cross-check.** Before the fix landed the delegate computed the expected impact from their own implementation of both rules: exactly one epic unlocked (P4-06), exactly two changing in-flight verdict (P4-05 and P6-01, the finished ones), nothing else touched. The measured result matched every value — P4-06 startable; P4-05 and P6-01 released; P1-02, P2-02 and P2-03 still holding their locks. **Two implementations agreeing on the impact set is stronger than either implementation passing its own tests**, and it distinguished "the change is correct" from "the change looks correct".
 
 The delegate also corrected the Supervisor's ownership claim: no epic declares `check-ready.mjs`, and P0-04.U declares `check-layer-deps.mjs` — a different file. Ownership had been inferred from the directory rather than checked. **The second objection survived the correction unchanged**: a Supervisor rewriting the admission gate to unblock their own next epic needs a second party regardless of who owns the file.
