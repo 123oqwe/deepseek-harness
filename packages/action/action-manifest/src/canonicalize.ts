@@ -43,15 +43,62 @@ import type { JsonValue } from '@deepseek-ai/dsh-util-values'
  * @returns the canonical string form of `args`.
  */
 export function canonicalizeArguments(args: JsonValue): string {
-  if (args === null) return 'null'
-  if (typeof args === 'boolean') return args ? 'true' : 'false'
-  if (typeof args === 'number') return JSON.stringify(args)
-  if (typeof args === 'string') return JSON.stringify(args.normalize('NFC'))
-  if (Array.isArray(args)) return `[${args.map(canonicalizeArguments).join(',')}]`
-  const entries = Object.entries(args)
-    .map(([key, value]): [string, JsonValue] => [key.normalize('NFC'), value])
-    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-  return `{${entries.map(([key, value]) => `${JSON.stringify(key)}:${canonicalizeArguments(value)}`).join(',')}}`
+  // Iterative, not recursive. The recursive form produced identical output for
+  // every input this package's own suite exercises, and threw
+  // `Maximum call stack size exceeded` on inputs the code-mode dispatch path
+  // genuinely produces: `packages/core/tools/tests/ptc.spec.ts` dispatches
+  // "binding arguments deeper than the structured-clone call stack", and depth
+  // 20000 overflows while depth 1000 hashes in 2ms. Because this function
+  // feeds `computeArgumentsHash`, a stack overflow here is not a slow path —
+  // it makes the manifest for that call impossible to produce at all, so
+  // P2-03 must[2]'s code-mode gate could not be wired while it stood.
+  //
+  // An explicit work stack replaces the call stack; nothing else changes. Key
+  // ordering, NFC normalization, number spelling and the emitted punctuation
+  // are the same operations in the same order, so every already-computed hash
+  // stays valid — the equivalence is asserted case-by-case against a retained
+  // copy of the recursive form in this package's own tests.
+  const out: string[] = []
+  // A frame is either a value still to be written, or a literal separator to
+  // emit once the values before it are done.
+  const stack: ({ readonly value: JsonValue } | { readonly literal: string })[] = [{ value: args }]
+  while (stack.length > 0) {
+    // oxlint-disable-next-line typescript/no-non-null-assertion -- guarded by the loop condition
+    const frame = stack.pop()!
+    if ('literal' in frame) {
+      out.push(frame.literal)
+      continue
+    }
+    const value = frame.value
+    if (value === null) { out.push('null'); continue }
+    if (typeof value === 'boolean') { out.push(value ? 'true' : 'false'); continue }
+    if (typeof value === 'number') { out.push(JSON.stringify(value)); continue }
+    if (typeof value === 'string') { out.push(JSON.stringify(value.normalize('NFC'))); continue }
+    if (Array.isArray(value)) {
+      // Pushed in reverse so the stack pops them left to right.
+      stack.push({ literal: ']' })
+      for (let index = value.length - 1; index >= 0; index -= 1) {
+        // oxlint-disable-next-line typescript/no-non-null-assertion -- index is in range
+        stack.push({ value: value[index]! })
+        if (index > 0) stack.push({ literal: ',' })
+      }
+      stack.push({ literal: '[' })
+      continue
+    }
+    const entries = Object.entries(value)
+      .map(([key, entryValue]): [string, JsonValue] => [key.normalize('NFC'), entryValue])
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    stack.push({ literal: '}' })
+    for (let index = entries.length - 1; index >= 0; index -= 1) {
+      // oxlint-disable-next-line typescript/no-non-null-assertion -- index is in range
+      const [key, entryValue] = entries[index]!
+      stack.push({ value: entryValue })
+      stack.push({ literal: `${JSON.stringify(key)}:` })
+      if (index > 0) stack.push({ literal: ',' })
+    }
+    stack.push({ literal: '{' })
+  }
+  return out.join('')
 }
 
 /**
