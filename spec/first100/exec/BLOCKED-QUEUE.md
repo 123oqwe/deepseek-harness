@@ -772,6 +772,27 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-087 — the readiness gate treats "finished but unaccepted" as "in flight", so a locked epic holds its file locks forever and `check-ready` now reports zero startable epics (Supervisor, own gate, 2026-09-05)
+
+**The symptom.** After P8-01's acceptance, `check-ready.mjs` reports **0 epics ready to start**. Five epics are in flight — P1-02, P2-02, P2-03, P4-05, P6-01 — and every unstarted epic sharing a file with any of them is refused.
+
+**The defect is in the gate's definition of "in flight", which I wrote.** `isInFlight` is *not ACCEPTED, and some cell has left NOT_RUN*. That conflates two states it should separate:
+
+| State | Files being written? | Under this definition |
+|---|---|---|
+| work genuinely in progress | yes — a concurrent write would conflict | in flight ✓ |
+| **all cells GREEN, acceptance withheld by a lock** | **no — every file is written and landed** | **in flight ✗** |
+
+**P4-05 and P6-01 are in the second row.** Both have every applicable cell GREEN. Their files are committed and merged; nothing further will be written to them. They hold write locks against a write that has already happened.
+
+**The lock's purpose is not this.** An acceptance lock exists so a row is not marked ACCEPTED while a clause is unproven — [BLOCKED-081](#blocked-081)'s subject. It is not a statement that the epic's files are still moving. But because acceptance is the only thing that clears "in flight", **a lock silently converts into an indefinite write lock over every file the epic declared**, and the two locks have entirely different purposes.
+
+**Measured consequence, bounded rather than asserted:** exactly one epic is affected today. **P4-06's predecessors are all ACCEPTED, and it is refused solely because 2 of its declared files are held by a finished epic.** Not a hypothetical — it is the epic that would otherwise be next.
+
+**Not fixed here, deliberately.** The gate is `scripts/first100/check-ready.mjs`, P0-04's Usage-stage deliverable, and **P0-04 is ACCEPTED** — so changing it edits an accepted epic's deliverable, exactly the situation [BLOCKED-076](#blocked-076) had to rule on for `docs/architecture.md`. The fix is small and the criterion is mechanical (an epic whose every non-N/A cell is GREEN releases its file locks, since its writes have landed), but a Supervisor rewriting the readiness gate to unblock their own next epic is precisely the shape that needs a second party.
+
+**Also worth deciding together with it:** whether releasing on all-cells-GREEN is right, or whether it should be all-cells-GREEN *and* merged to the integration branch. The first is what the ledger can see; the second is what actually guarantees the files have landed. Today they coincide, because a cell can only green from an exact-SHA CI run on a pushed commit — so the ledger's view is sufficient, and that reasoning should be recorded with the fix rather than left implicit.
+
 ### BLOCKED-086 — an invariant that was never true: `delegate-signoff.json`'s `rowDigestSha256` cannot match an ACCEPTED row, and checking it produces a frightening number that means nothing (delegate, self-caught, 2026-09-05)
 
 **The check that looked alarming.** Asking "are any of my sign-offs stale?" — comparing each recorded `rowDigestSha256` against the epic's current row digest — returns **8 of 8 mismatched**. Every sign-off appears invalid.
