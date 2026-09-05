@@ -100,6 +100,22 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-05T12:35:34.146Z",
       "note": "gq-92 independent verify. Ran: a script over ledger.json, acceptance-coverage.json and the vitest-report.json of run 33965511238 (19691 tests, 0 failures, no flake absorbed). (iii) 59 frozen titles across C/P/U/F, each present and passing. (ii) all four cells cite one SHA, 8486e52a6a -- no chain between cells to compare and none is claimed; the SHA itself was separately confirmed an ancestor of first100-exec via git merge-base --is-ancestor. (i) 3/3 acceptance clauses, 17 references, each checked twice: that the title belongs to the frozen set of the stage it claims, and that it passed in the cited observation. Lock check read from the machine-readable block: 'accept-blocked: P4-08' occurs 0 times."
+    },
+    {
+      "epic": "P4-07",
+      "rowDigestSha256": "6a82f870aba5bc393c0c66461510d2ac8de3f9f86121f303b10ad2585e1950dc",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T18:18:25.404Z",
+      "reason": "must[3] (external idempotency ledger rejects stale epoch) has no subject: IdempotencyKey is declared and computed in action-manifest (canonicalize.ts/types.ts) but no consumer rejects a replay. Found by clause-subject-audit 2026-09-05; independently confirmed by gq-92 (grep idempotencyKey: 18 hits, all in action-manifest, zero consumers). Signature of 2026-09-05T10:33:52Z was given without checking clause subjects; withdrawn. Mechanism belongs to P4-12 (wave 7)."
+    },
+    {
+      "epic": "P8-01",
+      "rowDigestSha256": "a1848cde6d4a4711f69b6dc80caa0094615131682332763db6ac0be0fa09c077",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T18:18:25.539Z",
+      "reason": "must[4] (protocol schema artifacts enter release evidence and golden compatibility fixtures) has no subject: scripts/release/collect-evidence.mjs (341 lines) contains zero occurrences of 'schema'; no test in packages/sdk/protocol pins a literal fingerprint value, so every fingerprint assertion is relative and cannot detect an algorithm change. Found by clause-subject-audit 2026-09-05; independently confirmed by gq-92. Signature of 2026-09-05T06:34:49Z was given without checking clause subjects; withdrawn."
     }
   ]
 }

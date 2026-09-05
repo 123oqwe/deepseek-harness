@@ -55,7 +55,7 @@
 | 49 | P4-04 | RunPlan Freeze、签名与 Amendment Protocol | L1_CONTRACT | UNASSIGNED_UNTIL_APPROVAL | P2-05, P4-03 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 50 | P4-05 | 扩展 Agent Lifecycle 状态机 | L3_CONSUMER | UNASSIGNED_UNTIL_APPROVAL | P4-01 | W5 | GREEN | NOT_RUN | GREEN | GREEN | d004aee95a86329d9eb4a9bed848e177214a9aaf | PENDING | NOT_RUN |
 | 51 | P4-06 | Durable Inbox / Outbox 与 Exactly-Once Effect Handoff | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P2-01, P4-01 | W5 | GREEN | GREEN | GREEN | GREEN | 4ce759848ccf663f7b18ed18a9de96959157c8ad | WITHHELD_LIVE_LOCK | BLOCKED_ON_ACCEPTANCE |
-| 52 | P4-07 | Worker Lease、Heartbeat 与 Fencing Token | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06 | W6 | GREEN | GREEN | GREEN | GREEN | 82d5e8112233b371fe891b7489e89fc2658b109f | APPROVED | ACCEPTED |
+| 52 | P4-07 | Worker Lease、Heartbeat 与 Fencing Token | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-06 | W6 | GREEN | GREEN | GREEN | GREEN | 82d5e8112233b371fe891b7489e89fc2658b109f | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 53 | P4-08 | Workflow Journal 与步骤级 Resume | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P4-01, P4-06, P4-07 | W7 | GREEN | GREEN | GREEN | GREEN | 8486e52a6a0627eaba36a616e01ed043f5acf200 | APPROVED | ACCEPTED |
 | 54 | P4-09 | Detached、Saved、Versioned 与 Nested Workflow | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P1-02, P4-08 | W8 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | WITHHELD_INCOMPLETE_EPIC | BLOCKED_ON_ACCEPTANCE |
 | 55 | P4-10 | Workflow 预算、Scheduler、Backpressure、公平性与资源锁 | L2_PROVIDER | UNASSIGNED_UNTIL_APPROVAL | P3-10, P4-07 | W9 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
@@ -95,7 +95,7 @@
 | 89 | P7-08 | Deterministic Replay、Simulation 与 Decision Diff | L3_CONSUMER | UNASSIGNED_UNTIL_APPROVAL | P0-06, P4-08, P4-12, P7-07 | W14 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 90 | P7-09 | General-Purpose Capability Scenario Suite：用领域夹具验证 Harness，而非内置垂直 Agent | L6_QUALIFICATION | UNASSIGNED_UNTIL_APPROVAL | P0-08, P7-05, P7-08 | W16 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 91 | P7-10 | Evaluation Plane、Chaos/Security/Scale Gates 与 Champion–Challenger 受控演化 | L6_QUALIFICATION | UNASSIGNED_UNTIL_APPROVAL | P1-11, P7-07, P7-08, P7-09 | W17 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
-| 92 | P8-01 | Protocol Version Negotiation 与 Capability Discovery | L1_CONTRACT | P8-01 | P0-06, P4-01 | W5 | GREEN | GREEN | GREEN | GREEN | 637a2b944898b2970f7ba87cf0469418492ac3a8 | APPROVED | ACCEPTED |
+| 92 | P8-01 | Protocol Version Negotiation 与 Capability Discovery | L1_CONTRACT | P8-01 | P0-06, P4-01 | W5 | GREEN | GREEN | GREEN | GREEN | 637a2b944898b2970f7ba87cf0469418492ac3a8 | PENDING | BLOCKED_ON_ACCEPTANCE |
 | 93 | P8-02 | 一等公民 Remote Resources：Run、Agent、Action、Approval、Artifact、Verification、World | L5_SURFACE | UNASSIGNED_UNTIL_APPROVAL | P4-01, P6-09, P7-05, P8-01 | W16 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 94 | P8-03 | 远程生命周期控制：Pause、Resume、Cancel、Fork、Retry、Reconcile、Close | L5_SURFACE | UNASSIGNED_UNTIL_APPROVAL | P4-05, P4-07, P4-08, P4-13, P8-02 | W17 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
 | 95 | P8-04 | 双向 Server→Client Requests：持久审批、澄清、人工接管与 Quorum | L5_SURFACE | UNASSIGNED_UNTIL_APPROVAL | P2-06, P2-07, P2-09, P2-12, P8-01 | W10 | NOT_RUN | NOT_RUN | NOT_RUN | NOT_RUN | — | PENDING | NOT_RUN |
