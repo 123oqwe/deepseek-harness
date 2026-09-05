@@ -10037,6 +10037,15 @@ importers:
         specifier: workspace:^
         version: link:../../util/brand
 
+  packages/workflow/workflow-registry:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+
   packages/workflow/workflow-worker-thread:
     dependencies:
       '@deepseek-ai/dsh-brand':

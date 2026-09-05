@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T11:57:03.683Z",
-  "inputDigest": "05435feb15593da46f0612ff988427a273b0ae08ff7a10a173f5e4bdda114830",
+  "lastUpdatedUtc": "2026-09-05T12:37:07.354Z",
+  "inputDigest": "70a65a1e5aa4f87e2ba19a3bef8adab913312b1ba04177b49b5f5cff0c68a334",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4158,10 +4158,40 @@
       },
       "supplements": {},
       "candidateSha": null,
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": [],
-      "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null,
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-05T12:37:07.353Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+            "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+            "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+            "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+            "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-05T12:35:34.146Z",
+          "userConfirmationRef": null
+        }
+      },
       "selfAudit": {
         "performedAtUtc": "2026-09-06T10:20:00.000Z",
         "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",

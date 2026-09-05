@@ -2224,6 +2224,8 @@ The cost of the check is one grep. The cost of skipping it is a safety property 
 
 **Status: STANDING RULE, delegate-adopted 2026-09-06. Sits beside BLOCKED-085 and BLOCKED-067 as a third, distinct shape.**
 
+**Why this one is the hardest of the three to find, stated first because it is the whole answer:** BLOCKED-085 and BLOCKED-067 both leave a test a careful reader can see is wrong. This one leaves a normal-looking test, a green suite, **and a green coverage report** — the guard executed, it simply had no decision to make. Only a mutation reveals it, and only a *targeted* one: a random mutation may never construct the input that would distinguish the behaviours.
+
 P4-08's journal recorder keys entries by `seq` and sorts them before emitting. Deleting the sort reddened **nothing** — and unlike the shapes already recorded here, neither the assertions nor their subject were wrong:
 
 | Shape | What is wrong |
@@ -2239,5 +2241,7 @@ Every case started its steps in order, so insertion order and `seq` order coinci
 > **The check: mutate the logic and ask not only "did anything redden" but "could this input have distinguished the two behaviours at all?" A line that runs without ever having a decision to make is executed, not tested.**
 
 **An actionable form, since the shape is concentrated in one family.** Sorting, deduplication, normalization, canonicalization — anything whose job is to *transform* an input toward a form — must be given an input **already in the wrong form**. A fixture that happens to be sorted tests the identity transform. `parallel()` starts several `agent()` calls concurrently, so out-of-order arrival is real rather than hypothetical; the added case starts steps 3, 1, 2 and the mutation now reddens.
+
+**This entry and BLOCKED-085's targeted-mutation supplement are a pair:** this one says why a mutation is the only way to see the defect, and that one says which mutation to write. Neither is sufficient alone — knowing you must mutate does not tell you to construct an out-of-order input, and knowing to mutate the likely mistake does not tell you the guard was never exercised.
 
 **Both times this arose, the response was to find out why the mutation was *not* equivalent rather than to record it as equivalent** — P4-07's fencing order was the first, this the second. An equivalent mutant is a real category, and treating it as the default explanation for a surviving mutation is how a real gap gets filed as a curiosity.

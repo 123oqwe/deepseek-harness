@@ -4908,6 +4908,54 @@
         "mutationDescription": "Three mutations on src/replay.ts beyond those recorded for the C stage: (1) compaction made non-idempotent by stripping the output ref on a second pass; (2) a refused plan still yields receipts to reconcile; (3) an empty journal reported unresumable. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
       }
+    },
+    {
+      "epic": "P4-09",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "identifies a definition by the digest of its body, not by its name",
+        "recomputes the digest rather than trusting the one supplied",
+        "requires versions to advance by one per name",
+        "refuses to reuse a version already issued for a different body",
+        "refuses a re-registration of an identical body rather than silently accepting it",
+        "resolves a run whose digest and name both match",
+        "refuses an unknown digest",
+        "reports a name/digest mismatch distinctly from a missing definition",
+        "validation[1]: a newer version under the same name does NOT make an old run resumable",
+        "treats a body containing executable-looking text as opaque data",
+        "gives the child what remains, minus the call that started it",
+        "clamps an inherited budget to the deployment ceiling",
+        "refuses a child whose definition is already on the ancestor chain",
+        "reports recursion even when the depth limit would ALSO have refused",
+        "refuses at the depth ceiling, and admits one step below it",
+        "refuses when the agent or token budget is spent",
+        "validation[2]: a self-recursive definition is refused at REGISTRATION"
+      ],
+      "files": [
+        "packages/workflow/workflow-registry/src/types.ts",
+        "packages/workflow/workflow-registry/src/version.ts",
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "packages/workflow/workflow-registry/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T11:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b485ac2e097b624a77e8587b9f1ef8086089c093",
+        "testsDiscovered": 17
+      },
+      "note": "P4-09 C-stage. Per-stage freeze-target list made before any code (C first, written out); path patch for nested.e2e.spec.ts recorded before the first line -- fourth application of BLOCKED-070's prevention subclass. The list again produced answers that would otherwise have surfaced late: P declares ONE source file and no test, U declares two source files and no test AND belongs in workflow-worker-thread rather than this package.\n\nA RUN PINS A DIGEST, NOT A NAME. A name can be repointed at different code, so a run recorded against one cannot be reproduced. The digest covers the BODY ALONE -- including the name or version would give one source two identities, and a run recorded under either could not be recognized as the same work. canResumeAgainst answers by digest and never by version, so a newer version under the same name does not make an old run resumable: that is different code the run never referenced, and upgrading is a deliberate migration rather than something a version comparison authorizes.\n\nTHE SUPPLIED DIGEST IS RECOMPUTED, NOT TRUSTED. A caller-supplied digest nobody checks would let a registration claim one identity and store another, after which every resolution would be exact about the wrong thing.\n\nacceptance[0] IS DEMONSTRATED, NOT ASSERTED: a case registers and resolves a definition whose body is `process.exit(1); throw new Error(\"executed\")`. Every function here either hashes a body or pattern-matches it, so a hostile body behaves exactly like any other. declaresNestedCall is textual for the same reason -- parsing would mean building an evaluator, and over-reporting is the safe direction.\n\nRECURSION IS CHECKED BEFORE DEPTH, and a case pins that ordering with a child that would fail both. A depth limit halts a recursive definition eventually, but reports the same failure for one that is merely deeply composed; reporting depth for a self-call would tell an operator to raise a limit when the definition never terminates.",
+      "sensitivityProof": {
+        "mutationDescription": "Seven mutations. types.ts: (1) recursion checked after depth; (2) the child budget not decayed; (3) the budget not clamped to the ceiling; (4) the name not checked when resolving a digest. version.ts: (5) the supplied digest trusted instead of recomputed; (6) canResumeAgainst compares version instead of digest; (7) the version-monotonicity check dropped. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each -- seven mutations, seven distinct cases, no overlap. (6) is the targeted mutation in BLOCKED-085's sense: comparing versions is the natural way to write a resume check, and it is precisely how an old run would be resumed against code it never referenced."
+      }
     }
   ]
 }
