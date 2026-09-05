@@ -16,7 +16,12 @@
  */
 
 import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { MemoryRecordId, MemoryScope } from './types.ts'
+import type {
+  CrossScopeMergeAuthorization,
+  CrossScopeMergeDecision,
+  MemoryRecordId,
+  MemoryScope,
+} from './types.ts'
 
 /** A session event a record was derived from. */
 export type SourceEventId = Branded<'SourceEventId'>
@@ -189,4 +194,51 @@ export function isDefaultRetrievable(record: MemoryRecord, nowIso: string): bool
   if (record.status !== 'active') return false
   if (record.validUntil !== null && record.validUntil <= nowIso) return false
   return true
+}
+
+/** Whether two scopes name the same tenant and session. */
+function sameScope(left: MemoryScope, right: MemoryScope): boolean {
+  return left.tenantId === right.tenantId && left.sessionId === right.sessionId
+}
+
+/**
+ * Decide whether one record may be merged into another's scope
+ * (acceptance[2]).
+ *
+ * A merge within one scope is permitted and reports `crossesScope: false`,
+ * so a caller can tell the two apart without re-deriving it — an audit that
+ * could not distinguish them would record every merge identically.
+ *
+ * A merge that crosses a boundary requires an authorization naming BOTH
+ * endpoints. Requiring the pair, rather than just the destination, is the
+ * point: an authorization naming only where records land would permit
+ * merging into it from anywhere.
+ *
+ * Tenant crossings and session crossings are refused with different reasons.
+ * Crossing tenants moves data between customers; crossing sessions moves it
+ * within one. Collapsing them would make an operator read the same message
+ * for events of very different severity.
+ * @param from - the scope the record currently belongs to.
+ * @param into - the scope it would be merged into.
+ * @param authorization - the caller's explicit authorization, when supplied.
+ * @returns whether the merge is permitted, and whether it crosses a boundary.
+ */
+export function decideCrossScopeMerge(
+  from: MemoryScope,
+  into: MemoryScope,
+  authorization?: CrossScopeMergeAuthorization,
+): CrossScopeMergeDecision {
+  if (sameScope(from, into)) return { permitted: true, crossesScope: false }
+  if (authorization === undefined) {
+    return {
+      permitted: false,
+      reason: from.tenantId === into.tenantId ? 'cross-session-not-authorized' : 'cross-tenant-not-authorized',
+    }
+  }
+  if (!sameScope(authorization.from, from) || !sameScope(authorization.into, into)) {
+    // An authorization for a different pair is not authorization for this one,
+    // and accepting it would let one approval cover every later merge.
+    return { permitted: false, reason: 'authorization-scope-mismatch' }
+  }
+  return { permitted: true, crossesScope: true }
 }

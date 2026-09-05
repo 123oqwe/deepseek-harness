@@ -617,6 +617,7 @@ function toRecordView(record: ScopedMemoryRecord): MemoryRecordView {
 
 export default MemoryRuntime
 export {
+  decideCrossScopeMerge,
   isDefaultRetrievable,
   recordConflict,
   validateRecord,

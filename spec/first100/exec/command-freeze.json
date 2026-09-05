@@ -4644,6 +4644,45 @@
         "mutationDescription": "Six mutations. record.ts: (1) recordConflict mutates the loser in place instead of returning a copy; (2) disputed records stay default-retrievable; (3) the confidence range written as `< 0 || > 1`, which lets NaN through since every NaN comparison is false; (4) the expiry boundary uses `<` instead of `<=`; (6) the derived-without-source check removed. provenance.ts: (5) sensitive content admitted to the index regardless of policy. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each -- six mutations, six distinct cases, no overlap. (3) is the targeted mutation in BLOCKED-085's sense: `< 0 || > 1` is the form a competent author would write, and it admits NaN, which would then pass both bounds and sort unpredictably wherever confidence is ranked."
       }
+    },
+    {
+      "epic": "P6-02",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/scope.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "permits it and reports that no boundary was crossed",
+        "treats the same tenant and session as one scope",
+        "refuses a cross-tenant merge with no authorization",
+        "refuses a cross-session merge with a DIFFERENT reason from a cross-tenant one",
+        "permits a cross-tenant merge that names both endpoints",
+        "refuses an authorization issued for a different destination",
+        "refuses an authorization issued for a different source",
+        "does not let a session-scoped authorization cover a tenant-wide merge"
+      ],
+      "files": [
+        "packages/memory/memory/src/types.ts",
+        "packages/memory/memory/src/record.ts",
+        "packages/memory/memory/tests/scope.spec.ts",
+        "packages/memory/memory/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T06:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "84d3b3888c81aadf09cdc5568bcf71556de228e0",
+        "testsDiscovered": 8
+      },
+      "note": "P6-02 U-stage, acceptance[2]'s explicit cross-scope merge.\n\nscope.spec.ts EXISTS BECAUSE OF THE PRE-FLIGHT LIST. The U stage declares only two SOURCE files (memory/src/types.ts, identity/principal/src/types.ts) and no test file at all. Asking where the freeze would hang, before writing anything, is what surfaced that -- otherwise these titles would have landed in record.spec.ts beside the C and F sets, giving one file three disjoint frozen groups for no reason. First execution of BLOCKED-095's repair, and it prevented a specific bad outcome rather than merely not failing.\n\nTHE DECLARED-FILE SPLIT, recorded rather than quietly resolved: the decision types live in src/types.ts as the registry declares, but the FUNCTION lives in src/record.ts, because packages/AGENTS.md requires src/types.ts to contain only types and no runtime code. Under BLOCKED-088's standing ruling the files list is a declaration and not a gate; this is a placement forced by another repository rule, not a scope deviation.\n\nAN AUTHORIZATION NAMES BOTH ENDPOINTS, and two cases exist for that alone. One naming only the destination would permit merging into it from ANYWHERE, so a single approval would cover every later merge. Tenant crossings and session crossings refuse with DIFFERENT reasons: crossing tenants moves data between customers, crossing sessions moves it within one, and one message for both would have an operator read events of very different severity identically.\n\nNOT DONE HERE, and it is the reason P6-01's lock was rewritten: adding `scope` to MemoryRecordView is forbidden by P6-01's own frozen cases, which assert that projection is exactly four keys. That collision is BLOCKED-096, the lock now names an OUTCOME instead of that mechanism, and both of its steps are owned by P6-03. MemoryRecord.scope, delivered by this epic's C stage, is a DIFFERENT type and is unaffected.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations on src/record.ts's decideCrossScopeMerge: (1) the authorization endpoint check removed entirely; (2) only the destination checked, not the source; (3) cross-session and cross-tenant collapsed to one reason; (4) sameScope ignores sessionId. All restored byte-identical.",
+        "failureSummary": "Reddens 3, 2, 1 and 2 cases respectively. (2) is the targeted mutation in BLOCKED-085's sense -- checking only where records LAND is the natural way to write this, and it is exactly the widening the clause exists to prevent."
+      }
     }
   ]
 }

@@ -204,3 +204,38 @@ declare module '@deepseek-ai/dsh-session/types' {
     'memory/access': MemoryAccessEvent
   }
 }
+
+/**
+ * Why a cross-scope merge was refused (Epic P6-02 acceptance[2]).
+ *
+ * A merge that stays inside one scope needs no authorization. One that
+ * crosses scopes moves a record out of the boundary it was written under, so
+ * it must be asked for by name — never inferred from the fact that two
+ * records happen to be mergeable.
+ */
+export type CrossScopeDenialReason =
+  /** The merge crosses tenants and no explicit authorization accompanied it. */
+  | 'cross-tenant-not-authorized'
+  /** The merge crosses sessions within a tenant, unauthorized. */
+  | 'cross-session-not-authorized'
+  /** Authorization was supplied, but for a different scope pair than the one attempted. */
+  | 'authorization-scope-mismatch'
+
+/**
+ * A caller's explicit request to merge across a scope boundary.
+ *
+ * Names BOTH endpoints. An authorization naming only a destination would
+ * authorize a merge from anywhere into it, which is the widening the clause
+ * exists to prevent.
+ */
+export interface CrossScopeMergeAuthorization {
+  readonly from: MemoryScope
+  readonly into: MemoryScope
+  /** Who authorized it, for the audit record. */
+  readonly authorizedBy: string
+}
+
+/** The outcome of deciding one merge. */
+export type CrossScopeMergeDecision =
+  | { readonly permitted: true; readonly crossesScope: boolean }
+  | { readonly permitted: false; readonly reason: CrossScopeDenialReason }
