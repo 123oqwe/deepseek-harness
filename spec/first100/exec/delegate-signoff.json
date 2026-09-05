@@ -68,6 +68,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-05T04:56:30.880Z",
       "note": "gq-92 independent verify: (iii) 36 frozen titles across C/U/F (P is N/A per registry), each checked against the observation ITS OWN cell cites, strict every-occurrence rule; 0 unmet. C run 33790217988 (18583/0), U run 33945015221 (19305/0), F run 33942181035 (19288/0) -- all three observations zero-failure, so no flake-registry adjudication is involved. (ii) 3 candidate SHAs all ancestors. (i) 3/3 acceptance clauses, 17 references, 0 unresolvable. No lock register row. U's freeze was created after the implementation but BEFORE the cases had ever executed -- verified independently: freeze commit e0ad64e579 at 23:54:18, first run e789af3098 at 23:56:59, and dryRunProof.treeSha b3cff191 is exactly the tree of e0ad64e579~1, the pre-freeze tree the dry run must have run on. The 17 titles were therefore a prediction, not a transcription."
+    },
+    {
+      "epic": "P8-01",
+      "rowDigestSha256": "0fc7bb841928921d59336d9b30c46ab75063b810ab926ea7f7f6863e2a15043d",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T06:34:49.044Z",
+      "note": "gq-92 independent verify: (iii) 78 frozen titles across C/P/U/F, each against the observation ITS OWN cell cites, strict every-occurrence rule; 0 unmet. (ii) 4 candidate SHAs all ancestors. (i) 5/5 acceptance clauses, 27 references, 0 unresolvable. Lock check, read from the primary source: 'accept-blocked: P8-01' occurs 0 times in the machine-readable block, and P8-01 has no ACCEPTANCE LOCKS row -- the five live entries are P1-02, P2-02, P6-01, P2-03, P4-05. Run 33949286482 carries one failure, verified present in flake-registry.json (the Inspector realm-session case) and absorbed mechanically as absorbedFlakes on the cells; run 33947070508 is zero-failure. No frozen title of this epic is among the failures."
     }
   ]
 }
