@@ -4053,24 +4053,123 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
+          "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
+          "expectCasesMatched": [
+            "carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
+            "keeps `verified` separate from `outcome`",
+            "records artifact REFS, never inline content",
+            "skips it and reuses its recorded output",
+            "re-runs a step that never completed",
+            "re-runs a completed step that recorded no output",
+            "reconciles it even when completed AND verified",
+            "reconciles a side-effecting step that recorded no receipts at all",
+            "collects every side-effect receipt in the journal, not only those before the restart point",
+            "resumes at the first step that is not skippable, not past it",
+            "resumes at the end when every step completed and was verified",
+            "resumes at zero when the first step is unskippable, whatever follows it",
+            "does not repeat a completed child agent call: its receipt is retained and its step skipped",
+            "refuses the WHOLE resume rather than degrading to a partial one",
+            "admits an unchanged digest, so the refusal is not unconditional",
+            "drops recomputable inputs from a completed, verified, pure step",
+            "leaves an unverified or side-effecting step untouched",
+            "retains EVERY receipt, which is the evidence nothing can regenerate",
+            "reports a compaction that dropped a receipt as NOT retaining evidence"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
+          "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
+          "expectCasesMatched": [
+            "writes an in-flight entry when a step STARTS, before it settles",
+            "replaces the in-flight entry in place when the step settles",
+            "orders entries by sequence even when they settle out of order",
+            "carries the declared phase, and names an unphased step rather than omitting it",
+            "orders by sequence even when steps START out of order",
+            "drops a settlement for a step that never started",
+            "refuses to mark an in-flight step verified",
+            "refuses to mark a FAILED step verified",
+            "marks a completed step verified when asked",
+            "records the effect class the caller declared, never one it inferred",
+            "kill BEFORE the agent call settles: the step is re-run",
+            "kill AFTER the agent call settles but before verification: still re-run",
+            "kill after verification: the completed child work is NOT repeated"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
+          "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
+          "expectCasesMatched": [
+            "records a started agent call as in-flight, carrying the child session id as its receipt",
+            "settles a completed call with an output the resume can reuse",
+            "maps `cancelled` to a failed journal outcome, so a resume re-runs it",
+            "maps `failed` the same way, and `completed` differently",
+            "takes the effect class from the caller, never from the event",
+            "records a call with no phase without inventing one",
+            "kill between two agent calls: the finished one is skipped, the next re-run",
+            "kill during concurrent calls started out of order: the journal still reads in script order"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33965511238",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
+          "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
+          "expectCasesMatched": [
+            "enumerates at least twelve boundaries, each named once",
+            "fault boundary 01 an in-flight step is re-run",
+            "fault boundary 02 a failed step is re-run",
+            "fault boundary 03 a completed but unverified step is re-run",
+            "fault boundary 04 a completed, verified step with no output is re-run",
+            "fault boundary 05 a completed, verified, pure step is skipped",
+            "fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+            "fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+            "fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+            "fault boundary 09 a changed script digest refuses the whole resume",
+            "fault boundary 10 an empty journal is resumable and resumes at zero",
+            "fault boundary 11 a fully completed journal resumes past its last step",
+            "fault boundary 12 resume stops at the first non-skippable step, not past it",
+            "fault boundary 13 receipts are collected from AFTER the restart point too",
+            "fault boundary 14 a refused plan yields no receipts to reconcile",
+            "fault boundary 15 compaction leaves a side-effecting entry untouched",
+            "fault boundary 16 compaction retains every receipt",
+            "fault boundary 17 compacting an already-compacted journal changes nothing further",
+            "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "openFindings": [],
+      "status": "BLOCKED_ON_ACCEPTANCE",
+      "acceptedEvidence": null,
+      "selfAudit": {
+        "performedAtUtc": "2026-09-06T10:20:00.000Z",
+        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
+        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P4-08', cross-checked against the non-superseded P4-08 entries in spec/first100/exec/command-freeze.json, with a count against tests/first100/registry.json's acceptance array. RESULT: 3 clauses, 3 entries covering indices 0/1/2, 17 references, all 17 belonging to the frozen set of the stage each names, 0 mismatches. Written in the same pass as the F freeze.",
+        "ii_candidateChainConsistency": "PASS. RAN: read each cell's candidateSha, then `git merge-base --is-ancestor` for that SHA against the pushed branch. RESULT: all four cells rest on one commit, 8486e52a6a, so there is no chain to compare between cells and none is claimed -- but that single SHA was itself confirmed to be an ancestor of fork/first100-exec, which is the check a same-SHA row still owes (BLOCKED-084).",
+        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four freeze entries' argv and expectCases sets pairwise and matched each against the cited vitest-report.json. RESULT: four cells share run 33965511238; argv differ across all four; C and F share resume.e2e.spec.ts with disjoint title sets (19 + 19 = 38, the file's full discovery count); P and U have their own files, U's in a different PACKAGE. 19/19, 13/13, 8/8, 19/19 present-and-passing.",
+        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row and no open findings recorded against it."
+      }
     },
     "P4-09": {
       "id": "P4-09",
