@@ -1163,7 +1163,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 45,
+    "count": 47,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1567,6 +1567,24 @@
         "declaredPath": "packages/workflow/workflow-registry/tests/nested.e2e.ts",
         "approvedPath": "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fourth application, after P4-06, P4-07 and P4-08. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P4-09's clauses are workflow definitions registered as versioned signed artifacts, runs referencing a digest, detached runs surviving UI disconnect, and nested runs inheriting or decaying budget/capability/trace with recursion detection; its acceptance covers load-without-executing, cancel propagation, child failure policy, and depth/agent/budget limits. None requires a model or external API -- these are decisions over recorded definitions and limits. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
+        "approvedAt": "2026-09-06",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
+      },
+      "P5-11-C-claims-e2e-not-yet-created": {
+        "epic": "P5-11",
+        "stage": "C",
+        "declaredPath": "packages/collaboration/taskboard/tests/claims.e2e.ts",
+        "approvedPath": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fifth application (P4-06, P4-07, P4-08, P4-09). The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P5-11's clauses are task claim/lease/owner/verification fields, structured blackboard facts with provenance, keeping roles out of the primitives, single-winner concurrent claim, receipt-driven status advance, and cycle refusal at submission -- none requires a model or external API.",
+        "approvedAt": "2026-09-06",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
+      },
+      "P5-11-F-claims-e2e-not-yet-created": {
+        "epic": "P5-11",
+        "stage": "F",
+        "declaredPath": "packages/collaboration/taskboard/tests/claims.e2e.ts",
+        "approvedPath": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- fifth application (P4-06, P4-07, P4-08, P4-09). The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line. Local-behaviour classification: P5-11's clauses are task claim/lease/owner/verification fields, structured blackboard facts with provenance, keeping roles out of the primitives, single-winner concurrent claim, receipt-driven status advance, and cycle refusal at submission -- none requires a model or external API.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
       }

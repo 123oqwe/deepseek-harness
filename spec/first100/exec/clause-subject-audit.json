@@ -14,19 +14,23 @@
       "epic": "P4-07",
       "clause": "must[3]",
       "text": "外部 idempotency ledger 拒绝 stale epoch",
-      "verdict": "NO SUBJECT",
+      "verdict": "NO SUBJECT -- and worse than absent (sharpened 2026-09-06)",
       "evidence": "`idempotencyLedger` and `idempotency ledger` occur 0 times anywhere in packages/. What P4-07 delivers is `checkFencing`, which refuses a token whose epoch is not the item's current one -- a LEASE-level authority check. An idempotency ledger answers a different question: 'have I already applied this effect?'. The nearest thing in the repository is P4-06's message-bus dedup, which belongs to another epic and is not consulted here.",
       "whyItWasMissed": "must[0], must[1] and must[2] are all lease/heartbeat/fencing and were built together; must[3] names a component OUTSIDE that cluster. No declared file pointed at it, so neither pre-flight question reached it -- exactly BLOCKED-101's blind spot, in an epic already ACCEPTED.",
-      "status": "P4-07 is ACCEPTED. Reported for a maintainer decision; not silently reopened."
+      "status": "P4-07 is ACCEPTED. Reported for a maintainer decision; not silently reopened.",
+      "sharpenedByDelegate": "My report said 'idempotency ledger' occurs 0 times, which is true and insufficient -- a mechanism's NAME is not the only evidence of its existence, the trap I had just caught five times in this same audit. Searching by concept instead: `IdempotencyKey` appears 14 times and `idempotencyKey` 18. But following them settles it the other way: both live ONLY in packages/action/action-manifest -- declared in types.ts, computed in canonicalize.ts, exercised by that package's own test. NO consumer anywhere. The key is minted and canonicalized; nothing ever uses it to REFUSE a replay.",
+      "whyThisIsWorseThanEmpty": "An absent mechanism is honest. Here the system mints idempotency keys, so a future reader finds an `IdempotencyKey` type and a canonicalizer and reasonably concludes deduplication is wired. Identical to P4-09's nesting: machinery present, types present, no call site -- and the part that exists is precisely enough to mislead. Third occurrence of this shape in one session."
     },
     {
       "epic": "P8-01",
       "clause": "must[4]",
       "text": "将协议 schema 生成物纳入 release evidence 和 golden compatibility fixtures",
-      "verdict": "NO SUBJECT",
-      "evidence": "Two halves, both absent. RELEASE EVIDENCE: `schema` occurs 0 times in scripts/release/collect-evidence.mjs, so no protocol schema artifact enters an evidence package. GOLDEN FIXTURES: no fixture pins a fingerprint VALUE. The closest assertions are `computeSchemaFingerprint(surface) === computeSchemaFingerprint(surface)` and a /^[0-9a-f]{64}$/ shape check -- the first is a tautology that cannot fail, and neither can detect drift, which is the whole purpose of a golden fixture.",
+      "verdict": "NO SUBJECT (diagnosis corrected 2026-09-06)",
+      "evidence": "The real gap is narrower and harder: EVERY assertion is RELATIVE -- a fingerprint compared against another fingerprint -- and none is ABSOLUTE. Verified: zero 64-hex literals in packages/sdk/protocol/src or /tests. So the suite catches 'this surface differs from that one' and cannot catch 'the ALGORITHM changed', which is the single thing a golden fixture exists for and exactly what must[4] asks for. The release-evidence half is separately absent: `schema` occurs 0 times in scripts/release/collect-evidence.mjs (341 lines), so no protocol schema artifact enters an evidence package.",
       "secondaryFinding": "The self-equality assertion is BLOCKED-098's shape: it executes, reports as covered, and can never distinguish any two implementations.",
-      "status": "P8-01 is ACCEPTED. Reported for a maintainer decision."
+      "status": "P8-01 is ACCEPTED. Reported for a maintainer decision.",
+      "correctionToMyOwnReport": "My first report called the fingerprint suite BLOCKED-098's shape -- a guard with nothing to decide. THAT WAS WRONG, and wrong in the direction that misdirects the repair. The suite DOES discriminate: reordering a surface keeps the fingerprint (line 149), a version bump changes it (157), an added method changes it (165), a new resource type changes it (169), and moving a name between the method and event kinds changes it (184). A fingerprint function returning a constant would redden four of those. Only line 138's `f(x) === f(x)` is a tautology.",
+      "whyTheCorrectionMatters": "Read as an 098, the next person deletes line 138 -- a tidy-up that leaves the actual gap untouched. Read correctly, the repair is to ADD a case pinning a fingerprint VALUE. Diagnosis and defect are different things, and I had just written that a false defect 'sends someone to fix what is not broken' -- then produced one, in the diagnosis rather than in the probe."
     }
   ],
   "clearedEpics": [
@@ -119,5 +123,70 @@
   "notAudited": {
     "acceptanceClauses": "Every acceptance clause of all 19 has a non-empty acceptance-coverage entry citing frozen, verified cases; completeness was checked mechanically rather than re-read.",
     "correctness": "Out of scope by the delegate's framing: this audit asks only whether a subject exists, never whether it is right or sufficiently tested."
-  }
+  },
+  "preFlight": {
+    "P5-11": {
+      "recordedBeforeFirstLine": true,
+      "titleNouns": [
+        "Taskboard",
+        "Mailbox",
+        "Blackboard"
+      ],
+      "titleNounCheck": "All three are packages this epic creates (packages/collaboration/{taskboard,mailbox,blackboard} are ABSENT). Planned, not missing -- the distinction P4-09's must[2] failed.",
+      "clauses": [
+        {
+          "clause": "must[0]",
+          "text": "Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status",
+          "plannedArtifact": "packages/collaboration/taskboard/src/types.ts (fields + claim decision), src/store.ts (the atomic claim)",
+          "stage": "C, P"
+        },
+        {
+          "clause": "must[1]",
+          "text": "Blackboard 只存结构化 facts/artifact refs，带 provenance",
+          "plannedArtifact": "packages/collaboration/blackboard/src/index.ts -- a fact type admitting only structured values and refs, each carrying provenance",
+          "stage": "U"
+        },
+        {
+          "clause": "must[2]",
+          "text": "角色、组织图和 captain 保持插件/skill 层",
+          "plannedArtifact": "A NEGATIVE clause, and the kind most likely to end up unbuilt: it requires that these primitives do NOT encode roles, an org chart, or a captain. Its subject is therefore a case asserting the absence -- the exported surface carries no role/captain concept -- not an implementation. Flagged here because 'implement nothing' is indistinguishable from 'forgot to implement' unless something asserts it.",
+          "stage": "C or F"
+        },
+        {
+          "clause": "acceptance[0]",
+          "text": "多进程并发 claim 只有一个 winner",
+          "plannedArtifact": "taskboard/src/store.ts atomic claim + a contention case",
+          "stage": "P"
+        },
+        {
+          "clause": "acceptance[1]",
+          "text": "模型未手动更新任务时，runtime 根据 receipts 推进状态",
+          "plannedArtifact": "a receipt-driven status advance in taskboard, consuming the receipts P4-06/P4-07 define",
+          "stage": "U"
+        },
+        {
+          "clause": "acceptance[2]",
+          "text": "循环依赖在提交时拒绝",
+          "plannedArtifact": "a dependency-cycle refusal at task submission, in taskboard",
+          "stage": "C, F"
+        }
+      ],
+      "freezeTargets": {
+        "C": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts [NEW; path patch required -- .e2e.ts is key-gated, 5th application of BLOCKED-070's prevention subclass]",
+        "P": "packages/collaboration/taskboard/tests/store.spec.ts [NEW; P declares two source files and no test file]",
+        "U": "packages/collaboration/blackboard/tests/blackboard.spec.ts [NEW; U declares five source files across three packages and no test file]",
+        "F": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts [shared with C, disjoint titles]"
+      }
+    }
+  },
+  "methodCorrections": [
+    {
+      "lesson": "A mechanism's NAME is not the only evidence of its existence.",
+      "detail": "I applied 'read, do not count' to five probes that returned ZERO and correctly found the subjects. Then I reported P4-07's absence from a single name search. The delegate searched by CONCEPT and found the type; following it to its consumers is what settled the question -- in the same direction, but for a better reason and with a sharper finding."
+    },
+    {
+      "lesson": "A wrong diagnosis is a false defect, and false defects send people to fix what is not broken.",
+      "detail": "The P8-01 miscall would have produced a deletion instead of an addition. The audit's credibility rests on 2 findings out of 19 rather than 7; a wrong diagnosis damages that the same way a wrong probe would."
+    }
+  ]
 }
