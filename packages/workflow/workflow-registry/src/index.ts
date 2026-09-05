@@ -28,3 +28,5 @@ export {
   isSelfRecursive,
 } from './version.ts'
 export type { RegistrationOutcome, RegistrationRefusalReason } from './version.ts'
+export { DefinitionRegistry } from './store.ts'
+export type { StoreOutcome, StoreRefusalReason } from './store.ts'

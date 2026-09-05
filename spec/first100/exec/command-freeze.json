@@ -4956,6 +4956,45 @@
         "mutationDescription": "Seven mutations. types.ts: (1) recursion checked after depth; (2) the child budget not decayed; (3) the budget not clamped to the ceiling; (4) the name not checked when resolving a digest. version.ts: (5) the supplied digest trusted instead of recomputed; (6) canResumeAgainst compares version instead of digest; (7) the version-monotonicity check dropped. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each -- seven mutations, seven distinct cases, no overlap. (6) is the targeted mutation in BLOCKED-085's sense: comparing versions is the natural way to write a resume check, and it is precisely how an old run would be resumed against code it never referenced."
       }
+    },
+    {
+      "epic": "P4-09",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-registry/tests/registry.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "registers a first definition and resolves a run against it",
+        "does not resolve a definition that was refused",
+        "reports the highest version as current, not the most recently registered",
+        "reports no current definition for an unknown name",
+        "keeps a version history, oldest first",
+        "returns a COPY of the history, so a caller cannot mutate the store",
+        "keeps names independent: registering under one does not affect another",
+        "refuses it at registration, before it can be stored or started",
+        "admits a definition that nests a DIFFERENT workflow",
+        "stores and resolves a definition whose body would throw if evaluated"
+      ],
+      "files": [
+        "packages/workflow/workflow-registry/src/store.ts",
+        "packages/workflow/workflow-registry/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T11:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "59bcaa0073cdd8084bc094040b8b06f7594c2d39",
+        "testsDiscovered": 10
+      },
+      "note": "P4-09 P-stage: the registry that holds definitions.\n\nSELF-RECURSION IS REFUSED AT REGISTRATION, not left to admitNestedRun. Catching it at run time would mean the definition had already been stored, shipped, and started before anyone learned it cannot terminate. A positive control sits beside it -- a definition nesting a DIFFERENT workflow registers fine -- since otherwise a registry refusing every body containing the word `workflow` would satisfy the refusal case.\n\nA REFUSED REGISTRATION MUST NOT BE STORED, and a case checks the store afterwards rather than only the return value: a store that retained it would let a run resolve a definition the registry declined.\n\nONE MUTATION IS A GENUINE EQUIVALENT MUTANT, and it is recorded rather than patched around -- BLOCKED-098's shape appearing a second time, correctly identified this time as equivalent instead of as a gap. Replacing current()'s highest-version reduce with 'last element' reddens NOTHING, and reading establishes why: byName.set is the sole writer to that array and is reached only after admitRegistration has required version === highest + 1, so insertion order always equals version order.\n\nTHE EQUIVALENCE IS GUARANTEED BY AN INVARIANT IN ANOTHER MODULE, which is the part worth recording. If version monotonicity is ever relaxed in version.ts, current() silently becomes wrong and NO case in this suite would notice -- the test cannot construct an out-of-order history because the store will not accept one. That is a real dependency between two files, currently invisible except here.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations on src/store.ts: (1) a refused registration stored anyway; (2) current() returns the last-registered instead of the highest version; (3) history() returns the store's own array rather than a copy; (4) the self-recursion check dropped; (5) versions tracked globally instead of per name. All restored byte-identical.",
+        "failureSummary": "Reddens 1, 0, 1, 1 and 1 cases. (2) is an EQUIVALENT MUTANT, established by reading rather than assumed: monotonic registration makes insertion order equal version order, so no reachable input distinguishes the two implementations. Recorded with the caveat that the equivalence depends on version.ts's monotonicity check, so relaxing that would make this a silent gap."
+      }
     }
   ]
 }
