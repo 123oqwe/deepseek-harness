@@ -6353,6 +6353,45 @@
         "mutationDescription": "Three targeted mutations of conformance-probes.ts, each restored byte-identical: (M1) deltasMergeIntoFinalCalls returns true for an observation with no completed tool call, so an adapter that never streams deltas passes vacuously; (M2) parallel-tool-calls accepts a single call, so 'surfaces every call' is no longer distinguished from 'surfaces the first'; (M3) usage-accounting passes without a usage chunk, reporting silence as success.",
         "failureSummary": "All three reddened: 2, 1 and 1 of 9. M1 reddens two -- the no-deltas case and the direct unit case -- because that probe is the one a broken adapter would most plausibly slip past. The empty-stream case does NOT redden under M1, since it asserts every probe reports zero cases and a vacuous pass still reports zero; the gate rejects that separately through the vacuous rule, which is the intended division of labour. None reddened zero. (This summary was first written as 2, 3, 2 from expectation rather than observation and corrected against the real run: a sensitivityProof stating counts nobody measured is the same false assertion as an expectCasesMatched nobody computed.)"
       }
+    },
+    {
+      "epic": "P9-01",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm/tests/conformance-route.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-01 Provider — the complete conformance kit a correct route demonstrates all six behaviours and is ADMITTED",
+        "P9-01 Provider — the complete conformance kit a route that emits whole tool calls without deltas is denied on merging",
+        "P9-01 Provider — the complete conformance kit a route that drops the second of two tool calls is denied on parallel calls",
+        "P9-01 Provider — the complete conformance kit a cancelled request reported as `stop` is denied: the caller cannot tell it from a normal finish",
+        "P9-01 Provider — the complete conformance kit a failure carrying no code is denied: llm-retry routes on the code and cannot route on nothing",
+        "P9-01 Provider — the complete conformance kit a route that TRUNCATES an over-long input and finishes normally is denied",
+        "P9-01 Provider — the complete conformance kit a scenario the route cannot stage leaves its behaviour ABSENT, and absence denies",
+        "P9-01 Provider — the complete conformance kit each defect is independent: breaking one behaviour denies on that one alone"
+      ],
+      "files": [
+        "packages/llm/llm/src/conformance-probes.ts",
+        "packages/llm/llm/src/conformance-route.ts",
+        "packages/llm/llm/tests/conformance-route.spec.ts",
+        "packages/llm/llm/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T07:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "84822bd5cef37c04bf41dad5f1b4dba92d10a93a",
+        "testsDiscovered": 8
+      },
+      "note": "U (Usage) for P9-01: the kit completed, and the first route the gate can ADMIT. Until this stage admitConformantRoute could only deny, because no kit demonstrated all six behaviours -- so its admit branch had never been exercised by anything, which is the shape of a guard nobody has watched work. The first frozen case is that a correct route is admitted; every denial case below it is meaningful only because that one passes. The three scenario-driven behaviours read the FINISH reason rather than the body: a cancelled request must end with 'aborted' (a stream that merely stops leaves cancellation indistinguishable from a hang, and one reporting 'stop' claims the model finished normally), a failure must carry a non-empty code (llm-retry routes on it and cannot route on nothing; an empty string is treated as absent because it carries no more information), and an over-long input must end with 'error' -- the dangerous failure there is not an error but a confident answer to a question the caller did not ask. NOT a wire-protocol mock: createScriptedRoute emits StreamChunks directly, which is the surface LlmAdapter.stream is defined in; HTTP underneath would test transports, and the three pi-ai protocol routes each have their own. The declared llm-conformance package is still not created, for the reason recorded in the P entry.",
+      "sensitivityProof": {
+        "mutationDescription": "Four targeted mutations of conformance-probes.ts, each restored byte-identical: (M1) the abort probe accepts ANY finish rather than requiring 'aborted'; (M2) the failure probe accepts a failure with an empty code; (M3) the oversized probe passes unconditionally, so truncation counts as rejection; (M4) the oversized outcome is emitted even when the runner declined to stage the scenario, so an unstageable behaviour is credited.",
+        "failureSummary": "All four reddened: 2, 2, 2 and 1 of 8. The three behaviour mutations redden two each -- the specific defect case and the independence sweep that breaks all six one at a time -- which is the intended overlap, since the sweep exists to catch a probe that reports the wrong behaviour rather than no behaviour. M4 reddens only the unstageable case, which is the one case written for absence rather than for failure."
+      }
     }
   ]
 }

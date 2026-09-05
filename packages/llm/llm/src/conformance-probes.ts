@@ -5,15 +5,18 @@
  * `./conformance.ts` decides what a route must demonstrate. This decides what a
  * given stream actually did demonstrate.
  *
- * **It covers only the behaviours a chunk stream can show.** Three of the six
- * — `error-retry-classification`, `oversized-input-rejection`, and a real
- * `mid-stream-abort` against a live connection — need the adapter's REQUEST
- * path and a server that can misbehave, which is the mock-server half of this
- * epic and is not built yet. Those behaviours are therefore ABSENT from the
- * outcomes rather than reported as passing, so `admitConformantRoute` denies
- * the route. That is the intended behaviour of an incomplete kit: a suite that
- * reported the untested three as green would be exactly the vacuous pass the
- * gate exists to reject.
+ * All six behaviours are covered. Three are read from a single stream; the
+ * other three need the adapter driven through a SCENARIO — a cancelled request,
+ * a failing one, an over-long one — because what they assert is how the adapter
+ * ends a stream it cannot finish normally. `runAllProbes` takes a scenario
+ * runner rather than a stream, which is what lets a caller point the kit at a
+ * real adapter or at `createScriptedRoute` below.
+ *
+ * A behaviour whose scenario the runner cannot produce stays ABSENT from the
+ * outcomes rather than being reported as passing. `admitConformantRoute` then
+ * denies the route, which is the intended behaviour of a partial kit: reporting
+ * an untested behaviour as green is the vacuous pass the gate exists to
+ * reject.
  *
  * @module @deepseek-ai/dsh-llm/conformance-probes
  */
@@ -113,4 +116,85 @@ export async function runStreamProbes(chunks: AsyncIterable<StreamChunk>): Promi
       cases: observation.sawFinish ? 1 : 0,
     },
   ]
+}
+
+/** The request shapes a route must be driven through to show every behaviour. */
+export type ProbeScenario =
+  /** A normal request that calls two tools. */
+  | 'parallel-tool-calls'
+  /** A request cancelled after the stream has begun. */
+  | 'abort-mid-stream'
+  /** A request the provider rejects with a transport or status failure. */
+  | 'provider-failure'
+  /** A request whose input exceeds what the route accepts. */
+  | 'oversized-input'
+
+/** Produces the adapter's stream for one scenario, or null when it cannot stage it. */
+export type ScenarioRunner = (scenario: ProbeScenario) => AsyncIterable<StreamChunk> | null
+
+/** The finish chunk a stream ended with, when it emitted one. */
+async function finishOf(chunks: AsyncIterable<StreamChunk>): Promise<Extract<StreamChunk, { type: 'finish' }> | null> {
+  let finish: Extract<StreamChunk, { type: 'finish' }> | null = null
+  for await (const chunk of chunks) {
+    if (chunk.type === 'finish') finish = chunk
+  }
+  return finish
+}
+
+/**
+ * Run every probe, including the three that need a staged scenario.
+ *
+ * A scenario the runner declines leaves its behaviour out of the result, so an
+ * adapter that cannot be driven into a failure is not credited with handling
+ * one.
+ * @param run - stages one scenario and returns the adapter's stream.
+ * @returns one outcome per behaviour the runner could stage.
+ */
+export async function runAllProbes(run: ScenarioRunner): Promise<ConformanceOutcome[]> {
+  const outcomes: ConformanceOutcome[] = []
+
+  const normal = run('parallel-tool-calls')
+  if (normal !== null) outcomes.push(...await runStreamProbes(normal))
+
+  const aborted = run('abort-mid-stream')
+  if (aborted !== null) {
+    const finish = await finishOf(aborted)
+    // A cancelled request must END, and say it was cancelled. A stream that
+    // simply stops emitting leaves the caller unable to tell cancellation from
+    // a hang, and one that reports `stop` claims the model finished normally.
+    outcomes.push({
+      behavior: 'mid-stream-abort',
+      passed: finish?.reason.kind === 'aborted',
+      cases: finish === null ? 0 : 1,
+    })
+  }
+
+  const failed = run('provider-failure')
+  if (failed !== null) {
+    const finish = await finishOf(failed)
+    const failure = finish?.reason.kind === 'error' ? finish.reason.failure : undefined
+    // `llm-retry` routes on `code`, so a failure without one is unroutable and
+    // the policy layer can only guess. An empty string is treated as absent
+    // rather than as a code, because it carries no more information than none.
+    outcomes.push({
+      behavior: 'error-retry-classification',
+      passed: failure !== undefined && failure.code.length > 0,
+      cases: finish === null ? 0 : 1,
+    })
+  }
+
+  const oversized = run('oversized-input')
+  if (oversized !== null) {
+    const finish = await finishOf(oversized)
+    // Refusing is the required behaviour; the failure mode this catches is an
+    // adapter that TRUNCATES and finishes normally, which silently answers a
+    // different question than the caller asked.
+    outcomes.push({
+      behavior: 'oversized-input-rejection',
+      passed: finish?.reason.kind === 'error',
+      cases: finish === null ? 0 : 1,
+    })
+  }
+
+  return outcomes
 }
