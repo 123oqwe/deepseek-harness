@@ -12,6 +12,12 @@ import type { Agent, AgentHandle } from '@deepseek-ai/dsh-agent'
 import { admitEncodedImages, type EncodedImageAttachment, type ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import { createUserMessage, ReasoningEffortId, type ContentBlock, type LlmRuntime } from '@deepseek-ai/dsh-llm'
 import { getSchema, negotiateSchema } from '@deepseek-ai/dsh-schema-registry'
+import {
+  computeSchemaFingerprint,
+  negotiateCapabilities,
+  negotiateProtocolVersion,
+} from '@deepseek-ai/dsh-sdk-protocol'
+import type { CapabilityId, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
 import type { SchemaId } from '@deepseek-ai/dsh-schema-registry'
 import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
 import type { SessionId } from '@deepseek-ai/dsh-session'
@@ -74,6 +80,54 @@ function successStatus(reason: string, options: HarnessSdkJsonRpcServerOptions):
  * subscribes to session, agent, and subagent lifecycle events until shutdown;
  * reinitialization is unsupported.
  */
+/**
+ * The protocol version range this build speaks (Epic P8-01 must[0]).
+ *
+ * A single generation today. It is a RANGE rather than a number so the
+ * negotiation shape does not change when a second generation appears — the
+ * moment a peer has to be told "we now support 1..2" is the moment the field
+ * must already exist on both sides.
+ */
+const SERVER_PROTOCOL_VERSIONS: ProtocolVersionRange = { min: 1, max: 1 }
+
+/**
+ * Capability ids this build recognises (must[1]/must[2]).
+ *
+ * Distinct from {@link SUPPORTED_CAPABILITIES} because must[2] separates two
+ * refusals: an id absent from this set means the peer speaks of something this
+ * build has never heard of — version skew — while one present here but absent
+ * from the supported set is a capability this build knows and has not
+ * implemented. A peer can act on the difference; collapsing them would leave
+ * it unable to tell "upgrade me" from "this will never work".
+ */
+const KNOWN_CAPABILITIES: ReadonlySet<CapabilityId> = new Set(['streaming', 'approval', 'replay'])
+
+/** The subset this build actually implements. */
+const SUPPORTED_CAPABILITIES: ReadonlySet<CapabilityId> = new Set(['streaming', 'approval'])
+
+/**
+ * Fingerprint this build's wire surface (acceptance[2]/[3]).
+ *
+ * Derived from the method and event names the server answers, so it moves when
+ * the surface moves and is stable when it does not. Computed per call rather
+ * than cached: the surface is fixed at build time, and a cache would be one
+ * more thing that could disagree with the surface it describes.
+ * @returns the hex digest of this build's wire surface.
+ */
+function serverSchemaFingerprint(): string {
+  return computeSchemaFingerprint({
+    methods: [
+      { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
+      { name: 'session.prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+    ],
+    events: [
+      { name: 'session.event', schemaId: 'sdk-protocol:SessionEventNotification', version: '1.0' },
+      { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
+    ],
+    resourceTypes: ['session', 'agent'],
+  })
+}
+
 export class HarnessSdkJsonRpcServer {
   private cwd = process.cwd()
   private provider = 'deepseek-official'
@@ -142,6 +196,29 @@ export class HarnessSdkJsonRpcServer {
     const encounteredVersion = params.schemaVersion ?? getSchema(schemaId)?.version ?? { major: 1, minor: 0 }
     const negotiation = negotiateSchema(schemaId, encounteredVersion)
     if (!negotiation.compatible) throw negotiation.error
+    // P8-01 must[2]: an incompatible peer is refused BEFORE any work is done.
+    // Placed ahead of adapter resolution and plugin mounting on purpose --
+    // refusing after mounting an LLM adapter would leave the runtime holding
+    // state for a connection it just rejected, and acceptance[1] asks for the
+    // refusal to precede the task, not merely to precede the reply.
+    const versionOutcome = negotiateProtocolVersion(
+      params.protocolVersions ?? SERVER_PROTOCOL_VERSIONS,
+      SERVER_PROTOCOL_VERSIONS,
+    )
+    if (!versionOutcome.agreed) {
+      throw new Error(
+        `initialize refused: ${versionOutcome.reason} (client ${JSON.stringify(versionOutcome.client)}, `
+        + `server ${JSON.stringify(versionOutcome.server)})`,
+      )
+    }
+    const capabilityOutcome = negotiateCapabilities(
+      params.capabilities ?? [],
+      KNOWN_CAPABILITIES,
+      SUPPORTED_CAPABILITIES,
+    )
+    if (!capabilityOutcome.accepted) {
+      throw new Error(`initialize refused: ${capabilityOutcome.reason} (${capabilityOutcome.capability})`)
+    }
     if (params.reasoningEffort !== undefined
       && (typeof params.reasoningEffort !== 'string' || params.reasoningEffort.length === 0)) {
       throw new TypeError('initialize reasoningEffort must be a non-empty string')
@@ -174,7 +251,20 @@ export class HarnessSdkJsonRpcServer {
     this.reasoningEffort = reasoningEffort
     this.maxTokens = params.maxTokens
     this.initialized = true
-    return { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } }
+    return {
+      serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+      // acceptance[4]: the agreed outcome is returned so it can be recorded on
+      // the run, making "what did these peers agree to" answerable from the
+      // record rather than by replaying a handshake that no longer exists.
+      negotiation: {
+        protocolVersion: versionOutcome.version,
+        agreedCapabilities: capabilityOutcome.agreed,
+        ignoredCapabilities: capabilityOutcome.ignored,
+        downgrades: [],
+      },
+      protocolVersions: SERVER_PROTOCOL_VERSIONS,
+      schemaFingerprint: serverSchemaFingerprint(),
+    }
   }
 
   /**

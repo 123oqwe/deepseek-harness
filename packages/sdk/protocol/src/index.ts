@@ -25,3 +25,27 @@ export type {
   SubagentFinishedNotification,
   SubagentStartedNotification,
 } from './types.ts'
+
+// P8-01 P-stage: the Contract stage defined negotiation in ./version.ts,
+// ./capabilities.ts and ./schema-fingerprint.ts, and nothing re-exported them
+// — so the server and client could not consume them through the package's
+// public face. A definition no consumer can reach is not yet a provider
+// surface, which is what this stage makes it.
+export { isWellFormedRange, negotiateProtocolVersion } from './version.ts'
+export type {
+  ProtocolVersion,
+  ProtocolVersionRange,
+  VersionNegotiationDenialReason,
+  VersionNegotiationResult,
+} from './version.ts'
+export { negotiateCapabilities } from './capabilities.ts'
+export type {
+  CapabilityDeclaration,
+  CapabilityDenialReason,
+  CapabilityDowngrade,
+  CapabilityId,
+  CapabilityNegotiationResult,
+  NegotiationProvenance,
+} from './capabilities.ts'
+export { computeSchemaFingerprint } from './schema-fingerprint.ts'
+export type { ProtocolSurface, ProtocolSurfaceEntry } from './schema-fingerprint.ts'

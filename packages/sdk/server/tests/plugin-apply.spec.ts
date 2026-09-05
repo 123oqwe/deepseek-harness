@@ -184,7 +184,21 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
       expect(response).toEqual({
         jsonrpc: '2.0',
         id: 'init-1',
-        result: { serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } },
+        result: {
+          serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+          // P8-01: the handshake now also returns what the peers agreed to.
+          // Asserted in full rather than loosened to a partial match: this
+          // case pins the exact wire reply, and relaxing it would stop it
+          // catching the next field that appears or vanishes.
+          negotiation: {
+            protocolVersion: 1,
+            agreedCapabilities: [],
+            ignoredCapabilities: [],
+            downgrades: [],
+          },
+          protocolVersions: { min: 1, max: 1 },
+          schemaFingerprint: expect.stringMatching(/^[0-9a-f]{64}$/u) as unknown as string,
+        },
       })
       expect(harness.exits()).toEqual([])
     } finally {
