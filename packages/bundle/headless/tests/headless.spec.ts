@@ -405,3 +405,48 @@ describe('headless runner', () => {
     expect(new Config({ task: 'x' })).toEqual({ task: 'x' })
   })
 })
+
+describe('P9-06 Fault — acceptance[2], the exit-code matrix through the real runner', () => {
+  // Each row drives the runner to one turn-end class and pins the code a script
+  // sees. The unit table in scriptability.spec.ts pins the MAPPING; this pins
+  // that the runner actually consults it, which is a different claim — a
+  // correct table nothing reads produces exactly the old blanket 1.
+  const rows = [
+    { kind: 'completed', code: 0, named: false },
+    { kind: 'blocked', code: 2, named: true },
+    { kind: 'aborted', code: 3, named: true },
+    { kind: 'max-tokens', code: 5, named: true },
+    { kind: 'interrupted', code: 6, named: true },
+  ] as const
+
+  it.each(rows)('a $kind run exits $code', async ({ kind, code, named }) => {
+    const test = await bench({
+      afterPrompt(session, message) {
+        session.append('turn/start', { turn: 1 })
+        session.append('step/start', { turn: 1, step: 1 })
+        session.append('user/message', message, { surfaceOp: 'append' })
+        session.append('step/end', { turn: 1, step: 1 })
+        session.append('turn/end', {
+          turn: 1,
+          // `aborted` carries a cause; the rest are bare discriminants, and the
+          // union accepts each shape without help.
+          reason: kind === 'aborted'
+            ? { kind: 'aborted', reason: { kind: 'user' } }
+            : { kind },
+        })
+      },
+    })
+    const result = await test.run()
+    expect(result.code, `${kind} must exit ${code}`).toBe(code)
+    // A completed run says nothing extra; every other class names itself, so a
+    // script reading stderr never has to map a number back to a cause.
+    expect(result.err.includes('run did not complete'), `${kind} stderr`).toBe(named)
+    await test.ctx.fiber.dispose()
+  })
+
+  it('every non-completed class exits with a DISTINCT non-zero code, so the matrix is not decorative', () => {
+    const codes = rows.filter(row => row.kind !== 'completed').map(row => row.code)
+    expect(new Set(codes).size).toBe(codes.length)
+    expect(codes).not.toContain(0)
+  })
+})

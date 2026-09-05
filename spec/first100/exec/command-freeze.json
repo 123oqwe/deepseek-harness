@@ -6515,6 +6515,43 @@
         "mutationDescription": "Three targeted mutations of packages/bundle/headless/src/index.ts, each restored byte-identical: (M1) restored the old `completed ? 0 : 1` exit, collapsing every failure class; (M2) dropped the typed stderr line so a non-completion is unnamed; (M3) emitted the stderr line for a completed run too, so success reports a failure.",
         "failureSummary": "All three reddened. M1 and M2 also redden the recorded-session snapshots, because the harness derives both the exit code and stderr from the same mapping -- which is the point of routing it through one function: a change to the runner's behaviour cannot pass while the fixtures still describe the old one."
       }
+    },
+    {
+      "epic": "P9-06",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/bundle/headless/tests/headless.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-06 Fault — acceptance[2], the exit-code matrix through the real runner a 'completed' run exits +0",
+        "P9-06 Fault — acceptance[2], the exit-code matrix through the real runner a 'blocked' run exits 2",
+        "P9-06 Fault — acceptance[2], the exit-code matrix through the real runner a 'aborted' run exits 3",
+        "P9-06 Fault — acceptance[2], the exit-code matrix through the real runner a 'max-tokens' run exits 5",
+        "P9-06 Fault — acceptance[2], the exit-code matrix through the real runner a 'interrupted' run exits 6",
+        "P9-06 Fault — acceptance[2], the exit-code matrix through the real runner every non-completed class exits with a DISTINCT non-zero code, so the matrix is not decorative"
+      ],
+      "files": [
+        "packages/bundle/headless/tests/headless.spec.ts",
+        "packages/bundle/headless/src/index.ts",
+        "packages/bundle/headless/src/scriptability.ts",
+        "packages/bundle/headless/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T11:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "7ca1e8ca69b4ac18a2a4ec7b8de6819182b71b84",
+        "testsDiscovered": 6
+      },
+      "note": "F (Fault) for P9-06 acceptance[2]: the exit-code matrix driven through the REAL runner, one row per turn-end class. This is a different claim from the C stage's table: scriptability.spec.ts pins the MAPPING, and a correct mapping nothing consults produces exactly the old blanket 1. Six rows, five classes plus the distinctness check. Each row also asserts whether stderr names the class -- completed says nothing extra, every other class names itself -- because a script that reads stderr should never have to map a number back to a cause. Chosen deliberately over adding more pure cases: the C stage already pins the table from both sides, and a fault stage that re-pinned it would be testing the same subject twice while the runner's consultation of it went unasserted.",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations, each restored byte-identical: (M1) the runner ignores exitStatusFor and restores the old `completed ? 0 : 1`; (M2) the typed stderr line is dropped; (M3) 'max-tokens' is given the same code as 'blocked' in the table, collapsing two classes.",
+        "failureSummary": "Reddened 8, 8 and 1 of 19. M1 and M2 redden broadly because every matrix row asserts both the code and whether stderr names the class -- which is the intended coupling: a runner that stops consulting the table fails every row at once rather than one. M3 reddens exactly the distinctness case, which exists because two classes sharing a code is invisible from any single row."
+      }
     }
   ]
 }
