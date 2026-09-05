@@ -2383,7 +2383,28 @@ Three titles were shared across epics, over 11 live freeze references:
 
 Each reference now names the case's `fullName`, whose `describe` block carries the epic number. Replacing a frozen string shrinks-and-regrows the set, so this went through supersession, not supplement (BLOCKED-103). Source, cases, and observations are unchanged — only which string points at them — so no acceptance signature reopens.
 
-**The open half, and why it is filed rather than done.** The existing verification checks that each `expectCases` entry matches **at least one** case. Nothing checks that it matches **exactly one**. Under BLOCKED-034 (*an invariant maintained by patrol is itself the defect*) this belongs in the freeze-time check, and the fact that a patrol found it is the evidence that it currently lives in that state.
+**Mechanized 2026-09-06, in two places, because they cover different windows.** `generate-ledger.mjs` gates cells greened from now on; `verify-frozen-titles-resolvable.mjs` gates the 129 **already-frozen** entries, which no later greening ever re-examines. Adding only the first would leave every existing entry reachable by nothing but a human sweep — the patrol-maintained state BLOCKED-034 names as the defect itself.
+
+Three predicates, each a pure exported function with unit tests, each mutation-proved to fail closed: a frozen string must match **at least one** passing case (pre-existing), **at most one** (new), and no entry may **repeat** a string (new). Corpus after the fixes: 1869 frozen titles, 0 unresolved, 0 ambiguous, 0 duplicated.
+
+### The P6-01 case, and why it is NOT the fourth instance of "prose beside a machine-read field"
+
+The delegate's own scan found six more references, all in P6-01's C freeze, all in one file. `runConformance` runs the suite **once per provider** — once over the local reference provider, once over a **fake** — and the freeze listed its six bare titles **twice**, meaning one match per run.
+
+`expectCases` is written as a list and consumed as a **set**, so both copies collapsed to one match. The local reference provider's entire pass was therefore deletable without reddening: every reference would still be satisfied **by the fake alone**. On a conformance epic that is the worst available place to lose discrimination, because the suite exists to show several implementations satisfy one contract and a bare title reduces that to *at least one does* — where the one may be the fake.
+
+`acceptance[0]` reads "at least local reference provider **and** fake provider pass conformance", so freezing one `fullName` per run is the clause's own granularity, not an added requirement.
+
+> **This is not the program's fourth "an accurate sentence beside a machine-read field changes nothing". The intent was not in prose beside the field — it was IN the field, as the list's multiplicity, and the matcher discarded it. The format accepted something it could not honour.**
+
+The distinction decides the fix, and the two point opposite ways: the earlier three are repaired by **moving a judgement out of prose and into a field**; this one by **refusing the part of the field that cannot be honoured**. A third gate therefore rejects any `expectCases` that repeats a string, which forces the `fullName` form — two provider runs have different describe chains, so a genuine duplicate becomes impossible. Its unit tests include an explicitly *accepted* case (two `fullName`s for one verb), because the cheapest way to satisfy a naive duplicate-check is to delete the second copy, which is exactly the wrong direction.
+
+**Two scans, non-overlapping blind spots.** Neither angle could have reached this alone, and the "no third batch" conclusion depends on both:
+
+| Scan | Blind to |
+|---|---|
+| does a title match several **passing cases**? | a title written twice — after set collapse it looks identical to once |
+| does one entry **repeat** a title? | a title shared across epics, where each entry names it once |
 
 **Scope note.** The scan above groups by *distinct epic*. Two same-named cases inside a **single** epic's own observation are equally non-discriminating and this scan cannot see them; the exactly-one check would catch both, which is a further argument for mechanizing rather than re-scanning.
 

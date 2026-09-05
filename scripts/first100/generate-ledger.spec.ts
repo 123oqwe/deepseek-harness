@@ -32,6 +32,7 @@ import {
   checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
   findAmbiguousCaseMatches,
+  findDuplicateFrozenCases,
   checkObservationDistinctness,
   rowDigest,
 } from './generate-ledger.mjs'
@@ -388,5 +389,27 @@ describe('findAmbiguousCaseMatches (BLOCKED-104, 2026-09-06)', () => {
 
   it('does not report a string that matches nothing: a missing case is the earlier check\'s failure, not this one\'s', () => {
     expect(findAmbiguousCaseMatches(['absent'], new Map())).toStrictEqual([])
+  })
+})
+
+describe('findDuplicateFrozenCases (BLOCKED-104, 2026-09-06)', () => {
+  it('accepts an entry whose case strings are all distinct', () => {
+    expect(findDuplicateFrozenCases(['a', 'b', 'c'])).toStrictEqual([])
+  })
+
+  it("rejects P6-01's shape: six titles written twice to mean two provider runs", () => {
+    const six = ['propose()', 'query()', 'get()', 'revise()', 'forget()', 'export()']
+    expect(findDuplicateFrozenCases([...six, ...six])).toStrictEqual(six.map(title => ({ title, count: 2 })))
+  })
+
+  it('accepts the fullName form the rejection forces, where two runs cannot collide', () => {
+    expect(findDuplicateFrozenCases([
+      'conformance: local reference provider get() resolves the record',
+      'conformance: fake provider get() resolves the record',
+    ])).toStrictEqual([])
+  })
+
+  it('reports how many times each repeat appears, so a triple is not read as a pair', () => {
+    expect(findDuplicateFrozenCases(['x', 'x', 'x', 'y'])).toStrictEqual([{ title: 'x', count: 3 }])
   })
 })

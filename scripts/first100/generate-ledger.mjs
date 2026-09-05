@@ -237,6 +237,42 @@ function checkSharedObservationAllowed(used, observationSha256, selfLabel, froze
 }
 
 /**
+ * Reject a frozen entry that names the same case twice (BLOCKED-104).
+ *
+ * `expectCases` is written as a list and consumed as a set, so a repeated
+ * entry expresses a multiplicity the matcher then discards. P6-01's C freeze
+ * listed six titles twice, intending one match per provider run; the set
+ * collapsed both to one, and the local reference provider's entire pass became
+ * deletable without reddening.
+ *
+ * The format should not accept what it cannot honour. Naming each case by its
+ * `fullName` makes a genuine duplicate impossible — two provider runs have
+ * different describe chains — so this rejection forces the intent to be stated
+ * in a form the matcher can keep.
+ * @param expectCases - the frozen case strings.
+ * @returns each repeated string with the number of times it appears.
+ */
+export function findDuplicateFrozenCases(expectCases) {
+  const counts = new Map()
+  for (const title of expectCases) counts.set(title, (counts.get(title) ?? 0) + 1)
+  return [...counts].filter(([, count]) => count > 1).map(([title, count]) => ({ title, count }))
+}
+
+/**
+ * Fail a greening whose frozen entry repeats a case string (BLOCKED-104).
+ * @param expectCases - the frozen case strings.
+ * @param label - the epic and stage, for the diagnostic.
+ */
+function checkNoDuplicateFrozenCases(expectCases, label) {
+  const duplicates = findDuplicateFrozenCases(expectCases)
+  if (duplicates.length === 0) return
+  console.error(
+    `BLOCKED: ${label}'s expectCases names ${duplicates.length} case string(s) more than once. expectCases is matched as a SET, so a repeat expresses a multiplicity the matcher discards -- if the repeats mean different runs of one suite, name each by its fullName (BLOCKED-104):\n  ${duplicates.map(d => `${d.count}x  ${d.title}`).join('\n  ')}`,
+  )
+  process.exit(1)
+}
+
+/**
  * Reject a frozen case string that names more than one passing case
  * (BLOCKED-104).
  *
@@ -470,6 +506,7 @@ function cmdGreen() {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
   }
+  checkNoDuplicateFrozenCases(frozen.expectCases, `${epic}.${stage}`)
   checkCaseMatchesAreUnique(frozen.expectCases, matchCounts, reportPath)
   let absorbedFlakes = []
   if (exit !== frozen.expectExit) {
@@ -574,6 +611,7 @@ function cmdGreenSupplement() {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
   }
+  checkNoDuplicateFrozenCases(frozen.expectCases, `${epic}.${stage}`)
   checkCaseMatchesAreUnique(frozen.expectCases, matchCounts, reportPath)
   let absorbedFlakes = []
   if (exit !== frozen.expectExit) {

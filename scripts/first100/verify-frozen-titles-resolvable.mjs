@@ -122,6 +122,7 @@ function main() {
   let totalTitles = 0
   let totalUnresolved = 0
   let totalAmbiguous = 0
+  let totalDuplicated = 0
   let totalRenameCovered = 0
   let entriesWithProblems = 0
 
@@ -143,6 +144,19 @@ function main() {
 
     const unresolved = []
     const ambiguous = []
+    // `expectCases` is a list matched as a set, so a repeated string expresses
+    // a multiplicity nothing honours (BLOCKED-104). Reported per entry, before
+    // the per-title loop, because it is a property of the freeze rather than of
+    // the observation.
+    const duplicated = []
+    const seenInEntry = new Map()
+    for (const title of e.expectCases) seenInEntry.set(title, (seenInEntry.get(title) ?? 0) + 1)
+    for (const [title, count] of seenInEntry) {
+      if (count > 1) {
+        totalDuplicated += 1
+        duplicated.push({ title, count })
+      }
+    }
     const renameCovered = []
     for (const title of e.expectCases) {
       totalTitles += 1
@@ -172,9 +186,9 @@ function main() {
       unresolved.push({ title, reason: 'not found in the frozen command\'s real vitest --reporter=json output and no registered rename' })
     }
 
-    if (unresolved.length > 0 || ambiguous.length > 0) {
+    if (unresolved.length > 0 || ambiguous.length > 0 || duplicated.length > 0) {
       entriesWithProblems += 1
-      entries[key] = { argv: e.argv, unresolved, ambiguous, renameCovered }
+      entries[key] = { argv: e.argv, unresolved, ambiguous, duplicated, renameCovered }
     }
   }
 
@@ -186,6 +200,7 @@ function main() {
       totalTitles,
       totalUnresolved,
       totalAmbiguous,
+      totalDuplicated,
       totalRenameCovered,
     },
     entries,
@@ -196,13 +211,18 @@ function main() {
 
   console.log(
     `command-freeze.json: ${freeze.entries.length} entries, ${runCache.size} unique command(s) run, ` +
-      `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, ${totalUnresolved} UNRESOLVED, ${totalAmbiguous} AMBIGUOUS.`,
+      `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, ${totalUnresolved} UNRESOLVED, ${totalAmbiguous} AMBIGUOUS, ${totalDuplicated} DUPLICATED.`,
   )
   if (entriesWithProblems > 0) {
     console.error('UNRESOLVED (fail-closed):')
     for (const [key, e] of Object.entries(entries)) {
       if (e.runError) console.error(`  ${key}: ${e.runError}`)
       for (const u of e.unresolved) console.error(`  ${key}: ${JSON.stringify(u.title)} -- ${u.reason}`)
+      for (const dup of e.duplicated ?? []) {
+        console.error(
+          `  ${key}: ${JSON.stringify(dup.title)} -- listed ${dup.count} times in one expectCases, which is matched as a SET, so the repeat is discarded; if the repeats mean different runs of one suite, name each by its fullName (BLOCKED-104)`,
+        )
+      }
       for (const a of e.ambiguous ?? []) {
         console.error(
           `  ${key}: ${JSON.stringify(a.title)} -- names ${a.count} passing cases, so any ONE of them satisfies it and this epic's own case could be deleted without reddening; use the case's fullName (BLOCKED-104)`,

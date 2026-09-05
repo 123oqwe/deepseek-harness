@@ -47,6 +47,9 @@ export interface FlakeRegistryCheckResult {
 
 export function checkFailureSetAgainstFlakeRegistry(failedFullNames: Set<string>, registry: unknown): FlakeRegistryCheckResult
 
+/** Frozen case strings a single entry names more than once (BLOCKED-104). */
+export function findDuplicateFrozenCases(expectCases: readonly string[]): { title: string, count: number }[]
+
 /** Frozen case strings that name more than one passing case (BLOCKED-104). */
 export function findAmbiguousCaseMatches(
   expectCases: readonly string[],
