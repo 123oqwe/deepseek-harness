@@ -11,11 +11,12 @@ kind: "package-reference"
 
 Neither half is sufficient alone. The outbox guarantees a message survives a crash; the inbox guarantees a *lost acknowledgement* does not cost a second effect.
 
-This package is at its Contract stage: the decisions and types are real and covered, and nothing here performs I/O or mounts a plugin.
+The decisions themselves perform no I/O and own no clock. `commitWithOutbox` is the one place they meet durable storage, through a structural sink interface rather than a mounted capability seam.
 
 ## Table of Contents
 
 - [Effective-once, not exactly-once](#effective-once-not-exactly-once)
+- [Committing an event with its outbox records](#committing-an-event-with-its-outbox-records)
 - [Ordering rules that are load-bearing](#ordering-rules-that-are-load-bearing)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -26,6 +27,12 @@ This package is at its Contract stage: the decisions and types are real and cove
 The transport may deliver a message any number of times. No protocol closes the window between sending a message and durably recording its acknowledgement, so a crash inside that window necessarily produces a redelivery. What this package guarantees is that the *business effect* happens once, which is what `classifyIntake` exists for.
 
 That window is also the only place deduplication is the sole protection: at every other crash point the outbox record's own state already prevents a second delivery. [`tests/crash.e2e.spec.ts`](tests/crash.e2e.spec.ts) names it `after-effect` and covers it directly.
+
+## Committing an event with its outbox records
+
+`commitWithOutbox` hands a domain event and the outbox records derived from it to a durable sink in **one** call. That matters because the session write controller takes its whole pending queue when a write begins: two separate `enqueue` calls with a write starting between them land in different batches, leaving an event durable whose outgoing message no record explains. The indivisibility comes from the sink's `enqueueAll` never awaiting — a write can only begin at a suspension point, and there is none inside the group.
+
+**One batch is not one transaction, and the difference is measured rather than assumed.** The JSONL backend rolls a batch back to its pre-batch size on a write *error*, so that path is atomic. A *crash* mid-batch is not: recovery truncates to the last complete record, so the earlier entries of a batch can survive while later ones are dropped. See `Known Limitations` below and BLOCKED-089.
 
 ## Ordering rules that are load-bearing
 
@@ -40,7 +47,8 @@ No model-visible surface. The package exports pure decision functions and types;
 
 ## Known Limitations and Deferred Work
 
-- **Contract stage only.** No Cordis plugin, service registration, or durable storage adapter is wired yet. The Provider stage owns binding these decisions to `dsh-session-persistence`'s write-behind coordinator.
+- **`commitWithOutbox` guarantees one batch, not one transaction.** must[0] asks for a single transaction. A crash inside a batch can leave the domain event durable and drop the outbox record, because recovery truncates to the last complete record rather than to the batch boundary. Ordering the records first would make the survivor the recoverable direction, but the batch is written in `seq` order and the log requires contiguity. Closing this needs backend atomicity or a change to seq assignment; neither belongs to this package.
+- **No Cordis plugin or service registration yet.** The decisions are bound to a durable sink through a structural interface, not mounted as a capability seam.
 - **The dispatcher loop lives in the test harness.** `tests/crash.e2e.spec.ts` drives the crash points through a local durable-state simulation rather than a real process kill. It proves the decision sequence survives each crash point; it does not prove a real process does, which the Fault stage owns.
 - **No clock, no I/O.** Every decision takes `nowMs` as a parameter. A caller that passes an inconsistent clock gets inconsistent dead-lettering, and nothing here detects that.
 

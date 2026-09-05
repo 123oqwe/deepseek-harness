@@ -1983,3 +1983,25 @@ P4-06 must[2] requires a consumer to deduplicate by message id and epoch. The ag
 
 **What survives unaffected:** `packages/run/message-bus` is self-contained, and its inbox/outbox dedup is keyed on explicit receipt and effect application rather than on a claim. The confusion was specific to reusing the agent inbox's existing "claimed" vocabulary for a different event.
 
+## BLOCKED-089 — "Same batch" is not "same transaction", and must[0] only reaches the first
+
+**Status: OPEN, recorded before the P stage's first line was written. Does not block P4-06.P from greening; it bounds what that cell may be read as proving.**
+
+P4-06 must[0] is *事务性写入 domain event 与 outbox* — commit the domain event and the outbox record in one transaction. Before building on that clause, the question asked was whether this repository has a transaction boundary that could satisfy it. **It has one, and it is narrower than the clause.**
+
+What was measured, not assumed:
+
+| Path | Atomic? | Evidence |
+|---|---|---|
+| Write **error** mid-batch | **Yes** | `appendLines` stats the file first and `rollbackAppend(path, before)` restores the pre-batch size. |
+| **Crash** mid-batch | **No** | Recovery truncates to `truncateTo: committedBytes` — the last **complete JSONL record**, not the batch boundary. |
+| Materialize + first batch | **Yes** | `appendBatch`'s contract states it explicitly. |
+
+So a crash inside a two-entry batch can leave the domain event durable and drop the outbox record — **exactly the loss the outbox exists to prevent**, and the direction that is unrecoverable: replay cannot repair a message it cannot find.
+
+**What the Provider stage does deliver, stated at its real strength.** `enqueueAll` removes a *different* and genuinely live hazard: `startWrite` splices the entire pending queue, so two separate `enqueue` calls with a write starting between them land in different batches. That split is demonstrated by a test written to fail before the fix, not assumed. **One batch instead of two is a real improvement and is not the clause.** Calling it "transactional" would be the day's recurring defect once more — a mechanism described in stronger terms than what it was measured to do.
+
+**Why the obvious repair was not made.** Ordering the outbox record *before* the event would turn the surviving failure into the recoverable direction — a record with no event can be reconciled or discarded. But the batch is written in `seq` order and the log requires contiguity, so reordering breaks a different invariant. Closing this needs backend-level atomicity or a change to seq assignment, both wider than this cell, and choosing between them is not a call to make while implementing.
+
+**A note on the mutation table.** One P-stage mutation — replacing `enqueueAll`'s single push with a loop — reddened nothing, and that is correct rather than a gap: it is an **equivalent mutant**. The indivisibility comes from the method never awaiting, so no write can interleave regardless of how the entries are appended. Writing the mutation is what revealed that the JSDoc had credited the wrong mechanism; the comment was corrected to name the suspension point. **A surviving mutant is not automatically a missing test — but it always means the stated mechanism deserves rereading.**
+

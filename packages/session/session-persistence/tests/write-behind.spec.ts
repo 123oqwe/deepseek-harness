@@ -17,6 +17,81 @@ afterEach(() => {
 })
 
 describe('SessionWriteBehind', () => {
+  it('splits two separate enqueue calls across batches when a write starts between them', async () => {
+    vi.useFakeTimers()
+    const batches: SessionEvent[][] = []
+    let release: () => void = () => {}
+    const controller = new SessionWriteBehind({
+      maxDelayMs: 200,
+      write: async (events) => {
+        batches.push(structuredClone(events) as SessionEvent[])
+        // Hold only the FIRST write open; later ones must settle on their own,
+        // or the flush below would wait on a resolver nobody holds.
+        if (batches.length > 1) return
+        await new Promise<void>(resolve => { release = resolve })
+      },
+      reportBackgroundFailure: vi.fn(),
+    })
+
+    controller.enqueue(event(SessionSeq(0)))
+    // The window closes and startWrite takes the WHOLE queue, so the next
+    // event can only begin a second batch. Recorded because the guarantee
+    // enqueueAll offers is worthless unless this split genuinely happens.
+    await vi.advanceTimersByTimeAsync(200)
+    controller.enqueue(event(SessionSeq(1)))
+    release()
+    await controller.flush()
+
+    expect(batches.map(batch => batch.map(entry => entry.seq))).toEqual([[0], [1]])
+  })
+
+  it('keeps an enqueueAll group in one batch under that same interleaving', async () => {
+    vi.useFakeTimers()
+    const batches: SessionEvent[][] = []
+    let release: () => void = () => {}
+    const controller = new SessionWriteBehind({
+      maxDelayMs: 200,
+      write: async (events) => {
+        batches.push(structuredClone(events) as SessionEvent[])
+        // Hold only the FIRST write open; later ones must settle on their own,
+        // or the flush below would wait on a resolver nobody holds.
+        if (batches.length > 1) return
+        await new Promise<void>(resolve => { release = resolve })
+      },
+      reportBackgroundFailure: vi.fn(),
+    })
+
+    controller.enqueueAll([event(SessionSeq(0)), event(SessionSeq(1))])
+    await vi.advanceTimersByTimeAsync(200)
+    release()
+    await controller.flush()
+
+    expect(batches.map(batch => batch.map(entry => entry.seq))).toEqual([[0, 1]])
+  })
+
+  it('owns its copy of every event in a group, and ignores an empty group', async () => {
+    vi.useFakeTimers()
+    const batches: SessionEvent[][] = []
+    const controller = new SessionWriteBehind({
+      maxDelayMs: 200,
+      write: async (events) => { batches.push(structuredClone(events) as SessionEvent[]) },
+      reportBackgroundFailure: vi.fn(),
+    })
+
+    controller.enqueueAll([])
+    expect(controller.hasWork).toBe(false)
+
+    const second = event(SessionSeq(1))
+    controller.enqueueAll([event(SessionSeq(0)), second])
+    second.data.turn = 99
+    await vi.advanceTimersByTimeAsync(200)
+
+    expect(batches).toEqual([[
+      expect.objectContaining({ seq: 0 }),
+      expect.objectContaining({ seq: 1, data: { turn: 2 } }),
+    ]])
+  })
+
   it('uses one fixed window from the first queued event and owns its copy', async () => {
     vi.useFakeTimers()
     const batches: SessionEvent[][] = []

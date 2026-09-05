@@ -4016,6 +4016,53 @@
         "mutationDescription": "Four mutations against the frozen suite: (1) removed the duplicate branch from classifyIntake; (2) moved the tenant check AFTER the dedup check; (3) swapped the deadline and attempt-budget checks in decideDelivery; (4) removed applyReceipt's already-acked early return. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1 and 1 case respectively, each landing on the case that names its defect. Against the FIRST DRAFT of this suite, mutations (2), (3) and (4) reddened ZERO of ten -- the draft was discarded rather than frozen, because its harness had no crash point between applying the effect and recording the ack, the one window where dedup is the sole protection."
       }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/commit-atomicity.spec.ts",
+        "packages/session/session-persistence/tests/write-behind.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "hands the event and its record to the sink in a single call",
+        "keeps a multi-record commit together and preserves its order",
+        "refuses a commit with no records rather than appending a lone event",
+        "does not retain the caller's array, so a later mutation cannot reach the sink",
+        "splits two separate enqueue calls across batches when a write starts between them",
+        "keeps an enqueueAll group in one batch under that same interleaving",
+        "owns its copy of every event in a group, and ignores an empty group",
+        "uses one fixed window from the first queued event and owns its copy",
+        "coalesces twenty events admitted ten milliseconds apart into one 200 ms batch",
+        "makes concurrent flushes one immediate barrier that drains admitted tails",
+        "starts a new window for work admitted after an already-quiescent barrier",
+        "starts an over-budget tail immediately after the active write",
+        "keeps a tail deadline that has not expired when the active write finishes",
+        "pauses automatic retries after failure and preserves order for new work",
+        "observes an overlapping background failure and retries it inside flush",
+        "surfaces a barrier failure without detached logging and retains its batch",
+        "retains a failed batch larger than the engine call-argument limit"
+      ],
+      "files": [
+        "packages/run/message-bus/src/index.ts",
+        "packages/session/session-persistence/src/write-behind.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T16:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "4d5f50f2680d92bde03e6cbb6110640fc68b7ff2",
+        "testsDiscovered": 17
+      },
+      "note": "P4-06 P-stage. First freeze for this cell.\n\nPRE-FLIGHT, run before the first line: does this repository have a transaction boundary that could satisfy must[0]'s 'commit the domain event and the outbox record in one transaction'? It has one, and it is NARROWER than the clause. Measured, not assumed: the write-ERROR path is atomic (appendLines stats the file and rollbackAppend restores the pre-batch size), and materialize-plus-first-batch is atomic by appendBatch's stated contract, but the CRASH path is not -- recovery truncates to `truncateTo: committedBytes`, the last COMPLETE JSONL record, not the batch boundary. A crash inside a two-entry batch can therefore keep the domain event and drop the outbox record, which is the unrecoverable direction. Filed as BLOCKED-089 before building.\n\nWHAT THIS CELL ACTUALLY DELIVERS, at its measured strength: enqueueAll removes a DIFFERENT and genuinely live hazard. startWrite splices the whole pending queue, so two separate enqueue calls with a write starting between them land in different batches. The first frozen case demonstrates that split happening against the real controller, because a mechanism that prevents nothing is worth nothing. One batch instead of two is real and is NOT 'transactional'; describing it as transactional would repeat the day's recurring defect of stating a mechanism above what it was measured to do.\n\nTEST PLACEMENT: SessionWriteBehind is internal to session-persistence and not exported from its root, so the batching proof lives in that package's own suite against the real controller, and message-bus tests only what it owns -- that commitWithOutbox reaches the sink as one ordered group and refuses the empty case. The first draft imported the controller across the package boundary and failed to resolve; the boundary was respected rather than worked around by widening exports.\n\nEQUIVALENT MUTANT, recorded deliberately: replacing enqueueAll's single push with a loop reddens NOTHING, and that is correct rather than a gap. Indivisibility comes from the method never awaiting -- a write can only begin at a suspension point, and there is none inside the group. Writing that mutation is what revealed the JSDoc had credited the wrong mechanism (the single push rather than the absence of a suspension point), and the comment was corrected. A surviving mutant is not automatically a missing test, but it always means the stated mechanism deserves rereading.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations. (1) commitWithOutbox splits its one enqueueAll into two calls, restoring the straddle hazard; (2) removed its empty-records refusal; (3) enqueueAll drops its structuredClone defensive copy; (4) enqueueAll appends one entry at a time instead of in a single push. All restored byte-identical.",
+        "failureSummary": "Reddens 3, 1, 2 and 0 cases respectively. (4) is an equivalent mutant by construction -- see the note; the guarantee is the absence of an await, not the shape of the append -- and is recorded rather than papered over with an assertion that would only pin an implementation detail."
+      }
     }
   ]
 }

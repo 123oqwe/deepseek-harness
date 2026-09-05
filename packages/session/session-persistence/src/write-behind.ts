@@ -43,8 +43,32 @@ export class SessionWriteBehind {
    * @param event - frozen live event to retain independently of its producer.
    */
   enqueue(event: SessionEvent): void {
+    this.enqueueAll([event])
+  }
+
+  /**
+   * Copy several events into the queue as one indivisible group.
+   *
+   * Two separate {@link enqueue} calls can land in different durable batches:
+   * `startWrite` takes the whole pending queue, so a write starting between
+   * them leaves the first batch durable and the second not. For independent
+   * events that is harmless ordering. For an event and the outbox record
+   * derived from it (Epic P4-06 must[0]) it is the failure the outbox exists
+   * to prevent — a crash there leaves a committed domain event whose outgoing
+   * message no record explains, and replay cannot repair what it cannot find.
+   *
+   * Passing them in one call is what makes them inseparable, and the reason is
+   * that this method never awaits: a write can only begin at a suspension
+   * point, and there is none between the first entry and the last. Whether the
+   * entries are appended by one push or a loop is therefore irrelevant to the
+   * guarantee — replacing one with the other changes no behaviour a caller can
+   * observe.
+   * @param events - the group; persisted together or not at all.
+   */
+  enqueueAll(events: readonly SessionEvent[]): void {
+    if (events.length === 0) return
     const wasEmpty = this.pending.length === 0
-    this.pending.push(structuredClone(event))
+    for (const event of events) this.pending.push(structuredClone(event))
     if (this.barrier !== undefined) return
     if (this.automaticPaused) {
       this.automaticPaused = false
