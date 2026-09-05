@@ -772,6 +772,23 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-080 — a registered flake at 25% failure rate makes a real regression in the same file indistinguishable from itself (delegate measured, 2026-09-05)
+
+**The number.** `experimental Inspector real Worker forwards Client Console objects through isolated realm sessions` failed **7 of 28** observations — 25%, one run in four — and `flake-registry.json` has recorded 8 occurrences.
+
+**The direct cost is diagnosis.** Six times in one day a red run had to be resolved by downloading the artifact and matching failures case by case, purely to answer "flake or real". That work is unavoidable while the answer is unknown, and it is spent every time.
+
+**The real cost is that the registry makes the question stop being asked.** A genuine regression in that file and this flake produce the identical record: the same file fails, the same title matches, the registry admits it, the greening tool proceeds. **The flake registry's whole function is to make "this file failed" legitimately ignorable** — which is correct while the entry describes a genuinely nondeterministic failure, and becomes a hazard at the point where nobody re-diagnoses the Nth identical failure. If that test began failing for a real reason tomorrow, current practice would log occurrence 9 and pass.
+
+This is [BLOCKED-072](#blocked-072)'s pattern reached by a different road: not a mechanism that skips its subject, but **two different subjects that produce the same record**, with the process built to treat that record as settled.
+
+**The criterion this yields.** A registered flake is safe only while its failures remain distinguishable from a real regression in the same file. Occurrence count alone erodes that: the more often an entry is matched by title, the less anyone examines what actually failed. Two mechanical options, neither adopted here:
+
+1. **Require evidence per occurrence** — a failure matching a registered entry is admitted only with a same-cause demonstration (error-message comparison against the recorded occurrences), not on title match alone.
+2. **Move the file out of the repo-wide suite** — `packages/experimental/inspector` is an experimental package, and 25% exceeds any reasonable reading of "intermittent". **Moving it out is not skipping it**: it still runs, but a red in the main suite stops being routinely meaningless.
+
+**Not acted on now, deliberately.** It does not block greening — the registry admits it by design — and epic work is the path. Recorded so the decision is made against the measured rate rather than discovered when a real regression is filed as occurrence 9.
+
 ### BLOCKED-079 — a mutation refuted a predicted coupling: P4-05 asserts the EDGE that protects lease-epoch integrity, but not the PROPERTY it protects (Supervisor, delegate-proposed mutation, 2026-09-05)
 
 **The prediction.** P4-05's state machine forbids `orphaned → running`, requiring a reclaim to pass through `starting`, because `starting` is what issues a new lease epoch — resuming directly would keep the dead worker's epoch alive, and that value is exactly what acceptance[0]'s staleness test compares. The delegate proposed the mutation that follows from it: **add the direct edge, and acceptance[0]'s stale-epoch assertions should begin to fail.** Their stated corollary was that if those assertions did *not* fail, they never really depended on the epoch.
