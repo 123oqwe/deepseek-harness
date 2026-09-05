@@ -1999,6 +1999,16 @@ What caught it was `goal-round-driver` — **a real consumer that already depend
 > **When a change TIGHTENS an existing semantic, the tests of real consumers are the only thing that can judge whether it was tightened correctly, because they were not written from your interpretation.**
 
 So mutation covers "implementation and assertions have come apart"; it does not cover "implementation and assertions are wrong together". Only an external consumer covers the second. **A tightening change with no consumer test exercising the tightened path has not been checked, however green its own suite is and however cleanly it mutates.**
+
+**Mutate the mistake most likely to be made, not an arbitrary line (2026-09-05, adopted from P1-03.P).** A mutation table proves a suite is sensitive to *something*. What a component needs proved is sensitivity to **its own characteristic failure** — the wrong implementation a competent author would actually write.
+
+P1-03's candidate generator has to record `integrity`, `sourceCommit` and `signatureIdentity`, none of which an installed directory carries. The natural mistake is not to delete a check; it is to **fill them in with something plausible** — `sha512-${name}-${version}` reads like a real digest and would satisfy every type. The mutation table includes exactly that, and it reddens 4 cases.
+
+**Why this class of defect is the hardest to see:** the artifact's shape is completely correct. A lock full of fabricated integrity values validates, serializes byte-stably, round-trips, and pins nothing. **The tool built to prevent unverifiable installs would be producing one**, and no structural check would notice — the fields are all present and well-formed.
+
+> **Random mutation measures whether the suite can see a change. Targeted mutation measures whether the suite can see the change this component is most likely to suffer** — and only the second is the reason the suite exists.
+
+This composes with the boundary already recorded above: mutation cannot catch an implementation and its assertions being wrong *together*. It can catch a plausible-looking wrong implementation, but only if someone writes that specific mutation, which means **choosing the mutation is itself a design act** and not a mechanical sweep.
 ### BLOCKED-088 — "Claimed" is not "effected": a dedup rule that forbade a real production path
 
 **Status: ADJUDICATED 2026-09-05 by the delegate. C greens on its frozen cases; the inbox half is recorded as an unproven clause and an ACCEPTANCE LOCK candidate.**
