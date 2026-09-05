@@ -49,7 +49,7 @@
       "properties": {
         "epic": {
           "type": "string",
-          "pattern": "^P[0-8]-\\d{2}$",
+          "pattern": "^P[0-9]-\\d{2}$",
           "description": "Registry epic id, e.g. P0-02."
         },
         "stage": {
@@ -132,7 +132,7 @@
             "properties": {
               "epic": {
                 "type": "string",
-                "pattern": "^P[0-8]-\\d{2}$"
+                "pattern": "^P[0-9]-\\d{2}$"
               },
               "stage": {
                 "type": "string",
@@ -158,7 +158,7 @@
           "properties": {
             "epic": {
               "type": "string",
-              "pattern": "^P[0-8]-\\d{2}$"
+              "pattern": "^P[0-9]-\\d{2}$"
             },
             "stage": {
               "type": "string",

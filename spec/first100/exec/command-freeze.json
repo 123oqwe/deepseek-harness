@@ -6051,6 +6051,57 @@
       },
       "note": "C-stage RED scaffold for P6-01 (native provider-neutral Memory Service Definition), attempt/P6-01-C @ 17ca16450f (post-corrective-round, closes 3 Reviewer-flagged gaps: acceptance[2] tightened from a gameable toMatchObject to an exact toStrictEqual shape check; must[3] access-context scoping now also tested on get()/export(), not just query(); the self-referential src/invariant.ts (no independent second source, matching AGENTS.md disqualified pattern) removed with the required README rationale sentence, matching the dsh-web precedent). 19/19 genuinely failed on real not-implemented/assertion-mismatch errors, zero module/syntax errors, independently re-verified by the Supervisor. Supersedes the pre-corrective-round entry committed at b987645544 (17 cases, wrong assertion strictness) -- nothing had graded a GREEN observation against that entry. expectExit=0 is the GREEN target per the P0-01.C precedent.\n\nSuperseded 2026-09-03T13:19:43.161Z: the first twelve entries were the SAME six bare titles listed twice, and `runConformance` runs the suite once per provider -- once over the local reference provider and once over a fake. Under generate-ledger.mjs's flat per-observation title set a bare title is satisfied by EITHER run, and a duplicate listing collapses to the same single match. So the local reference provider's entire pass could be deleted and all twelve references would still be met by the fake alone. For a conformance epic that is the worst place to lose discrimination: the suite exists to show several implementations satisfy one contract, and a bare title reduces that to 'at least one does', where the one may be the fake. acceptance[0] reads 'at least local reference provider and fake provider pass conformance', so freezing BOTH fullNames per verb is the clause's own granularity rather than an added requirement -- deleting either run now reddens. Replacement of frozen strings, so supersession rather than supplement (BLOCKED-103); no source, case, or observation changed and no signature reopens. Found by the delegate's full-corpus scan (BLOCKED-104).",
       "supersedes": "2026-09-03T13:19:43.161Z"
+    },
+    {
+      "epic": "P9-04",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/fs/fs-local/tests/edit-fallback.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-04 Contract — graded edit fallback must[0]: an exact match is located at the exact tier, so the ladder never runs for text that already matches",
+        "P9-04 Contract — graded edit fallback must[0]: a trailing-whitespace difference falls to the trailing-whitespace tier",
+        "P9-04 Contract — graded edit fallback must[0]: a uniform indent shift falls to the indentation tier and reports the delta",
+        "P9-04 Contract — graded edit fallback CRLF is already handled by normalization, NOT by a fallback tier — the tier stays exact",
+        "P9-04 Contract — graded edit fallback must[0]: multiple exact hits fail closed rather than choosing one",
+        "P9-04 Contract — graded edit fallback must[0]: an ambiguity at a looser tier also fails closed, so a fallback cannot resolve what it cannot tell apart",
+        "P9-04 Contract — graded edit fallback an ambiguous stricter tier does NOT fall through to a looser one that would pick a single region",
+        "P9-04 Contract — graded edit fallback must[3]: text found nowhere reports the nearest region with a similarity, to locate the near miss",
+        "P9-04 Contract — graded edit fallback must[3]: a multi-line near miss reports the region where most lines did match",
+        "P9-04 Contract — graded edit fallback an empty search string is not found rather than matching everywhere",
+        "P9-04 Contract — graded edit fallback must[1]: replacing through the indentation tier re-indents to the FILE, not to the search text",
+        "P9-04 Contract — graded edit fallback must[1]: an exact-tier replacement is written verbatim",
+        "P9-04 Contract — graded edit fallback re-indenting leaves blank lines empty rather than padding them with spaces",
+        "uniformIndentDelta requires ONE delta across every line, so a region with different internal structure is not a match",
+        "uniformIndentDelta accepts a region every line of which shifted by the same amount",
+        "uniformIndentDelta skips blank lines rather than letting them force a delta of their own",
+        "uniformIndentDelta rejects lines whose text differs, however the indentation lines up",
+        "uniformIndentDelta reports a negative delta when the file is LESS indented than the search text",
+        "nearestRegion returns null when the search text is longer than the file",
+        "nearestRegion scores a fully matching region at 1",
+        "nearestRegion ignores indentation when scoring, since that is what the caller most often gets wrong"
+      ],
+      "files": [
+        "packages/fs/fs-local/src/edit-fallback.ts",
+        "packages/fs/fs-local/tests/edit-fallback.spec.ts",
+        "packages/fs/fs-local/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T00:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "69d8fd400e67e8904479b22099c6790bc8b53ecb",
+        "testsDiscovered": 21
+      },
+      "note": "C (Contract) for P9-04, the first Phase-9 freeze. Authorized by decision C3, which cleared P9-01..07 to start ahead of W20-W22; the freeze schema's epic pattern was widened from ^P[0-8]- to ^P[0-9]- in the same change, since a schema that rejects P9 makes the approved slice impossible to run. The ladder's tiers are exact, trailing-whitespace and indentation -- NOT the three fixture classes the epic's text names. fsio.ts normalizes line endings on both the content and the search text before matching, so CRLF/LF already resolves at the exact tier; a CRLF tier would be a branch no input can reach, reporting success for work the exact tier had already done. The frozen case asserting CRLF resolves AT THE EXACT TIER is therefore deliberately a different claim from 'a CRLF fallback works'. The other load-bearing case is that an ambiguous tier fails closed rather than falling through: falling through would let a looser tier pick one region out of text a stricter tier already found twice, converting an ambiguity into a confident wrong edit. Cases are frozen by fullName per BLOCKED-104.",
+      "sensitivityProof": {
+        "mutationDescription": "Five targeted mutations of edit-fallback.ts, each restored byte-identical: (M1) deleted the exact-tier ambiguity return so an ambiguous tier falls through to a looser one; (M2) allowed the indent delta to vary per line; (M3) wrote the replacement verbatim, ignoring indentDelta; (M4) padded blank lines when re-indenting; (M5) scored the nearest region on raw lines instead of ignoring leading/trailing whitespace.",
+        "failureSummary": "All five reddened: 2, 1, 2, 1 and 1 of 21. M1 and M3 redden two each because both the locate and the apply side assert them; M2, M4 and M5 redden exactly one, naming the single guard removed. No mutation reddened zero, so no assertion in the suite is decorative."
+      }
     }
   ]
 }
