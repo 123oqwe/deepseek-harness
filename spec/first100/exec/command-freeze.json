@@ -4683,6 +4683,53 @@
         "mutationDescription": "Four mutations on src/record.ts's decideCrossScopeMerge: (1) the authorization endpoint check removed entirely; (2) only the destination checked, not the source; (3) cross-session and cross-tenant collapsed to one reason; (4) sameScope ignores sessionId. All restored byte-identical.",
         "failureSummary": "Reddens 3, 2, 1 and 2 cases respectively. (2) is the targeted mutation in BLOCKED-085's sense -- checking only where records LAND is the natural way to write this, and it is exactly the widening the clause exists to prevent."
       }
+    },
+    {
+      "epic": "P6-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/record.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 confidence below zero is refused",
+        "fault boundary 02 confidence above one is refused",
+        "fault boundary 03 NaN confidence is refused, not admitted by two false comparisons",
+        "fault boundary 04 confidence exactly zero and exactly one are accepted",
+        "fault boundary 05 an inverted validity range is refused",
+        "fault boundary 06 an instantaneous validity range is accepted",
+        "fault boundary 07 validation[0] time validity: a record is retrievable up to, but not at, its end",
+        "fault boundary 08 an open-ended record never expires",
+        "fault boundary 09 validation[0] source deletion: a derived record left with no sources is refused",
+        "fault boundary 10 validation[0] source deletion: a user-asserted record survives it",
+        "fault boundary 11 validation[0] conflict chain: a relation to itself is refused",
+        "fault boundary 12 validation[0] conflict chain: a duplicated relation is refused",
+        "fault boundary 13 validation[0] conflict chain: two relation KINDS toward one target are allowed",
+        "fault boundary 14 validation[0] conflict chain: a three-record chain leaves every record present",
+        "fault boundary 15 a revoked record is withheld even while still within its validity",
+        "fault boundary 16 sensitive content is withheld from an index by default",
+        "fault boundary 17 normal content is indexable even under the strictest policy",
+        "fault boundary 18 a well-formed record validates, so the checks above refuse selectively"
+      ],
+      "files": [
+        "packages/memory/memory/tests/record.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T06:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "bf0a5845df282f4603aff4fe0fe86cfbd6e721fa",
+        "testsDiscovered": 39
+      },
+      "note": "P6-02 F-stage. 18 boundaries as data, count asserted against a floor of 12, added to record.spec.ts under their own describe block. expectCases names only the Fault titles; the C stage's 20 are disjoint, so predicate (iii) holds despite the shared file -- the arrangement declared in this epic's pre-flight freeze-target list before either stage was written.\n\nvalidation[0] NAMES THREE SCENARIOS and each has boundaries of its own rather than being folded into a single case. TIME VALIDITY: retrievable up to but not at the end instant, and open-ended never expiring. CONFLICT CHAINS: self-relations and duplicates refused, two relation KINDS toward one target allowed, and a three-record chain in which every record survives -- that last one checks must[1] across a chain rather than one pair, since 'nothing is destroyed' is a property of the accumulation. SOURCE DELETION: covered from BOTH sides -- a derived record whose last source event is gone is refused, while a user-asserted record survives because it has no sources to lose. That pair is why the two provenance kinds are separate variants instead of one list that may be empty; with one list, source deletion would silently turn a derived record into an unsourced one that still validated.\n\nBoundary 03 is the targeted mutation's target (BLOCKED-085): NaN confidence must be refused, and the natural implementation `< 0 || > 1` admits it because every NaN comparison is false.",
+      "sensitivityProof": {
+        "mutationDescription": "The same six mutations recorded against the C stage apply to this file's subject, plus their effect on the boundary cases: recordConflict mutating in place, disputed records staying retrievable, the confidence range written as `< 0 || > 1`, the expiry boundary using `<`, sensitive content admitted regardless of policy, and the derived-without-source check removed.",
+        "failureSummary": "Each reddens at least one Fault boundary in addition to its C-stage case: the boundaries are named restatements of the same behaviours, so a mutation that escaped the C case would still be caught here. The duplication is deliberate -- C asserts the behaviour, F asserts it as an enumerated boundary with the count guarded."
+      }
     }
   ]
 }

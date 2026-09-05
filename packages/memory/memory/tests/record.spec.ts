@@ -187,3 +187,144 @@ describe('P6-02 validation[1]: a malformed record is refused rather than stored'
       .toEqual({ valid: true })
   })
 })
+
+/**
+ * P6-02 Fault stage: a systematic matrix over the record's rejection and
+ * retrieval boundaries, including validation[0]'s three named scenarios —
+ * time validity, conflict chains, and source deletion.
+ *
+ * Enumerated as data with the count asserted against a floor, so a boundary
+ * cannot be deleted while every remaining case still passes.
+ */
+describe('P6-02 Fault — record boundary matrix', () => {
+  interface RecordFault {
+    readonly boundary: string
+    readonly run: () => void
+  }
+
+  const NOW = '2026-09-02T00:00:00.000Z'
+
+  const FAULTS: readonly RecordFault[] = [
+    {
+      boundary: '01 confidence below zero is refused',
+      run: () => expect(validateRecord(record('m', { confidence: -0.0001 })))
+        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }),
+    },
+    {
+      boundary: '02 confidence above one is refused',
+      run: () => expect(validateRecord(record('m', { confidence: 1.0001 })))
+        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }),
+    },
+    {
+      boundary: '03 NaN confidence is refused, not admitted by two false comparisons',
+      run: () => expect(validateRecord(record('m', { confidence: Number.NaN })))
+        .toMatchObject({ valid: false, reason: 'confidence-out-of-range' }),
+    },
+    {
+      boundary: '04 confidence exactly zero and exactly one are accepted',
+      run: () => {
+        expect(validateRecord(record('m', { confidence: 0 }))).toEqual({ valid: true })
+        expect(validateRecord(record('m', { confidence: 1 }))).toEqual({ valid: true })
+      },
+    },
+    {
+      boundary: '05 an inverted validity range is refused',
+      run: () => expect(validateRecord(record('m', { validFrom: '2026-09-02T00:00:00.000Z', validUntil: '2026-09-01T00:00:00.000Z' })))
+        .toMatchObject({ valid: false, reason: 'valid-range-inverted' }),
+    },
+    {
+      boundary: '06 an instantaneous validity range is accepted',
+      run: () => expect(validateRecord(record('m', { validFrom: NOW, validUntil: NOW }))).toEqual({ valid: true }),
+    },
+    {
+      boundary: '07 validation[0] time validity: a record is retrievable up to, but not at, its end',
+      run: () => {
+        const expiring = record('m', { validUntil: NOW })
+        expect(isDefaultRetrievable(expiring, '2026-09-01T23:59:59.999Z')).toBe(true)
+        expect(isDefaultRetrievable(expiring, NOW)).toBe(false)
+      },
+    },
+    {
+      boundary: '08 an open-ended record never expires',
+      run: () => expect(isDefaultRetrievable(record('m', { validUntil: null }), '2999-01-01T00:00:00.000Z')).toBe(true),
+    },
+    {
+      boundary: '09 validation[0] source deletion: a derived record left with no sources is refused',
+      run: () => {
+        // Deleting the last source event does not silently turn a derived
+        // record into an unsourced one that still validates.
+        expect(validateRecord(record('m', { provenance: { kind: 'derived', sourceEvents: [] } })))
+          .toMatchObject({ valid: false, reason: 'derived-without-source' })
+      },
+    },
+    {
+      boundary: '10 validation[0] source deletion: a user-asserted record survives it',
+      run: () => {
+        // The other half. A user-asserted record has no source events to lose,
+        // so source deletion cannot invalidate it -- which is why the two are
+        // separate variants rather than one list that may be empty.
+        expect(validateRecord(record('m', { provenance: { kind: 'user-asserted', assertedBy: 'user-1' } })))
+          .toEqual({ valid: true })
+      },
+    },
+    {
+      boundary: '11 validation[0] conflict chain: a relation to itself is refused',
+      run: () => expect(validateRecord(record('m', { relations: [{ kind: 'supersedes', target: brandString<MemoryRecordId>('m') }] })))
+        .toMatchObject({ valid: false, reason: 'relation-targets-self' }),
+    },
+    {
+      boundary: '12 validation[0] conflict chain: a duplicated relation is refused',
+      run: () => {
+        const target = brandString<MemoryRecordId>('other')
+        expect(validateRecord(record('m', { relations: [{ kind: 'supersedes', target }, { kind: 'supersedes', target }] })))
+          .toMatchObject({ valid: false, reason: 'duplicate-relation' })
+      },
+    },
+    {
+      boundary: '13 validation[0] conflict chain: two relation KINDS toward one target are allowed',
+      run: () => {
+        const target = brandString<MemoryRecordId>('other')
+        expect(validateRecord(record('m', { relations: [{ kind: 'supersedes', target }, { kind: 'disputes', target }] })))
+          .toEqual({ valid: true })
+      },
+    },
+    {
+      boundary: '14 validation[0] conflict chain: a three-record chain leaves every record present',
+      run: () => {
+        // must[1]'s core property across a chain rather than one pair: nothing
+        // is destroyed as corrections accumulate.
+        const first = recordConflict(record('b'), record('a'), 'supersedes')
+        const second = recordConflict(record('c'), first.winner, 'supersedes')
+        expect([first.loser.status, second.loser.status, second.winner.status])
+          .toEqual(['superseded', 'superseded', 'active'])
+        expect(second.winner.relations).toEqual([{ kind: 'supersedes', target: 'b' }])
+      },
+    },
+    {
+      boundary: '15 a revoked record is withheld even while still within its validity',
+      run: () => expect(isDefaultRetrievable(record('m', { status: 'revoked', validUntil: null }), NOW)).toBe(false),
+    },
+    {
+      boundary: '16 sensitive content is withheld from an index by default',
+      run: () => expect(admitToIndex(record('m', { sensitivity: 'sensitive' }), { allowSensitive: false }))
+        .toEqual({ indexable: false, reason: 'sensitive-not-permitted' }),
+    },
+    {
+      boundary: '17 normal content is indexable even under the strictest policy',
+      run: () => expect(admitToIndex(record('m'), { allowSensitive: false })).toEqual({ indexable: true }),
+    },
+    {
+      boundary: '18 a well-formed record validates, so the checks above refuse selectively',
+      run: () => expect(validateRecord(record('m'))).toEqual({ valid: true }),
+    },
+  ]
+
+  it('enumerates at least twelve boundaries, each named once', () => {
+    expect(FAULTS.length).toBeGreaterThanOrEqual(12)
+    expect(new Set(FAULTS.map(fault => fault.boundary)).size).toBe(FAULTS.length)
+  })
+
+  for (const fault of FAULTS) {
+    it(`fault boundary ${fault.boundary}`, () => { fault.run() })
+  }
+})
