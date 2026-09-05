@@ -1111,6 +1111,18 @@ Members found so far, each of which produced a real CI failure or a silent exemp
 
   **Cost measured, not estimated:** `verify-cordis-catalog` alone runs **34.56s / 88.13s** on two consecutive runs of the same clean tree — a full AST walk over 99 artifacts, contending for CPU with whatever else runs. The whole `doc-sync` suite runs **121.47s real / 402.59s user**, so it is parallel, not serial: bundling the ~9 repo-wide single-point artifacts costs the same order as the single slowest gate already does, not the sum of them. That retires the objection that class-wide coverage would make pushing minutes slower — `typecheck` is already on `pre-push` at 20–88s, and 121s is the same order. **The estimate this replaces was wrong in the direction that would have blocked the better fix**, which is why the number was owed before any proposal.
 
+**The family has three VISIBILITY TIERS, not three instances, and the tier decides what can possibly catch it.** Every member is "a change inside the declared scope whose consequence lands on repo-wide state outside it." What separates them is whether that consequence produces a symptom anyone can look for:
+
+| Tier | Example | Symptom | What can catch it |
+|---|---|---|---|
+| **1 — local symptom** | the cordis catalog going stale (twice, from two different epics) | CI goes red | CI, eventually. Late, but certain. |
+| **2 — no symptom, but countable** | ten documentation gates outside the program's evidence path ([BLOCKED-069](#blocked-069)) | none | an inventory. Nobody is told, but anyone who counts finds it. |
+| **3 — no symptom, nothing to count** | a skipped pipeline step (the missing P0-08.U freeze) | none | only a precondition check at each step. |
+
+**Tier 3 is the dangerous one, and it differs in kind rather than degree: it has no surface to inspect periodically.** The P0-08.U case is the proof. The Usage implementation landed with no SPEC-FREEZE, then three further steps ran — implement, freeze the sibling F stage, green F — and **every one of those steps was individually correct**. A missing ordering step produces no local defect, so no amount of reviewing any single step surfaces it. It was found only because greening F happened to run a tool that checks for a freeze entry, three steps downstream. Had that cell not been greened, the gap could have survived indefinitely.
+
+**Therefore the remedy differs by tier and cannot be borrowed across them.** Tier 1 is served by CI. Tier 2 is served by periodically inventorying what the evidence path actually covers. **Tier 3 is served only by each step verifying its own precondition before running** — there is no audit that finds it after the fact, because there is nothing to audit.
+
 **Reconciliation checklist, run before every push, not only after a batch of lanes lands**:
 
 1. `pnpm install` (never stage the lockfile before running it)
