@@ -249,11 +249,17 @@ describe('headless runner', () => {
     await test.ctx.fiber.dispose()
   })
 
-  it('exits 1 when the final turn does not complete', async () => {
+  it('exits 1 with a typed unknown reason when the final turn does not complete', async () => {
+    // P9-06 must[3]: a turn that never ended did not complete, so the run is
+    // `unknown` rather than success. Exit 1 is unchanged; what is new is that
+    // stderr names WHY, which is what a script branches on.
     const test = await bench({
       afterPrompt(session, message) { appendTurn(session, 1, message, undefined, false) },
     })
-    expect(await test.run()).toMatchObject({ code: 1, out: '\n', err: '' })
+    // P9-06 must[3]: an unterminated turn is recorded as ABORTED, which is its
+    // own class and its own code — not the old blanket 1, and not `unknown`,
+    // which is reserved for a run whose turn/end never arrived at all.
+    expect(await test.run()).toMatchObject({ code: 3, out: '\n', err: 'dsh: run did not complete: aborted\n' })
     await test.ctx.fiber.dispose()
   })
 
@@ -271,9 +277,9 @@ describe('headless runner', () => {
       },
     })
     expect(await test.run()).toMatchObject({
-      code: 1,
+      code: 4,
       out: '\n',
-      err: 'dsh: SERVER: provider unavailable\n',
+      err: 'dsh: SERVER: provider unavailable\ndsh: run did not complete: error\n',
     })
     await test.ctx.fiber.dispose()
   })
@@ -296,17 +302,19 @@ describe('headless runner', () => {
         })
       },
     })
+    // P9-06 must[3]: an error is exit 4, not the old blanket 1, so a script can
+    // tell a provider error from a blocked run without parsing stdout.
     expect(await test.run()).toMatchObject({
-      code: 1,
+      code: 4,
       out: '\n',
-      err: 'dsh: reasoning:\ntrying recovery\ndsh: SERVER: provider unavailable\n',
+      err: 'dsh: reasoning:\ntrying recovery\ndsh: SERVER: provider unavailable\ndsh: run did not complete: error\n',
     })
     await test.ctx.fiber.dispose()
   })
 
-  it('exits 1 when the owned interval contains no turn', async () => {
+  it('exits 1 with a typed unknown reason when the owned interval contains no turn', async () => {
     const test = await bench({ afterPrompt: () => {} })
-    expect(await test.run()).toMatchObject({ code: 1, out: '\n', err: '' })
+    expect(await test.run()).toMatchObject({ code: 1, out: '\n', err: 'dsh: run did not complete: unknown\n' })
     await test.ctx.fiber.dispose()
   })
 

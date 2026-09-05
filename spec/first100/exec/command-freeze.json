@@ -6481,6 +6481,40 @@
         "mutationDescription": "Three targeted mutations, each restored byte-identical: (M1) deleted the version-guard check in fs-local/src/index.ts so the guard no longer precedes the edit; (M2) removed the fallback ambiguity branch in fsio.ts so a tier with two matches resolves rather than refusing; (M3) dropped the nearest-region hint from the not-found message.",
         "failureSummary": "All three reddened, exactly one case each of 9. The narrowness is the result and was the goal: each mutation removes one interaction and reddens only the case written for that interaction, so no case is standing in for another. M1 is the one that matters -- it is the only case in the program that would notice the fallback being allowed to outrank the version guard."
       }
+    },
+    {
+      "epic": "P9-06",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/bundle/headless/tests/headless.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "headless runner exits 1 with a typed unknown reason when the final turn does not complete",
+        "headless runner prints the durable model failure when the final turn ends in error",
+        "headless runner exits 1 with a typed unknown reason when the owned interval contains no turn"
+      ],
+      "files": [
+        "packages/bundle/headless/src/index.ts",
+        "packages/bundle/headless/tests/headless.spec.ts",
+        "snapshots/session/headless.snapshot.ts",
+        "packages/bundle/headless/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T10:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "1c04bc21cb4cd3100c3d24758ef2ba9e9cce51ad",
+        "testsDiscovered": 3
+      },
+      "note": "P (Provider) for P9-06 must[3]: the headless runner now exits with the failure class's own code instead of a blanket 1, and names the typed reason on stderr. Three pre-existing cases asserted the old binary exit and were updated with their reasons rather than loosened -- an unterminated turn is recorded ABORTED (exit 3), not 'unknown', which is reserved for a run whose turn/end never arrived at all; a provider error is exit 4. The snapshot harness had TWO independent re-derivations of the runner's behaviour -- `expectedExitCode` and `stderrFromSession` -- both carrying their own `completed ? 0 : 1` logic. Both now read `exitStatusFor`, the same function the runner uses. That is deliberately not circular: the literal code table (0/2/4/5/6, and 1 for an absent reason) is pinned in scriptability.spec.ts, so a wrong mapping fails there; what the harness must NOT do is keep a second derivation, because two derivations drift and the drift arrives as a snapshot failure nobody can attribute. Verified against the full recorded-session suite: 113 passed, 2 skipped (the pwsh scenarios BLOCKED-110 covers).",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/bundle/headless/src/index.ts, each restored byte-identical: (M1) restored the old `completed ? 0 : 1` exit, collapsing every failure class; (M2) dropped the typed stderr line so a non-completion is unnamed; (M3) emitted the stderr line for a completed run too, so success reports a failure.",
+        "failureSummary": "All three reddened. M1 and M2 also redden the recorded-session snapshots, because the harness derives both the exit code and stderr from the same mapping -- which is the point of routing it through one function: a change to the runner's behaviour cannot pass while the fixtures still describe the old one."
+      }
     }
   ]
 }

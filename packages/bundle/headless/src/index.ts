@@ -12,6 +12,7 @@ import { randomUUID } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { exitStatusFor } from './scriptability.ts'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
@@ -207,7 +208,13 @@ async function run(ctx: Context, task: string, io: HeadlessIo): Promise<void> {
   if (outcome.reason?.kind === 'error') {
     io.stderr.write(`dsh: ${outcome.reason.error.code}: ${outcome.reason.error.message}\n`)
   }
-  io.exit(outcome.reason?.kind === 'completed' ? 0 : 1)
+  // P9-06 must[3]: each failure class exits with its own code, so a script can
+  // branch on blocked-versus-error without parsing stdout. The typed reason goes
+  // to stderr for the same purpose -- a caller that reads neither still gets a
+  // non-zero exit, and one that reads stderr does not have to map codes back.
+  const status = exitStatusFor(outcome.reason)
+  if (status.failure !== undefined) io.stderr.write(`dsh: run did not complete: ${status.failure}\n`)
+  io.exit(status.exitCode)
 }
 
 /**

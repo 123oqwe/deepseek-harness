@@ -37,6 +37,7 @@ import {
   type SnapshotManifest,
   type WorkspaceSnapshotEntry,
 } from '@deepseek-ai/dsh-session-snapshot'
+import { exitStatusFor } from '../../packages/bundle/headless/src/scriptability.ts'
 import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
 import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local'
 import { parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
@@ -366,12 +367,21 @@ function stderrFromSession(log: string): string {
   }
   close()
   const reason = turnReasonFromSession(log)
-  if (reason?.kind !== 'error') return output
+  // P9-06 must[3]: the runner names the typed reason on stderr for any
+  // non-completion, so a script that reads stderr does not have to map exit
+  // codes back. Derived from the same `exitStatusFor` the runner uses, for the
+  // reason given at `expectedExitCode`: a second table here would drift, and the
+  // drift would surface as a snapshot failure nobody could attribute.
+  const failureLine = (): string => {
+    const failure = exitStatusFor(reason as Parameters<typeof exitStatusFor>[0]).failure
+    return failure === undefined ? '' : `dsh: run did not complete: ${failure}\n`
+  }
+  if (reason?.kind !== 'error') return `${output}${failureLine()}`
   const error = reason.error as JsonObject | undefined
   if (typeof error?.code !== 'string' || typeof error.message !== 'string') {
     throw new Error('headless snapshot error reason has no code and message')
   }
-  return `${output}dsh: ${error.code}: ${error.message}\n`
+  return `${output}dsh: ${error.code}: ${error.message}\n${failureLine()}`
 }
 
 function modelFromSession(log: string): { provider: string; model: string } {
@@ -693,10 +703,19 @@ describe('headless recorded-session snapshots', () => {
             task,
           ],
           tsconfigPath,
-          expectedExitCode: turnReasonFromSession(primaryFixture)?.kind === 'completed'
-            || turnReasonFromSession(primaryFixture) === undefined && scenario.manifest.input?.task !== undefined
+          // The runner maps each turn-end class to its OWN exit code (P9-06
+          // must[3]), so this expectation reads the same mapping rather than
+          // keeping a second `completed ? 0 : 1` table that would silently
+          // disagree. Not circular: the code table's literal values (0/2/4/5/6
+          // and 1 for an absent reason) are pinned in
+          // packages/bundle/headless/tests/scriptability.spec.ts, so a wrong
+          // mapping fails there. What this line must not do is re-derive the
+          // table, because two derivations drift and the drift shows up as a
+          // snapshot failure nobody can attribute.
+          expectedExitCode: turnReasonFromSession(primaryFixture) === undefined
+            && scenario.manifest.input?.task !== undefined
             ? 0
-            : 1,
+            : exitStatusFor(turnReasonFromSession(primaryFixture)).exitCode,
           env: {
             DSH_SNAPSHOT: replaying ? 'replay' : 'record',
             DSH_SNAPSHOT_PROVIDER: model.provider,
