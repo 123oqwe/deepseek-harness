@@ -1007,9 +1007,11 @@ So the epoch assertions are sound, and the coupling is real, and there is still 
 
 Then `packages/run/lease` was created for P4-07, with types, a README, and both aggregate registrations. `gen-cordis-api` wrote **0 artifacts**, and the catalog test passed untouched. **One counter-example is enough to retire an "always" — once the counter-example itself is confirmed.**
 
-**PENDING CI CONFIRMATION as of this writing, and the distinction is not a formality.** The observation above is a LOCAL generator run, and this program treats local runs as advisory. "The commit contains no catalog change" and "re-running the generator produces no change" are different claims, and only the second is the counter-example. The authoritative check is whether `cordis-catalog.spec.ts` stays green in the exact-SHA run for `4898a47a1c`:
+**CONFIRMED BY CI 2026-09-05: `cordis-catalog.spec.ts` reported 10 of 10 passing in the exact-SHA run for `4898a47a1c`.** The counter-example holds and the "always" is retired. The run's only failure was an unrelated smoke case, diagnosed and fixed separately. What follows is the reasoning that made the confirmation necessary, kept because the distinction it draws is the reusable part.
 
-- **green** — the counter-example holds and the "always" is retired.
+**It was held PENDING until that run, and the distinction is not a formality.** The observation above is a LOCAL generator run, and this program treats local runs as advisory. "The commit contains no catalog change" and "re-running the generator produces no change" are different claims, and only the second is the counter-example. The authoritative check was whether `cordis-catalog.spec.ts` stayed green in the exact-SHA run for `4898a47a1c`:
+
+- **green** — the counter-example holds and the "always" is retired. **This is what happened.**
 - **red** — the counter-example fails, and the finding becomes something worse than a wrong universal: the generator's inputs differ between local and CI.
 
 Flagged deliberately, because concluding from one local run is a close relative of the very error being corrected here — a single observation carrying more weight than it can bear.
