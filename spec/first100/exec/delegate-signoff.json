@@ -84,6 +84,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-05T10:33:52.134Z",
       "note": "gq-92 independent verify. (iii) 51 frozen titles across C/P/U/F, all against run 33959624760 (19523 tests, 0 failures, no flake absorbed); the four cells share one observation, permitted under BLOCKED-018 because their argv differ and their title sets are pairwise disjoint -- measured here, 0 overlap across all six pairs. (ii) 4 candidate SHAs all ancestors. (i) 3/3 acceptance clauses, 19 references; each reference checked twice -- that the title belongs to the frozen set of the stage it claims, and that it passed in the cited observation. Lock check read from the machine-readable block: 'accept-blocked: P4-07' occurs 0 times. The authority residual (decideTransition adopts the proposal's epoch, and the unfenced entry is publicly exported) is recorded as a finding pinned by a characterization case, not as a lock -- the case fails the day it is closed, which is coverage a lock exists to substitute for."
+    },
+    {
+      "epic": "P6-02",
+      "rowDigestSha256": "1789998c92fcb7e0149f5bc81f0b29932537d9f00149cf977a7f1a8a6d484032",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T11:56:00.020Z",
+      "note": "gq-92 independent verify. Ran: a script over ledger.json, acceptance-coverage.json, command-freeze.json and the vitest-report.json of run 33963744479 (19631 tests, 0 failures, no flake absorbed). (iii) 47 frozen titles across C/U/F (P is N/A per registry: record/codec only), each present and passing. (ii) all three cells cite one candidate SHA, 2c854a9be2 -- there is no chain to compare and none is claimed; the single SHA was separately confirmed an ancestor of first100-exec. (i) 3/3 acceptance clauses, 17 references, each checked twice: that the title belongs to the frozen set of the stage it claims, and that it passed in the cited observation. Lock check read from the machine-readable block: 'accept-blocked: P6-02' occurs 0 times. acceptance[2]'s entry states what it does not cover -- decideCrossScopeMerge is a decision, and the runtime that would enforce it on the read path belongs to the lock now owned by P6-03."
     }
   ]
 }
