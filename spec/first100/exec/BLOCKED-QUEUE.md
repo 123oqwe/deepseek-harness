@@ -2640,6 +2640,20 @@ committed fixture:  4 tools — pwsh, job_kill, job_list, job_output
 
 **A correction worth keeping, because the reasoning error is reusable.** The first reading of this evidence was that CI had refreshed against the wrong composition, supported by noting that a local refresh left `ptc-turn` correctly narrow. That comparison does not hold: `ptc-turn` RAN locally and the pwsh scenarios did not. There is no local evidence of what these two would produce, because this host cannot produce any. **Comparing a scenario that ran against two that never have is the same shape as every other finding in this queue — reasoning from the adjacent case.**
 
+### Are there other scenarios rotting the same way?
+
+The headless harness has exactly three skip conditions, and only one of them can hide drift:
+
+| condition | can it rot? |
+|---|---|
+| `platform: posix` on win32 | no — CI is Linux, so these always run |
+| `platform: pwsh` without `pwsh` | **it did** — now covered by the CI refresh workflow |
+| record mode over an authored recording | no — only reachable while recording |
+
+Exactly two manifests declare `platform: pwsh`, and both are refreshed. (An earlier count of four here was a double-count from two overlapping globs matching the same files — noted because a wrong count in this queue is the same defect as a wrong count anywhere else.)
+
+**One genuine remaining candidate, outside this harness.** `snapshots/web/pwsh-terminal` was last touched 2026-08-24 and carries **zero** `action/manifest-appended` lines, exactly as the other two did. It lives in `apps/web/tests`, which `vitest.snapshot.config.ts` includes only when `DSH_EXAMPLE_MODE=lib` — a mode this program's gate never sets, and which only `e2e.yml` uses. **So it is drifting in the same way, in a suite this gate cannot see, and the same argument that justified refreshing the other two applies to it.** It is not this program's fixture to refresh, and it is recorded here so the next person who widens a gate finds it already named.
+
 **The durable fix is separate and larger:** `refresh` should report what it SKIPPED, and a refresh that skipped anything should say so loudly rather than reporting only what it rewrote. Until then, every session-log change carries this trap, and it will be sprung by whoever next refreshes on a machine without pwsh — which is every macOS host by default.
 
 ### BLOCKED-111 — ~56 type-aware lint errors predate this program, and were never in any count given to the delegate
