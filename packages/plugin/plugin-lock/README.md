@@ -16,6 +16,7 @@ kind: "package-reference"
 - [Boot fails closed on the whole profile](#boot-fails-closed-on-the-whole-profile)
 - [The transactional install](#the-transactional-install)
 - [An unlocked profile is a deployment decision](#an-unlocked-profile-is-a-deployment-decision)
+- [Generating a candidate: record, never invent](#generating-a-candidate-record-never-invent)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -50,14 +51,20 @@ The `observedBase` parameter is what makes concurrent installs safe. Two process
 
 An admitted boot carries `verified: true` or `false`. A caller must be able to tell a checked boot from an unlocked one; without that flag, "loaded successfully" would mean two different things. The policy governs **only** the absent-lock case: a profile that has a lock is judged against it whatever the policy says, or `warn-and-proceed` would become a way to skip verification entirely.
 
+## Generating a candidate: record, never invent
+
+`buildCandidateLock`'s central obligation is not to fill in what it cannot see. Of must[0]'s nine facts, an installed directory carries the package name, its exact version, and enough bytes to digest its manifest. Archive integrity, the source commit, and the signing identity describe how the package was *published*; they are recorded only when the package declares them, and marked `unavailable:<reason>` otherwise.
+
+A generator that supplied plausible values instead would produce a lock that looks complete and verifies nothing — the failure this epic exists to prevent, committed by the tool meant to prevent it. The marker is a value a later comparison can still be exact about, while a reader can see at a glance that it pins nothing.
+
 ## Model Experience
 
 No model-visible surface. The package exports decision functions and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
 
 ## Known Limitations and Deferred Work
 
-- **The unlocked-profile policy has no chosen default, and nothing in the CLI calls this gate yet.** `gateProductionBoot` is complete and covered, but `composeProfile` does not consult it — wiring it requires deciding what a production boot does with the unlocked profiles that are the only kind that exist today. See BLOCKED-094.
-- **Nothing GENERATES a candidate lock.** `planLockCommit` decides whether a candidate may replace the current lock and `writeLockAtomically` puts it on disk, but producing the candidate from a resolved install — reading what pnpm actually wrote and deriving the nine facts — has no implementation here. The Usage stage owns wiring this into `dsh plugin add/update/remove`.
+- **Most locked facts are markers, not observations, for packages as they exist today.** `buildCandidateLock` records what an installed directory actually carries — name, exact version, and a digest over the manifest — and marks the rest `unavailable:<reason>`. Archive integrity, source commit and signing identity are properties of how a package was *published*, and no package in this repository declares them yet, so a lock generated today pins the manifest and nothing else. `summarizeLockCoverage` exists so a caller can say so rather than reporting "locked".
+- **`gateProductionBoot` has no call site in `composeProfile`.** The gate is complete and covered, but wiring it means choosing what a production boot does with an unlocked profile, and that decision depends on locking having actually run somewhere. See BLOCKED-094.
 - **The recorded signature identity is not authenticated**, and cannot be while P1-02's signature root holds no key material. See above.
 - **The atomicity of lock replacement is not proven by this package's tests.** `writeLockAtomically` writes a sibling temp file and renames it over the target, and `rename` within one directory is atomic on POSIX and NTFS — but that is a filesystem property. The tests prove the content lands whole and no scratch file survives; observing a partial write would require a reader racing the writer, and replacing the temp-and-rename with an in-place write reddens none of them.
 - **No integrity is computed here.** `PackageIntegrity` and `ManifestDigest` are compared, never derived; whoever writes the lock must produce them.

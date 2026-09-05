@@ -31,6 +31,10 @@
     "./gate": {
       "types": "./lib/types/gate.d.ts",
       "default": "./lib/types/gate.js"
+    },
+    "./candidate": {
+      "types": "./lib/types/candidate.d.ts",
+      "default": "./lib/types/candidate.js"
     }
   },
   "files": [

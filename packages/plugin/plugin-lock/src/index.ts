@@ -11,6 +11,8 @@ export {
 } from './types.ts'
 export { planLockCommit, serializeLock, writeLockAtomically } from './commit.ts'
 export { gateProductionBoot } from './gate.ts'
+export { buildCandidateLock, computeManifestDigest, isUnavailable, summarizeLockCoverage, UNAVAILABLE_PREFIX } from './candidate.ts'
+export type { ObservedPackage } from './candidate.ts'
 export type { GateDenialReason, GateOutcome, UnlockedProfilePolicy } from './gate.ts'
 export type {
   GrantedCapability,

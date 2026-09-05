@@ -8,6 +8,7 @@
     "src"
   ],
   "references": [
+    { "path": "../../packages/plugin/plugin-lock" },
     {
       "path": "../../vendor/cordis"
     },

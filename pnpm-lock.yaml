@@ -225,6 +225,9 @@ importers:
       '@deepseek-ai/dsh-plugin-compat':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-compat
+      '@deepseek-ai/dsh-plugin-lock':
+        specifier: workspace:^
+        version: link:../../packages/plugin/plugin-lock
       '@deepseek-ai/dsh-plugin-manifest':
         specifier: workspace:^
         version: link:../../packages/plugin/plugin-manifest

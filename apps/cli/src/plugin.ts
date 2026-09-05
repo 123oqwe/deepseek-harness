@@ -24,6 +24,15 @@ import {
   type ProfileManifest,
 } from '@deepseek-ai/dsh-app-boot'
 import { classifyPluginDeclaration, evaluatePreMountAdmission } from '@deepseek-ai/dsh-plugin-manifest'
+import {
+  buildCandidateLock,
+  planLockCommit,
+  serializeLock,
+  summarizeLockCoverage,
+  writeLockAtomically,
+  type ObservedPackage,
+  type PluginLockFile,
+} from '@deepseek-ai/dsh-plugin-lock'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
 
 const NAME = 'dsh'
@@ -91,6 +100,106 @@ function reconcilePlugins(before: ProfileManifest, profileDir: string): void {
   writeProfileManifest(profileDir, after)
 }
 
+/** The profile-relative path of the plugin lock file. */
+const LOCK_FILENAME = 'plugins.lock.json'
+
+/**
+ * Read the profile's current lock, or an empty one when it has none.
+ *
+ * A profile with no lock is the normal starting state, not an error: locking
+ * begins the first time `dsh plugin` completes successfully. An unreadable or
+ * malformed lock is a different matter and is NOT smoothed over here — it
+ * throws, because silently replacing a corrupt lock with a fresh one would
+ * destroy the record an operator needs to see.
+ * @param profileDir - the profile directory.
+ * @returns the current lock, or an empty lock when none exists.
+ */
+function readCurrentLock(profileDir: string): PluginLockFile {
+  const path = join(profileDir, LOCK_FILENAME)
+  if (!existsSync(path)) return { lockfileVersion: 1, entries: [], loadOrder: [] }
+  return JSON.parse(readFileSync(path, 'utf8')) as PluginLockFile
+}
+
+/**
+ * Observe every installed dependency of the profile.
+ *
+ * Reads what an installed directory actually carries. Archive integrity, the
+ * source commit, and the signing identity are properties of how a package was
+ * PUBLISHED and are recorded only when the package declares them — see
+ * `@deepseek-ai/dsh-plugin-lock/candidate`, which marks the rest rather than
+ * inventing values.
+ * @param profileDir - the profile directory (resolution anchor).
+ * @returns one observation per resolvable dependency.
+ */
+function observeInstalledPackages(profileDir: string): readonly ObservedPackage[] {
+  const manifest = readProfileManifest(NAME, profileDir)
+  const observed: ObservedPackage[] = []
+  for (const packageName of Object.keys(manifest.dependencies ?? {})) {
+    let dir: string
+    try {
+      dir = resolveBundleDir(NAME, packageName, INSTALL_ANCHOR, profileDir)
+    } catch {
+      continue // unresolvable after a successful install: reconcilePlugins already warned
+    }
+    const installed = readProfileManifest(NAME, dir) as ProfileManifest & {
+      version?: string
+      dsh?: { provenance?: { integrity?: string, sourceCommit?: string, signatureIdentity?: string } }
+    }
+    const provenance = installed.dsh?.provenance
+    observed.push({
+      name: packageName,
+      version: installed.version ?? '0.0.0',
+      manifest: installed,
+      dependencies: Object.keys(installed.dependencies ?? {}),
+      grantedCapabilities: [],
+      ...(provenance?.integrity === undefined ? {} : { integrity: provenance.integrity }),
+      ...(provenance?.sourceCommit === undefined ? {} : { sourceCommit: provenance.sourceCommit }),
+      ...(provenance?.signatureIdentity === undefined ? {} : { signatureIdentity: provenance.signatureIdentity }),
+    })
+  }
+  return observed
+}
+
+/**
+ * Generate, verify, and atomically install a new lock (must[1]).
+ *
+ * Runs only after pnpm reported success, so the observed install is the one
+ * that actually landed. The candidate is validated before it replaces
+ * anything, and the replacement is a rename, so a failure at any point leaves
+ * the previous lock exactly as it was.
+ *
+ * A refusal is reported and does NOT fail the command: the packages are
+ * already installed at this point, and exiting non-zero would tell the user
+ * their install failed when what failed is the record of it. The distinction
+ * is stated in the message.
+ * @param profileDir - the profile directory.
+ */
+function commitProfileLock(profileDir: string): void {
+  const current = readCurrentLock(profileDir)
+  const candidate = buildCandidateLock(observeInstalledPackages(profileDir))
+  if (candidate === undefined) {
+    process.stderr.write(`${NAME}: lock: not written — the installed dependency graph contains a cycle\n`)
+    return
+  }
+  const decision = planLockCommit(current, candidate, current)
+  if (!decision.committed) {
+    process.stderr.write(`${NAME}: lock: not written (${decision.reason}) — ${decision.detail}\n`)
+    process.stderr.write(`${NAME}: lock: the plugins ARE installed; only the lock record was refused\n`)
+    return
+  }
+  if (serializeLock(current) === serializeLock(decision.lock)) return
+  writeLockAtomically(join(profileDir, LOCK_FILENAME), decision.lock)
+  const coverage = summarizeLockCoverage(decision.lock)
+  if (coverage.unavailable > 0) {
+    // Saying "locked" without saying how much of it is real would overstate
+    // the file: an entry whose integrity is a marker pins no archive.
+    process.stderr.write(
+      `${NAME}: lock: wrote ${LOCK_FILENAME} — ${coverage.observed} observed fact(s), `
+      + `${coverage.unavailable} unavailable (packages declaring no provenance)\n`,
+    )
+  }
+}
+
 /**
  * Rewrite relative filesystem specs against the user's invoking directory.
  * pnpm runs with cwd = the profile directory, so a bare `.` or `../plugin`
@@ -148,6 +257,7 @@ export function runPlugin(profile: string, args: readonly string[]): number {
   const exitCode = result.status ?? 1
   if (exitCode === 0) {
     reconcilePlugins(before, dir)
+    commitProfileLock(dir)
   } else {
     // pnpm's own diagnostics name pnpm-workspace.yaml without saying WHICH
     // one; the profile owns it, and the commonest failure here is pnpm ≥10

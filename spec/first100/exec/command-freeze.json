@@ -4445,11 +4445,12 @@
         "treeSha": "e052b5923c643282af6e16856adad51008adb623",
         "testsDiscovered": 9
       },
-      "note": "P1-03 P-stage. must[1]'s candidate/verify/atomic-replace, plus acceptance[2]'s concurrency control.\n\nORDER IS THE MECHANISM and one case pins it: validation runs BEFORE the base comparison, because an invalid candidate is wrong regardless of what else happened and reporting a base mismatch would send its author to fix the wrong thing. The observedBase parameter is what makes concurrent installs safe -- two processes that both read version 3 would otherwise each silently replace the other's work, leaving a profile describing one install while holding the other's plugins.\n\nA LIMIT IS RECORDED RATHER THAN PAPERED OVER. Replacing writeLockAtomically's temp-and-rename with an in-place write reddens ZERO cases, and that is stated in the suite's own module comment, in the README, and here. Atomicity is a property of rename(2), not of this module; observing a partial write would require a reader racing the writer. What the cases DO prove is that the content lands whole and no scratch file survives. The alternative -- asserting that renameSync was called -- would be the 'assert a function was called' shape this program rejects, and would convert an honest gap into a green that means nothing.\n\nTWO MUTATIONS INITIALLY REDDENED ZERO AND BOTH WERE BROKEN EDITS, NOT TEST GAPS. Re-applied correctly, removing the concurrency check and dropping the trailing newline each redden 1. Worth recording because a mutation that leaves the file syntactically invalid reports 'no tests' rather than 'no failures', and reading that as 'the suite is insensitive' would have been a false finding in the opposite direction from the usual one.",
+      "note": "P1-03 P-stage. must[1]'s candidate/verify/atomic-replace, plus acceptance[2]'s concurrency control.\n\nORDER IS THE MECHANISM and one case pins it: validation runs BEFORE the base comparison, because an invalid candidate is wrong regardless of what else happened and reporting a base mismatch would send its author to fix the wrong thing. The observedBase parameter is what makes concurrent installs safe -- two processes that both read version 3 would otherwise each silently replace the other's work, leaving a profile describing one install while holding the other's plugins.\n\nA LIMIT IS RECORDED RATHER THAN PAPERED OVER. Replacing writeLockAtomically's temp-and-rename with an in-place write reddens ZERO cases, and that is stated in the suite's own module comment, in the README, and here. Atomicity is a property of rename(2), not of this module; observing a partial write would require a reader racing the writer. What the cases DO prove is that the content lands whole and no scratch file survives. The alternative -- asserting that renameSync was called -- would be the 'assert a function was called' shape this program rejects, and would convert an honest gap into a green that means nothing.\n\nTWO MUTATIONS INITIALLY REDDENED ZERO AND BOTH WERE BROKEN EDITS, NOT TEST GAPS. Re-applied correctly, removing the concurrency check and dropping the trailing newline each redden 1. Worth recording because a mutation that leaves the file syntactically invalid reports 'no tests' rather than 'no failures', and reading that as 'the suite is insensitive' would have been a false finding in the opposite direction from the usual one.\n\nSUPERSEDED 2026-09-06T04:00:00.000Z, before this cell ever greened. The delegate's review found the stage INCOMPLETE, and correctly: writeLockAtomically and planLockCommit had ZERO callers, while apps/cli/src/plugin.ts sits in this stage's declared files and must[1] asks that `plugin add/update/remove` BE transactional -- not that a function capable of writing a lock exists somewhere. Same shape as P4-06's provider spec, which tested a package face while the stage's substance was the server call site.",
       "sensitivityProof": {
         "mutationDescription": "Five mutations on src/commit.ts: (1) the concurrent-modification check removed; (2) validation moved AFTER the base comparison; (3) the serializer stops sorting dependencies and capabilities; (4) temp-and-rename replaced by an in-place write; (5) the trailing newline dropped. All restored byte-identical.",
         "failureSummary": "Reddens 1, 1, 1, 0 and 1 respectively. (4) is a KNOWN and recorded insensitivity, not an oversight -- see the note. (1) and (5) reddened zero on a first attempt whose edits broke the file syntactically; re-applied correctly they redden 1 each."
-      }
+      },
+      "supersededBy": "2026-09-06T04:00:00.000Z"
     },
     {
       "epic": "P1-03",
@@ -4529,6 +4530,60 @@
       "sensitivityProof": {
         "mutationDescription": "Four mutations: (1) the version check moved after the integrity check, inverting reason precedence; (2) a self-dependency filtered out so it is no longer a cycle; (3) the loadOrder duplicate check removed; (4) an empty lock refused instead of admitted. All restored byte-identical.",
         "failureSummary": "Reddens 3, 1, 1 and 1 cases respectively. (1) reddens three because reason precedence is asserted at both the C and F stages -- the duplication is deliberate, since the C stage asserts the behaviour and the F stage asserts it as a named boundary."
+      }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-lock/tests/commit.spec.ts",
+        "packages/plugin/plugin-lock/tests/candidate.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "marks integrity, source commit and signature identity when the package declares none",
+        "records a declared provenance fact verbatim instead of marking it",
+        "always computes the manifest digest, since that IS observable",
+        "digests a manifest independently of its key order",
+        "reports a different digest when the manifest content actually differs",
+        "emits entries in canonical order with a resolved load order",
+        "drops a dependency on a package outside the observed set",
+        "returns no candidate at all when the observed graph has a cycle",
+        "counts observed facts against unavailable ones",
+        "reports a fully-marked lock as mostly unavailable rather than as locked",
+        "marks nothing when every package declares full provenance",
+        "uses one recognizable prefix for every marker",
+        "commits a valid candidate generated from the current lock",
+        "refuses an invalid candidate and names the defect, not a base mismatch",
+        "acceptance[2]: refuses a candidate generated from a lock that has since changed",
+        "reports the candidate defect even when the base ALSO moved",
+        "produces identical bytes for locks built with different property order",
+        "ends with exactly one trailing newline",
+        "replaces an existing lock with the new content",
+        "leaves no scratch file behind, so a reader never finds a partial lock",
+        "writes a complete, re-readable lock when the target did not exist"
+      ],
+      "files": [
+        "packages/plugin/plugin-lock/src/commit.ts",
+        "packages/plugin/plugin-lock/src/candidate.ts",
+        "packages/plugin/plugin-lock/src/index.ts",
+        "apps/cli/src/plugin.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T04:00:00.000Z",
+      "supersedes": "2026-09-06T02:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "5f6d92e2376708d81335e445225ae426c141da27",
+        "testsDiscovered": 21
+      },
+      "note": "P1-03 P-stage, SUPERSEDING the 02:00 freeze, which never greened.\n\nWHAT WAS MISSING: the first version delivered planLockCommit and writeLockAtomically with ZERO callers. must[1] asks that `plugin add/update/remove` be transactional, and a transaction nothing enters is not one. `commitProfileLock` now runs in apps/cli/src/plugin.ts after a successful pnpm run -- observe the install, build a candidate, validate, atomically replace.\n\nTHE GENERATOR'S CENTRAL OBLIGATION IS NOT TO INVENT, and one mutation exists for it alone. Of must[0]'s nine facts an installed directory carries the name, the exact version, and enough bytes to digest the manifest. Archive integrity, source commit and signing identity describe how a package was PUBLISHED and are recorded only when declared, marked `unavailable:<reason>` otherwise. Filling them with plausible values -- `sha512-<name>-<version>` is the obvious temptation -- produces a lock that looks complete and verifies nothing, which is this epic's own failure committed by the tool meant to prevent it. That mutation reddens 4 cases.\n\nAN HONEST CONSEQUENCE, recorded rather than hidden: no package in this repository declares provenance, so a lock generated today pins the MANIFEST and nothing else. summarizeLockCoverage exists so the CLI reports observed-versus-unavailable counts instead of printing 'locked', and one case asserts a fully-marked lock reports more unavailable facts than observed ones.\n\nA lock refusal does NOT fail the command. The packages are already installed when this runs, and exiting non-zero would tell the user their install failed when what failed is the RECORD of it; the message states that distinction.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations on src/candidate.ts plus the five already recorded against src/commit.ts. Candidate: (1) fabricate `sha512-<name>-<version>` instead of marking integrity unavailable; (2) digest the manifest without sorting keys; (3) keep dependencies outside the observed set; (4) stop sorting entries; (5) count every fact as observed. All restored byte-identical.",
+        "failureSummary": "Reddens 4, 1, 1, 1 and 2 cases respectively. (1) is the load-bearing one -- it is the shape of the defect this epic exists to prevent, and four independent cases see it."
       }
     }
   ]
