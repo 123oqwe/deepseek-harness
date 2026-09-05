@@ -4438,6 +4438,52 @@
         "mutationDescription": "Three mutations on src/gate.ts: (1) the policy also short-circuits when a lock EXISTS, so warn-and-proceed skips verification; (2) the verified flag is always true; (3) the absent-lock branch ignores the policy and always proceeds. All restored byte-identical.",
         "failureSummary": "Reddens 2, 2 and 1 cases respectively. (1) is caught by the case asserting a drifted install is refused even under warn-and-proceed, which exists precisely because that is how a transitional policy would silently become a bypass."
       }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-lock/tests/lock.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a dangling dependency is refused",
+        "fault boundary 02 a duplicate entry is refused",
+        "fault boundary 03 unsorted entries are refused, since the file would not be byte-stable",
+        "fault boundary 04 a load order shorter than the entries is refused",
+        "fault boundary 05 a load order naming an unknown plugin is refused",
+        "fault boundary 06 a load order listing one plugin twice is refused",
+        "fault boundary 07 a load order placing a plugin before its dependency is refused",
+        "fault boundary 08 a dependency cycle yields no order at all",
+        "fault boundary 09 a self-dependency is a cycle, not a no-op",
+        "fault boundary 10 a well-formed lock is accepted, so the checks above refuse selectively",
+        "fault boundary 11 boot refuses an integrity drift",
+        "fault boundary 12 boot refuses a manifest-digest drift distinctly from an integrity drift",
+        "fault boundary 13 boot refuses a version drift ahead of the digests it would also fail",
+        "fault boundary 14 boot refuses a plugin on disk that the lock does not list",
+        "fault boundary 15 boot refuses a locked plugin missing from disk (validation[2])",
+        "fault boundary 16 an empty lock admits an empty install rather than refusing",
+        "fault boundary 17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it"
+      ],
+      "files": [
+        "packages/plugin/plugin-lock/tests/lock.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T03:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "405027feb5adfbf973d2623e9d3d212f75dad629",
+        "testsDiscovered": 34
+      },
+      "note": "P1-03 F-stage. The declared file is lock.spec.ts, which the C stage also uses, so the Fault cases are added under their own describe block and expectCases names ONLY the Fault-stage titles. The C stage's frozen titles are untouched; predicate (iii) distinctness holds because the two sets are disjoint despite the shared file -- same arrangement as P1-02.F.\n\n17 boundaries enumerated as data with the count asserted against a floor of 12.\n\nONE BOUNDARY EXISTS TO MAKE THE ADJUDICATED CONSTRAINT'S COST CONCRETE. Boundary 17 is a KNOWN GAP: a lock whose signatureIdentity is an outright forgery ('github:attacker/impostor') boots exactly like a genuine one, because nothing authenticates that field. This is P1-02's locked clause surfacing in P1-03's fault surface, not a defect of this package, and writing it as a PASSING case rather than omitting it is the point -- the alternative was a case asserting that a forged identity is refused, which would have gone green because nothing refuses. It starts failing when a real signature root lands, and that failure is the unlock signal.\n\nBoundary 13 pins reason PRECEDENCE rather than the checks separately: a version drift necessarily changes the archive too, so both the version and integrity checks would fire. Reporting the digest would tell an operator the package was tampered with when the real event is that a different version is installed. Boundary 16 is the empty-lock positive control -- an empty lock must admit an empty install, or 'refuse everything' would satisfy most of this matrix.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations: (1) the version check moved after the integrity check, inverting reason precedence; (2) a self-dependency filtered out so it is no longer a cycle; (3) the loadOrder duplicate check removed; (4) an empty lock refused instead of admitted. All restored byte-identical.",
+        "failureSummary": "Reddens 3, 1, 1 and 1 cases respectively. (1) reddens three because reason precedence is asserted at both the C and F stages -- the duplication is deliberate, since the C stage asserts the behaviour and the F stage asserts it as a named boundary."
+      }
     }
   ]
 }

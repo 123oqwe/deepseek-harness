@@ -227,3 +227,152 @@ describe('P1-03 acceptance[1]: registry tag drift does not change a locked profi
     expect(result.denials).toEqual([{ name: name('alpha'), reason: 'version-mismatch' }])
   })
 })
+
+/**
+ * P1-03 Fault stage: a systematic matrix over the lock's rejection
+ * boundaries.
+ *
+ * Enumerated as data with the count asserted against a floor, so a boundary
+ * cannot be deleted while every remaining case still passes.
+ *
+ * The adjudicated constraint stated at the top of this file applies here too,
+ * and one boundary exists to make its cost concrete: a lock records a
+ * signature identity that nothing authenticates, so drift in that claim is
+ * detectable while forgery of it is not.
+ */
+describe('P1-03 Fault — rejection-boundary matrix', () => {
+  interface LockFault {
+    readonly boundary: string
+    readonly run: () => void
+  }
+
+  const FAULTS: readonly LockFault[] = [
+    {
+      boundary: '01 a dangling dependency is refused',
+      run: () => expect(validateLock(lock([entry('alpha', { dependencies: [name('missing')] })], [name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'dangling-dependency' }),
+    },
+    {
+      boundary: '02 a duplicate entry is refused',
+      run: () => expect(validateLock(lock([entry('alpha'), entry('alpha')], [name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'duplicate-entry' }),
+    },
+    {
+      boundary: '03 unsorted entries are refused, since the file would not be byte-stable',
+      run: () => expect(validateLock(lock([entry('beta'), entry('alpha')], [name('alpha'), name('beta')])))
+        .toMatchObject({ valid: false, reason: 'entries-not-canonical' }),
+    },
+    {
+      boundary: '04 a load order shorter than the entries is refused',
+      run: () => expect(validateLock(lock([entry('alpha'), entry('beta')], [name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }),
+    },
+    {
+      boundary: '05 a load order naming an unknown plugin is refused',
+      run: () => expect(validateLock(lock([entry('alpha')], [name('ghost')])))
+        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }),
+    },
+    {
+      boundary: '06 a load order listing one plugin twice is refused',
+      run: () => expect(validateLock(lock([entry('alpha'), entry('beta')], [name('alpha'), name('alpha')])))
+        .toMatchObject({ valid: false, reason: 'load-order-mismatch' }),
+    },
+    {
+      boundary: '07 a load order placing a plugin before its dependency is refused',
+      run: () => expect(validateLock(lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')], [name('alpha'), name('beta')])))
+        .toMatchObject({ valid: false, reason: 'load-order-violates-dependency' }),
+    },
+    {
+      boundary: '08 a dependency cycle yields no order at all',
+      run: () => expect(resolveLoadOrder([
+        entry('alpha', { dependencies: [name('beta')] }),
+        entry('beta', { dependencies: [name('alpha')] }),
+      ])).toBeUndefined(),
+    },
+    {
+      boundary: '09 a self-dependency is a cycle, not a no-op',
+      run: () => expect(resolveLoadOrder([entry('alpha', { dependencies: [name('alpha')] })])).toBeUndefined(),
+    },
+    {
+      boundary: '10 a well-formed lock is accepted, so the checks above refuse selectively',
+      run: () => expect(validateLock(lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')])))
+        .toEqual({ valid: true }),
+    },
+    {
+      boundary: '11 boot refuses an integrity drift',
+      run: () => {
+        const entries = [entry('alpha')]
+        const drifted = [installedFrom(entries[0] as PluginLockEntry, { integrity: brandString<PackageIntegrity>('sha512-x') })]
+        expect(admitBoot(lock(entries), drifted)).toMatchObject({ admitted: false })
+      },
+    },
+    {
+      boundary: '12 boot refuses a manifest-digest drift distinctly from an integrity drift',
+      run: () => {
+        const entries = [entry('alpha')]
+        const drifted = [installedFrom(entries[0] as PluginLockEntry, { manifestDigest: brandString<ManifestDigest>('sha256-x') })]
+        const result = admitBoot(lock(entries), drifted)
+        if (result.admitted) throw new Error('unreachable')
+        expect(result.denials[0]?.reason).toBe('manifest-digest-mismatch')
+      },
+    },
+    {
+      boundary: '13 boot refuses a version drift ahead of the digests it would also fail',
+      run: () => {
+        // A version drift necessarily changes the archive too. Reporting the
+        // digest would tell an operator the package was tampered with, when
+        // the real event is that a different version is installed.
+        const entries = [entry('alpha')]
+        const drifted = [installedFrom(entries[0] as PluginLockEntry, {
+          version: brandString<PluginVersion>('2.0.0'),
+          integrity: brandString<PackageIntegrity>('sha512-x'),
+        })]
+        const result = admitBoot(lock(entries), drifted)
+        if (result.admitted) throw new Error('unreachable')
+        expect(result.denials[0]?.reason).toBe('version-mismatch')
+      },
+    },
+    {
+      boundary: '14 boot refuses a plugin on disk that the lock does not list',
+      run: () => {
+        const result = admitBoot(lock([entry('alpha')]), [installedFrom(entry('alpha')), installedFrom(entry('extra'))])
+        if (result.admitted) throw new Error('unreachable')
+        expect(result.denials).toEqual([{ name: name('extra'), reason: 'not-in-lock' }])
+      },
+    },
+    {
+      boundary: '15 boot refuses a locked plugin missing from disk (validation[2])',
+      run: () => {
+        const entries = [entry('alpha'), entry('beta')]
+        const result = admitBoot(lock(entries), [installedFrom(entries[0] as PluginLockEntry)])
+        if (result.admitted) throw new Error('unreachable')
+        expect(result.denials).toEqual([{ name: name('beta'), reason: 'missing-from-disk' }])
+      },
+    },
+    {
+      boundary: '16 an empty lock admits an empty install rather than refusing',
+      run: () => expect(admitBoot(lock([]), [])).toEqual({ admitted: true, loadOrder: [] }),
+    },
+    {
+      boundary: '17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it',
+      run: () => {
+        // The cost of the adjudicated constraint, made concrete. A lock whose
+        // signature identity is an outright forgery boots exactly like a
+        // genuine one, because nothing authenticates the field. This is
+        // P1-02's locked clause, not a defect of this package -- and it starts
+        // FAILING when a real signature root lands, which is the unlock signal.
+        const forged = entry('alpha', { signatureIdentity: brandString<SignatureIdentity>('github:attacker/impostor') })
+        expect(admitBoot(lock([forged]), [installedFrom(forged)])).toMatchObject({ admitted: true })
+      },
+    },
+  ]
+
+  it('enumerates at least twelve boundaries, each named once', () => {
+    expect(FAULTS.length).toBeGreaterThanOrEqual(12)
+    expect(new Set(FAULTS.map(fault => fault.boundary)).size).toBe(FAULTS.length)
+  })
+
+  for (const fault of FAULTS) {
+    it(`fault boundary ${fault.boundary}`, () => { fault.run() })
+  }
+})
