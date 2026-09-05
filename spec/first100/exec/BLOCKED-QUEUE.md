@@ -1023,6 +1023,19 @@ What actually distinguishes them is not established, and is deliberately not gue
 **What survives:** the artifact does go stale often enough that regenerating it belongs in the create-a-package checklist, alongside the package README, which failed `doc-standard` twice on the same commit. Both are cheap to run and were both left to be remembered. That is still the right repair; only the word "always" was wrong.
 
 That matters for where the check belongs. A conditional hazard argues for a reminder; a certainty argues for the generator running as part of the create-a-package path, because there is no case in which it is unnecessary. The same holds for the new package's own README, which failed `doc-standard` twice in the same run — **both are mandatory consequences of the create-a-package act, and both were left to be remembered.**
+
+**A fourth trigger, and it separates two things the earlier three could not (2026-09-06).** P5-11 created three packages and reddened FIVE cases: four layer-classification failures plus the catalog. The five earlier package creations in this program reddened none of the layer checks.
+
+The difference is not the packages — it is that `packages/collaboration/` is a **new GROUP**. `check-layer-deps.mjs` classifies by path group, so a package added to an existing group (`run/`, `plugin/`, `workflow/`, `memory/`) inherits that group's layer automatically, while a package in an unknown group is **unclassified, which the gate treats as a violation rather than a default** — the source comment says so in as many words.
+
+| Act | Consequence |
+|---|---|
+| new package in an existing group | catalog may go stale; layers already known |
+| **new package in a NEW group** | catalog may go stale **and** `GROUP_LAYERS` must gain an entry |
+
+**This is the mechanism this entry has been missing** — for the layer half, at least. It is not a guess: the classifier's own comment states that an absent group leaves its packages unclassified by design, so the gate fires on group novelty and not on package novelty. The catalog half remains unexplained, and after four observations still has no established mechanism.
+
+Recorded because the earlier framing ("creating a package stales the artifact") was the wrong unit. **The unit is the group, not the package** — which is why three packages in one new group produced one root cause and four failing cases.
 ### BLOCKED-078 — the greening path reads the report, and one class of CI failure is invisible to the report; the log fix is CALIBRATED, not verified (Supervisor + delegate, 2026-09-05)
 
 **Run 33943262728 reported `success: true`, 19305 tests, 0 failures, 0 failed suites — and its job conclusion was `failure`.** The log held nothing between "JSON report written" and "Process completed with exit code 1". Both artifacts agreed the run was clean; GitHub said it was not.

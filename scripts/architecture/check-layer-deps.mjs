@@ -138,6 +138,11 @@ const GROUP_LAYERS = {
   action: 'capability-definitions',
   migration: 'capability-definitions',
   attachment: 'capability-definitions',
+  // Epic P5-11's coordination primitives (taskboard, mailbox, blackboard):
+  // pure decision functions over caller-supplied state, depending only on
+  // `dsh-brand`. They define what a claim, a delivery and a fact ARE and
+  // ship no provider, which is the capability-definition role.
+  collaboration: 'capability-definitions',
   e2b: 'providers',
   core: 'orchestration-runtime',
   run: 'orchestration-runtime',
