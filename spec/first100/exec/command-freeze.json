@@ -5203,6 +5203,52 @@
         "mutationDescription": "Five mutations on src/store.ts: (1) the claim decided but not persisted; (2) a refused submission stores its tasks anyway; (3) a duplicate id overwrites instead of refusing; (4) a submission validated in isolation rather than against stored tasks; (5) dependencies not resolved before deciding a claim. All restored byte-identical.",
         "failureSummary": "Reddens 3, 2, 1, 1 and 1 respectively. (1) is the targeted mutation: a store that returns a claimed task without retaining it satisfies the single-winner assertion while losing every claim, which is the failure a contention test alone would not see."
       }
+    },
+    {
+      "epic": "P5-11",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/blackboard/tests/blackboard.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "admits a structured value and a stored reference",
+        "refuses a bare string, an array and null, even when the type would allow them",
+        "requires an observed fact to name its source",
+        "requires a derived fact to name at least one source it can resolve",
+        "traces a derived conclusion back to its OBSERVATIONS, not its inputs",
+        "collects every observation behind a fact derived from two branches",
+        "delivers a first arrival and drops a redelivery",
+        "treats the same id at a new epoch as a NEW message",
+        "refuses a misdirected message WITHOUT consulting the seen-set",
+        "advances claimed -> submitted -> verified with no model involvement",
+        "refuses a receipt from a STALE attempt, so a reclaimed task is not overwritten",
+        "refuses an illegal advance, such as verifying work never submitted",
+        "records the outputs a receipt carries",
+        "refuses a receipt for an unknown task"
+      ],
+      "files": [
+        "packages/collaboration/blackboard/src/index.ts",
+        "packages/collaboration/mailbox/src/index.ts",
+        "packages/collaboration/taskboard/src/store.ts",
+        "packages/collaboration/taskboard/src/index.ts",
+        "packages/collaboration/blackboard/tests/blackboard.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T16:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e0e9f2d8ed1b3dc23b6f09c60b28c0da23335cda",
+        "testsDiscovered": 14
+      },
+      "note": "P5-11 U-stage: blackboard facts, mailbox delivery, and receipt-driven task advance.\n\nTWO OF THE FIVE DECLARED FILES ARE NAME COLLISIONS, checked by reading rather than counting. packages/core/agent/src/inbox.ts scores 9 for 'claim' -- and every one is claiming a USER MESSAGE into a turn, the same collision BLOCKED-088 records, not claiming a task on a board. packages/subagent/subagent/src/list-children.ts scores 0 on every P5-11 term and lists subagent descendants. Neither is this stage's subject; the real subjects are the two packages this stage creates plus the taskboard store's receipt path.\n\nmust[1]'s REFUSAL is the substance, not its acceptance. A blackboard that held free text would be a second, unversioned channel for instructions -- anything written there reaches another agent's context as text, and nothing could distinguish a recorded observation from an injected directive. The structured check runs at RUNTIME rather than resting on the type, because Record<string, unknown> is satisfied by anything a cast produces; strings, arrays and null are each refused, since an array of strings is as much free text as a string.\n\nPROVENANCE TRACES TO OBSERVATIONS, not to immediate inputs: 'derived from fact 7' is not an answer if fact 7 was itself derived. A mutation returning immediate inputs reddens.\n\nTHE MAILBOX REUSES P4-06'S ORDERING DELIBERATELY: address is checked before deduplication, because consulting the seen-set for a message addressed to someone else would let a misdirected message suppress a later legitimate one sharing its key. Same reasoning as the tenant-before-dedup rule recorded there, applied to a different boundary.\n\nacceptance[1]'s receipts carry an ATTEMPT, and that is the point: a worker whose claim lapsed can still finish and report, and accepting that report would overwrite the new holder's task with the old holder's result.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations. blackboard: (1) the runtime structured check removed so a cast-through string is admitted; (2) trace returns immediate inputs instead of observations; (3) dangling provenance admitted. mailbox: (4) deduplication checked before the address. taskboard store: (5) the receipt owner check removed; (6) any receipt kind advances from any status. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each -- six mutations, six distinct cases, no overlap."
+      }
     }
   ]
 }

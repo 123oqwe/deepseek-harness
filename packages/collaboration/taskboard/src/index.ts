@@ -19,4 +19,4 @@ export type {
   WorkerId,
 } from './types.ts'
 export { TaskStore } from './store.ts'
-export type { SubmitOutcome, SubmitRefusalReason } from './store.ts'
+export type { ReceiptOutcome, ReceiptRejectionReason, SubmitOutcome, SubmitRefusalReason, TaskReceipt } from './store.ts'

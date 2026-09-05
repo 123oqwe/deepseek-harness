@@ -18,8 +18,8 @@
  * @module @deepseek-ai/dsh-taskboard/store
  */
 
-import { decideClaim, validateTaskGraph } from './types.ts'
-import type { ClaimDecision, GraphValidation, Task, TaskId, WorkerId } from './types.ts'
+import { decideClaim, isClaimCurrent, validateTaskGraph } from './types.ts'
+import type { ArtifactRef, ClaimDecision, GraphValidation, Task, TaskId, TaskStatus, WorkerId } from './types.ts'
 
 /** Why a submission was refused. */
 export type SubmitRefusalReason = 'graph-invalid' | 'duplicate-task'
@@ -87,8 +87,77 @@ export class TaskStore {
     return decision
   }
 
+  /**
+   * Advance a task from a receipt, without the model touching it
+   * (acceptance[1]).
+   *
+   * The clause is that a runtime moves a task forward on EVIDENCE rather than
+   * waiting for a model to remember to update it. So the receipt does the
+   * advancing, and every rule that protects a claim protects it: the receipt
+   * must come from the current owner at the current attempt, and it must name
+   * a legal transition.
+   *
+   * A stale attempt is refused rather than applied, which is the whole point
+   * of pairing receipts with attempts -- a worker whose claim lapsed and was
+   * reclaimed can still finish its work and report, and accepting that report
+   * would overwrite the new holder's task with the old holder's result.
+   * @param receipt - the evidence being applied.
+   * @returns the advanced task, or why the receipt was refused.
+   */
+  applyReceipt(receipt: TaskReceipt): ReceiptOutcome {
+    const task = this.tasks.get(receipt.taskId)
+    if (task === undefined) return { advanced: false, reason: 'unknown-task' }
+    if (task.owner !== receipt.worker) return { advanced: false, reason: 'not-owner' }
+    if (!isClaimCurrent(task, receipt.worker, receipt.attempt)) {
+      return { advanced: false, reason: 'stale-attempt' }
+    }
+    if (!RECEIPT_LEGAL_FROM[receipt.kind].includes(task.status)) {
+      return { advanced: false, reason: 'illegal-advance' }
+    }
+    const advanced: Task = {
+      ...task,
+      status: RECEIPT_TARGET[receipt.kind],
+      outputs: receipt.outputs ?? task.outputs,
+      verification: receipt.kind === 'verified' ? 'passed' : receipt.kind === 'failed' ? 'failed' : task.verification,
+    }
+    this.tasks.set(receipt.taskId, advanced)
+    return { advanced: true, task: advanced }
+  }
+
   /** Every task currently held, in insertion order. */
   list(): readonly Task[] {
     return [...this.tasks.values()]
   }
+}
+
+/** Evidence that work happened, as a worker or runtime reports it. */
+export interface TaskReceipt {
+  readonly taskId: TaskId
+  readonly worker: WorkerId
+  /** The attempt the receipt was produced under. */
+  readonly attempt: number
+  readonly kind: 'submitted' | 'verified' | 'failed'
+  readonly outputs?: readonly ArtifactRef[]
+}
+
+/** Why a receipt did not advance a task. */
+export type ReceiptRejectionReason = 'unknown-task' | 'stale-attempt' | 'not-owner' | 'illegal-advance'
+
+/** The outcome of applying a receipt. */
+export type ReceiptOutcome =
+  | { readonly advanced: true; readonly task: Task }
+  | { readonly advanced: false; readonly reason: ReceiptRejectionReason }
+
+/** Which status a receipt moves a task to. */
+const RECEIPT_TARGET: Readonly<Record<TaskReceipt['kind'], TaskStatus>> = {
+  submitted: 'submitted',
+  verified: 'verified',
+  failed: 'failed',
+}
+
+/** Which statuses a receipt may advance FROM. */
+const RECEIPT_LEGAL_FROM: Readonly<Record<TaskReceipt['kind'], readonly TaskStatus[]>> = {
+  submitted: ['claimed'],
+  verified: ['submitted'],
+  failed: ['claimed', 'submitted'],
 }

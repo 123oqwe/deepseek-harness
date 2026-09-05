@@ -198,6 +198,8 @@
     { "path": "./packages/run/run" },
     { "path": "./packages/session/session-telemetry-otel" },
     { "path": "./packages/core/system-prompt" },
+    { "path": "./packages/collaboration/blackboard" },
+    { "path": "./packages/collaboration/mailbox" },
     { "path": "./packages/collaboration/taskboard" },
     { "path": "./packages/core/agent" },
     { "path": "./packages/core/agent-default-model" },

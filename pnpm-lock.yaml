@@ -3885,6 +3885,30 @@ importers:
         specifier: workspace:^
         version: link:../../util/timeout
 
+  packages/collaboration/blackboard:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-mailbox':
+        specifier: workspace:^
+        version: link:../mailbox
+      '@deepseek-ai/dsh-taskboard':
+        specifier: workspace:^
+        version: link:../taskboard
+
+  packages/collaboration/mailbox:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+
   packages/collaboration/taskboard:
     devDependencies:
       '@deepseek-ai/cordis':
