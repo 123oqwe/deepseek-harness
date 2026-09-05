@@ -1,0 +1,88 @@
+name: first100 refresh single-environment snapshots
+
+# BLOCKED-110/112. Some recorded scenarios run in exactly ONE environment: the
+# pwsh ones need a real `pwsh`, which a macOS developer host does not have, so
+# they self-skip there and a local refresh silently leaves them describing an
+# older build.
+#
+# The standing rule is "never refresh on CI", and its real reason is not that CI
+# paths would leak into the expectations — that is a consequence. The reason is
+# that the refresh LOCATION must not be able to hide a gap in normalization: if
+# normalization is complete the location cannot matter, and if it is incomplete
+# every location is wrong, differing only in which side goes red.
+#
+# For a scenario with only one side, that consequence cannot appear, so the
+# reason has to be guarded directly instead. This workflow therefore refreshes
+# nothing into the repository. It emits the rewritten expectations as an
+# artifact, and admission is a byte-level diff against the delta that is
+# supposed to be there. Anything else in that diff — a runner path, a hostname,
+# a timestamp, a CI environment variable — is a normalization gap and a real
+# finding, exactly as the sandbox failure was.
+#
+# The diff is admission, not acceptance. Acceptance is the next ordinary run
+# comparing against the committed result.
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenarios:
+        description: Space-separated scenario names to refresh
+        required: true
+        default: pwsh-tool-turn persistent-pwsh-tool-turn
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify pwsh is present
+        # The whole point of refreshing here is that this host can run what the
+        # developer host cannot. If pwsh were missing the scenarios would skip
+        # and the refresh would produce nothing while reporting success — the
+        # partial-refresh failure this workflow exists to escape.
+        run: pwsh --version
+
+      - name: Refresh the named scenarios
+        env:
+          DSH_SNAPSHOT: refresh
+        run: |
+          set -o pipefail
+          filters=""
+          for scenario in ${{ inputs.scenarios }}; do
+            filters="$filters -t $scenario"
+          done
+          echo "refreshing:${filters}"
+          # The refresh reports failure when it skipped anything, which is
+          # deliberate (BLOCKED-110) and not a reason to stop here — the files it
+          # did rewrite are what this job exists to produce.
+          pnpm exec vitest run --config vitest.snapshot.config.ts $filters || true
+          pnpm exec tsx scripts/migrate-packed-session-fixtures.ts
+
+      - name: Show what changed, and fail if nothing did
+        run: |
+          git --no-pager diff --stat
+          if git diff --quiet; then
+            echo "::error::the refresh changed nothing; the scenarios did not run here either"
+            exit 1
+          fi
+
+      - name: Upload the rewritten expectations
+        uses: actions/upload-artifact@v4
+        with:
+          name: refreshed-single-env-snapshots
+          path: snapshots/**
+          if-no-files-found: error

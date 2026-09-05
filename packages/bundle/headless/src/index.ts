@@ -35,10 +35,21 @@ export const inject = ['agentDefaultModel', 'agents', 'sessions']
 export interface Config {
   /** The prompt text for the single run. */
   task: string
+  /**
+   * Continue an existing session instead of creating one (Epic P9-06 must[0]).
+   *
+   * The session layer already owns what resuming MEANS — replaying a persisted
+   * log and continuing from its end — so this carries the id and nothing else.
+   * A headless-specific notion of resume would be a second answer to a question
+   * `ctx.agents.resume` has already answered, and the two would diverge the
+   * first time either changed.
+   */
+  resumeSessionId?: string
 }
 
 export const Config: z<Config> = z.object({
   task: z.string().required(),
+  resumeSessionId: z.string(),
 })
 
 /** Outcome of one owned run interval. */
@@ -166,7 +177,7 @@ function fail(io: HeadlessIo, error: unknown): void {
  * @param task - one-shot task text.
  * @param io - process-facing effects.
  */
-async function run(ctx: Context, task: string, io: HeadlessIo): Promise<void> {
+async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?: string): Promise<void> {
   // Loader siblings mount concurrently. Await the complete application before
   // creating an Agent so its scoped tools and adapters are not half-composed.
   await ctx.get('loader')?.await()
@@ -181,15 +192,28 @@ async function run(ctx: Context, task: string, io: HeadlessIo): Promise<void> {
   // host plane and the agent reads them from the global layer. A deployment
   // that DOES configure one has to join it here first
   // (@deepseek-ai/dsh-agent-presets README, "Composing a child agent").
-  const { agent } = await agents.create({
-    sessionId: brandString<SessionId>(`session-${randomUUID()}`),
-    meta: { cwd: process.cwd() },
-    agentOptions: { provider: selection.provider, model: selection.model },
-    setup: (agentCtx) => {
-      const selected: ModelSelectionRef = { current: selection, assembled: undefined }
-      installModelSelection(agentCtx, selected)
-    },
-  })
+  // Resuming and creating differ only in which registry call is made; every
+  // step after this point — the prompt, the idle wait, the summary, the exit
+  // code — is identical, because a resumed run is the same run with a longer
+  // history rather than a different kind of run.
+  const { agent } = resumeSessionId !== undefined
+    ? await agents.resume({
+      resumeSessionId: brandString<SessionId>(resumeSessionId),
+      agentOptions: { provider: selection.provider, model: selection.model },
+      setup: (agentCtx) => {
+        const selected: ModelSelectionRef = { current: selection, assembled: undefined }
+        installModelSelection(agentCtx, selected)
+      },
+    })
+    : await agents.create({
+      sessionId: brandString<SessionId>(`session-${randomUUID()}`),
+      meta: { cwd: process.cwd() },
+      agentOptions: { provider: selection.provider, model: selection.model },
+      setup: (agentCtx) => {
+        const selected: ModelSelectionRef = { current: selection, assembled: undefined }
+        installModelSelection(agentCtx, selected)
+      },
+    })
   await agent.whenIdle()
   const firstSeq = agent.session.seq
   const stopReasoning = streamReasoning(ctx, agent, io.stderr)
@@ -230,5 +254,5 @@ export function apply(ctx: Context, config: Config): void {
     throw new Error('headless-runner: the launcher must provide ctx.appExit before the tree mounts')
   }
   const io: HeadlessIo = { stdout: internals.stdout, stderr: internals.stderr, exit }
-  void run(ctx, config.task, io).catch((error: unknown) => { fail(io, error) })
+  void run(ctx, config.task, io, config.resumeSessionId).catch((error: unknown) => { fail(io, error) })
 }
