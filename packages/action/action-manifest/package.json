@@ -24,14 +24,13 @@
     },
     "./canonicalize": {
       "types": "./lib/types/canonicalize.d.ts",
-      "default": "./lib/canonicalize.js"
+      "default": "./lib/types/canonicalize.js"
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/canonicalize.js",
     "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],

@@ -10153,6 +10153,9 @@ importers:
       '@deepseek-ai/dsh-acp':
         specifier: workspace:^
         version: link:../../packages/acp/acp
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../../packages/action/action-manifest
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../../packages/core/agent
