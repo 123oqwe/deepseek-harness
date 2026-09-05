@@ -14,6 +14,7 @@ kind: "package-reference"
 - [What the lock records, and what it does not decide](#what-the-lock-records-and-what-it-does-not-decide)
 - [Byte-stability is a requirement, not a nicety](#byte-stability-is-a-requirement-not-a-nicety)
 - [Boot fails closed on the whole profile](#boot-fails-closed-on-the-whole-profile)
+- [The transactional install](#the-transactional-install)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -36,14 +37,21 @@ Entries are stored sorted by name and a lock whose entries are unsorted is rejec
 
 Every denial is reported rather than the first, because an operator repairing an install needs the whole list. The installed set arrives as data, so acceptance[0]'s offline cold start is the same call with no network-shaped parameter to omit.
 
+## The transactional install
+
+`planLockCommit` validates a candidate **before** comparing bases, and the order is deliberate: an invalid candidate is wrong regardless of what else happened, so reporting a base mismatch would send its author to fix the wrong thing.
+
+The `observedBase` parameter is what makes concurrent installs safe. Two processes that both read version 3 and both produce a candidate would otherwise each silently replace the other's work, leaving a profile that describes one install while holding the other's plugins. The second commit is refused instead, and its caller regenerates against the lock that actually landed.
+
 ## Model Experience
 
 No model-visible surface. The package exports decision functions and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
 
 ## Known Limitations and Deferred Work
 
-- **Nothing writes or reads a lock file yet.** The types and decisions are here; generating a candidate lock, atomically replacing the current one, and the concurrency control that makes must[1] transactional belong to the Provider stage. `InstallDecision` names the outcomes but no function produces one.
+- **Nothing GENERATES a candidate lock.** `planLockCommit` decides whether a candidate may replace the current lock and `writeLockAtomically` puts it on disk, but producing the candidate from a resolved install — reading what pnpm actually wrote and deriving the nine facts — has no implementation here. The Usage stage owns wiring this into `dsh plugin add/update/remove`.
 - **The recorded signature identity is not authenticated**, and cannot be while P1-02's signature root holds no key material. See above.
+- **The atomicity of lock replacement is not proven by this package's tests.** `writeLockAtomically` writes a sibling temp file and renames it over the target, and `rename` within one directory is atomic on POSIX and NTFS — but that is a filesystem property. The tests prove the content lands whole and no scratch file survives; observing a partial write would require a reader racing the writer, and replacing the temp-and-rename with an in-place write reddens none of them.
 - **No integrity is computed here.** `PackageIntegrity` and `ManifestDigest` are compared, never derived; whoever writes the lock must produce them.
 
 ### Dev Note

@@ -4,8 +4,14 @@
  * must[1] asks for candidate → verify → atomic replace, and the order is the
  * mechanism: a rejected candidate must leave the working lock byte-identical.
  * acceptance[2] asks that two concurrent installs never produce a half-written
- * lock, which is checked here against the real filesystem rather than a stub,
- * because "atomic" is a property of `rename` and not of this module.
+ * lock. What is checked here is bounded, and the bound is worth stating: the
+ * atomicity comes from `rename(2)`, which is a property of the filesystem and
+ * not of this module. These cases run against a real temporary directory and
+ * prove that the content lands whole and that no scratch file survives — they
+ * do NOT prove atomicity, because observing a partial write would require a
+ * reader racing the writer. Replacing the temp-and-rename with an in-place
+ * write reddens none of them, and that is recorded rather than papered over
+ * with an assertion that a function was called.
  */
 
 import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
@@ -108,7 +114,7 @@ describe('P1-03: the serialized lock is byte-stable', () => {
   })
 })
 
-describe('P1-03 acceptance[2]: replacement is atomic on the real filesystem', () => {
+describe('P1-03 acceptance[2]: replacement lands whole and leaves nothing behind', () => {
   let directory: string
 
   beforeEach(() => {
@@ -133,8 +139,9 @@ describe('P1-03 acceptance[2]: replacement is atomic on the real filesystem', ()
     const path = join(directory, 'plugins.lock.json')
     writeLockAtomically(path, lock([entry('alpha')]))
 
-    // A leftover temp file is what a concurrent reader would trip over, and a
-    // half-written one is exactly acceptance[2]'s failure.
+    // A leftover temp file is what a concurrent reader would trip over. This
+    // is the observable half of acceptance[2]; the unobservable half is that
+    // no reader ever sees the target mid-write, which rests on rename(2).
     expect(readdirSync(directory)).toEqual(['plugins.lock.json'])
   })
 
