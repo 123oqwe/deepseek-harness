@@ -1003,7 +1003,15 @@ So the epoch assertions are sound, and the coupling is real, and there is still 
 | ② | P2-02.U added a capability-token export | same |
 | ③ | P4-06.C created a new package | a new package **is** a new public surface |
 
-**The third is a stronger statement than the first two.** ① and ② say that changing a public export *may* stale the catalog — true, and it depends what you changed. ③ says that creating a package *necessarily* does, because a new package introduces a new public surface by definition. **The rule escalates from "editing public exports can stale the artifact" to "creating a package always stales it."**
+**The escalation recorded here was WRONG, and creating a fourth package disproved it the same day.** The original text read: "③ says that creating a package *necessarily* does, because a new package introduces a new public surface by definition — the rule escalates from *editing public exports can stale the artifact* to *creating a package always stales it*."
+
+Then `packages/run/lease` was created for P4-07, with types, a README, and both aggregate registrations. `gen-cordis-api` wrote **0 artifacts**, and the catalog test passed untouched. **One counter-example is enough to retire an "always".**
+
+What actually distinguishes them is not established, and is deliberately not guessed at here. The observable difference is that message-bus's exported types appear in the catalog while `dsh-lease`'s do not, so catalog membership is evidently narrower than "every workspace package" — but *which* rule selects it has not been read out of the generator, and a plausible-sounding mechanism written down now would be exactly the kind of claim this register exists to catch.
+
+**The defect in the original entry is the reasoning, not the conclusion.** "A new package is a new public surface *by definition*" is an argument from the meaning of the words, and it produced a confident universal from a single observation. The first two occurrences were honest inductions from evidence; the third dressed an induction as a deduction, which is what made it feel safe enough to escalate. **A claim that a thing happens ALWAYS needs a mechanism, not a definition** — and the mechanism was never checked.
+
+**What survives:** the artifact does go stale often enough that regenerating it belongs in the create-a-package checklist, alongside the package README, which failed `doc-standard` twice on the same commit. Both are cheap to run and were both left to be remembered. That is still the right repair; only the word "always" was wrong.
 
 That matters for where the check belongs. A conditional hazard argues for a reminder; a certainty argues for the generator running as part of the create-a-package path, because there is no case in which it is unnecessary. The same holds for the new package's own README, which failed `doc-standard` twice in the same run — **both are mandatory consequences of the create-a-package act, and both were left to be remembered.**
 ### BLOCKED-078 — the greening path reads the report, and one class of CI failure is invisible to the report; the log fix is CALIBRATED, not verified (Supervisor + delegate, 2026-09-05)

@@ -2,7 +2,7 @@
   "schemaVersion": "1.1",
   "generatedFrom": "tests/first100/registry.json",
   "digests": {
-    "spec/deepseek-harness-optimization-manifest-v1.1.yaml": "75bfee00c0198bf12d1c6681ccc9f17225b90d800d1d59ed46a67127f5588c41",
+    "spec/deepseek-harness-optimization-manifest-v1.1.yaml": "862c827dbbebfb5a3ecd9f8738c162aa59a1c6935e7da4678d176889549d6796",
     "spec/first100-clause-coverage-report.json": "b8019b4542f79baaaa7eec32191792cce1e81fbaa4aad6e79cd832a1ea557c54",
     "spec/first100-command-registry.json": "eca2bfc92ee7e8bb4d83f19a80c969fd00e505f5672f04e9aa35fae61a0b6c1d",
     "spec/first100-dependency-graph.json": "1bcdffa9a9783a16821b98f5c183c265e0b99ed8d7e9aab7049273f6f3ffcb3b",
