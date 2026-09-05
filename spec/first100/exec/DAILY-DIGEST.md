@@ -20,6 +20,19 @@ BLOCKED queue summary, rough token-spend estimate.
 - **BLOCKED queue:** 104 resolved, 105–109 open. Seven items need the maintainer, of which two are permissions rather than judgements: the push path, and approval to run `test:snapshot:refresh`.
 - **Token spend:** heavy; one full unit suite (~350s) and three full freeze-corpus sweeps (~10 min each) were run rather than trusted.
 
+### Later the same day — the push opened, and the gate widened
+
+- **The user authorized three commands** (`push fork`, `generate-ledger --green/--accept`, `DSH_SNAPSHOT=refresh`). Everything below follows from that.
+- **BLOCKED-106 closed.** All 30 drifted cells regreened **through the tool** from the observations they already cited. Every signature of the hand-writing is gone, and `EXEC-STATE.ledgerDigest` matches `ledger.json` again without anyone touching the field. Recomputation gate: **97 GREEN cells, 97 recomputed, 0 mismatched, 0 unavailable, 0 false claims.**
+- **The ledger went DOWN, 19 → 17.** The delegate withdrew its sign-offs on P4-07 and P8-01 after finding both rested on a clause with no subject, using a `--conclusion WITHDRAWN` path added for it. Append-only: the retracted PASS is still readable, and the verdict comes from order rather than deletion.
+- **BLOCKED-108 closed**, 76 snapshot failures → 0 locally. Its first diagnosis (needs a key) was wrong; `DSH_SNAPSHOT=refresh` is keyless.
+- **BLOCKED-109 adjudicated and applied.** Lint and snapshots joined the greening gate, then lint was re-scoped to files differing from `frozenBaseline` — because 39 of its 95 type-aware errors were this program's (two were real signature bugs discarding type information) and 56 predate the baseline. **Lint is now green on CI.**
+- **BLOCKED-110/111/112 opened.** A partial refresh that reports as complete; ~56 repo-level lint errors; environment-dependent snapshot expectations.
+- **P9 advanced to four epics with frozen stages:** P9-01 (C/P/U/F), P9-04 (C/P/U/F), P9-06 (C/P/F), P9-07 (C/P). 126 of 132 frozen P9 cases were confirmed present and passing in a real CI observation; the other 6 postdate that run.
+- **Doc gates:** the four packages this program left without READMEs now have them, bilingual and paired, plus 15 audited model-experience entries. Three doc gates green; the rest is pre-existing debt.
+- **CI now:** unit **green**, scoped lint **green**, snapshots red at three scenarios — two pwsh (absent on this host) and `bash-tool` (the runner has no sandbox backend, so the product correctly refuses to run unconfined). A bubblewrap install with a real confinement control is in flight.
+- **Method note that outgrew any single entry:** every failure found today was the same move — *checking something adjacent to the target and reporting it as the target*. Hand-written cells verified against the freeze rather than the observation; `argumentsHash` diagnosed from a summary; a refresh that skipped what it could not run; `lint clean` from a grep pattern the local reporter never emits; a sandbox control stricter than the product it guards. The standing rule adopted from it: **a check returning "none" needs a positive control before it may be reported as "none".**
+
 ## 2026-08-31
 
 - **Progress:** 0/109 ACCEPTED (fixed truth: First-100 = 0/100 ACCEPTED until proven otherwise).
