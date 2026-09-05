@@ -33,10 +33,52 @@
           "outcome": "failed"
         },
         {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33678503246",
+          "candidateSha": "899cb9771b59227a2abaf2f1a6be640c3d1aae18",
+          "observedAtUtc": "2026-09-02T20:18:38Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33679006528",
+          "candidateSha": "5efcc2b8b24c0306548c7a15a697028fecd12fba",
+          "observedAtUtc": "2026-09-02T20:23:42Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33685469628",
           "candidateSha": "042f9e959377f776306550177215299eeef896fc",
           "observedAtUtc": "2026-09-03T02:45:18.469Z",
           "outcome": "failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33715236692",
+          "candidateSha": "aaa08c035999effa2e85a10bda27aee960278876",
+          "observedAtUtc": "2026-09-03T04:29:41Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33760559499",
+          "candidateSha": "95dc3a2f981224eeb2fe9c9c0c8dcd85daa8a294",
+          "observedAtUtc": "2026-09-03T13:20:18Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33772865507",
+          "candidateSha": "9a3e51305fb0d78e241cf5a54e31738af2fa4009",
+          "observedAtUtc": "2026-09-03T15:29:02Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33775736046",
+          "candidateSha": "45cf8e83f28d2d5c7310c86f418445d0fa8280f4",
+          "observedAtUtc": "2026-09-03T15:57:40Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
         },
         {
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
@@ -45,10 +87,24 @@
           "outcome": "failed"
         },
         {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33781366343",
+          "candidateSha": "332be1af040deaac832a7c63c0527b7bddc188aa",
+          "observedAtUtc": "2026-09-03T16:53:57Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33788387514",
           "candidateSha": "1f7e2a72d8691f83b97b94fb4a569ed68a2ea8ee",
           "observedAtUtc": "2026-09-03T18:05:04Z",
           "outcome": "failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33790052379",
+          "candidateSha": "4a257307e0ffb3cc604f444f2ad456d87db42e42",
+          "observedAtUtc": "2026-09-03T18:21:55Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
         },
         {
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33798817909",
@@ -57,11 +113,60 @@
           "outcome": "failed"
         },
         {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33845690532",
+          "candidateSha": "39c41ab9273992b5237c68f787550e3350691974",
+          "observedAtUtc": "2026-09-04T06:45:21Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33902424787",
+          "candidateSha": "d0bedd508947cae2cbee5242af4144b598c27c42",
+          "observedAtUtc": "2026-09-04T17:47:20Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33903484775",
+          "candidateSha": "51b22b8dd8880132fdb22286591caba0bc0ddc78",
+          "observedAtUtc": "2026-09-04T17:59:34Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33906484018",
+          "candidateSha": "317c30fa9feea867d9377b5d3a32ad1fa4155025",
+          "observedAtUtc": "2026-09-04T18:32:57Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33944432715",
+          "candidateSha": "fc76515489d5f75293b09f98120565cc59117637",
+          "observedAtUtc": "2026-09-05T04:23:44Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33945818069",
           "candidateSha": "a74be1dec3c35760055eb80a8d9d98f7b1a1c782",
           "observedAtUtc": "2026-09-05T04:54:49Z",
           "outcome": "failed",
           "verifiedBy": "the run's failed-step log contains the case's full name; four further runs the delegate offered as candidates were REJECTED because that string appears zero times in them and they failed on something else"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33946921934",
+          "candidateSha": "0b4b9c71b0dd37a705b9b3038a9c1e5af6c1ff00",
+          "observedAtUtc": "2026-09-05T05:19:57Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33947611474",
+          "candidateSha": "6cc108e275362b87873077e585272b838c7ba7af",
+          "observedAtUtc": "2026-09-05T05:35:36Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact lists this case with status failed"
         },
         {
           "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33949286482",
@@ -81,7 +186,18 @@
       "unrelatedNote": "Four occurrences across four distinct candidate SHAs, none touching packages/experimental/inspector or its dependencies. Two of the four (03a7321e23 and 6decdacb89) are First-100 process-only commits (BLOCKED-QUEUE.md/decisions-approved.md/goal.md/EXEC-STATE.json edits) touching zero product code at all -- the strongest possible unrelatedness evidence, since no source change of any kind was present when the failure occurred. The other two (c60c0f3a4f, af01a06bc96) touch only tests/release/baseline-fingerprint.spec.ts and scripts/release/baseline-fingerprint.mjs (P0-01 slice work), an unrelated package with no dependency relationship to packages/experimental/inspector. Every occurrence reruns clean with zero code changes (confirmed for af01a06bc96 via a same-SHA CI rerun, run 33473101218's second attempt, success). Failure mode each time: a single real-Worker isolated-realm-session test, consistent with a timing-sensitive worker-thread integration test, matching this repo's own history of similar fixes elsewhere (e.g. 'bind fixture servers to OS-assigned ports').",
       "registeredAtUtc": "2026-09-01T06:15:00Z",
       "registeredBy": "ANSWERED-BY-DELEGATE(gq-92)",
-      "backfillNote": "Occurrences 9-11 were backfilled on 2026-09-05, not recorded when observed. The lag is itself the finding: this count is the evidence that the test is unstable, and BLOCKED-080's criterion -- whether the flake rate is high enough that 'a failure here is distinguishable from a real regression' stops holding -- reads THIS number to decide. A register consulted to judge its own subject's severity was recording lighter than reality, and in one direction only. Absorbing a flake into a green cell and appending its occurrence are currently two separate acts, so the first happened and the second did not; mechanizing that pairing is recorded under BLOCKED-080. Backfill is verified per run rather than accepted from a list: of seven candidate runs offered, three carried this case's failure text and four did not, so only three were added."
+      "backfillNote": "Rebuilt from CI ARTIFACTS on 2026-09-05, replacing a count maintained by remembering to append. It read 8; the artifact scan puts it at 26.\n\nTWO SEPARATE UNDERCOUNTS, and the second is the instructive one. The first was ordinary lag: occurrences absorbed into green cells were never appended, because greening a cell requires the absorption and nothing requires the record. The second was a BLIND SEARCH: the first attempt to backfill searched the runs' failed-step LOG TEXT for the case name, and returned zero for every run predating cc2511aadb -- the commit that added --reporter=default. Before it, --reporter=json was the only reporter and no human-readable case name reached the log at all (BLOCKED-078). The search was blind for exactly the period before the fix that made logs readable, and it reported that blindness as 'did not fail'. Four runs were rejected as unrelated on that basis; all four in fact failed on this case, which their artifacts state plainly.\n\nTHE RULE: a retrospective search is bounded by when its evidence began being recorded, and outside that bound it returns 'nothing found', which is indistinguishable from 'nothing happened'. Correcting it required changing evidence source -- from logs to artifacts -- not searching harder.\n\nBoth errors ran in the same direction. Nobody ever forgets to REMOVE an occurrence, and no blind search invents one. That is why this figure is measured rather than accumulated: BLOCKED-080's criterion reads it to decide whether the flake rate is high enough that a failure here stops being distinguishable from a real regression, and every force acting on a remembered count pushes it toward 'safer than it is'.",
+      "measuredRate": {
+        "method": "Downloaded the vitest-report.json artifact for all 83 failed runs of first100-exact-sha.yml in the most recent 200-run window (2026-09-01T19:59:01Z to 2026-09-05T07:26:49Z) and matched this case's full name against status=='failed'. 80 of the 83 still had a retrievable artifact; 3 did not.",
+        "windowRuns": 198,
+        "windowFailuresOnThisCase": 22,
+        "windowRate": "11.1%",
+        "last20Runs": "4 of 20 = 20.0%",
+        "last40Runs": "6 of 40 = 15.0%",
+        "last80Runs": "9 of 80 = 11.3%",
+        "totalRecordedOccurrences": 26,
+        "note": "4 recorded occurrences predate the scan window and could not be re-verified by this method; they are retained. The true lifetime count is therefore at least this figure, not exactly it."
+      }
     },
     {
       "testFile": "tests/architecture/check-capability-seams.spec.ts",

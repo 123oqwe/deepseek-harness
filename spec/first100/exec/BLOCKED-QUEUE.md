@@ -1923,7 +1923,17 @@ The cause is that absorbing a flake into a green cell and appending its occurren
 
 **The backfill was verified per run, not accepted from a list.** Of seven candidate runs offered, three carry this case's failure text in their failed-step log and four carry it zero times, having failed on something else. Only the three were added. Attributing the other four would have inflated the very number this entry uses to decide whether the flake has become unsafe — **an error in the direction the register was already leaning.**
 
-**Priority unchanged: still not fixed here.** It does not block a cell from greening, and the epic is the path.
+**Corrected the same day, and the correction is the finding (2026-09-05).** The backfill above was itself wrong. It searched the failed-step **log text** for the case's name and rejected four candidate runs that returned zero hits — but those four predate `cc2511aadb`, the commit that added `--reporter=default`. Before it, `--reporter=json` was the only reporter and **no human-readable case name reached the log at all**, which is precisely BLOCKED-078. All four had in fact failed on this case; their artifacts say so plainly.
+
+**A retrospective search is bounded by when its evidence began being recorded, and outside that bound it returns "nothing found" — which is shaped exactly like "nothing happened".** The search was blind for the whole period before the fix that made logs readable, and reported that blindness as a negative result. Searching harder would not have helped; the fix was to change evidence source, from logs to artifacts.
+
+**Rebuilt by measurement rather than by patching.** Every one of the 83 failed runs in the most recent 200-run window had its `vitest-report.json` pulled and matched on `status == 'failed'`. Result: **22 occurrences in the window and 26 recorded lifetime**, against the 8 the register held — and against the 11 that *both* parties independently arrived at, each by a method blind to the same period.
+
+Measured rate: **11.1% across the window (22/198), rising to 20.0% over the last 20 runs.** The rate and the trend disagree, and both are worth keeping: the lifetime figure is lower than the recent-sample estimate, while the recent trend is genuinely upward.
+
+**Every error here ran in one direction.** Nobody forgets to *remove* an occurrence, and no blind search *invents* one. A count that only ever loses entries will read "safer than it is" — which is the reading this entry's own criterion consumes.
+
+**Priority unchanged: still not fixed here.** It does not block a cell from greening, and the epic is the path. What changes is that the number is now measured, and the method is recorded so the next person does not repeat the blind search and conclude the frequency is falling.
 
 ## BLOCKED-088 — "Claimed" is not "effected": a dedup rule that forbade a real production path
 
