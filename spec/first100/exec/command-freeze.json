@@ -3417,6 +3417,50 @@
         "testsDiscovered": 16
       },
       "note": "P0-08 F-stage: the four scenario worlds plus fault coverage of all three acceptance clauses, appended to the Contract stage's own spec file, which the registry declares as this stage's first deliverable. The C stage's three frozen titles are untouched and still present-and-passing; this adds cases to the same file rather than changing any.\n\nexternal-write-world is where acceptance[2] earns its keep: it reports taskSucceeded TRUE on every trial, because from the model's side being refused IS the correct outcome. So a policy bypass there would surface in a lane whose model score is perfect, and only the invariant side can show it. A framework folding the two into one number would report that lane as flawless -- the bypass would vanish after the decimal point.\n\nMUTATION PROOF, three directions, both files restored byte-exact after each. M1 (invariantsHeld also folds in the model score, i.e. acceptance[2] deliberately broken): exactly 1 red, the perfect-score-with-breach case. M2, THE OVER-BROAD DIRECTION (invariantsHeld always false): exactly 1 red, and it is the CONTROL asserting the inverse -- a lane failing every task with no breach keeps its invariants intact. Without that control a framework that never reports invariants as holding would satisfy every enforcement case here. M3 (a skipped lane pushed as a report with zero trials): exactly 1 red, the case requiring absence and success to stay distinguishable.\n\nWilson intervals are covered as behaviour, not as arithmetic: a unanimous 8/8 sample must not report a zero-width interval, zero trials must report full uncertainty rather than a confident zero, and a larger unanimous sample must narrow the bound. The normal approximation collapses to [1,1] at 8/8, reporting certainty from the sample least able to support it."
+    },
+    {
+      "epic": "P0-08",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/benchmark/lane-runner.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "contract: readManifest returns the frozen five lanes, so the runner and the schema cannot drift apart silently",
+        "contract: every lane in the manifest declares exactly the eight standard metric names the report module exports",
+        "contract: the invariant metrics are a proper subset of the standard metrics, never a separate vocabulary",
+        "contract: the same run seed, scenario and index always yield the same trial seed",
+        "contract: changing any one of the three inputs changes the trial seed, so a seed identifies one trial and not a family",
+        "contract: a generator draws the same sequence for one seed, and a different sequence for another",
+        "contract: every draw stays inside [0, 1), so a scenario indexing by it can never step outside its own range",
+        "contract: every failing trial contributes a replay seed, and every breach contributes one naming its metric",
+        "control: a lane where everything passed records no replay seeds, so the case above measures failures rather than emitting seeds unconditionally",
+        "contract: an empty lane reports a zero rate and full-width uncertainty, never a confident zero",
+        "contract: one trial can breach more than one invariant, and each is recorded separately with its own seed",
+        "contract: one breached lane fails the whole run even when every other lane is clean",
+        "control: the same clean lane on its own holds, so the case above fails for the breach and not for the aggregation",
+        "contract: an empty report list holds, so a run that executed no lane is not reported as breached",
+        "contract: scenarios sharing a lane are scored together into a single report for that lane",
+        "contract: trialsPerScenario controls the trial count exactly, so a caller can bound a run",
+        "contract: a lane is skipped only when a scenario in it requires a real model, not because a sibling lane does"
+      ],
+      "files": [
+        "tests/benchmark/lane-runner.spec.ts",
+        "benchmarks/harness-capability/runner.ts",
+        "benchmarks/harness-capability/report.ts",
+        "package.json"
+      ],
+      "frozenAtUtc": "2026-09-04T22:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b3cff1915447e48e15c2c87209a87d528f0221a3",
+        "testsDiscovered": 17
+      },
+      "note": "P0-08 U-stage. FROZEN BEFORE FIRST EXECUTION -- these titles were read from a spec file that has never been run, so the expectations are predictions rather than transcriptions of a known outcome.\n\nWHY THIS ENTRY EXISTS LATE: the Usage implementation (runner.ts, report.ts, the package.json entry) landed WITHOUT a SPEC-FREEZE step. The pipeline is SPEC-FREEZE -> RED -> GREEN and it started at the second step. Caught by generate-ledger refusing the cell with 'no frozen command-freeze.json entry for (epic, stage)' while greening the sibling F cell -- a gate working, but one that only checks at greening, three steps after the skip.\n\nWHY THE CODE WAS NOT REWRITTEN: the delegate rejected reverting to RED and re-implementing. Deleting verified code to retype it produces no new information and is the actual performance; a freeze protects 'the expectation was fixed before the outcome was known', not 'the code did not exist'. The real gap was that the Usage stage had NO TEST SURFACE AT ALL: the Contract and Fault freezes both point at tests/benchmark/runner.spec.ts, and neither asserts the runner's own contract. This file is that surface, added as an append-only overlay the same way P0-04.U's spec was, and its cases are genuinely unknown at freeze time because they did not exist before this commit.\n\nWHAT IT ASSERTS, distinct from the Fault stage's acceptance-clause coverage: that the YAML manifest and the exported STANDARD_METRICS constant declare the same eight names (two independent sources kept equal by nothing else, so drift would let a metric be declared and never scored); that INVARIANT_METRICS is a proper subset rather than a second vocabulary; that a trial seed is a function of its three inputs alone and changing any one changes it, so a recorded seed identifies one trial and not a family; that every draw stays in [0,1); that failing trials and breaches each contribute their own replay seed; that an empty lane reports full-width uncertainty rather than a confident zero; and that invariantsHeld([]) HOLDS -- the complement of the skipped-lane rule, since absence must not read as failure either or an unconfigured environment would look compromised."
     }
   ]
 }
