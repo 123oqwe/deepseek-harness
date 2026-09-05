@@ -99,6 +99,7 @@
     "packages/*/*/tests/**/*.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
+    "benchmarks/**/*.ts",
     "website/**/*.ts",
     "website/.vitepress/**/*.ts"
   ],
