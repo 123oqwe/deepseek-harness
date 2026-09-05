@@ -2677,4 +2677,18 @@ persistent-pwsh-tool-turn    session
 2. **Record per-environment expectations** (`session.linux.jsonl` beside `session.jsonl`). Keeps the signal, doubles what must be kept true, and needs a host of each kind to refresh.
 3. **Keep snapshots out of the cell gate** and run them only where they were recorded, accepting BLOCKED-109's finding that a GREEN cell then does not imply a releasable branch.
 
-**Not chosen here.** The trade is between evidence and portability, and this program is a consumer of these fixtures rather than their owner.
+**Not chosen by the executor.** The trade is between evidence and portability, and this program consumes these fixtures rather than owning them.
+
+### Adjudication (delegate, 2026-09-07): option 1, with the signal moved rather than dropped
+
+**Normalize `sandbox/mode` and `permission/preset`.** The event, its position and its shape stay pinned; only the chosen mode is replaced.
+
+The reasoning that settles it is about what these three fixtures could ever have detected. On a runner with no usable confinement they can never catch *the sandbox was available and went unused*, because it never was; on macOS they can, but only against an expectation recorded on macOS, which is red on CI by construction. **The sandbox reading here was single-environment and incidental — paying doubled maintenance (option 2) to keep it would be preserving a coincidence as though it were a design**, which is the `absorbedFlakes` lesson from the same day. Option 3 is refused outright: BLOCKED-109's whole finding is that the cell gate was too narrow, and retreating restores it.
+
+**The obligation moves, and this is the binding half of the ruling:**
+
+> These fixtures incidentally observed the sandbox-mode decision; as of this entry they no longer do. The decision itself — **given a capability set, which mode is chosen** — must be carried by an explicit test under **P3**, keyed on the capability set rather than on the host it happens to run on, and pinned in both directions: with confinement available the mode must not degrade, and without it the mode must degrade AND record that it did. **Until that test exists, the sandbox-mode decision has no explicit coverage, and this is recorded as a must-have finding for P3's first slice.**
+
+P3's thirteen epics are the sandbox group and have not started, so the obligation lands on the code that owns it. **A single-environment incidental reading is replaced by an assertion with a named owner, no environment dependence, and both directions pinned — an upgrade, not a loss.**
+
+**Verified by positive control**, not by the change appearing to work: a macOS log and a CI log normalize to identical text, while an unrelated difference in the same log still survives normalization. Without the second half, a normalizer that flattened everything would have looked equally successful.

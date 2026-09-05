@@ -25,6 +25,7 @@ const TOOLS = '{{tools}}'
 const EVENT_TIME = '{{eventTime}}'
 const EVENT_OMITTED_BYTES = '{{eventOmittedBytes}}'
 const ARGUMENTS_HASH = '{{argumentsHash}}'
+const SANDBOX_MODE = '{{sandboxMode}}'
 const PACKED_CHUNK_ROW_TYPES = new Set(['text-chunks', 'reasoning-chunks', 'tool-call-chunks'])
 
 function isPackedFixtureRow(record: Record<string, unknown>): boolean {
@@ -343,6 +344,31 @@ export function normalizeStdout(
  * are fixed rather than environmental.
  * @param record - one parsed session-log record, mutated in place.
  */
+function scrubHostChosenSandboxMode(record: Record<string, unknown>): void {
+  // `sandbox/mode` and `permission/preset` record which mode the runtime chose
+  // for THIS host. A Linux CI runner with no usable confinement degrades to
+  // `danger-full-access`; a macOS host with a working sandbox picks
+  // `workspace-write`. Both are correct decisions about different machines, so
+  // an expectation pinning either one is only true where it was recorded.
+  //
+  // The event and its shape stay pinned — that a mode was decided, logged, and
+  // reached the session in this position is still asserted. What is dropped is
+  // WHICH mode, and that reading was never a reliable signal here: on a runner
+  // without confinement these scenarios could never have caught "the sandbox
+  // was available and went unused", because it never was. Keeping a
+  // single-environment incidental reading at the price of environment-specific
+  // fixtures is paying maintenance for a coincidence.
+  //
+  // The obligation moves rather than disappears: BLOCKED-112 records that the
+  // mode DECISION (capability set in, mode out) needs an explicit test under
+  // P3, keyed on capabilities rather than on the host it happens to run on.
+  if (record.type !== 'sandbox/mode' && record.type !== 'permission/preset') return
+  const data = record.data as Record<string, unknown> | undefined
+  if (data === undefined) return
+  if (typeof data.mode === 'string') data.mode = SANDBOX_MODE
+  if (typeof data.preset === 'string') data.preset = SANDBOX_MODE
+}
+
 function scrubVolatileArgumentsHash(record: Record<string, unknown>): void {
   if (record.type !== 'action/manifest-appended') return
   const data = record.data as Record<string, unknown> | undefined
@@ -387,6 +413,7 @@ export function normalizeSessionLog(
       record.time = 0
     }
     scrubVolatileArgumentsHash(record)
+    scrubHostChosenSandboxMode(record)
     if (record.type === 'hook/result' && record.data !== null && typeof record.data === 'object') {
       const data = record.data as Record<string, unknown>
       if ('durationMs' in data) data.durationMs = 0
