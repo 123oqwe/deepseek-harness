@@ -1163,7 +1163,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 35,
+    "count": 36,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1479,6 +1479,15 @@
         "reason": "Archival correction, not a scope deviation. The `.e2e.ts` suffix routes a file into `vitest.e2e.config.ts`, the real-API suite whose own header states each test self-skips without a key. P6-07's clauses -- session-log paging, filtering, deletion, retention and corrupt-log repair -- are local behaviour with no model call, so the pinned v1.0 source filed a local test into the paid channel. `first100-exact-sha.yml` runs bare `pnpm exec vitest run` (default config) and never loads that config, so a frozen `.e2e.ts` command freezes cases the sole greening channel cannot observe (BLOCKED-048's class). `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since `vitest.e2e.config.ts`'s include requires a filename ending `.e2e.ts`. The registry path stays byte-locked and unedited: the pinned v1.0 source is immutable under BLOCKED-035, so this deviation can only be recorded, never removed. Full reasoning and the class-wide ruling live in BLOCKED-070; this entry records only the site.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
+      },
+      "P2-03-U-agent-loop-architecture-doc": {
+        "epic": "P2-03",
+        "stage": "U",
+        "declaredPath": "packages/core/agent-loop/src/tool-calls.ts",
+        "approvedPath": "packages/core/agent-loop/src/tool-calls.ts + docs/architecture.md",
+        "reason": "WIDENING, not substitution: the declared path is unchanged and still written. Root CLAUDE.md requires that changing agent-loop be accompanied by a docs/architecture.md update, and that file appears in no stage of P2-03, so the registry authorizes the loop edit while the repository's own rule requires a companion edit outside the authorization. docs/architecture.md is declared only by P0-02.U, and P0-02 is ACCEPTED -- verified before approving that none of P0-02's frozen cases assert anything about that file's content, so editing it cannot invalidate P0-02's green; this is not a quiet edit to an accepted row. Class-level reasoning, the 21 epics that will hit this, and the fact that P2-01 already changed the loop without the doc update (recorded against P2-01, NOT discharged here) are in BLOCKED-076. Patches for the other 20 epics are added when their stage is dispatched, never in bulk, per BLOCKED-070.",
+        "approvedAt": "2026-09-04",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-076"
       }
     }
   }
