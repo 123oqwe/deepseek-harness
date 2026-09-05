@@ -4995,6 +4995,43 @@
         "mutationDescription": "Five mutations on src/store.ts: (1) a refused registration stored anyway; (2) current() returns the last-registered instead of the highest version; (3) history() returns the store's own array rather than a copy; (4) the self-recursion check dropped; (5) versions tracked globally instead of per name. All restored byte-identical.",
         "failureSummary": "Reddens 1, 0, 1, 1 and 1 cases. (2) is an EQUIVALENT MUTANT, established by reading rather than assumed: monotonic registration makes insertion order equal version order, so no reachable input distinguishes the two implementations. Recorded with the caveat that the equivalence depends on version.ts's monotonicity check, so relaxing that would make this a silent gap."
       }
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "caps the child at its decayed agent budget, not at the deployment ceiling",
+        "never raises the child above the parent worker's own total",
+        "inherits concurrency unchanged rather than dividing it",
+        "refuses to plan a run it would not admit, so limits cannot be derived without admission",
+        "propagates to the child",
+        "fails the parent when the policy says so",
+        "continues the parent but still RECORDS the failure"
+      ],
+      "files": [
+        "packages/workflow/workflow-registry/src/nesting.ts",
+        "packages/workflow/workflow-registry/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T12:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "a68df17fee4a5b893195d7bc445e6a110977e625",
+        "testsDiscovered": 7
+      },
+      "note": "P4-09 U-stage. The test lives in workflow-worker-thread rather than the registry package because U's subject is the nested-run wiring -- the placement the pre-flight list produced, as it did for P4-08.U.\n\nTHERE IS NO CALL SITE, and this is stated rather than glossed. runtime.ts has NO nested `workflow()` hook: nesting is not implemented in the worker at all. So must[3] has a genuinely empty subject there, the same shape as P1-03's must[2] in profile-boot. What this stage delivers is the composition of P4-09's nesting decision with the worker's REAL limit type (WorkerLimits, imported from the worker package, not a stand-in), and nothing consumes it yet. A reader must not take these green cells as evidence that a running worker enforces nested budgets.\n\nTHE CHILD'S CAP COMES FROM ITS DECAYED BUDGET, not the deployment ceiling. Spawning with the ceiling would let a tree of nested runs each start a full allowance and the total would exceed every limit meant to bound it. Concurrency is inherited UNCHANGED rather than divided, because it bounds how much runs at once rather than in total -- a child allowed fewer agents overall is not thereby entitled to less parallelism among them.\n\nplanNestedRun exists so limits cannot be derived without admission: the only way to obtain child limits is to have been admitted, so a caller cannot spawn a refused run with plausible-looking numbers.\n\nacceptance[2]'s `continue-parent` still RECORDS the failure, and a case asserts it: a parent reporting success while a declared child failed silently would make that child's work indistinguishable from work that never ran.\n\nONE MUTATION WAS BADLY CHOSEN AND REDONE. The first attempt at the admission-bypass mutation rebuilt an object equal to the one being returned, so it was equivalent BY CONSTRUCTION and reddened nothing -- an artifact of the mutation, not a gap in the suite. Rewritten to return admitted:true with the parent's own limits, it reddens 1. Recorded because a surviving mutation has three possible causes -- a weak suite, a genuinely equivalent mutant, and a mutation that failed to change behaviour -- and only the first is a defect.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations on src/nesting.ts: (1) child limits taken from the ceiling instead of the decayed budget; (2) concurrency halved instead of inherited; (3) a refused plan returns admitted:true with the parent's limits; (4) continue-parent stops recording the failure; (5) cancellation does not propagate to the child. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each. (3) reddened 0 on a first attempt whose mutation rebuilt an equal object -- equivalent by construction, an artifact of the mutation rather than of the suite; rewritten, it reddens 1."
+      }
     }
   ]
 }
