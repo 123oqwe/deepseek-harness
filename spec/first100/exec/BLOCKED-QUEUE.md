@@ -2151,3 +2151,17 @@ P1-03 must[2] reads "a production boot loads only plugins approved in the lock w
 **What the decision needs, and it is a sequencing question rather than a preference:** `warn-and-proceed` is only a transitional answer if lock generation actually lands, and lock generation has no owner. Choosing it without one makes it permanent by default — the shape BLOCKED-092 records, where a deliverable named as someone else's future work quietly becomes nobody's.
 
 **Not blocking the cell.** The gate's own behaviour is complete and mutation-proved in both branches. What is missing is a call site, and adding one without this decision would ship a product-visible boot policy that nobody chose.
+
+### BLOCKED-095 — The freeze-target rule caught P8-01 and missed P1-03, and the honest answer is that it was not run
+
+**Status: OPEN. A rule that works once and lapses once is worse than no rule, because it advertises coverage it does not provide.**
+
+The standing rule is: *before writing code, list which test file each stage's freeze will hang on.* It worked on P8-01 — the overlay spec was built because that listing surfaced the need. On P1-03 the Contract stage's freeze was created **three stages late**, after its cases had already been observed green.
+
+The delegate asked which failure this was, and asked not to have it smoothed over. **It is (a): the step was not performed.** P1-03 went `check-ready` → read the registry's stage/file lists → start building. No per-stage freeze-target listing was made at any point. The rule did not have a hole that let C slip through; it was not run.
+
+**One observation about why it is skippable, offered as mechanism and not as mitigation.** For a Contract stage the freeze target is usually the file being created, so "where will this freeze hang" feels answered by the act of writing it — the question has no friction, and a question with no friction is one nobody notices skipping. Later stages are different: P's and U's targets were new files whose existence had to be decided, and those got frozen on time. **That asymmetry predicts C as the stage that will be missed, which is exactly what happened.**
+
+**So the repair is both halves.** Run the listing, and make it per-stage with C first — precisely because C looks like it needs no answer. A rule phrased as "list where the freezes hang" invites one answer for the epic; phrased as four lines with C at the top, the missing one is visible.
+
+**What actually caught it** was neither the rule nor a review: it was building the acceptance-coverage entries and mechanically checking each cited title against the frozen set of the stage it names. Four C references matched no frozen set. **A check written for a different defect (BLOCKED-093's mislabelling) found this one** — which is an argument for mechanical cross-checks over remembering, and the third time today the same argument has been made from a different direction.

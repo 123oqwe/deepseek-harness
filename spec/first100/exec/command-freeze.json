@@ -4411,6 +4411,14 @@
       "sensitivityProof": {
         "mutationDescription": "Six mutations: (1) load-order resolution made non-total by reversing rather than sorting; (2) the canonical-order check removed; (3) boot admission made per-plugin instead of whole-profile; (4) boot stops at the first denial instead of reporting all; (5) the not-in-lock check removed; (6) the load-order dependency check removed. All restored byte-identical.",
         "failureSummary": "Reddens 1, 1, 4, 1, 1 and 1 cases respectively -- every one non-zero. A first attempt at (2) reported 'no tests' because the edit left the file syntactically invalid; re-applied correctly it reddens 1, and the distinction between 'no tests' and 'no failures' is recorded in the P-stage freeze."
+      },
+      "postHocFreeze": {
+        "isPostHoc": true,
+        "reason": "The cases were already observed GREEN before this entry was written. The C-stage code landed in 9530c3746b, three stages of work followed, and the freeze entry was created only in 6f01f864cc. The F stage runs the SAME file (lock.spec.ts) and had already executed it: C freezes 16 titles, F freezes 18, and the dry run discovers 34 -- the two halves of one file, so the 16 C titles had demonstrably been run and seen passing before they were frozen.",
+        "whatIsStillTrue": "Predicate (iii) holds without qualification: the cases are real, they exercise real exported functions, and their passing is genuine. Six mutations against the C-stage implementation each redden at least one of them, so the titles are sensitive to the behaviour they name.",
+        "whatIsAbsent": "The property a freeze normally supplies -- that the EXPECTATION was recorded before the RESULT was known -- is missing for this cell. The entry is a transcription of an observed outcome, not a prediction, so it provides no protection against having selected the titles that happened to pass. The dryRunProof treeSha is exact and anchors the run to the right tree, but anchoring the tree does not restore ordering.",
+        "whyNotRebuilt": "Unlike P0-08, there is nothing to build first and freeze after: the C-stage test surface already existed and had already run. 'Build, then freeze, then run' is not reachable from here, so self-declaration is the only honest handling.",
+        "precedentWarning": "This cell must NOT be cited as an instance of expectation-preceding-result. Recorded because an undeclared post-hoc freeze is indistinguishable in the ledger from an ordinary one, and a reader is entitled to know that this cell's evidence is one grade weaker and exactly where."
       }
     },
     {
