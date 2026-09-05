@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T03:36:44.958Z",
-  "inputDigest": "c43c6e328ead2b27cdf13cddab56fdc3b2a8bbca5760b3f40ff4a3fba0b4a08a",
+  "lastUpdatedUtc": "2026-09-05T03:49:24.738Z",
+  "inputDigest": "8f487506449146029ad2aa764fd00b549a31ec61584a1282403682e958965508",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1056,11 +1056,34 @@
           "status": "NOT_RUN"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "abe444fba1fb14a1de1470c331454a78cad904dd",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33942181035",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-abe4/first100-evidence-abe444fba1fb14a1de1470c331454a78cad904dd/vitest-report.json",
+          "observationSha256": "845ddba53e944072c4d0444ef18f8804573730363f229b981db3e2940869cffd",
+          "expectCasesMatched": [
+            "must[0]: declares exactly the 5 required lanes (deterministic, fault, security, real-model, scale), no extras",
+            "must[1]: each required lane declares exactly the 8 standard metrics",
+            "must[2]: each required lane's report declares confidenceInterval and a replayable seed",
+            "enforcement: deterministic, fault and security all execute with no external model configured",
+            "enforcement: a lane needing a real model is skipped WITH a reason, and contributes no report at all",
+            "control: the same lane DOES execute once a real model is configured, so the skip measures configuration",
+            "enforcement: two runs at one seed are identical, down to every recorded replay seed",
+            "control: a different seed produces a different run, so the case above is not comparing two constants",
+            "enforcement: a recorded replay seed identifies exactly one trial, so a failure can be reproduced from the report alone",
+            "enforcement: a lane scoring a perfect task-success rate still reports a breach, and the verdict reads only the invariant side",
+            "control: the inverse also holds — a lane that fails every task with no breach keeps its invariants intact",
+            "enforcement: the security guard refuses an uncapability-backed write, which is why the security lane records no breach today",
+            "control: a capability-backed write IS admitted, so the refusal above is a decision and not a function that always denies",
+            "enforcement: a unanimous sample does not report a zero-width interval",
+            "enforcement: zero trials report full uncertainty rather than a confident zero",
+            "control: a larger unanimous sample narrows the interval, so the bound tracks evidence"
+          ],
+          "capturedAtUtc": "2026-09-05T03:49:24.714Z"
         }
       },
       "supplements": {},
-      "candidateSha": "aa7e1a85d352f1dc7418cb854ad3cd129ca5d357",
+      "candidateSha": "abe444fba1fb14a1de1470c331454a78cad904dd",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
