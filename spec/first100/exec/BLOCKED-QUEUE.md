@@ -2749,3 +2749,20 @@ The normalization landed and `bash-tool` stayed red. Reading the actual diff —
 **Decision A2 already called for this infrastructure** — *"rootless 容器运行时"* among the CI capabilities to land before W8. This is that item arriving as a concrete failure rather than a plan: the sandboxed-bash path has never been exercised on CI, because until BLOCKED-109 nothing ran these snapshots there.
 
 **Still the maintainer's call**, and now a narrower one: install a sandbox backend on the runner (which also makes the P3 sandbox epics testable on CI), or declare a `sandbox` platform requirement for these scenarios the way `pwsh` is declared.
+
+## BLOCKED-113 — a 5s timeout in `check-capability-seams.spec.ts`, seen once, not yet registrable
+
+**Status:** OPEN — one occurrence, and one is not evidence.
+
+CI run `33998988841` (candidate `ee247cc6eef8545e82ebc0d981563a0d3652947f`) failed 1 of 20000 cases:
+
+    tests/architecture/check-capability-seams.spec.ts
+    CI output (acceptance[3]): the real CLI script names the edge, source file, and a remediation
+      > prints the dependency edge, source file, and remediation for a real fixture violation, and exits non-zero
+    Error: Test timed out in 5000ms.
+
+The case spawns the real CLI script; its two siblings that do the same finished in 1194ms and 1270ms in the same run. `ee247cc6ee` changed exactly one file — this queue — and its parent `ddc00e1f28` passed the identical suite minutes earlier. So the failure is not associated with what the run was observing.
+
+**That argument is not enough to register it as a flake, and it is not being registered.** The registry's evidence standard (BLOCKED-007 item 3, extended by BLOCKED-023) takes either two occurrences across two distinct SHAs, or two occurrences on the SAME SHA with genuine outcome divergence — a `failed` and a `passed`. One occurrence plus a plausible story is exactly what that standard exists to refuse: "the commit touched no product code" explains why a flake is *possible*, never that this failure *was* one. A deterministic 5-second budget that a slower runner simply exceeds would produce this same single observation and the same story.
+
+The failed job has been re-run at the identical SHA. A `passed` there is standard (b) satisfied by direct proof, and the entry then goes to the delegate — flake classification is C7 scope and is never self-classified here. A second `failed` at the same SHA is the opposite finding: a deterministic timeout that must be fixed rather than registered, because the registry never accepts all-failed same-SHA occurrences.
