@@ -2219,3 +2219,25 @@ Both look finished from the producer's side. One computed an answer nothing read
 > **Any structural decision of the form "I separated X from Y" must come with a consumer-side check: name the line that reads X and not Y. Without that line, the separation is a naming convention.**
 
 The cost of the check is one grep. The cost of skipping it is a safety property that exists only in the author's intention — and intentions are not enforced at runtime.
+
+### BLOCKED-098 — A guard the fixture never gives anything to do: "not tested" wearing the costume of "covered"
+
+**Status: STANDING RULE, delegate-adopted 2026-09-06. Sits beside BLOCKED-085 and BLOCKED-067 as a third, distinct shape.**
+
+P4-08's journal recorder keys entries by `seq` and sorts them before emitting. Deleting the sort reddened **nothing** — and unlike the shapes already recorded here, neither the assertions nor their subject were wrong:
+
+| Shape | What is wrong |
+|---|---|
+| BLOCKED-085 | the case measures something other than what it names — **wrong subject** |
+| BLOCKED-067 | the case asserts an input's shape instead of its effect — **wrong level** |
+| **this one** | assertions right, subject right — **the fixture leaves the guard nothing to do** |
+
+Every case started its steps in order, so insertion order and `seq` order coincided and the sort performed an identity transform. The guard ran on every case and could not have changed any outcome.
+
+**Coverage tooling reports that line as covered, because it executed.** That is what makes this the hardest of the three to notice: the two earlier shapes at least leave a suspicious-looking test, while this one leaves a normal test, a green suite, and a green coverage report.
+
+> **The check: mutate the logic and ask not only "did anything redden" but "could this input have distinguished the two behaviours at all?" A line that runs without ever having a decision to make is executed, not tested.**
+
+**An actionable form, since the shape is concentrated in one family.** Sorting, deduplication, normalization, canonicalization — anything whose job is to *transform* an input toward a form — must be given an input **already in the wrong form**. A fixture that happens to be sorted tests the identity transform. `parallel()` starts several `agent()` calls concurrently, so out-of-order arrival is real rather than hypothetical; the added case starts steps 3, 1, 2 and the mutation now reddens.
+
+**Both times this arose, the response was to find out why the mutation was *not* equivalent rather than to record it as equivalent** — P4-07's fencing order was the first, this the second. An equivalent mutant is a real category, and treating it as the default explanation for a surviving mutation is how a real gap gets filed as a curiosity.

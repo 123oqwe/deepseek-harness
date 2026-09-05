@@ -10088,6 +10088,9 @@ importers:
       '@deepseek-ai/dsh-workflow':
         specifier: workspace:^
         version: link:../workflow
+      '@deepseek-ai/dsh-workflow-journal':
+        specifier: workspace:^
+        version: link:../workflow-journal
       tsx:
         specifier: ^4.19.2
         version: 4.22.4

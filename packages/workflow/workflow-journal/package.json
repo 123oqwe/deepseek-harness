@@ -31,6 +31,10 @@
     "./recorder": {
       "types": "./lib/types/recorder.d.ts",
       "default": "./lib/types/recorder.js"
+    },
+    "./observer": {
+      "types": "./lib/types/observer.d.ts",
+      "default": "./lib/types/observer.js"
     }
   },
   "files": [

@@ -25,3 +25,5 @@ export { compactJournal, planResume, receiptsToReconcile, retainsAllReceipts } f
 export type { PlannedStep, ResumePlan } from './replay.ts'
 export { createJournalRecorder } from './recorder.ts'
 export type { JournalRecorder, StepEnd, StepStart } from './recorder.ts'
+export { journalingObserver, journalOutcomeOf } from './observer.ts'
+export type { AgentEndEvent, AgentStartEvent } from './observer.ts'

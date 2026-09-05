@@ -4822,6 +4822,44 @@
         "mutationDescription": "Five mutations on src/recorder.ts: (1) no entry written until a step settles; (2) a settlement for an unstarted step back-fills an invented entry; (3) verification accepts any outcome; (4) entries emitted in insertion order rather than by seq; (5) a settlement appends a second entry instead of replacing the first. All restored byte-identical.",
         "failureSummary": "Reddens 11, 1, 2, 1 and 7 cases respectively. (4) reddened ZERO before a case was added that starts steps out of order -- the suite, not the mutation, was incomplete."
       }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "records a started agent call as in-flight, carrying the child session id as its receipt",
+        "settles a completed call with an output the resume can reuse",
+        "maps `cancelled` to a failed journal outcome, so a resume re-runs it",
+        "maps `failed` the same way, and `completed` differently",
+        "takes the effect class from the caller, never from the event",
+        "records a call with no phase without inventing one",
+        "kill between two agent calls: the finished one is skipped, the next re-run",
+        "kill during concurrent calls started out of order: the journal still reads in script order"
+      ],
+      "files": [
+        "packages/workflow/workflow-journal/src/observer.ts",
+        "packages/workflow/workflow-journal/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T09:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "addf0369da197b50af4f6a4b47ed69a7a89b8a67",
+        "testsDiscovered": 8
+      },
+      "note": "P4-08 U-stage: the host's existing agent event stream becomes a journal.\n\nTHE TEST LIVES IN workflow-worker-thread, NOT the journal package, and that placement came from the pre-flight freeze-target list. The list's usual output is which FILE a freeze hangs on; here it produced which PACKAGE, because U's subject is the host/worker wiring rather than the journal. That is a decision one otherwise meets halfway through writing, with a file already in the wrong place.\n\nTHE ADAPTER DECIDES NOTHING, deliberately. It maps one event shape to another; every judgement -- what may be skipped, what must be reconciled, whether a resume is allowed -- stays in ./types.ts where it is testable without a running worker. `classify` is a CALLER-SUPPLIED parameter for the same reason the effect class is declared rather than inferred: an adapter guessing by label, by phase, or by whether a result came back would be inferring whether an effect escaped from outside the process that produced it.\n\n`cancelled` maps to `failed` rather than gaining a journal outcome of its own. A cancelled step produced no result, so a resume must re-run it, which is what `failed` already means to decideResume; a third outcome would create a state every consumer must handle and none would treat differently. A positive control sits beside it (`completed` maps differently), since a function returning 'failed' unconditionally would otherwise satisfy the mapping case.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations on src/observer.ts: (1) `cancelled` mapped to `completed`; (2) the effect class hard-coded to 'pure' instead of consulting the caller's classify; (3) the child session id dropped rather than recorded as a receipt; (4) a completed call records no output. All restored byte-identical.",
+        "failureSummary": "Reddens 1, 1, 1 and 3 cases respectively. (1) is the targeted mutation: treating a cancellation as a completion is how a resume would skip work that never produced a result."
+      }
     }
   ]
 }
