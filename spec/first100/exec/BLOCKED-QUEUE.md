@@ -2464,4 +2464,19 @@ This is the BLOCKED-098 family's hardest member yet. Earlier members were guards
 
 **A bug in the gate's first draft, kept here because it is the same error one level up.** It compared recorded cases against the *live freeze* rather than against the observation, and so reported "the artifact does not support this" for a case the artifact plainly showed passing. A gate against false assertions had made one. It was caught by checking a surprising output against the artifact by hand instead of believing the tool.
 
+**The retention cliff, and why it is shallower than it looked.** P0-01 -- the program's FIRST accepted row -- came back UNAVAILABLE on the gate's first run: its scratchpad directory had been cleared, leaving its evidence only inside GitHub's retention window. All four artifacts were recovered from `ciRunUrl` and hash byte-identically to what the ledger recorded, so the gate now reports **0 UNAVAILABLE**.
+
+Recovering them surfaced a trap worth encoding: each run uploads **two** files named `vitest-report.json`, under `first100-vitest-report-<sha>/` and `first100-evidence-<sha>/`, and only the second matches the recorded digest. Choosing by directory name returns a digest that does not match, and so a MISMATCHED verdict for a sound cell. `selectArtifactByDigest` therefore selects by content and knows nothing about the naming convention. **A false MISMATCHED is less dangerous than a false VERIFIED, but it sends someone to repair a row that was never broken.**
+
+**Two properties were being conflated, and separating them dissolves most of the cliff:**
+
+| | |
+|---|---|
+| `observationSha256` | a tamper seal over one uploaded file — dies with the retention window |
+| the substantive claim | *these cases passed at this commit* — reproducible while the tree and workflow are in git |
+
+`first100-exact-sha.yml` accepts any historical SHA, so an expired artifact means one CI run to regenerate, not lost evidence. A re-dispatched run necessarily has a different digest (durations vary) and so cannot satisfy the seal; that is the two properties differing, not a failure.
+
+**A stored extract was considered and rejected on grounds other than size.** Keeping only the case names any freeze or cell references is 59 KB gzipped, against 425 MB of full artifacts -- cheap enough that size cannot decide it. But such a file is a summary assertion, *I read the original and it said X*, which is the exact shape of the `expectCasesMatched` defect above. Recomputing from a fresh run at the same SHA trusts no extractor. The remaining case for having CI emit and sign a summary alongside the artifact is convenience for FUTURE cells, not a fix for the 53 existing observations, which can never acquire one.
+
 **Responsibility.** The delegate proposed splitting this as "you skipped a command, I skipped a class of verification" and declined the softer version offered back. Both halves stand on their own: the `selfAudit` blocks asserting `RAN: …` were written by the same hand that skipped the run, and the delegate had never once asked *who wrote this cell* — it recomputed contents from bytes every time, so its verdicts never depended on those fields.

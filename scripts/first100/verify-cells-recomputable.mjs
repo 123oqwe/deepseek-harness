@@ -26,6 +26,16 @@
  * plausible it looks -- the only way to pass is for the observation itself to
  * say so.
  *
+ * **An expired artifact is not lost evidence.** Two properties were easy to
+ * conflate here, and separating them is what keeps the retention window from
+ * looking like a cliff: `observationSha256` is a tamper seal over one specific
+ * uploaded file and dies with GitHub's retention, while the substantive claim
+ * -- *these cases passed at this commit* -- stays reproducible for as long as
+ * the tree and the workflow are in git, since `first100-exact-sha.yml` accepts
+ * any historical SHA. A re-dispatched run necessarily produces a DIFFERENT
+ * digest (durations vary), so it cannot satisfy the seal; that is the two
+ * properties differing, not a failure.
+ *
  * **An unreachable artifact is its own outcome, never a pass.** Scratchpad
  * paths are cleared and GitHub artifacts expire, so a cell can become
  * unverifiable through nothing but time. Reporting that as success would
@@ -33,6 +43,21 @@
  * reporting the same green as a check that ran. UNAVAILABLE is counted and
  * listed separately, and `--require-all` turns it into a failure for callers
  * that need every cell proved now.
+ *
+ * States a cell can be in:
+ *
+ * | state | meaning |
+ * |---|---|
+ * | VERIFIED | recomputed from the cell's own artifact, digest intact |
+ * | MISMATCHED | the artifact does not support what the cell records |
+ * | UNAVAILABLE | the artifact is unreachable, so nothing is proved either way |
+ *
+ * A cell whose artifact has expired is UNAVAILABLE, and the route back is to
+ * re-dispatch the workflow at the cell's `candidateSha` and recompute the
+ * substantive claim from the fresh run -- deriving it from the source again
+ * rather than trusting anyone's saved summary. A stored extract would be one
+ * more "I read the original and it said X", which is the shape of the very
+ * defect this gate exists for.
  *
  * CLI:
  *   node scripts/first100/verify-cells-recomputable.mjs
@@ -55,6 +80,28 @@ function opt(name) {
 
 function sha256(buffer) {
   return createHash('sha256').update(buffer).digest('hex')
+}
+
+/**
+ * Choose the artifact whose bytes hash to the recorded digest.
+ *
+ * A `first100-exact-sha.yml` run uploads TWO files named `vitest-report.json`
+ * -- under `first100-vitest-report-<sha>/` and `first100-evidence-<sha>/` --
+ * and only the second is what a cell's `observationSha256` was taken over.
+ * Choosing by directory name, or taking whichever is found first, yields a
+ * digest that does not match and so a MISMATCHED verdict for a cell that is
+ * perfectly sound. A false MISMATCHED is less dangerous than a false VERIFIED,
+ * but it sends someone to repair a row that was never broken.
+ *
+ * Selecting by digest cannot make that mistake, and needs no knowledge of the
+ * naming convention at all.
+ * @param candidates - paths to consider, with their contents' digests.
+ * @param expectedSha256 - the digest the cell recorded.
+ * @returns the matching path, or null when none matches.
+ */
+export function selectArtifactByDigest(candidates, expectedSha256) {
+  const match = candidates.find(candidate => candidate.sha256 === expectedSha256)
+  return match?.path ?? null
 }
 
 /**
@@ -215,4 +262,8 @@ function main() {
   process.exit(failed ? 1 : 0)
 }
 
-main()
+// Guarded so the gate's pure functions can be imported by tests without the
+// whole verification running as a side effect of the import.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+}
