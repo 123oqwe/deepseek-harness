@@ -4369,6 +4369,52 @@
     },
     {
       "epic": "P1-03",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-lock/tests/lock.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries package, version, integrity, source commit, manifest digest, signature identity, dependencies and capabilities",
+        "records the signature identity WITHOUT that recording implying it was verified",
+        "refuses entries that are not in canonical order",
+        "resolves a TOTAL load order, so independent plugins do not order by chance",
+        "reports no order at all for a dependency cycle",
+        "refuses a lock whose load order places a plugin before its dependency",
+        "refuses a dangling dependency and a duplicate entry",
+        "accepts a well-formed lock, so the checks above are not refusing everything",
+        "admits an install that matches the lock exactly, and returns the locked order",
+        "refuses the WHOLE boot when one plugin's integrity drifted, not just that plugin",
+        "reports EVERY denial, so an operator repairing an install sees the whole list",
+        "refuses a plugin present on disk but absent from the lock",
+        "refuses a plugin the lock requires but disk does not have (validation[2])",
+        "acceptance[0]: the offline cold start is the same call, with no network-shaped parameter",
+        "reports drift when the registry has moved, without changing what boot loads",
+        "refuses the drifted version even once it is what is installed"
+      ],
+      "files": [
+        "packages/plugin/plugin-lock/src/types.ts",
+        "packages/plugin/plugin-lock/src/index.ts",
+        "packages/plugin/plugin-lock/tests/lock.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T03:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "30e3a20521be32f2c4fc4c4e697466dc2bf13e1b",
+        "testsDiscovered": 34
+      },
+      "note": "P1-03 C-stage. FROZEN LATE, and the lateness is the finding rather than a clerical note. The stage was built, run, and mutation-proved (6 mutations, all reddening) at the time it was written, and then the freeze entry was never created -- work moved straight to the P stage. Nothing noticed for three stages.\n\nWHAT CAUGHT IT: building the acceptance-coverage entries and mechanically checking that every cited title belongs to the FROZEN SET of the stage it names. Four C-stage references matched no frozen set, because no C-stage freeze existed. That check is the one the delegate added after P4-07's mislabelled self-audit, on the reasoning that a title can be present-and-passing while belonging to a different stage; here it caught the stronger case of a stage with no freeze at all. A coverage entry citing a stage that was never frozen would otherwise have been the second 'reads like a real record' defect in the same epic.\n\nexpectCases names the Contract-stage titles only; the F stage's boundary cases live in the same file under their own describe block and are frozen separately, so the two sets are disjoint and predicate (iii) holds despite the shared file.\n\nThe suite is written under an adjudicated constraint recorded in its own module comment: signatureIdentity may be asserted RECORDED and stable across tag drift, never trustworthy or as grounds for refusing a forged package. verifyPackageSignature trusts a first-seen issuer today, so 'the lock records the signer, therefore a forgery is rejected' would pass because nothing is rejecting.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations: (1) load-order resolution made non-total by reversing rather than sorting; (2) the canonical-order check removed; (3) boot admission made per-plugin instead of whole-profile; (4) boot stops at the first denial instead of reporting all; (5) the not-in-lock check removed; (6) the load-order dependency check removed. All restored byte-identical.",
+        "failureSummary": "Reddens 1, 1, 4, 1, 1 and 1 cases respectively -- every one non-zero. A first attempt at (2) reported 'no tests' because the edit left the file syntactically invalid; re-applied correctly it reddens 1, and the distinction between 'no tests' and 'no failures' is recorded in the P-stage freeze."
+      }
+    },
+    {
+      "epic": "P1-03",
       "stage": "P",
       "argv": [
         "pnpm",

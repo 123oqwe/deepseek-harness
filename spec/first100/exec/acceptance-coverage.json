@@ -1525,6 +1525,75 @@
         }
       ],
       "note": "acceptance[2]: 'stop taking new work when the lease store fails.' Stop-work is proved in BOTH directions -- nothing can be acquired and nothing is offered as reclaimable -- because a scheduler blocked on one path and fed by the other would still start work. The refusal carries a DISTINCT 'store-unavailable' tag rather than a null or empty result: 'nobody holds this' and 'I cannot tell you who holds this' must not look alike, since reporting an item free during an outage is exactly how the same work item reaches a second worker. The fourth case is a positive control and is load-bearing here -- without it, a store stuck permanently unavailable would satisfy every one of the refusal cases above."
+    },
+    {
+      "epic": "P1-03",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "acceptance[0]: the offline cold start is the same call, with no network-shaped parameter"
+        },
+        {
+          "stage": "C",
+          "title": "admits an install that matches the lock exactly, and returns the locked order"
+        },
+        {
+          "stage": "U",
+          "title": "admits a matching install and reports the boot as verified"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 boot refuses a locked plugin missing from disk (validation[2])"
+        }
+      ],
+      "note": "acceptance[0]: 'an offline cold start can verify the local cache against the lock.' Satisfied structurally rather than by an offline test harness: every input to admitBoot is already-resolved data -- the lock's facts and the installed facts -- with no registry handle, URL, or process handle anywhere in the parameter list. There is therefore no network path to omit when the network is gone, so the offline call and the online call are THE SAME call and cannot diverge. The F-stage boundary covers the other half: a cache missing a locked plugin is refused rather than silently booting short."
+    },
+    {
+      "epic": "P1-03",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "reports drift when the registry has moved, without changing what boot loads"
+        },
+        {
+          "stage": "C",
+          "title": "refuses the drifted version even once it is what is installed"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 13 boot refuses a version drift ahead of the digests it would also fail"
+        }
+      ],
+      "note": "acceptance[1]: 'registry tag drift does not change an already-locked profile.' Covered from both directions, which is what the clause needs. Detecting drift is reported and nothing else happens -- following the registry is precisely what a lock exists to prevent, so the only legitimate response is to tell someone. And once the drifted version is what is actually INSTALLED, boot refuses it: a lock that reported drift but then loaded the new version would be a lock in name only. The F boundary pins that this refusal reports version-mismatch rather than the integrity mismatch it would also fail, so an operator is told a different version is installed rather than that the package was tampered with."
+    },
+    {
+      "epic": "P1-03",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "acceptance[2]: refuses a candidate generated from a lock that has since changed"
+        },
+        {
+          "stage": "P",
+          "title": "reports the candidate defect even when the base ALSO moved"
+        },
+        {
+          "stage": "P",
+          "title": "replaces an existing lock with the new content"
+        },
+        {
+          "stage": "P",
+          "title": "leaves no scratch file behind, so a reader never finds a partial lock"
+        },
+        {
+          "stage": "P",
+          "title": "writes a complete, re-readable lock when the target did not exist"
+        }
+      ],
+      "note": "acceptance[2]: 'two concurrent install processes do not produce a half-written lock.' Covered in two independent senses, and the second is only PARTLY closed -- stated here rather than left for a reader to discover. (a) Logical: a candidate generated from a base that has since moved is refused, so two installs that both read version 3 cannot each silently erase the other's work. (b) Physical: replacement goes through a sibling temp file and a rename, and the cases prove the content lands whole with no scratch file surviving. They do NOT prove atomicity -- that is a property of rename(2), and observing a partial write would need a reader racing the writer; replacing temp-and-rename with an in-place write reddens none of them. Recorded in the P-stage freeze, the suite's module comment, and the package README rather than closed with an assertion that a function was called."
     }
   ]
 }
