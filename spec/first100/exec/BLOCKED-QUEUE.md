@@ -2599,3 +2599,27 @@ Both consequences belong to the maintainer and the delegate, not to the executor
 - **The schedule cost is zero.** Greening is already stopped on the push, and BLOCKED-108's repair is stopped on the same classifier. The order is one line: user approves → `refresh` repairs 108 → push → CI under the new gate → greening resumes. Adding the steps does not stop anything for an extra second.
 
 **Not filed as a defect in anyone's diligence.** The narrow gate is a reasonable design for per-cell evidence — a cell asserts that specific frozen cases pass at a SHA, which is exactly what the observation shows. What is missing is anything that ever asks the wider question, and the answer to "who runs lint" turned out to be nobody.
+
+### BLOCKED-110 — a snapshot refresh on a host that SKIPS scenarios produces a partial refresh that looks complete
+
+**Status: OPEN. Cause established; the repair needs a `pwsh`-capable host.**
+
+`DSH_SNAPSHOT=refresh` rewrote 116 fixtures on this machine and reported success. Three scenarios were never touched, because they self-skip here:
+
+```
+snapshots/session/pwsh-tool-turn              action/manifest-appended lines: 0
+snapshots/session/persistent-pwsh-tool-turn   action/manifest-appended lines: 0
+snapshots/web/pwsh-terminal                   action/manifest-appended lines: 0
+```
+
+Every scenario that DID run gained that event when P2-03 added it. These three still carry expectations from before it existed, so they pass locally (skipped) and fail on CI (pwsh present, event emitted). Run `33985073439` showed exactly that: unit suite green, snapshots red at 16, all in the SDK/jsonrpc group.
+
+**This is `docs/testing.md`'s documented asymmetry, arriving as a defect rather than as a caveat:** *"without one its executor suites self-skip and `vitest.config.ts` exempts the file so pwsh-less hosts stay green, while CI runners ship pwsh and enforce the full bar."* Decision A2 said the same thing in advance — *本地全绿永远不能当证据*.
+
+> **The refresh's own report is what made it invisible: "116 rewritten, 176 inspected" reads as a complete pass. A refresh that silently omits every scenario the host cannot run is indistinguishable, from its output, from one that covered everything.**
+
+**Why I did not repair it here.** Rewriting those three by hand would be authoring evidence for runs that never happened — BLOCKED-106 with a different file. Refreshing under CI is worse: it would pin the runner's paths into the expectations and move the failure to every developer machine instead of fixing it.
+
+**What actually repairs it:** a refresh on a host where `pwsh` exists, so the three scenarios run and their expectations are OBSERVED like the other 116. Installing PowerShell on this machine would do it; that is the user's call, not mine.
+
+**The durable fix is separate and larger:** `refresh` should report what it SKIPPED, and a refresh that skipped anything should say so loudly rather than reporting only what it rewrote. Until then, every session-log change carries this trap, and it will be sprung by whoever next refreshes on a machine without pwsh — which is every macOS host by default.
