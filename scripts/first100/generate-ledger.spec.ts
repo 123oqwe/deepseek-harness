@@ -413,3 +413,56 @@ describe('findDuplicateFrozenCases (BLOCKED-104, 2026-09-06)', () => {
     expect(findDuplicateFrozenCases(['x', 'x', 'x', 'y'])).toStrictEqual([{ title: 'x', count: 3 }])
   })
 })
+
+describe('checkDelegateSignoff — withdrawal (delegate ruling, 2026-09-07)', () => {
+  const row = { cells: {}, status: 'ACCEPTED' }
+  const digest = 'ignored-by-these-cases'
+
+  it('a PASS matching the current row digest is valid', () => {
+    const registry = { entries: [{ epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'PASS' }] }
+    expect(checkDelegateSignoff('P4-07', row, registry).valid).toBe(true)
+  })
+
+  it('a WITHDRAWN recorded AFTER a PASS invalidates it, without deleting the PASS', () => {
+    const registry = {
+      entries: [
+        { epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'PASS' },
+        { epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'WITHDRAWN', reason: 'must[3] has no subject' },
+      ],
+    }
+    const result = checkDelegateSignoff('P4-07', row, registry)
+    expect(result.valid).toBe(false)
+    expect(result.reason).toBe('withdrawn')
+    // The retracted PASS is still in the file: append-only means the history is
+    // readable, and the verdict comes from the order rather than from deletion.
+    expect(registry.entries.filter(e => e.conclusion === 'PASS')).toHaveLength(1)
+  })
+
+  it('a later PASS re-signs a withdrawn epic, so withdrawal is not permanent', () => {
+    const registry = {
+      entries: [
+        { epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'PASS' },
+        { epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'WITHDRAWN', reason: 'gap found' },
+        { epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'PASS' },
+      ],
+    }
+    expect(checkDelegateSignoff('P4-07', row, registry).valid).toBe(true)
+  })
+
+  it("another epic's withdrawal does not touch this one", () => {
+    const registry = {
+      entries: [
+        { epic: 'P4-07', rowDigestSha256: rowDigest(row), conclusion: 'PASS' },
+        { epic: 'P8-01', rowDigestSha256: rowDigest(row), conclusion: 'WITHDRAWN', reason: 'unrelated' },
+      ],
+    }
+    expect(checkDelegateSignoff('P4-07', row, registry).valid).toBe(true)
+  })
+
+  it('the withdrawal reason is carried back, since it is the part a digest cannot reconstruct', () => {
+    const registry = {
+      entries: [{ epic: 'P4-07', rowDigestSha256: digest, conclusion: 'WITHDRAWN', reason: 'must[3] has no subject' }],
+    }
+    expect(checkDelegateSignoff('P4-07', row, registry).matchedEntry?.reason).toBe('must[3] has no subject')
+  })
+})

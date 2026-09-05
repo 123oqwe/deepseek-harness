@@ -67,7 +67,7 @@
  *     --ci-run-url <url> --candidate-sha <sha>
  *     record a real observation for a supplement entry (BLOCKED-005).
  *   node scripts/first100/generate-ledger.mjs --record-signoff --epic <id> \
- *     --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>] \
+ *     --conclusion PASS|WITHDRAWN [--reason <text>] [--user-confirmation-ref <ref>] [--note <text>] \
  *     [--delegate-session <name>]
  *     record the delegate's real three-predicate deep-verify sign-off for
  *     the epic's CURRENT ledger row state (BLOCKED-036). `--user-confirmation-ref`
@@ -803,7 +803,18 @@ export function rowDigest(row) {
  */
 export function checkDelegateSignoff(epicId, row, signoffRegistry, userConfirmationTierEpics = USER_CONFIRMATION_TIER_EPICS) {
   const currentDigest = rowDigest(row)
-  const entries = (signoffRegistry?.entries ?? []).filter((e) => e.epic === epicId && e.conclusion === 'PASS')
+  const forEpic = (signoffRegistry?.entries ?? []).filter((e) => e.epic === epicId)
+  // The registry is append-only, so a withdrawal cannot delete the PASS it
+  // retracts -- it supersedes it by arriving later. Reading only the LAST
+  // conclusion is what makes that work: a PASS followed by a WITHDRAWN is
+  // withdrawn, and a later PASS re-signs it. Filtering for PASS anywhere in the
+  // history would make a withdrawal unrecordable without erasing evidence,
+  // which is the one thing this file exists to prevent.
+  const latest = forEpic.at(-1)
+  if (latest?.conclusion === 'WITHDRAWN') {
+    return { valid: false, reason: 'withdrawn', currentRowDigest: currentDigest, matchedEntry: latest }
+  }
+  const entries = forEpic.filter((e) => e.conclusion === 'PASS')
   const matching = entries.find((e) => e.rowDigestSha256 === currentDigest)
   if (!matching) {
     return {
@@ -823,9 +834,17 @@ function cmdRecordSignoff() {
   const conclusion = opt('conclusion')
   const userConfirmationRef = opt('user-confirmation-ref')
   const note = opt('note')
+  const reason = opt('reason')
   const delegateSession = opt('delegate-session', 'guanjieqiao-92')
-  if (!epic || conclusion !== 'PASS') {
-    console.error('usage: generate-ledger.mjs --record-signoff --epic <id> --conclusion PASS [--user-confirmation-ref <ref>] [--note <text>] [--delegate-session <name>]')
+  if (!epic || (conclusion !== 'PASS' && conclusion !== 'WITHDRAWN')) {
+    console.error('usage: generate-ledger.mjs --record-signoff --epic <id> --conclusion PASS|WITHDRAWN [--reason <text>] [--user-confirmation-ref <ref>] [--note <text>] [--delegate-session <name>]')
+    process.exit(1)
+  }
+  // A withdrawal must say why. A sign-off that can be retracted silently is a
+  // sign-off nobody can audit, and the reason is the only part a later reader
+  // cannot reconstruct from the digests.
+  if (conclusion === 'WITHDRAWN' && !reason) {
+    console.error('BLOCKED: --conclusion WITHDRAWN requires --reason <text> naming what the sign-off rested on that no longer holds')
     process.exit(1)
   }
   const registry = loadJson(REGISTRY_PATH)
@@ -843,7 +862,10 @@ function cmdRecordSignoff() {
     console.error(`no ledger row for ${epic}`)
     process.exit(1)
   }
-  if (USER_CONFIRMATION_TIER_EPICS.has(epic) && !userConfirmationRef) {
+  // A withdrawal is always permitted: the tier gate exists to make ACCEPTING
+  // harder, and applying it to a retraction would mean a row could be signed
+  // more easily than un-signed.
+  if (conclusion === 'PASS' && USER_CONFIRMATION_TIER_EPICS.has(epic) && !userConfirmationRef) {
     console.error(`BLOCKED: ${epic} is in the user-confirmation release tier (BLOCKED-011/022/024) — pass --user-confirmation-ref pointing at the decisions-approved.md entry`)
     process.exit(1)
   }
@@ -855,10 +877,24 @@ function cmdRecordSignoff() {
     conclusion,
     delegateSession,
     signedAtUtc: nowIso(),
+    ...(reason ? { reason } : {}),
     ...(userConfirmationRef ? { userConfirmationRef } : {}),
     ...(note ? { note } : {}),
   })
   writeFileSync(SIGNOFF_PATH, `${JSON.stringify(signoffRegistry, null, 2)}\n`, 'utf8')
+
+  // A withdrawal must move the row it retracts. Leaving an ACCEPTED row
+  // ACCEPTED while its only sign-off is withdrawn would make the ledger and the
+  // sign-off registry disagree, and the ledger is what everyone reads.
+  if (conclusion === 'WITHDRAWN' && row.status === 'ACCEPTED') {
+    row.status = 'BLOCKED_ON_ACCEPTANCE'
+    row.independentVerdict = 'PENDING'
+    const ledgerBytes = `${JSON.stringify(ledger, null, 2)}\n`
+    writeFileSync(LEDGER_PATH, ledgerBytes, 'utf8')
+    renderMarkdown(ledger)
+    syncExecState(ledgerBytes, ledger.rows)
+    console.log(`${epic}: ACCEPTED -> BLOCKED_ON_ACCEPTANCE (sign-off withdrawn)`)
+  }
   console.log(`recorded sign-off for ${epic} (row digest ${rowDigest(row)}) — ${signoffRegistry.entries.length} total entries`)
 }
 
@@ -928,7 +964,12 @@ function cmdAccept() {
     failures.push(`predicate (iii) observation mutual-distinctness: shared observation file(s) between ${JSON.stringify(distinctness.conflicts)}`)
   }
   if (!signoff.valid) {
-    const reasonText = { missing: 'no PASS sign-off recorded', stale: 'recorded sign-off is stale (row changed since)', 'missing-user-confirmation-ref': 'sign-off missing required --user-confirmation-ref (user-confirmation-tier epic)' }[signoff.reason]
+    const reasonText = {
+      missing: 'no PASS sign-off recorded',
+      stale: 'recorded sign-off is stale (row changed since)',
+      'missing-user-confirmation-ref': 'sign-off missing required --user-confirmation-ref (user-confirmation-tier epic)',
+      withdrawn: `the sign-off was WITHDRAWN: ${signoff.matchedEntry?.reason ?? '(no reason recorded)'}`,
+    }[signoff.reason]
     failures.push(
       `predicate (iv) delegate sign-off (BLOCKED-036): ${reasonText} — run: node scripts/first100/generate-ledger.mjs --record-signoff --epic ${epic} --conclusion PASS (row digest ${signoff.currentRowDigest})`,
     )

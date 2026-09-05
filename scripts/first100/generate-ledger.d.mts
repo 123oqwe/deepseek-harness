@@ -59,7 +59,10 @@ export function findAmbiguousCaseMatches(
 export interface DelegateSignoffEntry {
   epic: string
   rowDigestSha256: string
+  /** 'PASS' or 'WITHDRAWN'; the LAST entry for an epic decides. */
   conclusion: string
+  /** Required on a WITHDRAWN entry: what the sign-off rested on that no longer holds. */
+  reason?: string
   delegateSession?: string
   signedAtUtc?: string
   userConfirmationRef?: string
