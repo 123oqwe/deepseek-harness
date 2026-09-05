@@ -66,21 +66,6 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      - name: Lint
-        # BLOCKED-109: a First-100 commit that fails lint has not been through
-        # the branch's own gate, which is a diagnostic signal rather than a
-        # style one -- taking that shortcut is the shape every failure found on
-        # 2026-09-07 shared. Cheap now: the 525 accumulated errors were cleared
-        # in the same session, so this step starts green.
-        run: pnpm run lint
-
-      - name: Recorded-session snapshots
-        # BLOCKED-109: snapshots are tests. A cell greened while 76 of them are
-        # red says less than it appears to, and P2-03's U stage is the worked
-        # example -- it broke 76 and every cell greened anyway. Keyless replay,
-        # so this needs no credentials.
-        run: pnpm run test:snapshot
-
       - name: Full test suite (verbose json reporter — the ledger's observation input)
         run: |
           mkdir -p .artifacts/first100/observations
@@ -109,6 +94,26 @@ jobs:
           name: first100-vitest-report-${{ steps.resolve-sha.outputs.sha }}
           path: .artifacts/first100/observations/vitest-report.json
           if-no-files-found: error
+
+      - name: Lint
+        # Ordered AFTER the observation upload deliberately. BLOCKED-007 item 3
+        # established that a RED observation is real, inspectable evidence and
+        # must still be uploaded; a gate that ran first and failed would leave
+        # the ledger with no artifact at all, turning a reviewable failure into
+        # a missing one.
+        # BLOCKED-109: a First-100 commit that fails lint has not been through
+        # the branch's own gate, which is a diagnostic signal rather than a
+        # style one -- taking that shortcut is the shape every failure found on
+        # 2026-09-07 shared. Cheap now: the 525 accumulated errors were cleared
+        # in the same session, so this step starts green.
+        run: pnpm run lint
+
+      - name: Recorded-session snapshots
+        # BLOCKED-109: snapshots are tests. A cell greened while 76 of them are
+        # red says less than it appears to, and P2-03's U stage is the worked
+        # example -- it broke 76 and every cell greened anyway. Keyless replay,
+        # so this needs no credentials.
+        run: pnpm run test:snapshot
 
       # R0 exit gate item 1's other half (packInstall): the exact CI-equivalent
       # build, then pack + verify-packed-install, on Linux CI where the prior
