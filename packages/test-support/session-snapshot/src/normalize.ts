@@ -24,6 +24,7 @@ const SYSTEM = '{{system}}'
 const TOOLS = '{{tools}}'
 const EVENT_TIME = '{{eventTime}}'
 const EVENT_OMITTED_BYTES = '{{eventOmittedBytes}}'
+const ARGUMENTS_HASH = '{{argumentsHash}}'
 const PACKED_CHUNK_ROW_TYPES = new Set(['text-chunks', 'reasoning-chunks', 'tool-call-chunks'])
 
 function isPackedFixtureRow(record: Record<string, unknown>): boolean {
@@ -39,6 +40,7 @@ function omitFixtureEnvelope(record: Record<string, unknown>): void {
 
 /** A cwd-rooted path after volatile cwd replacement, through its last separator-delimited segment. */
 const CWD_ROOTED_PATH_RE = /\{\{cwd\}\}(?:[\\/][^\s<>"'`]+)+/g
+
 const PATH_TAG_RE = /(<path>)([^<]*)(<\/path>)/g
 const ADDITIONAL_INSTRUCTIONS_PATH_RE = /(Additional instructions from: )([^\r\n]+)/g
 const EMBEDDED_EVENT_TIME_RE = /^(  "time": )\d+(?=,\r?$)/gm
@@ -326,6 +328,29 @@ export function normalizeStdout(
 }
 
 /**
+ * Replace an `action/manifest-appended` record's `argumentsHash` with a token.
+ *
+ * The digest is taken over the action's RAW arguments, before any cwd scrubbing.
+ * When those arguments contain an absolute path -- an attachment object, a spill
+ * locator -- two runs hash different strings because the paths genuinely differ.
+ * The hash is therefore CORRECT and the expectation is what cannot be portable:
+ * scrubbing the visible path while pinning a digest of the unscrubbed one
+ * asserts a value no second machine can reproduce.
+ *
+ * Only the hash is replaced. `capability`, `sideEffectClass`, `requiresApproval`,
+ * `sequence` and the event's presence stay pinned, and the digest's own
+ * correctness is covered by `dsh-action-manifest`'s unit tests, where the inputs
+ * are fixed rather than environmental.
+ * @param record - one parsed session-log record, mutated in place.
+ */
+function scrubVolatileArgumentsHash(record: Record<string, unknown>): void {
+  if (record.type !== 'action/manifest-appended') return
+  const data = record.data as Record<string, unknown> | undefined
+  if (data === undefined || typeof data.argumentsHash !== 'string') return
+  data.argumentsHash = ARGUMENTS_HASH
+}
+
+/**
  * Normalize a session JSONL log into a stable expected output: the header line's
  * volatile fields (`createdAt`, `id`, `cwd`) are zeroed/scrubbed, ordinary
  * event `time`, packed-row `time0`, and goal-change lifecycle clock values are
@@ -361,6 +386,7 @@ export function normalizeSessionLog(
     } else if ('time' in record) {
       record.time = 0
     }
+    scrubVolatileArgumentsHash(record)
     if (record.type === 'hook/result' && record.data !== null && typeof record.data === 'object') {
       const data = record.data as Record<string, unknown>
       if ('durationMs' in data) data.durationMs = 0
