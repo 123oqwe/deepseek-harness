@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T10:35:34.036Z",
-  "inputDigest": "596f6bd0d6509b1e0ed6dd4434fd047857173a9e6515187b5d853226edc8d27c",
+  "lastUpdatedUtc": "2026-09-05T11:57:03.683Z",
+  "inputDigest": "05435feb15593da46f0612ff988427a273b0ae08ff7a10a173f5e4bdda114830",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4871,12 +4871,38 @@
       },
       "supplements": {},
       "candidateSha": null,
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": [
         "BLOCKED-096: P6-01 residual lock rewritten as an outcome; both steps now owned by P6-03 (wave 8)"
       ],
-      "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null,
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-05T11:57:03.682Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+            "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+            "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+            "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-05T11:56:00.020Z",
+          "userConfirmationRef": null
+        }
+      },
       "selfAudit": {
         "performedAtUtc": "2026-09-06T07:10:00.000Z",
         "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",

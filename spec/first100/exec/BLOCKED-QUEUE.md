@@ -2198,3 +2198,24 @@ Restated as an outcome (*`MemoryRuntime` can determine each returned record's sc
 | Title unchanged, meaning changed | **No** — the ledger reads identically to "it was always so" |
 
 **No mechanical check can see the second.** A frozen title is a claim about what was proven; silently repointing it at a different assertion falsifies the record while leaving every gate green.
+
+### BLOCKED-097 — Separating X from Y is only naming until you can point at the line that reads one and not the other
+
+**Status: STANDING RULE, delegate-adopted 2026-09-06.**
+
+The flake register gained a `candidates` array so a single observation could be recorded without gaining the force of a registered entry. The structure was chosen deliberately — a separate array rather than a `status: 'CANDIDATE'` field on `entries`, because a field can be missed by any reader while a separate array cannot be read by accident.
+
+**The choice was right and the work was half done.** Nothing verified that the consumer actually ignores it. Had `generate-ledger.mjs` read every array in that file, the separation would have been decorative and the confidence it produced would have been false. The delegate checked and found the line — `generate-ledger.mjs:272` builds its set from `registry?.entries ?? []` — so candidates genuinely cannot absorb a failure or green a cell.
+
+**This is the same fault line as the day's first finding, from the other side:**
+
+| Case | Producer side | Consumer side |
+|---|---|---|
+| `checkDeliverablePathPatches` | computed a complete verdict | **nobody consumed it** |
+| `candidates` array | correct structure, correctly placed | **consumption unverified** |
+
+Both look finished from the producer's side. One computed an answer nothing read; the other created a distinction nothing was known to honour.
+
+> **Any structural decision of the form "I separated X from Y" must come with a consumer-side check: name the line that reads X and not Y. Without that line, the separation is a naming convention.**
+
+The cost of the check is one grep. The cost of skipping it is a safety property that exists only in the author's intention — and intentions are not enforced at runtime.
