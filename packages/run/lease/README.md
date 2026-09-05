@@ -51,6 +51,8 @@ No model-visible surface. The package exports decision functions, an in-memory l
 - **Nothing carries the token yet.** `FencingToken` is defined and checked, but no state write in this repository presents one. The Usage stage owns threading it through the agent dispatch path and the workflow worker host.
 - **Contention is proved sequentially.** `tests/fencing.e2e.spec.ts` runs a hundred acquisitions in order and asserts exactly one token survives. Genuinely concurrent acquisition needs a shared store, which does not exist here.
 - **`setAvailable` is a switch, not a health check.** Nothing detects an outage; a caller must tell the store it is unreachable.
+- **The unfenced lifecycle entry point is still public.** `advanceAgentLifecycle` is exported from `@deepseek-ai/dsh-agent` and adopts whatever epoch a proposal carries, so any consumer reaches the unauthorized path by importing it. `advanceAgentLifecycleFenced` closes the hole only for callers who choose it. Withdrawing or gating the unfenced export changes P4-05's delivered surface and is not this package's to make; a characterization case in `tests/fault-matrix.spec.ts` pins the reachability as a measured fact.
+- **A refusal's audit record can be produced but not appended.** `describeFencingRejection` returns a complete record, and `TrustKernel.auditAppend` is `(_entry) => {}` with no read member on the kernel at all, so nothing can observe an appended entry — including a test.
 
 ### Dev Note
 

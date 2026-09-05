@@ -17,7 +17,15 @@
  */
 
 import { brandNumber } from '@deepseek-ai/dsh-brand'
-import { isReclaimable, type FencingToken, type Lease, type LeaseEpoch, type WorkerId, type WorkItemId } from './types.ts'
+import {
+  isReclaimable,
+  type FencingDenialReason,
+  type FencingToken,
+  type Lease,
+  type LeaseEpoch,
+  type WorkerId,
+  type WorkItemId,
+} from './types.ts'
 
 /** Why an acquisition was refused. */
 export type AcquireDenialReason =
@@ -135,5 +143,55 @@ export class LeaseStore {
   reclaimable(nowMs: number): readonly WorkItemId[] {
     if (!this.available) return []
     return [...this.leases.values()].filter(lease => isReclaimable(lease, nowMs)).map(lease => lease.workItem)
+  }
+}
+
+/**
+ * The audit record a refused write produces (validation[2]).
+ *
+ * Carries the presented authority, the authority that was current, and the
+ * reason — an auditor asking "who was fenced out, and by whom" must be able
+ * to answer from the record alone, without replaying a lease that has since
+ * moved on.
+ *
+ * Deliberately carries NO signature, key, or secret material: the record
+ * describes an authorization decision, and a record that quoted the token's
+ * credentials would leak them into whatever the audit chain is backed by.
+ */
+export interface FencingRejectionRecord {
+  readonly workItem: WorkItemId
+  readonly rejectedHolder: WorkerId
+  readonly rejectedEpoch: LeaseEpoch
+  /** The holder whose lease was current at refusal time, absent when none was. */
+  readonly currentHolder: WorkerId | undefined
+  readonly currentEpoch: LeaseEpoch | undefined
+  readonly reason: FencingDenialReason
+}
+
+/**
+ * Describe one refused write for the audit chain.
+ *
+ * Pure, and separate from any append: producing the record and durably
+ * recording it are different obligations, and only the first is reachable in
+ * this build. `TrustKernel.auditAppend` is `(_entry) => {}` and the kernel
+ * exposes no read member at all, so an appended entry is unobservable — see
+ * this package's `Known Limitations`.
+ * @param token - the authority that was presented and refused.
+ * @param lease - the item's lease at refusal time, or `undefined` when none was held.
+ * @param reason - why the write was refused.
+ * @returns the record, ready to hand to an audit sink.
+ */
+export function describeFencingRejection(
+  token: FencingToken,
+  lease: Lease | undefined,
+  reason: FencingDenialReason,
+): FencingRejectionRecord {
+  return {
+    workItem: token.workItem,
+    rejectedHolder: token.holder,
+    rejectedEpoch: token.epoch,
+    currentHolder: lease?.holder,
+    currentEpoch: lease?.epoch,
+    reason,
   }
 }

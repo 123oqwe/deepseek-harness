@@ -5,8 +5,8 @@
  */
 
 export { checkFencing, isReclaimable } from './types.ts'
-export { LeaseStore } from './store.ts'
-export type { AcquireDenialReason, AcquireResult, RenewDenialReason, RenewResult } from './store.ts'
+export { describeFencingRejection, LeaseStore } from './store.ts'
+export type { AcquireDenialReason, AcquireResult, FencingRejectionRecord, RenewDenialReason, RenewResult } from './store.ts'
 export type {
   FencingDecision,
   FencingDenialReason,

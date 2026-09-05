@@ -4315,6 +4315,57 @@
         "mutationDescription": "Two mutations on dispatch.ts: (1) the fencing check removed entirely, falling through to the unfenced path; (2) the fencing check moved AFTER the lifecycle decision. Both restored byte-identical.",
         "failureSummary": "(1) reddens 3 cases; (2) reddens exactly the order case. Against the first draft (2) reddened ZERO, because no case could distinguish the orders -- both return the same verdict except when a token is simultaneously fenced and illegal."
       }
+    },
+    {
+      "epic": "P4-07",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a strictly older epoch is refused as stale",
+        "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
+        "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
+        "fault boundary 04 a token for another work item is refused",
+        "fault boundary 05 a token from another holder at the current epoch is refused",
+        "fault boundary 06 no lease at all refuses rather than admits",
+        "fault boundary 07 a lease is still held AT its expiry instant",
+        "fault boundary 08 a lease one millisecond past expiry is reclaimable",
+        "fault boundary 09 acquiring is refused while another holder's lease is live",
+        "fault boundary 10 renewing an expired lease is refused rather than resurrecting it",
+        "fault boundary 11 renewing on a superseded token is refused",
+        "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free",
+        "fault boundary 13 an unavailable store offers nothing reclaimable",
+        "fault boundary 14 an unavailable store refuses renewal",
+        "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival",
+        "fault boundary 16 split brain: two holders across a reclaim, only the later one writes",
+        "names who was refused, who was current, and why",
+        "records the absence of a lease rather than omitting the fields",
+        "carries no field capable of holding key or signature material",
+        "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
+        "CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not"
+      ],
+      "files": [
+        "packages/run/lease/tests/fault-matrix.spec.ts",
+        "packages/run/lease/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T23:50:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d1e13ecb0db4d1f53119150a45b0c944dcd51284",
+        "testsDiscovered": 22
+      },
+      "note": "P4-07 F-stage. 16 boundaries enumerated as data with the count asserted against validation[0]'s floor of 12, including its two named scenarios: a delayed packet from a reclaimed holder refused on arrival, and split brain across a reclaim where only the later holder writes.\n\nPRE-FLIGHT on validation[2] ('stale token rejection is written to audit'). The subject is HALF present, measured rather than assumed: TrustKernel.auditAppend is literally `(_entry: TrustKernelAuditEntry): void => {}` and the kernel exposes NO read member at all -- by design, since a function type with that signature cannot expose one. So an appended entry is unobservable to anything, a test included. The producible half is real and is built: describeFencingRejection returns a complete record naming who was refused, who was current, and why. It deliberately carries no signature, key, or secret material -- the record describes an authorization DECISION, and quoting the token's credentials would leak them into whatever backs the audit chain. A KNOWN GAP case states plainly which half is proved.\n\nRESIDUAL PINNED AS A MEASURED FACT, per the delegate's ruling, and it is TWO facts kept apart. decideTransition adopting a proposal's epoch is permissive but harmless alone; what makes it REACHABLE is that advanceAgentLifecycle is a PUBLIC EXPORT of dsh-agent, so any consumer -- including a third-party plugin, in a product whose premise is that everything is a plugin -- reaches the unfenced path by importing it. The unfenced function's JSDoc already says it cannot enforce authority, and documentation is not a gate: a consumer need not read it and the compiler will not object. The characterization case therefore asserts BOTH outcomes on one forged proposal -- refused through the fenced entry, ADMITTED through the public one. That case PASSING is the defect; it starts failing when the unfenced export is withdrawn or gated, which is a P4-05 supersession and not P4-07's to make.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations: (1) the audit record omits the current holder; (2) the audit record spreads the whole lease into itself, leaking fields; (3) checkFencing's epoch equality relaxed to a less-than comparison, admitting a forged-high epoch; (4) the expiry boundary relaxed to greater-or-equal. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 2, 2 and 1 cases respectively. Mutation (2) is caught by the case asserting the record's exact key set, which exists precisely because 'carries no credential material' is otherwise unfalsifiable."
+      }
     }
   ]
 }
