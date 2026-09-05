@@ -66,15 +66,19 @@ jobs:
           DSH_SNAPSHOT: refresh
         run: |
           set -o pipefail
-          filters=""
+          # One `-t` per invocation: vitest accepts a single value for it, and
+          # passing two threw `Expected a single value for option`. The first
+          # version wrapped the call in `|| true` to tolerate the deliberate
+          # partial-refresh failure (BLOCKED-110), and that also swallowed this
+          # error — the run reported success while nothing had executed. The
+          # tolerance is now narrow: each invocation is reported, and the
+          # change-detection step below is what decides whether anything ran.
           for scenario in $SCENARIOS; do
-            filters="$filters -t $scenario"
+            echo "::group::refresh $scenario"
+            pnpm exec vitest run --config vitest.snapshot.config.ts -t "$scenario" && status=0 || status=$?
+            echo "$scenario: vitest exited $status"
+            echo "::endgroup::"
           done
-          echo "refreshing:${filters}"
-          # The refresh reports failure when it skipped anything, which is
-          # deliberate (BLOCKED-110) and not a reason to stop here — the files it
-          # did rewrite are what this job exists to produce.
-          pnpm exec vitest run --config vitest.snapshot.config.ts $filters || true
           pnpm exec tsx scripts/migrate-packed-session-fixtures.ts
 
       - name: Show what changed, and fail if nothing did
