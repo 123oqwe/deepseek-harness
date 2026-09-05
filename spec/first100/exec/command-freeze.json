@@ -3506,6 +3506,40 @@
         "testsDiscovered": 20
       },
       "note": "P4-05 C-stage. FROZEN BEFORE FIRST EXECUTION -- neither the module nor its spec has been run, so these titles are predictions.\n\nWHY A NEW MODULE: `AgentStatus` in runtime-types.ts is a two-value runtime flag ('idle' | 'running') that cannot express the distinctions a supervisor needs. A run waiting on a tool and a run waiting on a human are both 'running' there, yet only one can ever proceed unattended -- so must[0]'s ten states are added alongside that flag, not as a replacement.\n\nTWO PROPERTIES MADE STRUCTURAL RATHER THAN LEFT TO CALLERS. must[1]'s reason/runId/epoch are REQUIRED FIELDS of AgentTransition, so a transition lacking them is not a constructible value. acceptance[0]'s stale-worker half is decided by lease epoch alone -- no clock, no heartbeat, nothing a retrying stale worker can forge.\n\nCHECK ORDER IS DELIBERATE AND ASSERTED: identity, then authority, then legality, then completeness. A stale worker proposing an ILLEGAL edge is refused for staleness, not illegality, so it never learns whether its edge would have been legal on a lifecycle it no longer owns. One case pins exactly that pair.\n\nTHREE MODELLING DECISIONS THE CASES PIN, each of which could reasonably have gone the other way: `cancelling` is EXCLUDED from the non-consuming set because a draining run still holds its slot, so a supervisor that treated it as idle would reclaim resources in use; terminal states have NO outgoing edges at all, including to `orphaned`, so a reclaim sweep cannot rewrite a finished run; and `orphaned` may NOT resume directly as `running` but must pass through `starting`, because starting is what issues the new epoch and resuming directly would keep the dead worker's epoch alive -- which is the very value acceptance[0]'s staleness test compares.\n\nControls accompany the negative-space cases: the empty-reason refusals are paired with the same edge carrying a real reason, and the stale-epoch refusal with the same proposal at the current epoch, so each refusal measures the property named rather than a decider that refuses everything."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent/tests/lifecycle-dispatch.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "contract: an admitted transition returns the next lifecycle carrying the proposal epoch",
+        "contract: a refusal is RETURNED, not thrown, so a supervisor can record a turned-away worker as an ordinary outcome",
+        "contract: the refusal reason reaches the caller unchanged, so dispatch adds no interpretation of its own",
+        "contract: a refused transition leaves the lifecycle untouched, so a rejected proposal cannot half-apply",
+        "control: the same proposal at the current epoch IS admitted, so the refusal above measures the epoch",
+        "contract: a run that is running or starting holds a dispatch slot",
+        "contract: every waiting state, plus queued and paused, holds no slot",
+        "contract: a cancelling run still holds its slot, because a draining run has not released it",
+        "contract: moving into a waiting state releases the slot in the SAME step that changes the state"
+      ],
+      "files": [
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent/tests/lifecycle-dispatch.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T07:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "7f273f4d705bb00cbf78ea30fa0e9cfdff9ee5e8",
+        "testsDiscovered": 9
+      },
+      "note": "P4-05 U-stage. FROZEN BEFORE FIRST EXECUTION.\n\nSCOPE, fixed by the pinned source rather than by inference: P4-05's own 'how to change' names three things -- the ten states, reason/runId/epoch on every transition, and separating UI status from durable state -- and its new-file list is state-machine.ts plus its spec. Building a worker registry or an agent-run store would exceed 'only the minimum change needed for this item and its stable capability seam', so this stage wires the existing decision function into the existing dispatch layer and builds no persistence.\n\nWHAT ONLY EXISTS ONCE A CALLER USES IT, which is why these cases are not a repeat of the Contract stage: a refusal is RETURNED rather than thrown, because a stale worker being turned away is the system working and throwing would make the normal case indistinguishable from a fault; a refused transition leaves the lifecycle untouched, so a rejected proposal cannot half-apply; and the refusal reason reaches the caller unchanged, so dispatch adds no interpretation of its own.\n\nacceptance[1] IS DERIVED, NOT TRACKED: holdsDispatchSlot computes occupancy from the lifecycle state rather than from a counter maintained alongside it, so the two cannot disagree -- there is no window in which the state says waiting while a separate tally still says occupied. One case asserts the release happens in the SAME step as the state change. `cancelling` holds its slot, because a draining run has not released it.\n\nacceptance[2] IS NOT COVERED HERE and is not asserted anywhere: 'reclaimable after a restart' needs agent-run state that survives a process boundary, and this repository has none -- turn-level crash recovery and P4-01's Run-level persistence are neither of them Agent-level. Owner is P4-07 (Worker Lease, Heartbeat and Fencing Token), verified in the registry: its must[0] is 'every work item is owned by an epoch lease' and must[2] is 'heartbeat renews the lease; the scheduler may reclaim after expiry'. Recorded in the ACCEPTANCE LOCKS register. Writing an assertion today would produce one that passes because nothing can be orphaned across a restart at all."
     }
   ]
 }

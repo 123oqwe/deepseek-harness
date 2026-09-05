@@ -8,6 +8,8 @@
 
 import type { Context, Events } from '@deepseek-ai/cordis'
 import { scopeTarget } from '@deepseek-ai/dsh-scope'
+import { consumesNoResources, decideTransition } from './state-machine.ts'
+import type { AgentLifecycle, AgentTransition, TransitionDenialReason } from './state-machine.ts'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
 import type { AssembleContext } from '@deepseek-ai/dsh-system-prompt'
 import type { Agent } from './types.ts'
@@ -173,4 +175,46 @@ export function emitAgentEvent<K extends AgentSubjectEvent>(
  */
 export function assembleContextFor(agent: Agent, signal?: AbortSignal): AssembleContext {
   return { agent, scope: agent, ...signal === undefined ? {} : { signal } }
+}
+
+
+/**
+ * Advance one agent's lifecycle, refusing anything the state machine refuses
+ * (Epic P4-05 acceptance[0]).
+ *
+ * This is the Usage-stage entry point: it is where a lifecycle transition
+ * actually happens, so it is where must[1]'s reason/runId/epoch stop being a
+ * type requirement and become a runtime one. Callers cannot route around it
+ * by constructing a state value directly — `decideTransition` is the only
+ * function that produces an admitted state, and it requires all three fields.
+ *
+ * Returns the decision rather than throwing, because a refused transition is
+ * an ordinary outcome a supervisor must record: a stale worker being turned
+ * away is the system working, not an exception.
+ * @param lifecycle - the run's current position.
+ * @param transition - the proposed transition.
+ * @returns the next lifecycle on success, or the refusal.
+ */
+export function advanceAgentLifecycle(
+  lifecycle: AgentLifecycle,
+  transition: AgentTransition,
+): { readonly ok: true; readonly next: AgentLifecycle } | { readonly ok: false; readonly reason: TransitionDenialReason } {
+  const decision = decideTransition(lifecycle, transition)
+  if (!decision.admitted) return { ok: false, reason: decision.reason }
+  return { ok: true, next: { runId: lifecycle.runId, state: decision.state, epoch: decision.epoch } }
+}
+
+/**
+ * Whether an agent in this lifecycle state should hold a dispatch slot
+ * (Epic P4-05 acceptance[1]).
+ *
+ * The inverse of `consumesNoResources`, expressed here rather than imported
+ * raw so the dispatch layer states its own rule: a scheduler asks this
+ * function, not the state list, and the two cannot drift because there is
+ * only one of them.
+ * @param lifecycle - the run's current position.
+ * @returns true when the run should occupy a slot.
+ */
+export function holdsDispatchSlot(lifecycle: AgentLifecycle): boolean {
+  return !consumesNoResources(lifecycle.state)
 }
