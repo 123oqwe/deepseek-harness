@@ -23,3 +23,5 @@ export type {
 } from './types.ts'
 export { compactJournal, planResume, receiptsToReconcile, retainsAllReceipts } from './replay.ts'
 export type { PlannedStep, ResumePlan } from './replay.ts'
+export { createJournalRecorder } from './recorder.ts'
+export type { JournalRecorder, StepEnd, StepStart } from './recorder.ts'

@@ -4780,6 +4780,48 @@
         "mutationDescription": "Six mutations. types.ts: (1) side-effecting steps skipped when verified and holding receipts -- the double-charge bug; (2) the verified flag ignored; (3) the digest-mismatch refusal removed. replay.ts: (4) resumeAt counts skippable steps instead of finding the first non-skippable, so it skips PAST a rerun; (5) compaction drops receipts along with inputs; (6) receipts collected only up to resumeAt. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1, 1, 1 and 1 cases respectively. (1) is the targeted mutation in BLOCKED-085's sense: skipping a completed-and-verified step is the natural implementation, and it is precisely how a resumed workflow charges twice."
       }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-journal/tests/session-journal.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "writes an in-flight entry when a step STARTS, before it settles",
+        "replaces the in-flight entry in place when the step settles",
+        "orders entries by sequence even when they settle out of order",
+        "carries the declared phase, and names an unphased step rather than omitting it",
+        "orders by sequence even when steps START out of order",
+        "drops a settlement for a step that never started",
+        "refuses to mark an in-flight step verified",
+        "refuses to mark a FAILED step verified",
+        "marks a completed step verified when asked",
+        "records the effect class the caller declared, never one it inferred",
+        "kill BEFORE the agent call settles: the step is re-run",
+        "kill AFTER the agent call settles but before verification: still re-run",
+        "kill after verification: the completed child work is NOT repeated"
+      ],
+      "files": [
+        "packages/workflow/workflow-journal/src/recorder.ts",
+        "packages/workflow/workflow-journal/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T08:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "fd83556152deb288456d545550c3dd1be94c1e5a",
+        "testsDiscovered": 13
+      },
+      "note": "P4-08 P-stage, must[4]: the DSL and worker API are journalable.\n\nPRE-FLIGHT on session.ts, and the verdict needed reading rather than counting. Every P4-08 term scores ZERO there (journal/resume/digest/step/receipt/replay/checkpoint), which by itself is the same signal P4-06 got from dispatch.ts. But reading it shows runWorkerSession IS the worker session that drives an execution, and its ExecutionObserver already carries agentStart/agentEnd -- exactly the points acceptance[0] kills around. So this is a genuinely EMPTY subject (the journal does not exist yet), not a name collision (the file is about something else). Same distinction, opposite conclusion, and the counts alone could not tell them apart.\n\nAN ENTRY IS WRITTEN WHEN A STEP STARTS, not when it finishes, and that ordering is the whole reason a journal survives a crash. A process killed mid-step leaves an in-flight entry, which decideResume re-runs. Recording only on completion would leave no trace of the step at all, and a resume would believe it never began -- indistinguishable from a step whose side effect escaped just before the kill. That mutation reddens 11 of 13.\n\nTHE RECORDER INVENTS NOTHING. A settlement for a step that never started is DROPPED rather than back-filled: an entry conjured there would carry an effect class nobody declared, and decideResume would then act on a guess. Verification is refused for in-flight and failed steps, with a positive control beside both refusals so a recorder that verified nothing could not satisfy them.\n\nONE MUTATION FIRST REDDENED ZERO and the suite was the thing at fault, not the mutation: entries are keyed by seq and sorted, but every existing case STARTED its steps in order, so insertion order and sequence order coincided and the sort was never exercised. parallel() begins several agent() calls concurrently, so out-of-order starts are real. A case that starts 3, 1, 2 was added; the mutation now reddens it.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations on src/recorder.ts: (1) no entry written until a step settles; (2) a settlement for an unstarted step back-fills an invented entry; (3) verification accepts any outcome; (4) entries emitted in insertion order rather than by seq; (5) a settlement appends a second entry instead of replacing the first. All restored byte-identical.",
+        "failureSummary": "Reddens 11, 1, 2, 1 and 7 cases respectively. (4) reddened ZERO before a case was added that starts steps out of order -- the suite, not the mutation, was incomplete."
+      }
     }
   ]
 }
