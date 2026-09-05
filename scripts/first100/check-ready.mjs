@@ -217,7 +217,11 @@ const target = process.argv[2]
 if (target !== undefined) {
   const verdict = decide(target)
   if (verdict.ready) {
-    console.log(`READY: ${target} — every predecessor ACCEPTED, no declared-file overlap with any in-flight epic`)
+    // "ACCEPTED or fully landed", not "ACCEPTED": P1-03 is admitted today on a
+    // predecessor that is NOT accepted (P1-02, every cell GREEN, acceptance
+    // withheld by a live lock). Saying ACCEPTED here would state something
+    // false about the very condition just evaluated.
+    console.log(`READY: ${target} — every predecessor ACCEPTED or fully landed, no declared-file overlap with any in-flight epic`)
     process.exit(0)
   }
   console.error(`NOT READY: ${target}`)
