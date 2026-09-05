@@ -906,6 +906,203 @@
         }
       ],
       "note": "acceptance[2]: 'downgrading trust immediately revokes project capabilities.' The two C-stage cases assert EXACT revocation sets at both downgrade steps, not merely that something was revoked: trusted-execute to trusted-read revokes the five executable kinds and keeps project instructions, and trusted-read to untrusted revokes exactly project-instructions. An over-broad implementation that revoked everything on any downgrade would fail both. The F-stage pair closes the direction of this same entry point -- BEFORE that stage, downgradeTrust accepted a RAISING target, so acceptance[2]'s own entry point could mint a trusted-execute record with no host principal and no audit, bypassing must[2]; the second case proves the refusal holds even when the presented record carries a grantor from an earlier legitimate grant. The characterization case fixes the no-op boundary so a downgrade of a never-granted workspace cannot fabricate a grantor. POSITIVE CONTROL: the U-stage case proves the capabilities being revoked are genuinely offered at trusted-execute, so revocation is measured against a real grant."
+    },
+    {
+      "epic": "P6-07",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 5000"
+        },
+        {
+          "stage": "C",
+          "title": "walking every page via nextCursor from an absent cursor to exhaustion returns every session exactly once, for page size 1"
+        },
+        {
+          "stage": "C",
+          "title": "paginates correctly when multiple sessions share the exact same createdAt, exercising the id tiebreak rather than relying on createdAt alone to order records"
+        },
+        {
+          "stage": "P",
+          "title": "walks every page of a restored listing, visiting each durable record exactly once with no omission or duplication"
+        },
+        {
+          "stage": "U",
+          "title": "feeds listSessions, so a tenant-filtered page walk over the real corpus omits and duplicates nothing"
+        }
+      ],
+      "note": "acceptance[0]: 'pagination over a million-session fixture is stable, with no omission or duplication.' Evidenced as the property rather than the fixture size: the C-stage cases walk a generated corpus to exhaustion via nextCursor and assert each session is visited EXACTLY once, across page sizes spanning the extremes (1 and 5000) plus randomized sizes in between, so the invariant is checked at boundary and interior page sizes rather than one convenient value. The same-createdAt case is the one that makes it stable rather than merely correct: without an id tiebreak, records sharing a timestamp can be skipped or repeated across a page boundary, which is exactly the omission/duplication this clause names. P and U carry it through the two layers where a page walk could still break after C proves the algorithm -- a listing restored from the durable store, and one projected from a live corpus."
+    },
+    {
+      "epic": "P6-07",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "assertNoLegalHold refuses a session under legal hold with LegalHoldBlocksErasureError"
+        },
+        {
+          "stage": "C",
+          "title": "assertNoLegalHold refuses a session that is under legal hold AND already soft-deleted, proving disposition never bypasses the hold check"
+        },
+        {
+          "stage": "C",
+          "title": "a session with no legal hold is admitted: assertNoLegalHold's proof authorizes a real hardErase call all the way through"
+        },
+        {
+          "stage": "P",
+          "title": "persists a legal hold so a fresh service still refuses to hard-erase after a restart"
+        },
+        {
+          "stage": "P",
+          "title": "leaves a held record durably intact after a refused erase, rather than partially destroying it"
+        }
+      ],
+      "note": "acceptance[1]: 'a legal hold blocks a hard erase.' The C-stage pair asserts the refusal and closes the bypass route in the same breath -- a held session that is ALSO soft-deleted is still refused, so no disposition value can route around the hold. POSITIVE CONTROL, required because the refusal cases are negative space: 'a session with no legal hold is admitted' proves the guard is a decision rather than a function that denies everything; without it, an assertNoLegalHold that always threw would satisfy both refusals. The P-stage pair adds what C cannot show: the hold survives a restart (a hold that lived only in memory would refuse nothing after a crash), and a refused erase leaves the record DURABLY INTACT rather than partially destroyed -- refusing after destroying half the dependents would satisfy a naive 'was it refused' assertion."
+    },
+    {
+      "epic": "P6-07",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "HARD_ERASE_POLICY destroys all four target kinds completely, matching acceptance[2]"
+        },
+        {
+          "stage": "C",
+          "title": "an authorized hardErase (no legal hold) reaches all four dependent-store kinds, in order, with the full real target shape per kind -- not just kind order -- matching must[2]'s standalone propagateDeletion(HARD_ERASE_POLICY) rigor"
+        },
+        {
+          "stage": "C",
+          "title": "SOFT_DELETE_POLICY only hides the query index, leaving attachments/memory/artifacts untouched"
+        },
+        {
+          "stage": "P",
+          "title": "propagates an authorized erase to all four dependent stores and removes the record durably"
+        },
+        {
+          "stage": "P",
+          "title": "does not resurrect an erased record for a fresh service over the same path"
+        }
+      ],
+      "note": "acceptance[2]: 'an authorized erase propagates completely.' Completeness is asserted as all four dependent-store kinds reached with the full target shape per kind, not merely as call order -- a propagation that visited the right stores with wrong targets would pass an order-only assertion. CONTRAST CONTROL: SOFT_DELETE_POLICY touching ONLY the query index is what makes 'complete' meaningful; a propagation that always destroyed everything would satisfy the hard-erase cases while being catastrophically wrong, and this pair is what separates the two policies. The P-stage cases add durability: propagation reaches the real stores, and the erased record does not come back for a fresh service over the same path -- a propagation that removed rows without committing would look complete in-process."
+    },
+    {
+      "epic": "P6-07",
+      "acceptanceIndex": 3,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "a corruption partway through the log recovers only the valid prefix before it, plus evidence -- never a line after it, even one that is individually well-formed"
+        },
+        {
+          "stage": "C",
+          "title": "a corruption at the very first line leaves no recoverable prefix at all, returning evidence with no events"
+        },
+        {
+          "stage": "C",
+          "title": "a fully valid log with no corruption reads back completely, with no partial-recovery evidence"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: recovery stops at the first unreadable row and never resumes past it, even when later rows parse"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: the evidence names the exact row and reason, not a summary"
+        },
+        {
+          "stage": "F",
+          "title": "control: a log whose every row parses recovers fully, so the truncation cases below measure a decision"
+        }
+      ],
+      "note": "acceptance[3]: 'a corrupted-log read returns the minimal recoverable range and evidence.' Both halves are asserted separately. MINIMALITY: recovery stops at the first unreadable row and never resumes past it even when later rows are individually well-formed -- a reader that skipped the bad row and continued would produce a LONGER range that is not the minimal recoverable one, and would silently mix records whose interpretation the corruption may have invalidated. The first-row case pins the boundary where 'minimal' means nothing at all, which must not report as an empty success. EVIDENCE: the exact row number and parse reason, not a summary. POSITIVE CONTROL: a fully valid log reads back complete with NO partial-recovery evidence, so the truncation cases measure a decision rather than a reader that always truncates. The F stage re-asserts both against the entry point directly, and additionally records two defects it does not repair."
+    },
+    {
+      "epic": "P0-04",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "finds a two-package cycle"
+        },
+        {
+          "stage": "U",
+          "title": "finds a four-package cycle and reports the shortest cycle when a shorter one also exists"
+        },
+        {
+          "stage": "U",
+          "title": "accepts a cycle covered by a declared exemption and still rejects an undeclared one"
+        },
+        {
+          "stage": "U",
+          "title": "excludes devDependencies from the production graph acceptance[0] scopes"
+        },
+        {
+          "stage": "U",
+          "title": "reports zero violations and no unexempted cycle in the production package graph"
+        },
+        {
+          "stage": "F",
+          "title": "calibration: the same entry point reports a violation when one exists, so zero distinguishes this repository from a broken check"
+        }
+      ],
+      "note": "acceptance[0]: 'the production package graph has no unexempted cycle.' The detection cases prove the search finds cycles at two sizes and honours the exemption store in both directions (an exempted cycle accepted, an undeclared one still rejected), and the devDependencies case fixes the graph's scope -- 'production' excludes dev edges, so a checker including them would report cycles this clause does not name. The real-repository case is the clause's actual assertion. CALIBRATION, which is what makes that zero mean anything: the F-stage case runs the SAME entry point against a fixture root and requires a real violation, so 'zero violations here' is distinguishable from 'this function never reports violations'. An always-zero verdict and a working verdict produce identical reports without it."
+    },
+    {
+      "epic": "P0-04",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "rejects a kernel dependency on a surfaces-apps package and on a providers package"
+        },
+        {
+          "stage": "U",
+          "title": "permits a kernel package importing only Context, and rejects one importing Service"
+        },
+        {
+          "stage": "U",
+          "title": "rejects a forbidden Cordis binding imported type-only, since rule 4 grants the kernel no type-only escape"
+        },
+        {
+          "stage": "U",
+          "title": "resolves the real trust-kernel Cordis edge as permitted under rule 4 and its dsh-invariants edge as allowlisted"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: a kernel upward edge is a violation even when it is the narrow event-type kind"
+        },
+        {
+          "stage": "F",
+          "title": "control: the same narrow event-type edge from a non-kernel layer IS allowed, proving the case above measures the kernel rule"
+        }
+      ],
+      "note": "acceptance[1]: 'any kernel dependency on Cordis, UI, or a concrete model provider fails.' Covered as the kernel having NO escape hatch, which is the only way the clause is stronger than an ordinary upward-edge rule. Three routes are closed independently: an ordinary upward edge to surfaces-apps and to providers; a Cordis binding beyond the single permitted Context; and the same forbidden binding imported type-only, since a type-only import is the obvious way to argue an edge is harmless. The F stage closes the fourth: must[1]'s narrow event-type allowance, which is a real exception everywhere else, does not apply to the kernel. POSITIVE CONTROL: the identical event-type edge from a non-kernel layer IS allowed, so the kernel case measures the kernel rule rather than a suite that rejects event-type edges generally -- and 'permits a kernel importing only Context' proves the Cordis rule is a binding-level decision, not a blanket ban that would make the permitted mechanism unusable."
+    },
+    {
+      "epic": "P0-04",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "finds a four-package cycle and reports the shortest cycle when a shorter one also exists"
+        },
+        {
+          "stage": "F",
+          "title": "calibration: the real scan reaches real input — hundreds of packages, thousands of edges"
+        },
+        {
+          "stage": "C",
+          "title": "completes within the 10-second production-scale budget on a dense, many-overlapping-cycle graph (acceptance[2])"
+        },
+        {
+          "stage": "C",
+          "title": "finds the real shortest cycle even when a longer, disjoint cycle is encountered first in construction order"
+        }
+      ],
+      "note": "acceptance[2]: 'the check completes within 10 seconds and reports the shortest cycle path.' Two independent requirements. SHORTEST: asserted where a shorter cycle also exists, so returning any cycle is insufficient -- a search reporting the first cycle found would pass a single-cycle fixture and fail this one. WITHIN 10s: the C-stage case times a 300-package scan against the budget. CALIBRATION of that timing claim: the F-stage case asserts the real scan reaches real input (>200 packages, >1000 edges, zero unclassified), because a scan that completes quickly by examining nothing satisfies a timing assertion perfectly. The budget only means something once the work it bounds is shown to have happened."
     }
   ]
 }

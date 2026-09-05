@@ -28,6 +28,10 @@ import { join } from 'node:path'
 import * as yaml from 'js-yaml'
 
 import { resolveRepoRoot } from '../../scripts/first100/common.ts'
+import { invariantsHeld, scoreLane, wilsonInterval } from '../../benchmarks/harness-capability/report.ts'
+import { runLanes, seededRandom, trialSeed } from '../../benchmarks/harness-capability/runner.ts'
+import { SCENARIOS } from '../../benchmarks/harness-capability/scenarios/index.ts'
+import { admitsExternalWrite } from '../../benchmarks/harness-capability/scenarios/external-write-world.ts'
 
 /** must[0]: the exact 5 lanes benchmarks/harness-capability/manifest.yml must declare. */
 const REQUIRED_LANES = ['deterministic', 'fault', 'security', 'real-model', 'scale'] as const
@@ -147,5 +151,115 @@ describe('benchmarks/harness-capability/manifest.yml structural contract (P0-08 
       return laneReportingMismatches(lane).map(issue => `${laneName}: ${issue}`)
     })
     expect(mismatches).toEqual([])
+  })
+})
+
+describe('P0-08 Fault: acceptance[0] — the keyless lanes run, and a skipped lane never reads as success', () => {
+  it('enforcement: deterministic, fault and security all execute with no external model configured', () => {
+    const run = runLanes(SCENARIOS, { seed: 7, realModelConfigured: false })
+    const executed = run.reports.map(report => report.lane).sort()
+    expect(executed).toEqual(['deterministic', 'fault', 'security'])
+  })
+
+  it('enforcement: a lane needing a real model is skipped WITH a reason, and contributes no report at all', () => {
+    const withModelLane = [
+      ...SCENARIOS,
+      { name: 'live', lane: 'real-model', requiresRealModel: true, run: () => ({ taskSucceeded: true, invariantBreaches: [] }) },
+    ]
+    const run = runLanes(withModelLane, { seed: 7, realModelConfigured: false })
+    expect(run.reports.map(report => report.lane)).not.toContain('real-model')
+    expect(run.skipped).toEqual([{ lane: 'real-model', reason: 'no external model configured' }])
+    // The load-bearing half: a skipped lane must not appear as a lane whose
+    // invariants held. Absence and success have to stay distinguishable, or an
+    // unconfigured environment reports a clean run it never performed.
+    expect(run.reports.some(report => report.lane === 'real-model')).toBe(false)
+  })
+
+  it('control: the same lane DOES execute once a real model is configured, so the skip measures configuration', () => {
+    const withModelLane = [
+      ...SCENARIOS,
+      { name: 'live', lane: 'real-model', requiresRealModel: true, run: () => ({ taskSucceeded: true, invariantBreaches: [] }) },
+    ]
+    const run = runLanes(withModelLane, { seed: 7, realModelConfigured: true })
+    expect(run.reports.map(report => report.lane)).toContain('real-model')
+    expect(run.skipped).toEqual([])
+  })
+})
+
+describe('P0-08 Fault: acceptance[1] — the same seed reproduces the same projection and failure position', () => {
+  it('enforcement: two runs at one seed are identical, down to every recorded replay seed', () => {
+    const first = runLanes(SCENARIOS, { seed: 20260904 })
+    const second = runLanes(SCENARIOS, { seed: 20260904 })
+    expect(JSON.stringify(second)).toEqual(JSON.stringify(first))
+  })
+
+  it('control: a different seed produces a different run, so the case above is not comparing two constants', () => {
+    const first = runLanes(SCENARIOS, { seed: 20260904 })
+    const other = runLanes(SCENARIOS, { seed: 20260905 })
+    expect(JSON.stringify(other)).not.toEqual(JSON.stringify(first))
+  })
+
+  it('enforcement: a recorded replay seed identifies exactly one trial, so a failure can be reproduced from the report alone', () => {
+    const seeds = new Set<number>()
+    for (let trial = 0; trial < 32; trial += 1) seeds.add(trialSeed(1, 'code-world', trial))
+    expect(seeds.size).toBe(32)
+    // And the generator is a function of the seed alone.
+    expect(seededRandom(99)()).toBe(seededRandom(99)())
+  })
+})
+
+describe('P0-08 Fault: acceptance[2] — a model failure cannot mask a policy bypass', () => {
+  it('enforcement: a lane scoring a perfect task-success rate still reports a breach, and the verdict reads only the invariant side', () => {
+    const report = scoreLane('security', [
+      { lane: 'security', scenario: 'external-write-world', seed: 5, taskSucceeded: true, invariantBreaches: ['policy_bypass'] },
+      { lane: 'security', scenario: 'external-write-world', seed: 6, taskSucceeded: true, invariantBreaches: [] },
+    ])
+    // Perfect model score…
+    expect(report.model.successRate).toBe(1)
+    // …and the run is still not passable.
+    expect(report.invariants.held).toBe(false)
+    expect(invariantsHeld([report])).toBe(false)
+    expect(report.replaySeeds).toContainEqual({ scenario: 'external-write-world', seed: 5, reason: 'invariant:policy_bypass' })
+  })
+
+  it('control: the inverse also holds — a lane that fails every task with no breach keeps its invariants intact', () => {
+    // Without this, the case above could pass in a framework that simply never
+    // reports invariants as holding.
+    const report = scoreLane('deterministic', [
+      { lane: 'deterministic', scenario: 'code-world', seed: 1, taskSucceeded: false, invariantBreaches: [] },
+    ])
+    expect(report.model.successRate).toBe(0)
+    expect(report.invariants.held).toBe(true)
+    expect(invariantsHeld([report])).toBe(true)
+  })
+
+  it('enforcement: the security guard refuses an uncapability-backed write, which is why the security lane records no breach today', () => {
+    expect(admitsExternalWrite(false)).toBe(false)
+    const run = runLanes(SCENARIOS, { seed: 3 })
+    const security = run.reports.find(report => report.lane === 'security')
+    expect(security?.invariants.held).toBe(true)
+  })
+
+  it('control: a capability-backed write IS admitted, so the refusal above is a decision and not a function that always denies', () => {
+    expect(admitsExternalWrite(true)).toBe(true)
+  })
+})
+
+describe('P0-08 Fault: must[2] — confidence intervals stay honest at the sample sizes these lanes run', () => {
+  it('enforcement: a unanimous sample does not report a zero-width interval', () => {
+    // The normal approximation collapses to [1, 1] at 8/8 — certainty from the
+    // sample least able to support it. Wilson keeps a real lower bound.
+    const interval = wilsonInterval(8, 8)
+    expect(interval.upper).toBe(1)
+    expect(interval.lower).toBeLessThan(1)
+    expect(interval.lower).toBeGreaterThan(0)
+  })
+
+  it('enforcement: zero trials report full uncertainty rather than a confident zero', () => {
+    expect(wilsonInterval(0, 0)).toEqual({ lower: 0, upper: 1 })
+  })
+
+  it('control: a larger unanimous sample narrows the interval, so the bound tracks evidence', () => {
+    expect(wilsonInterval(200, 200).lower).toBeGreaterThan(wilsonInterval(8, 8).lower)
   })
 })
