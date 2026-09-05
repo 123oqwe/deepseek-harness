@@ -3790,24 +3790,118 @@
       "wave": 6,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
+          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
+          "expectCasesMatched": [
+            "refuses the old holder's token after the item is reclaimed at a higher epoch",
+            "admits the new holder's token against the same reclaimed lease",
+            "refuses a token whose epoch is HIGHER than any the store issued",
+            "refuses any write when the item holds no lease at all",
+            "refuses a token naming a different work item even at a live epoch",
+            "refuses a matching epoch presented by a different holder",
+            "reports the work-item mismatch even when the epoch is ALSO stale",
+            "holds the lease AT its expiry instant, so renew and reclaim cannot both be legal",
+            "decides staleness without consulting any clock, so skewed workers agree",
+            "leaves exactly one admitted holder after a hundred sequential acquisitions"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
+          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
+          "expectCasesMatched": [
+            "issues increasing epochs across successive acquisitions of one item",
+            "refuses a second worker while the incumbent lease is unexpired",
+            "keeps epochs per work item, so acquiring one does not advance another",
+            "extends the deadline without issuing a new epoch",
+            "refuses to renew an ALREADY-EXPIRED lease, rather than resurrecting it",
+            "refuses to renew on a token that is not the current authority",
+            "lists an expired item as reclaimable and an unexpired one as not",
+            "refuses the old token after reclaim, and admits the new one",
+            "refuses acquisition with a reason distinct from a free item",
+            "refuses renewal while unavailable, so a holder cannot extend blindly",
+            "offers nothing reclaimable while unavailable, even for a lapsed lease",
+            "resumes normally once the store is available again"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
+          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
+          "expectCasesMatched": [
+            "CHARACTERIZATION: unfenced, a self-asserted high epoch is admitted and becomes the authority",
+            "fenced, that same self-asserted epoch is refused",
+            "admits the holder's real token, so the check is not refusing everything",
+            "refuses the previous holder after the item is reclaimed",
+            "still applies the lifecycle rules once fencing admits the token",
+            "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
+            "refuses when the item holds no lease at all"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
+          "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
+          "expectCasesMatched": [
+            "enumerates at least twelve boundaries, each named once",
+            "fault boundary 01 a strictly older epoch is refused as stale",
+            "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
+            "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
+            "fault boundary 04 a token for another work item is refused",
+            "fault boundary 05 a token from another holder at the current epoch is refused",
+            "fault boundary 06 no lease at all refuses rather than admits",
+            "fault boundary 07 a lease is still held AT its expiry instant",
+            "fault boundary 08 a lease one millisecond past expiry is reclaimable",
+            "fault boundary 09 acquiring is refused while another holder's lease is live",
+            "fault boundary 10 renewing an expired lease is refused rather than resurrecting it",
+            "fault boundary 11 renewing on a superseded token is refused",
+            "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free",
+            "fault boundary 13 an unavailable store offers nothing reclaimable",
+            "fault boundary 14 an unavailable store refuses renewal",
+            "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival",
+            "fault boundary 16 split brain: two holders across a reclaim, only the later one writes",
+            "names who was refused, who was current, and why",
+            "records the absence of a lease rather than omitting the fields",
+            "carries no field capable of holding key or signature material",
+            "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
+            "CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "openFindings": [
+        "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)"
+      ],
+      "status": "BLOCKED_ON_ACCEPTANCE",
+      "acceptedEvidence": null,
+      "selfAudit": {
+        "performedAtUtc": "2026-09-06T00:30:00.000Z",
+        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
+        "i_coverageClosure": "PASS. All four cells' expectCasesMatched are byte-identical to their live freeze entries (10/12/7/22), and every live entry carries a sensitivityProof.",
+        "ii_candidateChainConsistency": "PASS, trivially: all four cells rest on one candidate SHA, 82d5e81122, which is on fork/first100-exec.",
+        "iii_observationDistinctness": "PASS under BLOCKED-018's approved redefinition. All four cells share run 33959624760, permitted iff (a) the frozen commands genuinely differ and (b) each cell's titles are independently confirmed in the shared observation. Both hold: four different argv (fencing.e2e / store / fenced-dispatch / fault-matrix), pairwise-disjoint title sets, and 10/10, 12/12, 7/7, 22/22 verified present-and-passing. The forbidden case -- identical frozen commands greened from one observation -- does not apply.",
+        "iv_delegateSignOff": "PENDING. Unlike P4-05/P4-06, this row carries NO live acceptance lock, so the delegate is not refusing on that ground. The residual below is recorded as a finding pinned by a passing characterization case, not as a lock; whether it warrants one is the delegate's call.",
+        "residual": "advanceAgentLifecycle remains a public export of dsh-agent and adopts a proposal's epoch, so the unfenced path is reachable by any consumer. Withdrawing or gating it is a P4-05 supersession, outside every P4-07 stage's scope."
+      }
     },
     "P4-08": {
       "id": "P4-08",
