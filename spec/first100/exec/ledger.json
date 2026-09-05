@@ -3647,7 +3647,38 @@
           "capturedAtUtc": "2026-09-05T15:10:00.000Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "a7ed2e4f25b736a8bb4470acd7c5828b476eb80f",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33954161047",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r5/first100-evidence-a7ed2e4f25b736a8bb4470acd7c5828b476eb80f/vitest-report.json",
+          "observationSha256": "5e3d2e5d04f067163984b2ff3bcbafee7a947be316de836b9a2f35adbf2d3ccf",
+          "expectCasesMatched": [
+            "hands the event and its record to the sink in a single call",
+            "keeps a multi-record commit together and preserves its order",
+            "refuses a commit with no records rather than appending a lone event",
+            "does not retain the caller's array, so a later mutation cannot reach the sink",
+            "splits two separate enqueue calls across batches when a write starts between them",
+            "keeps an enqueueAll group in one batch under that same interleaving",
+            "owns its copy of every event in a group, and ignores an empty group",
+            "uses one fixed window from the first queued event and owns its copy",
+            "coalesces twenty events admitted ten milliseconds apart into one 200 ms batch",
+            "makes concurrent flushes one immediate barrier that drains admitted tails",
+            "starts a new window for work admitted after an already-quiescent barrier",
+            "starts an over-budget tail immediately after the active write",
+            "keeps a tail deadline that has not expired when the active write finishes",
+            "pauses automatic retries after failure and preserves order for new work",
+            "observes an overlapping background failure and retries it inside flush",
+            "surfaces a barrier failure without detached logging and retains its batch",
+            "retains a failed batch larger than the engine call-argument limit"
+          ],
+          "absorbedFlakes": [
+            {
+              "testFullName": "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions",
+              "basis": "spec/first100/exec/flake-registry.json",
+              "note": "The run's ONLY failure; 28th recorded occurrence."
+            }
+          ],
+          "capturedAtUtc": "2026-09-05T16:40:00.000Z"
         },
         "U": {
           "status": "NOT_RUN"
