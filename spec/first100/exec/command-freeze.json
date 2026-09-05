@@ -4404,6 +4404,40 @@
         "mutationDescription": "Five mutations on src/commit.ts: (1) the concurrent-modification check removed; (2) validation moved AFTER the base comparison; (3) the serializer stops sorting dependencies and capabilities; (4) temp-and-rename replaced by an in-place write; (5) the trailing newline dropped. All restored byte-identical.",
         "failureSummary": "Reddens 1, 1, 1, 0 and 1 respectively. (4) is a KNOWN and recorded insensitivity, not an oversight -- see the note. (1) and (5) reddened zero on a first attempt whose edits broke the file syntactically; re-applied correctly they redden 1 each."
       }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-lock/tests/gate.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "admits a matching install and reports the boot as verified",
+        "refuses a drifted install and does not soften admitBoot's verdict",
+        "refuses when the policy is refuse, naming the gate rather than a plugin",
+        "proceeds when the policy allows it, but marks the boot UNVERIFIED",
+        "marks a locked, matching boot verified and an unlocked one not, on the same install"
+      ],
+      "files": [
+        "packages/plugin/plugin-lock/src/gate.ts",
+        "packages/plugin/plugin-lock/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T02:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "90e1e7cdad946789424a7d43a2d5e21285b56e53",
+        "testsDiscovered": 5
+      },
+      "note": "P1-03 U-stage. must[2]'s production-boot gate.\n\nPRE-FLIGHT: apps/cli/src/profile-boot.ts IS the real seam -- pre-mount admission already happens in composeProfile, and 'digest' and 'integrity' appear ZERO times in that file, so must[2] has a genuine empty subject rather than a name collision. Contrast the three collisions found in P4-06 and P4-07, where the vocabulary was absent because the file was about something else entirely.\n\nTHE CALL SITE IS DELIBERATELY NOT WIRED, and this is the substance of the stage rather than an omission. Nothing in this repository generates a lock, so every existing profile is unlocked, and wiring the gate means choosing what a production boot does with an unlocked profile. 'refuse' is must[2]'s literal reading and breaks every boot; 'warn-and-proceed' breaks nothing and lets must[2] read as enforced while enforcing nothing on every profile in existence. Neither is safe to pick while implementing, so the policy is a REQUIRED PARAMETER with no default -- the repository's own rule that defaulting is an explicit resolve() step, never a hidden ?? default. Filed as BLOCKED-094.\n\nThe admitted outcome carries verified: true|false so a caller cannot mistake an unlocked boot for a checked one whichever policy is chosen -- without it, 'loaded successfully' would mean two different things. And the policy governs ONLY the absent-lock case: a profile that HAS a lock is judged against it whatever the policy says, which one mutation exists specifically to protect, since otherwise warn-and-proceed would become a way to skip verification entirely.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations on src/gate.ts: (1) the policy also short-circuits when a lock EXISTS, so warn-and-proceed skips verification; (2) the verified flag is always true; (3) the absent-lock branch ignores the policy and always proceeds. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 2 and 1 cases respectively. (1) is caught by the case asserting a drifted install is refused even under warn-and-proceed, which exists precisely because that is how a transitional policy would silently become a bypass."
+      }
     }
   ]
 }

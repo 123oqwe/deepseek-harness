@@ -2132,3 +2132,22 @@ P4-07's self-audit reported `i_coverageClosure: PASS`. Two checks had been run �
 **Why binding the coverage entries to the last cell's greening is insufficient.** That repair was proposed first and is worth doing, but it addresses only the *forgotten* case. It cannot catch this one: the entries were not forgotten in the sense of being skipped — a check genuinely ran, and its output was filed under the wrong name. **Mechanizing the pairing prevents an omission; recording the inputs is what makes a misattribution visible.** The two failures need different repairs, which is why both are recorded.
 
 **Precedent:** `sensitivityProof` became a required field for the same reason — a freeze note claiming a mutation table proved nothing until the table's inputs and results were on record.
+
+### BLOCKED-094 — must[2] cannot be wired until someone chooses what an UNLOCKED profile does
+
+**Status: OPEN, needs a maintainer decision. Blocks P1-03's Usage stage from reaching `composeProfile`; does not block the cell.**
+
+P1-03 must[2] reads "a production boot loads only plugins approved in the lock with a matching digest." The gate is built and covered (`gateProductionBoot`), and `apps/cli/src/profile-boot.ts`'s `composeProfile` is its real seam — pre-mount admission already happens there, and `digest`/`integrity` appear **zero** times in that file today, so the clause has a genuine empty subject rather than a name collision.
+
+**What cannot be decided while implementing:** nothing in this repository generates a lock. Every profile that exists is unlocked, so wiring the gate means choosing what a production boot does with a profile that has none:
+
+| Policy | Consequence |
+|---|---|
+| `refuse` | must[2]'s literal reading. **Breaks every existing boot**, since no lock can be produced yet. |
+| `warn-and-proceed` | Nothing breaks. But must[2] then reads as enforced while enforcing nothing, on every profile in existence. |
+
+**Neither is safe to pick while implementing, so neither was picked.** The policy is a required parameter with no default — the repository's own rule that defaulting is an explicit `resolve()` step and never a hidden `?? default`. An admitted boot additionally carries `verified: true | false`, so a caller cannot mistake an unlocked boot for a checked one whichever policy is chosen.
+
+**What the decision needs, and it is a sequencing question rather than a preference:** `warn-and-proceed` is only a transitional answer if lock generation actually lands, and lock generation has no owner. Choosing it without one makes it permanent by default — the shape BLOCKED-092 records, where a deliverable named as someone else's future work quietly becomes nobody's.
+
+**Not blocking the cell.** The gate's own behaviour is complete and mutation-proved in both branches. What is missing is a call site, and adding one without this decision would ship a product-visible boot policy that nobody chose.

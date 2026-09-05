@@ -15,6 +15,7 @@ kind: "package-reference"
 - [Byte-stability is a requirement, not a nicety](#byte-stability-is-a-requirement-not-a-nicety)
 - [Boot fails closed on the whole profile](#boot-fails-closed-on-the-whole-profile)
 - [The transactional install](#the-transactional-install)
+- [An unlocked profile is a deployment decision](#an-unlocked-profile-is-a-deployment-decision)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -43,12 +44,19 @@ Every denial is reported rather than the first, because an operator repairing an
 
 The `observedBase` parameter is what makes concurrent installs safe. Two processes that both read version 3 and both produce a candidate would otherwise each silently replace the other's work, leaving a profile that describes one install while holding the other's plugins. The second commit is refused instead, and its caller regenerates against the lock that actually landed.
 
+## An unlocked profile is a deployment decision
+
+`gateProductionBoot` answers the question that comes before `admitBoot`: what a production boot does with a profile that has **no** lock. That is a required parameter, never a default hidden inside the check, because nothing in this repository generates a lock yet and both answers break something — refusing breaks every existing boot, admitting lets must[2] read as enforced while enforcing nothing.
+
+An admitted boot carries `verified: true` or `false`. A caller must be able to tell a checked boot from an unlocked one; without that flag, "loaded successfully" would mean two different things. The policy governs **only** the absent-lock case: a profile that has a lock is judged against it whatever the policy says, or `warn-and-proceed` would become a way to skip verification entirely.
+
 ## Model Experience
 
 No model-visible surface. The package exports decision functions and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
 
 ## Known Limitations and Deferred Work
 
+- **The unlocked-profile policy has no chosen default, and nothing in the CLI calls this gate yet.** `gateProductionBoot` is complete and covered, but `composeProfile` does not consult it — wiring it requires deciding what a production boot does with the unlocked profiles that are the only kind that exist today. See BLOCKED-094.
 - **Nothing GENERATES a candidate lock.** `planLockCommit` decides whether a candidate may replace the current lock and `writeLockAtomically` puts it on disk, but producing the candidate from a resolved install — reading what pnpm actually wrote and deriving the nine facts — has no implementation here. The Usage stage owns wiring this into `dsh plugin add/update/remove`.
 - **The recorded signature identity is not authenticated**, and cannot be while P1-02's signature root holds no key material. See above.
 - **The atomicity of lock replacement is not proven by this package's tests.** `writeLockAtomically` writes a sibling temp file and renames it over the target, and `rename` within one directory is atomic on POSIX and NTFS — but that is a filesystem property. The tests prove the content lands whole and no scratch file survives; observing a partial write would require a reader racing the writer, and replacing the temp-and-rename with an in-place write reddens none of them.

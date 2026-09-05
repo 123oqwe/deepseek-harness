@@ -10,6 +10,8 @@ export {
   validateLock,
 } from './types.ts'
 export { planLockCommit, serializeLock, writeLockAtomically } from './commit.ts'
+export { gateProductionBoot } from './gate.ts'
+export type { GateDenialReason, GateOutcome, UnlockedProfilePolicy } from './gate.ts'
 export type {
   GrantedCapability,
   LockDefectReason,

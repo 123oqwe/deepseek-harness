@@ -27,6 +27,10 @@
     "./commit": {
       "types": "./lib/types/commit.d.ts",
       "default": "./lib/types/commit.js"
+    },
+    "./gate": {
+      "types": "./lib/types/gate.d.ts",
+      "default": "./lib/types/gate.js"
     }
   },
   "files": [
