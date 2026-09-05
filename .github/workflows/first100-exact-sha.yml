@@ -60,42 +60,32 @@ jobs:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache: pnpm
 
+      - name: Install (immutable)
+        run: pnpm install --frozen-lockfile
+
       - name: Install a sandbox backend (bubblewrap)
-        # BLOCKED-112. Without one, `dsh-sandbox-local` refuses to run a
-        # confined command rather than silently dropping confinement — which is
-        # the right product behaviour and makes every sandboxed-bash scenario
-        # produce an error where the fixture recorded output. The choice was
-        # between giving CI the capability and letting those scenarios skip
-        # here; skipping would mean the sandboxed path is never exercised
-        # anywhere, and it is the path that decides whether a model's command
-        # runs confined.
+        # Ordered after `Install (immutable)`: the probe runs through tsx from
+        # node_modules, so placing it earlier would fail on a missing dependency
+        # and report that as a sandbox-capability failure.
+        # BLOCKED-112. Without one, `dsh-sandbox-local` refuses to run a confined
+        # command rather than silently dropping confinement — the right product
+        # behaviour, which makes every sandboxed-bash scenario produce an error
+        # where the fixture recorded output. Letting those scenarios skip instead
+        # would leave the path that decides whether a model's command runs
+        # confined untested everywhere. Decision A2 already lists this capability.
         #
-        # Decision A2 already lists this among the CI capabilities to land, so
-        # this is that item rather than a new one.
+        # The AppArmor sysctl is here because the runner ASKED for it: the probe
+        # reported `bwrap: setting up uid map: Permission denied`, which is
+        # Ubuntu 24.04 restricting unprivileged user namespaces. It is not
+        # written from memory of that restriction — an earlier guess at the cause
+        # (a network namespace) was wrong, and only the probe's own message
+        # distinguished them.
         run: |
           sudo apt-get update
           sudo apt-get install -y bubblewrap
-          bwrap --version
-          # A positive control, not a version check. `bwrap --version` proves the
-          # binary is on PATH and nothing else; Ubuntu's AppArmor restriction on
-          # unprivileged user namespaces can leave an installed bwrap unable to
-          # actually confine anything, which is precisely the state that made
-          # dsh-sandbox-local refuse in the first place. Running a real confined
-          # command is the only check that distinguishes them.
-          # The control runs the profile the product actually uses
-          # (`bwrapProfileArgs` in packages/sandbox/sandbox-local/src/profiles.ts),
-          # not a stricter one invented here. The first attempt used
-          # `--unshare-all` and failed with
-          # `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted` —
-          # a network-namespace capability dsh never asks for. A control
-          # stricter than the subject reports a capability gap that does not
-          # exist, which is the same error as a control weaker than the subject,
-          # in the opposite direction.
-          bwrap --ro-bind / / --dev /dev --unshare-pid --proc /proc --die-with-parent true
-          echo "bubblewrap can confine a command with the profile dsh-sandbox-local uses"
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          pnpm exec tsx scripts/probe-sandbox-backend.ts
 
-      - name: Install (immutable)
-        run: pnpm install --frozen-lockfile
 
       - name: Typecheck
         run: pnpm run typecheck
