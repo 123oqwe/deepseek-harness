@@ -192,18 +192,67 @@ if (target !== undefined) {
 }
 
 const ready = []
+const inFlight = []
+const blockedByPredecessor = []
+const blockedByOverlap = []
+const awaitingAcceptance = []
 for (const epic of registryRows) {
   const row = ledgerRows[epic.id]
   if (row === undefined) fail(`epic ${epic.id} has no ledger row`)
-  if (row.status === 'ACCEPTED' || isInFlight(row, epic.id, stagesById)) continue
+  if (row.status === 'ACCEPTED') continue
+  if (isInFlight(row, epic.id, stagesById)) {
+    inFlight.push(epic.id)
+    continue
+  }
   // An epic whose every applicable cell is GREEN has no work left to start; it
   // is waiting on acceptance, not on capacity. It stops being in flight so it
   // releases its file locks, but listing it as startable would send someone to
   // an epic with nothing to do.
-  if (hasStarted(row)) continue
-  if (decide(epic.id).ready) ready.push(epic.id)
+  if (hasStarted(row)) {
+    awaitingAcceptance.push(epic.id)
+    continue
+  }
+  const verdict = decide(epic.id)
+  if (verdict.ready) {
+    ready.push(epic.id)
+    continue
+  }
+  // Which condition failed, so a zero count can be read without opening the
+  // ledger. An epic failing both is counted under predecessors: an unmet
+  // predecessor cannot be worked around, while a file overlap clears on its
+  // own as the other epic finishes.
+  const target = verdict.reasons.some(reason => reason.startsWith('predecessor '))
+    ? blockedByPredecessor
+    : blockedByOverlap
+  target.push(epic.id)
 }
 
 console.log(`${ready.length} epic(s) ready to start:`)
 for (const id of ready) console.log(`  ${id}  (wave ${byId.get(id).wave})`)
+// Facts only, never an interpretation. `0 epic(s) ready to start` was the sole
+// symptom of BLOCKED-087, a defect that froze the admission gate, and it is
+// byte-identical to the output of a program where every epic is legitimately
+// busy. The line could not distinguish its own two meanings, so the counts
+// that separate them are printed beside it. Whether a given state is expected
+// is the reader's judgment and is deliberately not stated here.
+console.log(`  in flight: ${inFlight.length}${inFlight.length > 0 ? ` — ${inFlight.join(' ')}` : ''}`)
+console.log(`  blocked by predecessors: ${blockedByPredecessor.length}${blockedByPredecessor.length > 0 ? ` — ${blockedByPredecessor.join(' ')}` : ''}`)
+console.log(`  blocked by file overlap: ${blockedByOverlap.length}${blockedByOverlap.length > 0 ? ` — ${blockedByOverlap.join(' ')}` : ''}`)
+console.log(`  awaiting acceptance: ${awaitingAcceptance.length}${awaitingAcceptance.length > 0 ? ` — ${awaitingAcceptance.join(' ')}` : ''}`)
+// The five buckets partition every non-ACCEPTED epic. Printing the total lets
+// a reader confirm that: counts that fail to reconcile mean this listing is
+// hiding a state, which is the failure mode the whole block exists to prevent.
+//
+// This guard has NO reachable failure while the buckets above are correct, so
+// no test can drive it directly and none claims to. Its coverage is indirect:
+// deleting any bucket's push makes the totals disagree and reddens the cases
+// that assert them. It is here for the next edit that adds a sixth state and
+// forgets to print it — the same omission that made BLOCKED-087 invisible.
+const accounted = ready.length + inFlight.length + blockedByPredecessor.length
+  + blockedByOverlap.length + awaitingAcceptance.length
+const outstanding = Object.values(ledgerRows).filter(row => row.status !== 'ACCEPTED').length
+if (accounted !== outstanding) {
+  fail(`listing accounts for ${accounted} epic(s) but ${outstanding} are not ACCEPTED — a state is unaccounted for`)
+}
+console.log(`  (${accounted} of ${outstanding} non-ACCEPTED epics accounted for)`)
 process.exit(0)

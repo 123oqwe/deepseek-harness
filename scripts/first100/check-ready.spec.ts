@@ -63,6 +63,18 @@ const accepted = { status: 'ACCEPTED', cells: {} }
 const notStarted = { status: 'NOT_RUN', cells: { C: { status: 'NOT_RUN' } } }
 const inFlight = { status: 'NOT_RUN', cells: { C: { status: 'GREEN' }, P: { status: 'NOT_RUN' } } }
 
+/**
+ * The listing's ready section only — every line before the diagnostic counts.
+ *
+ * The assertions below mean "this epic is not startable", and checking the
+ * whole output for its id stopped expressing that once the listing began
+ * naming blocked epics too. Scoping to the ready section keeps the assertion
+ * about startability rather than about mentions.
+ */
+function readySection(output: string): string {
+  return output.split('\n  in flight:')[0] ?? output
+}
+
 describe('first100 readiness gate', () => {
   it('admits an epic whose predecessors are all ACCEPTED and whose files no in-flight epic touches', () => {
     const root = fixture(
@@ -217,6 +229,73 @@ describe('first100 readiness gate', () => {
     expect(output).toContain('no "rows"')
   })
 
+  it('separates a zero count into its causes, so the listing can be read without the ledger', () => {
+    const root = fixture(
+      [
+        { id: 'A', wave: 1, predecessors: [], files: ['a.ts'], stages: {} },
+        { id: 'X', wave: 2, predecessors: ['A'], files: ['shared.ts'], stages: {} },
+        { id: 'BLOCKED_FILE', wave: 2, predecessors: ['A'], files: ['shared.ts'], stages: {} },
+        { id: 'BLOCKED_DEP', wave: 3, predecessors: ['X'], files: ['d.ts'], stages: {} },
+      ],
+      { A: accepted, X: inFlight, BLOCKED_FILE: notStarted, BLOCKED_DEP: notStarted },
+    )
+    const { code, output } = run(root)
+
+    // The point of the block: '0 ready' now carries WHY. This exact string was
+    // the sole symptom of BLOCKED-087 and was indistinguishable from a program
+    // where everything is legitimately busy.
+    expect(code).toBe(0)
+    expect(output).toContain('0 epic(s) ready to start')
+    expect(output).toContain('in flight: 1 — X')
+    expect(output).toContain('blocked by predecessors: 1 — BLOCKED_DEP')
+    expect(output).toContain('blocked by file overlap: 1 — BLOCKED_FILE')
+  })
+
+  it('counts an epic blocked by BOTH conditions under predecessors, not twice', () => {
+    const root = fixture(
+      [
+        { id: 'A', wave: 1, predecessors: [], files: ['a.ts'], stages: {} },
+        { id: 'X', wave: 2, predecessors: ['A'], files: ['shared.ts'], stages: {} },
+        { id: 'BOTH', wave: 3, predecessors: ['X'], files: ['shared.ts'], stages: {} },
+      ],
+      { A: accepted, X: inFlight, BOTH: notStarted },
+    )
+    const { code, output } = run(root)
+
+    expect(code).toBe(0)
+    expect(output).toContain('blocked by predecessors: 1 — BOTH')
+    expect(output).toContain('blocked by file overlap: 0')
+    expect(output).toContain('(2 of 2 non-ACCEPTED epics accounted for)')
+  })
+
+  it('reports a finished-but-unaccepted epic under awaiting acceptance, so the counts reconcile', () => {
+    const root = fixture(
+      [
+        {
+          id: 'DONE',
+          wave: 1,
+          predecessors: [],
+          files: ['d.ts'],
+          // All four stages declared, three N/A -- the shape every one of the
+          // 101 registry epics actually has. An ABSENT stage counts as
+          // applicable and so can never be green, which keeps the epic in
+          // flight: unreachable with real data, and fail-closed if it ever is.
+          stages: { C: { nOf: null }, P: { nOf: 'N/A' }, U: { nOf: 'N/A' }, F: { nOf: 'N/A' } },
+        },
+        { id: 'FRESH', wave: 2, predecessors: [], files: ['f.ts'], stages: {} },
+      ],
+      { DONE: { ...notStarted, cells: { C: { status: 'GREEN' } } }, FRESH: notStarted },
+    )
+    const { code, output } = run(root)
+
+    // DONE is neither startable nor in flight. Without a bucket of its own it
+    // would vanish from the listing, and the totals would silently disagree --
+    // which is the failure the reconciliation line exists to catch.
+    expect(code).toBe(0)
+    expect(output).toContain('awaiting acceptance: 1 — DONE')
+    expect(output).toContain('(2 of 2 non-ACCEPTED epics accounted for)')
+  })
+
   it('lists only the epics that pass both conditions when given no epic id', () => {
     const root = fixture(
       [
@@ -232,8 +311,8 @@ describe('first100 readiness gate', () => {
     expect(code).toBe(0)
     expect(output).toContain('1 epic(s) ready')
     expect(output).toContain('READY')
-    expect(output).not.toContain('BLOCKED_FILE')
-    expect(output).not.toContain('BLOCKED_DEP')
+    expect(readySection(output)).not.toContain('BLOCKED_FILE')
+    expect(readySection(output)).not.toContain('BLOCKED_DEP')
   })
 
   it('names every shared path when two in-flight epics overlap, however many there are', () => {
@@ -259,7 +338,7 @@ describe('first100 readiness gate', () => {
     expect(output).toContain('a.ts')
     expect(output).toContain('c.ts')
     // `b.ts` belongs to X alone, so naming it would be over-reporting.
-    expect(output).not.toContain('b.ts')
+    expect(readySection(output)).not.toContain('b.ts')
   })
 
   it('smoke: runs against the live registry and ledger without crashing, and refuses an epic it cannot admit', () => {
@@ -331,6 +410,6 @@ describe('first100 readiness gate: a finished epic releases its file locks (BLOC
     )
     const { output } = run(root)
     expect(output).toContain('FRESH')
-    expect(output).not.toContain('DONE')
+    expect(readySection(output)).not.toContain('DONE')
   })
 })
