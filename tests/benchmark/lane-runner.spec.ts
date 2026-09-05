@@ -22,7 +22,6 @@ import {
   STANDARD_METRICS,
   invariantsHeld,
   scoreLane,
-  wilsonInterval,
 } from '../../benchmarks/harness-capability/report.ts'
 import { readManifest, runLanes, seededRandom, trialSeed } from '../../benchmarks/harness-capability/runner.ts'
 import type { Scenario } from '../../benchmarks/harness-capability/runner.ts'
