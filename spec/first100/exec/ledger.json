@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T05:32:53.059Z",
-  "inputDigest": "100c22f0ed222ba326adeaa55627b02acc7f270764c1b6f93caf5134e2c62871",
+  "lastUpdatedUtc": "2026-09-05T05:45:26.210Z",
+  "inputDigest": "389c9f11ca9e72fcfec840568fcb8e8199fab8cad921eed555284b80de2493cd",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5165,7 +5165,36 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "d6fe7ef9cd323f67542d97f8b5c279bf973898b9",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33947070508",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-d6fe/first100-evidence-d6fe7ef9cd323f67542d97f8b5c279bf973898b9/vitest-report.json",
+          "observationSha256": "4f15fd620743312df1d89e293b9688ad6c9faa8d101257e68d57e4f0927b3c7f",
+          "expectCasesMatched": [
+            "contract: a new client against an old server agrees on the highest version both support",
+            "contract: an old client against a new server reaches the same version as the reverse pairing",
+            "contract: the highest mutually supported version wins, not the lowest",
+            "contract: non-overlapping ranges refuse with a machine-readable reason and BOTH ranges, so no field silently vanishes",
+            "contract: adjacent-but-disjoint ranges refuse rather than meeting in the middle",
+            "contract: ranges touching at exactly one version agree on it",
+            "contract: an inverted range is refused rather than normalised, since it describes no version the peer claimed",
+            "control: a well-formed range is accepted, so the refusal above measures the inversion",
+            "contract: a mandatory capability this build has never heard of refuses, naming the capability",
+            "contract: a mandatory capability this build knows but does not implement refuses with a DIFFERENT reason",
+            "contract: an unknown OPTIONAL capability is ignored rather than refused, which is the point of the split",
+            "contract: ignored optional capabilities are RECORDED, not dropped, so a peer can see what was not used",
+            "contract: negotiation fails fast on the first mandatory failure rather than collecting them",
+            "control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag",
+            "contract: an empty declaration set is accepted, so a peer declaring nothing is not treated as declaring something impossible",
+            "contract: the same surface fingerprints identically across calls",
+            "contract: declaration order does not move the fingerprint, since order is not wire-visible",
+            "contract: a version bump on one method moves the fingerprint",
+            "contract: adding a method moves the fingerprint, so a new wire surface cannot ship unnoticed",
+            "contract: removing a resource type moves the fingerprint",
+            "contract: a method and an event with the same name are distinguished, so the two kinds cannot collide",
+            "contract: names containing the field separator cannot forge another surface, because fields are length-prefixed"
+          ],
+          "capturedAtUtc": "2026-09-05T05:45:26.208Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -5178,7 +5207,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "d6fe7ef9cd323f67542d97f8b5c279bf973898b9",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
