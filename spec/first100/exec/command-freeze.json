@@ -6589,6 +6589,41 @@
         "mutationDescription": "Three targeted mutations of agent.ts, each restored byte-identical: (M1) the loop stops consulting admitTurn; (M2) the budget/exceeded append is skipped, so the run stops silently; (M3) turnsCompleted increments on entry instead of at completion.",
         "failureSummary": "Reddened 2, 1 and 2 of 60. M1 and M3 redden two each -- the enforcement case and the zero-means-unlimited case -- because both depend on the count meaning turns COMPLETED. M2 reddens only the logging case, which is the one written for must[1]'s 'never silently truncate': a silent stop is otherwise indistinguishable from a run that simply had nothing left to do."
       }
+    },
+    {
+      "epic": "P9-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/budget.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-07 Usage — the configured-agent row carries a budget must[2]: a budget written on a cordis.yml agent row survives config validation",
+        "P9-07 Usage — the configured-agent row carries a budget must[3]: an explicit zero survives too, so \"unlimited\" can be stated in a profile",
+        "P9-07 Usage — the configured-agent row carries a budget a row with no budget stays absent rather than acquiring a default that would bound existing runs",
+        "P9-07 Usage — the configured-agent row carries a budget a negative maxTurns is refused at load, not carried into a loop that can never admit a turn",
+        "P9-07 Usage — the configured-agent row carries a budget a fractional maxTurns is refused: turns are counted, and rounding is a choice nobody stated",
+        "P9-07 Usage — the configured-agent row carries a budget a negative maxSpendUsd is refused, while a fractional one is money and stays legal",
+        "P9-07 Usage — the configured-agent row carries a budget the checked row is the one with no exact identity too, which the identity loop skips early"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/index.ts",
+        "packages/core/agent-loop/tests/budget.spec.ts",
+        "packages/core/agent-loop/README.md",
+        "packages/core/agent-loop/README.zh.md",
+        "packages/core/agent-loop/README.i18n.yaml"
+      ],
+      "frozenAtUtc": "2026-09-05T19:45:00.000Z",
+      "dryRunProof": {
+        "treeSha": "bdc6a695bf31ba235ae6f4c26a65234606dc612b",
+        "testsDiscovered": 7
+      },
+      "note": "U (Usage) for P9-07 must[2]: the profile-override half of \"conservative default, profile-overridable\". Recorded AFTER the tests were written rather than before them, which is out of the usual SPEC-FREEZE -> RED order; the reason it could not be frozen first is that the freeze would have pinned a hypothesis that observation disproved. The predicted defect was that schemastery drops a key the Config schema does not declare, so a cordis.yml budget would never reach the agent. It does reach it: undeclared keys pass through untouched. The real gap is the opposite one — the value arrives entirely UNCHECKED, so a negative or fractional ceiling reaches the loop just as far. expectCases below are the observed titles, and the three admission cases pass against the pre-change tree as well; only the four rejection cases were RED."
     }
   ]
 }

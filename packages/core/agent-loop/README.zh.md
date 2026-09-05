@@ -50,6 +50,8 @@ kind: "package-reference"
 | `agents[].provider` / `agents[].model` | — | 模型路由；分发前两者都必须存在 |
 | `agents[].reasoningEffort` | — | 非空的初始推理等级；`agent/request` 可以覆盖它 |
 | `agents[].maxTokens` | — | 正数的逐请求输出 token 上限 |
+| `agents[].budget.maxTurns` | — | 循环在拒绝下一轮之前可以执行的轮次数；`0` 或缺省表示不限 |
+| `agents[].budget.maxSpendUsd` | — | 本次运行在拒绝下一轮之前可以花费的美元数；`0` 或缺省表示不限 |
 | `agents[].cwd` | — | 全新会话的工作目录 |
 | `agents[].sessionId` | — | 确切身份：首次使用创建，重新挂载时恢复已实体化的历史 |
 | `agents[].resumeSessionId` | — | 加载这个持久化会话而不是创建新会话；与 `sessionId` 互斥 |
@@ -186,7 +188,8 @@ const handle = await ctx.agents.create({
 - **分类是一元的**：安全性取决于比较同级调用或资源的调用必须保持独占（[原理](../../../.agents/notes/implemented/feature/2026-07-10-parallel-tool-call-execution.zh.md)）。
 - **配置标签默认对应新会话**：省略 `sessionId` 时，每次启动都会创建新的 `${id}-session-<uuid>`；如需确切的恢复或创建行为，必须显式提供稳定的 `sessionId`，而 `resumeSessionId` 要求已有持久化历史。
 - **配置 agent 没有逐 agent persona 字段或 setup 钩子**：它们使用部署 persona；只有编程式 `ctx.agents.create()` / `resume()` 工厂选项支持带作用域的 persona 与工具组合。
-- **没有内置轮次预算**：工具调用或 steering 会让当前轮次继续；限制失控轮次的策略必须从既有生命周期扩展点（如 `agent/turn-stopping`）执行取消。
+- **预算限制的是轮次，不是一轮内部做了什么**：`agents[].budget` 在每个轮次边界处检查，因此工具调用或 steering 会让已经开始的那一轮继续；必须在轮次中途停止工作的策略要从生命周期扩展点（如 `agent/turn-stopping`）执行取消。
+- **花费上限的精度取决于它下面的计量**：`budget.maxSpendUsd` 与 `dsh-token-meter` 的记账比较，而后者按四字符一 token 估算；估算器被替换后该上限即变精确，且它的含义不会因此改变。
 
 <a id="dev-note"></a>
 ### 开发备注

@@ -7,6 +7,26 @@
  */
 import { describe, expect, it } from 'vitest'
 
+import { Context } from '@deepseek-ai/cordis'
+import LlmRuntime from '@deepseek-ai/dsh-llm'
+import SessionStore from '@deepseek-ai/dsh-session'
+import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import ToolRuntime from '@deepseek-ai/dsh-tools'
+import AgentRegistry from '@deepseek-ai/dsh-agent'
+import AgentLoop from '@deepseek-ai/dsh-agent-loop'
+
+/** The smallest context an agent-loop plugin can load in. */
+async function makeCoreContext(): Promise<Context> {
+  const ctx = new Context()
+  await ctx.plugin(LlmRuntime)
+  await ctx.plugin(SessionStore)
+  await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(SystemPrompt)
+  await ctx.plugin(ToolRuntime)
+  await ctx.plugin(AgentRegistry)
+  return ctx
+}
 import { decideTurnAdmission, isBudgetEnforced } from '../src/budget.ts'
 
 const FRESH = { turnsUsed: 0, spentUsd: 0 }
@@ -102,5 +122,72 @@ describe('isBudgetEnforced', () => {
   it('either limit alone counts as enforced', () => {
     expect(isBudgetEnforced({ maxTurns: 3 })).toBe(true)
     expect(isBudgetEnforced({ maxSpendUsd: 0.5 })).toBe(true)
+  })
+})
+
+/**
+ * P9-07 Usage — a budget written in `cordis.yml` reaches the agent.
+ *
+ * must[2] asks for a conservative default that a profile can override, and the
+ * override half is the half that can silently not exist: `AgentOptions.budget`
+ * is typed, and the configured-agent row spreads its extra fields straight into
+ * the options it constructs an agent with, so the TypeScript path looks whole.
+ * Schemastery is what actually decides which keys survive a `cordis.yml` row,
+ * and a key it does not declare is dropped without complaint — the run then
+ * proceeds unbounded while its configuration says otherwise. These cases pin
+ * the schema, because the schema is the only place the answer is decided.
+ */
+describe('P9-07 Usage — the configured-agent row carries a budget', () => {
+  it('must[2]: a budget written on a cordis.yml agent row survives config validation', () => {
+    const config = AgentLoop.Config({
+      agents: [{ id: 'bounded', model: 'deepseek-chat', budget: { maxTurns: 3, maxSpendUsd: 0.25 } }],
+    })
+    expect(config.agents[0]?.budget).toStrictEqual({ maxTurns: 3, maxSpendUsd: 0.25 })
+  })
+
+  it('must[3]: an explicit zero survives too, so "unlimited" can be stated in a profile', () => {
+    const config = AgentLoop.Config({ agents: [{ id: 'unbounded', budget: { maxTurns: 0 } }] })
+    expect(config.agents[0]?.budget).toStrictEqual({ maxTurns: 0 })
+  })
+
+  it('a row with no budget stays absent rather than acquiring a default that would bound existing runs', () => {
+    const config = AgentLoop.Config({ agents: [{ id: 'plain' }] })
+    expect(config.agents[0]?.budget).toBeUndefined()
+  })
+
+  it('a negative maxTurns is refused at load, not carried into a loop that can never admit a turn', async () => {
+    const ctx = await makeCoreContext()
+    await expect(ctx.plugin(AgentLoop, { agents: [{ id: 'bad', model: 'mock', budget: { maxTurns: -1 } }] }))
+      .rejects.toThrow('agent "bad": budget.maxTurns must be a non-negative safe integer (0 means unlimited)')
+    await ctx.fiber.dispose()
+  })
+
+  it('a fractional maxTurns is refused: turns are counted, and rounding is a choice nobody stated', async () => {
+    const ctx = await makeCoreContext()
+    await expect(ctx.plugin(AgentLoop, { agents: [{ id: 'bad', model: 'mock', budget: { maxTurns: 1.5 } }] }))
+      .rejects.toThrow('budget.maxTurns must be a non-negative safe integer')
+    await ctx.fiber.dispose()
+  })
+
+  it('a negative maxSpendUsd is refused, while a fractional one is money and stays legal', async () => {
+    const rejecting = await makeCoreContext()
+    await expect(rejecting.plugin(AgentLoop, {
+      agents: [{ id: 'bad', model: 'mock', budget: { maxSpendUsd: -0.01 } }],
+    })).rejects.toThrow('budget.maxSpendUsd must be a non-negative finite number')
+    await rejecting.fiber.dispose()
+
+    const accepting = await makeCoreContext()
+    await accepting.plugin(AgentLoop, {
+      agents: [{ id: 'ok', model: 'mock', budget: { maxSpendUsd: 0.01 } }],
+    })
+    await accepting.fiber.dispose()
+  })
+
+  it('the checked row is the one with no exact identity too, which the identity loop skips early', async () => {
+    const ctx = await makeCoreContext()
+    await expect(ctx.plugin(AgentLoop, {
+      agents: [{ id: 'anonymous', model: 'mock', budget: { maxTurns: Number.NaN } }],
+    })).rejects.toThrow('agent "anonymous": budget.maxTurns must be a non-negative safe integer')
+    await ctx.fiber.dispose()
   })
 })

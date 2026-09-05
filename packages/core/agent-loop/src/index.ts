@@ -194,12 +194,40 @@ function resolveMaxParallelToolCalls(value: number | undefined): number {
   return maxParallelToolCalls
 }
 
+/**
+ * Reject a budget a run could never satisfy (Epic P9-07 must[2]).
+ *
+ * `AgentOptions.budget` is typed, and a configured row spreads its extra fields
+ * straight into the options it creates an agent with, so the values arrive
+ * whether or not anything checks them — schemastery carries an undeclared key
+ * through untouched. Declaring it in the schema instead would materialize an
+ * empty `budget: {}` on every row that never asked for one, which is the field
+ * being absent stated as if it were present, so the check lives here.
+ *
+ * `0` is legal in both fields and means unlimited (`./budget.ts`); a negative
+ * limit is not the same thing, because it can never be reached from a usage of
+ * zero and would stop a run before its first turn.
+ * @param label - what to name in the failure: which row, or which agent.
+ * @param budget - the configured ceilings.
+ */
+function assertBudget(label: string, budget: AgentOptions['budget']): void {
+  if (budget === undefined) return
+  const { maxTurns, maxSpendUsd } = budget
+  if (maxTurns !== undefined && (!Number.isSafeInteger(maxTurns) || maxTurns < 0)) {
+    throw new TypeError(`${label}: budget.maxTurns must be a non-negative safe integer (0 means unlimited)`)
+  }
+  if (maxSpendUsd !== undefined && (!Number.isFinite(maxSpendUsd) || maxSpendUsd < 0)) {
+    throw new TypeError(`${label}: budget.maxSpendUsd must be a non-negative finite number (0 means unlimited)`)
+  }
+}
+
 /** Reject an output-token cap that cannot be represented exactly on the request wire. */
 function assertAgentOptions(options: AgentOptions): void {
   if (options.maxTokens !== undefined
     && (!Number.isSafeInteger(options.maxTokens) || options.maxTokens <= 0)) {
     throw new TypeError('agent maxTokens must be a positive safe integer')
   }
+  assertBudget('agent', options.budget)
 }
 
 /** Prepared-but-unpublished agent resources sharing one memoized teardown. */
@@ -333,11 +361,14 @@ type ResolvedConfig = Config & { maxParallelToolCalls: number }
 /** Reject self-contained identity conflicts before any configured agent starts. */
 function validateConfiguredAgents(agents: Config['agents']): void {
   const exactIdentities = new Map<SessionId, string>()
-  for (const { id, sessionId, resumeSessionId } of agents) {
+  for (const { id, sessionId, resumeSessionId, budget } of agents) {
     const hasResumeId = resumeSessionId !== undefined && resumeSessionId !== ''
     if (sessionId !== undefined && hasResumeId) {
       throw new Error(`agent "${id}": sessionId and resumeSessionId are mutually exclusive`)
     }
+    // Before the identity `continue` below: a budget is checked on every row,
+    // including the ones that configure no exact session identity.
+    assertBudget(`agent "${id}"`, budget)
     const exactIdentity = hasResumeId ? resumeSessionId : sessionId
     if (exactIdentity === undefined) continue
     const firstId = exactIdentities.get(exactIdentity)

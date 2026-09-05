@@ -50,6 +50,8 @@ Agents declared in the config start automatically when the plugin loads. Each en
 | `agents[].provider` / `agents[].model` | — | Model route; both required before dispatch |
 | `agents[].reasoningEffort` | — | Non-empty initial reasoning effort; `agent/request` may override it |
 | `agents[].maxTokens` | — | Positive per-request output-token cap |
+| `agents[].budget.maxTurns` | — | Turns the loop may take before it refuses another; `0` or absent is unlimited |
+| `agents[].budget.maxSpendUsd` | — | USD the run may spend before it refuses another turn; `0` or absent is unlimited |
 | `agents[].cwd` | — | Workspace directory for a fresh session |
 | `agents[].sessionId` | — | Exact identity: first use creates, a remount resumes materialized history |
 | `agents[].resumeSessionId` | — | Load this persisted session instead of creating one; mutually exclusive with `sessionId` |
@@ -186,7 +188,8 @@ These limits define when the loop needs special care. They are current package c
 - **Classification is unary** — calls whose safety depends on comparing siblings or resources must remain exclusive ([rationale](../../../.agents/notes/implemented/feature/2026-07-10-parallel-tool-call-execution.md)).
 - **Config labels are fresh by default** — omitting `sessionId` creates a fresh `${id}-session-<uuid>` on every startup; exact resume-or-create behavior requires an explicit stable `sessionId`, while `resumeSessionId` requires existing persisted history.
 - **Config agents have no per-agent persona field or setup hook** — they use the deployment persona; scoped persona and tool composition are available only through the programmatic `ctx.agents.create()` / `resume()` factory options.
-- **No built-in turn budget** — tool calls or steering continue the current turn; a policy that bounds runaway turns must cancel from an existing lifecycle extension point such as `agent/turn-stopping`.
+- **The budget bounds turns, not what one turn does** — `agents[].budget` is checked at each turn boundary, so tool calls or steering continue the turn already running; a policy that must stop work mid-turn cancels from a lifecycle extension point such as `agent/turn-stopping`.
+- **The spend ceiling is as accurate as the meter under it** — `budget.maxSpendUsd` compares against `dsh-token-meter`'s accounting, which estimates four characters per token; the ceiling becomes exact when that estimator is replaced, and its meaning does not change when it does.
 
 <a id="dev-note"></a>
 ### Dev Note
