@@ -2291,3 +2291,24 @@ P4-09 is titled *Detached、Saved、Versioned 与 Nested Workflow*. Four cells a
 Multi-day each, and the second is a lifecycle change of the kind [`docs/defensive-patterns.md`](../../../docs/defensive-patterns.md) governs.
 
 **Recommendation: suspend rather than wire.** Not because the work is unwelcome, but because its size is not knowable from here and the epic can be honestly parked while other work proceeds. **The clause-attribution branch is not ours**: moving these clauses to another epic edits `registry.json`, which is byte-locked and re-anchorable only with maintainer authorization — the user's touchpoint, not the Supervisor's and not the delegate's.
+
+### BLOCKED-101 — The pre-flight questions have a blind spot: a clause with no declared file is invisible to both
+
+**Status: STANDING RULE. Adds a third pre-flight question, from the P4-09 miss (BLOCKED-100).**
+
+Two pre-flight questions have each earned themselves several times:
+
+1. **Subject existence** — does the symbol this clause names sit on the execution path the clause changes? (Three worked samples: P4-06, P4-07, P4-08.)
+2. **Freeze targets, per stage, C first** — which file does each stage's freeze hang on? (Caught P1-03's unfrozen C stage; produced P4-08.U's and P4-09.U's *package* placement.)
+
+**Both are driven by the registry's declared files.** Question 1 starts from a declared path; question 2 enumerates them per stage. So a clause the registry gives **no file of its own** is invisible to both — and P4-09's `must[2]` (detached) was exactly that. It was never examined, never implemented, never covered, and four cells went green without anything noticing.
+
+`must[3]` was found only by luck: its vacuum sat inside a file already being read for another clause.
+
+> **Third question, asked before any code: take the epic's `must` and `acceptance` clauses ONE AT A TIME and name, for each, the artifact that will make it true. A clause whose answer is "nothing yet" is a finding at that moment — not after four cells are green.**
+
+Cheap, and it fails in the useful direction: the answer is written down for every clause, so a clause with no subject cannot stay unexamined merely because no file pointed at it.
+
+**Why the existing questions could not be stretched to cover this.** They ask whether a *declared thing* is real. This one asks whether a *required thing* is declared at all. The first pair validates what the registry says; the third checks what it fails to say — and no amount of care with the first two reaches it, because a missing declaration produces nothing to inspect.
+
+**A corroborating detail worth keeping:** the epic's own title named both missing clauses (*Detached… 与 Nested Workflow*). Neither party read it. The registry's `title` field is not merely a label — for an epic delivering several capabilities it is the shortest available statement of what completion means.
