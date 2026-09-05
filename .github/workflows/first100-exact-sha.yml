@@ -69,11 +69,23 @@ jobs:
       - name: Full test suite (verbose json reporter — the ledger's observation input)
         run: |
           mkdir -p .artifacts/first100/observations
-          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json
+          pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=default
         # Real exit is captured, not swallowed: a red suite must fail this
         # job (fail-closed), while the JSON report is still uploaded below
         # via `if: always()` so a RED observation is real, inspectable
         # evidence rather than a silently discarded log.
+        #
+        # The `default` reporter is additive and prints to the log only; the
+        # JSON report keeps its format and path, so predicate (iii)'s input is
+        # untouched. It is here because fail-closed was designed and
+        # diagnosability was not: vitest can exit non-zero for reasons that
+        # never reach `assertionResults` — an unhandled rejection, a teardown
+        # throw, a worker crash — and with `json` as the ONLY reporter such a
+        # run leaves no trace in either artifact. Run 33943262728 was exactly
+        # that: `success: true`, 19305 tests, 0 failures, job conclusion
+        # `failure`, and nothing between "JSON report written" and "exit code
+        # 1". The report cannot record what it has no field for, and no
+        # human-readable reporter was attached to print it.
 
       - name: Upload the vitest observation report
         if: always()
