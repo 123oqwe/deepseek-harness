@@ -6102,6 +6102,52 @@
         "mutationDescription": "Five targeted mutations of edit-fallback.ts, each restored byte-identical: (M1) deleted the exact-tier ambiguity return so an ambiguous tier falls through to a looser one; (M2) allowed the indent delta to vary per line; (M3) wrote the replacement verbatim, ignoring indentDelta; (M4) padded blank lines when re-indenting; (M5) scored the nearest region on raw lines instead of ignoring leading/trailing whitespace.",
         "failureSummary": "All five reddened: 2, 1, 2, 1 and 1 of 21. M1 and M3 redden two each because both the locate and the apply side assert them; M2, M4 and M5 redden exactly one, naming the single guard removed. No mutation reddened zero, so no assertion in the suite is decorative."
       }
+    },
+    {
+      "epic": "P9-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/budget.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-07 Contract — hard loop budget must[3]: an ABSENT maxTurns is unlimited, so a long run is never stopped by a field nobody set",
+        "P9-07 Contract — hard loop budget must[3]: a ZERO maxTurns is unlimited too, NOT a run that may take no turns",
+        "P9-07 Contract — hard loop budget must[3]: a ZERO maxSpendUsd is unlimited, on the same rule",
+        "P9-07 Contract — hard loop budget must[0]: the turn BEFORE the limit is admitted",
+        "P9-07 Contract — hard loop budget must[0]: the turn AT the limit is refused, so maxTurns=3 permits exactly three turns",
+        "P9-07 Contract — hard loop budget must[0]: a run already past its limit stays refused rather than wrapping to admitted",
+        "P9-07 Contract — hard loop budget must[0]: spend below the cap is admitted",
+        "P9-07 Contract — hard loop budget must[0]: spend exactly AT the cap is refused, so the cap is a ceiling and not a target",
+        "P9-07 Contract — hard loop budget reports the turn limit when BOTH are exhausted, since that needs no pricing data to act on",
+        "P9-07 Contract — hard loop budget reports the spend cap when only spend is exhausted, even with a turn limit configured",
+        "P9-07 Contract — hard loop budget carries the limit and the observation, so a refusal is actionable without re-reading config",
+        "P9-07 Contract — hard loop budget admits a fresh run under any configured budget",
+        "P9-07 Contract — hard loop budget must[3]: a maxTurns of 1 permits exactly one turn, the smallest budget that bounds anything",
+        "isBudgetEnforced an empty budget enforces nothing",
+        "isBudgetEnforced zeros enforce nothing, matching the admission rule rather than restating it differently",
+        "isBudgetEnforced either limit alone counts as enforced"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/budget.ts",
+        "packages/core/agent-loop/tests/budget.spec.ts",
+        "packages/core/agent-loop/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T01:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "a81cdcbeea64c712e634492f2cafd6fcdb4cce6f",
+        "testsDiscovered": 16
+      },
+      "note": "C (Contract) for P9-07, under decision C3's early-start clearance. Scope is deliberately the pure decision only: must[1] requires a typed `budget-exceeded` session event, and a new SessionEventMap member reaches both SDKs' expected outputs and the recorded snapshots, so wiring it into ReactLoopAgent is Usage-stage work and `agent.ts` is untouched here. The rule most likely to be reimplemented wrongly is must[3]: a limit of 0 means UNLIMITED, not a run permitted no turns, so every limit is pinned from both sides -- the value that still admits and the first that refuses. Admission is decided BEFORE a turn rather than after it, which is what makes must[1] satisfiable at all: a refused run has completed every turn it started, so its state is a whole number of turns and a later --resume continues from a boundary instead of from the middle of one. Turns are checked before spend so a run at both limits reports the reason a caller can act on without pricing data. Cases frozen by fullName per BLOCKED-104.",
+      "sensitivityProof": {
+        "mutationDescription": "Five targeted mutations of budget.ts, each restored byte-identical: (M1) treated 0 as a real limit rather than unlimited -- the exact must[3] mistake; (M2) turn boundary >= loosened to >; (M3) spend boundary >= loosened to >; (M4) spend checked before turns, changing which reason a doubly-exhausted run reports; (M5) isBudgetEnforced rewritten as an undefined-check, so it disagrees with the admission rule about 0.",
+        "failureSummary": "All five reddened: 3, 3, 2, 1 and 1 of 16. M1 and M2 redden three each because the zero-means-unlimited rule and the turn boundary are each pinned from both sides plus a composite case. M4 and M5 redden exactly one, naming the single ordering or consistency guard removed. No mutation reddened zero."
+      }
     }
   ]
 }
