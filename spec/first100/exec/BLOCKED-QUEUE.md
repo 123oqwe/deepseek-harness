@@ -1140,6 +1140,23 @@ Members found so far, each of which produced a real CI failure or a silent exemp
 
   **Cost measured, not estimated:** `verify-cordis-catalog` alone runs **34.56s / 88.13s** on two consecutive runs of the same clean tree — a full AST walk over 99 artifacts, contending for CPU with whatever else runs. The whole `doc-sync` suite runs **121.47s real / 402.59s user**, so it is parallel, not serial: bundling the ~9 repo-wide single-point artifacts costs the same order as the single slowest gate already does, not the sum of them. That retires the objection that class-wide coverage would make pushing minutes slower — `typecheck` is already on `pre-push` at 20–88s, and 121s is the same order. **The estimate this replaces was wrong in the direction that would have blocked the better fix**, which is why the number was owed before any proposal.
 
+**The subpath member has TWO OPPOSITE DIRECTIONS, and they hide for different lengths of time.** Both are the same disagreement — a package's declared public face does not match what it actually emits — but they fail in mirror image:
+
+| Direction | Shape | When it surfaces |
+|---|---|---|
+| **missing declaration** (four occurrences) | a subpath is imported but no alias or export declares it | immediately, at the first import — `ERR_MODULE_NOT_FOUND` |
+| **dangling declaration** (`./canonicalize`, 2026-09-05) | an export is declared, pointing at a file the build never produces | only when something traverses *all* declared exports |
+
+The second latches far longer. `@deepseek-ai/dsh-action-manifest` declared `./canonicalize` → `./lib/canonicalize.js` from its Contract stage onward while the build emitted only `lib/index.js` and `lib/types/**`. **Nothing in the repository imports that subpath** — only the module's own `@module` JSDoc names it — so no import could ever fail. It surfaced when P2-03.U made `agent-loop` and `core/tools` depend on the package, pulling it into the webworker packer's traversal, which resolves every *declared* export whether or not anyone imports it. Fixed to `./lib/types/canonicalize.js`, which exists and matches `core/session`'s `./types`.
+
+**A third causal relation, distinct from the two this queue already separates.** [BLOCKED-072](#blocked-072) records mistaking coincidence for cause. Regression is the ordinary case. This is neither:
+
+- **coincidence** — both true, neither causes the other (the recursion defect beside the ptc timeout)
+- **introduction** — A causes B (an ordinary regression)
+- **reachability** — B already existed; A made it reachable for the first time
+
+Reachability changes *ownership*: a dangling export belongs to the package that declared it, not to the first consumer that walks into it. **But the claim needs evidence, or it becomes a way to disown anything.** The required evidence is that B existed and was untouched before A — here, that no code anywhere imports the subpath, so the declaration was genuinely unreachable while nothing depended on the package. **"My change is somewhere else" is not that evidence.** Without it, "I only made it reachable" and "I broke it" are indistinguishable from outside.
+
 **The family has three VISIBILITY TIERS, not three instances, and the tier decides what can possibly catch it.** Every member is "a change inside the declared scope whose consequence lands on repo-wide state outside it." What separates them is whether that consequence produces a symptom anyone can look for:
 
 | Tier | Example | Symptom | What can catch it |
