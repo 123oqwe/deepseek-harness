@@ -11,6 +11,14 @@ English | [中文](README.zh.md)
 
 A mailbox delivers a message to one addressee at most once. `decideDelivery` decides whether a given message may be delivered now, from the addressee and the delivery history the caller supplies.
 
+## Table of Contents
+
+- [Address before dedup](#address-before-dedup)
+- [Identity is (id, epoch)](#identity-is-id-epoch)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
+
 ## Address before dedup
 
 The addressee is resolved BEFORE the duplicate check. Checking dedup first would let a message addressed to nobody be recorded as delivered, and the mistake is then invisible: the sender sees a successful delivery and the intended reader never had an address to receive it at.
@@ -31,3 +39,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **No transport.** Delivery is decided here and performed by the caller; the package neither moves bytes nor persists a queue.
 - **At-most-once, not exactly-once.** A caller that crashes between the decision and its own effect loses the message; recovering that needs the outbox pattern in `dsh-message-bus`, not this.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Epoch comparison assumes a sender's epochs advance monotonically across restarts. A sender that resets its epoch would make a genuinely new message look like a redelivery of an old one; nothing here detects that, and the fix belongs wherever epochs are minted rather than where they are compared.
+
+</details>

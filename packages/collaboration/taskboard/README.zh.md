@@ -7,9 +7,17 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 任务板在竞争下反复回答同一个问题:*这个任务现在归谁?* `src/types.ts` 从调用方提供的状态里做出认领决策;`src/store.ts` 原子地执行它,使两个同时发问的 worker 不可能都被告知"是"。
+
+## 目录
+
+- [只有一个赢家,而计数在输掉时也要留下](#one-winner-and-a-count-that-survives-losing)
+- [环在排程之前被拒绝,而不是在排程之中](#a-cycle-is-refused-before-scheduling-not-during)
+- [Model Experience](#model-experience)
+- [已知限制与延后事项](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 ## 只有一个赢家,而计数在输掉时也要留下
 
@@ -33,3 +41,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **目前还没有任何东西从板上排程。** 这里只有认领决策、原子 store 和图校验;消费它们的 worker 池属于后面的 epic。
 - **回收基于时间且信任时钟。** 过期的认领按调用方提供的截止时间回收;板本身不检测一个活着但卡死的 worker。
+
+### 开发备注
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+本开发备注是给维护者的工作上下文:未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
+
+尝试计数按任务单调递增,而不是按 worker,所以它回答的是「这个任务被争抢得多厉害」而不是「这个 worker 试了几次」。想要后者的重试策略需要一个板目前不保存的按 worker 计数,而加上它会让认领决策对每个调用方有状态。
+
+</details>

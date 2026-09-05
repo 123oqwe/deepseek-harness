@@ -11,6 +11,14 @@ English | [中文](README.zh.md)
 
 A taskboard answers one question repeatedly under contention: *who owns this task right now?* `src/types.ts` decides a claim from caller-supplied state; `src/store.ts` performs it atomically so two workers asking at once cannot both be told yes.
 
+## Table of Contents
+
+- [One winner, and a count that survives losing](#one-winner-and-a-count-that-survives-losing)
+- [A cycle is refused before scheduling, not during](#a-cycle-is-refused-before-scheduling-not-during)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
+
 ## One winner, and a count that survives losing
 
 `decideClaim` increments the attempt count on every claim, won or lost. A count that only advanced on success would report a task as cheap while a dozen workers fought over it, and the retry budget that reads the count would never fire.
@@ -33,3 +41,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **Nothing schedules from a board yet.** These are the claim decision, the atomic store and the graph check; the worker pool that consumes them is a later epic's.
 - **Reclaim is time-based and clock-trusting.** A stale claim is reclaimed on a deadline the caller supplies; the board does not itself detect a worker that is alive but wedged.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+The attempt count is monotonic per task, not per worker, so it answers "how contended is this?" and not "how many times did THIS worker try?". A retry policy that wants the latter needs a per-worker counter the board does not currently keep, and adding one would make the claim decision stateful per caller.
+
+</details>

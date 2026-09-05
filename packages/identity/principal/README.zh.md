@@ -7,9 +7,17 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 一个被每一层共用的身份类型,用来回答*谁在行动、代表谁、在什么委派之下*。`IdentityContext` 携带 principal、它的租户,以及回到根的链;`assertRuntimeTenantPolicy` 强制那条不能交给调用方的规则。
+
+## 目录
+
+- [跨租户请求被拒绝,绝不被放宽](#a-cross-tenant-request-is-refused-never-widened)
+- [链就是身份](#the-chain-is-the-identity)
+- [Model Experience](#model-experience)
+- [已知限制与延后事项](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 ## 跨租户请求被拒绝,绝不被放宽
 
@@ -31,3 +39,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **链被记录,而不被验证。** 这里没有任何东西检查某次委派是否真的被授予过;那属于 capability-token 缝(`dsh-capability-token`),本包信任它收到的链。
 - **租户策略是唯一被强制的规则。** purpose、scope 和 budget 随上下文传递,但由各自的消费者强制,所以单凭身份并不能界定调用方可以做什么。
+
+### 开发备注
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+本开发备注是给维护者的工作上下文:未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
+
+委派深度在这里被携带但不被设限。无限增长的链是资源问题而不是身份问题,所以上限属于创建被委派 agent 的那一方;本包只能在链已经被建好之后才拒绝它。
+
+</details>

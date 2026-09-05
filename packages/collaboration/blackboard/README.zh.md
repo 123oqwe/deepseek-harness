@@ -7,9 +7,17 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 黑板是多个 agent 放置各自发现、供他人在其上继续构建的地方。`admitFact` 决定什么可以被写入;`traceToObservations` 回答一条事实从何而来。
+
+## 目录
+
+- [事实要么是结构化的,要么是一个引用](#a-fact-is-structured-or-it-is-a-reference)
+- [每条事实都追溯到观测](#every-fact-traces-to-observations)
+- [Model Experience](#model-experience)
+- [已知限制与延后事项](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 ## 事实要么是结构化的,要么是一个引用
 
@@ -33,3 +41,14 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 - **没有保留策略。** 事实会累积;这里没有任何东西会让一块板过期、压缩或设限。
 - **信任是一律的。** 任何写入者的事实都按同样的条件被接纳;按写入者区分信任级别需要板目前并不携带的身份。
+
+### 开发备注
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+本开发备注是给维护者的工作上下文:未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
+
+`admitFact` 校验结构而不校验含义:两个 agent 可以写入互相矛盾但格式良好的事实,板会把两条都留着。裁定谁胜出需要一个尚不存在的冲突策略,而在这里发明一个,等于替从未请求仲裁的读者悄悄选了个赢家。
+
+</details>

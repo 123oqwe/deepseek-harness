@@ -76,6 +76,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bubblewrap
           bwrap --version
+          # A positive control, not a version check. `bwrap --version` proves the
+          # binary is on PATH and nothing else; Ubuntu's AppArmor restriction on
+          # unprivileged user namespaces can leave an installed bwrap unable to
+          # actually confine anything, which is precisely the state that made
+          # dsh-sandbox-local refuse in the first place. Running a real confined
+          # command is the only check that distinguishes them.
+          bwrap --ro-bind / / --dev /dev --unshare-all true
+          echo "bubblewrap can confine a command on this runner"
 
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
