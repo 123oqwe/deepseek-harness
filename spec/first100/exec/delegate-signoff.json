@@ -60,6 +60,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-05T03:35:19.947Z",
       "note": "gq-92 independent verify: (iii) 86 frozen titles across C/U/F (P is N/A), each against its own cited observation, strict every-occurrence rule; 0 unmet. (ii) 3 candidate SHAs all ancestors. (i) 3/3 acceptance clauses, 16 references, 0 unresolvable. No lock register row. The composition-root inbound edge this epic's own checker found is adjudicated in layering.md rule 8 (spawn-target: zero imported bindings plus a visible declaration, both decided mechanically) and gated by a paired fixture whose two workspaces are byte-identical except for one import line -- verified here by comparing the fixture files directly rather than by reading the assertions."
+    },
+    {
+      "epic": "P0-08",
+      "rowDigestSha256": "3640abd13eef7169c6b14d376886f3c37426936a5dd60fec045e91da821b9aca",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T04:56:30.880Z",
+      "note": "gq-92 independent verify: (iii) 36 frozen titles across C/U/F (P is N/A per registry), each checked against the observation ITS OWN cell cites, strict every-occurrence rule; 0 unmet. C run 33790217988 (18583/0), U run 33945015221 (19305/0), F run 33942181035 (19288/0) -- all three observations zero-failure, so no flake-registry adjudication is involved. (ii) 3 candidate SHAs all ancestors. (i) 3/3 acceptance clauses, 17 references, 0 unresolvable. No lock register row. U's freeze was created after the implementation but BEFORE the cases had ever executed -- verified independently: freeze commit e0ad64e579 at 23:54:18, first run e789af3098 at 23:56:59, and dryRunProof.treeSha b3cff191 is exactly the tree of e0ad64e579~1, the pre-freeze tree the dry run must have run on. The 17 titles were therefore a prediction, not a transcription."
     }
   ]
 }
