@@ -20,6 +20,7 @@ import {
   isSelfRecursive,
   resolveDefinition,
 } from '../src/index.ts'
+import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import type {
   DefinitionDigest,
   DefinitionName,
@@ -27,7 +28,6 @@ import type {
   RegisteredDefinition,
   RunBudget,
   SignerIdentity,
-  WorkflowRunId,
 } from '../src/types.ts'
 
 const LIMITS: NestingLimits = { maxDepth: 3, maxTotalAgents: 50, maxTotalTokens: 100_000 }

@@ -6469,6 +6469,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface WorkflowRun {\n    readonly id: WorkflowRunId;\n    readonly meta: WorkflowMeta;\n    readonly result: Promise<WorkflowResult>;\n    cancel(reason?: string): void;\n    dispose(): Promise<void>;\n}',
   },
   {
+    name: 'WorkflowRunId',
+    declaration: 'export type WorkflowRunId = Branded<\'WorkflowRunId\'>;',
+  },
+  {
     name: 'WorkflowRunInfo',
     declaration: 'export interface WorkflowRunInfo {\n    id: WorkflowRunId;\n    meta: WorkflowMeta;\n}',
   },

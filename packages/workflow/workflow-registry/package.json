@@ -31,6 +31,10 @@
     "./store": {
       "types": "./lib/types/store.d.ts",
       "default": "./lib/types/store.js"
+    },
+    "./nesting": {
+      "types": "./lib/types/nesting.d.ts",
+      "default": "./lib/types/nesting.js"
     }
   },
   "files": [
@@ -41,10 +45,12 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-workflow": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@deepseek-ai/dsh-workflow": "workspace:^"
   }
 }

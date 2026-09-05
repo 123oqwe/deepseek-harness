@@ -16,6 +16,12 @@
  */
 
 import type { Branded } from '@deepseek-ai/dsh-brand'
+// `WorkflowRunId` is the WORKFLOW package's concept -- a run of a workflow --
+// and is imported rather than redeclared here. An identically-branded copy
+// would be structurally assignable, so `tsc` would never object; the only
+// thing that noticed the duplicate was the Cordis catalog dropping the type,
+// and regenerating the catalog would have silenced the one report of it.
+import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 
 /** A registered definition's content digest; the only stable way to name one. */
 export type DefinitionDigest = Branded<'DefinitionDigest'>
@@ -25,9 +31,6 @@ export type DefinitionName = Branded<'DefinitionName'>
 
 /** Who signed a registered definition; recorded, never verified here. */
 export type SignerIdentity = Branded<'SignerIdentity'>
-
-/** One run of a workflow. */
-export type WorkflowRunId = Branded<'WorkflowRunId'>
 
 /**
  * A registered workflow definition.

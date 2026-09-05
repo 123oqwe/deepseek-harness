@@ -9,7 +9,8 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { describe, expect, it } from 'vitest'
 import { computeDefinitionDigest, DefinitionRegistry } from '../src/index.ts'
-import type { DefinitionName, RegisteredDefinition, SignerIdentity, WorkflowRunId } from '../src/types.ts'
+import type { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
+import type { DefinitionName, RegisteredDefinition, SignerIdentity } from '../src/types.ts'
 
 const NAME = brandString<DefinitionName>('review-changes')
 

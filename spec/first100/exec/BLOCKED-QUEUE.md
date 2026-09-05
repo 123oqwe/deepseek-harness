@@ -2245,3 +2245,23 @@ Every case started its steps in order, so insertion order and `seq` order coinci
 **This entry and BLOCKED-085's targeted-mutation supplement are a pair:** this one says why a mutation is the only way to see the defect, and that one says which mutation to write. Neither is sufficient alone — knowing you must mutate does not tell you to construct an out-of-order input, and knowing to mutate the likely mistake does not tell you the guard was never exercised.
 
 **Both times this arose, the response was to find out why the mutation was *not* equivalent rather than to record it as equivalent** — P4-07's fencing order was the first, this the second. An equivalent mutant is a real category, and treating it as the default explanation for a surviving mutation is how a real gap gets filed as a curiosity.
+
+### BLOCKED-099 — The stale-artifact gate was the only thing that saw a duplicate type, and regenerating it would have been the fix that hid the bug
+
+**Status: RESOLVED 2026-09-06. Recorded because the near-miss is the finding, not the defect.**
+
+P4-09's Contract stage declared `export type WorkflowRunId = Branded<'WorkflowRunId'>` in `workflow-registry/src/types.ts`. `packages/workflow/workflow/src/types.ts` already declared it, identically — same helper, same brand string.
+
+**Nothing in the type system can object.** Two `Branded<'WorkflowRunId'>` aliases built from the same import are structurally identical and mutually assignable, so `tsc` passed clean, every test passed, and lint saw nothing.
+
+**The one thing that noticed was the Cordis catalog going stale** — and the diff was four deleted lines: `WorkflowRunId` *leaving* the catalog, because a type declared in two places stops resolving to one. The habitual response, `pnpm run gen-cordis-api`, would have accepted the removal, turned the gate green, and left a public type silently absent from the generated catalog with no record of why.
+
+> **A gate firing is a report. Regenerating the artifact answers the gate without reading the report — and the answer is indistinguishable from the case where the artifact was legitimately out of date.**
+
+This is BLOCKED-098's family from the opposite side. There, a guard ran and had nothing to decide. Here a guard ran, *did* decide, fired correctly — and the firing was on track to be processed as routine noise.
+
+**The diagnosis had to survive a wrong correlation.** The Supervisor had noted that the two package-creations which staled the catalog both *added* exported types, and the two that did not, did not — offered as correlation and explicitly not recorded as a mechanism. This case has the opposite sign: the catalog changed because a type was **removed**. **Had that correlation been written into BLOCKED-046 as the mechanism, it would now need retracting for the second time in one day.**
+
+**Resolution: it was a missed import, not a layering decision.** The duplicate was written without knowing the original existed. Substantively the workflow package owns the concept — `RunDefinitionRef.runId` names a run *of a workflow* — so `workflow-registry` now imports it and the catalog entry is restored. The alternative reading (deliberately duplicating to avoid a package dependency) would have been defensible, but it was not what happened, and recording it that way would have been a rationalization written after the fact.
+
+**The mechanism behind BLOCKED-046 remains unestablished**, and is now known to be unrelated to whether a package is new: this staleness had nothing to do with package creation and everything to do with a name resolving in two places.

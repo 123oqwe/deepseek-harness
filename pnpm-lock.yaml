@@ -10045,6 +10045,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-workflow':
+        specifier: workspace:^
+        version: link:../workflow
 
   packages/workflow/workflow-worker-thread:
     dependencies:
@@ -10100,6 +10103,9 @@ importers:
       '@deepseek-ai/dsh-workflow-journal':
         specifier: workspace:^
         version: link:../workflow-journal
+      '@deepseek-ai/dsh-workflow-registry':
+        specifier: workspace:^
+        version: link:../workflow-registry
       tsx:
         specifier: ^4.19.2
         version: 4.22.4

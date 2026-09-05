@@ -18,7 +18,6 @@ export type {
   RunBudget,
   RunDefinitionRef,
   SignerIdentity,
-  WorkflowRunId,
 } from './types.ts'
 export {
   admitRegistration,
@@ -30,3 +29,5 @@ export {
 export type { RegistrationOutcome, RegistrationRefusalReason } from './version.ts'
 export { DefinitionRegistry } from './store.ts'
 export type { StoreOutcome, StoreRefusalReason } from './store.ts'
+export { applyChildFailure, cancelPropagationForNested, inheritWorkerLimits, planNestedRun } from './nesting.ts'
+export type { CancelPropagation, ChildFailureOutcome, ChildFailurePolicy, InheritedWorkerLimits } from './nesting.ts'
