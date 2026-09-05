@@ -189,6 +189,8 @@ These limits define when the loop needs special care. They are current package c
 - **Config labels are fresh by default** — omitting `sessionId` creates a fresh `${id}-session-<uuid>` on every startup; exact resume-or-create behavior requires an explicit stable `sessionId`, while `resumeSessionId` requires existing persisted history.
 - **Config agents have no per-agent persona field or setup hook** — they use the deployment persona; scoped persona and tool composition are available only through the programmatic `ctx.agents.create()` / `resume()` factory options.
 - **The budget bounds turns, not what one turn does** — `agents[].budget` is checked at each turn boundary, so tool calls or steering continue the turn already running; a policy that must stop work mid-turn cancels from a lifecycle extension point such as `agent/turn-stopping`.
+- **The turn allowance is per RUN, not per session** — a resumed session starts its count at zero, which is what lets `--resume` continue a run its budget stopped; a lifetime ceiling across restarts is a different mechanism and does not exist.
+- **`budget.maxSpendUsd` cannot bind today** — nothing in the repository converts tokens to money, so the loop's spend total is always zero and a spend ceiling admits every turn however low it is set. Use `maxTurns` for a ceiling a deployment can rely on.
 - **The spend ceiling is as accurate as the meter under it** — `budget.maxSpendUsd` compares against `dsh-token-meter`'s accounting, which estimates four characters per token; the ceiling becomes exact when that estimator is replaced, and its meaning does not change when it does.
 
 <a id="dev-note"></a>

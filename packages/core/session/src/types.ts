@@ -284,7 +284,6 @@ export interface SessionEventMap {
    * deciding whether to raise the budget needs the pair, and re-deriving
    * `limit` from configuration months later reads whatever the configuration
    * says THEN.
-   * @mode both
    * @param reason - which limit stopped the run.
    * @param limit - the configured ceiling that was reached.
    * @param observed - what had been consumed when it was reached.

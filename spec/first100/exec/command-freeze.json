@@ -6624,6 +6624,40 @@
         "testsDiscovered": 7
       },
       "note": "U (Usage) for P9-07 must[2]: the profile-override half of \"conservative default, profile-overridable\". Recorded AFTER the tests were written rather than before them, which is out of the usual SPEC-FREEZE -> RED order; the reason it could not be frozen first is that the freeze would have pinned a hypothesis that observation disproved. The predicted defect was that schemastery drops a key the Config schema does not declare, so a cordis.yml budget would never reach the agent. It does reach it: undeclared keys pass through untouched. The real gap is the opposite one — the value arrives entirely UNCHECKED, so a negative or fractional ceiling reaches the loop just as far. expectCases below are the observed titles, and the three admission cases pass against the pre-change tree as well; only the four rejection cases were RED."
+    },
+    {
+      "epic": "P9-07",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/resume.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run acceptance[0]: a session stopped by its budget persists whole, and the reason survives reload",
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run acceptance[0]: resuming with a raised budget continues the run rather than stopping again",
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run the turn allowance is PER RUN, so a resume at the same limit gets a fresh one",
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run BLOCKED-114: maxSpendUsd cannot bind today, and this pins that rather than implying it works"
+      ],
+      "files": [
+        "packages/core/session/src/types.ts",
+        "packages/core/session/src/known-event-types.ts",
+        "docs/persistence-catalog.md",
+        "packages/core/agent-loop/tests/resume.spec.ts",
+        "packages/core/agent-loop/README.md",
+        "packages/core/agent-loop/README.zh.md",
+        "packages/core/agent-loop/README.i18n.yaml"
+      ],
+      "frozenAtUtc": "2026-09-05T19:55:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2dd8169480e014dd895373e4685312bc88b147dd",
+        "testsDiscovered": 4
+      },
+      "note": "F (Fault) for P9-07 acceptance[0]: what a budget stop leaves behind. Two findings. (1) A session stopped by its budget could not be resumed AT ALL: budget/exceeded was added to SessionEventMap at the Provider stage without regenerating known-event-types.ts, so the persistence read path refused the log as written by a newer harness — the exact silent truncation must[1] forbids, produced by the mechanism meant to prevent it. Fixed by regenerating the catalog, which first required removing an @mode tag a log event may not carry. (2) acceptance[1] (spend cap) is UNMET and unmeetable: nothing converts tokens to money, so spentUsd is always 0. Recorded as BLOCKED-114 and routed to the maintainer; the fourth case pins the vacuity and is written to FAIL when a cost source lands."
     }
   ]
 }

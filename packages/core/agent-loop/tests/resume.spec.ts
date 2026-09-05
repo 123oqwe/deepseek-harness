@@ -959,3 +959,126 @@ describe('configured-start failure edges', () => {
     await ctx.fiber.dispose()
   })
 })
+
+/**
+ * P9-07 Fault — what a budget stop leaves behind, and what it does not enforce.
+ *
+ * A budget stop is the one stop that is not an error, so the risk is the
+ * opposite of the usual one: not that it fails loudly, but that it ends a run
+ * in a state nobody can tell apart from finished work. acceptance[0] requires
+ * the stopped session to be whole and resumable; these cases pin that across a
+ * real persist/reload, and pin the allowance semantics a resume inherits.
+ */
+describe('P9-07 Fault — a budget stop is durable, resumable, and per-run', () => {
+  it('acceptance[0]: a session stopped by its budget persists whole, and the reason survives reload', async () => {
+    const adapter1 = new MockAdapter([textResponse('first'), textResponse('second')])
+    const { ctx: ctx1 } = await persistentHarness(adapter1)
+    const a1 = (await ctx1.agents.create({
+      sessionId: SessionId('budget-resume'),
+      meta: { cwd: '/w' },
+      agentOptions: { provider: 'mock', model: 'mock', budget: { maxTurns: 1 } },
+    })).agent
+    a1.followup(createUserMessage({ content: [{ type: 'text', text: 'one' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx1, a1)
+    a1.followup(createUserMessage({ content: [{ type: 'text', text: 'two' }], source: { kind: 'user' } }))
+    await a1.whenIdle()
+    await ctx1.sessions.flush(a1.session)
+
+    const loaded = await ctx1.sessionPersistence.load(SessionId('budget-resume'))
+    // The refusal is on disk, not only in memory: a run that stopped for a
+    // budget must be distinguishable after restart from one that finished.
+    expect(loaded.events.filter(event => event.type === 'budget/exceeded')).toHaveLength(1)
+    // The last turn is CLOSED. A stop decided before a turn begins cannot
+    // leave a half-turn behind, which is what makes the reload resumable.
+    expect(loaded.events.filter(event => event.type === 'turn/start')).toHaveLength(1)
+    expect(loaded.events.filter(event => event.type === 'turn/end')).toHaveLength(1)
+    await ctx1.fiber.dispose()
+  })
+
+  it('acceptance[0]: resuming with a raised budget continues the run rather than stopping again', async () => {
+    const adapter1 = new MockAdapter([textResponse('first')])
+    const { ctx: ctx1, root } = await persistentHarness(adapter1)
+    const a1 = (await ctx1.agents.create({
+      sessionId: SessionId('budget-raise'),
+      meta: { cwd: '/w' },
+      agentOptions: { provider: 'mock', model: 'mock', budget: { maxTurns: 1 } },
+    })).agent
+    a1.followup(createUserMessage({ content: [{ type: 'text', text: 'one' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx1, a1)
+    a1.followup(createUserMessage({ content: [{ type: 'text', text: 'two' }], source: { kind: 'user' } }))
+    await a1.whenIdle()
+    // Pin that the first lifecycle really was STOPPED by the budget. Without
+    // this the case would pass just as well against a build that ignored the
+    // budget entirely, since an unbudgeted run also continues after a resume.
+    expect(a1.session.snapshotEvents().filter(e => e.type === 'budget/exceeded')).toHaveLength(1)
+    expect(a1.session.snapshotEvents().filter(e => e.type === 'turn/end')).toHaveLength(1)
+    await ctx1.sessions.flush(a1.session)
+    await ctx1.fiber.dispose()
+
+    const adapter2 = new MockAdapter([textResponse('second')])
+    const ctx2 = await mountPersistentHarness(root, adapter2)
+    const a2 = (await ctx2.agents.resume({
+      resumeSessionId: SessionId('budget-raise'),
+      agentOptions: { provider: 'mock', model: 'mock', budget: { maxTurns: 5 } },
+    })).agent
+    a2.followup(createUserMessage({ content: [{ type: 'text', text: 'again' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx2, a2)
+    expect(a2.session.snapshotEvents().filter(e => e.type === 'turn/end').length).toBeGreaterThan(1)
+    await ctx2.fiber.dispose()
+  })
+
+  it('the turn allowance is PER RUN, so a resume at the same limit gets a fresh one', async () => {
+    // Not an accident of an in-memory counter but the semantics acceptance[0]
+    // requires: a session that had spent its whole allowance could never be
+    // continued by `--resume` if the count carried across restarts. A
+    // deployment that wants a lifetime ceiling needs a different mechanism,
+    // and the README says so rather than leaving this to be discovered.
+    const adapter1 = new MockAdapter([textResponse('first')])
+    const { ctx: ctx1, root } = await persistentHarness(adapter1)
+    const a1 = (await ctx1.agents.create({
+      sessionId: SessionId('budget-perrun'),
+      meta: { cwd: '/w' },
+      agentOptions: { provider: 'mock', model: 'mock', budget: { maxTurns: 1 } },
+    })).agent
+    a1.followup(createUserMessage({ content: [{ type: 'text', text: 'one' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx1, a1)
+    await ctx1.sessions.flush(a1.session)
+    await ctx1.fiber.dispose()
+
+    const adapter2 = new MockAdapter([textResponse('second')])
+    const ctx2 = await mountPersistentHarness(root, adapter2)
+    const a2 = (await ctx2.agents.resume({
+      resumeSessionId: SessionId('budget-perrun'),
+      agentOptions: { provider: 'mock', model: 'mock', budget: { maxTurns: 1 } },
+    })).agent
+    a2.followup(createUserMessage({ content: [{ type: 'text', text: 'again' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx2, a2)
+    expect(a2.session.snapshotEvents().filter(e => e.type === 'turn/end').length).toBeGreaterThan(1)
+    await ctx2.fiber.dispose()
+  })
+
+  it('BLOCKED-114: maxSpendUsd cannot bind today, and this pins that rather than implying it works', async () => {
+    // Nothing in the repository converts tokens to money — `dsh-token-meter`
+    // prices IMAGES IN TOKENS, and the string "usd" appears in no other
+    // package's source. The loop's `spentUsd` is therefore always 0, so a
+    // spend ceiling admits every turn no matter how low it is set. This case
+    // exists so the gap is a recorded fact with a test holding it, not a
+    // configuration field a deployment might trust. When a cost source lands,
+    // this test SHOULD fail, and its failure is the signal to write the real
+    // acceptance[1] fixture.
+    const adapter = new MockAdapter([textResponse('first'), textResponse('second')])
+    const { ctx } = await persistentHarness(adapter)
+    const agent = (await ctx.agents.create({
+      sessionId: SessionId('budget-spend'),
+      meta: { cwd: '/w' },
+      agentOptions: { provider: 'mock', model: 'mock', budget: { maxSpendUsd: 0.000_001 } },
+    })).agent
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'one' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx, agent)
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'two' }], source: { kind: 'user' } }))
+    await waitForIdle(ctx, agent)
+    expect(agent.session.snapshotEvents().filter(e => e.type === 'budget/exceeded')).toHaveLength(0)
+    expect(agent.session.snapshotEvents().filter(e => e.type === 'turn/end')).toHaveLength(2)
+    await ctx.fiber.dispose()
+  })
+})

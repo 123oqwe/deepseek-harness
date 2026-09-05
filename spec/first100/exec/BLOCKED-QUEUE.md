@@ -2766,3 +2766,18 @@ The case spawns the real CLI script; its two siblings that do the same finished 
 **That argument is not enough to register it as a flake, and it is not being registered.** The registry's evidence standard (BLOCKED-007 item 3, extended by BLOCKED-023) takes either two occurrences across two distinct SHAs, or two occurrences on the SAME SHA with genuine outcome divergence — a `failed` and a `passed`. One occurrence plus a plausible story is exactly what that standard exists to refuse: "the commit touched no product code" explains why a flake is *possible*, never that this failure *was* one. A deterministic 5-second budget that a slower runner simply exceeds would produce this same single observation and the same story.
 
 The failed job has been re-run at the identical SHA. A `passed` there is standard (b) satisfied by direct proof, and the entry then goes to the delegate — flake classification is C7 scope and is never self-classified here. A second `failed` at the same SHA is the opposite finding: a deterministic timeout that must be fixed rather than registered, because the registry never accepts all-failed same-SHA occurrences.
+
+## BLOCKED-114 — `budget.maxSpendUsd` is a ceiling with nothing behind it
+
+**Status:** OPEN — routed to the maintainer, because the fix is a product decision rather than a repair.
+
+P9-07 acceptance[1] asks for a spend-cap fixture "the same way" as the turn fixture. It cannot be written. The loop compares `spentUsd` against the configured ceiling, and `spentUsd` is initialized to `0` and assigned nowhere. Nothing feeds it because nothing in the repository converts tokens into money: `dsh-token-meter` prices IMAGES IN TOKENS, and outside the budget code the string `usd` appears in no package source at all. So a deployment can set `maxSpendUsd: 0.01`, see it validated and accepted, and have every turn admitted.
+
+`packages/core/agent-loop/tests/resume.spec.ts` now pins this rather than leaving it to be discovered: a run with a ceiling of one millionth of a dollar completes both its turns and logs no budget event. **That test is written to fail when a cost source lands**, and its failure is the signal to write the real acceptance[1] fixture.
+
+**Why this is not fixed here.** Wiring a spend cap needs per-model USD rates, and this repository has none. Inventing a table would be exactly the unsupported default the package rules refuse — the rate would be a hardcoded tunable with no evidence behind it, wrong the day a provider changes its price, and wrong silently. The maintainer's decision is between two options, and neither is the Supervisor's to take:
+
+1. **Remove `maxSpendUsd`** until a cost source exists. A config field that validates and then does nothing is worse than an absent one, and it contradicts the repo's own "misconfiguration fails loud" rule.
+2. **Keep it and add a cost source**, which means per-route pricing config with an owner — a larger piece of work than P9-07, and arguably its own epic.
+
+Until then P9-07 acceptance[1] is UNMET and recorded as unmet; must[0]/[1]/[3] and acceptance[0]/[2] are met by `maxTurns`.

@@ -90,7 +90,7 @@ export type SessionEvent<T extends SessionEventType = SessionEventType> = {
 }[T]
 ```
 
-Sources: [`packages/core/session/src/types.ts:381`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:388`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:417`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:449`](../packages/core/session/src/types.ts)
+Sources: [`packages/core/session/src/types.ts:396`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:403`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:432`](../packages/core/session/src/types.ts) · [`packages/core/session/src/types.ts:464`](../packages/core/session/src/types.ts)
 
 ## Events
 
@@ -124,7 +124,7 @@ Sources: [`packages/core/session/src/types.ts:381`](../packages/core/session/src
 'action/manifest-appended': ActionManifestAppendedEventData
 ```
 
-Source: [`packages/core/tools/src/index.ts:2450`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2467`](../packages/core/tools/src/index.ts)
 
 ### `agent/*`
 
@@ -247,7 +247,7 @@ Source: [`packages/interaction/user-approval/src/index.ts:33`](../packages/inter
 
 Types: [StreamChunk](subsystems/llm-streaming.md)
 
-Source: [`packages/core/session/src/types.ts:290`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:305`](../packages/core/session/src/types.ts)
 
 <a id="assistantmessage--surface"></a>
 
@@ -269,7 +269,33 @@ Source: [`packages/core/session/src/types.ts:290`](../packages/core/session/src/
 
 Types: [TokenUsage](subsystems/llm-streaming.md)
 
-Source: [`packages/core/session/src/types.ts:301`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:316`](../packages/core/session/src/types.ts)
+
+### `budget/*`
+
+<a id="budgetexceeded--log-only"></a>
+
+#### `budget/exceeded` — log-only
+
+```ts persistence-catalog
+/**
+ * The loop refused to begin another turn because a configured budget is
+ * spent (Epic P9-07 must[1]).
+ *
+ * Appended BEFORE the run stops, so the record of why it stopped is part of
+ * the session a `--resume` reads rather than something only the process that
+ * halted knew. `limit` and `observed` are both carried because a reader
+ * deciding whether to raise the budget needs the pair, and re-deriving
+ * `limit` from configuration months later reads whatever the configuration
+ * says THEN.
+ * @param reason - which limit stopped the run.
+ * @param limit - the configured ceiling that was reached.
+ * @param observed - what had been consumed when it was reached.
+ */
+'budget/exceeded': { reason: 'max-turns-reached' | 'spend-cap-reached'; limit: number; observed: number }
+```
+
+Source: [`packages/core/session/src/types.ts:291`](../packages/core/session/src/types.ts)
 
 ### `command/*`
 
@@ -529,7 +555,7 @@ Source: [`packages/hooks/hook-protocol/src/types.ts:31`](../packages/hooks/hook-
 'identity/attached': { readonly identity: IdentityContext }
 ```
 
-Source: [`packages/core/session/src/types.ts:354`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:369`](../packages/core/session/src/types.ts)
 
 ### `llm/*`
 
@@ -644,7 +670,7 @@ Source: [`packages/plan/plan-mode/src/index.ts:46`](../packages/plan/plan-mode/s
 'request/context': RequestContext
 ```
 
-Source: [`packages/core/session/src/types.ts:340`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:355`](../packages/core/session/src/types.ts)
 
 <a id="requestheader--log-only"></a>
 
@@ -663,7 +689,7 @@ Source: [`packages/core/session/src/types.ts:340`](../packages/core/session/src/
 }
 ```
 
-Source: [`packages/core/session/src/types.ts:330`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:345`](../packages/core/session/src/types.ts)
 
 ### `sandbox/*`
 
@@ -738,7 +764,7 @@ Source: [`packages/schedule/schedule/src/types.ts:219`](../packages/schedule/sch
 'session/end-seed': Record<string, never>
 ```
 
-Source: [`packages/core/session/src/types.ts:377`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:392`](../packages/core/session/src/types.ts)
 
 <a id="sessiontitle--log-only"></a>
 
@@ -798,7 +824,7 @@ Source: [`packages/session/session-log-deepseek/src/types.ts:57`](../packages/se
 'step/end': { turn: number; step: number }
 ```
 
-Source: [`packages/core/session/src/types.ts:280`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:295`](../packages/core/session/src/types.ts)
 
 <a id="stepstart--log-only"></a>
 
@@ -809,7 +835,7 @@ Source: [`packages/core/session/src/types.ts:280`](../packages/core/session/src/
 'step/start': { turn: number; step: number }
 ```
 
-Source: [`packages/core/session/src/types.ts:278`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:293`](../packages/core/session/src/types.ts)
 
 ### `subagent/*`
 
@@ -940,7 +966,7 @@ Source: [`packages/todo/tool-todo/src/types.ts:31`](../packages/todo/tool-todo/s
 
 Types: [ToolCallId](subsystems/core.md)
 
-Source: [`packages/core/session/src/types.ts:307`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:322`](../packages/core/session/src/types.ts)
 
 <a id="toolcode-dispatch--log-only"></a>
 
@@ -1015,7 +1041,7 @@ Source: [`packages/core/tools/src/types.ts:40`](../packages/core/tools/src/types
 }
 ```
 
-Source: [`packages/core/session/src/types.ts:319`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:334`](../packages/core/session/src/types.ts)
 
 ### `tool-workflow/*`
 
@@ -1130,7 +1156,7 @@ Source: [`packages/core/session/src/types.ts:267`](../packages/core/session/src/
 'user/message': UserMessage
 ```
 
-Source: [`packages/core/session/src/types.ts:288`](../packages/core/session/src/types.ts)
+Source: [`packages/core/session/src/types.ts:303`](../packages/core/session/src/types.ts)
 
 ### `web/*`
 
