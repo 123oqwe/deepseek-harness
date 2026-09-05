@@ -44,6 +44,22 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-04T17:21:35.941Z",
       "note": "gq-92 independent verify. (i) 3/3 acceptance clauses, 20 references, each checked against the observation ITS OWN stage cites. (ii) 4 candidate SHAs all ancestors. (iii) 46 frozen titles across four cells, re-checked under the STRICT rule that EVERY occurrence of a title must be passed -- the rule the Supervisor's own fullName-Map collapse (19210 -> 19082, 128 duplicates) would have defeated; 0 titles had any non-passed occurrence. Acceptance lock lifted in the same act: (a) the mutation point exists at skill-filesystem/src/index.ts:255; (b) reconcileWorkspaceTrust demotes to untrusted on any mismatch of canonicalPath/device/inode/createdAtMs, binding the OBSERVED identity with no grantedBy, and keeps the createdAtMs>0 confirmable guard so a filesystem reporting no creation time fails closed; (c) both halves present -- files.ts:313 gates the incremental path and index.ts:139 folds trustState into the baseline identity so a downgrade recomposes. Verified by reading the source, not from the SATISFIED marker."
+    },
+    {
+      "epic": "P6-07",
+      "rowDigestSha256": "b501dc5042c210492eced86d4a0d528702fca0db43373660d1894f0d60f57856",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T03:35:19.764Z",
+      "note": "gq-92 independent verify: (iii) 85 frozen titles across C/P/U/F, each checked against the observation ITS OWN cell cites, under the strict rule that every occurrence of a title must be passed; 0 unmet. (ii) 4 candidate SHAs all ancestors. (i) 4/4 acceptance clauses, 21 references, 0 unresolvable. Lock: the P6-07 row carries LIFTED 2026-09-04, lifted by this delegate after verifying finish() returns corruption at format.ts:500-509 and that the evidence cases live in the real SessionLogScanner path the lock named. BLOCKED-075's UTF-16 evidence bound stays open under its own owner and does not gate this row."
+    },
+    {
+      "epic": "P0-04",
+      "rowDigestSha256": "fd48b0d0edd9612e8058637d23fb151620c0b74e507f5a714354ead09a2fb558",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T03:35:19.947Z",
+      "note": "gq-92 independent verify: (iii) 86 frozen titles across C/U/F (P is N/A), each against its own cited observation, strict every-occurrence rule; 0 unmet. (ii) 3 candidate SHAs all ancestors. (i) 3/3 acceptance clauses, 16 references, 0 unresolvable. No lock register row. The composition-root inbound edge this epic's own checker found is adjudicated in layering.md rule 8 (spawn-target: zero imported bindings plus a visible declaration, both decided mechanically) and gated by a paired fixture whose two workspaces are byte-identical except for one import line -- verified here by comparing the fixture files directly rather than by reading the assertions."
     }
   ]
 }
