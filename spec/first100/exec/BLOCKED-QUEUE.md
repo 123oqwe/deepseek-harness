@@ -2480,3 +2480,28 @@ Recovering them surfaced a trap worth encoding: each run uploads **two** files n
 **A stored extract was considered and rejected on grounds other than size.** Keeping only the case names any freeze or cell references is 59 KB gzipped, against 425 MB of full artifacts -- cheap enough that size cannot decide it. But such a file is a summary assertion, *I read the original and it said X*, which is the exact shape of the `expectCasesMatched` defect above. Recomputing from a fresh run at the same SHA trusts no extractor. The remaining case for having CI emit and sign a summary alongside the artifact is convenience for FUTURE cells, not a fix for the 53 existing observations, which can never acquire one.
 
 **Responsibility.** The delegate proposed splitting this as "you skipped a command, I skipped a class of verification" and declined the softer version offered back. Both halves stand on their own: the `selfAudit` blocks asserting `RAN: …` were written by the same hand that skipped the run, and the delegate had never once asked *who wrote this cell* — it recomputed contents from bytes every time, so its verdicts never depended on those fields.
+
+### BLOCKED-107 — P9-05's exact-count clause has no reachable subject without a tokenizer-source decision
+
+**Status: OPEN, awaiting the user. Two of four clauses are actionable now; two are not.**
+
+P9-05 (*token-meter 真实分词：替换 4 字符/词启发*) is one of the seven items decision C3 cleared to start early, and it has no predecessors. Its pre-flight, per BLOCKED-101, takes each clause one at a time and names the artifact that will make it true.
+
+**The subject is real.** `packages/llm/token-meter/src/estimate.ts:13` holds `const CHARS_PER_TOKEN = 4`, used by six exported estimators; the package exists and the heuristic is exactly what the epic describes. `estimate.ts` contains zero occurrences of `async`, `await`, or `Promise`, so must[3]'s "synchronous pure function" is a property to PRESERVE, not to build — which makes it a constraint on the other three clauses rather than work of its own.
+
+| clause | artifact that would make it true | reachable now |
+|---|---|---|
+| must[0] exact DeepSeek counting | a real DeepSeek tokenizer (vocab + merges) | **no** |
+| must[1] calibrate against each response's usage | a pure state update over recorded `usage` | yes |
+| must[2] p95 relative error ≤ threshold over 4 corpora | **ground-truth counts** for those corpora | **no** |
+| must[3] estimate stays synchronous and pure | already true; preserve it | yes |
+
+**Why must[0] and must[2] are the same blocker wearing two faces.** must[2] measures error *against something*. Without an exact tokenizer there is no ground truth for the four corpora, so the threshold could only be fitted to whatever the heuristic already produces — a test that cannot fail, which is the BLOCKED-098 shape this program keeps finding.
+
+**What is missing is a decision, not an implementation.** The repository vendors no tokenizer: no `tiktoken`, `gpt-tokenizer`, or `transformers` dependency, and no `*.tiktoken`, `tokenizer.json`, or `vocab*.json` anywhere outside `node_modules`. Exact counting therefore requires choosing a source for DeepSeek's vocabulary and merges, which carries a dependency choice, a data-vendoring choice, and a license question — none of which an executor should settle alone. Network egress is available, so this is not a capability limit; it is an authority limit.
+
+> **Not filed as "cannot be done". Filed as "cannot be done WITHOUT choosing where the tokenizer comes from", which is a maintainer's choice under the same rule that governs every other vendored source in `spec/first100/sources/`.**
+
+**One usable asset found, recorded so the next attempt does not re-derive it.** Recorded sessions under `snapshots/` carry real per-request usage (e.g. `"usage":{"inputTokens":8082,"outputTokens":235,"cacheReadTokens":384,"reasoningTokens":75}`). That is genuine ground truth for must[1]'s calibration loop — a real response's usage against a real estimate — and it needs no key and no network. It does **not** serve must[2], whose corpora need *per-corpus* counts rather than per-request totals.
+
+**Consequence for the terminal state.** P9-05 does not qualify for `scheduled-BLOCKED` as a whole, because half of it is actionable today; recording it as blocked would overstate the obstruction exactly as recording it VERIFIED would overstate the evidence. It stays `NOT_STARTED` until the tokenizer source is decided, at which point all four clauses become reachable together.
