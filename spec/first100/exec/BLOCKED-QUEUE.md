@@ -2013,3 +2013,30 @@ So a crash inside a two-entry batch can leave the domain event durable and drop 
 
 **A note on the mutation table.** One P-stage mutation — replacing `enqueueAll`'s single push with a loop — reddened nothing, and that is correct rather than a gap: it is an **equivalent mutant**. The indivisibility comes from the method never awaiting, so no write can interleave regardless of how the entries are appended. Writing the mutation is what revealed that the JSDoc had credited the wrong mechanism; the comment was corrected to name the suspension point. **A surviving mutant is not automatically a missing test — but it always means the stated mechanism deserves rereading.**
 
+### BLOCKED-090 — Two parties, opposite conclusions, and the truth in a third place
+
+**Status: METHOD ENTRY, not a defect. Recorded 2026-09-05 from a live instance.**
+
+The delegate searched the register for `^### BLOCKED-089`, found nothing, and reported that the code referenced an entry that did not exist — the day's most-caught defect shape, prose asserting a checkable fact that is false. The Supervisor had in fact written it, in the same commit as the referencing code.
+
+**Both parties were right, and the cause was in neither claim.** The entry existed; the search was correctly formed; the heading was written at `##` while all 92 other entries used `###`. A conventional search could not see it.
+
+**The two obvious responses both destroy the finding:**
+
+| Response | Outcome |
+|---|---|
+| Accept the report | An empty commit "adding" an entry that was already there; the heading inconsistency survives untouched. |
+| Reject the report | Two parties asserting opposite things; the heading inconsistency survives untouched. |
+
+**What worked was running the other party's method before answering** — their pattern, then the Supervisor's, then a count of heading levels across the whole file. The distribution is what named the real defect, and it was invisible to both original claims.
+
+> **When two parties reach opposite conclusions about a checkable fact, run each other's method before arguing about who is right. "Who is right" is usually not the question — a disagreement about a fact both parties can check normally means a third thing is wrong, and only comparing methods finds it.**
+
+**The consequence was already real, not hypothetical.** An entry that exists and cannot be found is, to the next reader, an entry that does not exist — and the delegate had just been that reader.
+
+**A second finding came out of the same exchange, and it corrects an earlier diagnosis in this file.** BLOCKED-089 was recorded; P4-06's acceptance-lock row was not updated to match. The behavioural reading ("forgot to sync") is the wrong one, because the same author did not forget the first record. The structural reading:
+
+> **One fact, two homes, and only one of them on a required path.** BLOCKED-089 had to be faced while writing the code that referenced it. The lock register had no such forcing, so it lagged.
+
+This is the same structure as the flake register lagging reality (BLOCKED-080), and it gives both a shared repair: **either the fact gets exactly one home, or the second home is made unavoidable too** — a sign-off step that checks the lock row the way greening a cell forces the absorption record. **"Remember to sync" is not a repair; it is the condition that produced the gap.**
+
