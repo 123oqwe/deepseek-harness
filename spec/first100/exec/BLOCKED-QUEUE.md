@@ -791,6 +791,21 @@ A genuine collision requires the **boundary** to move while the character sequen
 1. **Correct the comment only**, leaving the assertion as the difference-check it actually is. Titles are unchanged, so the freeze is untouched.
 2. **Add the true collision pair as a supplement**, where the outcome is genuinely unknown until run — the `ab|c` versus `a|bc` fixture.
 
+**Why this class is harder to catch than stale prose beside code.** The two are not equally visible:
+
+| Where | What a reader sees |
+|---|---|
+| a stale comment **beside code** | a comment they know may be out of date, so they read the code |
+| a stale comment **inside a test** | a passing case, plus a sentence explaining why it matters |
+
+**The green result silently endorses the sentence, when it only endorses the assertion.** A reader is not weighing prose against code there; they are reading an explanation attached to something that just demonstrated itself true, and the demonstration is taken as covering both.
+
+**RESOLVED 2026-09-05, both parts.** The original case keeps its title and assertion — it is a valid difference check — and its comment now states what it actually tests and points at the case that tests the prefixing. Rewriting its assertion after watching the mutation survive is what [BLOCKED-079](#blocked-079) forbids, so it was not touched. A new case carries the real collision: `'ab'+'c'` against `'a'+'bc'`, which concatenate identically unprefixed. Its outcome was unknown when written — the implementation was *expected* to prefix correctly, and expected is not known.
+
+Delivered by **supersession, not supplement**, on the delegate's reasoning: supplement adds coverage to an already-green cell without disturbing it, and this cell had never greened, so there was nothing to leave undisturbed.
+
+**Re-mutated afterwards, which is the part that matters:** removing length-prefixing now reddens **exactly one** case, the new one. The same mutation previously reddened none. The suite now detects the property it always claimed to.
+
 **The general point.** A comment stating why a case passes is unverified prose sitting inside a verified artifact. Every other stale-prose instance in this queue was documentation *beside* code; this one is documentation *inside a test*, which is the last place a reader expects to need to doubt it.
 
 ### BLOCKED-084 — greening accepts any 40-hex string as `--candidate-sha`, including one that is not a git object, while the correct value sits in the artifact's own filename (Supervisor, found by accident, 2026-09-05)

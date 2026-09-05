@@ -185,8 +185,10 @@ describe('P8-01 Contract: acceptance[2] and [3] — the fingerprint is stable pe
   })
 
   it('contract: names containing the field separator cannot forge another surface, because fields are length-prefixed', () => {
-    // Without length prefixing, a method named `a:b` and the pair `a`, `b`
-    // could hash identically.
+    // NOTE: this pair moves the `:` CHARACTER, so the two field sequences
+    // differ whether or not fields are length-prefixed — removing the prefixing
+    // does not redden this case (BLOCKED-085). It is kept as a plain
+    // difference check; the case below is the one that tests the prefixing.
     const one: ProtocolSurface = { methods: [{ name: 'a:b', schemaId: 'x', version: '1.0' }], events: [], resourceTypes: [] }
     const two: ProtocolSurface = {
       methods: [{ name: 'a', schemaId: 'b:x', version: '1.0' }],
@@ -194,6 +196,26 @@ describe('P8-01 Contract: acceptance[2] and [3] — the fingerprint is stable pe
       resourceTypes: [],
     }
     expect(computeSchemaFingerprint(one)).not.toBe(computeSchemaFingerprint(two))
+  })
+
+  it('contract: two surfaces whose fields concatenate identically still fingerprint differently, which is what length-prefixing buys', () => {
+    // The real collision: the BOUNDARY moves while the character sequence does
+    // not. Unprefixed, both absorb 'ab' + 'c' -> "abc" and 'a' + 'bc' -> "abc",
+    // so an unprefixed hash cannot tell a method named `ab` with schema `c`
+    // from one named `a` with schema `bc`. Prefixing is the only thing
+    // separating them, so removing it must break this case and nothing else
+    // needs to.
+    const boundaryLeft: ProtocolSurface = {
+      methods: [{ name: 'ab', schemaId: 'c', version: '1.0' }],
+      events: [],
+      resourceTypes: [],
+    }
+    const boundaryRight: ProtocolSurface = {
+      methods: [{ name: 'a', schemaId: 'bc', version: '1.0' }],
+      events: [],
+      resourceTypes: [],
+    }
+    expect(computeSchemaFingerprint(boundaryLeft)).not.toBe(computeSchemaFingerprint(boundaryRight))
   })
 })
 

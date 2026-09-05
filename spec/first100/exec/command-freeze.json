@@ -3696,7 +3696,66 @@
         "treeSha": "d75e4d239dc7a4e3a1fc0d3b71deda8ee1f2afd6",
         "testsDiscovered": 31
       },
-      "note": "P8-01 F-stage, appended to the Contract stage's spec file, which the registry declares as this stage's first deliverable. All 22 Contract titles remain present and unmodified -- asserted before freezing, not assumed. The second declared file, docs/subsystems/control-protocol.md, did not exist and is written here.\n\nvalidation[0], the N-2/N-1/N matrix: every ORDERED PAIR of three adjacent generations is negotiated, not a few hand-picked pairs, because acceptance[0]'s promise is about ANY new-against-old pairing and a rule holding for one pair but not another would still satisfy a spot check. Symmetry is asserted across the whole matrix. One case covers what a matrix of overlapping ranges cannot: real deprecation removes the LOW end, so a peer that has dropped the oldest generation must refuse it explicitly rather than agree to a version it cannot speak.\n\nvalidation[1], deliberate breakage: withdrawing a mandatory capability from the supported set turns an accepted handshake into a refusal, and withdrawing it from the KNOWN set changes the refusal REASON -- so the two failure modes stay distinguishable rather than collapsing into one. A schema-version edit on any single surface entry moves the fingerprint, with a CONTROL proving the fingerprint measures the change rather than the act of editing: a reorder that alters no wire-visible field leaves it untouched.\n\nvalidation[2], cross-implementation agreement: the Python half cannot run here, and no assertion pretends otherwise. What IS asserted is the property that makes two implementations able to agree at all -- the negotiated profile is a pure function of the fixture, identical across repeated derivations, with no dependence on ambient state or invocation count. A profile that varied per call could not be matched by any second implementation. The fixture pins its expected profile as LITERALS rather than by comparing the functions to themselves, so a Python port has a concrete target; a self-comparison would give it nothing to match."
+      "note": "P8-01 F-stage, appended to the Contract stage's spec file, which the registry declares as this stage's first deliverable. All 22 Contract titles remain present and unmodified -- asserted before freezing, not assumed. The second declared file, docs/subsystems/control-protocol.md, did not exist and is written here.\n\nvalidation[0], the N-2/N-1/N matrix: every ORDERED PAIR of three adjacent generations is negotiated, not a few hand-picked pairs, because acceptance[0]'s promise is about ANY new-against-old pairing and a rule holding for one pair but not another would still satisfy a spot check. Symmetry is asserted across the whole matrix. One case covers what a matrix of overlapping ranges cannot: real deprecation removes the LOW end, so a peer that has dropped the oldest generation must refuse it explicitly rather than agree to a version it cannot speak.\n\nvalidation[1], deliberate breakage: withdrawing a mandatory capability from the supported set turns an accepted handshake into a refusal, and withdrawing it from the KNOWN set changes the refusal REASON -- so the two failure modes stay distinguishable rather than collapsing into one. A schema-version edit on any single surface entry moves the fingerprint, with a CONTROL proving the fingerprint measures the change rather than the act of editing: a reorder that alters no wire-visible field leaves it untouched.\n\nvalidation[2], cross-implementation agreement: the Python half cannot run here, and no assertion pretends otherwise. What IS asserted is the property that makes two implementations able to agree at all -- the negotiated profile is a pure function of the fixture, identical across repeated derivations, with no dependence on ambient state or invocation count. A profile that varied per call could not be matched by any second implementation. The fixture pins its expected profile as LITERALS rather than by comparing the functions to themselves, so a Python port has a concrete target; a self-comparison would give it nothing to match.",
+      "supersededBy": "2026-09-05T10:15:00.000Z"
+    },
+    {
+      "epic": "P8-01",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "contract: a new client against an old server agrees on the highest version both support",
+        "contract: an old client against a new server reaches the same version as the reverse pairing",
+        "contract: the highest mutually supported version wins, not the lowest",
+        "contract: non-overlapping ranges refuse with a machine-readable reason and BOTH ranges, so no field silently vanishes",
+        "contract: adjacent-but-disjoint ranges refuse rather than meeting in the middle",
+        "contract: ranges touching at exactly one version agree on it",
+        "contract: an inverted range is refused rather than normalised, since it describes no version the peer claimed",
+        "control: a well-formed range is accepted, so the refusal above measures the inversion",
+        "contract: a mandatory capability this build has never heard of refuses, naming the capability",
+        "contract: a mandatory capability this build knows but does not implement refuses with a DIFFERENT reason",
+        "contract: an unknown OPTIONAL capability is ignored rather than refused, which is the point of the split",
+        "contract: ignored optional capabilities are RECORDED, not dropped, so a peer can see what was not used",
+        "contract: negotiation fails fast on the first mandatory failure rather than collecting them",
+        "control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag",
+        "contract: an empty declaration set is accepted, so a peer declaring nothing is not treated as declaring something impossible",
+        "contract: the same surface fingerprints identically across calls",
+        "contract: declaration order does not move the fingerprint, since order is not wire-visible",
+        "contract: a version bump on one method moves the fingerprint",
+        "contract: adding a method moves the fingerprint, so a new wire surface cannot ship unnoticed",
+        "contract: removing a resource type moves the fingerprint",
+        "contract: a method and an event with the same name are distinguished, so the two kinds cannot collide",
+        "contract: names containing the field separator cannot forge another surface, because fields are length-prefixed",
+        "contract: two surfaces whose fields concatenate identically still fingerprint differently, which is what length-prefixing buys",
+        "enforcement: every ordered pair of adjacent generations negotiates, and the result never exceeds either peer",
+        "enforcement: the matrix is symmetric — swapping the peers never changes the agreed version",
+        "enforcement: a peer that has dropped support for the oldest generation refuses it rather than agreeing to a version it cannot speak",
+        "enforcement: removing a mandatory capability from the supported set turns an accepted handshake into a refusal",
+        "enforcement: withdrawing a capability from the KNOWN set changes the refusal reason, so the two failures stay distinguishable",
+        "enforcement: changing a schema version on any single surface entry moves the fingerprint, so an enum or required-field edit cannot ship silently",
+        "control: an unrelated edit that changes no wire-visible field leaves the fingerprint alone, so the case above measures the change and not the act of editing",
+        "enforcement: the negotiated profile is identical across repeated derivations from one fixture",
+        "enforcement: the fixture pins the exact profile, so a second implementation has a concrete target rather than a description"
+      ],
+      "files": [
+        "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+        "docs/subsystems/control-protocol.md"
+      ],
+      "frozenAtUtc": "2026-09-05T10:15:00.000Z",
+      "supersedes": "2026-09-05T09:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "6bca3f98565f370fda4c4f09540791621931af2d",
+        "testsDiscovered": 32
+      },
+      "note": "P8-01 F-stage, SUPERSEDING the 2026-09-05T09:30:00.000Z freeze. Supersession rather than supplement because this cell was never greened -- supplement exists to add coverage to an already-green cell without disturbing it, and there is nothing here to leave undisturbed.\n\nWHY: BLOCKED-085. The original freeze contained a case asserting that length-prefixing prevents a name containing the field separator from forging another surface. Mutation M2 removed length-prefixing entirely and reddened NOTHING. Computed rather than guessed: the fixtures {name:'a:b',schemaId:'x'} and {name:'a',schemaId:'b:x'} concatenate to \"a:bx1.0\" and \"ab:x1.0\", which differ whether or not fields are prefixed, because moving the colon also moves it relative to its neighbours. The case was a true assertion passing for a reason unrelated to the property its comment claimed.\n\nTWO CHANGES. The original case KEEPS its title and its assertion -- it is a valid difference check -- and its comment is corrected to say what it actually tests and to point at the case that tests the prefixing. Rewriting its assertion after watching a mutation survive is what BLOCKED-079 forbids.\n\nThe new case is the real collision: the BOUNDARY moves while the character sequence does not. Unprefixed, 'ab'+'c' and 'a'+'bc' both absorb as \"abc\", so no unprefixed hash can separate them. Its outcome was unknown when written -- the implementation was expected to prefix correctly, but expected is not known, and had it failed that would have been a genuine defect M2 already proved the suite could not catch.\n\nRE-MUTATED AFTER: removing length-prefixing now reddens EXACTLY ONE case, the new one. Before this change the same mutation reddened none. The suite now detects the property it claimed to."
     }
   ]
 }
