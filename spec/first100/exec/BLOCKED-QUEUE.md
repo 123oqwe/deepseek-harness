@@ -1935,7 +1935,17 @@ Measured rate: **11.1% across the window (22/198), rising to 20.0% over the last
 
 **Every error here ran in one direction.** Nobody forgets to *remove* an occurrence, and no blind search *invents* one. A count that only ever loses entries will read "safer than it is" — which is the reading this entry's own criterion consumes.
 
-**Priority unchanged: still not fixed here.** It does not block a cell from greening, and the epic is the path. What changes is that the number is now measured, and the method is recorded so the next person does not repeat the blind search and conclude the frequency is falling.
+**The second party's number was biased too, by a different mechanism (2026-09-05).** The delegate's competing estimate came from 38 observations they had on hand — and they had those because they had **downloaded them to diagnose failures**. That set contains 59% failed runs against the true population's 42%. **A collection assembled for another purpose is not a sample:** the inclusion criterion was "I needed to diagnose this", which correlates strongly with "this failed". Three successive rate estimates that day (25% → 28% → 29%) all ran on that denominator, and the apparent rise may reflect only a rising share of red runs among those they chose to download.
+
+**Both parties were wrong, by different mechanisms, and met at the same number.** One method was blind in *time* — logs carried no case name before `cc2511aadb`. The other was biased in *selection* — only downloaded runs were visible. Two genuinely independent methods, which is what the existing rule asks for, and they agreed on 11 anyway.
+
+**So the independence rule needs a second clause.** Stating how two methods differ is not enough; they can differ in technique and still both be denied the same data:
+
+> **Ask what population each method could actually see.** One could see runs that left readable logs. The other could see runs someone had downloaded. Neither could see the whole, and neither party had asked where its own denominator came from.
+
+That is harder to catch than a shared blind spot, because a shared method is at least recognizable as shared.
+
+**Priority unchanged: still not fixed here.** It does not block a cell from greening, and the epic is the path. What changes is that the number is now measured against the full run list, and the method is recorded so the next person does not repeat the blind search and conclude the frequency is falling.
 
 
 **Where mutation stops working (2026-09-05, from P4-06.C).** Mutation caught this defect class three times in one session and was made a required field on that strength. Then P4-06's agent-inbox half produced a case it **cannot** catch, and the boundary is worth stating exactly:
