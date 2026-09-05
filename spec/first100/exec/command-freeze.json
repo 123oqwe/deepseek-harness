@@ -6314,6 +6314,45 @@
         "mutationDescription": "Four targeted mutations of tool-fs/src/edit.ts, each restored byte-identical: (M1) removed the exact-match early return so every edit is annotated; (M2) returned the base sentence always, so a fallback is never reported (must[1] unmet); (M3) described both fallback tiers as 'whitespace', losing which one matched; (M4) flipped the default from 'exact' to 'indentation', so a backend reporting no tier is annotated with a guess.",
         "failureSummary": "All four reddened: 2, 3, 3 and 1 of 5. M4 reddens exactly the default case, which exists because a backend that predates this field must not have a tier invented for it. M1 and M2 are opposite errors -- annotating everything and annotating nothing -- and redden disjoint sets, so neither case is standing in for the other."
       }
+    },
+    {
+      "epic": "P9-01",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm/tests/conformance-probes.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-01 Provider — stream probes a conformant stream passes all three stream-observable behaviours",
+        "P9-01 Provider — stream probes a dropped delta fails merging, which a caller cannot detect after the stream is consumed",
+        "P9-01 Provider — stream probes an adapter that emits whole calls and never streams deltas FAILS rather than passes vacuously",
+        "P9-01 Provider — stream probes a single tool call fails parallel-tool-calls, since one cannot show the second is not dropped",
+        "P9-01 Provider — stream probes a stream with no usage chunk fails accounting rather than reporting silence as success",
+        "P9-01 Provider — stream probes an empty stream reports zero cases, so no probe can claim a pass over nothing",
+        "P9-01 Provider — stream probes observeStream concatenates deltas per block index rather than across the whole stream",
+        "P9-01 Provider — stream probes deltasMergeIntoFinalCalls rejects an observation with no completed tool call",
+        "P9-01 Provider — an incomplete kit denies the route it examines a fully conformant stream STILL fails registration, because three behaviours were never demonstrated"
+      ],
+      "files": [
+        "packages/llm/llm/src/conformance-probes.ts",
+        "packages/llm/llm/tests/conformance-probes.spec.ts",
+        "packages/llm/llm/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T06:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "95819ba47f40f842d18dcc28c4a12f707201eda0",
+        "testsDiscovered": 9
+      },
+      "note": "P (Provider) for P9-01: the probes that turn a chunk stream into conformance outcomes. DELIBERATELY INCOMPLETE, and the last frozen case is that fact: three behaviours (mid-stream-abort against a live connection, error-retry classification, oversized-input rejection) need the adapter's REQUEST path and a server that can misbehave, which is the mock-server half of the epic and is not built. The kit therefore OMITS those three from its outcomes rather than reporting them passed, and a fully conformant stream still fails registration with 'behavior-not-demonstrated'. A kit that greened a route on three of six would be exactly the vacuous pass the C stage was written to reject, so the incompleteness is expressed through the gate instead of being hidden from it. DEVIATION from the epic's declared Files: the matrix names a new packages/llm/llm-conformance package. The probes live in packages/llm/llm for now because the package split belongs with the mock servers that justify it, and creating an empty package first would add a README, tsconfig and invariant decision with no provider in them. Recorded here rather than left for a reader to notice.",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of conformance-probes.ts, each restored byte-identical: (M1) deltasMergeIntoFinalCalls returns true for an observation with no completed tool call, so an adapter that never streams deltas passes vacuously; (M2) parallel-tool-calls accepts a single call, so 'surfaces every call' is no longer distinguished from 'surfaces the first'; (M3) usage-accounting passes without a usage chunk, reporting silence as success.",
+        "failureSummary": "All three reddened: 2, 1 and 1 of 9. M1 reddens two -- the no-deltas case and the direct unit case -- because that probe is the one a broken adapter would most plausibly slip past. The empty-stream case does NOT redden under M1, since it asserts every probe reports zero cases and a vacuous pass still reports zero; the gate rejects that separately through the vacuous rule, which is the intended division of labour. None reddened zero. (This summary was first written as 2, 3, 2 from expectation rather than observation and corrected against the real run: a sensitivityProof stating counts nobody measured is the same false assertion as an expectCasesMatched nobody computed.)"
+      }
     }
   ]
 }
