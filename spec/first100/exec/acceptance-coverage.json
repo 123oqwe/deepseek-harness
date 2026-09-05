@@ -1428,6 +1428,103 @@
         }
       ],
       "note": "acceptance[4]: 'the negotiated result is written to each Run's provenance.' The outcome is returned from initialize as structured provenance -- agreed version, agreed capabilities, ignored capabilities, downgrades -- so 'what did these peers agree to' is answerable from the record rather than by replaying a handshake that no longer exists. Two failure modes are closed rather than one: a partially-formed negotiation is dropped WHOLE, because a caller would treat the fields that did arrive as authoritative and a half-recorded agreement is worse than none; and an ABSENT negotiation stays absent rather than becoming an empty one, since absence means the peer predates negotiation while an empty record would assert agreement to nothing. The P-stage export case is included because provenance that no consumer can construct is not provenance: before that stage the negotiation functions existed and nothing re-exported them."
+    },
+    {
+      "epic": "P4-07",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses the old holder's token after the item is reclaimed at a higher epoch"
+        },
+        {
+          "stage": "C",
+          "title": "admits the new holder's token against the same reclaimed lease"
+        },
+        {
+          "stage": "P",
+          "title": "refuses the old token after reclaim, and admits the new one"
+        },
+        {
+          "stage": "U",
+          "title": "refuses the previous holder after the item is reclaimed"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 16 split brain: two holders across a reclaim, only the later one writes"
+        }
+      ],
+      "note": "acceptance[0]: 'a recovered old worker can neither submit results nor perform new side effects.' Covered through the full sequence rather than a hand-built stale token: the lease expires, the scheduler reclaims at a higher epoch, and only then does the old holder present the token it still believes is valid. The U-stage case carries it to a real state WRITE -- the fenced dispatch entry refuses to advance a lifecycle -- which is what makes 'cannot perform a side effect' more than a property of a pure comparison. Each stage's positive control sits beside its refusal, so none of these is satisfied by a check that refuses everything. NOT fully closed: the unfenced advanceAgentLifecycle export remains reachable, pinned by the U/F characterization cases rather than by a lock, because a failing case is already watching it."
+    },
+    {
+      "epic": "P4-07",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "decides staleness without consulting any clock, so skewed workers agree"
+        },
+        {
+          "stage": "C",
+          "title": "holds the lease AT its expiry instant, so renew and reclaim cannot both be legal"
+        },
+        {
+          "stage": "P",
+          "title": "extends the deadline without issuing a new epoch"
+        },
+        {
+          "stage": "P",
+          "title": "refuses to renew an ALREADY-EXPIRED lease, rather than resurrecting it"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 07 a lease is still held AT its expiry instant"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 08 a lease one millisecond past expiry is reclaimable"
+        }
+      ],
+      "note": "acceptance[1]: 'clock skew within tolerance does not produce two masters.' Satisfied by construction rather than by tuning a tolerance, and the coverage reflects that: the staleness test reads epochs only, so the C-stage case drives the same stale token against leases whose deadlines differ by the full safe-integer range and gets one verdict every time. Two workers with arbitrarily skewed clocks therefore cannot disagree about who holds authority. The remaining two-masters window is the expiry BOUNDARY, and it is pinned from both sides: a lease is still held at its expiry instant, and reclaimable one millisecond later. Renewal of an already-expired lease is refused for the same reason -- reviving a lapsed holder IS the two-masters state, since the scheduler may already have handed that item to someone else."
+    },
+    {
+      "epic": "P4-07",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "refuses acquisition with a reason distinct from a free item"
+        },
+        {
+          "stage": "P",
+          "title": "refuses renewal while unavailable, so a holder cannot extend blindly"
+        },
+        {
+          "stage": "P",
+          "title": "offers nothing reclaimable while unavailable, even for a lapsed lease"
+        },
+        {
+          "stage": "P",
+          "title": "resumes normally once the store is available again"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 13 an unavailable store offers nothing reclaimable"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 14 an unavailable store refuses renewal"
+        }
+      ],
+      "note": "acceptance[2]: 'stop taking new work when the lease store fails.' Stop-work is proved in BOTH directions -- nothing can be acquired and nothing is offered as reclaimable -- because a scheduler blocked on one path and fed by the other would still start work. The refusal carries a DISTINCT 'store-unavailable' tag rather than a null or empty result: 'nobody holds this' and 'I cannot tell you who holds this' must not look alike, since reporting an item free during an outage is exactly how the same work item reaches a second worker. The fourth case is a positive control and is load-bearing here -- without it, a store stuck permanently unavailable would satisfy every one of the refusal cases above."
     }
   ]
 }
