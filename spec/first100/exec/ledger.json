@@ -3681,18 +3681,75 @@
           "capturedAtUtc": "2026-09-05T16:40:00.000Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r6/first100-evidence-4ce759848ccf663f7b18ed18a9de96959157c8ad/vitest-report.json",
+          "observationSha256": "b25e3445447517bbf61a22ea94436327cab27c014f41cf626bcffa347c3ecd32",
+          "expectCasesMatched": [
+            "spends the attempt and persists `sent` BEFORE handing the record to the transport",
+            "applies the receipt, and applying the same outcome twice does not ack twice",
+            "returns a failed send to pending with its attempt spent, not dead-lettered",
+            "dead-letters once the attempt budget is exhausted, and says which reason",
+            "reads the clock ONCE, so a slow transport cannot expire a later record",
+            "dispatches in priority order, so a starved low-priority record cannot jump ahead"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-05T18:20:00.000Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r6/first100-evidence-4ce759848ccf663f7b18ed18a9de96959157c8ad/vitest-report.json",
+          "observationSha256": "b25e3445447517bbf61a22ea94436327cab27c014f41cf626bcffa347c3ecd32",
+          "expectCasesMatched": [
+            "enumerates at least the twelve boundaries the clause requires",
+            "fault boundary 01 deadline expired before any attempt",
+            "fault boundary 02 attempt budget exhausted",
+            "fault boundary 03 expired AND exhausted reports the expiry, pinning check order",
+            "fault boundary 04 exactly at the deadline is still deliverable, not expired",
+            "fault boundary 05 exactly at the attempt budget is exhausted, not deliverable",
+            "fault boundary 06 an acked record is skipped, never re-sent",
+            "fault boundary 07 a dead-lettered record is skipped, never resurrected",
+            "fault boundary 08 acked is terminal: no transition out of it is legal",
+            "fault boundary 09 dead-letter is terminal: no transition out of it is legal",
+            "fault boundary 10 a receipt naming another message id is refused",
+            "fault boundary 11 a receipt naming another epoch is refused",
+            "fault boundary 12 acking a dead-lettered record is refused",
+            "fault boundary 13 a replayed receipt from another consumer keeps the first consumer",
+            "fault boundary 14 a duplicate arrival is dropped without a second effect",
+            "fault boundary 15 a foreign-tenant arrival is refused and records nothing",
+            "fault boundary 16 a foreign-tenant arrival is refused even when its key is already seen",
+            "fault boundary 17 the same id at a different epoch is NOT a duplicate",
+            "fault boundary 18 backpressure refuses AT the limit, not above it",
+            "reports the buried record and its reason to the alert channel",
+            "alerts only AFTER the dead-letter state is persisted",
+            "does not alert when a send merely fails and the record stays retryable"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-05T18:20:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": null,
-      "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "IN_PROGRESS",
-      "acceptedEvidence": null
+      "independentVerdict": "WITHHELD_LIVE_LOCK",
+      "openFindings": [
+        "BLOCKED-088",
+        "BLOCKED-089",
+        "BLOCKED-091"
+      ],
+      "status": "BLOCKED_ON_ACCEPTANCE",
+      "acceptedEvidence": null,
+      "selfAudit": {
+        "performedAtUtc": "2026-09-05T18:30:00.000Z",
+        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's and is deliberately withheld — this row carries two live acceptance locks.",
+        "i_coverageClosure": "PASS. All four cells' expectCasesMatched are byte-identical to their live freeze entry's expectCases (14/17/6/22), and every live entry carries a sensitivityProof.",
+        "ii_candidateChainConsistency": "PASS. fc53394dc6 (C) is an ancestor of a7ed2e4f25 (P), which is an ancestor of 4ce759848c (U and F); all three are on fork/first100-exec. Verified with git merge-base --is-ancestor, not by commit date.",
+        "iii_observationDistinctness": "PASS under BLOCKED-018's approved redefinition. C, P and U/F rest on three distinct artifacts. U and F share run 33955647211, which is permitted iff (a) their frozen commands genuinely differ and (b) each cell's titles are independently confirmed in the shared observation. Both hold: different argv (dispatcher.spec.ts vs fault-matrix.spec.ts), ZERO overlap between the 6- and 22-title sets, and each set verified present-and-passing (6/6, 22/22). The forbidden case -- two cells with an IDENTICAL frozen command greened from one observation -- does not apply.",
+        "iv_delegateSignOff": "WITHHELD. The delegate will not sign a row carrying live locks; same precedent as P4-05. Recorded rather than pending, so nobody reads its absence as an oversight.",
+        "note": "Recorded now so it stays valid on unlock day and only the increment needs re-checking. --accept was NOT run and must not be: it would pass these three predicates and the row would be marked ACCEPTED while both locked clauses remain unproven."
+      }
     },
     "P4-07": {
       "id": "P4-07",
