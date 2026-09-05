@@ -1103,6 +1103,95 @@
         }
       ],
       "note": "acceptance[2]: 'the check completes within 10 seconds and reports the shortest cycle path.' Two independent requirements. SHORTEST: asserted where a shorter cycle also exists, so returning any cycle is insufficient -- a search reporting the first cycle found would pass a single-cycle fixture and fail this one. WITHIN 10s: the C-stage case times a 300-package scan against the budget. CALIBRATION of that timing claim: the F-stage case asserts the real scan reaches real input (>200 packages, >1000 edges, zero unclassified), because a scan that completes quickly by examining nothing satisfies a timing assertion perfectly. The budget only means something once the work it bounds is shown to have happened."
+    },
+    {
+      "epic": "P0-08",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "F",
+          "title": "enforcement: deterministic, fault and security all execute with no external model configured"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: a lane needing a real model is skipped WITH a reason, and contributes no report at all"
+        },
+        {
+          "stage": "F",
+          "title": "control: the same lane DOES execute once a real model is configured, so the skip measures configuration"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a lane is skipped only when a scenario in it requires a real model, not because a sibling lane does"
+        },
+        {
+          "stage": "U",
+          "title": "contract: an empty report list holds, so a run that executed no lane is not reported as breached"
+        }
+      ],
+      "note": "acceptance[0]: 'the deterministic/security/fault lanes run to completion with no external API configured.' Asserted as a property of the framework rather than of an invocation: runLanes decides lane eligibility itself, so all three keyless lanes execute regardless of configuration. The load-bearing half is the second case -- a lane requiring a real model is skipped WITH a recorded reason and contributes NO REPORT AT ALL. Absence and success must stay distinguishable, or an unconfigured environment reports a clean run it never performed. POSITIVE CONTROL: the same lane DOES execute once a model is configured, so the skip measures configuration rather than a lane that never runs. The U-stage pair closes two adjacent failures: a real-model lane must not suppress its keyless siblings, and invariantsHeld([]) must HOLD -- the dual of the skip rule, since absence must not read as failure either, or a machine with no key would look compromised."
+    },
+    {
+      "epic": "P0-08",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "F",
+          "title": "enforcement: two runs at one seed are identical, down to every recorded replay seed"
+        },
+        {
+          "stage": "F",
+          "title": "control: a different seed produces a different run, so the case above is not comparing two constants"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: a recorded replay seed identifies exactly one trial, so a failure can be reproduced from the report alone"
+        },
+        {
+          "stage": "U",
+          "title": "contract: the same run seed, scenario and index always yield the same trial seed"
+        },
+        {
+          "stage": "U",
+          "title": "contract: changing any one of the three inputs changes the trial seed, so a seed identifies one trial and not a family"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a generator draws the same sequence for one seed, and a different sequence for another"
+        }
+      ],
+      "note": "acceptance[1]: 'the same seed reproduces the same event projection and the same failure position.' Both halves are asserted. REPRODUCTION: two runs at one seed compare identical in full, including every recorded replay seed, so the failure POSITION is covered and not only the aggregate counts. CONTROL, required because equality of two runs is trivially satisfiable: a different seed must produce a different run, or the assertion could pass over two constants. FAILURE POSITION specifically: a recorded replay seed must identify exactly one trial, asserted as 32 distinct seeds across 32 trial indices -- a seed that collided would name a family of trials and could not reproduce the one that failed. The U-stage cases fix the mechanism underneath: a trial seed is a function of run seed, scenario name and trial index alone, changing ANY one changes it, and the generator is a function of its seed."
+    },
+    {
+      "epic": "P0-08",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "F",
+          "title": "enforcement: a lane scoring a perfect task-success rate still reports a breach, and the verdict reads only the invariant side"
+        },
+        {
+          "stage": "F",
+          "title": "control: the inverse also holds — a lane that fails every task with no breach keeps its invariants intact"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: the security guard refuses an uncapability-backed write, which is why the security lane records no breach today"
+        },
+        {
+          "stage": "F",
+          "title": "control: a capability-backed write IS admitted, so the refusal above is a decision and not a function that always denies"
+        },
+        {
+          "stage": "U",
+          "title": "contract: one breached lane fails the whole run even when every other lane is clean"
+        },
+        {
+          "stage": "U",
+          "title": "control: the same clean lane on its own holds, so the case above fails for the breach and not for the aggregation"
+        }
+      ],
+      "note": "acceptance[2]: 'real-model results are scored separately from base invariants; a model failure cannot mask a security bypass.' This is a SEPARATION, not a threshold, so it is asserted in both directions. FORWARD: a lane at a perfect 100% task-success rate still reports its breach, and invariantsHeld reads only the invariant side, so the bypass decides the verdict while the model score cannot dilute it -- folded into one number this lane would report as ~95% passing and the bypass would vanish after the decimal point. INVERSE, without which the forward case could pass in a framework that never reports invariants as holding: a lane failing EVERY task with no breach keeps its invariants intact. The security-guard pair proves the lane's clean invariant record is a decision rather than a dead path: an uncapability-backed write is refused, and a capability-backed one IS admitted. The U-stage pair adds aggregation: one breached lane fails the whole run, while that same clean lane alone holds."
     }
   ]
 }

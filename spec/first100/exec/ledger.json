@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T03:49:24.738Z",
-  "inputDigest": "8f487506449146029ad2aa764fd00b549a31ec61584a1282403682e958965508",
+  "lastUpdatedUtc": "2026-09-05T04:53:13.431Z",
+  "inputDigest": "da87de3925b5345059f907eb504a86a267e35b6e36ea8eff89422ef914dcb546",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1053,7 +1053,31 @@
           "status": "NOT_RUN"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "da1d43f1d0f19390f7345e2988bfb719d7d963f4",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33945015221",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-da1d/first100-evidence-da1d43f1d0f19390f7345e2988bfb719d7d963f4/vitest-report.json",
+          "observationSha256": "c728462613f3c065f7250f5a002c84664d2b2707aef85822b95e7b4ce4f919a6",
+          "expectCasesMatched": [
+            "contract: readManifest returns the frozen five lanes, so the runner and the schema cannot drift apart silently",
+            "contract: every lane in the manifest declares exactly the eight standard metric names the report module exports",
+            "contract: the invariant metrics are a proper subset of the standard metrics, never a separate vocabulary",
+            "contract: the same run seed, scenario and index always yield the same trial seed",
+            "contract: changing any one of the three inputs changes the trial seed, so a seed identifies one trial and not a family",
+            "contract: a generator draws the same sequence for one seed, and a different sequence for another",
+            "contract: every draw stays inside [0, 1), so a scenario indexing by it can never step outside its own range",
+            "contract: every failing trial contributes a replay seed, and every breach contributes one naming its metric",
+            "control: a lane where everything passed records no replay seeds, so the case above measures failures rather than emitting seeds unconditionally",
+            "contract: an empty lane reports a zero rate and full-width uncertainty, never a confident zero",
+            "contract: one trial can breach more than one invariant, and each is recorded separately with its own seed",
+            "contract: one breached lane fails the whole run even when every other lane is clean",
+            "control: the same clean lane on its own holds, so the case above fails for the breach and not for the aggregation",
+            "contract: an empty report list holds, so a run that executed no lane is not reported as breached",
+            "contract: scenarios sharing a lane are scored together into a single report for that lane",
+            "contract: trialsPerScenario controls the trial count exactly, so a caller can bound a run",
+            "contract: a lane is skipped only when a scenario in it requires a real model, not because a sibling lane does"
+          ],
+          "capturedAtUtc": "2026-09-05T04:53:13.421Z"
         },
         "F": {
           "status": "GREEN",
@@ -1083,7 +1107,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "abe444fba1fb14a1de1470c331454a78cad904dd",
+      "candidateSha": "da1d43f1d0f19390f7345e2988bfb719d7d963f4",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
