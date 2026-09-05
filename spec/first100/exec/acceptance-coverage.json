@@ -1849,6 +1849,99 @@
         }
       ],
       "note": "acceptance[3]: 'recursion depth, total agents and total budget are bounded.' Each ceiling is pinned from BOTH sides -- admitted one step below, refused at it -- because a limit tested only from the refusing side is satisfied by a check that refuses everything. The decay is what makes the totals hold: a child receives what remains minus the call that started it, so a tree cannot have every run believe it holds the full allowance. Recursion is refused structurally and anywhere on the chain, not merely caught by depth, so an operator learns 'this definition calls itself' rather than 'this got too deep'.\n\nmust[3] IS NOT CLAIMED AS COVERED, per the delegate's ruling. The clause is about the RUNTIME behaviour of nested workflows, and `runtime.ts` installs no `workflow()` global, so a script cannot start one and nothing can violate the clause today. The vacuum is held by a mutation-proved tripwire in the U stage rather than by prose: it fails the day a nesting hook appears, forcing whoever adds it to face must[3] then. These entries cover the DECISIONS a future wiring will consult; they do not cover a running worker enforcing them."
+    },
+    {
+      "epic": "P5-11",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses a second worker while the first claim is live"
+        },
+        {
+          "stage": "C",
+          "title": "leaves exactly one admitted holder after a hundred contending workers"
+        },
+        {
+          "stage": "C",
+          "title": "holds the claim AT its expiry instant, so renew and reclaim cannot both be legal"
+        },
+        {
+          "stage": "P",
+          "title": "admits the first claimant and refuses every later one"
+        },
+        {
+          "stage": "P",
+          "title": "persists the winning claim, so a later read sees the owner"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 03 a claim is still held AT its expiry instant"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 05 a reclaim issues a strictly greater attempt"
+        }
+      ],
+      "note": "acceptance[0]: 'concurrent claims across processes produce exactly one winner.' Covered at two levels, and the SCOPE LIMIT is stated rather than implied: the decision level proves the rule, and the store level proves the rule is applied without an interleaving point -- read-decide-write with no suspension between them. That makes single-winner true WITHIN ONE PROCESS. Genuine cross-process atomicity needs the write to be conditional on the attempt number that was read, a compare-and-set the backing store enforces, and no such store exists here; validation[0]'s 100-worker stress is therefore run sequentially. The clause says 多进程 and this covers the decision it rests on, not a multi-process deployment. The store-level case that persists the winning claim is load-bearing: a store returning a claimed task without retaining it satisfies the contention assertion while losing every claim."
+    },
+    {
+      "epic": "P5-11",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "advances claimed -> submitted -> verified with no model involvement"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a receipt from a STALE attempt, so a reclaimed task is not overwritten"
+        },
+        {
+          "stage": "U",
+          "title": "refuses an illegal advance, such as verifying work never submitted"
+        },
+        {
+          "stage": "U",
+          "title": "records the outputs a receipt carries"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a receipt for an unknown task"
+        }
+      ],
+      "note": "acceptance[1]: 'when the model does not update a task by hand, the runtime advances it from receipts.' The advance is driven entirely by evidence -- applyReceipt moves claimed to submitted to verified with nothing model-facing involved. Every rule protecting a claim protects the receipt too: it must come from the current owner at the current attempt and name a legal transition. The stale-attempt case carries the substance -- a worker whose claim lapsed can still finish and report, and accepting that report would overwrite the new holder's task with the old holder's result, which is exactly why receipts carry an attempt at all."
+    },
+    {
+      "epic": "P5-11",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses a two-task cycle"
+        },
+        {
+          "stage": "C",
+          "title": "refuses a three-task cycle, naming the path"
+        },
+        {
+          "stage": "C",
+          "title": "accepts a diamond, which shares a dependency without cycling"
+        },
+        {
+          "stage": "P",
+          "title": "refuses a cyclic submission and stores nothing"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 a two-task cycle is refused"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle"
+        }
+      ],
+      "note": "acceptance[2]: 'a cyclic dependency is refused at submission.' Refused when the graph is submitted rather than discovered when a claim deadlocks -- a cycle found at claim time presents as 'nothing is claimable', indistinguishable from a board whose dependencies are merely unfinished, so an operator would wait instead of fixing it. The store-level case checks that a refused submission stores NOTHING, since a partially-stored graph would let a later claim reach a task the board declined. The diamond cases are the necessary counterweight: a validator refusing every re-encountered node would pass every cycle test and reject legitimate shared dependencies."
     }
   ]
 }

@@ -5249,6 +5249,54 @@
         "mutationDescription": "Six mutations. blackboard: (1) the runtime structured check removed so a cast-through string is admitted; (2) trace returns immediate inputs instead of observations; (3) dangling provenance admitted. mailbox: (4) deduplication checked before the address. taskboard store: (5) the receipt owner check removed; (6) any receipt kind advances from any status. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each -- six mutations, six distinct cases, no overlap."
       }
+    },
+    {
+      "epic": "P5-11",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 an open task admits its first claim",
+        "fault boundary 02 a live claim refuses a second worker",
+        "fault boundary 03 a claim is still held AT its expiry instant",
+        "fault boundary 04 one millisecond past expiry the task is claimable again",
+        "fault boundary 05 a reclaim issues a strictly greater attempt",
+        "fault boundary 06 a superseded holder's write is refused",
+        "fault boundary 07 an attempt above the current one is refused, not treated as newer",
+        "fault boundary 08 the current holder at the current attempt is admitted",
+        "fault boundary 09 a verified task is not claimable",
+        "fault boundary 10 a failed task is not claimable",
+        "fault boundary 11 a submitted-but-unverified dependency blocks the claim",
+        "fault boundary 12 one unverified dependency among several still blocks",
+        "fault boundary 13 all dependencies verified admits the claim",
+        "fault boundary 14 a not-claimable status wins over an unmet dependency",
+        "fault boundary 15 a two-task cycle is refused",
+        "fault boundary 16 a self-dependency is refused distinctly from a cycle",
+        "fault boundary 17 a forward reference is refused as an unknown dependency",
+        "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle",
+        "fault boundary 19 an empty graph is valid"
+      ],
+      "files": [
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T17:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "11b4db3d976c7580f359925a792987a3446736f0",
+        "testsDiscovered": 40
+      },
+      "note": "P5-11 F-stage. 19 boundaries as data with the count guarded, added to claims.e2e.spec.ts under their own describe block; the C stage's 20 titles are disjoint, so predicate (iii) holds on the shared file.\n\nBoundary 14 pins CHECK PRECEDENCE with an input that triggers two rules at once: a verified task with an unmet dependency reports not-claimable, not dependency-unmet. A finished task is finished whatever its dependencies say, and reporting the dependency would send an operator to fix something that no longer matters.\n\nBoundary 12 exists because 'some dependency is unverified' and 'the first dependency is unverified' pass identical tests on single-dependency fixtures. The case gives a verified dependency FIRST and an unverified one second, so a check-only-the-first mutation reddens -- BLOCKED-098's rule applied deliberately rather than after being caught by it.\n\nBoundary 18 is the diamond: a shared dependency is not a cycle, and a naive visited-set walk that refused any re-encountered node would reject it. Boundary 19 pins the empty graph as valid, since a validator that refused everything would satisfy most of this matrix.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations on src/types.ts beyond those recorded for C: (1) the dependency check moved before the not-claimable check, inverting reason precedence; (2) only the first dependency examined instead of all; (3) an empty graph refused. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 boundary each -- 14, 12 and 19 respectively, each the boundary written for it."
+      }
     }
   ]
 }
