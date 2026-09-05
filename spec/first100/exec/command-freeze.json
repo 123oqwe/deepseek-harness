@@ -4150,6 +4150,54 @@
         "mutationDescription": "Eight mutations. Outbox: (1) deadline comparison > becomes >=; (2) attempts comparison >= becomes >; (3) dead-letter made non-terminal; (4) receipt epoch check dropped; (4b) receipt id check dropped; (5) dedupKey ignores the epoch; (6) backpressure < becomes <=. Dispatcher: (7) alert fires before persist; (8) alert fires on every failed send. All restored byte-identical.",
         "failureSummary": "Reddens 1, 2, 1, 1, 1, 1, 1 and 1 case respectively, each on the boundary that names its defect. Against the FIRST draft, mutation (4) reddened ZERO because boundaries 10 and 11 were built on a `pending` record and were satisfied by the transition table rather than by the identity check; the draft was fixed rather than frozen."
       }
+    },
+    {
+      "epic": "P1-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve rejection boundaries, each named once",
+        "fault boundary 01 tampered package digest is refused for digest mismatch",
+        "fault boundary 02 swapped source repo is refused for source-repo mismatch",
+        "fault boundary 03 forged commit in the same repo is refused distinctly from a repo swap",
+        "fault boundary 04 forged builder identity is refused for builder-identity mismatch",
+        "fault boundary 05 several mismatches at once still refuse, naming the first checked fact",
+        "fault boundary 06 sigstore evidence with an empty issuer is refused as invalid",
+        "fault boundary 07 sigstore evidence with an empty subject is refused as invalid",
+        "fault boundary 08 sigstore evidence with a negative transparency log index is refused",
+        "fault boundary 09 sigstore evidence with a non-integer log index is refused",
+        "fault boundary 10 log index zero is VALID, so the check is not an accidental truthiness test",
+        "fault boundary 11 offline evidence with an empty signature is refused as invalid",
+        "fault boundary 12 offline evidence with an empty key fingerprint is refused as invalid",
+        "fault boundary 13 a fact mismatch is reported even when the evidence is ALSO invalid",
+        "fault boundary 14 an SBOM omitting an installed runtime dependency is refused",
+        "fault boundary 15 a declared runtime dependency that is NOT installed is refused",
+        "fault boundary 16 a dev-only SBOM entry absent from the installed set is NOT a fault",
+        "fault boundary 17 unsigned-dev is refused for a profile the deployment does not call dev",
+        "fault boundary 18 an admitted unsigned-dev profile still carries a persistent untrusted banner",
+        "KNOWN GAP (P1-02 lock, validation[3]): an UNREGISTERED signing identity is trusted on sight"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T19:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "ab9d874180cd61404e2c9ead8c87932e34d2a7e9",
+        "testsDiscovered": 33
+      },
+      "note": "P1-02 F-stage. The declared file is provenance.spec.ts, which the C stage also uses -- so the Fault cases are ADDED to it under their own describe block, and expectCases names ONLY the Fault-stage titles. The C stage's frozen titles are untouched and remain that cell's evidence; predicate (iii) distinctness holds because the two title sets are disjoint even though the file is shared.\n\nPRE-FLIGHT on validation[3] ('run a revoked signing identity test'): it has NO SUBJECT, and this was measured rather than inferred. Zero occurrences of 'revok' anywhere in plugin-provenance or trust-kernel; SignatureRejectionReason has no revoked member; registerTrustAnchor returns an id rather than a disposer and nothing ever calls delete, so an anchor can never be removed. The deeper reason is worse than a missing API: verifyPackageSignature TRUSTS A FIRST-SEEN ISSUER that was never registered at all. Revocation would therefore be a no-op even if the registry could forget a key, because being unregistered already means trusted. 'No longer registered' cannot mean anything when 'never registered' verifies.\n\nNo case was faked for it. Instead one case, titled KNOWN GAP, proves the gap directly: an unregistered fingerprint verifies as trusted and names an anchor id derived from itself. When the trust root stops trusting first-seen identities that case starts FAILING -- that is the unlock signal, not a regression, and it is deleted together with the lock when the real revocation test is written. Same pattern as P1-02's existing BLOCKED-050 pinned case.\n\n18 reachable boundaries enumerated as DATA with the count asserted against a floor, so one cannot be deleted while every remaining case still passes.\n\nA VOCABULARY ASSUMPTION WAS WRONG AND THE TESTS CAUGHT IT: the first draft asserted trust: 'untrusted' throughout, but the verdict tag is 'rejected'. 13 cases failed immediately. Reading the union rather than guessing again was the fix -- the same pre-flight discipline applied to a type instead of to a subject.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations. (1) transparency-log-index validity becomes a truthiness check, so index 0 is wrongly refused; (2) the source-commit check removed, leaving repo-only; (3) the observed-digest check bypassed so evidence is effectively judged first; (4) SBOM coverage ignores undeclared installed dependencies; (5) SBOM coverage counts dev entries as runtime; (6) unsigned-dev admits any profile name. All restored byte-identical.",
+        "failureSummary": "Reddens 3, 2, 4, 2, 7 and 2 cases respectively -- every one non-zero, and each landing on the boundary that names its defect. Boundary 10 (index zero is valid) exists specifically to catch mutation (1), which a matrix testing only invalid indices would miss."
+      }
     }
   ]
 }
