@@ -92,6 +92,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-05T11:56:00.020Z",
       "note": "gq-92 independent verify. Ran: a script over ledger.json, acceptance-coverage.json, command-freeze.json and the vitest-report.json of run 33963744479 (19631 tests, 0 failures, no flake absorbed). (iii) 47 frozen titles across C/U/F (P is N/A per registry: record/codec only), each present and passing. (ii) all three cells cite one candidate SHA, 2c854a9be2 -- there is no chain to compare and none is claimed; the single SHA was separately confirmed an ancestor of first100-exec. (i) 3/3 acceptance clauses, 17 references, each checked twice: that the title belongs to the frozen set of the stage it claims, and that it passed in the cited observation. Lock check read from the machine-readable block: 'accept-blocked: P6-02' occurs 0 times. acceptance[2]'s entry states what it does not cover -- decideCrossScopeMerge is a decision, and the runtime that would enforce it on the read path belongs to the lock now owned by P6-03."
+    },
+    {
+      "epic": "P4-08",
+      "rowDigestSha256": "bc543e9e65c06a5f2d2e0f5ff64ff6fc20745f4f50eaffbd7f8aee862f8d4f5e",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-05T12:35:34.146Z",
+      "note": "gq-92 independent verify. Ran: a script over ledger.json, acceptance-coverage.json and the vitest-report.json of run 33965511238 (19691 tests, 0 failures, no flake absorbed). (iii) 59 frozen titles across C/P/U/F, each present and passing. (ii) all four cells cite one SHA, 8486e52a6a -- no chain between cells to compare and none is claimed; the SHA itself was separately confirmed an ancestor of first100-exec via git merge-base --is-ancestor. (i) 3/3 acceptance clauses, 17 references, each checked twice: that the title belongs to the frozen set of the stage it claims, and that it passed in the cited observation. Lock check read from the machine-readable block: 'accept-blocked: P4-08' occurs 0 times."
     }
   ]
 }
