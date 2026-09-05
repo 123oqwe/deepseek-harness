@@ -2544,3 +2544,36 @@ DSH_SNAPSHOT=refresh   replay committed fixtures, REWRITE expected keyless
 **Recorded because the error is instructive.** A wrong reason produced the right verdict — BLOCKED either way — and a verdict that happens to be right is not the same as one that was established, which is BLOCKED-106's whole subject. The blocker was filed against a key that was never required.
 
 **Scope note for whoever repairs it.** The correct fix is not only the refresh. `SessionEventMap` gained a member, so the Python SDK's expected outputs are in the same blast radius, and `docs/architecture.md` needs updating for the agent-loop change. A re-record that greens the TypeScript snapshots alone leaves two of the three obligations unmet.
+
+### BLOCKED-109 — the gate that decides a CELL is narrower than the gate that decides the BRANCH
+
+**Status: OPEN, proposal recorded, deliberately NOT applied unilaterally.**
+
+`first100-exact-sha.yml` decides every GREEN cell in this program. What it runs:
+
+```
+pnpm install --frozen-lockfile
+pnpm run typecheck
+pnpm exec vitest run --reporter=json ...        ← no path filter: the FULL unit suite
+```
+
+What it does not run: `pnpm run lint`, `pnpm run test:snapshot`, `pnpm run doc-sync`. Two gates the repository treats as mandatory therefore sit outside the program's own definition of done, and both were found red today:
+
+| gate | state found | how long it had been red |
+|---|---|---|
+| `lint` | 525 errors across 28 files, every one last touched by a First-100 commit | unknown; accumulated across many epics |
+| `test:snapshot` | 76 of 115 failing, from one session event added by `73722dd182` | since P2-03's U stage |
+
+**A correction to how this was first reported.** The Cordis catalog drift found in the same pass was described as a third witness. It is not: the greening command runs `vitest` with **no path filter**, so the catalog test is inside the observation and would have failed the job. The drift was simply newer than the last CI run. `vitest.snapshot.config.ts` is a separate config with its own `include`, which is why snapshots — and only snapshots, plus lint — are genuinely outside.
+
+> **The corrected finding is narrower and still holds: a cell can be greened, and its epic ACCEPTED, while `lint` and `test:snapshot` are red at that exact SHA.**
+
+**The proposed fix, and why it is not applied here.** Adding `pnpm run lint` and `pnpm run test:snapshot` as steps would close it. But those steps would also make greening impossible while BLOCKED-108 stands, since snapshots are red today — so applying it unilaterally would convert an open finding into a hard stop on every remaining cell, and it raises the acceptance bar for the 19 epics already ACCEPTED under the narrower one.
+
+Both consequences belong to the maintainer and the delegate, not to the executor. The change itself is two steps in the job; the decision is whether to:
+
+1. apply it after BLOCKED-108 is repaired, so the branch is green before the bar rises, and treat already-ACCEPTED epics as judged under the old bar; or
+2. apply it now and accept that nothing greens until the snapshots are refreshed; or
+3. keep cell greening as it is and run the wider gates as a separate branch-level check, accepting that a GREEN cell does not imply a releasable branch.
+
+**Not filed as a defect in anyone's diligence.** The narrow gate is a reasonable design for per-cell evidence — a cell asserts that specific frozen cases pass at a SHA, which is exactly what the observation shows. What is missing is anything that ever asks the wider question, and the answer to "who runs lint" turned out to be nobody.
