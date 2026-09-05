@@ -196,3 +196,131 @@ describe('P8-01 Contract: acceptance[2] and [3] — the fingerprint is stable pe
     expect(computeSchemaFingerprint(one)).not.toBe(computeSchemaFingerprint(two))
   })
 })
+
+describe('P8-01 Fault: the N-2/N-1/N compatibility matrix (validation[0])', () => {
+  // Three consecutive generations, each pair negotiated in both directions.
+  // A matrix rather than a few hand-picked pairs, because acceptance[0]'s
+  // promise is about ANY new-against-old pairing, and a rule that held for one
+  // pair and not another would still satisfy a spot check.
+  const N = 3
+  const generations: Record<string, ProtocolVersionRange> = {
+    'N-2': { min: 1, max: N - 2 },
+    'N-1': { min: 1, max: N - 1 },
+    N: { min: 1, max: N },
+  }
+
+  it('enforcement: every ordered pair of adjacent generations negotiates, and the result never exceeds either peer', () => {
+    for (const [clientName, client] of Object.entries(generations)) {
+      for (const [serverName, server] of Object.entries(generations)) {
+        const result = negotiateProtocolVersion(client, server)
+        const label = `${clientName} -> ${serverName}`
+        expect(result.agreed, label).toBe(true)
+        if (!result.agreed) continue
+        expect(result.version, label).toBeLessThanOrEqual(client.max)
+        expect(result.version, label).toBeLessThanOrEqual(server.max)
+      }
+    }
+  })
+
+  it('enforcement: the matrix is symmetric — swapping the peers never changes the agreed version', () => {
+    for (const client of Object.values(generations)) {
+      for (const server of Object.values(generations)) {
+        expect(negotiateProtocolVersion(client, server)).toEqual(negotiateProtocolVersion(server, client))
+      }
+    }
+  })
+
+  it('enforcement: a peer that has dropped support for the oldest generation refuses it rather than agreeing to a version it cannot speak', () => {
+    // The case a matrix of overlapping ranges alone would miss: real
+    // deprecation removes the low end, and the refusal must be explicit.
+    const dropped: ProtocolVersionRange = { min: N, max: N }
+    const ancient: ProtocolVersionRange = { min: 1, max: 1 }
+    expect(negotiateProtocolVersion(ancient, dropped)).toEqual({
+      agreed: false,
+      reason: 'no-overlapping-version',
+      client: ancient,
+      server: dropped,
+    })
+  })
+})
+
+describe('P8-01 Fault: deliberately breaking the contract must be detected (validation[1])', () => {
+  const known = new Set<CapabilityId>(['streaming', 'approval', 'replay'])
+
+  it('enforcement: removing a mandatory capability from the supported set turns an accepted handshake into a refusal', () => {
+    // validation[1] asks for a deliberate deletion to be caught. Same
+    // declaration, same known set, one capability withdrawn from support.
+    const declared: CapabilityDeclaration[] = [{ id: 'streaming', mandatory: true }]
+    expect(negotiateCapabilities(declared, known, new Set(['streaming', 'approval'])).accepted).toBe(true)
+    expect(negotiateCapabilities(declared, known, new Set(['approval'])))
+      .toEqual({ accepted: false, reason: 'unsupported-mandatory-capability', capability: 'streaming' })
+  })
+
+  it('enforcement: withdrawing a capability from the KNOWN set changes the refusal reason, so the two failures stay distinguishable', () => {
+    const declared: CapabilityDeclaration[] = [{ id: 'replay', mandatory: true }]
+    expect(negotiateCapabilities(declared, known, new Set()))
+      .toEqual({ accepted: false, reason: 'unsupported-mandatory-capability', capability: 'replay' })
+    expect(negotiateCapabilities(declared, new Set(['streaming']), new Set()))
+      .toEqual({ accepted: false, reason: 'unknown-mandatory-capability', capability: 'replay' })
+  })
+
+  it('enforcement: changing a schema version on any single surface entry moves the fingerprint, so an enum or required-field edit cannot ship silently', () => {
+    const base: ProtocolSurface = {
+      methods: [{ name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' }],
+      events: [],
+      resourceTypes: [],
+    }
+    const edited: ProtocolSurface = {
+      ...base,
+      methods: [{ name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.1' }],
+    }
+    expect(computeSchemaFingerprint(edited)).not.toBe(computeSchemaFingerprint(base))
+  })
+
+  it('control: an unrelated edit that changes no wire-visible field leaves the fingerprint alone, so the case above measures the change and not the act of editing', () => {
+    const base: ProtocolSurface = {
+      methods: [{ name: 'a', schemaId: 'x', version: '1.0' }, { name: 'b', schemaId: 'y', version: '1.0' }],
+      events: [],
+      resourceTypes: ['session'],
+    }
+    const reordered: ProtocolSurface = { ...base, methods: [base.methods[1]!, base.methods[0]!] }
+    expect(computeSchemaFingerprint(reordered)).toBe(computeSchemaFingerprint(base))
+  })
+})
+
+describe('P8-01 Fault: cross-implementation agreement on one fixture (validation[2])', () => {
+  // validation[2] asks that TypeScript and Python clients derive the SAME
+  // negotiated profile from one handshake fixture. The Python half cannot run
+  // here; what CAN be asserted is that the profile is a pure function of the
+  // fixture, with no dependence on ambient state, ordering, or invocation
+  // count -- which is the property that makes two implementations able to
+  // agree at all. A profile that varied per call could not be matched by any
+  // second implementation.
+  const fixture = {
+    client: { min: 1, max: 4 } satisfies ProtocolVersionRange,
+    server: { min: 2, max: 6 } satisfies ProtocolVersionRange,
+    declared: [
+      { id: 'streaming', mandatory: true },
+      { id: 'replay', mandatory: false },
+    ] satisfies CapabilityDeclaration[],
+    known: new Set<CapabilityId>(['streaming', 'replay']),
+    supported: new Set<CapabilityId>(['streaming']),
+  }
+
+  it('enforcement: the negotiated profile is identical across repeated derivations from one fixture', () => {
+    const derive = (): unknown => ({
+      version: negotiateProtocolVersion(fixture.client, fixture.server),
+      capabilities: negotiateCapabilities(fixture.declared, fixture.known, fixture.supported),
+    })
+    expect(JSON.stringify(derive())).toBe(JSON.stringify(derive()))
+  })
+
+  it('enforcement: the fixture pins the exact profile, so a second implementation has a concrete target rather than a description', () => {
+    // Written as literals rather than as a comparison against the functions
+    // themselves: a Python port must match THESE values, and a test that
+    // compared the code to itself would give it nothing to match.
+    expect(negotiateProtocolVersion(fixture.client, fixture.server)).toEqual({ agreed: true, version: 4 })
+    expect(negotiateCapabilities(fixture.declared, fixture.known, fixture.supported))
+      .toEqual({ accepted: true, agreed: ['streaming'], ignored: ['replay'] })
+  })
+})

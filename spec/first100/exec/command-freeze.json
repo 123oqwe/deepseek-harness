@@ -3641,6 +3641,62 @@
         "testsDiscovered": 22
       },
       "note": "P8-01 C-stage. FROZEN BEFORE FIRST EXECUTION -- the spec has never been run, so these titles are predictions. The three source modules were written in an earlier commit that explicitly disclaimed any cell and any freeze; this entry is that pipeline step, performed before the suite's first execution.\n\nSUBJECT-EXISTENCE CHECKED BEFORE STARTING, per the rule that saved a lane on P2-03's plugin-rpc: `packages/sdk/protocol` exists, `initialize` is a live method with real InitializeParams/InitializeResult types, and per-message schemaVersion negotiation through @deepseek-ai/dsh-schema-registry already ships. So must[0]'s handshake has a real subject to extend, unlike a clause naming a surface that does not exist.\n\nWHAT THE EXISTING HANDSHAKE DOES NOT ANSWER, and why this is not duplication: schemaVersion negotiation answers 'can this build read this message'. It does not answer 'can these two peers work together at all', which is what a client needs BEFORE sending a task rather than after a field silently vanishes. Version ranges answer the second question.\n\nHIGHEST rather than lowest mutually supported version, asserted deliberately: lowest would silently hold both peers at the oldest shape either has ever supported, which is how a capability stops being used without anyone deciding to stop using it. Symmetry is asserted directly -- a rule that is not symmetric gives two peers different answers about the same pair.\n\nmust[2]'s TWO refusal reasons are kept distinct because a peer can act on the difference: unknown means version skew, unsupported means a real gap. An unknown OPTIONAL capability is IGNORED rather than refused, which is the entire purpose of the mandatory/optional split, and ignored ones are RECORDED rather than dropped so a peer can see what went unused.\n\nTHE FINGERPRINT'S TWO REQUIREMENTS PULL OPPOSITE WAYS and the tension is the design problem: acceptance[2] wants stability, acceptance[3] wants sensitivity. The line drawn is wire-visible shape only -- declaration order does NOT move it, because a fingerprint reporting false drift on a refactor stops being consulted, while a version bump, an added method, a removed resource type, and a method-versus-event name collision all DO move it. Fields are length-prefixed so a name containing the separator cannot forge another surface's digest."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "contract: a new client against an old server agrees on the highest version both support",
+        "contract: an old client against a new server reaches the same version as the reverse pairing",
+        "contract: the highest mutually supported version wins, not the lowest",
+        "contract: non-overlapping ranges refuse with a machine-readable reason and BOTH ranges, so no field silently vanishes",
+        "contract: adjacent-but-disjoint ranges refuse rather than meeting in the middle",
+        "contract: ranges touching at exactly one version agree on it",
+        "contract: an inverted range is refused rather than normalised, since it describes no version the peer claimed",
+        "control: a well-formed range is accepted, so the refusal above measures the inversion",
+        "contract: a mandatory capability this build has never heard of refuses, naming the capability",
+        "contract: a mandatory capability this build knows but does not implement refuses with a DIFFERENT reason",
+        "contract: an unknown OPTIONAL capability is ignored rather than refused, which is the point of the split",
+        "contract: ignored optional capabilities are RECORDED, not dropped, so a peer can see what was not used",
+        "contract: negotiation fails fast on the first mandatory failure rather than collecting them",
+        "control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag",
+        "contract: an empty declaration set is accepted, so a peer declaring nothing is not treated as declaring something impossible",
+        "contract: the same surface fingerprints identically across calls",
+        "contract: declaration order does not move the fingerprint, since order is not wire-visible",
+        "contract: a version bump on one method moves the fingerprint",
+        "contract: adding a method moves the fingerprint, so a new wire surface cannot ship unnoticed",
+        "contract: removing a resource type moves the fingerprint",
+        "contract: a method and an event with the same name are distinguished, so the two kinds cannot collide",
+        "contract: names containing the field separator cannot forge another surface, because fields are length-prefixed",
+        "enforcement: every ordered pair of adjacent generations negotiates, and the result never exceeds either peer",
+        "enforcement: the matrix is symmetric — swapping the peers never changes the agreed version",
+        "enforcement: a peer that has dropped support for the oldest generation refuses it rather than agreeing to a version it cannot speak",
+        "enforcement: removing a mandatory capability from the supported set turns an accepted handshake into a refusal",
+        "enforcement: withdrawing a capability from the KNOWN set changes the refusal reason, so the two failures stay distinguishable",
+        "enforcement: changing a schema version on any single surface entry moves the fingerprint, so an enum or required-field edit cannot ship silently",
+        "control: an unrelated edit that changes no wire-visible field leaves the fingerprint alone, so the case above measures the change and not the act of editing",
+        "enforcement: the negotiated profile is identical across repeated derivations from one fixture",
+        "enforcement: the fixture pins the exact profile, so a second implementation has a concrete target rather than a description"
+      ],
+      "files": [
+        "packages/sdk/protocol/tests/version-negotiation.spec.ts",
+        "docs/subsystems/control-protocol.md"
+      ],
+      "frozenAtUtc": "2026-09-05T09:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d75e4d239dc7a4e3a1fc0d3b71deda8ee1f2afd6",
+        "testsDiscovered": 31
+      },
+      "note": "P8-01 F-stage, appended to the Contract stage's spec file, which the registry declares as this stage's first deliverable. All 22 Contract titles remain present and unmodified -- asserted before freezing, not assumed. The second declared file, docs/subsystems/control-protocol.md, did not exist and is written here.\n\nvalidation[0], the N-2/N-1/N matrix: every ORDERED PAIR of three adjacent generations is negotiated, not a few hand-picked pairs, because acceptance[0]'s promise is about ANY new-against-old pairing and a rule holding for one pair but not another would still satisfy a spot check. Symmetry is asserted across the whole matrix. One case covers what a matrix of overlapping ranges cannot: real deprecation removes the LOW end, so a peer that has dropped the oldest generation must refuse it explicitly rather than agree to a version it cannot speak.\n\nvalidation[1], deliberate breakage: withdrawing a mandatory capability from the supported set turns an accepted handshake into a refusal, and withdrawing it from the KNOWN set changes the refusal REASON -- so the two failure modes stay distinguishable rather than collapsing into one. A schema-version edit on any single surface entry moves the fingerprint, with a CONTROL proving the fingerprint measures the change rather than the act of editing: a reorder that alters no wire-visible field leaves it untouched.\n\nvalidation[2], cross-implementation agreement: the Python half cannot run here, and no assertion pretends otherwise. What IS asserted is the property that makes two implementations able to agree at all -- the negotiated profile is a pure function of the fixture, identical across repeated derivations, with no dependence on ambient state or invocation count. A profile that varied per call could not be matched by any second implementation. The fixture pins its expected profile as LITERALS rather than by comparing the functions to themselves, so a Python port has a concrete target; a self-comparison would give it nothing to match."
     }
   ]
 }
