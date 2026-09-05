@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T12:37:07.354Z",
-  "inputDigest": "70a65a1e5aa4f87e2ba19a3bef8adab913312b1ba04177b49b5f5cff0c68a334",
+  "lastUpdatedUtc": "2026-09-05T18:10:24.848Z",
+  "inputDigest": "2818810ded12492721ab9d7aa0f771f4dacf6cb560376ce5cafa34daa8066050",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -142,7 +142,7 @@
             "imports nothing: the kernel type surface depends on no other package",
             "has no runtime code: every top-level statement is a type/interface declaration or an ambient declare-const symbol",
             "declares an exported TrustKernel interface with exactly the six must[2] members, all readonly, and no methods",
-            "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+            "TrustKernel type surface (Epic P0-02 must[2]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
             "brands TrustKernelRootIdentity as an opaque interface, never a plain type alias",
             "brands TrustKernelSignatureRoots as an opaque interface, never a plain type alias",
             "brands TrustKernelSecretBrokerHandle as an opaque interface, never a plain type alias",
@@ -181,7 +181,7 @@
           "absorbedFlakes": [
             "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
           ],
-          "capturedAtUtc": "2026-09-01T10:51:28.133Z"
+          "capturedAtUtc": "2026-09-05T18:10:24.847Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -229,7 +229,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "74a6304ae05dfea5291936ffa68ff8bbbccfcbad",
+      "candidateSha": "cbd6031c9517dd4d71b28385b13b4037d89adddd",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -603,10 +603,10 @@
             "rejects a FeatureGateExpiryCheck implementation that returns something other than active/expired",
             "imports only via `import type`, never a runtime import",
             "has no runtime code: every top-level statement is a type-only import, interface, type alias, or an ambient declare-const symbol",
-            "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+            "src/types.ts hygiene (Epic P0-05 Contract stage: types-only, no plugin surface) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
             "has exactly one statement: a type-only `export type * from './types.ts'`"
           ],
-          "capturedAtUtc": "2026-09-01T21:55:35.350Z"
+          "capturedAtUtc": "2026-09-05T18:09:06.815Z"
         },
         "P": {
           "status": "GREEN",
@@ -713,7 +713,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "e4390a90a29e71dea1c2d32f3943b4692b5fd933",
+      "candidateSha": "92174bb7349de7fbd1908dd73c89c0f23aa576b1",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -898,7 +898,7 @@
           "observationSha256": "d2926c925c3b982c989b90df95a476e442cbb722debac59dfc5975d20878c3f4",
           "expectCasesMatched": [
             "imports only a type-only Branded from @deepseek-ai/dsh-brand -- no other import, no runtime dependency edge",
-            "exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+            "GateEvidence type surface (Epic P0-07 must[0]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
             "declares GateEvidence as a discriminated union of CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence",
             "gives GateEvidenceBase (unexported) exactly the must[0] base fields, all readonly",
             "exports CompletedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
@@ -927,7 +927,7 @@
             "is exactly one statement: `export type * from './types.ts'` -- zero runtime exports, zero Cordis registration, zero side effects",
             "has no default export and no Config/apply plugin exports"
           ],
-          "capturedAtUtc": "2026-09-01T21:32:53.039Z"
+          "capturedAtUtc": "2026-09-05T18:09:07.020Z"
         },
         "P": {
           "status": "GREEN",
@@ -995,7 +995,7 @@
           "capturedAtUtc": "2026-09-02T06:20:02.606Z"
         }
       },
-      "candidateSha": "00169c8ec501f30adcd1439a01b6bb5da3929437",
+      "candidateSha": "d21e75068d56f3150e1e32d9ceab68636b66df82",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -1485,12 +1485,11 @@
             "fault boundary 18 an admitted unsigned-dev profile still carries a persistent untrusted banner",
             "KNOWN GAP (P1-02 lock, validation[3]): an UNREGISTERED signing identity is trusted on sight"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-05T20:10:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:03.132Z"
         }
       },
       "supplements": {},
-      "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
+      "candidateSha": "1751b2f361c9ce12c9cad4acf7d19628dbea9c10",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -1531,8 +1530,7 @@
             "reports drift when the registry has moved, without changing what boot loads",
             "refuses the drifted version even once it is what is installed"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:03.369Z"
         },
         "P": {
           "status": "GREEN",
@@ -1563,8 +1561,7 @@
             "leaves no scratch file behind, so a reader never finds a partial lock",
             "writes a complete, re-readable lock when the target did not exist"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:03.594Z"
         },
         "U": {
           "status": "GREEN",
@@ -1579,8 +1576,7 @@
             "proceeds when the policy allows it, but marks the boot UNVERIFIED",
             "marks a locked, matching boot verified and an unlocked one not, on the same install"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:03.825Z"
         },
         "F": {
           "status": "GREEN",
@@ -1589,7 +1585,7 @@
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
           "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
           "expectCasesMatched": [
-            "enumerates at least twelve boundaries, each named once",
+            "P1-03 Fault — rejection-boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 a dangling dependency is refused",
             "fault boundary 02 a duplicate entry is refused",
             "fault boundary 03 unsorted entries are refused, since the file would not be byte-stable",
@@ -1608,12 +1604,11 @@
             "fault boundary 16 an empty lock admits an empty install rather than refusing",
             "fault boundary 17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T05:00:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:04.049Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
       "independentVerdict": "PENDING_WITH_LIVE_LOCK",
       "openFindings": [
         "ACCEPTANCE LOCK: must[2] product-level half + acceptance[0] product-level half — the gate has zero call sites",
@@ -3438,7 +3433,7 @@
             "resumes a non-terminal Run reconstructed after a restart",
             "refuses to resume a Run that reached a terminal state before the restart",
             "reconstructs a restored Run exactly, brands included, not an approximation of it",
-            "starts empty on a first boot, with no store file on disk yet",
+            "acceptance[0]: after a process restart, every non-terminal Run can be listed and resumed starts empty on a first boot, with no store file on disk yet",
             "accepts a legal transition through the service and durably records the new state",
             "rejects an illegal transition through the service, naming the exact rejected pair",
             "writes nothing for a rejected transition: the restored Run keeps its state and its unextended event log",
@@ -3452,7 +3447,7 @@
             "reports no Runs for a path that has never been written to, rather than failing",
             "writes the Run to the named path, not somewhere else"
           ],
-          "capturedAtUtc": "2026-09-03T21:03:12.918Z"
+          "capturedAtUtc": "2026-09-05T18:09:07.221Z"
         },
         "U": {
           "status": "GREEN",
@@ -3501,7 +3496,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "1e420e2f5bd42ae6ae9447f28faa2eb54cfc0228",
+      "candidateSha": "b1803848dfa379396582e5aa5e4240f1bf80c824",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -3772,13 +3767,9 @@
             "a refused foreign message cannot suppress a later legitimate one sharing its key"
           ],
           "absorbedFlakes": [
-            {
-              "testFullName": "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions",
-              "basis": "spec/first100/exec/flake-registry.json",
-              "note": "The run's ONLY failure. 27th recorded occurrence; the registry was rebuilt from artifacts the same day (8 -> 26 before this one)."
-            }
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
           ],
-          "capturedAtUtc": "2026-09-05T15:10:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:04.275Z"
         },
         "P": {
           "status": "GREEN",
@@ -3806,13 +3797,9 @@
             "retains a failed batch larger than the engine call-argument limit"
           ],
           "absorbedFlakes": [
-            {
-              "testFullName": "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions",
-              "basis": "spec/first100/exec/flake-registry.json",
-              "note": "The run's ONLY failure; 28th recorded occurrence."
-            }
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
           ],
-          "capturedAtUtc": "2026-09-05T16:40:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:04.497Z"
         },
         "U": {
           "status": "GREEN",
@@ -3828,8 +3815,7 @@
             "reads the clock ONCE, so a slow transport cannot expire a later record",
             "dispatches in priority order, so a starved low-priority record cannot jump ahead"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-05T18:20:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:04.719Z"
         },
         "F": {
           "status": "GREEN",
@@ -3861,12 +3847,11 @@
             "alerts only AFTER the dead-letter state is persisted",
             "does not alert when a send merely fails and the record stays retryable"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-05T18:20:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:04.945Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": [
         "BLOCKED-088",
@@ -3913,8 +3898,7 @@
             "decides staleness without consulting any clock, so skewed workers agree",
             "leaves exactly one admitted holder after a hundred sequential acquisitions"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:05.176Z"
         },
         "P": {
           "status": "GREEN",
@@ -3936,8 +3920,7 @@
             "offers nothing reclaimable while unavailable, even for a lapsed lease",
             "resumes normally once the store is available again"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:05.414Z"
         },
         "U": {
           "status": "GREEN",
@@ -3954,8 +3937,7 @@
             "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
             "refuses when the item holds no lease at all"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:05.639Z"
         },
         "F": {
           "status": "GREEN",
@@ -3964,7 +3946,7 @@
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r9/first100-evidence-82d5e8112233b371fe891b7489e89fc2658b109f/vitest-report.json",
           "observationSha256": "e2c607d0726e91f6ff36c2e08f3d33f060fc3a8a9cb35284b6953d70c908659d",
           "expectCasesMatched": [
-            "enumerates at least twelve boundaries, each named once",
+            "P4-07 validation[0]: systematic fault matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 a strictly older epoch is refused as stale",
             "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
             "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
@@ -3987,12 +3969,11 @@
             "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
             "CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T00:30:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:05.859Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f",
       "independentVerdict": "APPROVED",
       "openFindings": [
         "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)"
@@ -4079,8 +4060,7 @@
             "retains EVERY receipt, which is the evidence nothing can regenerate",
             "reports a compaction that dropped a receipt as NOT retaining evidence"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:06.084Z"
         },
         "P": {
           "status": "GREEN",
@@ -4103,8 +4083,7 @@
             "kill AFTER the agent call settles but before verification: still re-run",
             "kill after verification: the completed child work is NOT repeated"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:06.305Z"
         },
         "U": {
           "status": "GREEN",
@@ -4122,8 +4101,7 @@
             "kill between two agent calls: the finished one is skipped, the next re-run",
             "kill during concurrent calls started out of order: the journal still reads in script order"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:06.527Z"
         },
         "F": {
           "status": "GREEN",
@@ -4132,7 +4110,7 @@
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r13/first100-evidence-8486e52a6a0627eaba36a616e01ed043f5acf200/vitest-report.json",
           "observationSha256": "c6dcc9189a0c9b17a8062298af443ce7f5c7a36f83df0080541cc54da95c846d",
           "expectCasesMatched": [
-            "enumerates at least twelve boundaries, each named once",
+            "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 an in-flight step is re-run",
             "fault boundary 02 a failed step is re-run",
             "fault boundary 03 a completed but unverified step is re-run",
@@ -4152,12 +4130,11 @@
             "fault boundary 17 compacting an already-compacted journal changes nothing further",
             "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T10:20:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:06.752Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "8486e52a6a0627eaba36a616e01ed043f5acf200",
       "independentVerdict": "APPROVED",
       "openFindings": [],
       "status": "ACCEPTED",
@@ -4745,8 +4722,7 @@
             "exposes exactly the coordination fields, so ANY added field must be justified here",
             "carries the claimant's id through UNCHANGED, deriving nothing from it"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:06.983Z"
         },
         "P": {
           "status": "GREEN",
@@ -4766,8 +4742,7 @@
             "accepts an acyclic submission, so the refusals above are selective",
             "refuses while a stored dependency is unverified, and admits once verified"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:07.214Z"
         },
         "U": {
           "status": "GREEN",
@@ -4791,8 +4766,7 @@
             "records the outputs a receipt carries",
             "refuses a receipt for an unknown task"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:07.436Z"
         },
         "F": {
           "status": "GREEN",
@@ -4801,7 +4775,7 @@
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
           "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
           "expectCasesMatched": [
-            "enumerates at least twelve boundaries, each named once",
+            "P5-11 Fault — claim and graph boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 an open task admits its first claim",
             "fault boundary 02 a live claim refuses a second worker",
             "fault boundary 03 a claim is still held AT its expiry instant",
@@ -4822,12 +4796,11 @@
             "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle",
             "fault boundary 19 an empty graph is valid"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:07.657Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
       "independentVerdict": "PENDING",
       "openFindings": [],
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -4892,18 +4865,18 @@
           "observationReportPath": "/tmp/ci-run-33783568096/first100-vitest-report-abd04f2b279612deeb1145b0569b4baa2abee162/vitest-report.json",
           "observationSha256": "80bb660591db68e1ca548600e2389fb5b5b2868b059b3a19062dae4c05c28735",
           "expectCasesMatched": [
-            "propose() accepts a candidate record and resolves a new MemoryRecordId",
-            "query() resolves matching records honoring the caller-supplied context budget",
-            "get() resolves the record previously created by propose()",
-            "revise() updates an existing record, reflected by a later get()",
-            "forget() removes a record so a later get() resolves undefined",
-            "export() resolves every record visible to the access context",
-            "propose() accepts a candidate record and resolves a new MemoryRecordId",
-            "query() resolves matching records honoring the caller-supplied context budget",
-            "get() resolves the record previously created by propose()",
-            "revise() updates an existing record, reflected by a later get()",
-            "forget() removes a record so a later get() resolves undefined",
-            "export() resolves every record visible to the access context",
+            "conformance: fake provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId",
+            "conformance: local reference provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId",
+            "conformance: fake provider (acceptance[0] + must[0]) query() resolves matching records honoring the caller-supplied context budget",
+            "conformance: local reference provider (acceptance[0] + must[0]) query() resolves matching records honoring the caller-supplied context budget",
+            "conformance: fake provider (acceptance[0] + must[0]) get() resolves the record previously created by propose()",
+            "conformance: local reference provider (acceptance[0] + must[0]) get() resolves the record previously created by propose()",
+            "conformance: fake provider (acceptance[0] + must[0]) revise() updates an existing record, reflected by a later get()",
+            "conformance: local reference provider (acceptance[0] + must[0]) revise() updates an existing record, reflected by a later get()",
+            "conformance: fake provider (acceptance[0] + must[0]) forget() removes a record so a later get() resolves undefined",
+            "conformance: local reference provider (acceptance[0] + must[0]) forget() removes a record so a later get() resolves undefined",
+            "conformance: fake provider (acceptance[0] + must[0]) export() resolves every record visible to the access context",
+            "conformance: local reference provider (acceptance[0] + must[0]) export() resolves every record visible to the access context",
             "swapping the registered provider changes which provider serves the same runtime call",
             "a provider object alone is inert — it takes effect only once registered on ctx.memory",
             "revise() rejects an id that was never returned by propose()",
@@ -4912,7 +4885,7 @@
             "export() rejects a request whose access context is missing any of the four required fields",
             "docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry"
           ],
-          "capturedAtUtc": "2026-09-03T17:30:09.508Z"
+          "capturedAtUtc": "2026-09-05T18:09:07.420Z"
         },
         "P": {
           "status": "GREEN",
@@ -5003,7 +4976,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d13ac831dba8ac883ea389f39af69ac7b916a772",
+      "candidateSha": "abd04f2b279612deeb1145b0569b4baa2abee162",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5048,8 +5021,7 @@
             "accepts the exact bounds, so the range test is not off by one",
             "refuses an inverted validity range but accepts an instantaneous one"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T07:10:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:07.880Z"
         },
         "P": {
           "status": "N/A",
@@ -5071,8 +5043,7 @@
             "refuses an authorization issued for a different source",
             "does not let a session-scoped authorization cover a tenant-wide merge"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T07:10:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:08.105Z"
         },
         "F": {
           "status": "GREEN",
@@ -5081,7 +5052,7 @@
           "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r12/first100-evidence-2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5/vitest-report.json",
           "observationSha256": "df52900c9fcba62d6070e322260680f52e6c3e56221de3273550fe2fa35bf1db",
           "expectCasesMatched": [
-            "enumerates at least twelve boundaries, each named once",
+            "P6-02 Fault — record boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 confidence below zero is refused",
             "fault boundary 02 confidence above one is refused",
             "fault boundary 03 NaN confidence is refused, not admitted by two false comparisons",
@@ -5101,12 +5072,11 @@
             "fault boundary 17 normal content is indexable even under the strictest policy",
             "fault boundary 18 a well-formed record validates, so the checks above refuse selectively"
           ],
-          "absorbedFlakes": [],
-          "capturedAtUtc": "2026-09-06T07:10:00.000Z"
+          "capturedAtUtc": "2026-09-05T18:08:08.327Z"
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
       "independentVerdict": "APPROVED",
       "openFindings": [
         "BLOCKED-096: P6-01 residual lock rewritten as an outcome; both steps now owned by P6-03 (wave 8)"
@@ -5336,7 +5306,7 @@
           "expectCasesMatched": [
             "lists a lifecycle record reconstructed from the durable store by a fresh service",
             "walks every page of a restored listing, visiting each durable record exactly once with no omission or duplication",
-            "starts empty on a first boot, with no store file on disk yet",
+            "durable session-lifecycle registry (acceptance[0]: listing survives a restart) starts empty on a first boot, with no store file on disk yet",
             "reads back exactly what a separate store instance over the same path wrote, brands included",
             "filters a restored listing by tenant, excluding another tenant's record",
             "filters a restored listing by workspace",
@@ -5353,7 +5323,7 @@
             "does not resurrect an erased record for a fresh service over the same path",
             "refuses a store document written under an unsupported format version instead of reading it as empty"
           ],
-          "capturedAtUtc": "2026-09-03T23:49:55.088Z"
+          "capturedAtUtc": "2026-09-05T18:09:07.644Z"
         },
         "U": {
           "status": "GREEN",
@@ -5416,7 +5386,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
+      "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
