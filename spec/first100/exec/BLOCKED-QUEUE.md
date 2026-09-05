@@ -2645,3 +2645,36 @@ None is in `git diff --name-only 4e84901e64..HEAD`.
 **How BLOCKED-109 was mis-decided, and by what.** The delegate admitted lint to the greening gate partly on "the cost is now zero, the 525 are cleared." That premise came from me, and it was wrong in a specific way: I reported a stylistic-pass count as though it were the whole gate. The delegate's own note is the accurate summary — *the numbers were mine to get right, the not-checking was theirs.*
 
 **The re-adjudication is recorded at BLOCKED-109 and implemented:** the gate now lints only source files differing from `frozenBaseline`. That is not a weakening of the original reason but a narrowing to it — lint entered as a signal about *this program's commits*, and whole-tree lint answered a different question. A First-100 commit touching a file with old debt pulls that file into the set and must leave it clean.
+
+### BLOCKED-112 — recorded-session expectations are environment-dependent, and only pass on the host that recorded them
+
+**Status: OPEN, needs the maintainer. Not repairable from this host, and not by refreshing anywhere.**
+
+With the gate widened (BLOCKED-109), CI at `35dbfdcb77` runs unit **green**, scoped lint **green**, and snapshots **red at three scenarios**:
+
+```
+bash-tool                    sdk
+pwsh-tool-turn               session
+persistent-pwsh-tool-turn    session
+```
+
+**Two independent causes, both environmental:**
+
+| scenario | cause |
+|---|---|
+| the two pwsh ones | `pwsh` exists on the runner and not here, so they run there and self-skip here (BLOCKED-110) |
+| `bash-tool` | the runner's sandbox degrades to `danger-full-access`, emitting `permission/preset` and `sandbox/mode` events this host never produces |
+
+**Neither is fixable by refreshing.** Refreshing here bakes macOS behaviour into the expectations and breaks CI; refreshing on CI bakes the runner's degraded sandbox into them and breaks every developer machine. The fixture would have to describe both, and a single expected file cannot.
+
+**`bash-tool` is not a regression from this program.** Snapshots were never in this gate before — `663a394150`'s workflow has no snapshot step, and its run passed. The divergence has been there the whole time; adding the step is what made it visible. **The first thing the widened gate found is a defect the gate itself was needed to see, which is the argument for widening it, arriving as a bill.**
+
+**Why this outranks the pwsh item it contains.** BLOCKED-110 reads as "install pwsh and finish the refresh". That is true of two scenarios and false of the third: no install makes `bash-tool` agree, because the disagreement is about what the *sandbox* does, not about what is installed. A repair plan built on the pwsh framing would fix two thirds and report done.
+
+**What the maintainer has to choose**, since each answers a different question about what a recorded session is for:
+
+1. **Normalize the environment-dependent events** the way `argumentsHash` was normalized — the fixture stops pinning what the host decides. Cheapest, and it gives up the ability to notice a sandbox regression in these scenarios.
+2. **Record per-environment expectations** (`session.linux.jsonl` beside `session.jsonl`). Keeps the signal, doubles what must be kept true, and needs a host of each kind to refresh.
+3. **Keep snapshots out of the cell gate** and run them only where they were recorded, accepting BLOCKED-109's finding that a GREEN cell then does not imply a releasable branch.
+
+**Not chosen here.** The trade is between evidence and portability, and this program is a consumer of these fixtures rather than their owner.
