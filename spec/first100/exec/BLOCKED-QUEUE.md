@@ -772,6 +772,27 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-081 — the ACCEPTANCE LOCKS register has NO mechanical enforcement; the only thing stopping a locked epic from being accepted is the delegate remembering to grep (delegate found, Supervisor confirmed independently, 2026-09-05)
+
+**The claim everyone has been relying on.** Both parties have stated, repeatedly and as fact, that a locked epic "cannot reach ACCEPTED". Neither had ever tested it.
+
+**It is false.** `generate-ledger.mjs --accept` evaluates four predicates — coverage closure, candidate-chain consistency, observation distinctness, delegate sign-off — and **none consults the lock register**. Confirmed two independent ways: the delegate grepped `scripts/` and `tests/` for lock references (2 hits, both a doc reference and a data file, neither an execution point); the Supervisor read the accept path directly and found `generate-ledger.mjs` contains **no occurrence of `BLOCKED-QUEUE` and no occurrence of `lock` at all**. A locked epic with four green cells and a recorded sign-off is accepted immediately.
+
+**So the enforcement is one person's habit.** The delegate greps the register by hand before each sign-off. That is the entire mechanism — and it nearly failed once already: grepping for `| **P6-07**` showed the row present and was almost read as "still locked", when the row was in fact annotated LIFTED. **The near-miss ran in the safe direction. Nothing would have caught the opposite** — reading a live lock as lifted.
+
+This is [BLOCKED-034](#blocked-034) turned on the program itself: a constraint maintained by diligence is a defect, and here the diligence is the delegate's own.
+
+**Discipline has held so far, and the doubt is bounded by checking rather than left open.** Cross-referencing accepted rows against the register: locks exist for P1-02, P2-02, P6-01, P6-07 and P1-07. The two accepted ones — P1-07 and P6-07 — each had their lock explicitly lifted and annotated before acceptance, which is the correct sequence. **The three still-live locks (P1-02, P2-02, P6-01) are all unaccepted.** No locked epic has been accepted. As with the 34-observation audit in [BLOCKED-078](#blocked-078): when a missing gate is found, the reflex is to doubt everything that passed it, and the remedy is to check and narrow the doubt to zero.
+
+**The fix belongs where the judgement currently happens — `--record-signoff`, not `--accept`.** The lock is evaluated at the moment of sign-off, so mechanising it there converts existing discipline into a check rather than adding a second gate somewhere else. It also forces the ordering for free: annotating a row LIFTED becomes a precondition of signing, instead of something to remember to do first.
+
+Two implementation requirements, neither optional:
+
+1. **Parse fail-closed.** A row whose status cannot be determined counts as LOCKED. A checker that cannot read the register must refuse the sign-off, never pass it — the opposite default would reproduce the exact near-miss above, mechanically and at scale.
+2. **Prove both directions.** A genuinely locked epic must be refused, and the same epic must be accepted once its row is annotated LIFTED. One direction alone leaves it indistinguishable from a checker that refuses everything, or one that refuses nothing.
+
+**Sequenced after the epics but before the other remediation.** It guards the acceptance action itself, whereas the ten documentation gates ([BLOCKED-069](#blocked-069)) and the flake rate ([BLOCKED-080](#blocked-080)) guard inputs to it.
+
 ### BLOCKED-080 — a registered flake at 25% failure rate makes a real regression in the same file indistinguishable from itself (delegate measured, 2026-09-05)
 
 **The number.** `experimental Inspector real Worker forwards Client Console objects through isolated realm sessions` failed **7 of 28** observations — 25%, one run in four — and `flake-registry.json` has recorded 8 occurrences.
