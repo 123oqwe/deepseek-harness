@@ -95,7 +95,26 @@ jobs:
           path: .artifacts/first100/observations/vitest-report.json
           if-no-files-found: error
 
+      # R0 exit gate item 1's other half (packInstall): the exact CI-equivalent
+      # build, then pack + verify-packed-install, on Linux CI where the prior
+      # local macOS receipt's two known failure causes (stale npm cache,
+      # --omit=optional dropping koffi's darwin-arm64-only prebuilt) do not
+      # apply. Runs even if the test suite above went red — pack/install
+      # health is an independent fact from test-suite health.
+      - name: Build (official client profile, the exact env CI's build gate sets)
+        if: always()
+        env:
+          DSH_BUILD_CLIENT_PROFILE: official
+        run: pnpm run build
+
       - name: Lint
+        # Ordered after Build, not before it. `pnpm run lint` runs
+        # `build:lib:host`, which emits the HOST face only, while the type-aware
+        # rules also read `packages/client/**`. On a machine with a previous full
+        # build the client `lib/types` are already there and lint passes; on a
+        # fresh checkout they are not, every client type resolves to `error`, and
+        # the no-unsafe-* rules fire on correct code. Run 33985073439 was that
+        # difference and nothing else — local clean, CI red, same commit.
         # `always()` for the same reason as the ordering below: a red test suite
         # must not hide whether lint is also red. Without it these steps skip on
         # the first failure, so a run reports one problem per attempt and three
@@ -122,17 +141,6 @@ jobs:
         # so this needs no credentials.
         run: pnpm run test:snapshot
 
-      # R0 exit gate item 1's other half (packInstall): the exact CI-equivalent
-      # build, then pack + verify-packed-install, on Linux CI where the prior
-      # local macOS receipt's two known failure causes (stale npm cache,
-      # --omit=optional dropping koffi's darwin-arm64-only prebuilt) do not
-      # apply. Runs even if the test suite above went red — pack/install
-      # health is an independent fact from test-suite health.
-      - name: Build (official client profile, the exact env CI's build gate sets)
-        if: always()
-        env:
-          DSH_BUILD_CLIENT_PROFILE: official
-        run: pnpm run build
 
       - name: Pack the dsh family
         if: always()
