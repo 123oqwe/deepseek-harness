@@ -21,8 +21,28 @@ export type * from './projection.ts'
 export * from './inbox.ts'
 export * from './consumed-work.ts'
 export * from './model-selection.ts'
-export { agentCarrier, agentEvents, assembleContextFor, emitAgentEvent } from './dispatch.ts'
+export {
+  advanceAgentLifecycle,
+  advanceAgentLifecycleFenced,
+  agentCarrier,
+  agentEvents,
+  assembleContextFor,
+  emitAgentEvent,
+  holdsDispatchSlot,
+} from './dispatch.ts'
 export type { AgentEventDispatch, AgentSubjectEvent } from './dispatch.ts'
+// P4-05's lifecycle types were internal until P4-07 became a real consumer:
+// its fenced entry point takes them as parameters, so a caller outside this
+// package cannot name what it must pass without them.
+export type {
+  AgentLifecycle,
+  AgentLifecycleState,
+  AgentRunId,
+  AgentTransition,
+  LeaseEpoch,
+  TransitionDecision,
+  TransitionDenialReason,
+} from './state-machine.ts'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {

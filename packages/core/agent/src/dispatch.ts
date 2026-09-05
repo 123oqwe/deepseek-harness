@@ -6,6 +6,7 @@
  * @module @deepseek-ai/dsh-agent/dispatch
  */
 
+import { checkFencing, type FencingToken, type Lease } from '@deepseek-ai/dsh-lease'
 import type { Context, Events } from '@deepseek-ai/cordis'
 import { scopeTarget } from '@deepseek-ai/dsh-scope'
 import { consumesNoResources, decideTransition } from './state-machine.ts'
@@ -217,4 +218,45 @@ export function advanceAgentLifecycle(
  */
 export function holdsDispatchSlot(lifecycle: AgentLifecycle): boolean {
   return !consumesNoResources(lifecycle.state)
+}
+
+/**
+ * Advance a lifecycle only when a fencing token authorizes it (Epic P4-07
+ * must[1]: every state write carries a fencing token).
+ *
+ * {@link advanceAgentLifecycle} alone cannot enforce authority, and the reason
+ * is structural rather than an oversight: nothing issues the lifecycle's
+ * epoch. `decideTransition` refuses a strictly OLDER epoch and then adopts
+ * whatever the proposal carried, so the epoch a lifecycle holds is only ever
+ * the last one a caller asserted. A worker proposing an epoch far above the
+ * current one is admitted and becomes the new authority.
+ *
+ * That is safe exactly while no other component issues epochs, and P4-07's
+ * `LeaseStore` ends that condition. This entry point closes the gap from the
+ * outside rather than by editing P4-05's Contract surface: the token is
+ * checked against the store's current lease FIRST, so the epoch reaching
+ * `decideTransition` is one the store issued rather than one the caller chose.
+ *
+ * The two staleness rules stay deliberately different, and the difference is
+ * not a contradiction. `decideTransition` compares against a lifecycle that
+ * LEARNS its epoch from transitions, so it must admit a newer one.
+ * `checkFencing` compares against a store that ISSUES epochs, so anything but
+ * the current one is a forgery. Running the issuer's check first is what makes
+ * the lifecycle's more permissive rule unreachable by an attacker.
+ * @param lifecycle - the run's current position.
+ * @param transition - the proposed transition.
+ * @param token - the proposing worker's authority.
+ * @param lease - the work item's current lease, from the store.
+ * @returns the next lifecycle, or the refusal — `'fenced'` when the token was rejected.
+ */
+export function advanceAgentLifecycleFenced(
+  lifecycle: AgentLifecycle,
+  transition: AgentTransition,
+  token: FencingToken,
+  lease: Lease | undefined,
+): { readonly ok: true; readonly next: AgentLifecycle }
+  | { readonly ok: false; readonly reason: TransitionDenialReason | 'fenced' } {
+  const fencing = checkFencing(token, lease)
+  if (!fencing.admitted) return { ok: false, reason: 'fenced' }
+  return advanceAgentLifecycle(lifecycle, transition)
 }

@@ -4278,6 +4278,43 @@
         "mutationDescription": "Six mutations on src/store.ts: (1) a shared epoch counter across items instead of per item; (2) renew issues a new epoch; (3) renew permitted on an already-expired lease; (4) an unavailable store reports the item free instead of refusing; (5) an unavailable store still lists reclaimable items; (6) acquire steals an unexpired lease. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each, and each on the case naming its defect -- 6 mutations, 6 distinct cases, no overlap."
       }
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/fenced-dispatch.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "CHARACTERIZATION: unfenced, a self-asserted high epoch is admitted and becomes the authority",
+        "fenced, that same self-asserted epoch is refused",
+        "admits the holder's real token, so the check is not refusing everything",
+        "refuses the previous holder after the item is reclaimed",
+        "still applies the lifecycle rules once fencing admits the token",
+        "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
+        "refuses when the item holds no lease at all"
+      ],
+      "files": [
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/run/lease/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T23:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "94903a92634a61f8ed2a7b4ec6510d3951300334",
+        "testsDiscovered": 7
+      },
+      "note": "P4-07 U-stage. First freeze for this cell. dispatch.ts is a REAL subject here, unlike P4-06's use of the same file -- see the C-stage freeze note.\n\nTHE GAP THIS STAGE CLOSES WAS MEASURED, NOT ASSUMED. advanceAgentLifecycle cannot enforce authority, and the reason is structural: NOTHING ISSUES THE LIFECYCLE'S EPOCH. decideTransition refuses only a strictly OLDER epoch and then adopts whatever the proposal carried, so the epoch a lifecycle holds is only ever the last one a caller asserted. A worker proposing epoch 9999 against a lifecycle at 1 is admitted AND becomes the new authority. A CHARACTERIZATION case pins that behaviour directly, so the fenced entry point is measured against a real hole rather than an imagined one.\n\nP4-05'S CONTRACT WAS NOT EDITED. The gap is closed from outside: checkFencing runs against the store's current lease first, so the epoch reaching decideTransition is one the STORE issued rather than one the caller chose. The two staleness rules stay deliberately different and this is not a contradiction -- decideTransition compares against a lifecycle that LEARNS its epoch from transitions, so it must admit a newer one; checkFencing compares against a store that ISSUES epochs, so anything but the current one is a forgery. Running the issuer's check first makes the lifecycle's more permissive rule unreachable by an attacker.\n\nORDER IS PART OF THE CONTRACT, and one case exists only to pin it. A token that is BOTH fenced and proposing an illegal edge must report 'fenced'. This applies the principle already stated in decideTransition's own JSDoc -- ordering authority first means 'a stale worker never learns whether its proposed edge would have been legal'. Running fencing after the lifecycle decision leaks exactly that to a worker with no authority to ask. The first draft of this suite had no such case and the reordering mutation reddened ZERO; the case was added rather than the mutation dismissed as equivalent.\n\nP4-05's lifecycle types were internal to dsh-agent and are now exported, because P4-07's fenced entry point takes them as parameters and an outside caller could not otherwise name what it must pass. Same shape as P8-01's Provider stage, where a missing re-export WAS the stage's substance.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations on dispatch.ts: (1) the fencing check removed entirely, falling through to the unfenced path; (2) the fencing check moved AFTER the lifecycle decision. Both restored byte-identical.",
+        "failureSummary": "(1) reddens 3 cases; (2) reddens exactly the order case. Against the first draft (2) reddened ZERO, because no case could distinguish the orders -- both return the same verdict except when a token is simultaneously fenced and illegal."
+      }
     }
   ]
 }
