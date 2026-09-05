@@ -96,6 +96,12 @@ jobs:
           if-no-files-found: error
 
       - name: Lint
+        # `always()` for the same reason as the ordering below: a red test suite
+        # must not hide whether lint is also red. Without it these steps skip on
+        # the first failure, so a run reports one problem per attempt and three
+        # independent facts take three pushes to learn. The job still fails —
+        # this widens what one run tells you, it does not soften the gate.
+        if: always()
         # Ordered AFTER the observation upload deliberately. BLOCKED-007 item 3
         # established that a RED observation is real, inspectable evidence and
         # must still be uploaded; a gate that ran first and failed would leave
@@ -109,6 +115,7 @@ jobs:
         run: pnpm run lint
 
       - name: Recorded-session snapshots
+        if: always()
         # BLOCKED-109: snapshots are tests. A cell greened while 76 of them are
         # red says less than it appears to, and P2-03's U stage is the worked
         # example -- it broke 76 and every cell greened anyway. Keyless replay,
