@@ -971,6 +971,18 @@ So the epoch assertions are sound, and the coupling is real, and there is still 
 
 **The general shape, worth more than this instance.** Mutation testing is normally used to confirm a suite catches what it should. Here it was used on a *prediction about coverage* and returned "no" — which is more informative than a confirmation would have been, because a confirmation would have left the belief that the property was covered. **A mutation that fails to redden anything is evidence about the suite, not a failed experiment.**
 
+
+**Third occurrence, and the causal strength has changed (2026-09-05).** The generated-artifact staleness gap has now fired three times:
+
+| # | Trigger | Relationship |
+|---|---|---|
+| ① | P1-07.F widened a union member | a side effect of changing a public export |
+| ② | P2-02.U added a capability-token export | same |
+| ③ | P4-06.C created a new package | a new package **is** a new public surface |
+
+**The third is a stronger statement than the first two.** ① and ② say that changing a public export *may* stale the catalog — true, and it depends what you changed. ③ says that creating a package *necessarily* does, because a new package introduces a new public surface by definition. **The rule escalates from "editing public exports can stale the artifact" to "creating a package always stales it."**
+
+That matters for where the check belongs. A conditional hazard argues for a reminder; a certainty argues for the generator running as part of the create-a-package path, because there is no case in which it is unnecessary. The same holds for the new package's own README, which failed `doc-standard` twice in the same run — **both are mandatory consequences of the create-a-package act, and both were left to be remembered.**
 ### BLOCKED-078 — the greening path reads the report, and one class of CI failure is invisible to the report; the log fix is CALIBRATED, not verified (Supervisor + delegate, 2026-09-05)
 
 **Run 33943262728 reported `success: true`, 19305 tests, 0 failures, 0 failed suites — and its job conclusion was `failure`.** The log held nothing between "JSON report written" and "Process completed with exit code 1". Both artifacts agreed the run was clean; GitHub said it was not.
