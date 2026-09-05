@@ -392,9 +392,28 @@ describe('first100 readiness gate', () => {
   it('smoke: runs against the live registry and ledger without crashing, and refuses an epic it cannot admit', () => {
     // Deliberately asserts no specific epic, path, or count: every one of those
     // changes as the program advances, and pinning them turns ordinary progress
-    // into a red gate. What must stay true is that the real inputs parse, the
-    // gate reaches a verdict, and a refusal explains itself.
-    const { code, output } = run(REPO, 'P1-03')
+    // into a red gate.
+    //
+    // The first version of this case honoured that in its ASSERTIONS and broke
+    // it in its SUBJECT: it called the gate on a hard-coded `P1-03`, whose
+    // refusal was the precondition for all three assertions being observable
+    // at all. When BLOCKED-087's condition-1 fix made P1-03 startable, this
+    // case went red because the program had ADVANCED — the exact failure its
+    // own comment forbids. Choosing a different epic that "should stay
+    // blocked" would move the trap rather than remove it.
+    //
+    // So the subject is drawn from the ledger too. A listing with nothing
+    // refused is a legitimate state (every epic startable) and must not be a
+    // failure, so that case asserts the listing itself instead.
+    const listing = run(REPO)
+    expect(listing.code).toBe(0)
+    const blocked = /^ {2}(?:blocked by predecessors|blocked by file overlap): \d+ — (\S+)/mu.exec(listing.output)
+    if (blocked === null) {
+      expect(listing.output).toContain('non-ACCEPTED epics accounted for')
+      return
+    }
+
+    const { code, output } = run(REPO, blocked[1] ?? '')
     expect(code).toBe(1)
     expect(output).toContain('NOT READY')
     expect(output).toMatch(/ {2}- \S/u)
