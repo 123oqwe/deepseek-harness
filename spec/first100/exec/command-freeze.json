@@ -6441,6 +6441,46 @@
         "mutationDescription": "Four targeted mutations of conformance-route.ts, each restored byte-identical: (M1) the before-first-token abort emits nothing at all, so a cancelled request never ends; (M2) single-character framing collapses to one frame, so the kit stops exercising fine-grained splitting while still claiming to; (M3) the natural framing drops one character, so the pieces no longer rejoin to the original; (M4) the at-wrap-up abort omits its finish chunk.",
         "failureSummary": "Reddened 2, 1, 9 and 1 of 19. M3's breadth is the informative one: losing a single character from one framing reddens nine cases, because every admitted-route case downstream depends on deltas rejoining exactly, so a framing bug cannot hide in one assertion. M2 reddens exactly one -- the case written to check that a framing is really what it claims to be -- which is the case that exists because a fixture quietly degrading to a weaker one is invisible from the pass/fail line alone."
       }
+    },
+    {
+      "epic": "P9-04",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/fs/fs-local/tests/edit-fallback-faults.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-04 Fault — the fallback must not weaken the version guard (must[2]) a stale version is refused even when the fallback WOULD have matched",
+        "P9-04 Fault — the fallback must not weaken the version guard (must[2]) the same edit succeeds at the current version, so the guard bounds rather than blocks",
+        "P9-04 Fault — acceptance[0], indentation in both directions a search text indented +2 relative to the file is rescued and re-indented down",
+        "P9-04 Fault — acceptance[0], indentation in both directions a search text indented -2 relative to the file is an exact SUBSTRING hit, not a fallback",
+        "P9-04 Fault — acceptance[0], indentation in both directions acceptance[0]: a trailing-whitespace difference is rescued and reports its tier",
+        "P9-04 Fault — acceptance[0], indentation in both directions acceptance[0]: a CRLF/LF difference resolves at the EXACT tier, because both sides are normalized first",
+        "P9-04 Fault — acceptance[1], ambiguity still fails closed two approximate matches are refused rather than resolved by position",
+        "P9-04 Fault — acceptance[1], ambiguity still fails closed a refused ambiguous edit leaves the file byte-identical, so a failed rescue is not a partial write",
+        "P9-04 Fault — acceptance[1], ambiguity still fails closed must[3]: a genuine miss names the closest region and its similarity"
+      ],
+      "files": [
+        "packages/fs/fs-local/tests/edit-fallback-faults.spec.ts",
+        "packages/fs/fs-local/src/index.ts",
+        "packages/fs/fs-local/src/fsio.ts",
+        "packages/fs/fs-local/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T09:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e5a549090dde0da71acd3c7b05740d14d84b0909",
+        "testsDiscovered": 9
+      },
+      "note": "F (Fault) for P9-04, driven through the BACKEND rather than the pure ladder, because what this stage must show is only observable there: whether a rescue interacts with something it must not. The load-bearing case is must[2] -- a stale version is refused even when the fallback WOULD have matched. That is the dangerous shape: an edit the literal search rejects but a tier accepts, which if the guard were consulted after matching would become a write against content the caller never read. acceptance[0]'s indent +2/-2 is frozen in BOTH directions and they are not symmetric: +2 (needle more indented) reaches the indentation tier, while -2 is an exact SUBSTRING hit that never reaches the ladder at all, because applyLiteralEdit matches substrings and a less-indented needle sits inside a more-indented line. The tier is asserted in both, since without it the -2 case would look like a fallback success and prove nothing. The file's extra indentation survives a -2 edit untouched, which is correct: a substring replacement rewrites only the matched text. The CRLF case likewise asserts tier 'exact'. Validation's third item -- a headless real-edit task comparing retry counts before and after -- is NOT covered here: it needs a live model run, and is deferred to the live lane rather than approximated.",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations, each restored byte-identical: (M1) deleted the version-guard check in fs-local/src/index.ts so the guard no longer precedes the edit; (M2) removed the fallback ambiguity branch in fsio.ts so a tier with two matches resolves rather than refusing; (M3) dropped the nearest-region hint from the not-found message.",
+        "failureSummary": "All three reddened, exactly one case each of 9. The narrowness is the result and was the goal: each mutation removes one interaction and reddens only the case written for that interaction, so no case is standing in for another. M1 is the one that matters -- it is the only case in the program that would notice the fallback being allowed to outrank the version guard."
+      }
     }
   ]
 }
