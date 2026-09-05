@@ -256,7 +256,8 @@
         "treeSha": "552da8935430cd9fa1505cdf744d776c76beeb63",
         "testsDiscovered": 38
       },
-      "note": "P0-02 C-stage (2026-09-01): the TrustKernel narrow, unforgeable capability-surface type contract for @deepseek-ai/dsh-trust-kernel. Real RED at commit e95ca9e584 (stub types.ts exporting only a placeholder interface): 10/31 failed, all genuine TypeScript compiler diagnostics/structural mismatches, never module/syntax errors. Went through THREE rounds of Opus-level adversarial review (mandatory for this L0_KERNEL epic per C1): round 1 found a real gap -- the suite proved the surface was narrow and readonly but never actually tested unforgeability (2 of 5 seeded mutations, exporting a brand symbol or replacing it with an ordinary field, survived); fixed with 7 new tests (31->38), independently mutation-replayed twice before/after by two separate reviewers. Round 2 found the fix's honest package.json correction (dropping phantom main/types fields pointing at a lib/index.js this slice didn't yet produce) broke the repo-wide check-workspace-constraints.ts gate -- routed to the delegate as BLOCKED-009 (a brand-new package's C-stage-only slice structurally can't satisfy that gate without an index.ts). Delegate ruling: a pure-type-only src/index.ts (export type re-export only, zero runtime/Cordis surface) is now mandatory B4(f) scaffold for every future new-package C-stage slice, not a one-off. Round 3 found docs/module-graph (a peerDependencies-derived generated artifact) still stale on this package's own edge -- regenerated. Final ACCEPT confirmed via self-verification against the unmodified, already-reviewed gate scripts (typecheck, check-workspace-constraints.ts, verify-module-graph, publint, vitest all clean). A real, unrelated, pre-existing defect from P0-01.U's already-ACCEPTED slice was surfaced along the way (verify-cordis-config: packages/bundle/base/cordis.patch.yml references @deepseek-ai/dsh-baseline-preflight without declaring it in packages/bundle/base/package.json's dependencies) -- noted, not fixed here, out of scope for this epic."
+      "note": "P0-02 C-stage (2026-09-01): the TrustKernel narrow, unforgeable capability-surface type contract for @deepseek-ai/dsh-trust-kernel. Real RED at commit e95ca9e584 (stub types.ts exporting only a placeholder interface): 10/31 failed, all genuine TypeScript compiler diagnostics/structural mismatches, never module/syntax errors. Went through THREE rounds of Opus-level adversarial review (mandatory for this L0_KERNEL epic per C1): round 1 found a real gap -- the suite proved the surface was narrow and readonly but never actually tested unforgeability (2 of 5 seeded mutations, exporting a brand symbol or replacing it with an ordinary field, survived); fixed with 7 new tests (31->38), independently mutation-replayed twice before/after by two separate reviewers. Round 2 found the fix's honest package.json correction (dropping phantom main/types fields pointing at a lib/index.js this slice didn't yet produce) broke the repo-wide check-workspace-constraints.ts gate -- routed to the delegate as BLOCKED-009 (a brand-new package's C-stage-only slice structurally can't satisfy that gate without an index.ts). Delegate ruling: a pure-type-only src/index.ts (export type re-export only, zero runtime/Cordis surface) is now mandatory B4(f) scaffold for every future new-package C-stage slice, not a one-off. Round 3 found docs/module-graph (a peerDependencies-derived generated artifact) still stale on this package's own edge -- regenerated. Final ACCEPT confirmed via self-verification against the unmodified, already-reviewed gate scripts (typecheck, check-workspace-constraints.ts, verify-module-graph, publint, vitest all clean). A real, unrelated, pre-existing defect from P0-01.U's already-ACCEPTED slice was surfaced along the way (verify-cordis-config: packages/bundle/base/cordis.patch.yml references @deepseek-ai/dsh-baseline-preflight without declaring it in packages/bundle/base/package.json's dependencies) -- noted, not fixed here, out of scope for this epic.",
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P0-02",
@@ -540,7 +541,8 @@
         "treeSha": "859a2d017e04aec1cf25aacf22d7003107613fdb",
         "testsDiscovered": 29
       },
-      "note": "P0-07 C-stage (2026-09-01), Release Evidence Package's Contract type surface: a discriminated GateEvidence union (CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence, must[0]) carrying command/timestamps/exitCode/environment/digests/testCounts/skipReasons; an EvidencePackage binding baselineFingerprint + gitDiff + build-artifact digests (must[1]); and the epic's central claim, must[2] ('any skipped blocking gate or missing artifact must never allow accepted=true') proven as a real compile-time guarantee: AcceptedEvidencePackage<RequiredGateId, RequiredArtifactPath> requires complete Record<K, CompletedGateEvidence>/Record<K, Digest> maps keyed by literal-union required-id sets, independently verified via direct tsc diagnostics (TS2741 on a missing key, TS2322 on a skipped/missing gate where completed is required) -- not merely asserted by a test, a real compiler rejection. One honest, disclosed limit: with RequiredGateId/RequiredArtifactPath left at their string default, an EMPTY requiredGates/requiredBuildArtifacts map still type-checks -- required-id-SET completeness is P-stage's runtime job (verify-evidence.mjs against the release manifest), not something this type surface can express statically; a dedicated test documents this rather than hiding it. Confirmed the registry's third declared C-stage file, spec/first100-evidence.schema.json, is a coincidental path collision (this program's own 109-epic self-tracking schema, unrelated id/lane/baselineSha vocabulary) not a real dependency -- independently re-verified by the Reviewer, not just the Writer's own claim. Real RED->GREEN: a deliberately wrong stub types.ts failed 25/29 genuinely (TS2305 missing-export errors, AST shape mismatches, zero crashes); the real implementation passed 29/29. Round 1 independent review: ACCEPT on design/tests/central claim, REJECT on one purely mechanical miss -- gen-module-graph.ts --check failed because the new packages/assurance/evidence-format package was never reflected in the generated module-graph docs. Fix round: ran gen-module-graph, committed the 3 regenerated docs, touching nothing else. Round 2 independent review: ACCEPT, with the compile-time must[2] guarantee re-proven from scratch via a standalone tsc probe (not reusing the test file) and the fix commit's diff confirmed scoped to exactly the 3 doc files."
+      "note": "P0-07 C-stage (2026-09-01), Release Evidence Package's Contract type surface: a discriminated GateEvidence union (CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence, must[0]) carrying command/timestamps/exitCode/environment/digests/testCounts/skipReasons; an EvidencePackage binding baselineFingerprint + gitDiff + build-artifact digests (must[1]); and the epic's central claim, must[2] ('any skipped blocking gate or missing artifact must never allow accepted=true') proven as a real compile-time guarantee: AcceptedEvidencePackage<RequiredGateId, RequiredArtifactPath> requires complete Record<K, CompletedGateEvidence>/Record<K, Digest> maps keyed by literal-union required-id sets, independently verified via direct tsc diagnostics (TS2741 on a missing key, TS2322 on a skipped/missing gate where completed is required) -- not merely asserted by a test, a real compiler rejection. One honest, disclosed limit: with RequiredGateId/RequiredArtifactPath left at their string default, an EMPTY requiredGates/requiredBuildArtifacts map still type-checks -- required-id-SET completeness is P-stage's runtime job (verify-evidence.mjs against the release manifest), not something this type surface can express statically; a dedicated test documents this rather than hiding it. Confirmed the registry's third declared C-stage file, spec/first100-evidence.schema.json, is a coincidental path collision (this program's own 109-epic self-tracking schema, unrelated id/lane/baselineSha vocabulary) not a real dependency -- independently re-verified by the Reviewer, not just the Writer's own claim. Real RED->GREEN: a deliberately wrong stub types.ts failed 25/29 genuinely (TS2305 missing-export errors, AST shape mismatches, zero crashes); the real implementation passed 29/29. Round 1 independent review: ACCEPT on design/tests/central claim, REJECT on one purely mechanical miss -- gen-module-graph.ts --check failed because the new packages/assurance/evidence-format package was never reflected in the generated module-graph docs. Fix round: ran gen-module-graph, committed the 3 regenerated docs, touching nothing else. Round 2 independent review: ACCEPT, with the compile-time must[2] guarantee re-proven from scratch via a standalone tsc probe (not reusing the test file) and the fix commit's diff confirmed scoped to exactly the 3 doc files.",
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P0-05",
@@ -598,7 +600,8 @@
         "treeSha": "438683df389c260705963d6942a3522b6dff07e7",
         "testsDiscovered": 32
       },
-      "note": "P0-05 C-stage (2026-09-01), Shadow/Enforce Feature Gates' Contract type surface: the 3-state FeatureGateState union (must[0]), a FeatureGateDeclaration carrying owner/introducedVersion/defaultByProfile/removalVersion (must[2]), a settings-namespace-interoperable value type verified against the real packages/settings/settings/src/types.ts, an override-chain FeatureGateResolution shape proving --dump-config's source-and-chain requirement (must[3]), and a FeatureGateExpiryCheck contract (acceptance[2]). Real RED->GREEN: a 2-state stub union with missing exports failed 14/25 genuinely (missing-export/wrong-union-member errors); full implementation passed 25/25, later 32/32 after fix rounds. Round 1 independent review REJECTed on 3 findings: (1) must[1]/acceptance[1]'s 'no sensitive-parameter leak' guarantee was comment-only -- legacySummary/shadowSummary were typed as bare JsonValue, a fully generic type that structurally accepts a raw secret; (2) an unexplained devDependencies-vs-peerDependencies classification inconsistency between @deepseek-ai/dsh-brand and @deepseek-ai/dsh-util-values; (3) gen-module-graph.ts --check failed, never regenerated after adding the new package. Fix round: genuinely strengthened the type -- a branded RedactedJsonValue (JsonValue & unexported-unique-symbol tag, mirroring TrustKernelRootIdentity's opaque-handle idiom) now makes a bare JsonValue or object literal fail to type-check where a summary is required, forcing an explicit cast through RedactedJsonValue; the doc comment and tests are honest that this proves only structural non-assignability of a raw JSON literal, never that cast content is actually secret-free (that remains a P-stage runtime job, same precedent as settings/redact.ts's own real redactSecrets). The dependency classification was independently re-verified as already matching real repo-wide precedent (dsh-util-values is devDependencies-only in every genuine type-only consumer repo-wide, never peerDependencies anywhere) -- no change needed, documented in a new README Dev Note. module-graph regenerated. Round 2 independent review: the RedactedJsonValue claim independently re-proven via a standalone tsc probe (not reusing the Writer's test file) -- a bare JsonValue/object literal genuinely fails, a single-step cast from an already-JsonValue-typed value succeeds, a fresh literal needs the documented as-unknown-as escape hatch (a real TS2352 quirk). REJECTed only on one new, mechanical finding: no bilingual README.zh.md/README.i18n.yaml pair (verify-translation-pairing). Fix round: added the missing language-switcher line plus a faithful Chinese translation matching the trust-kernel README's structure exactly. Round 3 independent review: ACCEPT, with the bilingual pair's recorded blob hashes independently recomputed via git hash-object and confirmed matching."
+      "note": "P0-05 C-stage (2026-09-01), Shadow/Enforce Feature Gates' Contract type surface: the 3-state FeatureGateState union (must[0]), a FeatureGateDeclaration carrying owner/introducedVersion/defaultByProfile/removalVersion (must[2]), a settings-namespace-interoperable value type verified against the real packages/settings/settings/src/types.ts, an override-chain FeatureGateResolution shape proving --dump-config's source-and-chain requirement (must[3]), and a FeatureGateExpiryCheck contract (acceptance[2]). Real RED->GREEN: a 2-state stub union with missing exports failed 14/25 genuinely (missing-export/wrong-union-member errors); full implementation passed 25/25, later 32/32 after fix rounds. Round 1 independent review REJECTed on 3 findings: (1) must[1]/acceptance[1]'s 'no sensitive-parameter leak' guarantee was comment-only -- legacySummary/shadowSummary were typed as bare JsonValue, a fully generic type that structurally accepts a raw secret; (2) an unexplained devDependencies-vs-peerDependencies classification inconsistency between @deepseek-ai/dsh-brand and @deepseek-ai/dsh-util-values; (3) gen-module-graph.ts --check failed, never regenerated after adding the new package. Fix round: genuinely strengthened the type -- a branded RedactedJsonValue (JsonValue & unexported-unique-symbol tag, mirroring TrustKernelRootIdentity's opaque-handle idiom) now makes a bare JsonValue or object literal fail to type-check where a summary is required, forcing an explicit cast through RedactedJsonValue; the doc comment and tests are honest that this proves only structural non-assignability of a raw JSON literal, never that cast content is actually secret-free (that remains a P-stage runtime job, same precedent as settings/redact.ts's own real redactSecrets). The dependency classification was independently re-verified as already matching real repo-wide precedent (dsh-util-values is devDependencies-only in every genuine type-only consumer repo-wide, never peerDependencies anywhere) -- no change needed, documented in a new README Dev Note. module-graph regenerated. Round 2 independent review: the RedactedJsonValue claim independently re-proven via a standalone tsc probe (not reusing the Writer's test file) -- a bare JsonValue/object literal genuinely fails, a single-step cast from an already-JsonValue-typed value succeeds, a fresh literal needs the documented as-unknown-as escape hatch (a real TS2352 quirk). REJECTed only on one new, mechanical finding: no bilingual README.zh.md/README.i18n.yaml pair (verify-translation-pairing). Fix round: added the missing language-switcher line plus a faithful Chinese translation matching the trust-kernel README's structure exactly. Round 3 independent review: ACCEPT, with the bilingual pair's recorded blob hashes independently recomputed via git hash-object and confirmed matching.",
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P0-03",
@@ -2179,7 +2182,8 @@
         "treeSha": "7d3cbc26e2a2da66c67c2568b939679212ee39d5",
         "testsDiscovered": 19
       },
-      "note": "P-stage RED scaffold for P4-01, attempt/P4-01-P @ 8f0dcac43c (branched from first100-exec @ 624498308c). 19/19 genuinely failed on real not-implemented errors, zero module/syntax errors; C-stages own 111 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: acceptance[0] (list+resume every non-terminal Run after a process restart) is UNREACHABLE from C-stages surface no matter how correct it is -- listNonTerminalRuns/resumeRun operate on a value the caller already holds, and a restart is precisely the event that destroys that value. P-stage adds a RunStore durability seam, a real file-backed createFileRunStore (not an in-memory double, so a shortcut implementation cannot pass the restart fixture), and a RunService whose ONLY constructor is static restore(store). Each restart case uses a fresh store + fresh service over the same path, sharing no value/map/closure, so a reappearing Run came from durable bytes only. DECLARED-SCOPE DEVIATION, reported for audit, NOT a path patch: packages/session/session-persistence/src/coordinator.ts (P-stages other declared file) was read thoroughly and deliberately NOT touched -- its entire storage contract is keyed on session identity (loadStored(id: SessionId), records are SessionEvents under a SessionHeader, ops serialized per-SessionId), so storing a Run there would make a Runs durable existence a function of some Sessions, which must[2] forbids outright, and a Run spanning several Sessions (acceptance[2]) cannot be a row inside any one of their logs. Recorded in the modules JSDoc, the package READMEs Known Limitations, and the commit message; git status confirms zero changes to that package. expectExit=0 is the GREEN target per the P0-01.C precedent."
+      "note": "P-stage RED scaffold for P4-01, attempt/P4-01-P @ 8f0dcac43c (branched from first100-exec @ 624498308c). 19/19 genuinely failed on real not-implemented errors, zero module/syntax errors; C-stages own 111 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: acceptance[0] (list+resume every non-terminal Run after a process restart) is UNREACHABLE from C-stages surface no matter how correct it is -- listNonTerminalRuns/resumeRun operate on a value the caller already holds, and a restart is precisely the event that destroys that value. P-stage adds a RunStore durability seam, a real file-backed createFileRunStore (not an in-memory double, so a shortcut implementation cannot pass the restart fixture), and a RunService whose ONLY constructor is static restore(store). Each restart case uses a fresh store + fresh service over the same path, sharing no value/map/closure, so a reappearing Run came from durable bytes only. DECLARED-SCOPE DEVIATION, reported for audit, NOT a path patch: packages/session/session-persistence/src/coordinator.ts (P-stages other declared file) was read thoroughly and deliberately NOT touched -- its entire storage contract is keyed on session identity (loadStored(id: SessionId), records are SessionEvents under a SessionHeader, ops serialized per-SessionId), so storing a Run there would make a Runs durable existence a function of some Sessions, which must[2] forbids outright, and a Run spanning several Sessions (acceptance[2]) cannot be a row inside any one of their logs. Recorded in the modules JSDoc, the package READMEs Known Limitations, and the commit message; git status confirms zero changes to that package. expectExit=0 is the GREEN target per the P0-01.C precedent.",
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P6-01",
@@ -2300,7 +2304,8 @@
         "treeSha": "ed8c7a24da2fc2ccc37b391320be5f74ae6da233",
         "testsDiscovered": 18
       },
-      "note": "P-stage RED scaffold for P6-07, attempt/P6-07-P (rebased onto land-base-align-v2 @ a3b681f555; RED re-confirmed 18/18 on that base, whose tree dryRunProof.treeSha names). 18/18 genuinely failed on real not-implemented errors (17 from createFileSessionLifecycleStore, 1 an assertion mismatch on the version-refusal case), zero module/syntax errors; C-stage's lifecycle.spec.ts independently re-confirmed at 28/28 green (28, not 27 -- 248c0a6cc8 added a createdAt-collision pagination case). APPROVED PATH PATCH P6-07-P-lifecycle-store: the declared deliverable packages/session/session-persistence/src/index.ts is ARCHITECTURALLY UNREALIZABLE, not merely inconveniently placed -- a materially stronger basis than P6-07.C's .e2e.ts->.spec.ts path-spelling correction, and it must not be read as the same class of deviation. A durable lifecycle registry must name SessionLifecycleRecord/SessionDisposition and call the C-stage's listSessions/assertNoLegalHold/hardErase/propagateDeletion; that import closes a real project-reference cycle session-persistence -> session-lifecycle -> workspace/workspace -> session-persistence, whose last two edges already exist, which tsc reports as TS6202. No level of effort inside the declared scope avoids it: every P6-07 clause is an assertion about lifecycle semantics (must[0]'s filters ARE listSessions, acceptance[1]'s hold IS assertNoLegalHold, acceptance[2]'s propagation IS propagateDeletion), so a record-type-generic store that cannot name a disposition observes none of them and proves only that a JSON document round-trips. A variant exploiting tsconfig.host.json's direct inclusion of packages/*/*/tests/** -- letting a test import what src/ may not -- was also rejected: it would yield real observations while no shipped code assembles the service, making a fixture read as a product surface, which is WORSE than an honest gap because it greens. The approved placement packages/session/session-lifecycle/src/store.ts adds ZERO new dependency edges: this package already references brand, principal, core/session, workspace and attachment, which is everything a durable store of its own records needs. Verified by RUNNING THE COMPILER, not by reading manifests (BLOCKED-051): `pnpm exec tsc -b packages/session/session-lifecycle/tsconfig.json` exits 0 with no TS6202. Accuracy correction to an earlier premise in this thread: it is NOT true that nothing in the repo references session-lifecycle -- apps/web/tsconfig.json does; the conclusion is unchanged because an application is a terminal consumer and does not enter the inter-package dependency graph. Genuinely new at P-stage: a SessionLifecycleStore durability seam, a real file-backed createFileSessionLifecycleStore (single versioned JSON document, write-temp-then-rename, one promise chain -- P4-01's createFileRunStore format), and a SessionLifecycleService whose ONLY constructor is static restore(store). Every durability case builds a SECOND store + SECOND service over the same path sharing no map, closure or record value, so an in-memory double cannot pass. SCOPE NOTE (acceptance[0]): P covers pagination DURABILITY across a restart -- a full page-walk at limit 7 over 64 durably reconstructed records asserting the exact ordered id list -- while acceptance[0]'s million-record SCALE half stays with C-stage's already-green listSessions sweep; the P fixture size is deliberately not presented as a scale test. SCOPE NOTE (acceptance[3]): deliberately NOT covered at P per Supervisor ruling -- the clause names the corrupted SESSION LOG, already owned by C-stage's readSessionLogWithRepair and U/F-scope packages/core/session/src/repair.ts; a second corruption-recovery surface would be a divergent second implementation of one clause. session-persistence/src/{coordinator,revision}.ts remain declared-but-unmodified: PersistenceCoordinator's storage contract is keyed on SessionId + SessionEvent under SESSION_FORMAT_VERSION, and a retention disposition is not a session-log event. Zero changes under packages/session/session-persistence/ in this commit. CASE COUNT 18: the 18th covers the unknown-store-format-version refusal the Supervisor's ruling specified; retained on Supervisor instruction over the 17 an earlier arithmetic projection assumed. package.json gains only a ./store exports entry (build infrastructure, never enumerated in a registry files list). expectExit=0 is the GREEN target per the P0-01.C precedent."
+      "note": "P-stage RED scaffold for P6-07, attempt/P6-07-P (rebased onto land-base-align-v2 @ a3b681f555; RED re-confirmed 18/18 on that base, whose tree dryRunProof.treeSha names). 18/18 genuinely failed on real not-implemented errors (17 from createFileSessionLifecycleStore, 1 an assertion mismatch on the version-refusal case), zero module/syntax errors; C-stage's lifecycle.spec.ts independently re-confirmed at 28/28 green (28, not 27 -- 248c0a6cc8 added a createdAt-collision pagination case). APPROVED PATH PATCH P6-07-P-lifecycle-store: the declared deliverable packages/session/session-persistence/src/index.ts is ARCHITECTURALLY UNREALIZABLE, not merely inconveniently placed -- a materially stronger basis than P6-07.C's .e2e.ts->.spec.ts path-spelling correction, and it must not be read as the same class of deviation. A durable lifecycle registry must name SessionLifecycleRecord/SessionDisposition and call the C-stage's listSessions/assertNoLegalHold/hardErase/propagateDeletion; that import closes a real project-reference cycle session-persistence -> session-lifecycle -> workspace/workspace -> session-persistence, whose last two edges already exist, which tsc reports as TS6202. No level of effort inside the declared scope avoids it: every P6-07 clause is an assertion about lifecycle semantics (must[0]'s filters ARE listSessions, acceptance[1]'s hold IS assertNoLegalHold, acceptance[2]'s propagation IS propagateDeletion), so a record-type-generic store that cannot name a disposition observes none of them and proves only that a JSON document round-trips. A variant exploiting tsconfig.host.json's direct inclusion of packages/*/*/tests/** -- letting a test import what src/ may not -- was also rejected: it would yield real observations while no shipped code assembles the service, making a fixture read as a product surface, which is WORSE than an honest gap because it greens. The approved placement packages/session/session-lifecycle/src/store.ts adds ZERO new dependency edges: this package already references brand, principal, core/session, workspace and attachment, which is everything a durable store of its own records needs. Verified by RUNNING THE COMPILER, not by reading manifests (BLOCKED-051): `pnpm exec tsc -b packages/session/session-lifecycle/tsconfig.json` exits 0 with no TS6202. Accuracy correction to an earlier premise in this thread: it is NOT true that nothing in the repo references session-lifecycle -- apps/web/tsconfig.json does; the conclusion is unchanged because an application is a terminal consumer and does not enter the inter-package dependency graph. Genuinely new at P-stage: a SessionLifecycleStore durability seam, a real file-backed createFileSessionLifecycleStore (single versioned JSON document, write-temp-then-rename, one promise chain -- P4-01's createFileRunStore format), and a SessionLifecycleService whose ONLY constructor is static restore(store). Every durability case builds a SECOND store + SECOND service over the same path sharing no map, closure or record value, so an in-memory double cannot pass. SCOPE NOTE (acceptance[0]): P covers pagination DURABILITY across a restart -- a full page-walk at limit 7 over 64 durably reconstructed records asserting the exact ordered id list -- while acceptance[0]'s million-record SCALE half stays with C-stage's already-green listSessions sweep; the P fixture size is deliberately not presented as a scale test. SCOPE NOTE (acceptance[3]): deliberately NOT covered at P per Supervisor ruling -- the clause names the corrupted SESSION LOG, already owned by C-stage's readSessionLogWithRepair and U/F-scope packages/core/session/src/repair.ts; a second corruption-recovery surface would be a divergent second implementation of one clause. session-persistence/src/{coordinator,revision}.ts remain declared-but-unmodified: PersistenceCoordinator's storage contract is keyed on SessionId + SessionEvent under SESSION_FORMAT_VERSION, and a retention disposition is not a session-log event. Zero changes under packages/session/session-persistence/ in this commit. CASE COUNT 18: the 18th covers the unknown-store-format-version refusal the Supervisor's ruling specified; retained on Supervisor instruction over the 17 an earlier arithmetic projection assumed. package.json gains only a ./store exports entry (build infrastructure, never enumerated in a registry files list). expectExit=0 is the GREEN target per the P0-01.C precedent.",
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P2-02",
@@ -4365,7 +4370,8 @@
       "sensitivityProof": {
         "mutationDescription": "Four mutations: (1) the audit record omits the current holder; (2) the audit record spreads the whole lease into itself, leaking fields; (3) checkFencing's epoch equality relaxed to a less-than comparison, admitting a forged-high epoch; (4) the expiry boundary relaxed to greater-or-equal. All restored byte-identical.",
         "failureSummary": "Reddens 2, 2, 2 and 1 cases respectively. Mutation (2) is caught by the case asserting the record's exact key set, which exists precisely because 'carries no credential material' is otherwise unfalsifiable."
-      }
+      },
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P1-03",
@@ -4538,7 +4544,8 @@
       "sensitivityProof": {
         "mutationDescription": "Four mutations: (1) the version check moved after the integrity check, inverting reason precedence; (2) a self-dependency filtered out so it is no longer a cycle; (3) the loadOrder duplicate check removed; (4) an empty lock refused instead of admitted. All restored byte-identical.",
         "failureSummary": "Reddens 3, 1, 1 and 1 cases respectively. (1) reddens three because reason precedence is asserted at both the C and F stages -- the duplication is deliberate, since the C stage asserts the behaviour and the F stage asserts it as a named boundary."
-      }
+      },
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P1-03",
@@ -4729,7 +4736,8 @@
       "sensitivityProof": {
         "mutationDescription": "The same six mutations recorded against the C stage apply to this file's subject, plus their effect on the boundary cases: recordConflict mutating in place, disputed records staying retrievable, the confidence range written as `< 0 || > 1`, the expiry boundary using `<`, sensitive content admitted regardless of policy, and the derived-without-source check removed.",
         "failureSummary": "Each reddens at least one Fault boundary in addition to its C-stage case: the boundaries are named restatements of the same behaviours, so a mutation that escaped the C case would still be caught here. The duplication is deliberate -- C asserts the behaviour, F asserts it as an enumerated boundary with the count guarded."
-      }
+      },
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P4-08",
@@ -4907,7 +4915,8 @@
       "sensitivityProof": {
         "mutationDescription": "Three mutations on src/replay.ts beyond those recorded for the C stage: (1) compaction made non-idempotent by stripping the output ref on a second pass; (2) a refused plan still yields receipts to reconcile; (3) an empty journal reported unresumable. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
-      }
+      },
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P4-09",
@@ -5113,7 +5122,8 @@
       "sensitivityProof": {
         "mutationDescription": "Three mutations beyond those recorded for C and P. types.ts: (1) recursion checked only against the immediate parent rather than the whole chain; (2) the agent-budget guard changed to `<= 1`, so the last agent cannot be spent. version.ts: (3) the monotonicity check skipped when the history is empty. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 boundary each -- 12, 15 and 05 respectively, each the boundary written for it."
-      }
+      },
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P5-11",
@@ -5297,7 +5307,8 @@
       "sensitivityProof": {
         "mutationDescription": "Three mutations on src/types.ts beyond those recorded for C: (1) the dependency check moved before the not-claimable check, inverting reason precedence; (2) only the first dependency examined instead of all; (3) an empty graph refused. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 boundary each -- 14, 12 and 19 respectively, each the boundary written for it."
-      }
+      },
+      "supersededBy": "2026-09-06T22:00:00.000Z"
     },
     {
       "epic": "P5-11",
@@ -5385,6 +5396,616 @@
         "mutationDescription": "Eight mutations across the two freezes this supersedes. Six on src/types.ts: the attempt not incremented on claim; the expiry boundary relaxed; a dependency accepted while merely submitted; isClaimCurrent accepting any attempt at or above current; the cycle walk's memo removed; the self-dependency check removed. Two for the replaced must[2] cases: a `rank: string` field added to Task, and decideClaim returning a decorated owner. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1, 1, 0 and 1 for the first six -- the memo removal being a genuine equivalent mutant, established by re-running the cycle and diamond cases without it. The two must[2] mutations redden 2 and 4 against the CURRENT assertions and 1 and 0 against the REPLACED ones, which is what shows the replacement was load-bearing rather than cosmetic."
       }
+    },
+    {
+      "epic": "P2-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/capability-token/tests/token.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-02 Fault — attenuation boundary matrix enumerates at least twelve boundaries, each named once",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 01 an equal-to-parent request is admitted, so refusals below are selective",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 02 a narrowed verb set is admitted",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 03 a verb the parent does not hold is refused",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 04 an empty verb set is admitted: nothing is the strongest narrowing",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 05 a narrowed resource set is admitted",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 06 a resource outside the parent's is refused",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 07 keeping every parent resource and adding one is still refused",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 08 a lower budget is admitted",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 09 a budget equal to the parent's is admitted, not treated as an increase",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 10 a budget one unit above the parent's is refused",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 11 OMITTING a budget under a constrained parent is refused as a widening",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 12 an earlier expiry is admitted",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 13 an expiry equal to the parent's is admitted",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 14 an expiry one millisecond beyond the parent's is refused",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 15 a child of a child narrows again from the CHILD, not the root",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 16 each successful attenuation increments delegationDepth",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 17 a child records its parent's digest, so a chain can be walked back",
+        "P2-02 Fault — attenuation boundary matrix fault boundary 18 a child inherits tenant and capability verbatim, which the request cannot express"
+      ],
+      "files": [
+        "packages/policy/capability-token/src/attenuate.ts",
+        "packages/policy/capability-token/src/types.ts",
+        "packages/policy/capability-token/tests/token.spec.ts",
+        "packages/policy/capability-token/package.json"
+      ],
+      "frozenAtUtc": "2026-09-05T00:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "8a00a3059d3abe0cf0a6bc0eefb5da68681e338c",
+        "testsDiscovered": 55
+      },
+      "note": "F (Fault) for P2-02, under the same BLOCKED-050 acceptance lock as U. Eighteen attenuation boundaries pin must[2]'s one-way narrowing rule from BOTH sides on every dimension the request can express: equal-to-parent is admitted and one step beyond is refused, for verbs (03, 07), resources (06, 07), budget (09, 10) and expiry (13, 14). Boundary 11 is the one a reader would not predict -- OMITTING a budget under a constrained parent is a WIDENING, not a default -- and boundaries 16-18 pin the three fields the child does not get from its request at all (delegationDepth, parentDigest, and the verbatim tenant/capability). Boundary 15 pins that a grandchild narrows from its PARENT, not from the root, which is the difference between a chain that attenuates and one that only appears to. expectCases holds fullName strings, not bare titles: 'enumerates at least twelve boundaries, each named once' is a title six epics share, and a bare-title reference would be satisfied by any of them (the recurrence of BLOCKED-018 through a second door).",
+      "sensitivityProof": {
+        "mutationDescription": "Six targeted mutations of attenuate.ts, each restored byte-identical: (KK1) deleted the verb-subset check; (KK2) isBudgetWithinParent returns true for an omitted request budget, making omission a default rather than a widening; (KK3) expiry comparison relaxed from > to >=; (KK4) budget comparison tightened from <= to <, so an equal budget is wrongly refused; (KK5) delegationDepth not incremented; (KK6) parentDigest set to null.",
+        "failureSummary": "All six reddened: 4, 2, 19, 20, 2 and 2 of 55 respectively. The two relational mutations (KK3, KK4) redden broadly because every downstream boundary builds on an admitted parent; the four local ones redden narrowly and name the exact guard removed -- KK2's 2 are boundary 11 and the one grandchild case that omits a budget, and KK5/KK6 are boundaries 16 and 17 alone. An earlier seventh attempt reddened nothing, which was a failed sed against a string not present in the file rather than an insensitive suite; it was rewritten as KK1 and then reddened."
+      }
+    },
+    {
+      "epic": "P0-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/kernel/trust-kernel/tests/boundary.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "imports nothing: the kernel type surface depends on no other package",
+        "has no runtime code: every top-level statement is a type/interface declaration or an ambient declare-const symbol",
+        "declares an exported TrustKernel interface with exactly the six must[2] members, all readonly, and no methods",
+        "TrustKernel type surface (Epic P0-02 must[2]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+        "brands TrustKernelRootIdentity as an opaque interface, never a plain type alias",
+        "brands TrustKernelSignatureRoots as an opaque interface, never a plain type alias",
+        "brands TrustKernelSecretBrokerHandle as an opaque interface, never a plain type alias",
+        "keeps TrustKernelPolicyQuery.payload exactly `unknown` -- no business-domain field on the kernel surface",
+        "keeps TrustKernelAuditEntry.payload exactly `unknown` -- no business-domain field on the kernel surface",
+        "keeps TrustKernelSandboxAttestation.payload exactly `unknown` -- no business-domain field on the kernel surface",
+        "TrustKernelRootIdentity's brand symbol TRUST_KERNEL_ROOT_IDENTITY carries no export modifier",
+        "TrustKernelSignatureRoots's brand symbol TRUST_KERNEL_SIGNATURE_ROOTS carries no export modifier",
+        "TrustKernelSecretBrokerHandle's brand symbol TRUST_KERNEL_SECRET_BROKER carries no export modifier",
+        "gives TrustKernelRootIdentity exactly one member, a computed property keyed by TRUST_KERNEL_ROOT_IDENTITY",
+        "gives TrustKernelSignatureRoots exactly one member, a computed property keyed by TRUST_KERNEL_SIGNATURE_ROOTS",
+        "gives TrustKernelSecretBrokerHandle exactly one member, a computed property keyed by TRUST_KERNEL_SECRET_BROKER",
+        "exports none of the three branding symbols by name, per the real compiler's own module-exports list",
+        "type-checks a well-formed TrustKernel usage with zero diagnostics",
+        "rejects reassigning a TrustKernel member -- every capability is readonly",
+        "rejects constructing an opaque handle from an object literal -- no legitimate value exists outside an unsafe cast",
+        "names models among what remains a plugin",
+        "names tools among what remains a plugin",
+        "names storage providers among what remains a plugin",
+        "names workflow among what remains a plugin",
+        "names memory provider among what remains a plugin",
+        "names ui among what remains a plugin",
+        "names root identity among what is never a plugin",
+        "names deny enforcement among what is never a plugin",
+        "names audit-chain root among what is never a plugin",
+        "names signature-verification root among what is never a plugin",
+        "cross-references the TrustKernel type surface and the ctx.provide/ctx.plugin distinction",
+        "documents the auditAppend capability",
+        "documents the policyEnforcement capability",
+        "documents the rootIdentity capability",
+        "documents the sandboxAttestationVerifier capability",
+        "documents the secretBroker capability",
+        "documents the signatureRoots capability",
+        "cross-references the boundary doc and this slice's own test file"
+      ],
+      "files": [
+        "packages/kernel/trust-kernel/tests/boundary.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "552da8935430cd9fa1505cdf744d776c76beeb63",
+        "testsDiscovered": 38
+      },
+      "note": "P0-02 C-stage (2026-09-01): the TrustKernel narrow, unforgeable capability-surface type contract for @deepseek-ai/dsh-trust-kernel. Real RED at commit e95ca9e584 (stub types.ts exporting only a placeholder interface): 10/31 failed, all genuine TypeScript compiler diagnostics/structural mismatches, never module/syntax errors. Went through THREE rounds of Opus-level adversarial review (mandatory for this L0_KERNEL epic per C1): round 1 found a real gap -- the suite proved the surface was narrow and readonly but never actually tested unforgeability (2 of 5 seeded mutations, exporting a brand symbol or replacing it with an ordinary field, survived); fixed with 7 new tests (31->38), independently mutation-replayed twice before/after by two separate reviewers. Round 2 found the fix's honest package.json correction (dropping phantom main/types fields pointing at a lib/index.js this slice didn't yet produce) broke the repo-wide check-workspace-constraints.ts gate -- routed to the delegate as BLOCKED-009 (a brand-new package's C-stage-only slice structurally can't satisfy that gate without an index.ts). Delegate ruling: a pure-type-only src/index.ts (export type re-export only, zero runtime/Cordis surface) is now mandatory B4(f) scaffold for every future new-package C-stage slice, not a one-off. Round 3 found docs/module-graph (a peerDependencies-derived generated artifact) still stale on this package's own edge -- regenerated. Final ACCEPT confirmed via self-verification against the unmodified, already-reviewed gate scripts (typecheck, check-workspace-constraints.ts, verify-module-graph, publint, vitest all clean). A real, unrelated, pre-existing defect from P0-01.U's already-ACCEPTED slice was surfaced along the way (verify-cordis-config: packages/bundle/base/cordis.patch.yml references @deepseek-ai/dsh-baseline-preflight without declaring it in packages/bundle/base/package.json's dependencies) -- noted, not fixed here, out of scope for this epic.\n\nSuperseded 2026-09-01T06:40:00Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "supersedes": "2026-09-01T06:40:00Z"
+    },
+    {
+      "epic": "P0-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/release/evidence-package.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "imports only a type-only Branded from @deepseek-ai/dsh-brand -- no other import, no runtime dependency edge",
+        "GateEvidence type surface (Epic P0-07 must[0]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+        "declares GateEvidence as a discriminated union of CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence",
+        "gives GateEvidenceBase (unexported) exactly the must[0] base fields, all readonly",
+        "exports CompletedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+        "exports SkippedGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+        "exports MissingGateEvidence with exactly its own declared members, all readonly, extending GateEvidenceBase",
+        "types Digest as Branded<EvidenceDigest\"> -- a plain nominal string, never a unique-symbol handle",
+        "types Signature as Branded<EvidenceSignature\"> -- a plain nominal string, never a unique-symbol handle",
+        "types CommitSha as Branded<CommitSha\"> -- a plain nominal string, never a unique-symbol handle",
+        "types GateId as Branded<GateId\"> -- a plain nominal string, never a unique-symbol handle",
+        "type-checks well-formed CompletedGateEvidence, SkippedGateEvidence, and MissingGateEvidence literals with zero diagnostics",
+        "rejects a CompletedGateEvidence literal whose skipReasons is nonempty -- a completed gate carries no skip reason",
+        "rejects a SkippedGateEvidence literal whose skipReasons is empty -- a skip must name at least one real reason",
+        "rejects a MissingGateEvidence literal whose skipReasons is empty -- a missing gate must also name at least one real reason",
+        "rejects reassigning a GateEvidence member -- every field is readonly (TS2540)",
+        "rejects a plain string literal where a Digest is required -- Digest is a Branded nominal type, not a bare string",
+        "binds baselineFingerprint, gitDiff, additionalGates, and signature on EVERY EvidencePackage, before any accepted-narrowing",
+        "types BaselineFingerprintBinding.gitSha, GitDiffBinding.baseSha, and GitDiffBinding.headSha as the CommitSha brand -- distinct from GateId, not a bare string that would satisfy any brand",
+        "type-checks an AcceptedEvidencePackage literal when every required gate id is present and CompletedGateEvidence, and every required artifact path is present",
+        "rejects an AcceptedEvidencePackage literal that omits one required gate id from requiredGates",
+        "rejects an AcceptedEvidencePackage literal whose requiredGates assigns a SkippedGateEvidence to a required gate id",
+        "rejects an AcceptedEvidencePackage literal whose requiredGates assigns a MissingGateEvidence to a required gate id",
+        "rejects an AcceptedEvidencePackage literal that omits one required build artifact path from requiredBuildArtifacts -- must[2]'s \"missing artifact\" clause",
+        "type-checks an UnacceptedEvidencePackage literal whose requiredGates has a SkippedGateEvidence and whose requiredBuildArtifacts is empty -- accepted:false imposes no completeness or outcome constraint",
+        "documents the honest degraded case: with RequiredGateId/RequiredArtifactPath left at their string default, an AcceptedEvidencePackage literal with EMPTY requiredGates and requiredBuildArtifacts maps still type-checks -- completeness of a non-literal required-id SET is a P-stage runtime check (verify-evidence.mjs against the release manifest), never a static one this type surface can express",
+        "declares no unique-symbol-branded member anywhere in the module -- every field is a plain JSON-safe value, so JSON.stringify never silently drops it",
+        "is exactly one statement: `export type * from './types.ts'` -- zero runtime exports, zero Cordis registration, zero side effects",
+        "has no default export and no Config/apply plugin exports"
+      ],
+      "files": [
+        "packages/assurance/evidence-format/src/types.ts",
+        "tests/release/evidence-package.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "859a2d017e04aec1cf25aacf22d7003107613fdb",
+        "testsDiscovered": 29
+      },
+      "note": "P0-07 C-stage (2026-09-01), Release Evidence Package's Contract type surface: a discriminated GateEvidence union (CompletedGateEvidence | SkippedGateEvidence | MissingGateEvidence, must[0]) carrying command/timestamps/exitCode/environment/digests/testCounts/skipReasons; an EvidencePackage binding baselineFingerprint + gitDiff + build-artifact digests (must[1]); and the epic's central claim, must[2] ('any skipped blocking gate or missing artifact must never allow accepted=true') proven as a real compile-time guarantee: AcceptedEvidencePackage<RequiredGateId, RequiredArtifactPath> requires complete Record<K, CompletedGateEvidence>/Record<K, Digest> maps keyed by literal-union required-id sets, independently verified via direct tsc diagnostics (TS2741 on a missing key, TS2322 on a skipped/missing gate where completed is required) -- not merely asserted by a test, a real compiler rejection. One honest, disclosed limit: with RequiredGateId/RequiredArtifactPath left at their string default, an EMPTY requiredGates/requiredBuildArtifacts map still type-checks -- required-id-SET completeness is P-stage's runtime job (verify-evidence.mjs against the release manifest), not something this type surface can express statically; a dedicated test documents this rather than hiding it. Confirmed the registry's third declared C-stage file, spec/first100-evidence.schema.json, is a coincidental path collision (this program's own 109-epic self-tracking schema, unrelated id/lane/baselineSha vocabulary) not a real dependency -- independently re-verified by the Reviewer, not just the Writer's own claim. Real RED->GREEN: a deliberately wrong stub types.ts failed 25/29 genuinely (TS2305 missing-export errors, AST shape mismatches, zero crashes); the real implementation passed 29/29. Round 1 independent review: ACCEPT on design/tests/central claim, REJECT on one purely mechanical miss -- gen-module-graph.ts --check failed because the new packages/assurance/evidence-format package was never reflected in the generated module-graph docs. Fix round: ran gen-module-graph, committed the 3 regenerated docs, touching nothing else. Round 2 independent review: ACCEPT, with the compile-time must[2] guarantee re-proven from scratch via a standalone tsc probe (not reusing the test file) and the fix commit's diff confirmed scoped to exactly the 3 doc files.\n\nSuperseded 2026-09-01T21:20:00Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "supersedes": "2026-09-01T21:20:00Z"
+    },
+    {
+      "epic": "P0-05",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/migration/feature-gates/tests/gates.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "declares exactly three states: off, shadow, enforce -- no more, no fewer",
+        "rejects a fourth state at compile time",
+        "type-checks each of the three real states with zero diagnostics",
+        "declares an exported FeatureGateDeclaration interface with exactly the required fields, all readonly",
+        "rejects a well-formed declaration missing removalVersion at compile time",
+        "requires FeatureGateProfileDefaults to carry a \"default\" fallback entry",
+        "type-checks a well-formed declaration with per-profile overrides and zero diagnostics",
+        "reads the real SettingsNamespaceView.value field type: JsonValue, from @deepseek-ai/dsh-util-values",
+        "keeps FeatureGateNamespaceValue JSON-safe: assignable to the real JsonValue that carries SettingsNamespaceView.value",
+        "rejects a non-state value inside FeatureGateNamespaceValue at compile time",
+        "declares FeatureGateOverrideSource with exactly default, profile, settings, env",
+        "declares an exported FeatureGateResolution interface carrying gateId, resolved, and an ordered chain",
+        "type-checks a well-formed resolution with its chain and rejects an unknown source",
+        "declares an exported FeatureGateShadowDecisionRecord with exactly gateId/legacySummary/shadowSummary/differs",
+        "types legacySummary as RedactedJsonValue, never a bare JsonValue, unknown, or any",
+        "types shadowSummary as RedactedJsonValue, never a bare JsonValue, unknown, or any",
+        "rejects a raw unknown-typed payload field standing in for a summary",
+        "type-checks a well-formed diff record with zero diagnostics once both summaries are typed JsonValue, then cast through RedactedJsonValue",
+        "brands RedactedJsonValue with an unexported unique symbol -- an exported symbol would let any importer forge one with zero casts",
+        "exports RedactedJsonValue itself but never its brand symbol, per the real compiler's own module-exports list",
+        "rejects a bare JsonValue assigned directly where RedactedJsonValue is required -- the accidental, un-cast leak path does not type-check",
+        "rejects an object literal assigned directly where RedactedJsonValue is required, same as a bare JsonValue",
+        "accepts a JsonValue explicitly cast through RedactedJsonValue -- the deliberate, greppable escape hatch",
+        "does NOT verify cast content -- a value that still looks unredacted type-checks once cast, the documented, honest limit of this brand",
+        "stays assignable back to JsonValue -- a later analysis can read a RedactedJsonValue as ordinary JSON with zero diagnostics",
+        "declares FeatureGateExpiryStatus as exactly active|expired",
+        "declares FeatureGateExpiryCheck as (gate: FeatureGateDeclaration, releaseVersion: string) => FeatureGateExpiryStatus",
+        "rejects a FeatureGateExpiryCheck implementation that returns something other than active/expired",
+        "imports only via `import type`, never a runtime import",
+        "has no runtime code: every top-level statement is a type-only import, interface, type alias, or an ambient declare-const symbol",
+        "src/types.ts hygiene (Epic P0-05 Contract stage: types-only, no plugin surface) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
+        "has exactly one statement: a type-only `export type * from './types.ts'`"
+      ],
+      "files": [
+        "packages/migration/feature-gates/src/types.ts",
+        "packages/migration/feature-gates/tests/gates.spec.ts",
+        "packages/settings/settings/src/types.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "438683df389c260705963d6942a3522b6dff07e7",
+        "testsDiscovered": 32
+      },
+      "note": "P0-05 C-stage (2026-09-01), Shadow/Enforce Feature Gates' Contract type surface: the 3-state FeatureGateState union (must[0]), a FeatureGateDeclaration carrying owner/introducedVersion/defaultByProfile/removalVersion (must[2]), a settings-namespace-interoperable value type verified against the real packages/settings/settings/src/types.ts, an override-chain FeatureGateResolution shape proving --dump-config's source-and-chain requirement (must[3]), and a FeatureGateExpiryCheck contract (acceptance[2]). Real RED->GREEN: a 2-state stub union with missing exports failed 14/25 genuinely (missing-export/wrong-union-member errors); full implementation passed 25/25, later 32/32 after fix rounds. Round 1 independent review REJECTed on 3 findings: (1) must[1]/acceptance[1]'s 'no sensitive-parameter leak' guarantee was comment-only -- legacySummary/shadowSummary were typed as bare JsonValue, a fully generic type that structurally accepts a raw secret; (2) an unexplained devDependencies-vs-peerDependencies classification inconsistency between @deepseek-ai/dsh-brand and @deepseek-ai/dsh-util-values; (3) gen-module-graph.ts --check failed, never regenerated after adding the new package. Fix round: genuinely strengthened the type -- a branded RedactedJsonValue (JsonValue & unexported-unique-symbol tag, mirroring TrustKernelRootIdentity's opaque-handle idiom) now makes a bare JsonValue or object literal fail to type-check where a summary is required, forcing an explicit cast through RedactedJsonValue; the doc comment and tests are honest that this proves only structural non-assignability of a raw JSON literal, never that cast content is actually secret-free (that remains a P-stage runtime job, same precedent as settings/redact.ts's own real redactSecrets). The dependency classification was independently re-verified as already matching real repo-wide precedent (dsh-util-values is devDependencies-only in every genuine type-only consumer repo-wide, never peerDependencies anywhere) -- no change needed, documented in a new README Dev Note. module-graph regenerated. Round 2 independent review: the RedactedJsonValue claim independently re-proven via a standalone tsc probe (not reusing the Writer's test file) -- a bare JsonValue/object literal genuinely fails, a single-step cast from an already-JsonValue-typed value succeeds, a fresh literal needs the documented as-unknown-as escape hatch (a real TS2352 quirk). REJECTed only on one new, mechanical finding: no bilingual README.zh.md/README.i18n.yaml pair (verify-translation-pairing). Fix round: added the missing language-switcher line plus a faithful Chinese translation matching the trust-kernel README's structure exactly. Round 3 independent review: ACCEPT, with the bilingual pair's recorded blob hashes independently recomputed via git hash-object and confirmed matching.\n\nSuperseded 2026-09-01T21:45:00Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "supersedes": "2026-09-01T21:45:00Z"
+    },
+    {
+      "epic": "P4-01",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/run-service.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "lists a non-terminal Run reconstructed from the durable store by a fresh service",
+        "lists every non-terminal Run, not just the most recently written one",
+        "omits a Run that reached a terminal state before the restart from the non-terminal listing",
+        "resumes a non-terminal Run reconstructed after a restart",
+        "refuses to resume a Run that reached a terminal state before the restart",
+        "reconstructs a restored Run exactly, brands included, not an approximation of it",
+        "acceptance[0]: after a process restart, every non-terminal Run can be listed and resumed starts empty on a first boot, with no store file on disk yet",
+        "accepts a legal transition through the service and durably records the new state",
+        "rejects an illegal transition through the service, naming the exact rejected pair",
+        "writes nothing for a rejected transition: the restored Run keeps its state and its unextended event log",
+        "associates one Session with multiple Runs across a restart",
+        "lists no Run for a Session that never initiated or joined one",
+        "spans one Run across multiple Sessions durably: an attached Session survives a restart",
+        "appends across a restart without rewriting or reordering any earlier entry",
+        "restores a log entry's entity references, not just its state pair",
+        "owns a Run restored after a restart with RUN_SERVICE_OWNER_ID, never the initiating SessionId",
+        "reads back exactly what a separate store instance over the same path wrote",
+        "reports no Runs for a path that has never been written to, rather than failing",
+        "writes the Run to the named path, not somewhere else"
+      ],
+      "files": [
+        "packages/run/run/tests/run-service.spec.ts",
+        "packages/run/run/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "7d3cbc26e2a2da66c67c2568b939679212ee39d5",
+        "testsDiscovered": 19
+      },
+      "note": "P-stage RED scaffold for P4-01, attempt/P4-01-P @ 8f0dcac43c (branched from first100-exec @ 624498308c). 19/19 genuinely failed on real not-implemented errors, zero module/syntax errors; C-stages own 111 frozen cases independently re-confirmed still green by the Supervisor. Genuinely new at P-stage: acceptance[0] (list+resume every non-terminal Run after a process restart) is UNREACHABLE from C-stages surface no matter how correct it is -- listNonTerminalRuns/resumeRun operate on a value the caller already holds, and a restart is precisely the event that destroys that value. P-stage adds a RunStore durability seam, a real file-backed createFileRunStore (not an in-memory double, so a shortcut implementation cannot pass the restart fixture), and a RunService whose ONLY constructor is static restore(store). Each restart case uses a fresh store + fresh service over the same path, sharing no value/map/closure, so a reappearing Run came from durable bytes only. DECLARED-SCOPE DEVIATION, reported for audit, NOT a path patch: packages/session/session-persistence/src/coordinator.ts (P-stages other declared file) was read thoroughly and deliberately NOT touched -- its entire storage contract is keyed on session identity (loadStored(id: SessionId), records are SessionEvents under a SessionHeader, ops serialized per-SessionId), so storing a Run there would make a Runs durable existence a function of some Sessions, which must[2] forbids outright, and a Run spanning several Sessions (acceptance[2]) cannot be a row inside any one of their logs. Recorded in the modules JSDoc, the package READMEs Known Limitations, and the commit message; git status confirms zero changes to that package. expectExit=0 is the GREEN target per the P0-01.C precedent.\n\nSuperseded 2026-09-03T20:36:18.049Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "supersedes": "2026-09-03T20:36:18.049Z"
+    },
+    {
+      "epic": "P6-07",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-lifecycle/tests/store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "lists a lifecycle record reconstructed from the durable store by a fresh service",
+        "walks every page of a restored listing, visiting each durable record exactly once with no omission or duplication",
+        "durable session-lifecycle registry (acceptance[0]: listing survives a restart) starts empty on a first boot, with no store file on disk yet",
+        "reads back exactly what a separate store instance over the same path wrote, brands included",
+        "filters a restored listing by tenant, excluding another tenant's record",
+        "filters a restored listing by workspace",
+        "filters a restored listing by status, excluding a soft-deleted record from an active-only page",
+        "filters a restored listing by time range",
+        "persists an archive so a fresh service reads back the archived disposition, not the active one",
+        "persists a soft delete so a fresh service reads back the soft-deleted disposition",
+        "keeps archive and soft delete separate: an archived record is never listed under a soft-deleted status filter",
+        "persists a legal hold so a fresh service still refuses to hard-erase after a restart",
+        "leaves a held record durably intact after a refused erase, rather than partially destroying it",
+        "carries a legal hold alongside a soft-deleted disposition across a restart",
+        "propagates an authorized erase to all four dependent stores and removes the record durably",
+        "propagates a soft delete to the query index only, leaving attachments, memory and artifacts untouched",
+        "does not resurrect an erased record for a fresh service over the same path",
+        "refuses a store document written under an unsupported format version instead of reading it as empty"
+      ],
+      "files": [
+        "packages/session/session-lifecycle/tests/store.spec.ts",
+        "packages/session/session-lifecycle/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "ed8c7a24da2fc2ccc37b391320be5f74ae6da233",
+        "testsDiscovered": 18
+      },
+      "note": "P-stage RED scaffold for P6-07, attempt/P6-07-P (rebased onto land-base-align-v2 @ a3b681f555; RED re-confirmed 18/18 on that base, whose tree dryRunProof.treeSha names). 18/18 genuinely failed on real not-implemented errors (17 from createFileSessionLifecycleStore, 1 an assertion mismatch on the version-refusal case), zero module/syntax errors; C-stage's lifecycle.spec.ts independently re-confirmed at 28/28 green (28, not 27 -- 248c0a6cc8 added a createdAt-collision pagination case). APPROVED PATH PATCH P6-07-P-lifecycle-store: the declared deliverable packages/session/session-persistence/src/index.ts is ARCHITECTURALLY UNREALIZABLE, not merely inconveniently placed -- a materially stronger basis than P6-07.C's .e2e.ts->.spec.ts path-spelling correction, and it must not be read as the same class of deviation. A durable lifecycle registry must name SessionLifecycleRecord/SessionDisposition and call the C-stage's listSessions/assertNoLegalHold/hardErase/propagateDeletion; that import closes a real project-reference cycle session-persistence -> session-lifecycle -> workspace/workspace -> session-persistence, whose last two edges already exist, which tsc reports as TS6202. No level of effort inside the declared scope avoids it: every P6-07 clause is an assertion about lifecycle semantics (must[0]'s filters ARE listSessions, acceptance[1]'s hold IS assertNoLegalHold, acceptance[2]'s propagation IS propagateDeletion), so a record-type-generic store that cannot name a disposition observes none of them and proves only that a JSON document round-trips. A variant exploiting tsconfig.host.json's direct inclusion of packages/*/*/tests/** -- letting a test import what src/ may not -- was also rejected: it would yield real observations while no shipped code assembles the service, making a fixture read as a product surface, which is WORSE than an honest gap because it greens. The approved placement packages/session/session-lifecycle/src/store.ts adds ZERO new dependency edges: this package already references brand, principal, core/session, workspace and attachment, which is everything a durable store of its own records needs. Verified by RUNNING THE COMPILER, not by reading manifests (BLOCKED-051): `pnpm exec tsc -b packages/session/session-lifecycle/tsconfig.json` exits 0 with no TS6202. Accuracy correction to an earlier premise in this thread: it is NOT true that nothing in the repo references session-lifecycle -- apps/web/tsconfig.json does; the conclusion is unchanged because an application is a terminal consumer and does not enter the inter-package dependency graph. Genuinely new at P-stage: a SessionLifecycleStore durability seam, a real file-backed createFileSessionLifecycleStore (single versioned JSON document, write-temp-then-rename, one promise chain -- P4-01's createFileRunStore format), and a SessionLifecycleService whose ONLY constructor is static restore(store). Every durability case builds a SECOND store + SECOND service over the same path sharing no map, closure or record value, so an in-memory double cannot pass. SCOPE NOTE (acceptance[0]): P covers pagination DURABILITY across a restart -- a full page-walk at limit 7 over 64 durably reconstructed records asserting the exact ordered id list -- while acceptance[0]'s million-record SCALE half stays with C-stage's already-green listSessions sweep; the P fixture size is deliberately not presented as a scale test. SCOPE NOTE (acceptance[3]): deliberately NOT covered at P per Supervisor ruling -- the clause names the corrupted SESSION LOG, already owned by C-stage's readSessionLogWithRepair and U/F-scope packages/core/session/src/repair.ts; a second corruption-recovery surface would be a divergent second implementation of one clause. session-persistence/src/{coordinator,revision}.ts remain declared-but-unmodified: PersistenceCoordinator's storage contract is keyed on SessionId + SessionEvent under SESSION_FORMAT_VERSION, and a retention disposition is not a session-log event. Zero changes under packages/session/session-persistence/ in this commit. CASE COUNT 18: the 18th covers the unknown-store-format-version refusal the Supervisor's ruling specified; retained on Supervisor instruction over the 17 an earlier arithmetic projection assumed. package.json gains only a ./store exports entry (build infrastructure, never enumerated in a registry files list). expectExit=0 is the GREEN target per the P0-01.C precedent.\n\nSuperseded 2026-09-03T21:55:51Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "supersedes": "2026-09-03T21:55:51Z"
+    },
+    {
+      "epic": "P4-07",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 validation[0]: systematic fault matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a strictly older epoch is refused as stale",
+        "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
+        "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
+        "fault boundary 04 a token for another work item is refused",
+        "fault boundary 05 a token from another holder at the current epoch is refused",
+        "fault boundary 06 no lease at all refuses rather than admits",
+        "fault boundary 07 a lease is still held AT its expiry instant",
+        "fault boundary 08 a lease one millisecond past expiry is reclaimable",
+        "fault boundary 09 acquiring is refused while another holder's lease is live",
+        "fault boundary 10 renewing an expired lease is refused rather than resurrecting it",
+        "fault boundary 11 renewing on a superseded token is refused",
+        "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free",
+        "fault boundary 13 an unavailable store offers nothing reclaimable",
+        "fault boundary 14 an unavailable store refuses renewal",
+        "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival",
+        "fault boundary 16 split brain: two holders across a reclaim, only the later one writes",
+        "names who was refused, who was current, and why",
+        "records the absence of a lease rather than omitting the fields",
+        "carries no field capable of holding key or signature material",
+        "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
+        "CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not"
+      ],
+      "files": [
+        "packages/run/lease/tests/fault-matrix.spec.ts",
+        "packages/run/lease/src/store.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d1e13ecb0db4d1f53119150a45b0c944dcd51284",
+        "testsDiscovered": 22
+      },
+      "note": "P4-07 F-stage. 16 boundaries enumerated as data with the count asserted against validation[0]'s floor of 12, including its two named scenarios: a delayed packet from a reclaimed holder refused on arrival, and split brain across a reclaim where only the later holder writes.\n\nPRE-FLIGHT on validation[2] ('stale token rejection is written to audit'). The subject is HALF present, measured rather than assumed: TrustKernel.auditAppend is literally `(_entry: TrustKernelAuditEntry): void => {}` and the kernel exposes NO read member at all -- by design, since a function type with that signature cannot expose one. So an appended entry is unobservable to anything, a test included. The producible half is real and is built: describeFencingRejection returns a complete record naming who was refused, who was current, and why. It deliberately carries no signature, key, or secret material -- the record describes an authorization DECISION, and quoting the token's credentials would leak them into whatever backs the audit chain. A KNOWN GAP case states plainly which half is proved.\n\nRESIDUAL PINNED AS A MEASURED FACT, per the delegate's ruling, and it is TWO facts kept apart. decideTransition adopting a proposal's epoch is permissive but harmless alone; what makes it REACHABLE is that advanceAgentLifecycle is a PUBLIC EXPORT of dsh-agent, so any consumer -- including a third-party plugin, in a product whose premise is that everything is a plugin -- reaches the unfenced path by importing it. The unfenced function's JSDoc already says it cannot enforce authority, and documentation is not a gate: a consumer need not read it and the compiler will not object. The characterization case therefore asserts BOTH outcomes on one forged proposal -- refused through the fenced entry, ADMITTED through the public one. That case PASSING is the defect; it starts failing when the unfenced export is withdrawn or gated, which is a P4-05 supersession and not P4-07's to make.\n\nSuperseded 2026-09-05T23:50:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations: (1) the audit record omits the current holder; (2) the audit record spreads the whole lease into itself, leaking fields; (3) checkFencing's epoch equality relaxed to a less-than comparison, admitting a forged-high epoch; (4) the expiry boundary relaxed to greater-or-equal. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 2, 2 and 1 cases respectively. Mutation (2) is caught by the case asserting the record's exact key set, which exists precisely because 'carries no credential material' is otherwise unfalsifiable."
+      },
+      "supersedes": "2026-09-05T23:50:00.000Z"
+    },
+    {
+      "epic": "P1-03",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-lock/tests/lock.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-03 Fault — rejection-boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a dangling dependency is refused",
+        "fault boundary 02 a duplicate entry is refused",
+        "fault boundary 03 unsorted entries are refused, since the file would not be byte-stable",
+        "fault boundary 04 a load order shorter than the entries is refused",
+        "fault boundary 05 a load order naming an unknown plugin is refused",
+        "fault boundary 06 a load order listing one plugin twice is refused",
+        "fault boundary 07 a load order placing a plugin before its dependency is refused",
+        "fault boundary 08 a dependency cycle yields no order at all",
+        "fault boundary 09 a self-dependency is a cycle, not a no-op",
+        "fault boundary 10 a well-formed lock is accepted, so the checks above refuse selectively",
+        "fault boundary 11 boot refuses an integrity drift",
+        "fault boundary 12 boot refuses a manifest-digest drift distinctly from an integrity drift",
+        "fault boundary 13 boot refuses a version drift ahead of the digests it would also fail",
+        "fault boundary 14 boot refuses a plugin on disk that the lock does not list",
+        "fault boundary 15 boot refuses a locked plugin missing from disk (validation[2])",
+        "fault boundary 16 an empty lock admits an empty install rather than refusing",
+        "fault boundary 17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it"
+      ],
+      "files": [
+        "packages/plugin/plugin-lock/tests/lock.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "405027feb5adfbf973d2623e9d3d212f75dad629",
+        "testsDiscovered": 34
+      },
+      "note": "P1-03 F-stage. The declared file is lock.spec.ts, which the C stage also uses, so the Fault cases are added under their own describe block and expectCases names ONLY the Fault-stage titles. The C stage's frozen titles are untouched; predicate (iii) distinctness holds because the two sets are disjoint despite the shared file -- same arrangement as P1-02.F.\n\n17 boundaries enumerated as data with the count asserted against a floor of 12.\n\nONE BOUNDARY EXISTS TO MAKE THE ADJUDICATED CONSTRAINT'S COST CONCRETE. Boundary 17 is a KNOWN GAP: a lock whose signatureIdentity is an outright forgery ('github:attacker/impostor') boots exactly like a genuine one, because nothing authenticates that field. This is P1-02's locked clause surfacing in P1-03's fault surface, not a defect of this package, and writing it as a PASSING case rather than omitting it is the point -- the alternative was a case asserting that a forged identity is refused, which would have gone green because nothing refuses. It starts failing when a real signature root lands, and that failure is the unlock signal.\n\nBoundary 13 pins reason PRECEDENCE rather than the checks separately: a version drift necessarily changes the archive too, so both the version and integrity checks would fire. Reporting the digest would tell an operator the package was tampered with when the real event is that a different version is installed. Boundary 16 is the empty-lock positive control -- an empty lock must admit an empty install, or 'refuse everything' would satisfy most of this matrix.\n\nSuperseded 2026-09-06T03:10:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations: (1) the version check moved after the integrity check, inverting reason precedence; (2) a self-dependency filtered out so it is no longer a cycle; (3) the loadOrder duplicate check removed; (4) an empty lock refused instead of admitted. All restored byte-identical.",
+        "failureSummary": "Reddens 3, 1, 1 and 1 cases respectively. (1) reddens three because reason precedence is asserted at both the C and F stages -- the duplication is deliberate, since the C stage asserts the behaviour and the F stage asserts it as a named boundary."
+      },
+      "supersedes": "2026-09-06T03:10:00.000Z"
+    },
+    {
+      "epic": "P6-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/record.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P6-02 Fault — record boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 confidence below zero is refused",
+        "fault boundary 02 confidence above one is refused",
+        "fault boundary 03 NaN confidence is refused, not admitted by two false comparisons",
+        "fault boundary 04 confidence exactly zero and exactly one are accepted",
+        "fault boundary 05 an inverted validity range is refused",
+        "fault boundary 06 an instantaneous validity range is accepted",
+        "fault boundary 07 validation[0] time validity: a record is retrievable up to, but not at, its end",
+        "fault boundary 08 an open-ended record never expires",
+        "fault boundary 09 validation[0] source deletion: a derived record left with no sources is refused",
+        "fault boundary 10 validation[0] source deletion: a user-asserted record survives it",
+        "fault boundary 11 validation[0] conflict chain: a relation to itself is refused",
+        "fault boundary 12 validation[0] conflict chain: a duplicated relation is refused",
+        "fault boundary 13 validation[0] conflict chain: two relation KINDS toward one target are allowed",
+        "fault boundary 14 validation[0] conflict chain: a three-record chain leaves every record present",
+        "fault boundary 15 a revoked record is withheld even while still within its validity",
+        "fault boundary 16 sensitive content is withheld from an index by default",
+        "fault boundary 17 normal content is indexable even under the strictest policy",
+        "fault boundary 18 a well-formed record validates, so the checks above refuse selectively"
+      ],
+      "files": [
+        "packages/memory/memory/tests/record.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "bf0a5845df282f4603aff4fe0fe86cfbd6e721fa",
+        "testsDiscovered": 39
+      },
+      "note": "P6-02 F-stage. 18 boundaries as data, count asserted against a floor of 12, added to record.spec.ts under their own describe block. expectCases names only the Fault titles; the C stage's 20 are disjoint, so predicate (iii) holds despite the shared file -- the arrangement declared in this epic's pre-flight freeze-target list before either stage was written.\n\nvalidation[0] NAMES THREE SCENARIOS and each has boundaries of its own rather than being folded into a single case. TIME VALIDITY: retrievable up to but not at the end instant, and open-ended never expiring. CONFLICT CHAINS: self-relations and duplicates refused, two relation KINDS toward one target allowed, and a three-record chain in which every record survives -- that last one checks must[1] across a chain rather than one pair, since 'nothing is destroyed' is a property of the accumulation. SOURCE DELETION: covered from BOTH sides -- a derived record whose last source event is gone is refused, while a user-asserted record survives because it has no sources to lose. That pair is why the two provenance kinds are separate variants instead of one list that may be empty; with one list, source deletion would silently turn a derived record into an unsourced one that still validated.\n\nBoundary 03 is the targeted mutation's target (BLOCKED-085): NaN confidence must be refused, and the natural implementation `< 0 || > 1` admits it because every NaN comparison is false.\n\nSuperseded 2026-09-06T06:40:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "sensitivityProof": {
+        "mutationDescription": "The same six mutations recorded against the C stage apply to this file's subject, plus their effect on the boundary cases: recordConflict mutating in place, disputed records staying retrievable, the confidence range written as `< 0 || > 1`, the expiry boundary using `<`, sensitive content admitted regardless of policy, and the derived-without-source check removed.",
+        "failureSummary": "Each reddens at least one Fault boundary in addition to its C-stage case: the boundaries are named restatements of the same behaviours, so a mutation that escaped the C case would still be caught here. The duplication is deliberate -- C asserts the behaviour, F asserts it as an enumerated boundary with the count guarded."
+      },
+      "supersedes": "2026-09-06T06:40:00.000Z"
+    },
+    {
+      "epic": "P4-08",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 an in-flight step is re-run",
+        "fault boundary 02 a failed step is re-run",
+        "fault boundary 03 a completed but unverified step is re-run",
+        "fault boundary 04 a completed, verified step with no output is re-run",
+        "fault boundary 05 a completed, verified, pure step is skipped",
+        "fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+        "fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+        "fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+        "fault boundary 09 a changed script digest refuses the whole resume",
+        "fault boundary 10 an empty journal is resumable and resumes at zero",
+        "fault boundary 11 a fully completed journal resumes past its last step",
+        "fault boundary 12 resume stops at the first non-skippable step, not past it",
+        "fault boundary 13 receipts are collected from AFTER the restart point too",
+        "fault boundary 14 a refused plan yields no receipts to reconcile",
+        "fault boundary 15 compaction leaves a side-effecting entry untouched",
+        "fault boundary 16 compaction retains every receipt",
+        "fault boundary 17 compacting an already-compacted journal changes nothing further",
+        "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+      ],
+      "files": [
+        "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "packages/workflow/workflow-journal/src/replay.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2e78e92b5654bc42e2697d2908873bb31527771e",
+        "testsDiscovered": 38
+      },
+      "note": "P4-08 F-stage. 18 boundaries as data with the count guarded, added to resume.e2e.spec.ts under their own describe block; the C stage's 19 titles are disjoint, so predicate (iii) holds on the shared file -- the arrangement declared in this epic's pre-flight list before either stage was written.\n\nBoundary 18 carries validation[2] directly: a run killed after its first step replays to the SAME outputs as an uninterrupted one, with step 1 reused rather than recomputed. Stated as a comparison against the uninterrupted journal rather than as a property of the plan alone, because 'the resume produced something' is not the clause -- 'it produced the same thing' is.\n\nBoundary 17 pins COMPACTION IDEMPOTENCE, which the clause does not name and which a long-running workflow needs: a journal compacted at every checkpoint must not shed a little more information each pass. The mutation for it makes the second pass strip the output ref, which no other case notices.\n\nBoundary 07 is the one that separates two rules that look alike: a side-effecting step that never COMPLETED is re-run, not reconciled. Reconciling it would send an operator looking for an effect that never happened, and re-running it is safe precisely because it did not complete.\n\nSuperseded 2026-09-06T09:50:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations on src/replay.ts beyond those recorded for the C stage: (1) compaction made non-idempotent by stripping the output ref on a second pass; (2) a refused plan still yields receipts to reconcile; (3) an empty journal reported unresumable. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
+      },
+      "supersedes": "2026-09-06T09:50:00.000Z"
+    },
+    {
+      "epic": "P4-09",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-09 Fault — registration and nesting boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a digest that does not match its body is refused",
+        "fault boundary 02 a version that skips ahead is refused",
+        "fault boundary 03 a version already issued is refused for a different body",
+        "fault boundary 04 an identical body is refused rather than silently re-registered",
+        "fault boundary 05 the first registration under a name must be version 1",
+        "fault boundary 06 a well-formed first registration is accepted",
+        "fault boundary 07 an unknown digest does not resolve",
+        "fault boundary 08 a digest registered under another name reports a mismatch, not a miss",
+        "fault boundary 09 validation[1]: an old run does not resume against a newer version",
+        "fault boundary 10 validation[1]: a run resumes against the exact definition it referenced",
+        "fault boundary 11 recursion is refused before the depth limit is consulted",
+        "fault boundary 12 recursion is detected anywhere on the ancestor chain, not only at the parent",
+        "fault boundary 13 the depth ceiling admits one below and refuses at it",
+        "fault boundary 14 an exhausted agent budget refuses distinctly from an exhausted token budget",
+        "fault boundary 15 the last remaining agent may still be spent on a nested run",
+        "fault boundary 16 validation[2]: a self-recursive definition is detected from its body",
+        "fault boundary 17 validation[2]: nesting a different name is not self-recursion",
+        "fault boundary 18 acceptance[0]: a hostile body registers and resolves without executing"
+      ],
+      "files": [
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "packages/workflow/workflow-registry/src/version.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "a1e95e54f3376470c409bfd4523afee3f885e35c",
+        "testsDiscovered": 36
+      },
+      "note": "P4-09 F-stage. 18 boundaries as data with the count guarded, in nested.e2e.spec.ts under their own describe block; the C stage's 17 titles are disjoint, so predicate (iii) holds on the shared file.\n\nBoundary 12 covers what boundary 11 does not: recursion is detected ANYWHERE on the ancestor chain, not only against the immediate parent. The case closes an A -> B -> C -> A cycle against the ROOT, which a parent-only check would miss entirely -- and that mutation reddens only this boundary, so nothing else was covering it.\n\nBoundary 15 is the off-by-one at the agent budget: one remaining agent MUST still be spendable, or a run could never use its final allowance. The natural defensive form (`<= 1`) reddens it.\n\nBoundary 05 pins that a first registration must be version 1, which the `highest + 1` rule gives only because an empty history reduces to 0. Weakening it to skip the check when the history is empty reddens exactly this boundary.\n\nSuperseded 2026-09-06T13:30:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations beyond those recorded for C and P. types.ts: (1) recursion checked only against the immediate parent rather than the whole chain; (2) the agent-budget guard changed to `<= 1`, so the last agent cannot be spent. version.ts: (3) the monotonicity check skipped when the history is empty. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 boundary each -- 12, 15 and 05 respectively, each the boundary written for it."
+      },
+      "supersedes": "2026-09-06T13:30:00.000Z"
+    },
+    {
+      "epic": "P5-11",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-11 Fault — claim and graph boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 an open task admits its first claim",
+        "fault boundary 02 a live claim refuses a second worker",
+        "fault boundary 03 a claim is still held AT its expiry instant",
+        "fault boundary 04 one millisecond past expiry the task is claimable again",
+        "fault boundary 05 a reclaim issues a strictly greater attempt",
+        "fault boundary 06 a superseded holder's write is refused",
+        "fault boundary 07 an attempt above the current one is refused, not treated as newer",
+        "fault boundary 08 the current holder at the current attempt is admitted",
+        "fault boundary 09 a verified task is not claimable",
+        "fault boundary 10 a failed task is not claimable",
+        "fault boundary 11 a submitted-but-unverified dependency blocks the claim",
+        "fault boundary 12 one unverified dependency among several still blocks",
+        "fault boundary 13 all dependencies verified admits the claim",
+        "fault boundary 14 a not-claimable status wins over an unmet dependency",
+        "fault boundary 15 a two-task cycle is refused",
+        "fault boundary 16 a self-dependency is refused distinctly from a cycle",
+        "fault boundary 17 a forward reference is refused as an unknown dependency",
+        "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle",
+        "fault boundary 19 an empty graph is valid"
+      ],
+      "files": [
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T22:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "11b4db3d976c7580f359925a792987a3446736f0",
+        "testsDiscovered": 40
+      },
+      "note": "P5-11 F-stage. 19 boundaries as data with the count guarded, added to claims.e2e.spec.ts under their own describe block; the C stage's 20 titles are disjoint, so predicate (iii) holds on the shared file.\n\nBoundary 14 pins CHECK PRECEDENCE with an input that triggers two rules at once: a verified task with an unmet dependency reports not-claimable, not dependency-unmet. A finished task is finished whatever its dependencies say, and reporting the dependency would send an operator to fix something that no longer matters.\n\nBoundary 12 exists because 'some dependency is unverified' and 'the first dependency is unverified' pass identical tests on single-dependency fixtures. The case gives a verified dependency FIRST and an unverified one second, so a check-only-the-first mutation reddens -- BLOCKED-098's rule applied deliberately rather than after being caught by it.\n\nBoundary 18 is the diamond: a shared dependency is not a cycle, and a naive visited-set walk that refused any re-encountered node would reject it. Boundary 19 pins the empty graph as valid, since a validator that refused everything would satisfy most of this matrix.\n\nSuperseded 2026-09-06T17:00:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations on src/types.ts beyond those recorded for C: (1) the dependency check moved before the not-claimable check, inverting reason precedence; (2) only the first dependency examined instead of all; (3) an empty graph refused. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 boundary each -- 14, 12 and 19 respectively, each the boundary written for it."
+      },
+      "supersedes": "2026-09-06T17:00:00.000Z"
     }
   ]
 }

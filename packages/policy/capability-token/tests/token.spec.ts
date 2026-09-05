@@ -321,3 +321,146 @@ describe('P2-02 Contract — acceptance[2]: the token itself is never written in
     })
   })
 })
+
+/**
+ * P2-02 Fault stage: a systematic matrix over the attenuation boundaries.
+ *
+ * Enumerated as data with the count asserted against a floor, so a boundary
+ * cannot be deleted while every remaining case still passes.
+ *
+ * Every case here is about WIDENING, because must[2] is a one-way rule:
+ * ordinary code may narrow a token and may never enlarge one. Each dimension
+ * is therefore pinned from both sides — equal-to-parent admitted, one step
+ * beyond refused — since a check that refused everything would satisfy the
+ * refusals alone.
+ */
+describe('P2-02 Fault — attenuation boundary matrix', () => {
+  interface TokenFault {
+    readonly boundary: string
+    readonly run: () => void
+  }
+
+  const roots = createTrustKernel().signatureRoots
+  const parent = fixtureSigned(fixtureRootToken())
+
+  const attenuate = (overrides: Partial<TokenAttenuationRequest>) =>
+    attenuateToken(roots, parent, buildAttenuationRequest(overrides))
+
+  const FAULTS: readonly TokenFault[] = [
+    {
+      boundary: '01 an equal-to-parent request is admitted, so refusals below are selective',
+      run: () => expect(attenuate({}).accepted).toBe(true),
+    },
+    {
+      boundary: '02 a narrowed verb set is admitted',
+      run: () => expect(attenuate({ verbs: ['read'] }).accepted).toBe(true),
+    },
+    {
+      boundary: '03 a verb the parent does not hold is refused',
+      run: () => expect(attenuate({ verbs: ['read', 'delete'] }))
+        .toMatchObject({ accepted: false, reason: 'verbs-not-subset' }),
+    },
+    {
+      boundary: '04 an empty verb set is admitted: nothing is the strongest narrowing',
+      run: () => expect(attenuate({ verbs: [] }).accepted).toBe(true),
+    },
+    {
+      boundary: '05 a narrowed resource set is admitted',
+      run: () => expect(attenuate({ resources: ['file:///workspace/a'] }).accepted).toBe(true),
+    },
+    {
+      boundary: '06 a resource outside the parent\'s is refused',
+      run: () => expect(attenuate({ resources: ['file:///etc/passwd'] }))
+        .toMatchObject({ accepted: false, reason: 'resources-not-subset' }),
+    },
+    {
+      boundary: '07 keeping every parent resource and adding one is still refused',
+      run: () => expect(attenuate({ resources: [...PARENT_RESOURCES, 'file:///workspace/c'] }))
+        .toMatchObject({ accepted: false, reason: 'resources-not-subset' }),
+    },
+    {
+      boundary: '08 a lower budget is admitted',
+      run: () => expect(attenuate({ constraints: { budget: TokenBudget(999) } }).accepted).toBe(true),
+    },
+    {
+      boundary: '09 a budget equal to the parent\'s is admitted, not treated as an increase',
+      run: () => expect(attenuate({ constraints: { budget: PARENT_BUDGET } }).accepted).toBe(true),
+    },
+    {
+      boundary: '10 a budget one unit above the parent\'s is refused',
+      run: () => expect(attenuate({ constraints: { budget: TokenBudget(1001) } }))
+        .toMatchObject({ accepted: false, reason: 'budget-exceeds-parent' }),
+    },
+    {
+      boundary: '11 OMITTING a budget under a constrained parent is refused as a widening',
+      run: () => {
+        // Going from a real ceiling to "unconstrained" is an increase, not a
+        // narrowing. A subset check that only compared present values would
+        // admit this, which is why omission is treated as widening.
+        expect(attenuate({ constraints: {} }))
+          .toMatchObject({ accepted: false, reason: 'budget-exceeds-parent' })
+      },
+    },
+    {
+      boundary: '12 an earlier expiry is admitted',
+      run: () => expect(attenuate({ expiresAt: PARENT_EXPIRES_AT - 1 }).accepted).toBe(true),
+    },
+    {
+      boundary: '13 an expiry equal to the parent\'s is admitted',
+      run: () => expect(attenuate({ expiresAt: PARENT_EXPIRES_AT }).accepted).toBe(true),
+    },
+    {
+      boundary: '14 an expiry one millisecond beyond the parent\'s is refused',
+      run: () => expect(attenuate({ expiresAt: PARENT_EXPIRES_AT + 1 }))
+        .toMatchObject({ accepted: false, reason: 'expiry-exceeds-parent' }),
+    },
+    {
+      boundary: '15 a child of a child narrows again from the CHILD, not the root',
+      run: () => {
+        // Depth is where a subset check can silently compare against the wrong
+        // ancestor: a grandchild must be bounded by its parent's narrowed set,
+        // never by the root's wider one.
+        const child = attenuate({ verbs: ['read'] })
+        if (!child.accepted) throw new Error('unreachable')
+        expect(attenuateToken(roots, child.child, buildAttenuationRequest({ verbs: ['write'] })))
+          .toMatchObject({ accepted: false, reason: 'verbs-not-subset' })
+      },
+    },
+    {
+      boundary: '16 each successful attenuation increments delegationDepth',
+      run: () => {
+        const child = attenuate({})
+        if (!child.accepted) throw new Error('unreachable')
+        expect(child.child.token.delegationDepth).toBe(parent.token.delegationDepth + 1)
+      },
+    },
+    {
+      boundary: '17 a child records its parent\'s digest, so a chain can be walked back',
+      run: () => {
+        const child = attenuate({})
+        if (!child.accepted) throw new Error('unreachable')
+        expect(child.child.token.parentDigest).not.toBeNull()
+      },
+    },
+    {
+      boundary: '18 a child inherits tenant and capability verbatim, which the request cannot express',
+      run: () => {
+        // must[2] needs no tenant-mismatch denial reason, because attenuating
+        // into another tenant is not a request the type can carry.
+        const child = attenuate({})
+        if (!child.accepted) throw new Error('unreachable')
+        expect(child.child.token.tenant).toBe(parent.token.tenant)
+        expect(child.child.token.capability).toBe(parent.token.capability)
+      },
+    },
+  ]
+
+  it('enumerates at least twelve boundaries, each named once', () => {
+    expect(FAULTS.length).toBeGreaterThanOrEqual(12)
+    expect(new Set(FAULTS.map(fault => fault.boundary)).size).toBe(FAULTS.length)
+  })
+
+  for (const fault of FAULTS) {
+    it(`fault boundary ${fault.boundary}`, () => { fault.run() })
+  }
+})
