@@ -2479,6 +2479,10 @@ Recovering them surfaced a trap worth encoding: each run uploads **two** files n
 
 **A stored extract was considered and rejected on grounds other than size.** Keeping only the case names any freeze or cell references is 59 KB gzipped, against 425 MB of full artifacts -- cheap enough that size cannot decide it. But such a file is a summary assertion, *I read the original and it said X*, which is the exact shape of the `expectCasesMatched` defect above. Recomputing from a fresh run at the same SHA trusts no extractor. The remaining case for having CI emit and sign a summary alongside the artifact is convenience for FUTURE cells, not a fix for the 53 existing observations, which can never acquire one.
 
+**A measurable residue, still true today.** `EXEC-STATE.json`'s `ledgerDigest` is `46b2796c`, which is the digest of `ledger.json` **as of `f597e46b08`** — the last commit where the generator actually ran. The current ledger hashes to `ef6fe493`. The seal has not covered the file it seals since the hand-writing began, and nothing noticed because `ledgerDigest` has exactly one write site and no reader anywhere in the repository.
+
+This is deliberately left uncorrected. The only honest ways to update it are a real ledger-mutating command (which needs the push) or editing the field by hand — and editing a digest by hand to make a seal appear intact is a purer form of the defect this entry is about than the original episode was. It resolves itself when the 24 cells are regreened through the tool.
+
 **Responsibility.** The delegate proposed splitting this as "you skipped a command, I skipped a class of verification" and declined the softer version offered back. Both halves stand on their own: the `selfAudit` blocks asserting `RAN: …` were written by the same hand that skipped the run, and the delegate had never once asked *who wrote this cell* — it recomputed contents from bytes every time, so its verdicts never depended on those fields.
 
 ### BLOCKED-107 — P9-05's exact-count clause has no reachable subject without a tokenizer-source decision
