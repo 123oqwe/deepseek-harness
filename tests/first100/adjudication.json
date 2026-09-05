@@ -1163,7 +1163,7 @@
   },
   "deliverablePathPatches": {
     "status": "ADJUDICATED",
-    "count": 36,
+    "count": 37,
     "note": "Maintainer-approved amendments to an epic's declared deliverable path where the byte-locked registry.epics[].files[]/stages[].files path (extracted verbatim from the pinned planning sources, itself frozen to the baseline SHA current when the source was authored) collides with an unrelated existing artifact discovered during implementation, or is otherwise provably unbuildable as declared (BLOCKED-012's class: a forced same-stage deviation, e.g. a real dependency cycle). The registry path stays byte-locked and unedited; this overlay records the approved substitute path a Writer must target instead. A patch never re-scopes the epic's must/acceptance/nonGoals clauses -- only the on-disk path of the named deliverable. An entry's object key is unique per patch (never reused); `epic` names the real epic id when it differs from the key (BLOCKED-012 entries use a descriptive key since one epic/stage can carry more than one patch).",
     "entries": {
       "P2-01-U-agent-identity-attachment": {
@@ -1488,6 +1488,15 @@
         "reason": "WIDENING, not substitution: the declared path is unchanged and still written. Root CLAUDE.md requires that changing agent-loop be accompanied by a docs/architecture.md update, and that file appears in no stage of P2-03, so the registry authorizes the loop edit while the repository's own rule requires a companion edit outside the authorization. docs/architecture.md is declared only by P0-02.U, and P0-02 is ACCEPTED -- verified before approving that none of P0-02's frozen cases assert anything about that file's content, so editing it cannot invalidate P0-02's green; this is not a quiet edit to an accepted row. Class-level reasoning, the 21 epics that will hit this, and the fact that P2-01 already changed the loop without the doc update (recorded against P2-01, NOT discharged here) are in BLOCKED-076. Patches for the other 20 epics are added when their stage is dispatched, never in bulk, per BLOCKED-070.",
         "approvedAt": "2026-09-04",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-076"
+      },
+      "P2-03-U-code-mode-path-never-existed": {
+        "epic": "P2-03",
+        "stage": "U",
+        "declaredPath": "packages/core/tools/src/code-mode.ts",
+        "approvedPath": "packages/core/tools/src/ptc.ts",
+        "reason": "SUBSTITUTION, and a SECOND KIND of registry-path deviation that must not be conflated with the first. BLOCKED-070's class is an ARCHIVAL ERROR: the path exists and is real, but the spec filed it into the wrong channel (a local test written as `.e2e.ts`, routing it into the paid real-API suite). This entry is different: `packages/core/tools/src/code-mode.ts` HAS NEVER EXISTED in this repository at any commit. The code-mode execution surface P2-03 must[2] names -- the run_code dispatch bridge that starts embedded sub-calls -- lives in `packages/core/tools/src/ptc.ts`, where `tool/code-dispatch-start` is appended. So the spec did not misfile a real file; it named a file that was never written. Keeping the two kinds apart matters because their remedies differ: an archival error is corrected by moving the file into the right channel, while a never-existent name is corrected by pointing at the surface that actually implements the clause, and only the second requires establishing WHICH existing file is the real subject. The registry path stays byte-locked and unedited per BLOCKED-035.",
+        "approvedAt": "2026-09-05",
+        "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
       }
     }
   }
