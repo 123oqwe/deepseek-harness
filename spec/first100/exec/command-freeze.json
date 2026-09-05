@@ -6392,6 +6392,55 @@
         "mutationDescription": "Four targeted mutations of conformance-probes.ts, each restored byte-identical: (M1) the abort probe accepts ANY finish rather than requiring 'aborted'; (M2) the failure probe accepts a failure with an empty code; (M3) the oversized probe passes unconditionally, so truncation counts as rejection; (M4) the oversized outcome is emitted even when the runner declined to stage the scenario, so an unstageable behaviour is credited.",
         "failureSummary": "All four reddened: 2, 2, 2 and 1 of 8. The three behaviour mutations redden two each -- the specific defect case and the independence sweep that breaks all six one at a time -- which is the intended overlap, since the sweep exists to catch a probe that reports the wrong behaviour rather than no behaviour. M4 reddens only the unstageable case, which is the one case written for absence rather than for failure."
       }
+    },
+    {
+      "epic": "P9-01",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm/tests/conformance-faults.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-01 Fault — abort timing, all three points a correct route aborted before-first-token is still admitted",
+        "P9-01 Fault — abort timing, all three points a correct route aborted mid-tool-call-delta is still admitted",
+        "P9-01 Fault — abort timing, all three points a correct route aborted at-wrap-up is still admitted",
+        "P9-01 Fault — abort timing, all three points a route reporting stop instead of aborted is denied at before-first-token, so no timing hides the defect",
+        "P9-01 Fault — abort timing, all three points a route reporting stop instead of aborted is denied at mid-tool-call-delta, so no timing hides the defect",
+        "P9-01 Fault — abort timing, all three points a route reporting stop instead of aborted is denied at at-wrap-up, so no timing hides the defect",
+        "P9-01 Fault — abort timing, all three points aborting before the first token still ends the stream, rather than emitting nothing at all",
+        "P9-01 Fault — delta framing merging survives natural framing, since framing is not a contract",
+        "P9-01 Fault — delta framing merging survives single-character framing, since framing is not a contract",
+        "P9-01 Fault — delta framing merging survives single-frame framing, since framing is not a contract",
+        "P9-01 Fault — delta framing merging survives split-multibyte framing, since framing is not a contract",
+        "P9-01 Fault — delta framing a route that drops deltas is still caught under natural framing",
+        "P9-01 Fault — delta framing a route that drops deltas is still caught under single-character framing",
+        "P9-01 Fault — delta framing a route that drops deltas is still caught under single-frame framing",
+        "P9-01 Fault — delta framing a route that drops deltas is still caught under split-multibyte framing",
+        "P9-01 Fault — delta framing every framing reassembles to the identical arguments, which is the property merging depends on",
+        "P9-01 Fault — delta framing single-character framing really does split into one piece per character, not one frame",
+        "P9-01 Fault — delta framing a multibyte split reassembles too: pieces may be individually invalid so long as the join is not",
+        "P9-01 Fault — the six injections acceptance[1] requires one fixture deviation per behaviour, each reddening exactly its own"
+      ],
+      "files": [
+        "packages/llm/llm/src/conformance-route.ts",
+        "packages/llm/llm/tests/conformance-faults.spec.ts",
+        "packages/llm/llm/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T08:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "a84cc0376547d3647fcf43bc88e89dcbe21f3f1c",
+        "testsDiscovered": 19
+      },
+      "note": "F (Fault) for P9-01, taken from the epic's own Validation clause rather than invented: abort at three timings (before the first token / mid tool-call delta / at wrap-up) and frame-boundary injection including single-byte splitting. Both families were chosen because they are what a provider varies WITHOUT telling anyone -- neither framing nor cancellation timing is part of any contract, so a kit that worked for one framing or one abort point would pass today and fail on the provider's next deploy. The three timings are genuinely different situations and not one case repeated: before any output there is nothing to reconcile, mid tool-call there is a HALF-BUILT call the caller must not treat as complete, and at wrap-up the work is done but unreported. `split-multibyte` splits UTF-16 units rather than code points on purpose -- individual pieces may be invalid text so long as the join is not, which is what a byte-oriented transport actually delivers and what a naive merge corrupts. acceptance[1]'s 'one fixture deviation per behaviour, each reddening its own' is frozen as a single sweeping case over all six.",
+      "sensitivityProof": {
+        "mutationDescription": "Four targeted mutations of conformance-route.ts, each restored byte-identical: (M1) the before-first-token abort emits nothing at all, so a cancelled request never ends; (M2) single-character framing collapses to one frame, so the kit stops exercising fine-grained splitting while still claiming to; (M3) the natural framing drops one character, so the pieces no longer rejoin to the original; (M4) the at-wrap-up abort omits its finish chunk.",
+        "failureSummary": "Reddened 2, 1, 9 and 1 of 19. M3's breadth is the informative one: losing a single character from one framing reddens nine cases, because every admitted-route case downstream depends on deltas rejoining exactly, so a framing bug cannot hide in one assertion. M2 reddens exactly one -- the case written to check that a framing is really what it claims to be -- which is the case that exists because a fixture quietly degrading to a weaker one is invisible from the pass/fail line alone."
+      }
     }
   ]
 }
