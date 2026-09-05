@@ -1458,14 +1458,42 @@
           "capturedAtUtc": "2026-09-04T08:09:22.487Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "1751b2f361c9ce12c9cad4acf7d19628dbea9c10",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33956902198",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r7/first100-evidence-1751b2f361c9ce12c9cad4acf7d19628dbea9c10/vitest-report.json",
+          "observationSha256": "5ee1b0a56e767e779fcd0069146f66e61ab2ff78f632b3062007e9baffb9e5ee",
+          "expectCasesMatched": [
+            "enumerates at least twelve rejection boundaries, each named once",
+            "fault boundary 01 tampered package digest is refused for digest mismatch",
+            "fault boundary 02 swapped source repo is refused for source-repo mismatch",
+            "fault boundary 03 forged commit in the same repo is refused distinctly from a repo swap",
+            "fault boundary 04 forged builder identity is refused for builder-identity mismatch",
+            "fault boundary 05 several mismatches at once still refuse, naming the first checked fact",
+            "fault boundary 06 sigstore evidence with an empty issuer is refused as invalid",
+            "fault boundary 07 sigstore evidence with an empty subject is refused as invalid",
+            "fault boundary 08 sigstore evidence with a negative transparency log index is refused",
+            "fault boundary 09 sigstore evidence with a non-integer log index is refused",
+            "fault boundary 10 log index zero is VALID, so the check is not an accidental truthiness test",
+            "fault boundary 11 offline evidence with an empty signature is refused as invalid",
+            "fault boundary 12 offline evidence with an empty key fingerprint is refused as invalid",
+            "fault boundary 13 a fact mismatch is reported even when the evidence is ALSO invalid",
+            "fault boundary 14 an SBOM omitting an installed runtime dependency is refused",
+            "fault boundary 15 a declared runtime dependency that is NOT installed is refused",
+            "fault boundary 16 a dev-only SBOM entry absent from the installed set is NOT a fault",
+            "fault boundary 17 unsigned-dev is refused for a profile the deployment does not call dev",
+            "fault boundary 18 an admitted unsigned-dev profile still carries a persistent untrusted banner",
+            "KNOWN GAP (P1-02 lock, validation[3]): an UNREGISTERED signing identity is trusted on sight"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-05T20:10:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": null
     },
     "P1-03": {
