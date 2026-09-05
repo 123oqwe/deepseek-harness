@@ -1683,6 +1683,95 @@
         }
       ],
       "note": "acceptance[2]: 'a merge across scopes must be explicit.' The authorization names BOTH endpoints, and three of these cases exist for that alone -- one naming only the destination would authorize merging into it from anywhere, so a single approval would cover every later merge. A same-scope merge is permitted and reports crossesScope: false, so an audit can distinguish the two without re-deriving it. Tenant and session crossings refuse with different reasons because they are events of different severity: one moves data between customers, the other within one. NOT COVERED HERE, deliberately: whether a RUNTIME enforces this on real reads. decideCrossScopeMerge is a decision, and the runtime that would consult it is P6-01's MemoryRuntime, whose scope post-filtering is the residual lock now owned by P6-03 (BLOCKED-096)."
+    },
+    {
+      "epic": "P4-08",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "resumes at the first step that is not skippable, not past it"
+        },
+        {
+          "stage": "C",
+          "title": "does not repeat a completed child agent call: its receipt is retained and its step skipped"
+        },
+        {
+          "stage": "P",
+          "title": "kill BEFORE the agent call settles: the step is re-run"
+        },
+        {
+          "stage": "P",
+          "title": "kill AFTER the agent call settles but before verification: still re-run"
+        },
+        {
+          "stage": "P",
+          "title": "kill after verification: the completed child work is NOT repeated"
+        },
+        {
+          "stage": "U",
+          "title": "kill between two agent calls: the finished one is skipped, the next re-run"
+        },
+        {
+          "stage": "U",
+          "title": "kill during concurrent calls started out of order: the journal still reads in script order"
+        }
+      ],
+      "note": "acceptance[0]: 'kill before and after each agent() call; the resume does not repeat completed child work.' Covered at three levels rather than once, because the clause is about a SEQUENCE and each level can be right while the next is wrong. C decides one entry; P drives the recorder through the three kill points a real session produces (before settle, after settle but before verification, after verification) and checks the plan each yields; U drives the same through the host's actual agent event stream, including concurrent out-of-order starts. The middle kill point is the one that matters most and is easiest to miss: a step that settled but was never verified is re-run, because 'it finished' and 'we checked it' are different facts."
+    },
+    {
+      "epic": "P4-08",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses the WHOLE resume rather than degrading to a partial one"
+        },
+        {
+          "stage": "C",
+          "title": "admits an unchanged digest, so the refusal is not unconditional"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 09 a changed script digest refuses the whole resume"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 14 a refused plan yields no receipts to reconcile"
+        }
+      ],
+      "note": "acceptance[1]: 'a changed script digest must not be blindly resumed; migrate or restart.' The refusal is whole rather than partial: step ids are positions in a script, so against a different script they name different work, and a partial resume would skip steps never run while re-running steps that were. Boundary 14 covers the consequence a caller could otherwise miss -- a refused plan yields NO receipts, so a caller cannot reconcile its way into acting on a journal the system just refused. The positive control (an unchanged digest is admitted) is load-bearing: without it a function refusing every resume would satisfy the rest."
+    },
+    {
+      "epic": "P4-08",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "drops recomputable inputs from a completed, verified, pure step"
+        },
+        {
+          "stage": "C",
+          "title": "leaves an unverified or side-effecting step untouched"
+        },
+        {
+          "stage": "C",
+          "title": "retains EVERY receipt, which is the evidence nothing can regenerate"
+        },
+        {
+          "stage": "C",
+          "title": "reports a compaction that dropped a receipt as NOT retaining evidence"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 16 compaction retains every receipt"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 17 compacting an already-compacted journal changes nothing further"
+        }
+      ],
+      "note": "acceptance[2]: 'a journal may be compacted but the raw evidence is retained.' Compaction drops what can be recomputed (a pure verified step's input refs, derivable from the steps that produced them) and keeps what cannot -- every receipt, from every entry, because a receipt is evidence that something happened OUTSIDE this process and nothing inside it can regenerate that. retainsAllReceipts is EXPORTED so the property is checkable by a caller rather than only by this package's tests, and one case asserts it reports FALSE for a compaction that dropped a receipt -- without that control, its returning true would prove nothing. Boundary 17 adds idempotence, which the clause does not name: a journal compacted at every checkpoint must not shed more information each pass."
     }
   ]
 }

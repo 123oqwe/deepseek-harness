@@ -4860,6 +4860,54 @@
         "mutationDescription": "Four mutations on src/observer.ts: (1) `cancelled` mapped to `completed`; (2) the effect class hard-coded to 'pure' instead of consulting the caller's classify; (3) the child session id dropped rather than recorded as a receipt; (4) a completed call records no output. All restored byte-identical.",
         "failureSummary": "Reddens 1, 1, 1 and 3 cases respectively. (1) is the targeted mutation: treating a cancellation as a completion is how a resume would skip work that never produced a result."
       }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 an in-flight step is re-run",
+        "fault boundary 02 a failed step is re-run",
+        "fault boundary 03 a completed but unverified step is re-run",
+        "fault boundary 04 a completed, verified step with no output is re-run",
+        "fault boundary 05 a completed, verified, pure step is skipped",
+        "fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+        "fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+        "fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+        "fault boundary 09 a changed script digest refuses the whole resume",
+        "fault boundary 10 an empty journal is resumable and resumes at zero",
+        "fault boundary 11 a fully completed journal resumes past its last step",
+        "fault boundary 12 resume stops at the first non-skippable step, not past it",
+        "fault boundary 13 receipts are collected from AFTER the restart point too",
+        "fault boundary 14 a refused plan yields no receipts to reconcile",
+        "fault boundary 15 compaction leaves a side-effecting entry untouched",
+        "fault boundary 16 compaction retains every receipt",
+        "fault boundary 17 compacting an already-compacted journal changes nothing further",
+        "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+      ],
+      "files": [
+        "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "packages/workflow/workflow-journal/src/replay.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T09:50:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2e78e92b5654bc42e2697d2908873bb31527771e",
+        "testsDiscovered": 38
+      },
+      "note": "P4-08 F-stage. 18 boundaries as data with the count guarded, added to resume.e2e.spec.ts under their own describe block; the C stage's 19 titles are disjoint, so predicate (iii) holds on the shared file -- the arrangement declared in this epic's pre-flight list before either stage was written.\n\nBoundary 18 carries validation[2] directly: a run killed after its first step replays to the SAME outputs as an uninterrupted one, with step 1 reused rather than recomputed. Stated as a comparison against the uninterrupted journal rather than as a property of the plan alone, because 'the resume produced something' is not the clause -- 'it produced the same thing' is.\n\nBoundary 17 pins COMPACTION IDEMPOTENCE, which the clause does not name and which a long-running workflow needs: a journal compacted at every checkpoint must not shed a little more information each pass. The mutation for it makes the second pass strip the output ref, which no other case notices.\n\nBoundary 07 is the one that separates two rules that look alike: a side-effecting step that never COMPLETED is re-run, not reconciled. Reconciling it would send an operator looking for an effect that never happened, and re-running it is safe precisely because it did not complete.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations on src/replay.ts beyond those recorded for the C stage: (1) compaction made non-idempotent by stripping the output ref on a second pass; (2) a refused plan still yields receipts to reconcile; (3) an empty journal reported unresumable. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
+      }
     }
   ]
 }
