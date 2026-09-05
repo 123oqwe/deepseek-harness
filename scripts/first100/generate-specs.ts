@@ -338,6 +338,12 @@ export interface CommandFreezeEntry {
   sensitivityProof?: { mutationDescription: string; failureSummary: string } | null
   frozenAtUtc?: string
   supersededBy?: string
+  /** The `frozenAtUtc` of the entry this one replaces, when it replaces one. */
+  supersedes?: string
+  /** The frozen command's argv; compared to tell a rename from a new observation. */
+  argv?: string[]
+  /** The exit code the frozen command must produce; always 0 in this program. */
+  expectExit?: number
 }
 
 export interface SharedStageCoverageCheck {
@@ -496,18 +502,58 @@ export interface SensitivityProofCheck {
  *
  * An entry with no `frozenAtUtc` at all is treated as under the rule — a
  * missing timestamp must not become the cheapest way out.
+ *
+ * One exemption is inherited rather than timestamped: a supersession that
+ * changes only which string names a case, leaving argv, files, expected exit
+ * and the case count identical, takes its parent's standing. Such an entry
+ * asserts nothing new about behaviour, so there is no mutation for a proof to
+ * describe, and its later `frozenAtUtc` records when the NAME was corrected
+ * rather than when anything was tested.
  * @param entries - every freeze entry, superseded ones included.
  * @returns the verdict, naming each offending entry.
  */
+export function isProvenanceOnlySupersession(
+  entry: CommandFreezeEntry,
+  parent: CommandFreezeEntry | undefined,
+): boolean {
+  if (parent === undefined || entry.supersedes === undefined) return false
+  if (entry.supersedes !== parent.frozenAtUtc) return false
+  if (entry.expectExit !== parent.expectExit) return false
+  if (entry.expectCases === undefined || parent.expectCases === undefined) return false
+  if (JSON.stringify(entry.argv) !== JSON.stringify(parent.argv)) return false
+  if (JSON.stringify(entry.files) !== JSON.stringify(parent.files)) return false
+  // The case SET may be renamed but not resized: adding or dropping a case
+  // changes what the freeze demands, which is a substantive edit and must earn
+  // its own proof.
+  return entry.expectCases.length === parent.expectCases.length
+}
+
 export function checkSensitivityProofs(entries: readonly CommandFreezeEntry[]): SensitivityProofCheck {
   const missingProof: string[] = []
   const emptyProof: string[] = []
+  const byFrozenAt = new Map<string, CommandFreezeEntry>()
+  for (const entry of entries) {
+    if (entry.frozenAtUtc !== undefined) byFrozenAt.set(`${entry.epic}|${entry.stage}|${entry.frozenAtUtc}`, entry)
+  }
   for (const entry of entries) {
     // A superseded entry can never green a cell, so it is history rather than
     // evidence; demanding a proof of it would be retroactive.
     if (entry.supersededBy !== undefined) continue
     const label = `${entry.epic}.${entry.stage}${entry.frozenAtUtc === undefined ? '' : ` (${entry.frozenAtUtc})`}`
-    const predatesRule = entry.frozenAtUtc !== undefined && entry.frozenAtUtc < SENSITIVITY_RULE_EFFECTIVE_UTC
+    const parent = entry.supersedes === undefined
+      ? undefined
+      : byFrozenAt.get(`${entry.epic}|${entry.stage}|${entry.supersedes}`)
+    // A supersession that only changes WHICH STRING names a case -- same argv,
+    // same files, same expected exit, same number of cases -- asserts nothing
+    // new about behaviour, so there is no mutation for a proof to describe. It
+    // inherits its parent's standing rather than being pushed under the rule by
+    // a timestamp it acquired for a reason unrelated to what it tests.
+    // Deliberately narrow: any change to the command, the files, or the size of
+    // the case set falls straight through to the timestamp rule.
+    const inheritsFromParent = isProvenanceOnlySupersession(entry, parent)
+      && parent?.frozenAtUtc !== undefined && parent.frozenAtUtc < SENSITIVITY_RULE_EFFECTIVE_UTC
+    const predatesRule = inheritsFromParent
+      || (entry.frozenAtUtc !== undefined && entry.frozenAtUtc < SENSITIVITY_RULE_EFFECTIVE_UTC)
     if (entry.sensitivityProof === undefined || entry.sensitivityProof === null) {
       if (!predatesRule) missingProof.push(label)
       continue

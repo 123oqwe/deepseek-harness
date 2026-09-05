@@ -26,6 +26,8 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { parseMatrixText } from './matrix-parse.mjs'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(here, '..', '..')
 
@@ -148,56 +150,6 @@ const INCLUDE_NEW_GAP = true
 // 2. Parse the matrix
 // ---------------------------------------------------------------------------
 const ID_RX = /\bP([0-8])-(\d{2})\b/
-const FIELD_RX = /^- \*\*(.+?)：\*\*(.*)$/
-
-/**
- * Parse a matrix-format doc (`### P#-## — Title` headers, then
- * `- **Label：**value` fields) into `id -> {title, line, fields}`. Shared
- * by the canonical `first100-requirements-matrix.md` and any BLOCKED-037
- * new-gap matrix doc -- identical parsing, identical trust level; the only
- * difference is which SHA-pinned file is handed in.
- */
-function parseMatrixText(text) {
-  const matrix = new Map()
-  let currentId = null
-  let currentTitle = null
-  let currentLine = 0
-  let currentFields = null
-  const lines = text.split('\n')
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-    const head = line.match(/^###\s+(P[0-8]-\d{2})\s+[—-]\s*(.+)$/)
-    if (head) {
-      if (currentId) matrix.set(currentId, { title: currentTitle, line: currentLine, fields: currentFields })
-      currentId = head[1]
-      currentTitle = head[2].trim()
-      currentLine = i + 1
-      currentFields = {}
-      continue
-    }
-    if (!currentId) continue
-    const m = line.match(FIELD_RX)
-    if (m) {
-      const label = m[1].trim()
-      const value = m[2].trim()
-      // group field labels into canonical keys
-      let key = null
-      if (label.startsWith('Priority / Wave')) key = 'priorityWave'
-      else if (label.startsWith('Files')) key = 'files'
-      else if (label.startsWith('MUST')) key = 'must'
-      else if (label.startsWith('明确 non-goal')) key = 'nonGoal'
-      else if (label.startsWith('Acceptance')) key = 'acceptance'
-      else if (label.startsWith('Validation')) key = 'validation'
-      else if (label.startsWith('验证命令')) key = 'verifyCommand'
-      else if (label.startsWith('真实任务证据')) key = 'realTask'
-      else if (label.startsWith('规格缺口')) key = 'specGap'
-      else if (label.startsWith('PrimaryLayer')) key = 'primaryLayer' // new-gap docs only; canonical epics get primaryLayer from r0-decision-package.md
-      if (key) currentFields[key] = value
-    }
-  }
-  if (currentId) matrix.set(currentId, { title: currentTitle, line: currentLine, fields: currentFields })
-  return matrix
-}
 
 const matrix = parseMatrixText(matrixText)
 if (matrix.size !== 100) throw new Error(`matrix: expected 100 epic sections, got ${matrix.size}`)

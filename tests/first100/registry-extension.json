@@ -1,0 +1,481 @@
+{
+  "schema": {
+    "name": "first100-registry-extension",
+    "version": "1.0"
+  },
+  "generatedBy": "scripts/first100/extract-registry-extension.mjs",
+  "authorization": {
+    "decision": "C3",
+    "record": "spec/first100/exec/decisions-approved.md",
+    "approvedUtc": "2026-08-31T14:50:00.000Z",
+    "verbatim": "按推荐全批",
+    "scope": "W20-W22 ordering for P9-01..09; P9-01..07 additionally cleared to run parallel with R10, not counted toward the 100/100 gate"
+  },
+  "source": {
+    "path": "spec/first100/sources/first100-requirements-matrix-extension-101plus.md",
+    "sha256": "e6e327fa58b01bc0fef1d99d4b4105d29bcfa10a69cd453989c99b11e572f1fb"
+  },
+  "counts": {
+    "items": 9,
+    "parallelCleared": 7
+  },
+  "epics": [
+    {
+      "id": "P9-01",
+      "title": "LLM Provider Conformance Kit：把模型接入面变成可测契约",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [
+        "P0-06"
+      ],
+      "files": [
+        {
+          "path": "packages/llm/llm/src/index.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/llm/src/types.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/llm-deepseek/src/adapter.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/llm-pi-ai/src/provider.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/llm-conformance/src/kit.ts",
+          "kind": "N"
+        },
+        {
+          "path": "packages/llm/llm-conformance/src/mock-server.ts",
+          "kind": "N"
+        },
+        {
+          "path": "packages/llm/llm-conformance/tests/deepseek.conformance.spec.ts",
+          "kind": "N"
+        },
+        {
+          "path": "packages/llm/llm-conformance/tests/pi-ai-routes.conformance.spec.ts",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "覆盖六类行为：流式 tool-call 增量、并行多工具调用、中途 abort、错误→`llm-retry` 分类映射、usage/cacheRead/cacheWrite 计量一致、超长输入拒绝语义",
+        "`llm-deepseek` 与 pi-ai 三线协议（openai-completions/openai-responses/anthropic-messages）各以 mock server 为被试全绿",
+        "发现的现存缺陷单独立案",
+        "kit 不依赖真实 key"
+      ],
+      "acceptance": [
+        "kit 对 `llm-deepseek` + pi-ai 三协议路由全绿且总 case 数 ≥ 40",
+        "对六类行为各注入一处夹具偏差（含 SSE 单字节切分/合并帧边界），kit 逐一红",
+        "进入 CI：任何 `packages/llm/**` 改动触发"
+      ],
+      "nonGoal": "不新写任何 wire-protocol 实现（pi-ai 已有）；不测模型输出质量，只测协议行为。",
+      "validation": "全量 kit 运行；分帧边界注入；abort 时序（首 token 前/工具增量中/收尾）三点验证。",
+      "verifyCommand": "实施前按决策 B4 规则冻结（预期 `pnpm vitest run packages/llm/llm-conformance`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-02",
+      "title": "激活 pi-ai 多协议路由：让\"任何 API\"成为出货能力",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [
+        "P9-01"
+      ],
+      "files": [
+        {
+          "path": "packages/llm/llm-pi-ai/src/provider.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/llm-pi-ai/src/catalog.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/llm/llm-pi-ai/src/config.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/bundle/base/cordis.patch.yml",
+          "kind": "P"
+        },
+        {
+          "path": "packages/llm/llm-pi-ai/tests/route-activation.spec.ts",
+          "kind": "N"
+        },
+        {
+          "path": "docs/user/guide/providers.md",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "路由声明含 protocol/baseURL/model/apiKeyEnv/超时",
+        "schema 校验 fail closed，错误信息指明字段",
+        "key 只经 env/credentials 路径，不落日志与 session 事件",
+        "三类协议模板各过 conformance",
+        "catalog 变更不破坏 `deepseek-official` 默认行为",
+        "与 P5-02 Model Router 的接口保持：路由只提供可选项，不做选择策略"
+      ],
+      "acceptance": [
+        "只写一段 settings（无代码改动）即可让 headless 任务经 mock openai-compat 服务全链路完成（含 ≥3 次工具调用）",
+        "三类协议模板 conformance 全绿",
+        "无 key 时该路由状态为显式 dormant，`deepseek-official` 不受影响"
+      ],
+      "nonGoal": "不写新 wire protocol；不做 per-vendor 深度特化（能力差异走 P5-03 协商声明）；不动上游 `llm` 核心抽象（上游 llm 月 206 commits，避撞）。",
+      "validation": "mock 服务 headless E2E + 配置负例 5 类（缺字段/坏 URL/坏协议名/重复路由/key env 缺失）全部 fail closed + conformance 全量。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/llm/llm-pi-ai`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-03",
+      "title": "Provider/Model 选择面：零代码切换与 `--model`",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [
+        "P9-02"
+      ],
+      "files": [
+        {
+          "path": "apps/cli/src/args.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/boot/app-boot",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/llm/src/call-config.ts",
+          "kind": "B"
+        },
+        {
+          "path": "tests/e2e/model-switch.e2e.ts",
+          "kind": "N"
+        },
+        {
+          "path": "docs/user/guide/providers.md",
+          "kind": "P"
+        }
+      ],
+      "must": [
+        "`--model` 解析→路由存在性校验→不存在时列出可用路由 fail closed",
+        "headless 与交互两路径均生效",
+        "选择进 session 事件（可审计），不写死进代码"
+      ],
+      "acceptance": [
+        "同一 headless 任务，仅换 `--model` 参数分别经 2 条不同路由（mock）跑通，session 事件记录正确路由",
+        "错误 model 参数 fail closed 且提示可用列表"
+      ],
+      "nonGoal": "不做自动选型（P5-02）；不做图形配置 UI；不改上游 args 框架结构。",
+      "validation": "e2e 切换 + 负例 + `--help` 文本与实际行为一致性检查（现有 `--help` 仍宣传已删除的 tui profile，顺带修正）。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run tests/e2e/model-switch.e2e.ts`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-04",
+      "title": "编辑工具容错强化：从精确匹配到分级回退",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [],
+      "files": [
+        {
+          "path": "packages/fs/fs-local/src/fsio.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/fs/tool-fs/src/edit.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/fs/fs-local/tests/edit-fallback.spec.ts",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "三级回退逐级尝试，任何一级多重命中即 `FS_AMBIGUOUS_EDIT`",
+        "回退命中时结果 diff 标注实际匹配层级",
+        "版本守卫（现有 version-guard）语义不变",
+        "错误消息包含最近似片段定位提示（行号+相似度），帮模型一次改对"
+      ],
+      "acceptance": [
+        "夹具集：尾随空白差异、CRLF/LF 差异、整体缩进 +2/-2 三类均一次命中且 diff 标注层级",
+        "歧义夹具（两处近似）仍 fail closed",
+        "现有全部 fs 测试不回归"
+      ],
+      "nonGoal": "不引入模糊语义匹配/AST 匹配；不改 str_replace_editor 的对外 schema；不做 patch/hunk 新格式（避免与上游工具面撞车）。",
+      "validation": "夹具全量 + fs 包回归 + 一次 headless 真实编辑任务对比（改动前后各跑同一任务记录重试次数）。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/fs/fs-local`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-05",
+      "title": "token-meter 真实分词：替换 4 字符/词启发",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [],
+      "files": [
+        {
+          "path": "packages/llm/token-meter/src/estimate.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/llm/token-meter/src/index.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/llm/token-meter/src/tokenizer-deepseek.ts",
+          "kind": "N"
+        },
+        {
+          "path": "packages/llm/token-meter/src/usage-calibration.ts",
+          "kind": "N"
+        },
+        {
+          "path": "packages/llm/token-meter/tests/accuracy.spec.ts",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "官方 DeepSeek 路径精确计数",
+        "每次真实响应的 usage 与预估对比进校准状态（会话内自适应）",
+        "无 tokenizer 路由 p95 相对误差 ≤ 阈值（对照夹具：TS 代码/中文散文/JSON/混合 4 类语料）",
+        "估计接口保持同步纯函数（不阻塞循环）"
+      ],
+      "acceptance": [
+        "4 类语料夹具上 DeepSeek 精确路径误差=0",
+        "启发路径 p95 ≤ 冻结阈值",
+        "校准闭环在含 3 次真实（mock usage）响应的会话内把误差单调收窄",
+        "compaction-basic 现有测试不回归"
+      ],
+      "nonGoal": "不为每家第三方模型 vendor 打包 tokenizer；不改 compaction 策略本身（P6-06 域）。",
+      "validation": "语料夹具 + 校准收敛测试 + compaction 触发点前后对比。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/llm/token-meter`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-06",
+      "title": "Headless 脚本化：`--resume` / `--output-format json` / stdin",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [],
+      "files": [
+        {
+          "path": "packages/bundle/headless/src/startup.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/bundle/headless/src/index.ts",
+          "kind": "P"
+        },
+        {
+          "path": "apps/cli/src/args.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/bundle/headless/tests/scriptability.e2e.ts",
+          "kind": "N"
+        },
+        {
+          "path": "docs/user/guide/headless.md",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "`--resume` 恢复既有会话继续任务（复用 session 层既有恢复语义与崩溃修复）",
+        "`stream-json` 逐事件行输出与 SDK 既有 `stream-json.expected.jsonl` 口径一致",
+        "stdin 输入与位置参数互斥且报错清晰",
+        "退出码：任务完成=0，`BLOCKED`/失败=非 0 且 JSON 里带 typed 原因"
+      ],
+      "acceptance": [
+        "e2e：任务 A 运行→中断→`--resume` 完成，全程 stream-json 可逐行 parse 且事件序完整",
+        "`echo task | dsh --profile headless --output-format json` 输出可 parse 且含最终消息与 usage",
+        "退出码矩阵 4 类夹具全对"
+      ],
+      "nonGoal": "不做 TUI；不改 session 存储格式；不做多任务队列（P4 域）。",
+      "validation": "e2e 三件套 + 与 SDK expected.jsonl 口径 diff + 崩溃中断恢复夹具。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/bundle/headless`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-07",
+      "title": "Agent Loop 硬预算：maxTurns / 花费上限 / 超限语义",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 20,
+      "predecessors": [],
+      "files": [
+        {
+          "path": "packages/core/agent-loop/src/agent.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/core/agent-loop/src/constants.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/bundle/headless/src/startup.ts",
+          "kind": "P"
+        },
+        {
+          "path": "packages/core/agent-loop/tests/budget.spec.ts",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "预算在 loop 内强制，非 prompt 建议",
+        "超限=typed `budget-exceeded` 事件 + 当前候选状态完整落盘（可 `--resume` 续），绝不静默截断",
+        "默认值保守且可 profile 覆盖",
+        "`0/undefined`=不限（显式）",
+        "成本预算基于 token-meter 计量（P9-05 落地后自动变准）"
+      ],
+      "acceptance": [
+        "夹具：maxTurns=3 的循环在第 3 turn 边界停且事件/落盘齐全，`--resume` 可继续",
+        "花费上限夹具同理",
+        "不设预算时行为与现状 bit-for-bit 一致（回归）"
+      ],
+      "nonGoal": "不做多 agent 全局调度预算（P4-10）；不做计费系统（P3-10 资源配额域）。",
+      "validation": "预算夹具 + 恢复续跑 + 无预算回归对照。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/core/agent-loop`）。",
+      "parallelWithR10": true,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-08",
+      "title": "任务成功率基准 v1：给\"厉害\"一个可回归的数字",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 21,
+      "predecessors": [
+        "P0-08",
+        "P7-09",
+        "P9-06"
+      ],
+      "files": [
+        {
+          "path": "BENCHMARK.md",
+          "kind": "P"
+        },
+        {
+          "path": "examples/headless-agent/tests/coding-task.e2e.ts",
+          "kind": "B"
+        },
+        {
+          "path": "benchmarks/tasks/",
+          "kind": "N"
+        },
+        {
+          "path": "benchmarks/judge/",
+          "kind": "N"
+        },
+        {
+          "path": "scripts/benchmark/run.mjs",
+          "kind": "N"
+        },
+        {
+          "path": "scripts/benchmark/report.mjs",
+          "kind": "N"
+        },
+        {
+          "path": ".github/workflows/benchmark-nightly.yml",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "判分确定性（测试通过/文件断言/exit code），禁 LLM-as-judge 做主判",
+        "报告含 per-task 原始输出+判分依据+成本（token-meter）",
+        "同一 SHA 双跑成功率方差 ≤ 冻结阈值",
+        "无 key 时全套件显式 `BLOCKED` 不伪造",
+        "预算上限走决策 A5",
+        "沿用 coding-task e2e 的反作弊要点（判分器对执行者不可见、防直接改判分文件）"
+      ],
+      "acceptance": [
+        "固定 SHA + 固定路由/模型上产出 ≥20 任务基线报告，双跑方差达标",
+        "判分器负例（伪造输出/改判分文件）必须判 FAIL",
+        "nightly 在 fork 真实跑通一次（成功或显式 BLOCKED-无 key，均为合法结果）"
+      ],
+      "nonGoal": "不追公开榜单可比口径；不在本项内做提升（P9-09）；不测安全/混沌（P7-10 已有）。",
+      "validation": "双跑对比 + 判分负例 + 成本与 token-meter 核对。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `node scripts/benchmark/run.mjs --suite v1`）。",
+      "parallelWithR10": false,
+      "terminalState": "NOT_STARTED"
+    },
+    {
+      "id": "P9-09",
+      "title": "系统提示词准则 v1 + 评测驱动迭代（Champion–Challenger）",
+      "phase": 9,
+      "priority": "P9",
+      "wave": 22,
+      "predecessors": [
+        "P9-08",
+        "P5-03",
+        "P7-10"
+      ],
+      "files": [
+        {
+          "path": "packages/preset/persona",
+          "kind": "P"
+        },
+        {
+          "path": "packages/bundle/base/cordis.patch.yml",
+          "kind": "P"
+        },
+        {
+          "path": "packages/core/system-prompt",
+          "kind": "B"
+        },
+        {
+          "path": "packages/core/agent-tool-presentation",
+          "kind": "B"
+        },
+        {
+          "path": "benchmarks/ab/",
+          "kind": "N"
+        },
+        {
+          "path": "scripts/benchmark/ab-compare.mjs",
+          "kind": "N"
+        },
+        {
+          "path": "benchmarks/ab/tests/ab-gate.spec.ts",
+          "kind": "N"
+        },
+        {
+          "path": "docs/engineering/prompt-iteration.md",
+          "kind": "N"
+        }
+      ],
+      "must": [
+        "准则 v1 是受版本控制的完整声明，进默认 bundle",
+        "每个 challenger 是完整 prompt/工具描述变体声明，禁运行时手改",
+        "A/B 显著性达标才可晋级",
+        "晋级/否决与证据入 Evidence Package（P0-07 门）",
+        "准则改动必须过 P9-08 基准回归门（分数不得显著降）"
+      ],
+      "acceptance": [
+        "准则 v1 落进默认 bundle 且 headless 冒烟不回归",
+        "完成至少一轮真实 champion–challenger：变体/双方分数/显著性/决定记录齐全",
+        "注入已知更差变体，门必须拒绝晋级"
+      ],
+      "nonGoal": "不做在线自动 prompt 演化（每次晋级人批）；不动模型参数策略（P5-02/04）；不做 per-vendor prompt 编译管道（P5-03 已有，本项产出作为其输入内容）。",
+      "validation": "`ab-gate.spec.ts` 以 vitest 覆盖晋级门负例（更差变体拒晋、显著性不足拒晋、报告篡改检出），使本项具备标准 RED→GREEN 落点。",
+      "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run benchmarks/ab/tests/ab-gate.spec.ts` + `node scripts/benchmark/ab-compare.mjs`）。",
+      "parallelWithR10": false,
+      "terminalState": "NOT_STARTED"
+    }
+  ]
+}

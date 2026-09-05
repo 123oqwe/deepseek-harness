@@ -27,6 +27,7 @@
  *     the file").
  */
 import { createHash } from 'node:crypto'
+import type { CommandFreezeEntry } from './generate-specs.ts'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -48,6 +49,7 @@ import {
   checkSupplementalEntry,
   checkWriteSerialization,
   computeDag,
+  isProvenanceOnlySupersession,
   computeOwnership,
   composeEffective,
   layerMappingIssues,
@@ -1138,5 +1140,60 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     expect(digestsRec?.sourceDigest).not.toBe(clauseRec?.sourceDigest)
     const committed = JSON.parse(readFileSync(join(REPO_ROOT, ARTIFACT_MANIFEST_PATH), 'utf8')) as { artifacts: Record<string, { sourceDigest: string | null }> }
     expect(committed.artifacts[CLAUSE_REPORT_PATH]?.sourceDigest).toBe(clauseRec?.sourceDigest)
+  })
+})
+
+describe('isProvenanceOnlySupersession (BLOCKED-104 supersessions, 2026-09-06)', () => {
+  const parent = {
+    epic: 'P6-02', stage: 'F', frozenAtUtc: '2026-09-04T10:00:00.000Z',
+    argv: ['pnpm', 'exec', 'vitest', 'run', 'x.spec.ts'], expectExit: 0,
+    files: ['x.spec.ts'], expectCases: ['bare title'],
+  } as unknown as CommandFreezeEntry
+  const renamed = {
+    ...parent, frozenAtUtc: '2026-09-06T22:00:00.000Z', supersedes: parent.frozenAtUtc,
+    expectCases: ['P6-02 Fault — matrix bare title'],
+  } as unknown as CommandFreezeEntry
+
+  it('accepts a rename that leaves command, files, exit and case count identical', () => {
+    expect(isProvenanceOnlySupersession(renamed, parent)).toBe(true)
+  })
+
+  it('rejects one that ADDS a case, since the freeze then demands more', () => {
+    const grown = { ...renamed, expectCases: [...(renamed.expectCases ?? []), 'another'] } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(grown, parent)).toBe(false)
+  })
+
+  it('rejects one that DROPS a case, since the freeze then demands less', () => {
+    const shrunk = { ...renamed, expectCases: [] } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(shrunk, parent)).toBe(false)
+  })
+
+  it('rejects a changed command, which is a different observation entirely', () => {
+    const moved = { ...renamed, argv: ['pnpm', 'exec', 'vitest', 'run', 'y.spec.ts'] } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(moved, parent)).toBe(false)
+  })
+
+  it('rejects a changed expected exit', () => {
+    const flipped = { ...renamed, expectExit: 1 } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(flipped, parent)).toBe(false)
+  })
+
+  it('rejects a changed file set', () => {
+    const refiled = { ...renamed, files: ['x.spec.ts', 'z.ts'] } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(refiled, parent)).toBe(false)
+  })
+
+  it('rejects an entry whose supersedes does not point at the parent it is compared with', () => {
+    const detached = { ...renamed, supersedes: '2026-01-01T00:00:00.000Z' } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(detached, parent)).toBe(false)
+  })
+
+  it('rejects an entry that supersedes nothing, so a fresh freeze cannot borrow the exemption', () => {
+    const fresh = { ...renamed, supersedes: undefined } as unknown as CommandFreezeEntry
+    expect(isProvenanceOnlySupersession(fresh, parent)).toBe(false)
+  })
+
+  it('rejects when no parent is found at all', () => {
+    expect(isProvenanceOnlySupersession(renamed, undefined)).toBe(false)
   })
 })
