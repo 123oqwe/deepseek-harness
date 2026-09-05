@@ -83,7 +83,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y bubblewrap
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          # Read the key before setting it. It exists only on kernels carrying
+          # Ubuntu's unprivileged-userns restriction, and `sysctl -w` on an absent
+          # key fails with a message about the key rather than about sandboxing —
+          # which would send the next reader looking for a permissions problem
+          # that is really a wrong-kernel problem.
+          if sysctl kernel.apparmor_restrict_unprivileged_userns >/dev/null 2>&1; then
+            echo "AppArmor userns restriction present; lifting it for this runner"
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          else
+            echo "no kernel.apparmor_restrict_unprivileged_userns on this kernel; leaving sysctls alone"
+          fi
           pnpm exec tsx scripts/probe-sandbox-backend.ts
 
 
