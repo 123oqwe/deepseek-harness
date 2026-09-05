@@ -1772,6 +1772,86 @@
         }
       ],
       "note": "acceptance[2]: 'a journal may be compacted but the raw evidence is retained.' Compaction drops what can be recomputed (a pure verified step's input refs, derivable from the steps that produced them) and keeps what cannot -- every receipt, from every entry, because a receipt is evidence that something happened OUTSIDE this process and nothing inside it can regenerate that. retainsAllReceipts is EXPORTED so the property is checkable by a caller rather than only by this package's tests, and one case asserts it reports FALSE for a compaction that dropped a receipt -- without that control, its returning true would prove nothing. Boundary 17 adds idempotence, which the clause does not name: a journal compacted at every checkpoint must not shed more information each pass."
+    },
+    {
+      "epic": "P4-09",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "treats a body containing executable-looking text as opaque data"
+        },
+        {
+          "stage": "P",
+          "title": "stores and resolves a definition whose body would throw if evaluated"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 18 acceptance[0]: a hostile body registers and resolves without executing"
+        }
+      ],
+      "note": "acceptance[0]: 'saving and loading never executes unverified code.' Demonstrated rather than asserted: the cases register and resolve a definition whose body is `process.exit(1); throw new Error(\"executed\")`. If any path evaluated a body, the test process would die or the case would throw. The property is structural underneath -- `body` is typed `string` and every function that touches it either hashes it or pattern-matches it, so there is no evaluator to reach. declaresNestedCall is deliberately textual for the same reason; parsing would mean building the evaluator this clause forbids, and over-reporting is the safe direction since a false positive refuses a registration a human then inspects."
+    },
+    {
+      "epic": "P4-09",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "propagates to the child"
+        }
+      ],
+      "note": "acceptance[1]: 'a parent's cancellation propagates.' Covered at the DECISION level only, and the limit is the point: cancelPropagationForNested() states that a nested child is cancelled with its parent, and a case pins it. Nothing propagates a real cancellation, because nothing starts a nested run -- see acceptance[3]'s note and the U-stage tripwire. The decision exists so that when nesting is wired, the answer is already written down rather than improvised by whoever wires it; it is not evidence that a running parent cancels a running child."
+    },
+    {
+      "epic": "P4-09",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "fails the parent when the policy says so"
+        },
+        {
+          "stage": "U",
+          "title": "continues the parent but still RECORDS the failure"
+        }
+      ],
+      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' Both branches are covered, and the second carries the substance: `continue-parent` still RECORDS the failure. A policy that let a parent ignore a failed child would make that child's work indistinguishable from work that never ran, and a parent reporting success while a declared child failed silently is exactly what this clause exists to prevent. Same decision-level limit as acceptance[1]."
+    },
+    {
+      "epic": "P4-09",
+      "acceptanceIndex": 3,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses at the depth ceiling, and admits one step below it"
+        },
+        {
+          "stage": "C",
+          "title": "refuses when the agent or token budget is spent"
+        },
+        {
+          "stage": "C",
+          "title": "gives the child what remains, minus the call that started it"
+        },
+        {
+          "stage": "U",
+          "title": "caps the child at its decayed agent budget, not at the deployment ceiling"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 13 the depth ceiling admits one below and refuses at it"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 the last remaining agent may still be spent on a nested run"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 12 recursion is detected anywhere on the ancestor chain, not only at the parent"
+        }
+      ],
+      "note": "acceptance[3]: 'recursion depth, total agents and total budget are bounded.' Each ceiling is pinned from BOTH sides -- admitted one step below, refused at it -- because a limit tested only from the refusing side is satisfied by a check that refuses everything. The decay is what makes the totals hold: a child receives what remains minus the call that started it, so a tree cannot have every run believe it holds the full allowance. Recursion is refused structurally and anywhere on the chain, not merely caught by depth, so an operator learns 'this definition calls itself' rather than 'this got too deep'.\n\nmust[3] IS NOT CLAIMED AS COVERED, per the delegate's ruling. The clause is about the RUNTIME behaviour of nested workflows, and `runtime.ts` installs no `workflow()` global, so a script cannot start one and nothing can violate the clause today. The vacuum is held by a mutation-proved tripwire in the U stage rather than by prose: it fails the day a nesting hook appears, forcing whoever adds it to face must[3] then. These entries cover the DECISIONS a future wiring will consult; they do not cover a running worker enforcing them."
     }
   ]
 }

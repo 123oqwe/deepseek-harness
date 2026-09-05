@@ -5066,6 +5066,54 @@
         "mutationDescription": "One mutation on packages/workflow/workflow-worker-thread/src/runtime.ts: a `workflow:` hook added to the `globals` object beside agent/parallel/pipeline/phase/log. Restored byte-identical, confirmed by an empty git diff.",
         "failureSummary": "Reddens exactly this supplemental case and no other, so the tripwire observes the seam it names rather than something adjacent to it."
       }
+    },
+    {
+      "epic": "P4-09",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a digest that does not match its body is refused",
+        "fault boundary 02 a version that skips ahead is refused",
+        "fault boundary 03 a version already issued is refused for a different body",
+        "fault boundary 04 an identical body is refused rather than silently re-registered",
+        "fault boundary 05 the first registration under a name must be version 1",
+        "fault boundary 06 a well-formed first registration is accepted",
+        "fault boundary 07 an unknown digest does not resolve",
+        "fault boundary 08 a digest registered under another name reports a mismatch, not a miss",
+        "fault boundary 09 validation[1]: an old run does not resume against a newer version",
+        "fault boundary 10 validation[1]: a run resumes against the exact definition it referenced",
+        "fault boundary 11 recursion is refused before the depth limit is consulted",
+        "fault boundary 12 recursion is detected anywhere on the ancestor chain, not only at the parent",
+        "fault boundary 13 the depth ceiling admits one below and refuses at it",
+        "fault boundary 14 an exhausted agent budget refuses distinctly from an exhausted token budget",
+        "fault boundary 15 the last remaining agent may still be spent on a nested run",
+        "fault boundary 16 validation[2]: a self-recursive definition is detected from its body",
+        "fault boundary 17 validation[2]: nesting a different name is not self-recursion",
+        "fault boundary 18 acceptance[0]: a hostile body registers and resolves without executing"
+      ],
+      "files": [
+        "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+        "packages/workflow/workflow-registry/src/version.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T13:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "a1e95e54f3376470c409bfd4523afee3f885e35c",
+        "testsDiscovered": 36
+      },
+      "note": "P4-09 F-stage. 18 boundaries as data with the count guarded, in nested.e2e.spec.ts under their own describe block; the C stage's 17 titles are disjoint, so predicate (iii) holds on the shared file.\n\nBoundary 12 covers what boundary 11 does not: recursion is detected ANYWHERE on the ancestor chain, not only against the immediate parent. The case closes an A -> B -> C -> A cycle against the ROOT, which a parent-only check would miss entirely -- and that mutation reddens only this boundary, so nothing else was covering it.\n\nBoundary 15 is the off-by-one at the agent budget: one remaining agent MUST still be spendable, or a run could never use its final allowance. The natural defensive form (`<= 1`) reddens it.\n\nBoundary 05 pins that a first registration must be version 1, which the `highest + 1` rule gives only because an empty history reduces to 0. Weakening it to skip the check when the history is empty reddens exactly this boundary.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations beyond those recorded for C and P. types.ts: (1) recursion checked only against the immediate parent rather than the whole chain; (2) the agent-budget guard changed to `<= 1`, so the last agent cannot be spent. version.ts: (3) the monotonicity check skipped when the history is empty. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 boundary each -- 12, 15 and 05 respectively, each the boundary written for it."
+      }
     }
   ]
 }
