@@ -1594,6 +1594,95 @@
         }
       ],
       "note": "acceptance[2]: 'two concurrent install processes do not produce a half-written lock.' Covered in two independent senses, and the second is only PARTLY closed -- stated here rather than left for a reader to discover. (a) Logical: a candidate generated from a base that has since moved is refused, so two installs that both read version 3 cannot each silently erase the other's work. (b) Physical: replacement goes through a sibling temp file and a rename, and the cases prove the content lands whole with no scratch file surviving. They do NOT prove atomicity -- that is a property of rename(2), and observing a partial write would need a reader racing the writer; replacing temp-and-rename with an in-place write reddens none of them. Recorded in the P-stage freeze, the suite's module comment, and the package README rather than closed with an assertion that a function was called."
+    },
+    {
+      "epic": "P6-02",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses a derived record naming no source event"
+        },
+        {
+          "stage": "C",
+          "title": "accepts a user-asserted record, which names a responsible party instead"
+        },
+        {
+          "stage": "C",
+          "title": "does not treat an empty asserter as traceable"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 09 validation[0] source deletion: a derived record left with no sources is refused"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 10 validation[0] source deletion: a user-asserted record survives it"
+        }
+      ],
+      "note": "acceptance[0]: 'every memory traces to at least one source, or is explicitly marked user-asserted.' Enforced structurally rather than by a check that could be bypassed: the two origins are separate VARIANTS of MemoryProvenance, so a derived record with an empty source list is refused by validateRecord and there is no third state. That split is what keeps 'nobody recorded where this came from' from reading as 'the user said so' -- with one possibly-empty list the two would be the same value. The F boundaries carry it under source deletion specifically, from both sides: deleting the last source event refuses the record rather than silently downgrading it, while a user-asserted record has no sources to lose. An empty asserter string is also not traceable, so the user-asserted variant cannot be used as an empty escape hatch."
+    },
+    {
+      "epic": "P6-02",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "retrieves an active, unexpired record"
+        },
+        {
+          "stage": "C",
+          "title": "withholds a record whose validity has passed, and keeps one at the boundary out too"
+        },
+        {
+          "stage": "C",
+          "title": "withholds revoked, superseded and disputed records alike"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 07 validation[0] time validity: a record is retrievable up to, but not at, its end"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 a revoked record is withheld even while still within its validity"
+        }
+      ],
+      "note": "acceptance[1]: 'expired and revoked records do not enter default retrieval.' Covered on both axes, because the two exclusions are independent -- a record can be revoked while still within its validity window, and boundary 15 pins exactly that. The time axis is pinned at the instant: retrievable at 23:59:59.999 and withheld at the end instant itself, since at the moment validity ends the claim is no longer true. `disputed` is withheld too, which is the judgement worth recording: a disputed record's claim is not known to be false, but returning it by DEFAULT would present a contested fact as settled, and a caller who wants it can ask explicitly."
+    },
+    {
+      "epic": "P6-02",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "permits it and reports that no boundary was crossed"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a cross-tenant merge with no authorization"
+        },
+        {
+          "stage": "U",
+          "title": "refuses a cross-session merge with a DIFFERENT reason from a cross-tenant one"
+        },
+        {
+          "stage": "U",
+          "title": "permits a cross-tenant merge that names both endpoints"
+        },
+        {
+          "stage": "U",
+          "title": "refuses an authorization issued for a different destination"
+        },
+        {
+          "stage": "U",
+          "title": "refuses an authorization issued for a different source"
+        },
+        {
+          "stage": "U",
+          "title": "does not let a session-scoped authorization cover a tenant-wide merge"
+        }
+      ],
+      "note": "acceptance[2]: 'a merge across scopes must be explicit.' The authorization names BOTH endpoints, and three of these cases exist for that alone -- one naming only the destination would authorize merging into it from anywhere, so a single approval would cover every later merge. A same-scope merge is permitted and reports crossesScope: false, so an audit can distinguish the two without re-deriving it. Tenant and session crossings refuse with different reasons because they are events of different severity: one moves data between customers, the other within one. NOT COVERED HERE, deliberately: whether a RUNTIME enforces this on real reads. decideCrossScopeMerge is a decision, and the runtime that would consult it is P6-01's MemoryRuntime, whose scope post-filtering is the residual lock now owned by P6-03 (BLOCKED-096)."
     }
   ]
 }
