@@ -1652,6 +1652,7 @@ accept-blocked: P2-02
 accept-blocked: P6-01
 accept-blocked: P2-03
 accept-blocked: P4-05
+accept-blocked: P4-06
 ACCEPT-BLOCKED-END -->
 
 
@@ -1676,6 +1677,7 @@ This is the single place to check at wave close. A lock means the ledger row can
 | MCP server | **None.** `mcp-client` config comes from its cordis.yml plugin config; no `.mcp.json` or project discovery exists. |
 | home/profile patch override | **None** — no project-sourced patch layer exists. |
 | **executable skill** | **Real.** `skill-filesystem`'s `roots()` pushes `<projectRoot>/.dsh/skills` and `<projectRoot>/.agents/skills`, derived from the session `cwd`. The only genuine executable project-content load site in the product. |
+| **P4-06** | `must[2]` 消费者按 message id/epoch 去重 — the **agent-inbox half only**; the `packages/run/message-bus` half is proven and unaffected. | The correct predicate is "the turn that claimed this message committed", and the inbox observes no such event. The rule shipped in its place treated *claimed* as terminal, which forbade `goal-round-driver`'s deliberate restoration of a claimed message whose reservation went stale — a turn that never ran and therefore produced no effect. Reverted, not repaired: choosing the signal (a new session event, a claim/commit pair, or explicit release on restoration) is wider than this cell. See BLOCKED-088. | A turn-commitment signal; **ownership undecided** — deliberately not assigned to the party that misread the clause. | The inbox gains an observable turn-commitment event, and a case asserting that a claimed-then-RESTORED message is still deliverable while a claimed-then-COMMITTED one is not can be written without inventing that signal. **Registered before P4-06 has a single green cell**, because a lock added at four-green depends on remembering to add it, and BLOCKED-080 is the record of what remembered bookkeeping does. |
 
 Instructions — named first in the epic's own `gate` line — are the other real surface, via `agent-instructions`' `discoverInstructionFiles`.
 
@@ -1935,9 +1937,27 @@ Measured rate: **11.1% across the window (22/198), rising to 20.0% over the last
 
 **Priority unchanged: still not fixed here.** It does not block a cell from greening, and the epic is the path. What changes is that the number is now measured, and the method is recorded so the next person does not repeat the blind search and conclude the frequency is falling.
 
+
+**Where mutation stops working (2026-09-05, from P4-06.C).** Mutation caught this defect class three times in one session and was made a required field on that strength. Then P4-06's agent-inbox half produced a case it **cannot** catch, and the boundary is worth stating exactly:
+
+> **Mutation asks whether the suite can see a change in the implementation. It does not ask whether the implementation answers the right question.**
+
+The rule added there forbade re-queuing any message that had been *claimed*. Every test written for it passed, and mutating it reddened them properly — **because the assertions and the implementation shared one misreading of the clause.** must[2] deduplicates a second business *effect*, and a message claimed into a turn that never committed has produced none. Two things agreeing prove nothing when a single wrong premise produced both.
+
+What caught it was `goal-round-driver` — **a real consumer that already depended on the correct semantics** and did not share the author's reading. That gives an independent criterion, and it is narrow enough to apply:
+
+> **When a change TIGHTENS an existing semantic, the tests of real consumers are the only thing that can judge whether it was tightened correctly, because they were not written from your interpretation.**
+
+So mutation covers "implementation and assertions have come apart"; it does not cover "implementation and assertions are wrong together". Only an external consumer covers the second. **A tightening change with no consumer test exercising the tightened path has not been checked, however green its own suite is and however cleanly it mutates.**
 ## BLOCKED-088 — "Claimed" is not "effected": a dedup rule that forbade a real production path
 
-**Status: OPEN. Blocks P4-06's C stage from covering its declared file `packages/core/agent/src/inbox.ts`. Needs a maintainer ruling before that half is rewritten.**
+**Status: ADJUDICATED 2026-09-05 by the delegate. C greens on its frozen cases; the inbox half is recorded as an unproven clause and an ACCEPTANCE LOCK candidate.**
+
+**The ruling took neither option the Supervisor offered.** Not a path patch narrowing C to the message-bus package — that would state "we are not touching the inbox", when the truth is "that half needs a signal that does not exist", and **a patch would disguise a gap as a scope adjustment**. Not designing the turn-commitment signal now either — it is wider than this cell, and the party that just misread the clause does not get to choose its replacement.
+
+The basis is mechanical: **the registry's `files` list is a declaration, not a gate.** Nothing verifies that a declared file was actually modified (`generate-ledger`'s checks against `.files` match zero). So whether C greens depends on whether its frozen cases pass, and those cases are about the message-bus contract.
+
+**What is recorded instead: must[2]'s inbox half has no reachable subject today.** The inbox cannot observe turn commitment, and the correct predicate depends on it. Same shape as P1-07's four load paths and plugin-rpc. **If P4-06 reaches four green cells with that half still unproven, it is accepted UNDER LOCK, not waved through on "C's cases all passed."** Lock owner: *needs a turn-commitment signal; ownership undecided.*
 
 P4-06 must[2] requires a consumer to deduplicate by message id and epoch. The agent inbox is a genuine consumer, and it had a real gap: pending-list uniqueness does not survive a claim, so a message that had already run a turn could be re-appended and run a second one. A claimed-set was added, tracked across replay, refusing any id that had been claimed.
 
