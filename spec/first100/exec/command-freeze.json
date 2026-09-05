@@ -3461,6 +3461,51 @@
         "testsDiscovered": 17
       },
       "note": "P0-08 U-stage. FROZEN BEFORE FIRST EXECUTION -- these titles were read from a spec file that has never been run, so the expectations are predictions rather than transcriptions of a known outcome.\n\nWHY THIS ENTRY EXISTS LATE: the Usage implementation (runner.ts, report.ts, the package.json entry) landed WITHOUT a SPEC-FREEZE step. The pipeline is SPEC-FREEZE -> RED -> GREEN and it started at the second step. Caught by generate-ledger refusing the cell with 'no frozen command-freeze.json entry for (epic, stage)' while greening the sibling F cell -- a gate working, but one that only checks at greening, three steps after the skip.\n\nWHY THE CODE WAS NOT REWRITTEN: the delegate rejected reverting to RED and re-implementing. Deleting verified code to retype it produces no new information and is the actual performance; a freeze protects 'the expectation was fixed before the outcome was known', not 'the code did not exist'. The real gap was that the Usage stage had NO TEST SURFACE AT ALL: the Contract and Fault freezes both point at tests/benchmark/runner.spec.ts, and neither asserts the runner's own contract. This file is that surface, added as an append-only overlay the same way P0-04.U's spec was, and its cases are genuinely unknown at freeze time because they did not exist before this commit.\n\nWHAT IT ASSERTS, distinct from the Fault stage's acceptance-clause coverage: that the YAML manifest and the exported STANDARD_METRICS constant declare the same eight names (two independent sources kept equal by nothing else, so drift would let a metric be declared and never scored); that INVARIANT_METRICS is a proper subset rather than a second vocabulary; that a trial seed is a function of its three inputs alone and changing any one changes it, so a recorded seed identifies one trial and not a family; that every draw stays in [0,1); that failing trials and breaches each contribute their own replay seed; that an empty lane reports full-width uncertainty rather than a confident zero; and that invariantsHeld([]) HOLDS -- the complement of the skipped-lane rule, since absence must not read as failure either or an unconfigured environment would look compromised."
+    },
+    {
+      "epic": "P4-05",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent/tests/state-machine.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "contract: the state map declares exactly the ten states must[0] names, with no extras",
+        "contract: every declared target is itself a declared state, so the map cannot name a state that does not exist",
+        "contract: waiting_tool and waiting_human are distinct states rather than one waiting state",
+        "contract: a transition with an empty reason is refused, so a recorded transition always says why",
+        "contract: a whitespace-only reason is refused too, since it records nothing a reader can use",
+        "control: the same transition with a real reason is admitted, so the refusals above measure the reason and not the edge",
+        "contract: a proposal naming a different run is refused, so one run can never advance another",
+        "contract: an edge absent from the map is refused",
+        "contract: a proposal whose source disagrees with the current state is refused, even when the edge itself is legal",
+        "contract: a strictly older epoch is refused whatever it proposes — the stale-worker case",
+        "control: the same proposal at the current epoch is admitted, so staleness is decided by the epoch and not by the edge",
+        "contract: a stale worker is refused for staleness before legality, so it never learns whether its edge would have been legal",
+        "contract: no transition leaves a terminal state, so a finished run cannot be revived or re-orphaned",
+        "contract: every waiting state, plus queued and paused, is non-consuming",
+        "contract: running and starting DO consume, so the classification is a real partition rather than a list of everything",
+        "contract: cancelling consumes, because a draining run still holds its slot",
+        "contract: an orphaned run may be reclaimed through starting, which is what issues a new epoch",
+        "contract: an orphaned run may fail safely",
+        "contract: an orphaned run may NOT resume directly as running, so a reclaim always issues a new lease",
+        "contract: every non-terminal state can reach orphaned, so any interrupted run is representable after a restart"
+      ],
+      "files": [
+        "packages/core/agent/src/state-machine.ts",
+        "packages/core/agent/tests/state-machine.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T06:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "8b7799c8f04546f4e800397f77eae21fe10f874f",
+        "testsDiscovered": 20
+      },
+      "note": "P4-05 C-stage. FROZEN BEFORE FIRST EXECUTION -- neither the module nor its spec has been run, so these titles are predictions.\n\nWHY A NEW MODULE: `AgentStatus` in runtime-types.ts is a two-value runtime flag ('idle' | 'running') that cannot express the distinctions a supervisor needs. A run waiting on a tool and a run waiting on a human are both 'running' there, yet only one can ever proceed unattended -- so must[0]'s ten states are added alongside that flag, not as a replacement.\n\nTWO PROPERTIES MADE STRUCTURAL RATHER THAN LEFT TO CALLERS. must[1]'s reason/runId/epoch are REQUIRED FIELDS of AgentTransition, so a transition lacking them is not a constructible value. acceptance[0]'s stale-worker half is decided by lease epoch alone -- no clock, no heartbeat, nothing a retrying stale worker can forge.\n\nCHECK ORDER IS DELIBERATE AND ASSERTED: identity, then authority, then legality, then completeness. A stale worker proposing an ILLEGAL edge is refused for staleness, not illegality, so it never learns whether its edge would have been legal on a lifecycle it no longer owns. One case pins exactly that pair.\n\nTHREE MODELLING DECISIONS THE CASES PIN, each of which could reasonably have gone the other way: `cancelling` is EXCLUDED from the non-consuming set because a draining run still holds its slot, so a supervisor that treated it as idle would reclaim resources in use; terminal states have NO outgoing edges at all, including to `orphaned`, so a reclaim sweep cannot rewrite a finished run; and `orphaned` may NOT resume directly as `running` but must pass through `starting`, because starting is what issues the new epoch and resuming directly would keep the dead worker's epoch alive -- which is the very value acceptance[0]'s staleness test compares.\n\nControls accompany the negative-space cases: the empty-reason refusals are paired with the same edge carrying a real reason, and the stale-epoch refusal with the same proposal at the current epoch, so each refusal measures the property named rather than a decider that refuses everything."
     }
   ]
 }
