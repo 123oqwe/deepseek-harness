@@ -8,7 +8,9 @@
 import type { Context } from '@deepseek-ai/cordis'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { DiffCallView, DiffResultView, ToolResult } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-fs'
+import type {
+  FsEditMatchTier,
+} from '@deepseek-ai/dsh-fs'
 import { computeHunkDiffs, diffsFromMeta } from './diff.ts'
 import { remediateFsError } from './error.ts'
 import { sessionResolveOptions } from './session-cwd.ts'
@@ -61,10 +63,18 @@ export function parseEditArgs(args: { file_path: string; old_string: string; new
  * @param replaceAll - selects the all-occurrences wording over the single-replacement one.
  * @returns the confirmation sentence the model sees as the tool result.
  */
-export function formatEditOutput(displayPath: string, replaceAll: boolean): string {
-  return replaceAll
+export function formatEditOutput(displayPath: string, replaceAll: boolean, matchTier: FsEditMatchTier = 'exact'): string {
+  const base = replaceAll
     ? `The file ${displayPath} has been updated. All occurrences were successfully replaced.`
     : `The file ${displayPath} has been updated successfully.`
+  // An exact match adds nothing: it is what the caller asked for, and saying so
+  // on every edit would spend tokens to report the absence of news. A fallback
+  // tier is reported because the caller's old_string did NOT appear as written,
+  // and a caller that believes it did will keep sending text that only works by
+  // luck.
+  if (matchTier === 'exact') return base
+  const ignored = matchTier === 'trailing-whitespace' ? 'trailing whitespace' : 'indentation'
+  return `${base} Note: old_string did not match exactly; it was located by ignoring ${ignored}.`
 }
 
 /**
@@ -97,11 +107,12 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
           path: { type: 'string', required: true },
           before: { type: 'string', required: true },
           after: { type: 'string', required: true },
+          matchTier: { type: 'string' },
         },
       },
       render: (args, value) => [{
         type: 'text',
-        text: formatEditOutput(value.path, args.replace_all ?? false),
+        text: formatEditOutput(value.path, args.replace_all ?? false, (value.matchTier ?? 'exact') as FsEditMatchTier),
       }],
       presentationMeta: (args, value) => ({
         diffs: computeHunkDiffs(args.file_path, value.before, value.after)

@@ -424,7 +424,10 @@ export class E2BFileSystem extends FileSystem {
       const after = literalEdit(before, edit, target.displayPath)
       const storage = restoreLineEndings(after, detectsCrlf(raw))
       const version = await this.writeAtomic(target, storage, existing, false, signal)
-      return { version, before, after }
+      // This backend has no graded matcher: every edit it produces came from an
+      // exact literal match, so it reports that truthfully rather than leaving
+      // the field for a consumer to guess at (Epic P9-04).
+      return { version, before, after, matchTier: 'exact' }
     })
   }
 

@@ -165,7 +165,27 @@ export interface FsEditOutcome {
   before: string
   /** The file's content AFTER the edit. */
   after: string
+  /**
+   * Which matching tier located `oldString` (Epic P9-04).
+   *
+   * `'exact'` whenever the literal search succeeded, which is every edit a
+   * backend without graded matching can produce — so a backend that does not
+   * implement the ladder reports `'exact'` and says something true rather than
+   * omitting the field. A value other than `'exact'` means the text was found
+   * only after ignoring whitespace the caller got wrong, which a consumer
+   * surfaces so the caller can see WHAT was matched rather than assuming its
+   * search text was correct.
+   */
+  matchTier: FsEditMatchTier
 }
+
+/**
+ * How an edit's `oldString` was matched (Epic P9-04).
+ *
+ * Ordered by how much of the caller's text is ignored: `'exact'` ignores
+ * nothing, and each later tier ignores strictly more.
+ */
+export type FsEditMatchTier = 'exact' | 'trailing-whitespace' | 'indentation'
 
 /**
  * Stable, machine-routable codes for filesystem failures. Carried on

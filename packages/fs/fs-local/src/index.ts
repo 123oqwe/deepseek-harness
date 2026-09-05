@@ -254,6 +254,7 @@ export class LocalFileSystem extends FileSystem {
         // line-ending restoration is a storage detail the diff ignores.
         before: original.content,
         after: edited.content,
+        matchTier: edited.tier,
       }
     })
   }

@@ -78,7 +78,7 @@ class FakeFileSystem extends FileSystem {
     const content = this.files.get(target.targetKey) ?? ''
     const after = content.split(edit.oldString).join(edit.newString)
     this.files.set(target.targetKey, after)
-    return { version: FsVersion('v3'), before: content, after }
+    return { version: FsVersion('v3'), before: content, after, matchTier: 'exact' }
   }
 }
 

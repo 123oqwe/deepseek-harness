@@ -6276,6 +6276,44 @@
         "mutationDescription": "Four targeted mutations of fsio.ts, each restored byte-identical: (M1) removed the replaceAll guard so a bulk replace falls back to approximate matching; (M2) downgraded a fallback-tier ambiguity to not-found, losing FS_AMBIGUOUS_EDIT; (M3) dropped the nearest-region hint from the not-found message (must[3]); (M4) consulted the ladder even when the literal search had already succeeded.",
         "failureSummary": "All four reddened, one case each of 28. The narrowness is the result: each mutation removes one guard and reddens exactly the case written for it, so no case is standing in for another. M4 is the important one -- it proves the 'cannot change a success' claim is asserted rather than merely stated, since the exact-match case detects the ladder running when it should not."
       }
+    },
+    {
+      "epic": "P9-04",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/fs/tool-fs/tests/edit-tier.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-04 Usage — what the model is told about the tier must[1]: an exact match adds NOTHING, so an ordinary edit spends no tokens reporting the absence of news",
+        "P9-04 Usage — what the model is told about the tier must[1]: a trailing-whitespace match tells the model its old_string did not match as written",
+        "P9-04 Usage — what the model is told about the tier must[1]: an indentation match names indentation as what was ignored",
+        "P9-04 Usage — what the model is told about the tier the tier note is added to the replace_all sentence too, not only the single-edit one",
+        "P9-04 Usage — what the model is told about the tier defaults to exact when a backend reports no tier, so an older result is not annotated with a guess"
+      ],
+      "files": [
+        "packages/fs/fs/src/types.ts",
+        "packages/fs/fs/src/index.ts",
+        "packages/fs/fs-local/src/index.ts",
+        "packages/e2b/fs-e2b/src/index.ts",
+        "packages/fs/tool-fs/src/edit.ts",
+        "packages/fs/tool-fs/tests/edit-tier.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T05:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "529e9e015a8782c040776dc798878050225169bd",
+        "testsDiscovered": 5
+      },
+      "note": "U (Usage) for P9-04 must[1]: the tier reaches the model. This completes the capability seam rather than one role of it -- FsEditOutcome gains `matchTier` (Service Definition), fs-local reports the tier the ladder chose and fs-e2b reports 'exact' because it has no graded matcher (both Providers), and the edit tool annotates only a non-exact match (Consumer). fs-e2b reporting 'exact' is a true statement rather than a placeholder: every edit it produces did come from a literal match. An exact match adds NO text, because it is what the caller asked for and announcing it on every edit would spend tokens reporting the absence of news; a fallback IS announced, because the caller's old_string did not appear as written and a caller who believes it did will keep sending text that only works by luck. Titles are disjoint from P9-04's C and P entries. NOTE for the reviewer: `pnpm run test:snapshot` is red on this branch with 76 failures, and none of them mention matchTier or the tier sentence -- the cause is the `action/manifest-appended` session event added by 73722dd182 (P2-03 U part 2), recorded separately as BLOCKED-108.",
+      "sensitivityProof": {
+        "mutationDescription": "Four targeted mutations of tool-fs/src/edit.ts, each restored byte-identical: (M1) removed the exact-match early return so every edit is annotated; (M2) returned the base sentence always, so a fallback is never reported (must[1] unmet); (M3) described both fallback tiers as 'whitespace', losing which one matched; (M4) flipped the default from 'exact' to 'indentation', so a backend reporting no tier is annotated with a guess.",
+        "failureSummary": "All four reddened: 2, 3, 3 and 1 of 5. M4 reddens exactly the default case, which exists because a backend that predates this field must not have a tier invented for it. M1 and M2 are opposite errors -- annotating everything and annotating nothing -- and redden disjoint sets, so neither case is standing in for the other."
+      }
     }
   ]
 }
