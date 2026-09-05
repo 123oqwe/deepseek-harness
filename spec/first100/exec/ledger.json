@@ -4227,9 +4227,11 @@
       },
       "supplements": {},
       "candidateSha": null,
-      "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "NOT_RUN",
+      "independentVerdict": "WITHHELD_INCOMPLETE_EPIC",
+      "openFindings": [
+        "BLOCKED-100: must[2] (detached) has no implementation; must[3] (nested runtime) is decisions only"
+      ],
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": null
     },
     "P4-10": {

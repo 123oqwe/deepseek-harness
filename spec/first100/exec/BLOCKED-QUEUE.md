@@ -2265,3 +2265,29 @@ This is BLOCKED-098's family from the opposite side. There, a guard ran and had 
 **Resolution: it was a missed import, not a layering decision.** The duplicate was written without knowing the original existed. Substantively the workflow package owns the concept — `RunDefinitionRef.runId` names a run *of a workflow* — so `workflow-registry` now imports it and the catalog entry is restored. The alternative reading (deliberately duplicating to avoid a package dependency) would have been defensible, but it was not what happened, and recording it that way would have been a rationalization written after the fact.
 
 **The mechanism behind BLOCKED-046 remains unestablished**, and is now known to be unrelated to whether a package is new: this staleness had nothing to do with package creation and everything to do with a name resolving in two places.
+
+### BLOCKED-100 — P4-09 delivered half its title: `Detached` and `Nested` both have no implementation
+
+**Status: OPEN. P4-09 must NOT be accepted. Needs a maintainer decision, and one branch touches the byte-locked registry.**
+
+P4-09 is titled *Detached、Saved、Versioned 与 Nested Workflow*. Four cells are green and their contents are sound — but two of the four `must` clauses have no subject at all, and they are the two the title names first and last.
+
+| Clause | State |
+|---|---|
+| must[0] registered as a signed versioned artifact | **delivered** — digest identity, monotonic versions, registry |
+| must[1] a run references a digest | **delivered** — `RunDefinitionRef`, resolution, `canResumeAgainst` |
+| must[2] a **detached** run is held by the Run service and survives UI disconnect | **nothing.** Measured: `detach` appears 5 times in `packages/workflow/*/src`, and every one is `detachInputSignal` — removing an event listener, unrelated. No implementation, no coverage entry, no test. |
+| must[3] a **nested** run inherits/decays budget, capability and trace, with recursion detection | **decisions only.** `runtime.ts` installs no `workflow()` global, so a script cannot start a nested run and nothing can violate the clause. |
+
+**The Supervisor did not notice, and the reason is worth recording.** must[3]'s vacuum was found and tripwired; must[2] was never examined, because the pre-flight checks ask *does this clause's declared file exist* and *where does the freeze hang* — and never *does every clause have a subject*. **A clause with no declared file of its own is invisible to both.**
+
+**acceptance[1] was claimed as covered and has been corrected.** Its entry listed a decision-level case and described the gap honestly in prose. That is precisely the standard already rejected for must[3]: **an honest note is not a claim of coverage, and in a coverage file the two must not look alike.** acceptance[2] is now qualified the same way. Both are held by the U-stage tripwire.
+
+**Effort judgement, requested by the delegate.** Neither branch is a day's work:
+
+- **Nesting** needs a `workflow()` global, a new worker→host protocol message to request a nested run, the host spawning a child `WorkerRun`, cancellation crossing that boundary, and budget threading through it. It crosses the worker/host protocol, which is where this subsystem's concurrency and teardown rules live.
+- **Detached** is an ownership change: `WorkerRun` is currently held by its caller with a `disposeGraceMs` force-settle. Making a run outlive its parent means the Run service owning it, which spans `dsh-run` and the worker host.
+
+Multi-day each, and the second is a lifecycle change of the kind [`docs/defensive-patterns.md`](../../../docs/defensive-patterns.md) governs.
+
+**Recommendation: suspend rather than wire.** Not because the work is unwelcome, but because its size is not knowable from here and the epic can be honestly parked while other work proceeds. **The clause-attribution branch is not ours**: moving these clauses to another epic edits `registry.json`, which is byte-locked and re-anchorable only with maintainer authorization — the user's touchpoint, not the Supervisor's and not the delegate's.

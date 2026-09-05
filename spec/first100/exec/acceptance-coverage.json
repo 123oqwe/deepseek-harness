@@ -1795,13 +1795,9 @@
     {
       "epic": "P4-09",
       "acceptanceIndex": 1,
-      "coveredBy": [
-        {
-          "stage": "U",
-          "title": "propagates to the child"
-        }
-      ],
-      "note": "acceptance[1]: 'a parent's cancellation propagates.' Covered at the DECISION level only, and the limit is the point: cancelPropagationForNested() states that a nested child is cancelled with its parent, and a case pins it. Nothing propagates a real cancellation, because nothing starts a nested run -- see acceptance[3]'s note and the U-stage tripwire. The decision exists so that when nesting is wired, the answer is already written down rather than improvised by whoever wires it; it is not evidence that a running parent cancels a running child."
+      "coveredBy": [],
+      "note": "acceptance[1]: 'a parent's cancellation propagates.' **NOT COVERED, corrected 2026-09-06.** This entry previously listed a decision-level case and described the gap honestly in prose -- which is exactly the standard the delegate rejected for must[3]: an honest note is not a claim of coverage, and the two must not look alike in this file.\n\nNothing propagates a real cancellation because nothing starts a nested run: runtime.ts installs no `workflow()` global. cancelPropagationForNested() records the ANSWER a future wiring should use, so whoever wires nesting does not improvise it, and a U-stage case pins that answer. But a stated answer is not an enforced behaviour, and this clause asks for the behaviour.\n\nHeld by the same mutation-proved tripwire as must[3] (U-stage supplement): the day a nesting hook appears, that case fails and this clause becomes live.",
+      "status": "NOT COVERED"
     },
     {
       "epic": "P4-09",
@@ -1816,7 +1812,8 @@
           "title": "continues the parent but still RECORDS the failure"
         }
       ],
-      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' Both branches are covered, and the second carries the substance: `continue-parent` still RECORDS the failure. A policy that let a parent ignore a failed child would make that child's work indistinguishable from work that never ran, and a parent reporting success while a declared child failed silently is exactly what this clause exists to prevent. Same decision-level limit as acceptance[1]."
+      "note": "acceptance[2]: 'a child failure is handled by the declared policy.' Both branches are covered, and the second carries the substance: `continue-parent` still RECORDS the failure. A policy that let a parent ignore a failed child would make that child's work indistinguishable from work that never ran, and a parent reporting success while a declared child failed silently is exactly what this clause exists to prevent. Same decision-level limit as acceptance[1].\n\n**Status qualified 2026-09-06, for the same reason as acceptance[1].** Both branches of the declared policy are pinned, but nothing applies a policy to a real child failure, because no child runs. This entry covers the DECISION; it is not evidence that a parent handled a failing nested child.",
+      "status": "DECISION LEVEL ONLY"
     },
     {
       "epic": "P4-09",
