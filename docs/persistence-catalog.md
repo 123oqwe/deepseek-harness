@@ -94,6 +94,38 @@ Sources: [`packages/core/session/src/types.ts:381`](../packages/core/session/src
 
 ## Events
 
+### `action/*`
+
+<a id="actionmanifest-appended--log-only"></a>
+
+#### `action/manifest-appended` — log-only
+
+```ts persistence-catalog
+/**
+ * One ActionManifest durably appended BEFORE its action executes
+ * (P2-03 must[1]). Appended by every execution path — native tool call,
+ * code-mode embedded call, and plugin RPC — so acceptance[0]'s "every
+ * external write has a manifest preceding it in the event log" is
+ * answerable from the log alone.
+ *
+ * Appended even when the execution is subsequently refused: a refused
+ * attempt is the case where the record matters most, so this event is
+ * never rolled back on denial.
+ *
+ * @param actionId - the action this manifest describes.
+ * @param origin - which of the three execution paths produced it.
+ * @param capability - the capability being exercised.
+ * @param argumentsHash - canonical hash of the arguments it was built for.
+ * @param sideEffectClass - the classified class, or the destructive default.
+ * @param classified - false when no declared class was available.
+ * @param requiresApproval - whether approval is required before execution.
+ * @param sequence - the monotonic append position in the durable log.
+ */
+'action/manifest-appended': ActionManifestAppendedEventData
+```
+
+Source: [`packages/core/tools/src/index.ts:2450`](../packages/core/tools/src/index.ts)
+
 ### `agent/*`
 
 <a id="agentinboxspliced--log-only"></a>
@@ -115,7 +147,7 @@ Sources: [`packages/core/session/src/types.ts:381`](../packages/core/session/src
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:68`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:81`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 
@@ -796,7 +828,7 @@ Source: [`packages/core/session/src/types.ts:278`](../packages/core/session/src/
 'subagent/descriptor': SubagentDescriptorData
 ```
 
-Source: [`packages/subagent/subagent/src/descriptor.ts:38`](../packages/subagent/subagent/src/descriptor.ts)
+Source: [`packages/subagent/subagent/src/descriptor.ts:39`](../packages/subagent/subagent/src/descriptor.ts)
 
 <a id="subagentmodel-selection-policy--log-only"></a>
 
