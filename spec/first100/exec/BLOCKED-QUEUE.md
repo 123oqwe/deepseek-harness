@@ -2348,3 +2348,17 @@ The risk is not hypothetical: earlier the same day, P8-01's fingerprint gap was 
 **A companion limit, from the same episode.** BLOCKED-101's third pre-flight question flagged `must[2]` in advance as *"a negative clause, and the kind most likely to end up unbuilt"* — and that flag was correct. It did not prevent the failure, because what got built was two assertions that could not carry the clause.
 
 > **The third question establishes whether a clause has a subject. It says nothing about whether the subject is sufficient. That remains mutation's job, and the two are not substitutes.**
+
+### BLOCKED-103 — A supplement can only grow the frozen set; replacing a case requires a supersession
+
+**Status: RESOLVED 2026-09-06 by superseding P5-11's C freeze. Recorded because the error was invisible until CI ran.**
+
+P5-11's two `must[2]` cases were **replaced**: a forbidden-word blacklist became a closed set, and a `typeof` check became an identity check. Following the standing guidance to supplement rather than re-freeze, the two new titles went in as `supplementSeq: 1` and the parent entry gained a note saying the old titles no longer carried what they claimed.
+
+**That was the wrong instrument, and the parent freeze became unsatisfiable.** `expectCases` still named two titles the suite no longer contained, so CI verification reported **2 of 20 missing** — the cell could not be greened at all.
+
+> **A supplement ADDS titles to predicate (i)'s union. It cannot remove one. So adding cases is a supplement; replacing or removing them is a supersession — the test is not how much changed, but whether the frozen SET shrank.**
+
+**A note in the parent did not rescue it, and that is the reusable part.** The note was accurate and placed correctly, and it changed nothing: **`expectCases` is what a verifier reads, and prose beside it is not.** Same shape as BLOCKED-093 (a self-audit field recording only a verdict) and the must[3] tripwire (a note no gate reads) — the third time in this program that an accurate sentence sat next to a machine-read field and failed to affect it.
+
+**What caught it was the ordinary greening check**, comparing each frozen title against the observation before writing the cell. That check exists to confirm a case passed; here it caught a case that no longer *existed*. A verification aimed at one failure mode catching a different one is now the second such instance today, after the coverage cross-check found P1-03's unfrozen C stage.

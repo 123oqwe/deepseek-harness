@@ -4718,24 +4718,129 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
+          "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
+          "expectCasesMatched": [
+            "carries exactly the enumerated fields",
+            "represents an unclaimed task with explicit nulls, not absent fields",
+            "claims an open task, taking ownership and a lease",
+            "refuses a second worker while the first claim is live",
+            "leaves exactly one admitted holder after a hundred contending workers",
+            "lets a NEW worker claim once the lease has expired, at a greater attempt",
+            "holds the claim AT its expiry instant, so renew and reclaim cannot both be legal",
+            "refuses a write from the superseded holder and admits the current one",
+            "refuses an attempt number HIGHER than the task's current one",
+            "refuses a claim while a dependency is only submitted",
+            "admits the claim once the dependency is verified",
+            "refuses a claim on a finished task",
+            "refuses a two-task cycle",
+            "refuses a three-task cycle, naming the path",
+            "refuses a self-dependency distinctly from a cycle",
+            "refuses a dependency on a task not in the submitted set",
+            "accepts an acyclic graph, so the checks above refuse selectively",
+            "accepts a diamond, which shares a dependency without cycling",
+            "exposes exactly the coordination fields, so ANY added field must be justified here",
+            "carries the claimant's id through UNCHANGED, deriving nothing from it"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
+          "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
+          "expectCasesMatched": [
+            "admits the first claimant and refuses every later one",
+            "lets the next worker win once the first claim lapses, at a higher attempt",
+            "persists the winning claim, so a later read sees the owner",
+            "refuses a claim on an unknown task",
+            "refuses a cyclic submission and stores nothing",
+            "refuses a FORWARD reference, which is what makes a cross-batch cycle unreachable",
+            "validates each submission against tasks ALREADY stored, not the batch alone",
+            "refuses a duplicate task id rather than overwriting",
+            "accepts an acyclic submission, so the refusals above are selective",
+            "refuses while a stored dependency is unverified, and admits once verified"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
+          "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
+          "expectCasesMatched": [
+            "admits a structured value and a stored reference",
+            "refuses a bare string, an array and null, even when the type would allow them",
+            "requires an observed fact to name its source",
+            "requires a derived fact to name at least one source it can resolve",
+            "traces a derived conclusion back to its OBSERVATIONS, not its inputs",
+            "collects every observation behind a fact derived from two branches",
+            "delivers a first arrival and drops a redelivery",
+            "treats the same id at a new epoch as a NEW message",
+            "refuses a misdirected message WITHOUT consulting the seen-set",
+            "advances claimed -> submitted -> verified with no model involvement",
+            "refuses a receipt from a STALE attempt, so a reclaimed task is not overwritten",
+            "refuses an illegal advance, such as verifying work never submitted",
+            "records the outputs a receipt carries",
+            "refuses a receipt for an unknown task"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33971207960",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r15/first100-evidence-4c9d4356d07dd6bb14c7bf8fe067d39e8a6cf125/vitest-report.json",
+          "observationSha256": "873045726a0d6e2f9c44d72774a24a82917088f5f768d0fd34383aca654a56c2",
+          "expectCasesMatched": [
+            "enumerates at least twelve boundaries, each named once",
+            "fault boundary 01 an open task admits its first claim",
+            "fault boundary 02 a live claim refuses a second worker",
+            "fault boundary 03 a claim is still held AT its expiry instant",
+            "fault boundary 04 one millisecond past expiry the task is claimable again",
+            "fault boundary 05 a reclaim issues a strictly greater attempt",
+            "fault boundary 06 a superseded holder's write is refused",
+            "fault boundary 07 an attempt above the current one is refused, not treated as newer",
+            "fault boundary 08 the current holder at the current attempt is admitted",
+            "fault boundary 09 a verified task is not claimable",
+            "fault boundary 10 a failed task is not claimable",
+            "fault boundary 11 a submitted-but-unverified dependency blocks the claim",
+            "fault boundary 12 one unverified dependency among several still blocks",
+            "fault boundary 13 all dependencies verified admits the claim",
+            "fault boundary 14 a not-claimable status wins over an unmet dependency",
+            "fault boundary 15 a two-task cycle is refused",
+            "fault boundary 16 a self-dependency is refused distinctly from a cycle",
+            "fault boundary 17 a forward reference is refused as an unknown dependency",
+            "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle",
+            "fault boundary 19 an empty graph is valid"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T18:40:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "openFindings": [],
+      "status": "BLOCKED_ON_ACCEPTANCE",
+      "acceptedEvidence": null,
+      "selfAudit": {
+        "performedAtUtc": "2026-09-06T18:40:00.000Z",
+        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
+        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P5-11', cross-checked against the non-superseded P5-11 entries in spec/first100/exec/command-freeze.json, plus a count against tests/first100/registry.json's acceptance array. RESULT: 3 clauses, 3 entries covering indices 0/1/2, 18 references, all 18 in the frozen set of the stage each names, 0 mismatches. Written in the same pass as the F freeze.",
+        "ii_candidateChainConsistency": "PASS. RAN: read each cell's candidateSha, then `git merge-base --is-ancestor` for it against the pushed branch. RESULT: all four rest on 4c9d4356d0, so there is no chain to compare BETWEEN cells and none is claimed; that single SHA was separately confirmed an ancestor of fork/first100-exec, which is the check a same-SHA row still owes (BLOCKED-084).",
+        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four entries' argv and expectCases pairwise and matched each against the cited vitest-report.json. RESULT: four cells share run 33971207960; C and F share claims.e2e.spec.ts with disjoint title sets (20 + 20 = 40, the file's full discovery count); P and U have their own files, U's spanning three packages. 20/20, 10/10, 14/14, 20/20 present-and-passing.",
+        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row.",
+        "freezeCorrection": "The C freeze was SUPERSEDED after CI, not before: verification reported 2 of 20 missing because the must[2] replacements had deleted two titles the frozen list still named. A supplement can only grow the frozen set, so replacement required a supersession. Recorded because the cell would otherwise have been greened against a list naming cases that do not exist."
+      }
     },
     "P5-12": {
       "id": "P5-12",
