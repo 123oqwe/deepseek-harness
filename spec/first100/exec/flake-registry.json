@@ -181,6 +181,14 @@
           "observedAtUtc": "2026-09-05T06:43:42Z",
           "outcome": "failed",
           "verifiedBy": "the run's failed-step log contains the case's full name; four further runs the delegate offered as candidates were REJECTED because that string appears zero times in them and they failed on something else"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33952572274",
+          "candidateSha": "fc53394dc64507d8a77036105b6fc9a8a35c86ac",
+          "observedAtUtc": "2026-09-05T15:10:00.000Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; the run's only failure",
+          "absorbedByCell": "P4-06.C"
         }
       ],
       "unrelatedNote": "Four occurrences across four distinct candidate SHAs, none touching packages/experimental/inspector or its dependencies. Two of the four (03a7321e23 and 6decdacb89) are First-100 process-only commits (BLOCKED-QUEUE.md/decisions-approved.md/goal.md/EXEC-STATE.json edits) touching zero product code at all -- the strongest possible unrelatedness evidence, since no source change of any kind was present when the failure occurred. The other two (c60c0f3a4f, af01a06bc96) touch only tests/release/baseline-fingerprint.spec.ts and scripts/release/baseline-fingerprint.mjs (P0-01 slice work), an unrelated package with no dependency relationship to packages/experimental/inspector. Every occurrence reruns clean with zero code changes (confirmed for af01a06bc96 via a same-SHA CI rerun, run 33473101218's second attempt, success). Failure mode each time: a single real-Worker isolated-realm-session test, consistent with a timing-sensitive worker-thread integration test, matching this repo's own history of similar fixes elsewhere (e.g. 'bind fixture servers to OS-assigned ports').",

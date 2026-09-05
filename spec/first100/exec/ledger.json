@@ -3616,7 +3616,35 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "fc53394dc64507d8a77036105b6fc9a8a35c86ac",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33952572274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r3/first100-evidence-fc53394dc64507d8a77036105b6fc9a8a35c86ac/vitest-report.json",
+          "observationSha256": "f666911c9fb71ea97239437d6ed30f7a4141efcf38430fc66d57b4e25e6ee1a4",
+          "expectCasesMatched": [
+            "kill after-commit, then replay: the business effect is applied exactly once",
+            "kill after-send, then replay: the business effect is applied exactly once",
+            "kill after-effect, then replay: the business effect is applied exactly once",
+            "kill after-ack, then replay: the business effect is applied exactly once",
+            "a crash after send leaves a record replay can still find, not a lost message",
+            "ten thousand redeliveries of one message produce one effect (validation[1])",
+            "a pending message is visible as undelivered and still delivers after replay",
+            "an expired message is dead-lettered rather than dispatched, and says why",
+            "an out-of-budget message reports attempts-exhausted, distinct from expiry",
+            "a message that is BOTH expired and out of attempts reports the expiry",
+            "a replayed receipt does not overwrite the consumer that took responsibility",
+            "refuses a foreign-tenant message and records nothing about it",
+            "a foreign message is refused WITHOUT its key being looked up in the seen-set",
+            "a refused foreign message cannot suppress a later legitimate one sharing its key"
+          ],
+          "absorbedFlakes": [
+            {
+              "testFullName": "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions",
+              "basis": "spec/first100/exec/flake-registry.json",
+              "note": "The run's ONLY failure. 27th recorded occurrence; the registry was rebuilt from artifacts the same day (8 -> 26 before this one)."
+            }
+          ],
+          "capturedAtUtc": "2026-09-05T15:10:00.000Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -3632,7 +3660,7 @@
       "candidateSha": null,
       "independentVerdict": "PENDING",
       "openFindings": null,
-      "status": "NOT_RUN",
+      "status": "IN_PROGRESS",
       "acceptedEvidence": null
     },
     "P4-07": {

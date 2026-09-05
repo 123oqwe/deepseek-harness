@@ -3971,6 +3971,51 @@
         "failureSummary": "Against the FROZEN suite each mutation reddens: (1) 2, (2) 1, (3) 1, (4) 1, (5) 2, (6) 1, (7) 1 -- every one non-zero and each landing on the case that names its defect. Against the FIRST DRAFT, mutations (2), (3) and (4) reddened ZERO of ten, which is why that draft was discarded rather than frozen."
       },
       "supersededBy": "2026-09-05T15:10:00.000Z"
+    },
+    {
+      "epic": "P4-06",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/crash.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "kill after-commit, then replay: the business effect is applied exactly once",
+        "kill after-send, then replay: the business effect is applied exactly once",
+        "kill after-effect, then replay: the business effect is applied exactly once",
+        "kill after-ack, then replay: the business effect is applied exactly once",
+        "a crash after send leaves a record replay can still find, not a lost message",
+        "ten thousand redeliveries of one message produce one effect (validation[1])",
+        "a pending message is visible as undelivered and still delivers after replay",
+        "an expired message is dead-lettered rather than dispatched, and says why",
+        "an out-of-budget message reports attempts-exhausted, distinct from expiry",
+        "a message that is BOTH expired and out of attempts reports the expiry",
+        "a replayed receipt does not overwrite the consumer that took responsibility",
+        "refuses a foreign-tenant message and records nothing about it",
+        "a foreign message is refused WITHOUT its key being looked up in the seen-set",
+        "a refused foreign message cannot suppress a later legitimate one sharing its key"
+      ],
+      "files": [
+        "packages/run/message-bus/src/inbox.ts",
+        "packages/run/message-bus/src/outbox.ts",
+        "packages/run/message-bus/tests/crash.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T15:10:00.000Z",
+      "supersedes": "2026-09-05T14:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d41a3a6bfa129e551fce3aea2fcc582ab42473d7",
+        "testsDiscovered": 14
+      },
+      "note": "P4-06 C-stage, SUPERSEDING the 2026-09-05T14:20:00.000Z freeze, which never greened.\n\nWHAT CHANGED: the superseded freeze also ran packages/core/agent/tests/agent.spec.ts, covering a claimed-set dedup rule added to the agent inbox for must[2]. That rule was wrong and is reverted -- it treated a CLAIMED message as terminal, forbidding goal-round-driver's deliberate restoration of a claimed message whose reservation went stale, a turn that never ran and therefore produced no effect. Red 3/3 with the change, green 3/3 without: a controlled bidirectional test, not a second observation.\n\nWHY THE CELL STILL GREENS, per the delegate's adjudication of BLOCKED-088: the registry's files list is a declaration, not a gate -- nothing verifies a declared file was modified, and generate-ledger's checks against .files match zero. A path patch narrowing C to the message-bus package was REJECTED because it would state 'we are not touching the inbox' when the truth is 'that half needs a signal that does not exist', disguising a gap as a scope adjustment. Instead must[2]'s inbox half is recorded as having no reachable subject and carries a live ACCEPTANCE LOCK, registered before this epic had a single green cell.\n\nWHAT THE MUTATION RECORD DOES NOT COVER, and this is why the lock exists rather than a re-freeze: every case written for the reverted rule passed, and mutating that rule reddened them correctly, because the assertions and the implementation shared one misreading of the clause. Mutation asks whether the suite can see a change in the implementation, not whether the implementation answers the right question. Only goal-round-driver -- a real consumer that already depended on the correct semantics and did not share the author's reading -- could catch it.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations against the frozen suite: (1) removed the duplicate branch from classifyIntake; (2) moved the tenant check AFTER the dedup check; (3) swapped the deadline and attempt-budget checks in decideDelivery; (4) removed applyReceipt's already-acked early return. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 1, 1 and 1 case respectively, each landing on the case that names its defect. Against the FIRST DRAFT of this suite, mutations (2), (3) and (4) reddened ZERO of ten -- the draft was discarded rather than frozen, because its harness had no crash point between applying the effect and recording the ack, the one window where dedup is the sole protection."
+      }
     }
   ]
 }
