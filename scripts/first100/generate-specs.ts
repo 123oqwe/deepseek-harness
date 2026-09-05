@@ -335,7 +335,9 @@ export interface CommandFreezeEntry {
   coveredStages?: { epic: string; stage: 'C' | 'P' | 'U' | 'F' }[]
   supplements?: { epic: string; stage: 'C' | 'P' | 'U' | 'F' }
   supplementSeq?: number
-  sensitivityProof?: { mutationDescription: string; failureSummary: string }
+  sensitivityProof?: { mutationDescription: string; failureSummary: string } | null
+  frozenAtUtc?: string
+  supersededBy?: string
 }
 
 export interface SharedStageCoverageCheck {
@@ -459,10 +461,63 @@ export function checkSupplementalEntry(entry: CommandFreezeEntry, allEntries: Co
     e => e !== entry && e.epic === entry.epic && e.stage === entry.stage && e.supplementSeq === entry.supplementSeq,
   )
   const incompleteSensitivityProof =
-    entry.sensitivityProof !== undefined &&
+    entry.sensitivityProof !== undefined && entry.sensitivityProof !== null &&
     (entry.sensitivityProof.mutationDescription.trim().length === 0 || entry.sensitivityProof.failureSummary.trim().length === 0)
   const valid = !mismatchedTarget && !missingSeq && !noPrimaryEntry && !duplicateSeq && !incompleteSensitivityProof
   return { valid, mismatchedTarget, missingSeq, noPrimaryEntry, duplicateSeq, incompleteSensitivityProof }
+}
+
+/**
+ * The instant the sensitivity rule took effect. An entry frozen at or after
+ * this point must carry a real {@link CommandFreezeEntry.sensitivityProof};
+ * one frozen before it may record `null`.
+ */
+export const SENSITIVITY_RULE_EFFECTIVE_UTC = '2026-09-05T00:00:00.000Z'
+
+/** One entry's sensitivity-proof verdict. */
+export interface SensitivityProofCheck {
+  readonly valid: boolean
+  /** Entries frozen under the rule that carry no proof, or an explicit `null`. */
+  readonly missingProof: string[]
+  /** Entries whose proof is present but has an empty field. */
+  readonly emptyProof: string[]
+}
+
+/**
+ * Check that every freeze entry frozen under the sensitivity rule carries a
+ * real mutation proof.
+ *
+ * `null` is permitted ONLY for entries frozen before
+ * {@link SENSITIVITY_RULE_EFFECTIVE_UTC}. That bound is what makes the rule a
+ * gate rather than a formality: an entry frozen afterwards cannot opt out by
+ * writing `null` and a reason, because the exemption is decided by its own
+ * `frozenAtUtc` and not by anything its author can assert. Without the bound,
+ * skipping a mutation proof would cost one extra line.
+ *
+ * An entry with no `frozenAtUtc` at all is treated as under the rule — a
+ * missing timestamp must not become the cheapest way out.
+ * @param entries - every freeze entry, superseded ones included.
+ * @returns the verdict, naming each offending entry.
+ */
+export function checkSensitivityProofs(entries: readonly CommandFreezeEntry[]): SensitivityProofCheck {
+  const missingProof: string[] = []
+  const emptyProof: string[] = []
+  for (const entry of entries) {
+    // A superseded entry can never green a cell, so it is history rather than
+    // evidence; demanding a proof of it would be retroactive.
+    if (entry.supersededBy !== undefined) continue
+    const label = `${entry.epic}.${entry.stage}${entry.frozenAtUtc === undefined ? '' : ` (${entry.frozenAtUtc})`}`
+    const predatesRule = entry.frozenAtUtc !== undefined && entry.frozenAtUtc < SENSITIVITY_RULE_EFFECTIVE_UTC
+    if (entry.sensitivityProof === undefined || entry.sensitivityProof === null) {
+      if (!predatesRule) missingProof.push(label)
+      continue
+    }
+    if (entry.sensitivityProof.mutationDescription.trim().length === 0
+      || entry.sensitivityProof.failureSummary.trim().length === 0) {
+      emptyProof.push(label)
+    }
+  }
+  return { valid: missingProof.length === 0 && emptyProof.length === 0, missingProof, emptyProof }
 }
 
 function readRegistry(root: string): Registry {
@@ -1867,6 +1922,21 @@ export function renderArtifacts(reg: Registry, registryBytes: string, adj: Adjud
   // was never declared records a deviation from nothing. Enforced here rather
   // than at either caller because generate and verify both route through this
   // function, and a check only one of them runs is the gap this closes.
+  // BLOCKED-081's lesson applied before it recurs: a check that only exists in
+  // a schema is a declaration, not an execution. checkDeliverablePathPatches
+  // computed a full verdict that nothing consumed until it was wired here.
+  const freezeEntries = (JSON.parse(readFileSync(join(repoRoot, 'spec/first100/exec/command-freeze.json'), 'utf8')) as {
+    entries?: CommandFreezeEntry[]
+  }).entries ?? []
+  const sensitivity = checkSensitivityProofs(freezeEntries)
+  if (!sensitivity.valid) {
+    const detail = [
+      ...sensitivity.missingProof.map(k => `no sensitivityProof (frozen under the rule): ${k}`),
+      ...sensitivity.emptyProof.map(k => `sensitivityProof has an empty field: ${k}`),
+    ]
+    throw new Error(`command-freeze: ${String(detail.length)} entry/entries without a usable mutation proof\n  ${detail.join('\n  ')}`)
+  }
+
   const patches = checkDeliverablePathPatches(reg, adj)
   if (!patches.valid) {
     const detail = [
