@@ -242,5 +242,23 @@
       "registeredAtUtc": "2026-09-02T02:10:00Z",
       "registeredBy": "ANSWERED-BY-DELEGATE(gq-92)"
     }
+  ],
+  "candidates": [
+    {
+      "testFullName": "runScenario waitForInboxMessage times out when the session log or matching insertion is absent",
+      "testFile": "packages/test-support/session-snapshot/tests/harness.spec.ts",
+      "status": "CANDIDATE — NOT REGISTERED",
+      "occurrences": [
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33962713536",
+          "candidateSha": "b154f4f086",
+          "observedAtUtc": "2026-09-06T05:30:00.000Z",
+          "outcome": "failed"
+        }
+      ],
+      "whyNotRegistered": "One occurrence. The program's own rule is that a single failure never registers a flake, and both existing entries carry many. Recorded here so the observation is not lost, and so a second occurrence is recognized as a second rather than a first.",
+      "evidenceItAlreadyHas": "Unusually strong for a first sighting, and worth stating because it is the pattern that settled the webworker-packer case: the commit it failed on, b154f4f086, changed ONLY spec/first100/exec/BLOCKED-QUEUE.md and ledger.json -- documentation and bookkeeping, no code that could reach a session-snapshot harness. It also passes 3 of 3 locally. A docs-only commit failing a test is evidence of instability rather than of a regression, since nothing in that commit could have caused it.",
+      "whatWouldSettleIt": "A second occurrence on any run. If it instead stays green across the next several runs, this candidate should be dropped rather than left standing -- a candidates list that only ever grows becomes a list of things nobody will ever conclude anything about."
+    }
   ]
 }
