@@ -245,6 +245,18 @@ export type RawSessionLogLine =
  */
 export interface CorruptedLogEvidence {
   readonly lineNumber: number
+  /**
+   * The offending row's text. **This type promises no length bound**, and
+   * `readSessionLogWithRepair` applies none — a caller-supplied row is carried
+   * through whole ([BLOCKED-075](../../../../spec/first100/exec/BLOCKED-QUEUE.md)).
+   *
+   * `@deepseek-ai/dsh-session-persistence-jsonl` declares a type of the same
+   * name and the same shape whose `raw` IS documented as bounded. The two are
+   * kept aligned by comment rather than by import, deliberately, so the
+   * packages stay independent — the cost of that choice is that their
+   * obligations can diverge without the compiler noticing, and here they
+   * already have.
+   */
   readonly raw: string
   readonly parseError: string
 }

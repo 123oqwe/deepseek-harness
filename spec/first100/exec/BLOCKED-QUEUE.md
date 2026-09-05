@@ -861,6 +861,10 @@ So the epoch assertions are sound, and the coupling is real, and there is still 
 
 **Not patched, deliberately.** P4-05's Contract freeze is committed and its expectations are on record. Adding a case now, having seen which mutation survived, would be re-freezing against a known result — the same objection that ruled out writing P0-08.U's freeze after watching it pass. The gap is recorded here for whoever owns the epoch-advancement property; the natural home is P4-07, which owns the real lease store.
 
+**A second instance of reachability changing a defect's severity (2026-09-05).** `sdk-client`'s dangling export ([BLOCKED-046](#blocked-046)) was harmless until something depended on the package. The SDK client's `initialize` is the same shape from the other direction: it rebuilt its result from `serverInfo` alone, discarding every other field the server sent. **Before negotiation existed that was waste; the moment `InitializeResult` began carrying a negotiated version and capability set, the identical unchanged code became a violation of P8-01 acceptance[0]** — a server's agreement discarded, the client proceeding as though nothing had been agreed, which is precisely the silent field loss the clause forbids.
+
+**So a new contract can convert an existing, unmodified discard into a breach.** Neither the introduction shape nor the coincidence shape covers this: nothing about that code changed, and the new contract did not *cause* the discard — it made the discard mean something. Worth checking when any contract widens: not only "what must the new code do", but "what does existing code now silently drop that has become load-bearing".
+
 **The general shape, worth more than this instance.** Mutation testing is normally used to confirm a suite catches what it should. Here it was used on a *prediction about coverage* and returned "no" — which is more informative than a confirmation would have been, because a confirmation would have left the belief that the property was covered. **A mutation that fails to redden anything is evidence about the suite, not a failed experiment.**
 
 ### BLOCKED-078 — the greening path reads the report, and one class of CI failure is invisible to the report; the log fix is CALIBRATED, not verified (Supervisor + delegate, 2026-09-05)
@@ -903,6 +907,18 @@ What makes the absence acceptable rather than a silent gap is structural and alr
 
 1. I first reported the recursion defect in `canonicalizeArguments` as this blocker's cause. It was a **real** defect — overflow at depth 20000, fixed and proven byte-equivalent over 4014 inputs — but **fixing it did not clear the symptom**. Two true facts adjacent to each other are not a causal link. This is [BLOCKED-072](#blocked-072)'s hardest variant: not an unevaluated claim, but a correctly evaluated one **attached to a symptom it does not produce**. Had the iterative rewrite happened to clear the timeout for some unrelated reason, the false cause would have been frozen into the record as "fixed".
 2. I then reported that "the first call never returns." **Wrong** — it returns by throwing. That claim came from `console.error` printing nothing, and `console.error` is not captured in that worker context. **A silent channel was read as a silent subject** — the instrument again, not the thing.
+
+**Widened 2026-09-05 — the bound is documented in one package, absent in another, and wrong in the third place.** Tracing this defect across the two structurally-identical `CorruptedLogEvidence` declarations ([BLOCKED-083](#blocked-083)) yields **three different contracts for the same field**:
+
+| Where | What `raw` promises |
+|---|---|
+| `session-persistence-jsonl`'s type | documented as truncated to `CORRUPTION_RAW_LIMIT` |
+| `session-lifecycle`'s type | **no bound stated** |
+| `readSessionLogWithRepair`'s behaviour | **no bound applied** — a caller-supplied row passes through whole |
+
+And the promise that *is* documented does not hold either: the truncation cuts UTF-16 code units, so 512 units of CJK is 1536 bytes. **No caller can learn from the type how long the `raw` it received may be** — one side promises nothing, the other promises something its implementation does not deliver.
+
+**Not merged, deliberately.** Unifying the two types would revoke a deliberate independence between packages, and that choice may be sound on its own terms. What was missing is that the choice recorded only its benefit. `format.ts`'s comment states the two stay "independent" and says nothing about the cost — that consistency now rests on diligence, in a dimension the compiler cannot check. **Both declarations now name the other and state where their obligations differ**, so a reader arriving at either side learns the other exists. That does not fix the divergence; it makes it visible, which is what was actually absent.
 
 **Owner and unblock signal.** Owner is P2-03's remaining Usage work. **Unblock signal: `ptc.spec.ts`'s deep-arguments case passes with the manifest wiring in place.** No assertion may be written that routes around this — an assertion that passes because the wiring is absent certifies nothing.
 

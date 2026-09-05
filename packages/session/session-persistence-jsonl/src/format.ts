@@ -359,6 +359,12 @@ interface SessionLogScan {
  * The exact failure that ended the recoverable prefix. Mirrors
  * `@deepseek-ai/dsh-session-lifecycle`'s type of the same name by structure
  * rather than by import, so the two packages stay independent.
+ *
+ * The structural mirror does NOT extend to the obligations: that type promises
+ * no bound on `raw` and its reader applies none, while this one does. The
+ * independence is deliberate; the divergence it permits is not visible to the
+ * compiler, so it is stated here instead
+ * ([BLOCKED-075](../../../../spec/first100/exec/BLOCKED-QUEUE.md)).
  */
 export interface CorruptedLogEvidence {
   /** 1-based index of the offending row among event rows, header excluded. */

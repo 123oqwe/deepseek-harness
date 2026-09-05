@@ -1192,6 +1192,68 @@
         }
       ],
       "note": "acceptance[2]: 'real-model results are scored separately from base invariants; a model failure cannot mask a security bypass.' This is a SEPARATION, not a threshold, so it is asserted in both directions. FORWARD: a lane at a perfect 100% task-success rate still reports its breach, and invariantsHeld reads only the invariant side, so the bypass decides the verdict while the model score cannot dilute it -- folded into one number this lane would report as ~95% passing and the bypass would vanish after the decimal point. INVERSE, without which the forward case could pass in a framework that never reports invariants as holding: a lane failing EVERY task with no breach keeps its invariants intact. The security-guard pair proves the lane's clean invariant record is a decision rather than a dead path: an uncapability-backed write is refused, and a capability-backed one IS admitted. The U-stage pair adds aggregation: one breached lane fails the whole run, while that same clean lane alone holds."
+    },
+    {
+      "epic": "P4-05",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: an edge absent from the map is refused"
+        },
+        {
+          "stage": "C",
+          "title": "contract: a proposal whose source disagrees with the current state is refused, even when the edge itself is legal"
+        },
+        {
+          "stage": "C",
+          "title": "contract: a strictly older epoch is refused whatever it proposes — the stale-worker case"
+        },
+        {
+          "stage": "C",
+          "title": "control: the same proposal at the current epoch is admitted, so staleness is decided by the epoch and not by the edge"
+        },
+        {
+          "stage": "C",
+          "title": "contract: a stale worker is refused for staleness before legality, so it never learns whether its edge would have been legal"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a refusal is RETURNED, not thrown, so a supervisor can record a turned-away worker as an ordinary outcome"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a refused transition leaves the lifecycle untouched, so a rejected proposal cannot half-apply"
+        }
+      ],
+      "note": "acceptance[0]: 'illegal transitions and stale worker updates are refused.' Both halves are covered and they are refused by different mechanisms, so each is asserted separately. ILLEGAL: an edge absent from the map, and — the subtler case — a proposal whose source state disagrees with the lifecycle's current state even though the edge itself is legal, which is what a worker holding an out-of-date view would send. STALE: a strictly older epoch is refused whatever it proposes. POSITIVE CONTROL, required because both are negative space: the same proposal at the current epoch is admitted, so staleness is decided by the epoch rather than by the edge; without it a decider that refused everything would satisfy every case above. ORDERING is asserted, not left incidental: a stale worker proposing an ILLEGAL edge is refused for staleness, not illegality, so the refusal reason never leaks the shape of a lifecycle the worker no longer owns. The U-stage pair adds what only exists once a caller uses it — the refusal is returned rather than thrown, since a turned-away stale worker is the system working and throwing would make the normal case indistinguishable from a fault, and a refused transition leaves the lifecycle untouched so a rejected proposal cannot half-apply."
+    },
+    {
+      "epic": "P4-05",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: every waiting state, plus queued and paused, is non-consuming"
+        },
+        {
+          "stage": "C",
+          "title": "contract: running and starting DO consume, so the classification is a real partition rather than a list of everything"
+        },
+        {
+          "stage": "C",
+          "title": "contract: cancelling consumes, because a draining run still holds its slot"
+        },
+        {
+          "stage": "U",
+          "title": "contract: every waiting state, plus queued and paused, holds no slot"
+        },
+        {
+          "stage": "U",
+          "title": "contract: moving into a waiting state releases the slot in the SAME step that changes the state"
+        }
+      ],
+      "note": "acceptance[1]: 'waiting states consume no LLM or worker resource.' The classification is asserted as a real PARTITION rather than as a list: running and starting DO consume, so a classifier that returned true for everything would fail. `cancelling` consumes deliberately and is asserted so — a draining run still holds its slot, and treating it as idle would let a supervisor reclaim resources still in use, which is the opposite failure from the one this clause names. The U-stage cases carry it into dispatch, where the load-bearing property is that occupancy is DERIVED from the lifecycle rather than tracked in a counter beside it: one case asserts the slot is released in the SAME step that changes the state, so there is no window in which the state says waiting while a separate tally still says occupied. A counter would make that window possible and invisible."
     }
   ]
 }

@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T05:16:54.648Z",
-  "inputDigest": "5572dc8c124d83517c5634e1429acf5126ef0c6e14ee6e4edc9a16a864eb592e",
+  "lastUpdatedUtc": "2026-09-05T05:28:41.103Z",
+  "inputDigest": "52c744154cd6731236dc9fe1a77d77026f252d3a6d7ddf5b0aa2bfba1e753a09",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3540,14 +3540,30 @@
           "status": "NOT_RUN"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8d8dec5ad1c06bc711a033891c4fe33cab601faa",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33946484946",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-8d8d/first100-evidence-8d8dec5ad1c06bc711a033891c4fe33cab601faa/vitest-report.json",
+          "observationSha256": "b030719b376bb7e70a0d0ebcac9a5b22e3795ebb3a2c03ecb8026e9086dc52d3",
+          "expectCasesMatched": [
+            "contract: an admitted transition returns the next lifecycle carrying the proposal epoch",
+            "contract: a refusal is RETURNED, not thrown, so a supervisor can record a turned-away worker as an ordinary outcome",
+            "contract: the refusal reason reaches the caller unchanged, so dispatch adds no interpretation of its own",
+            "contract: a refused transition leaves the lifecycle untouched, so a rejected proposal cannot half-apply",
+            "control: the same proposal at the current epoch IS admitted, so the refusal above measures the epoch",
+            "contract: a run that is running or starting holds a dispatch slot",
+            "contract: every waiting state, plus queued and paused, holds no slot",
+            "contract: a cancelling run still holds its slot, because a draining run has not released it",
+            "contract: moving into a waiting state releases the slot in the SAME step that changes the state"
+          ],
+          "capturedAtUtc": "2026-09-05T05:28:41.102Z"
         },
         "F": {
           "status": "NOT_RUN"
         }
       },
       "supplements": {},
-      "candidateSha": "684d0aad2a50cf2e8bc0cb9f611172cd971114f7",
+      "candidateSha": "8d8dec5ad1c06bc711a033891c4fe33cab601faa",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
