@@ -1,0 +1,123 @@
+{
+  "schema": {
+    "name": "first100-clause-subject-audit",
+    "version": "1.0"
+  },
+  "purpose": "One line per must[] clause of every ACCEPTED epic, naming the artifact that makes it true. Created by the retroactive audit BLOCKED-100 required, and doubling as the standing artifact BLOCKED-101's third pre-flight question produces: a clause with no subject becomes a visible empty row rather than a question nobody asked.",
+  "method": {
+    "question": "Does this clause's subject exist in code? NOT whether it is correct or sufficiently tested -- those were signed off already.",
+    "readNotCount": "A keyword hit is not evidence. P4-09's must[2] would have passed a careless grep: `detach` had 5 hits, in the right package, with the right word -- and every one was `detachInputSignal`, an event listener. Each row below was settled by reading the hit, and several probes that returned ZERO turned out to be wrong probes rather than missing subjects (P0-01 must[3], P0-07 must[0], P0-08 must[1], P1-07 must[1], P2-01 must[2]).",
+    "scope": "72 must[] clauses across 19 ACCEPTED epics. All 19 already have a non-empty acceptance-coverage entry per acceptance clause, verified mechanically."
+  },
+  "findings": [
+    {
+      "epic": "P4-07",
+      "clause": "must[3]",
+      "text": "外部 idempotency ledger 拒绝 stale epoch",
+      "verdict": "NO SUBJECT",
+      "evidence": "`idempotencyLedger` and `idempotency ledger` occur 0 times anywhere in packages/. What P4-07 delivers is `checkFencing`, which refuses a token whose epoch is not the item's current one -- a LEASE-level authority check. An idempotency ledger answers a different question: 'have I already applied this effect?'. The nearest thing in the repository is P4-06's message-bus dedup, which belongs to another epic and is not consulted here.",
+      "whyItWasMissed": "must[0], must[1] and must[2] are all lease/heartbeat/fencing and were built together; must[3] names a component OUTSIDE that cluster. No declared file pointed at it, so neither pre-flight question reached it -- exactly BLOCKED-101's blind spot, in an epic already ACCEPTED.",
+      "status": "P4-07 is ACCEPTED. Reported for a maintainer decision; not silently reopened."
+    },
+    {
+      "epic": "P8-01",
+      "clause": "must[4]",
+      "text": "将协议 schema 生成物纳入 release evidence 和 golden compatibility fixtures",
+      "verdict": "NO SUBJECT",
+      "evidence": "Two halves, both absent. RELEASE EVIDENCE: `schema` occurs 0 times in scripts/release/collect-evidence.mjs, so no protocol schema artifact enters an evidence package. GOLDEN FIXTURES: no fixture pins a fingerprint VALUE. The closest assertions are `computeSchemaFingerprint(surface) === computeSchemaFingerprint(surface)` and a /^[0-9a-f]{64}$/ shape check -- the first is a tautology that cannot fail, and neither can detect drift, which is the whole purpose of a golden fixture.",
+      "secondaryFinding": "The self-equality assertion is BLOCKED-098's shape: it executes, reports as covered, and can never distinguish any two implementations.",
+      "status": "P8-01 is ACCEPTED. Reported for a maintainer decision."
+    }
+  ],
+  "clearedEpics": [
+    {
+      "epic": "P0-01",
+      "clauses": 4,
+      "note": "must[3] (exclude nondeterministic data) holds BY CONSTRUCTION -- captureFields returns exactly gitSha, toolchain, workspacePackages, defaultBundleRowIds, protocolSchemaHashes, pnpmLockHash, and .dsh/baseline.json contains no timestamp or build path. A keyword probe scored 0; reading the captured field set settled it."
+    },
+    {
+      "epic": "P0-02",
+      "clauses": 6,
+      "note": "All six kernel members present in createTrustKernel; pinTrustKernel called in profile-boot before context creation; the plugin/never-a-plugin split is in docs/architecture/trust-kernel-boundary.md."
+    },
+    {
+      "epic": "P0-03",
+      "clauses": 3,
+      "note": "architecture.layers.json declares families/allowlist; check-capability-seams.mjs carries the deep-import ban and the four-artifact requirement."
+    },
+    {
+      "epic": "P0-04",
+      "clauses": 4,
+      "note": "check-layer-deps.mjs covers the layer order, singleton bypass, path alias and dynamic require, and the ADR requirement for legal cycles."
+    },
+    {
+      "epic": "P0-05",
+      "clauses": 4,
+      "note": "off|shadow|enforce is a closed union; all four gate metadata fields exist; dump-config renders the gate source chain."
+    },
+    {
+      "epic": "P0-06",
+      "clauses": 4,
+      "note": "must[3] verified by reading: session replay refuses an unknown event type at coordinator.ts:1250 unless marked ignorable. The declared file repair.ts scored 0 -- the subject is in the persistence coordinator, not the declared path."
+    },
+    {
+      "epic": "P0-07",
+      "clauses": 3,
+      "note": "must[0] verified by reading: the test count is recorded as total/passed/failed/skipped in a counts sub-object; a `testsRun` probe used the wrong name."
+    },
+    {
+      "epic": "P0-08",
+      "clauses": 3,
+      "note": "must[1] verified by reading: the six metrics exist as STANDARD_METRICS in snake_case (task_success, policy_bypass, router_regret, ...); a camelCase probe scored 0 on all six."
+    },
+    {
+      "epic": "P1-01",
+      "clauses": 4,
+      "note": "manifestVersion 2 with every declared field; side-effect class, auth audience, destinations and data classification present; legacy-untrusted handled."
+    },
+    {
+      "epic": "P1-07",
+      "clauses": 3,
+      "note": "must[1] verified by reading authorizeProjectLoad: only trusted-execute admits a project plugin, hook, MCP server, executable skill or patch override. must[2]: requestTrustUpgrade is gated on isHostUserPrincipal and produces an audit record."
+    },
+    {
+      "epic": "P1-08",
+      "clauses": 4,
+      "note": "runtime API and schema ranges, required/optional capabilities, provider constraints, whole-graph solve, and unsat core all present in plugin-compat."
+    },
+    {
+      "epic": "P1-09",
+      "clauses": 4,
+      "note": "PluginIdentity, namespace, capability id and ownership token all present; reserved namespaces, explicit replace, and token-matched unload all have subjects."
+    },
+    {
+      "epic": "P2-01",
+      "clauses": 3,
+      "note": "must[2] is a NEGATIVE clause with a real mechanism: every principal constructor accepts only branded PrincipalId/TenantId, never raw string or ContentBlock. types.ts additionally DISCLOSES the residual -- a caller can cast or build a literal, and closing that needs a runtime-boundary check named as a later stage's job. Subject present, residual disclosed in-source."
+    },
+    {
+      "epic": "P4-01",
+      "clauses": 3,
+      "note": "All ten run states present as literals; the event log references all six entity kinds; run ownership is service-held."
+    },
+    {
+      "epic": "P4-08",
+      "clauses": 5,
+      "note": "Journal entry carries every enumerated fact; skip/reconcile/rerun decisions exist; no-closure-serialization is structural (body is data, never code); observer.ts makes the host stream journalable."
+    },
+    {
+      "epic": "P6-02",
+      "clauses": 3,
+      "note": "MemoryRecord carries all enumerated fields; recordConflict returns both records with supersedes/disputes; admitToIndex is default-deny for sensitive content."
+    },
+    {
+      "epic": "P6-07",
+      "clauses": 3,
+      "note": "Tenant/workspace/status/time filters, soft delete, legal hold, hard erase and archive are separate, and deletion propagation exists."
+    }
+  ],
+  "notAudited": {
+    "acceptanceClauses": "Every acceptance clause of all 19 has a non-empty acceptance-coverage entry citing frozen, verified cases; completeness was checked mechanically rather than re-read.",
+    "correctness": "Out of scope by the delegate's framing: this audit asks only whether a subject exists, never whether it is right or sufficiently tested."
+  }
+}
