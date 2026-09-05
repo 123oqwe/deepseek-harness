@@ -52,14 +52,14 @@ Two decisions depend on the order of their checks, not only on the checks themse
 
 ## Model Experience
 
-No model-visible surface. The package exports pure decision functions and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
+No model-visible surface. The package exports decision functions, a dispatch loop, and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
 
 ## Known Limitations and Deferred Work
 
 - **`commitWithOutbox` guarantees one batch, not one transaction.** must[0] asks for a single transaction. A crash inside a batch can leave the domain event durable and drop the outbox record, because recovery truncates to the last complete record rather than to the batch boundary. Ordering the records first would make the survivor the recoverable direction, but the batch is written in `seq` order and the log requires contiguity. Closing this needs backend atomicity or a change to seq assignment; neither belongs to this package.
 - **The dispatcher is a loop, not a service.** `dispatchOnce` runs one pass and returns what it did; scheduling passes, retry backoff, and dead-letter alerting belong to a caller that does not exist yet.
 - **No Cordis plugin or service registration yet.** The decisions are bound to a durable sink through a structural interface, not mounted as a capability seam.
-- **The dispatcher loop lives in the test harness.** `tests/crash.e2e.spec.ts` drives the crash points through a local durable-state simulation rather than a real process kill. It proves the decision sequence survives each crash point; it does not prove a real process does, which the Fault stage owns.
+- **The crash points are simulated, not real process kills.** `tests/crash.e2e.spec.ts` drives them through a local durable-state harness. It proves the decision sequence survives each crash point; it does not prove a real process does, which the Fault stage owns.
 - **No clock, no I/O.** Every decision takes `nowMs` as a parameter. A caller that passes an inconsistent clock gets inconsistent dead-lettering, and nothing here detects that.
 
 ### Dev Note
@@ -69,6 +69,6 @@ No model-visible surface. The package exports pure decision functions and types;
 
 This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
 
-`MessageEpoch` is currently a bare branded number with no owner assigning it. Which component advances a producer's epoch, and whether it is durable across a restart or derived from something already durable, is a Provider-stage question — the Contract stage only requires that `(id, epoch)` be unique.
+`MessageEpoch` is currently a bare branded number with no owner assigning it. Which component advances a producer's epoch, and whether it is durable across a restart or derived from something already durable, remains undecided — the decisions here only require that `(id, epoch)` be unique.
 
 </details>
