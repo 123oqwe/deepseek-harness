@@ -2622,6 +2622,24 @@ Every scenario that DID run gained that event when P2-03 added it. These three s
 
 **What actually repairs it:** a refresh on a host where `pwsh` exists, so the three scenarios run and their expectations are OBSERVED like the other 116. Installing PowerShell on this machine would do it; that is the user's call, not mine.
 
+### What the CI refresh actually revealed, 2026-09-07
+
+A `workflow_dispatch`-free workflow (triggered by a branch under `refresh-snapshots/`) refreshed the two scenarios where `pwsh` exists, wrote nothing to the repository, and emitted the result as an artifact. The admission criterion was that the diff must be exactly the `action/manifest-appended` delta. **It was not**, and stopping there was correct — but the reason was not the one anyone predicted.
+
+```
+default composition (text-turn)   26 tools
+refreshed pwsh-tool-turn          22 tools
+absent from pwsh:  bash, create_goal, get_goal, update_goal, skill
+added:             pwsh
+committed fixture:  4 tools — pwsh, job_kill, job_list, job_output
+```
+
+`pwsh-tool-turn/cordis.snapshot.yml` disables `tool-bash`, enables `tool-pwsh`, and disables the goal and skill rows. **The refreshed output corresponds to that patch line by line. The committed fixture does not** — it lacks fs, web, subagent and todo tools the patch never disabled.
+
+**So the stale artifact is the one in the repository.** These fixtures record a base composition from before those tools were default, and no host has been able to observe them since: macOS skips them for want of `pwsh`, and CI never ran snapshots until BLOCKED-109 widened the gate. **Two weeks of composition drift accumulated in a place nothing could see.**
+
+**A correction worth keeping, because the reasoning error is reusable.** The first reading of this evidence was that CI had refreshed against the wrong composition, supported by noting that a local refresh left `ptc-turn` correctly narrow. That comparison does not hold: `ptc-turn` RAN locally and the pwsh scenarios did not. There is no local evidence of what these two would produce, because this host cannot produce any. **Comparing a scenario that ran against two that never have is the same shape as every other finding in this queue — reasoning from the adjacent case.**
+
 **The durable fix is separate and larger:** `refresh` should report what it SKIPPED, and a refresh that skipped anything should say so loudly rather than reporting only what it rewrote. Until then, every session-log change carries this trap, and it will be sprung by whoever next refreshes on a machine without pwsh — which is every macOS host by default.
 
 ### BLOCKED-111 — ~56 type-aware lint errors predate this program, and were never in any count given to the delegate
