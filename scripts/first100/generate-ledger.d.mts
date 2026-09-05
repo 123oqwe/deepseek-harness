@@ -47,6 +47,12 @@ export interface FlakeRegistryCheckResult {
 
 export function checkFailureSetAgainstFlakeRegistry(failedFullNames: Set<string>, registry: unknown): FlakeRegistryCheckResult
 
+/** Frozen case strings that name more than one passing case (BLOCKED-104). */
+export function findAmbiguousCaseMatches(
+  expectCases: readonly string[],
+  matchCounts: ReadonlyMap<string, number>,
+): { title: string, count: number }[]
+
 export interface DelegateSignoffEntry {
   epic: string
   rowDigestSha256: string

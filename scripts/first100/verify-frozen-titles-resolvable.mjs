@@ -74,17 +74,29 @@ function runAndCollectTitles(argvList) {
     }
   }
   const titles = new Set()
+  // How many cases each name can resolve to. A bare `title` shared by several
+  // cases counts once per case; a `fullName` carries its describe chain and so
+  // counts once. A frozen string whose count exceeds 1 is satisfiable by a case
+  // other than the one it means (BLOCKED-104).
+  const matchCounts = new Map()
+  const countMatch = (name) => matchCounts.set(name, (matchCounts.get(name) ?? 0) + 1)
   for (const file of report.testResults ?? []) {
     for (const a of file.assertionResults ?? []) {
-      if (typeof a.title === 'string') titles.add(a.title)
+      if (typeof a.title === 'string') {
+        titles.add(a.title)
+        countMatch(a.title)
+      }
       // vitest's real `--reporter=json` shape: `fullName` is
       // `ancestorTitles.join(' ') + ' ' + title` (space-separated, no
       // delimiter) -- generate-ledger.mjs's parseVitestJsonReport matches on
       // it directly rather than reconstructing it; this gate does the same.
-      if (typeof a.fullName === 'string') titles.add(a.fullName)
+      if (typeof a.fullName === 'string') {
+        titles.add(a.fullName)
+        if (a.fullName !== a.title) countMatch(a.fullName)
+      }
     }
   }
-  return { ok: true, titles }
+  return { ok: true, titles, matchCounts }
 }
 
 function main() {
@@ -109,6 +121,7 @@ function main() {
   const entries = {}
   let totalTitles = 0
   let totalUnresolved = 0
+  let totalAmbiguous = 0
   let totalRenameCovered = 0
   let entriesWithProblems = 0
 
@@ -124,15 +137,23 @@ function main() {
 
     if (!run.ok) {
       entriesWithProblems += 1
-      entries[key] = { argv: e.argv, runError: run.error, unresolved: [], renameCovered: [] }
+      entries[key] = { argv: e.argv, runError: run.error, unresolved: [], ambiguous: [], renameCovered: [] }
       continue
     }
 
     const unresolved = []
+    const ambiguous = []
     const renameCovered = []
     for (const title of e.expectCases) {
       totalTitles += 1
-      if (run.titles.has(title)) continue
+      if (run.titles.has(title)) {
+        const count = run.matchCounts.get(title) ?? 0
+        if (count > 1) {
+          totalAmbiguous += 1
+          ambiguous.push({ title, count })
+        }
+        continue
+      }
       const renameEntry = renameIndex.get(`${e.epic}|${e.stage}|${title}`)
       if (renameEntry) {
         totalRenameCovered += 1
@@ -151,9 +172,9 @@ function main() {
       unresolved.push({ title, reason: 'not found in the frozen command\'s real vitest --reporter=json output and no registered rename' })
     }
 
-    if (unresolved.length > 0) {
+    if (unresolved.length > 0 || ambiguous.length > 0) {
       entriesWithProblems += 1
-      entries[key] = { argv: e.argv, unresolved, renameCovered }
+      entries[key] = { argv: e.argv, unresolved, ambiguous, renameCovered }
     }
   }
 
@@ -164,6 +185,7 @@ function main() {
       entriesWithProblems,
       totalTitles,
       totalUnresolved,
+      totalAmbiguous,
       totalRenameCovered,
     },
     entries,
@@ -174,13 +196,18 @@ function main() {
 
   console.log(
     `command-freeze.json: ${freeze.entries.length} entries, ${runCache.size} unique command(s) run, ` +
-      `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, ${totalUnresolved} UNRESOLVED.`,
+      `${totalTitles} frozen titles, ${totalRenameCovered} covered by a registered rename, ${totalUnresolved} UNRESOLVED, ${totalAmbiguous} AMBIGUOUS.`,
   )
   if (entriesWithProblems > 0) {
     console.error('UNRESOLVED (fail-closed):')
     for (const [key, e] of Object.entries(entries)) {
       if (e.runError) console.error(`  ${key}: ${e.runError}`)
       for (const u of e.unresolved) console.error(`  ${key}: ${JSON.stringify(u.title)} -- ${u.reason}`)
+      for (const a of e.ambiguous ?? []) {
+        console.error(
+          `  ${key}: ${JSON.stringify(a.title)} -- names ${a.count} passing cases, so any ONE of them satisfies it and this epic's own case could be deleted without reddening; use the case's fullName (BLOCKED-104)`,
+        )
+      }
     }
   }
 

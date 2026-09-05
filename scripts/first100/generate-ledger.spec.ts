@@ -31,6 +31,7 @@ import {
   checkCoverageClosure,
   checkDelegateSignoff,
   checkFailureSetAgainstFlakeRegistry,
+  findAmbiguousCaseMatches,
   checkObservationDistinctness,
   rowDigest,
 } from './generate-ledger.mjs'
@@ -357,5 +358,35 @@ describe('checkFailureSetAgainstFlakeRegistry (BLOCKED-007 item 3, 2026-09-01)',
   it('never exempts the test itself -- absorption only changes greening eligibility, the failure still shows up in absorbedFlakes', () => {
     const result = checkFailureSetAgainstFlakeRegistry(new Set(['suite known flake test']), registry)
     expect(result.absorbedFlakes).toContain('suite known flake test')
+  })
+})
+
+describe('findAmbiguousCaseMatches (BLOCKED-104, 2026-09-06)', () => {
+  it('accepts a frozen string that names exactly one passing case', () => {
+    const counts = new Map([['P5-11 Fault — matrix enumerates twelve boundaries', 1]])
+    expect(findAmbiguousCaseMatches(['P5-11 Fault — matrix enumerates twelve boundaries'], counts)).toStrictEqual([])
+  })
+
+  it('rejects a bare title six epics share, which any one of them would satisfy', () => {
+    const counts = new Map([['enumerates twelve boundaries', 6]])
+    expect(findAmbiguousCaseMatches(['enumerates twelve boundaries'], counts)).toStrictEqual([
+      { title: 'enumerates twelve boundaries', count: 6 },
+    ])
+  })
+
+  it('rejects a conformance title the fake provider alone would satisfy', () => {
+    const counts = new Map([['get() resolves the record previously created by propose()', 2]])
+    expect(findAmbiguousCaseMatches(['get() resolves the record previously created by propose()'], counts)).toStrictEqual([
+      { title: 'get() resolves the record previously created by propose()', count: 2 },
+    ])
+  })
+
+  it('reports only the ambiguous strings, leaving unique siblings out of the diagnostic', () => {
+    const counts = new Map([['shared', 3], ['unique', 1]])
+    expect(findAmbiguousCaseMatches(['unique', 'shared'], counts)).toStrictEqual([{ title: 'shared', count: 3 }])
+  })
+
+  it('does not report a string that matches nothing: a missing case is the earlier check\'s failure, not this one\'s', () => {
+    expect(findAmbiguousCaseMatches(['absent'], new Map())).toStrictEqual([])
   })
 })

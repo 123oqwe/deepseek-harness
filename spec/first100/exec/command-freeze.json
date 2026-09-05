@@ -1623,7 +1623,8 @@
         "treeSha": "6e7b79e66dcc8f7071058be2911905a17b7e13c2",
         "testsDiscovered": 19
       },
-      "note": "C-stage RED scaffold for P6-01 (native provider-neutral Memory Service Definition), attempt/P6-01-C @ 17ca16450f (post-corrective-round, closes 3 Reviewer-flagged gaps: acceptance[2] tightened from a gameable toMatchObject to an exact toStrictEqual shape check; must[3] access-context scoping now also tested on get()/export(), not just query(); the self-referential src/invariant.ts (no independent second source, matching AGENTS.md disqualified pattern) removed with the required README rationale sentence, matching the dsh-web precedent). 19/19 genuinely failed on real not-implemented/assertion-mismatch errors, zero module/syntax errors, independently re-verified by the Supervisor. Supersedes the pre-corrective-round entry committed at b987645544 (17 cases, wrong assertion strictness) -- nothing had graded a GREEN observation against that entry. expectExit=0 is the GREEN target per the P0-01.C precedent."
+      "note": "C-stage RED scaffold for P6-01 (native provider-neutral Memory Service Definition), attempt/P6-01-C @ 17ca16450f (post-corrective-round, closes 3 Reviewer-flagged gaps: acceptance[2] tightened from a gameable toMatchObject to an exact toStrictEqual shape check; must[3] access-context scoping now also tested on get()/export(), not just query(); the self-referential src/invariant.ts (no independent second source, matching AGENTS.md disqualified pattern) removed with the required README rationale sentence, matching the dsh-web precedent). 19/19 genuinely failed on real not-implemented/assertion-mismatch errors, zero module/syntax errors, independently re-verified by the Supervisor. Supersedes the pre-corrective-round entry committed at b987645544 (17 cases, wrong assertion strictness) -- nothing had graded a GREEN observation against that entry. expectExit=0 is the GREEN target per the P0-01.C precedent.",
+      "supersededBy": "2026-09-06T23:30:00.000Z"
     },
     {
       "epic": "P1-07",
@@ -6006,6 +6007,50 @@
         "failureSummary": "Reddens exactly 1 boundary each -- 14, 12 and 19 respectively, each the boundary written for it."
       },
       "supersedes": "2026-09-06T17:00:00.000Z"
+    },
+    {
+      "epic": "P6-01",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/conformance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "conformance: fake provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId",
+        "conformance: local reference provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId",
+        "conformance: fake provider (acceptance[0] + must[0]) query() resolves matching records honoring the caller-supplied context budget",
+        "conformance: local reference provider (acceptance[0] + must[0]) query() resolves matching records honoring the caller-supplied context budget",
+        "conformance: fake provider (acceptance[0] + must[0]) get() resolves the record previously created by propose()",
+        "conformance: local reference provider (acceptance[0] + must[0]) get() resolves the record previously created by propose()",
+        "conformance: fake provider (acceptance[0] + must[0]) revise() updates an existing record, reflected by a later get()",
+        "conformance: local reference provider (acceptance[0] + must[0]) revise() updates an existing record, reflected by a later get()",
+        "conformance: fake provider (acceptance[0] + must[0]) forget() removes a record so a later get() resolves undefined",
+        "conformance: local reference provider (acceptance[0] + must[0]) forget() removes a record so a later get() resolves undefined",
+        "conformance: fake provider (acceptance[0] + must[0]) export() resolves every record visible to the access context",
+        "conformance: local reference provider (acceptance[0] + must[0]) export() resolves every record visible to the access context",
+        "swapping the registered provider changes which provider serves the same runtime call",
+        "a provider object alone is inert — it takes effect only once registered on ctx.memory",
+        "revise() rejects an id that was never returned by propose()",
+        "query() rejects a request whose access context is missing any of the four required fields",
+        "get() rejects a request whose access context is missing any of the four required fields",
+        "export() rejects a request whose access context is missing any of the four required fields",
+        "docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry"
+      ],
+      "files": [
+        "packages/memory/memory/tests/conformance.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T23:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "6e7b79e66dcc8f7071058be2911905a17b7e13c2",
+        "testsDiscovered": 19
+      },
+      "note": "C-stage RED scaffold for P6-01 (native provider-neutral Memory Service Definition), attempt/P6-01-C @ 17ca16450f (post-corrective-round, closes 3 Reviewer-flagged gaps: acceptance[2] tightened from a gameable toMatchObject to an exact toStrictEqual shape check; must[3] access-context scoping now also tested on get()/export(), not just query(); the self-referential src/invariant.ts (no independent second source, matching AGENTS.md disqualified pattern) removed with the required README rationale sentence, matching the dsh-web precedent). 19/19 genuinely failed on real not-implemented/assertion-mismatch errors, zero module/syntax errors, independently re-verified by the Supervisor. Supersedes the pre-corrective-round entry committed at b987645544 (17 cases, wrong assertion strictness) -- nothing had graded a GREEN observation against that entry. expectExit=0 is the GREEN target per the P0-01.C precedent.\n\nSuperseded 2026-09-03T13:19:43.161Z: the first twelve entries were the SAME six bare titles listed twice, and `runConformance` runs the suite once per provider -- once over the local reference provider and once over a fake. Under generate-ledger.mjs's flat per-observation title set a bare title is satisfied by EITHER run, and a duplicate listing collapses to the same single match. So the local reference provider's entire pass could be deleted and all twelve references would still be met by the fake alone. For a conformance epic that is the worst place to lose discrimination: the suite exists to show several implementations satisfy one contract, and a bare title reduces that to 'at least one does', where the one may be the fake. acceptance[0] reads 'at least local reference provider and fake provider pass conformance', so freezing BOTH fullNames per verb is the clause's own granularity rather than an added requirement -- deleting either run now reddens. Replacement of frozen strings, so supersession rather than supplement (BLOCKED-103); no source, case, or observation changed and no signature reopens. Found by the delegate's full-corpus scan (BLOCKED-104).",
+      "supersedes": "2026-09-03T13:19:43.161Z"
     }
   ]
 }

@@ -236,26 +236,80 @@ function checkSharedObservationAllowed(used, observationSha256, selfLabel, froze
   }
 }
 
+/**
+ * Reject a frozen case string that names more than one passing case
+ * (BLOCKED-104).
+ *
+ * The existing check asks whether a frozen string matches AT LEAST one
+ * passing case. Nothing asked whether it matches EXACTLY one, and a bare
+ * `title` shared by several cases is satisfied by any of them: the epic's own
+ * case can be deleted and its cell stays green on another one's evidence.
+ * That is BLOCKED-018's "one proof greens several cells" reached through a
+ * second door -- 018 closed the door marked *same frozen command*, this closes
+ * the one marked *same case title*.
+ *
+ * The fix a caller applies is always the same: name the case by its
+ * `fullName`, whose describe chain carries the epic. Where a suite genuinely
+ * runs once per provider, freeze one `fullName` per run rather than choosing
+ * between them, or deleting either run leaves the cell green on the other.
+ * A frozen string matching ZERO cases is NOT reported here; that is the
+ * existing missing-case check's failure and it runs first, so a string that
+ * reaches this function already matched at least once.
+ * @param expectCases - the frozen case strings.
+ * @param matchCounts - passing-case counts per matchable name, from `parseVitestJsonReport`.
+ * @returns every frozen string naming more than one passing case, with its count.
+ */
+export function findAmbiguousCaseMatches(expectCases, matchCounts) {
+  return expectCases
+    .map(title => ({ title, count: matchCounts.get(title) ?? 0 }))
+    .filter(entry => entry.count > 1)
+}
+
+/**
+ * Fail a greening whose frozen strings are not uniquely resolvable
+ * (BLOCKED-104).
+ * @param expectCases - the frozen case strings.
+ * @param matchCounts - passing-case counts per matchable name.
+ * @param reportPath - the observation, for the diagnostic.
+ */
+function checkCaseMatchesAreUnique(expectCases, matchCounts, reportPath) {
+  const ambiguous = findAmbiguousCaseMatches(expectCases, matchCounts)
+  if (ambiguous.length === 0) return
+  console.error(
+    `BLOCKED: ${ambiguous.length} frozen case string(s) each name MORE THAN ONE passing case in ${reportPath} -- a shared bare title is satisfied by any same-named case, so deleting this epic's own case would leave the cell green on another's evidence (BLOCKED-104, the second door on BLOCKED-018). Name each case by its fullName:\n  ${ambiguous.map(a => `${a.count}x  ${a.title}`).join('\n  ')}`,
+  )
+  process.exit(1)
+}
+
 function parseVitestJsonReport(reportPath) {
   const raw = readFileSync(reportPath, 'utf8')
   const report = JSON.parse(raw)
   const titles = new Set()
+  // How many PASSING cases each frozen string can name. A bare `title` shared
+  // by several cases counts once per case, which is what `checkCaseMatchesAreUnique`
+  // rejects; a `fullName` carries its describe chain and so counts once.
+  const matchCounts = new Map()
+  const countMatch = (name) => matchCounts.set(name, (matchCounts.get(name) ?? 0) + 1)
   const failedFullNames = new Set()
   for (const file of report.testResults ?? []) {
     for (const assertion of file.assertionResults ?? []) {
       if (assertion.status === 'passed') {
         titles.add(assertion.title)
+        countMatch(assertion.title)
         // vitest's real `--reporter=json` shape: `fullName` is
         // `ancestorTitles.join(' ') + ' ' + title` (space-separated, no
         // delimiter) — match on it directly rather than reconstructing it.
-        if (typeof assertion.fullName === 'string') titles.add(assertion.fullName)
+        if (typeof assertion.fullName === 'string') {
+          titles.add(assertion.fullName)
+          if (assertion.fullName !== assertion.title) countMatch(assertion.fullName)
+        }
       } else if (assertion.status === 'failed' && typeof assertion.fullName === 'string') {
         failedFullNames.add(assertion.fullName)
       }
     }
   }
   const exit = report.success === true ? 0 : 1
-  return { raw, report, titles, failedFullNames, exit }
+  return { raw, report, titles, matchCounts, failedFullNames, exit }
 }
 
 /**
@@ -402,7 +456,7 @@ function cmdGreen() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, titles, failedFullNames, exit } = parseVitestJsonReport(reportPath)
+  const { raw, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -416,6 +470,7 @@ function cmdGreen() {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
   }
+  checkCaseMatchesAreUnique(frozen.expectCases, matchCounts, reportPath)
   let absorbedFlakes = []
   if (exit !== frozen.expectExit) {
     const flakeCheck = checkFailureSetAgainstFlakeRegistry(failedFullNames, existsSync(FLAKE_REGISTRY_PATH) ? loadJson(FLAKE_REGISTRY_PATH) : null)
@@ -500,7 +555,7 @@ function cmdGreenSupplement() {
     console.error(`report not found: ${reportPath}`)
     process.exit(1)
   }
-  const { raw, titles, failedFullNames, exit } = parseVitestJsonReport(reportPath)
+  const { raw, titles, matchCounts, failedFullNames, exit } = parseVitestJsonReport(reportPath)
   const observationSha256 = sha256(raw)
 
   const existing = existsSync(LEDGER_PATH) ? loadJson(LEDGER_PATH) : { rows: buildSkeleton(null) }
@@ -519,6 +574,7 @@ function cmdGreenSupplement() {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
   }
+  checkCaseMatchesAreUnique(frozen.expectCases, matchCounts, reportPath)
   let absorbedFlakes = []
   if (exit !== frozen.expectExit) {
     const flakeCheck = checkFailureSetAgainstFlakeRegistry(failedFullNames, existsSync(FLAKE_REGISTRY_PATH) ? loadJson(FLAKE_REGISTRY_PATH) : null)
