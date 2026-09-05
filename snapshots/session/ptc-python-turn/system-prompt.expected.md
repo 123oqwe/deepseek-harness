@@ -144,6 +144,7 @@ class EditOutput(TypedDict):
     path: str
     before: str
     after: str
+    matchTier: NotRequired[str]
 
 class ExitPlanModeArgs(TypedDict):
     # The complete plan, as markdown, starting with a # heading that names it.
