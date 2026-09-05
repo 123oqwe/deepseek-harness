@@ -2692,3 +2692,28 @@ The reasoning that settles it is about what these three fixtures could ever have
 P3's thirteen epics are the sandbox group and have not started, so the obligation lands on the code that owns it. **A single-environment incidental reading is replaced by an assertion with a named owner, no environment dependence, and both directions pinned — an upgrade, not a loss.**
 
 **Verified by positive control**, not by the change appearing to work: a macOS log and a CI log normalize to identical text, while an unrelated difference in the same log still survives normalization. Without the second half, a normalizer that flattened everything would have looked equally successful.
+
+### Correction, 2026-09-07: `bash-tool` was never a normalization problem
+
+The normalization landed and `bash-tool` stayed red. Reading the actual diff — rather than the event-type summary I had been reading — shows why:
+
+```
+- ...{"type":"text","text":"dsh-sdk-proof-7391\n"}],"isError":false...
++ ...{"type":"text","text":"Error: sandbox mode \"workspace-write\" is requested but no
+     sandbox backend is usable on this host; refusing to run the command unconfined.
+     Install bub[blewrap]..."
+```
+
+**The tool does not run on CI.** The runner has no usable sandbox backend, and the product does the correct thing: it refuses to execute unconfined rather than silently dropping confinement. The `sandbox/mode` and `permission/preset` differences are downstream of that, not the cause.
+
+> **I described this as "CI emits two extra events" from skimming a diff for `+` lines. The delegate asked whether that was read or counted, and it was read. The primary difference — a tool result that is an error instead of output — was in the same diff and I had not looked at it.**
+
+**Consequences, which are different from what the previous entry assumed:**
+
+- The normalization is still correct on its own terms — a host-chosen mode is not portable — and the P3 obligation it created stands. It simply does not fix this scenario.
+- **No normalization can.** Two runs where the command executed and did not execute are not the same session, and pretending otherwise would hide a real capability gap behind a passing test.
+- The parallel to pwsh is exact: `pwsh` scenarios self-skip where `pwsh` is absent. **`bash-tool` needs the same treatment or the same fix — either the runner gains a sandbox backend, or scenarios requiring one declare it and skip where it is missing.**
+
+**Decision A2 already called for this infrastructure** — *"rootless 容器运行时"* among the CI capabilities to land before W8. This is that item arriving as a concrete failure rather than a plan: the sandboxed-bash path has never been exercised on CI, because until BLOCKED-109 nothing ran these snapshots there.
+
+**Still the maintainer's call**, and now a narrower one: install a sandbox backend on the runner (which also makes the P3 sandbox epics testable on CI), or declare a `sandbox` platform requirement for these scenarios the way `pwsh` is declared.
