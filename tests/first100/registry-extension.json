@@ -15,6 +15,10 @@
     "path": "spec/first100/sources/first100-requirements-matrix-extension-101plus.md",
     "sha256": "e6e327fa58b01bc0fef1d99d4b4105d29bcfa10a69cd453989c99b11e572f1fb"
   },
+  "triageSource": {
+    "path": "spec/first100/sources/base-align-v2/upstream-status-COMPLETE.md",
+    "sha256": "2858c273340502af8819d8493cad6cc8854b63e19914d0b5dd38e4f42465f57c"
+  },
   "counts": {
     "items": 9,
     "parallelCleared": 7
@@ -78,7 +82,8 @@
       "validation": "全量 kit 运行；分帧边界注入；abort 时序（首 token 前/工具增量中/收尾）三点验证。",
       "verifyCommand": "实施前按决策 B4 规则冻结（预期 `pnpm vitest run packages/llm/llm-conformance`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-01(conformance kit)= 部分**: 各 adapter 已有零散协议测试(llm-pi-ai/tests),缩成\"抽可复用 kit + 注册门 + 补故障注入(SSE 单字节分帧/3 点 abort/超长拒绝/retry 分类映射)\"。"
     },
     {
       "id": "P9-02",
@@ -132,7 +137,8 @@
       "validation": "mock 服务 headless E2E + 配置负例 5 类（缺字段/坏 URL/坏协议名/重复路由/key env 缺失）全部 fail closed + conformance 全量。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/llm/llm-pi-ai`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-02(激活 pi-ai 多协议路由)≈ 冗余 → 大幅缩**: pi-ai 路由引擎(openai-completions/responses/anthropic-messages)+ web UI\"添加自定义 provider\"+ providers 文档**在基线就已 ship**;bundle 零路由是**故意默认**,非能力缺失。缩成薄可选项:默认路由模板 + conformance 门。**(纠正:这是我 8-30 版 P9 计划把 gap 高估了,与上游同步无关。)**"
     },
     {
       "id": "P9-03",
@@ -178,7 +184,8 @@
       "validation": "e2e 切换 + 负例 + `--help` 文本与实际行为一致性检查（现有 `--help` 仍宣传已删除的 tui profile，顺带修正）。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run tests/e2e/model-switch.e2e.ts`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-03(--model)= 部分**: 交互/web 切换已 ship,缩成只补 headless CLI `--model <route:model>` + CLI 选择的 session 事件。"
     },
     {
       "id": "P9-04",
@@ -216,7 +223,8 @@
       "validation": "夹具全量 + fs 包回归 + 一次 headless 真实编辑任务对比（改动前后各跑同一任务记录重试次数）。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/fs/fs-local`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-04/05/06/07/08/09 = 全缺,照做**(目标文件字节级即原计划描述,上游只有测试/tsconfig 微改):编辑容错回退 / 真 tokenizer / headless 脚本化 / loop 硬预算 / 任务成功率基准 / prompt 准则+A-B。"
     },
     {
       "id": "P9-05",
@@ -263,7 +271,8 @@
       "validation": "语料夹具 + 校准收敛测试 + compaction 触发点前后对比。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/llm/token-meter`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-04/05/06/07/08/09 = 全缺,照做**(目标文件字节级即原计划描述,上游只有测试/tsconfig 微改):编辑容错回退 / 真 tokenizer / headless 脚本化 / loop 硬预算 / 任务成功率基准 / prompt 准则+A-B。"
     },
     {
       "id": "P9-06",
@@ -309,7 +318,8 @@
       "validation": "e2e 三件套 + 与 SDK expected.jsonl 口径 diff + 崩溃中断恢复夹具。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/bundle/headless`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-04/05/06/07/08/09 = 全缺,照做**(目标文件字节级即原计划描述,上游只有测试/tsconfig 微改):编辑容错回退 / 真 tokenizer / headless 脚本化 / loop 硬预算 / 任务成功率基准 / prompt 准则+A-B。"
     },
     {
       "id": "P9-07",
@@ -352,7 +362,8 @@
       "validation": "预算夹具 + 恢复续跑 + 无预算回归对照。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/core/agent-loop`）。",
       "parallelWithR10": true,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-04/05/06/07/08/09 = 全缺,照做**(目标文件字节级即原计划描述,上游只有测试/tsconfig 微改):编辑容错回退 / 真 tokenizer / headless 脚本化 / loop 硬预算 / 任务成功率基准 / prompt 准则+A-B。"
     },
     {
       "id": "P9-08",
@@ -412,7 +423,8 @@
       "validation": "双跑对比 + 判分负例 + 成本与 token-meter 核对。",
       "verifyCommand": "实施前按 B4 冻结（预期 `node scripts/benchmark/run.mjs --suite v1`）。",
       "parallelWithR10": false,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-04/05/06/07/08/09 = 全缺,照做**(目标文件字节级即原计划描述,上游只有测试/tsconfig 微改):编辑容错回退 / 真 tokenizer / headless 脚本化 / loop 硬预算 / 任务成功率基准 / prompt 准则+A-B。"
     },
     {
       "id": "P9-09",
@@ -475,7 +487,8 @@
       "validation": "`ab-gate.spec.ts` 以 vitest 覆盖晋级门负例（更差变体拒晋、显著性不足拒晋、报告篡改检出），使本项具备标准 RED→GREEN 落点。",
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run benchmarks/ab/tests/ab-gate.spec.ts` + `node scripts/benchmark/ab-compare.mjs`）。",
       "parallelWithR10": false,
-      "terminalState": "NOT_STARTED"
+      "terminalState": "NOT_STARTED",
+      "upstreamTriage": "- **P9-04/05/06/07/08/09 = 全缺,照做**(目标文件字节级即原计划描述,上游只有测试/tsconfig 微改):编辑容错回退 / 真 tokenizer / headless 脚本化 / loop 硬预算 / 任务成功率基准 / prompt 准则+A-B。"
     }
   ]
 }

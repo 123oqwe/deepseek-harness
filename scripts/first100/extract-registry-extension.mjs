@@ -55,6 +55,23 @@ const OUT_PATH = join(REPO_ROOT, 'tests/first100/registry-extension.json')
  */
 const SOURCE_SHA256 = 'e6e327fa58b01bc0fef1d99d4b4105d29bcfa10a69cd453989c99b11e572f1fb'
 
+/**
+ * The upstream-coverage triage, and its pin.
+ *
+ * `extract-registry.mjs` already pins this file (BLOCKED-043) because it is the
+ * sole evidence behind the program's terminal-state requirement for the nine P9
+ * items, and before that pin a fabricated verdict could be appended without any
+ * gate noticing. It is pinned again here because this generator now READS it.
+ *
+ * What it contains is a scope triage -- which items upstream already ships, in
+ * part or whole -- NOT a terminal state. Recording it as VERIFIED would assert a
+ * check nobody ran, which is the defect BLOCKED-106 exists for. Each row instead
+ * carries the verbatim line that mentions it, so a later reader adjudicates from
+ * the source rather than from this generator's paraphrase.
+ */
+const TRIAGE_PATH = join(REPO_ROOT, 'spec/first100/sources/base-align-v2/upstream-status-COMPLETE.md')
+const TRIAGE_SHA256 = '2858c273340502af8819d8493cad6cc8854b63e19914d0b5dd38e4f42465f57c'
+
 /** Items C3 additionally cleared to run in parallel with R10, ahead of W20-W22. */
 const PARALLEL_CLEARED = new Set(['P9-01', 'P9-02', 'P9-03', 'P9-04', 'P9-05', 'P9-06', 'P9-07'])
 
@@ -108,12 +125,41 @@ export function parseFiles(value) {
   return files
 }
 
+/**
+ * Find the triage line that mentions an item.
+ *
+ * The document groups items -- one line can cover `P9-04/05/06/07/08/09` -- so a
+ * row's evidence is whichever line names it, quoted rather than summarized.
+ * @param id - the P9 item id.
+ * @param triageText - the pinned triage document.
+ * @returns the verbatim line, or null when the document does not mention it.
+ */
+export function triageLineFor(id, triageText) {
+  const shortId = id.replace('P9-', '')
+  for (const line of triageText.split('\n')) {
+    if (!line.trim().startsWith('-')) continue
+    if (line.includes(id)) return line.trim()
+    // Grouped form: `P9-04/05/06/07/08/09 = 全缺`.
+    const grouped = line.match(/P9-\d{2}(?:\/\d{2})+/)
+    if (grouped && grouped[0].slice(3).split('/').includes(shortId)) return line.trim()
+  }
+  return null
+}
+
 function build() {
   const text = readFileSync(SOURCE_PATH, 'utf8')
   const actual = sha256(text)
   if (actual !== SOURCE_SHA256) {
     throw new Error(
       `${SOURCE_PATH}: sha mismatch (got ${actual}, expected ${SOURCE_SHA256}) -- the extension matrix is fail-closed SHA-pinned exactly like the canonical sources`,
+    )
+  }
+
+  const triageText = readFileSync(TRIAGE_PATH, 'utf8')
+  const triageActual = sha256(triageText)
+  if (triageActual !== TRIAGE_SHA256) {
+    throw new Error(
+      `${TRIAGE_PATH}: sha mismatch (got ${triageActual}, expected ${TRIAGE_SHA256}) -- the P9 triage decides a terminal-state answer and must not be editable without a gate reporting it`,
     )
   }
 
@@ -150,8 +196,22 @@ function build() {
       // scheduled-BLOCKED. Nothing has been observed yet, so the honest initial
       // value is neither.
       terminalState: 'NOT_STARTED',
+      // The upstream triage, quoted from the pinned source. It adjusts SCOPE --
+      // P9-02 is largely shipped upstream already, P9-01 and P9-03 partly -- and
+      // says nothing about whether this item has been verified here, which is
+      // what `terminalState` is for.
+      upstreamTriage: triageLineFor(id, triageText),
     })
   }
+  // Every item must be adjudicated by the triage, and a silent `null` would let
+  // an item with no upstream verdict look the same as one the document simply
+  // did not reach. The triage is the sole evidence behind these nine terminal
+  // states, so an unmentioned item is a gap to report, not a blank to store.
+  const unadjudicated = epics.filter(epic => epic.upstreamTriage === null).map(epic => epic.id)
+  if (unadjudicated.length > 0) {
+    throw new Error(`no upstream-triage line mentions ${unadjudicated.join(', ')} -- the triage is the sole evidence for these items' terminal state`)
+  }
+
   epics.sort((left, right) => left.id.localeCompare(right.id))
 
   // Two independent sources say which items may start early, and they must
@@ -180,6 +240,7 @@ function build() {
       scope: 'W20-W22 ordering for P9-01..09; P9-01..07 additionally cleared to run parallel with R10, not counted toward the 100/100 gate',
     },
     source: { path: 'spec/first100/sources/first100-requirements-matrix-extension-101plus.md', sha256: SOURCE_SHA256 },
+    triageSource: { path: 'spec/first100/sources/base-align-v2/upstream-status-COMPLETE.md', sha256: TRIAGE_SHA256 },
     counts: { items: epics.length, parallelCleared: epics.filter(epic => epic.parallelWithR10).length },
     epics,
   }
