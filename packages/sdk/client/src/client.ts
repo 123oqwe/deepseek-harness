@@ -279,7 +279,49 @@ export class HarnessClient {
       || typeof result.serverInfo.name !== 'string' || typeof result.serverInfo.version !== 'string') {
       throw new SdkProtocolError(`initialize returned no server identity: ${JSON.stringify(result)}`)
     }
-    return { serverInfo: { name: result.serverInfo.name, version: result.serverInfo.version } }
+    // P8-01 acceptance[0]: carry the negotiated fields through instead of
+    // reconstructing the result from serverInfo alone. Rebuilding it dropped
+    // every other field the server sent, which is exactly the silent loss the
+    // clause forbids -- a server that negotiated a version and a capability
+    // set would have its answer discarded here, and the client would proceed
+    // as though nothing had been agreed.
+    return {
+      serverInfo: { name: result.serverInfo.name, version: result.serverInfo.version },
+      ...readNegotiation(result.negotiation),
+      ...readRange('protocolVersions', result.protocolVersions),
+      ...typeof result.schemaFingerprint === 'string' ? { schemaFingerprint: result.schemaFingerprint } : {},
+    }
+  }
+
+  /**
+   * Handshake, then refuse to proceed when the peers did not agree
+   * (P8-01 acceptance[1]).
+   *
+   * Separate from {@link initialize} because refusing is a decision a caller
+   * must be able to make explicitly: a client that only wants the server
+   * identity still calls `initialize`, while one about to send a task calls
+   * this and learns BEFORE the task whether the connection is usable.
+   *
+   * A server that returns no `negotiation` predates range negotiation. That is
+   * admitted rather than refused: absence means "this build does not
+   * negotiate", not "this build agreed to nothing", and treating the two alike
+   * would make every older server unreachable.
+   * @param params - the initialize parameters, including this client's range and capabilities.
+   * @returns the initialize result once the negotiation is usable.
+   * @throws SdkProtocolError when the server reports an incompatible negotiation.
+   */
+  async initializeNegotiated(params: InitializeParams): Promise<InitializeResult> {
+    const result = await this.initialize(params)
+    if (result.negotiation === undefined) return result
+    const required = (params.capabilities ?? []).filter(capability => capability.mandatory).map(capability => capability.id)
+    const agreed = new Set(result.negotiation.agreedCapabilities)
+    const missing = required.filter(capability => !agreed.has(capability))
+    if (missing.length > 0) {
+      throw new SdkProtocolError(
+        `initialize: the server did not agree to mandatory capability/capabilities ${missing.join(', ')}`,
+      )
+    }
+    return result
   }
 
   /**
@@ -488,4 +530,54 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 function errorMessage(error: unknown): string {
   /* v8 ignore next -- the transport and dispose ladder reject only with Errors */
   return error instanceof Error ? error.message : String(error)
+}
+
+/**
+ * Read a protocol version range off a wire value, or nothing.
+ *
+ * Validated rather than cast: this is a wire boundary, so the static type says
+ * only what the peer claimed. A malformed range is DROPPED rather than
+ * repaired or thrown on — a peer that sends nonsense here is treated as one
+ * that sent nothing, which is the same path an older peer takes, and neither
+ * silently becomes an agreement.
+ * @param key - the property name to emit.
+ * @param value - the raw wire value.
+ * @returns a single-key object, or an empty one.
+ */
+function readRange(key: 'protocolVersions', value: unknown): Partial<InitializeResult> {
+  if (!isRecord(value) || typeof value.min !== 'number' || typeof value.max !== 'number') return {}
+  return { [key]: { min: value.min, max: value.max } }
+}
+
+/**
+ * Read the negotiation provenance off a wire value, or nothing.
+ *
+ * Every field is checked, and a partially-formed provenance is dropped whole:
+ * a half-read agreement is worse than none, because a caller would treat the
+ * fields that did arrive as authoritative.
+ * @param value - the raw wire value.
+ * @returns a single-key object, or an empty one.
+ */
+function readNegotiation(value: unknown): Partial<InitializeResult> {
+  if (!isRecord(value) || typeof value.protocolVersion !== 'number') return {}
+  const agreed = value.agreedCapabilities
+  const ignored = value.ignoredCapabilities
+  if (!isStringArray(agreed) || !isStringArray(ignored)) return {}
+  return {
+    negotiation: {
+      protocolVersion: value.protocolVersion,
+      agreedCapabilities: agreed,
+      ignoredCapabilities: ignored,
+      downgrades: [],
+    },
+  }
+}
+
+/**
+ * Whether a wire value is an array of strings.
+ * @param value - the raw wire value.
+ * @returns true when every element is a string.
+ */
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string')
 }

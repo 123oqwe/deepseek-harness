@@ -772,6 +772,31 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-083 — `session-lifecycle` is an island: no product path reaches an ACCEPTED epic's deliverable, and a sibling duplicates its type by structure while the two carry different contracts (delegate found, Supervisor confirmed by a second method, 2026-09-05)
+
+**Unreachable, confirmed two ways.** The delegate computed a dependency closure from the bundle's mounted plugins (156 → 221 reachable packages) and found `@deepseek-ai/dsh-session-lifecycle` outside it. The Supervisor checked differently — which manifests *declare* the dependency, rather than which packages a closure walk reaches:
+
+| Package | Manifests declaring a dependency on it |
+|---|---|
+| `session-lifecycle` | **1** — its own |
+| `session-query` (control) | **12** |
+
+It appears in no `cordis.yml`. Nothing mounts it, nothing imports it.
+
+**The delegate's own method had three false positives and they said so before anyone acted on the number**: `bundle/base` is the closure's own root, `migration/feature-gates` is reached via `apps/cli` which the walk did not start from, and `assurance/evidence-format` is a release tool that legitimately never enters the runtime. **Three of four "unreachable" results were artefacts of the instrument.** Only this one survives.
+
+**What this does and does not mean for P6-07.** It does **not** reopen the epic. P6-07's Usage stage delivered to `session-query` and `core/session/repair.ts`, both reachable, and its acceptance evidence sits there. What it means is narrower and still real: **the retention, deletion and pagination implementations inside `session-lifecycle` have only ever executed under their own tests.** No product path calls them. "Tested in isolation" and "reachable in the product" are different properties, and a green suite reports them identically — [BLOCKED-072](#blocked-072)'s shape landing on a deliverable rather than on a record.
+
+**The corroborating detail is the strongest evidence, and it hides a real divergence.** `session-persistence-jsonl/src/format.ts:358` declares its own `CorruptedLogEvidence`, with a comment stating it *"mirrors `@deepseek-ai/dsh-session-lifecycle`'s type of the same name by structure rather than by import, so the two packages stay independent."* **A sibling that needed the type re-declared it instead of importing it — which is what one does with a package one cannot depend on.**
+
+Compared field by field, the two are structurally identical: three `readonly` fields, same names, same types. **But their contracts already differ.** The JSONL copy documents `raw` as *"the row's raw bytes as UTF-8, truncated to `CORRUPTION_RAW_LIMIT`"*; the `session-lifecycle` copy states no bound at all — and [BLOCKED-075](#blocked-075) recorded that `readSessionLogWithRepair` applies none, passing a caller-supplied row through whole. **So the structural mirror holds while the guarantee attached to the same field does not, and the comment asserting the mirror is checked by nothing.** The compiler cannot see the divergence, because the divergence is in the documented obligation rather than in the shape.
+
+**Three follow-ups, none actioned here.**
+
+1. **Decide whether the wiring is missing or the package is.** If the design intent is "`session-query` is the surface, `session-lifecycle` is the implementation", then `session-query` should depend on it and does not — a wiring gap. If that is not the intent, the question is why the package exists.
+2. **The structural duplication needs an owner.** Two packages declaring the same type and kept consistent by a comment is exactly the consistency-by-diligence this queue keeps recording as a defect, and it has already diverged in contract if not in shape.
+3. **Make reachability a routine pre-acceptance check** — does each deliverable package reach the bundle or the CLI, and if not, is there a stated reason (release tool, pure type library, deliberate opt-in)? **The closure script must first be fixed for its two known blind spots** (excluding `apps/cli`'s own dependencies, and excluding the root itself), or a routine check would stably misreport three packages and be ignored within a week.
+
 ### BLOCKED-082 — the auditor's own unverified premise, checked and found sound: `expectCasesMatched` equals the frozen `expectCases` for all 67 green cells (delegate, 2026-09-05)
 
 **Recorded because it came back clean, not despite it.** [BLOCKED-081](#blocked-081) found a mechanism nobody had tested — the lock register with no enforcement. The natural next question is what *else* has been assumed, and the delegate turned it on their own audit method rather than outward.
