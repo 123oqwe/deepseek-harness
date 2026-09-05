@@ -11,14 +11,22 @@ import { describe, expect, it } from 'vitest'
 
 import { admitConformantRoute } from '../src/conformance.ts'
 import { deltasMergeIntoFinalCalls, observeStream, runStreamProbes } from '../src/conformance-probes.ts'
+import type { ToolCallId } from '../src/brand.ts'
 import type { StreamChunk } from '../src/types.ts'
 
-const toolCall = (index: number, id: string, name: string, args: string): StreamChunk[] => [
-  { type: 'block-start', index, blockType: 'tool-call' },
-  { type: 'tool-call-delta', index, id, name, argumentsDelta: args.slice(0, 4) } as StreamChunk,
-  { type: 'tool-call-delta', index, id, argumentsDelta: args.slice(4) } as StreamChunk,
-  { type: 'block-end', index, block: { type: 'tool-call', id, name, arguments: args } } as StreamChunk,
-]
+// `id` is branded rather than cast at each use: the two delta chunks needed the
+// cast for `ToolCallId`, and casting the whole chunk to StreamChunk to get it
+// hid that — the lint rule read those casts as unnecessary because the object
+// literal already matched, while the compiler needed them for the brand alone.
+const toolCall = (index: number, rawId: string, name: string, args: string): StreamChunk[] => {
+  const id = rawId as ToolCallId
+  return [
+    { type: 'block-start', index, blockType: 'tool-call' },
+    { type: 'tool-call-delta', index, id, name, argumentsDelta: args.slice(0, 4) },
+    { type: 'tool-call-delta', index, id, argumentsDelta: args.slice(4) },
+    { type: 'block-end', index, block: { type: 'tool-call', id, name, arguments: args } },
+  ]
+}
 
 async function* stream(chunks: StreamChunk[]): AsyncIterable<StreamChunk> {
   for (const chunk of chunks) yield chunk
@@ -27,8 +35,8 @@ async function* stream(chunks: StreamChunk[]): AsyncIterable<StreamChunk> {
 const CONFORMANT: StreamChunk[] = [
   ...toolCall(0, 'call_a', 'read', '{"path":"a"}'),
   ...toolCall(1, 'call_b', 'read', '{"path":"b"}'),
-  { type: 'usage', usage: { inputTokens: 10, outputTokens: 4 } } as StreamChunk,
-  { type: 'finish', reason: { kind: 'tool-calls' } } as StreamChunk,
+  { type: 'usage', usage: { inputTokens: 10, outputTokens: 4 } },
+  { type: 'finish', reason: { kind: 'tool-calls' } },
 ]
 
 describe('P9-01 Provider — stream probes', () => {
@@ -57,10 +65,10 @@ describe('P9-01 Provider — stream probes', () => {
   })
 
   it('a single tool call fails parallel-tool-calls, since one cannot show the second is not dropped', async () => {
-    const single = [
+    const single: StreamChunk[] = [
       ...toolCall(0, 'call_a', 'read', '{"path":"a"}'),
-      { type: 'usage', usage: { inputTokens: 1, outputTokens: 1 } } as StreamChunk,
-      { type: 'finish', reason: { kind: 'tool-calls' } } as StreamChunk,
+      { type: 'usage', usage: { inputTokens: 1, outputTokens: 1 } },
+      { type: 'finish', reason: { kind: 'tool-calls' } },
     ]
     const outcomes = await runStreamProbes(stream(single))
     const parallel = outcomes.find(outcome => outcome.behavior === 'parallel-tool-calls')

@@ -69,12 +69,14 @@ export interface RouteDefects {
  */
 export function splitArguments(args: string, framing: DeltaFraming): string[] {
   if (framing === 'single-frame') return [args]
-  // `[...args]` iterates by code point, so a split never lands inside a
-  // multi-byte character. `split-multibyte` deliberately does the opposite,
-  // splitting the UTF-16 units, which is what a byte-oriented transport does
-  // and what a naive merge corrupts.
-  if (framing === 'single-character') return [...args]
-  if (framing === 'split-multibyte') return args.split('').map(unit => unit)
+  // Two different splits, and the difference is the point. `single-character`
+  // splits by CODE POINT via the string iterator, so a split never lands inside
+  // a character. `split-multibyte` splits by UTF-16 CODE UNIT, which is what a
+  // byte-oriented transport actually delivers and what a naive merge corrupts —
+  // its pieces may individually be invalid text, and the contract is only that
+  // the join is not.
+  if (framing === 'single-character') return Array.from(args)
+  if (framing === 'split-multibyte') return args.split('')
   return [args.slice(0, 4), args.slice(4)]
 }
 
@@ -108,8 +110,15 @@ function toolCall(index: number, id: string, args: string, withDeltas: boolean, 
 export function createScriptedRoute(defects: RouteDefects = {}): ScenarioRunner {
   const cannotStage = new Set(defects.cannotStage ?? [])
 
-  async function* emit(chunks: StreamChunk[]): AsyncIterable<StreamChunk> {
-    for (const chunk of chunks) yield chunk
+  // Not `async function*`: there is nothing to await, and an async generator
+  // that never awaits is a promise of asynchrony the fixture does not have.
+  // The probes consume it through `for await`, which accepts a sync iterable.
+  function emit(chunks: StreamChunk[]): AsyncIterable<StreamChunk> {
+    return {
+      [Symbol.asyncIterator]: async function* asyncChunks() {
+        for (const chunk of chunks) yield await Promise.resolve(chunk)
+      },
+    }
   }
 
   return (scenario) => {

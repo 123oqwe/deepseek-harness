@@ -128,15 +128,18 @@ const EXIT_CODES: Record<RunFailureCode, number> = {
 export function exitStatusFor(reason: SessionEvent<'turn/end'>['data']['reason'] | undefined): RunExitStatus {
   if (reason === undefined) return { exitCode: EXIT_CODES.unknown, failure: 'unknown' }
   if (reason.kind === 'completed') return { exitCode: 0, failure: undefined }
-  const known: RunFailureCode = reason.kind === 'blocked'
-    || reason.kind === 'aborted'
-    || reason.kind === 'error'
-    || reason.kind === 'max-tokens'
-    || reason.kind === 'interrupted'
-    ? reason.kind
-    // A reason this build does not know is still a non-completion. Reporting it
-    // as `unknown` keeps the exit code non-zero rather than letting a newer
-    // TurnEndReason member fall through to success.
+  // Membership is tested against the code table rather than by listing the
+  // kinds again. `TurnEndReason` is merge-extensible, so a chain of comparisons
+  // exhausts the union THIS build knows and the compiler then reports the last
+  // arm as unreachable — while a newer member would still arrive at runtime.
+  // Reading the table answers the question actually being asked: is this a
+  // failure class we have a code for?
+  const kind: string = reason.kind
+  // A reason this build does not know is still a non-completion. Reporting it as
+  // `unknown` keeps the exit code non-zero rather than letting a newer
+  // TurnEndReason member fall through to success.
+  const known: RunFailureCode = Object.hasOwn(EXIT_CODES, kind) && kind !== 'unknown'
+    ? kind as RunFailureCode
     : 'unknown'
   return { exitCode: EXIT_CODES[known], failure: known }
 }
