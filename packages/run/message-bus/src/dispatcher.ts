@@ -49,6 +49,20 @@ export interface DispatchDeps {
   readonly maxAttempts: number
   /** Persist a record's new state; called at most once per record per pass. */
   readonly persist: (record: OutboxRecord) => void
+  /**
+   * Report a record entering dead-letter, for operator alerting (validation[2]).
+   *
+   * Separate from the returned {@link DispatchReport} because the report tells
+   * the CALLER what happened and an alert must reach someone who is not
+   * watching the return value. A dead-letter that only appeared in a return
+   * value would be silent to exactly the person who needs it: a message has
+   * stopped being retried, and nothing else in the system will mention it
+   * again.
+   *
+   * Called after the record is persisted, so an alert never describes a state
+   * that failed to become durable.
+   */
+  readonly onDeadLetter?: (record: OutboxRecord, reason: string) => void
 }
 
 /**
@@ -85,7 +99,9 @@ export async function dispatchOnce(
       continue
     }
     if (decision.action === 'dead-letter') {
-      deps.persist({ ...record, state: 'dead-letter' })
+      const buried: OutboxRecord = { ...record, state: 'dead-letter' }
+      deps.persist(buried)
+      deps.onDeadLetter?.(buried, decision.reason)
       deadLettered.push({ id: record.id, reason: decision.reason })
       continue
     }

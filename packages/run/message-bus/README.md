@@ -57,7 +57,7 @@ No model-visible surface. The package exports decision functions, a dispatch loo
 ## Known Limitations and Deferred Work
 
 - **`commitWithOutbox` guarantees one batch, not one transaction.** must[0] asks for a single transaction. A crash inside a batch can leave the domain event durable and drop the outbox record, because recovery truncates to the last complete record rather than to the batch boundary. Ordering the records first would make the survivor the recoverable direction, but the batch is written in `seq` order and the log requires contiguity. Closing this needs backend atomicity or a change to seq assignment; neither belongs to this package.
-- **The dispatcher is a loop, not a service.** `dispatchOnce` runs one pass and returns what it did; scheduling passes, retry backoff, and dead-letter alerting belong to a caller that does not exist yet.
+- **The dispatcher is a loop, not a service.** `dispatchOnce` runs one pass and returns what it did; scheduling passes and retry backoff belong to a caller that does not exist yet. It reports a dead-letter through `onDeadLetter`, but nothing is wired to that channel — the alert has a producer and no consumer.
 - **No Cordis plugin or service registration yet.** The decisions are bound to a durable sink through a structural interface, not mounted as a capability seam.
 - **The crash points are simulated, not real process kills.** `tests/crash.e2e.spec.ts` drives them through a local durable-state harness. It proves the decision sequence survives each crash point; it does not prove a real process does, which the Fault stage owns.
 - **No clock, no I/O.** Every decision takes `nowMs` as a parameter. A caller that passes an inconsistent clock gets inconsistent dead-lettering, and nothing here detects that.

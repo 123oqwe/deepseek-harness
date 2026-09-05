@@ -4098,6 +4098,58 @@
         "mutationDescription": "Five mutations. (1) persist AFTER the send instead of before; (2) read the clock per record instead of once per pass; (3) dead-letter a failed send immediately instead of returning it to pending; (4) do not spend the attempt; (5) drop orderForDispatch and iterate in argument order. All restored byte-identical.",
         "failureSummary": "Reddens 1, 1, 1, 2 and 1 case respectively, each on the case naming its defect. Against the FIRST draft of the suite mutation (1) reddened ZERO, because that draft's assertion read the record passed to send rather than the durable store -- the draft was rewritten rather than frozen."
       }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "enumerates at least the twelve boundaries the clause requires",
+        "fault boundary 01 deadline expired before any attempt",
+        "fault boundary 02 attempt budget exhausted",
+        "fault boundary 03 expired AND exhausted reports the expiry, pinning check order",
+        "fault boundary 04 exactly at the deadline is still deliverable, not expired",
+        "fault boundary 05 exactly at the attempt budget is exhausted, not deliverable",
+        "fault boundary 06 an acked record is skipped, never re-sent",
+        "fault boundary 07 a dead-lettered record is skipped, never resurrected",
+        "fault boundary 08 acked is terminal: no transition out of it is legal",
+        "fault boundary 09 dead-letter is terminal: no transition out of it is legal",
+        "fault boundary 10 a receipt naming another message id is refused",
+        "fault boundary 11 a receipt naming another epoch is refused",
+        "fault boundary 12 acking a dead-lettered record is refused",
+        "fault boundary 13 a replayed receipt from another consumer keeps the first consumer",
+        "fault boundary 14 a duplicate arrival is dropped without a second effect",
+        "fault boundary 15 a foreign-tenant arrival is refused and records nothing",
+        "fault boundary 16 a foreign-tenant arrival is refused even when its key is already seen",
+        "fault boundary 17 the same id at a different epoch is NOT a duplicate",
+        "fault boundary 18 backpressure refuses AT the limit, not above it",
+        "reports the buried record and its reason to the alert channel",
+        "alerts only AFTER the dead-letter state is persisted",
+        "does not alert when a send merely fails and the record stays retryable"
+      ],
+      "files": [
+        "packages/run/message-bus/tests/fault-matrix.spec.ts",
+        "packages/run/message-bus/src/outbox.ts",
+        "packages/run/message-bus/src/dispatcher.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T18:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "9b135a485028dcee6e94318a2265ae2b1f47a327",
+        "testsDiscovered": 22
+      },
+      "note": "P4-06 F-stage. First freeze for this cell. UNLIKE the C and U stages, BOTH declared files are genuinely this epic's -- crash.e2e.spec.ts (at its adjudicated path) and outbox.ts. No name collision here, checked rather than assumed.\n\nvalidation[0] asks for a SYSTEMATIC fault matrix over at least 12 boundaries. The boundaries are enumerated as DATA and driven by one runner, and the count is asserted against the clause's floor -- a hand-written case per boundary would let one be deleted while every remaining case still passed, so the floor is what makes the enumeration checkable. 18 boundaries, all distinct titles (also asserted).\n\nvalidation[2] asks that dead-letter produce a clear alert. The alert is a separate channel from the returned DispatchReport, because a report tells the CALLER and an alert must reach someone who is not reading the return value -- a dead-lettered message has stopped being retried and nothing else will mention it again. Three properties are pinned: it fires with the record and reason, it fires only AFTER the state is persisted (an alert describing a state that failed to persist would send an operator after a record the log does not show as dead), and it does NOT fire on an ordinary failed send.\n\nvalidation[1]'s 10,000 redeliveries were already covered in the C stage and are not duplicated here.\n\nTWO BOUNDARIES WERE FIXED BEFORE FREEZING, and the mutation is what found them. Boundaries 10 and 11 asserted that a receipt naming another message id or epoch is refused, but they built the record in `pending` state -- from which acking is an ILLEGAL TRANSITION anyway. Both threw, both passed, and dropping the epoch check entirely reddened NOTHING: the assertions were satisfied by the state machine while claiming to test the identity check. Rebuilt on a `sent` record, where acking would be legal, so the only thing that can refuse is the check under test. This is the same defect as the U stage's persist-order case, and it is now the third time in one epic that a passing test was measuring something other than its stated subject.",
+      "sensitivityProof": {
+        "mutationDescription": "Eight mutations. Outbox: (1) deadline comparison > becomes >=; (2) attempts comparison >= becomes >; (3) dead-letter made non-terminal; (4) receipt epoch check dropped; (4b) receipt id check dropped; (5) dedupKey ignores the epoch; (6) backpressure < becomes <=. Dispatcher: (7) alert fires before persist; (8) alert fires on every failed send. All restored byte-identical.",
+        "failureSummary": "Reddens 1, 2, 1, 1, 1, 1, 1 and 1 case respectively, each on the boundary that names its defect. Against the FIRST draft, mutation (4) reddened ZERO because boundaries 10 and 11 were built on a `pending` record and were satisfied by the transition table rather than by the identity check; the draft was fixed rather than frozen."
+      }
     }
   ]
 }
