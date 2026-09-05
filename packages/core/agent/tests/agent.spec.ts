@@ -112,6 +112,41 @@ describe('Inbox', () => {
     expect(() => { inbox.append('next-step', first) }).toThrow(`message "${first.id}" is already pending`)
   })
 
+  it('P4-06 must[2]: a claimed identity cannot be re-queued, but a canceled one can', () => {
+    const session = Session.create(SessionId('claimed-dedup-inbox'))
+    const inbox = new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} })
+    const delivered = createUserMessage({ content: [{ type: 'text', text: 'a' }], source: { kind: 'user' } })
+    const canceled = createUserMessage({ content: [{ type: 'text', text: 'b' }], source: { kind: 'user' } })
+
+    inbox.append('next-step', delivered)
+    expect(inbox.claim('next-step', 1)).toEqual([delivered])
+    // Redelivery of a message that already ran a turn. Pending-list uniqueness
+    // cannot see this: the claim emptied both lists.
+    expect(() => { inbox.append('next-step', delivered) })
+      .toThrow(`message "${delivered.id}" was already claimed`)
+
+    // The other direction, so the rule is not simply "no id may return":
+    // cancellation removes a message that never ran, and its id stays usable.
+    inbox.append('next-step', canceled)
+    expect(inbox.remove(canceled.id)).toBe(true)
+    expect(() => { inbox.append('next-step', canceled) }).not.toThrow()
+  })
+
+  it('P4-06 must[2]: the claimed set survives replay from the session log', () => {
+    const session = Session.create(SessionId('claimed-dedup-replay'))
+    const message = createUserMessage({ content: [{ type: 'text', text: 'a' }], source: { kind: 'user' } })
+    const first = new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} })
+    first.append('next-step', message)
+    first.claim('next-step', 1)
+
+    // A fresh projection over the same log is what a restarted process gets.
+    // If claims were tracked only in memory, redelivery after a crash -- the
+    // exact case acceptance[0] kills for -- would produce a second turn.
+    const restarted = new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} })
+    expect(() => { restarted.append('next-step', message) })
+      .toThrow(`message "${message.id}" was already claimed`)
+  })
+
   it('clears both pending lists as durable cancellations', () => {
     const session = Session.create(SessionId('clear-inbox'))
     const discarded: UserMessage[] = []

@@ -193,6 +193,7 @@
     { "path": "./packages/identity/anonymous-user-id" },
     { "path": "./packages/identity/principal" },
     { "path": "./packages/policy/capability-token" },
+    { "path": "./packages/run/message-bus" },
     { "path": "./packages/run/run" },
     { "path": "./packages/session/session-telemetry-otel" },
     { "path": "./packages/core/system-prompt" },

@@ -25,6 +25,21 @@ export interface InboxNotifications {
 export class Inbox {
   private readonly state: InboxState = { 'next-turn': [], 'next-step': [] }
 
+  /**
+   * Identities already claimed into a turn, which may never be pending again.
+   *
+   * Pending-list uniqueness alone does not survive redelivery: a claimed
+   * message leaves both lists, so re-appending its id afterwards is accepted
+   * and produces a second turn from one message. That is the double effect
+   * Epic P4-06's must[2] rules out, and the inbox is the consumer where it
+   * would land, so the seen-set has to outlive the pending state.
+   *
+   * A claim is a removal that carries no `outcome`, which is what separates it
+   * on replay from a cancellation -- a canceled message never ran, so its id
+   * stays reusable.
+   */
+  private readonly claimed = new Set<MessageId>()
+
   constructor(
     private readonly session: Session,
     private readonly notifications: InboxNotifications,
@@ -73,7 +88,10 @@ export class Inbox {
     if (target === 'next-turn') {
       claimed.push(...this.mutate('next-turn', 0, 1, [], false))
     }
-    for (const message of claimed) this.notifications.claimed(message, turn)
+    for (const message of claimed) {
+      this.claimed.add(message.id)
+      this.notifications.claimed(message, turn)
+    }
     return claimed
   }
 
@@ -196,7 +214,12 @@ export class Inbox {
   private apply(splice: SessionEventMap['agent/inbox/spliced']): UserMessage[] {
     this.validate(splice)
     const inbox = this.state[splice.target]
-    return inbox.splice(splice.start, splice.removedCount ?? 0, ...splice.inserted)
+    const removed = inbox.splice(splice.start, splice.removedCount ?? 0, ...splice.inserted)
+    // A removal with no outcome is a claim; a canceled one never ran.
+    if (splice.outcome === undefined) {
+      for (const message of removed) this.claimed.add(message.id)
+    }
+    return removed
   }
 
   /** Validate one normalized splice against the current projection. */
@@ -215,6 +238,9 @@ export class Inbox {
       : [...this.nextTurn, ...candidate]) {
       if (ids.has(message.id)) throw new Error(`message "${message.id}" is already pending`)
       ids.add(message.id)
+    }
+    for (const message of splice.inserted) {
+      if (this.claimed.has(message.id)) throw new Error(`message "${message.id}" was already claimed`)
     }
   }
 }

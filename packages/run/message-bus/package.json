@@ -1,0 +1,46 @@
+{
+  "name": "@deepseek-ai/dsh-message-bus",
+  "description": "Contract-stage durable inbox/outbox logic for Epic P4-06's effective-once effect handoff: outbox record states and their legal transitions, idempotent delivery receipts, deadline and attempt-budget dead-lettering, total dispatch ordering, enqueue backpressure, and consumer-side (message id, epoch) deduplication with cross-tenant refusal",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/run/message-bus"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./inbox": {
+      "types": "./lib/types/inbox.d.ts",
+      "default": "./lib/types/inbox.js"
+    },
+    "./outbox": {
+      "types": "./lib/types/outbox.d.ts",
+      "default": "./lib/types/outbox.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-brand": "workspace:^"
+  }
+}

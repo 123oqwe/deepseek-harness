@@ -3903,6 +3903,73 @@
         "mutationDescription": "Deleted the server's entire negotiation check from `initialize` -- both the protocol-range guard and the capability guard -- and pinned the returned provenance to constants. Restored byte-identical.",
         "failureSummary": "Exactly 2 red, both in plugin-apply.spec.ts, which mounts a real server over an injected stdio pair: the unknown-mandatory-capability refusal and the non-overlapping-range refusal. Against the SUPERSEDED freeze the same mutation reddened ZERO of seven cases, because all seven asserted the negotiation functions through the package face and none of them ran the server."
       }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/crash.e2e.spec.ts",
+        "packages/core/agent/tests/agent.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "rejects an invalid durable splice during reconstruction",
+        "replaces a pending message by identity across both lists",
+        "normalizes splice coordinates, rejects duplicate identities, and reports missing removals",
+        "P4-06 must[2]: a claimed identity cannot be re-queued, but a canceled one can",
+        "P4-06 must[2]: the claimed set survives replay from the session log",
+        "clears both pending lists as durable cancellations",
+        "contributes Agent lookup and scoped Context providers while Typert is live",
+        "registers exact entries, emits lifecycle events, and unregisters on owner disposal",
+        "rejects an agent whose registry and session identities differ",
+        "tracks runtime creator ownership separately from registry order",
+        "rolls an entry back and pairs a partially delivered creation when a listener throws",
+        "contains asynchronous creation rejection and every disposal-listener failure",
+        "separates entry from announcement and stale/idempotent detach cannot remove a replacement",
+        "defers detach requested by a creation listener until that dispatch unwinds",
+        "contains each synchronous throw and returned-promise rejection",
+        "dispatches serial listeners with the fused agent subject",
+        "injects the fused subject even when the payload carries a conflicting agent field",
+        "exposes the closed typed cancellation cause at the Agent seam",
+        "requires a factory and delegates through the calling context",
+        "rejects a second factory and clears the slot with its owner (HMR)",
+        "canonicalizes an already traced Service before tracing it for the caller",
+        "kill after-commit, then replay: the business effect is applied exactly once",
+        "kill after-send, then replay: the business effect is applied exactly once",
+        "kill after-effect, then replay: the business effect is applied exactly once",
+        "kill after-ack, then replay: the business effect is applied exactly once",
+        "a crash after send leaves a record replay can still find, not a lost message",
+        "ten thousand redeliveries of one message produce one effect (validation[1])",
+        "a pending message is visible as undelivered and still delivers after replay",
+        "an expired message is dead-lettered rather than dispatched, and says why",
+        "an out-of-budget message reports attempts-exhausted, distinct from expiry",
+        "a message that is BOTH expired and out of attempts reports the expiry",
+        "a replayed receipt does not overwrite the consumer that took responsibility",
+        "refuses a foreign-tenant message and records nothing about it",
+        "a foreign message is refused WITHOUT its key being looked up in the seen-set",
+        "a refused foreign message cannot suppress a later legitimate one sharing its key"
+      ],
+      "files": [
+        "packages/run/message-bus/src/inbox.ts",
+        "packages/run/message-bus/src/outbox.ts",
+        "packages/run/message-bus/tests/crash.e2e.spec.ts",
+        "packages/core/agent/src/inbox.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T14:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d41a3a6bfa129e551fce3aea2fcc582ab42473d7",
+        "testsDiscovered": 35
+      },
+      "note": "P4-06 C-stage. First freeze for this cell; nothing superseded.\n\nThe declared deliverable packages/run/message-bus/tests/crash.e2e.ts is written at the adjudicated path crash.e2e.spec.ts (adjudication.json, P4-06-C-crash-e2e-not-yet-created), recorded BEFORE the first line was written so the deviation is dated rather than looking later like a rename.\n\nWHY THE FIRST DRAFT WAS NOT FROZEN: the initial ten cases passed on the first run, and four mutations against them reddened one, zero, zero and zero. Three of four defect classes the module claims to prevent were invisible to the suite that claimed to prove them -- BLOCKED-085's shape again, caught only by running the mutation and never by having met it before.\n\nWHAT THE MUTATION EXPOSED, and it was a gap in the SUBJECT and not only in the assertions: the harness modeled crashes after commit, after send and after ack, but NOT the crash between applying the business effect and recording the ack. That is the one window where deduplication is the sole protection against a second effect -- at every other point the outbox state already prevents redelivery. The epic's whole premise had no case. `after-effect` was added as a fourth crash point, and three assertions were added that can observe check ORDER rather than the checks separately: a message both expired and out of attempts, a foreign-tenant message whose dedup key is pre-seeded in the seen-set, and a replayed receipt from a different consumer.\n\nBIDIRECTIONAL on the agent-side consumer: narrowing (removing the claimed-set check; making it in-memory so it does not survive replay) reddens 2 and 1; WIDENING it so cancellation also marks an id claimed reddens 1. A one-direction table would have accepted an over-broad rule that permanently burns the id of every canceled message.",
+      "sensitivityProof": {
+        "mutationDescription": "Seven mutations across both halves. Message bus: (1) removed the duplicate branch from classifyIntake; (2) moved the tenant check AFTER the dedup check; (3) swapped the deadline and attempt-budget checks in decideDelivery; (4) removed applyReceipt's already-acked early return. Agent inbox: (5) removed the claimed-set enforcement from validate; (6) stopped recording claims during replay, leaving the set in-memory only; (7) widened it so cancellation also marks an id claimed. All restored byte-identical.",
+        "failureSummary": "Against the FROZEN suite each mutation reddens: (1) 2, (2) 1, (3) 1, (4) 1, (5) 2, (6) 1, (7) 1 -- every one non-zero and each landing on the case that names its defect. Against the FIRST DRAFT, mutations (2), (3) and (4) reddened ZERO of ten, which is why that draft was discarded rather than frozen."
+      }
     }
   ]
 }
