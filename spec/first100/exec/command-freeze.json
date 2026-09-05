@@ -6194,6 +6194,49 @@
         "mutationDescription": "Five targeted mutations of scriptability.ts, each restored byte-identical: (M1) removed the both-inputs check so stdin silently takes precedence; (M2) accepted whitespace-only input as a task; (M3) mapped a missing turn/end reason to exit 0; (M4) collapsed every failure class to exit 1; (M5) mapped an unrecognized future reason to 'blocked' instead of 'unknown'.",
         "failureSummary": "All five reddened: 2, 1, 1, 4 and 1 of 16. M4 reddens four because the distinct-code property is asserted per class and again as a set. M1 reddens two -- the explicit both-inputs case and the empty-positional-with-real-stdin case that exists precisely because precedence would make it appear to work. No mutation reddened zero."
       }
+    },
+    {
+      "epic": "P9-01",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm/tests/conformance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-01 Contract — conformance registration gate must[1]: a route demonstrating every behaviour is admitted",
+        "P9-01 Contract — conformance registration gate must[1]: a MISSING behaviour denies — untested is not passed",
+        "P9-01 Contract — conformance registration gate must[1]: an EMPTY result set denies, naming every required behaviour",
+        "P9-01 Contract — conformance registration gate must[1]: a failing behaviour denies and names it",
+        "P9-01 Contract — conformance registration gate a behaviour that PASSED over zero cases denies as vacuous, since it demonstrated nothing",
+        "P9-01 Contract — conformance registration gate a FAILING behaviour over zero cases is reported as failed, not vacuous — it already denies on its merits",
+        "P9-01 Contract — conformance registration gate reports missing behaviours BEFORE failures, so a half-tested route is told the bigger problem first",
+        "P9-01 Contract — conformance registration gate reports every missing behaviour at once, in REQUIRED_BEHAVIORS order rather than input order",
+        "P9-01 Contract — conformance registration gate a duplicated behaviour takes its LAST result, so a re-run supersedes rather than accumulates",
+        "P9-01 Contract — conformance registration gate every required behaviour is individually load-bearing: dropping any one of the six denies",
+        "P9-01 Contract — conformance registration gate the required set is exactly the six behaviours must[0] enumerates, each named once",
+        "extraBehaviors reports a behaviour beyond the required set without denying, so a growing kit does not fail the gate",
+        "extraBehaviors reports nothing when a route demonstrates exactly the required set"
+      ],
+      "files": [
+        "packages/llm/llm/src/conformance.ts",
+        "packages/llm/llm/tests/conformance.spec.ts",
+        "packages/llm/llm/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T03:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "fa7777557155df327108c0966d2dd9fa3a00b4a5",
+        "testsDiscovered": 13
+      },
+      "note": "C (Contract) for P9-01, under decision C3's early-start clearance. P9-01 gates P9-02 and P9-03, so it is the first of that chain. Scope is must[0]'s six-behaviour enumeration and must[1]'s registration gate -- the kit that PRODUCES results and the mock servers it runs against are Provider-stage work and perform I/O this module does not. The load-bearing rule is that an ABSENT result DENIES: a route that skipped the abort cases and a route that handles aborts correctly are indistinguishable from their result sets unless absence is a denial, so treating a missing result as a pass would make the gate strongest against routes that bothered to test and weakest against routes that did not. A pass over ZERO cases denies for the same reason under a different disguise -- it is exactly what a suite that silently matched no cases produces, which this program has already met once as BLOCKED-098. Extra behaviours are reported, never denied, so a kit that grows does not fail the gate. Cases frozen by fullName per BLOCKED-104.",
+      "sensitivityProof": {
+        "mutationDescription": "Five targeted mutations of conformance.ts, each restored byte-identical: (M1) treated a missing behaviour as present, so untested equals passed; (M2) admitted a pass reported over zero cases; (M3) reordered the checks so failures are reported before undemonstrated behaviours; (M4) took the FIRST result for a duplicated behaviour instead of the last, so a re-run cannot supersede an earlier verdict; (M5) denied a route for demonstrating MORE than the required set.",
+        "failureSummary": "All five reddened: 5, 1, 1, 1 and 1 of 13. M1 reddens five because the absent-denies rule is pinned by the empty set, a single omission, the per-behaviour sweep over all six, the ordering case and the missing-list case -- which is the intended weighting, since that one rule is what the gate is for. The other four redden exactly one each, naming the single guard removed."
+      }
     }
   ]
 }
