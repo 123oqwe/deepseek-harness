@@ -31,6 +31,8 @@ export type {
   TenantId,
 } from './outbox.ts'
 export { classifyIntake, dedupKey } from './inbox.ts'
+export { dispatchOnce } from './dispatcher.ts'
+export type { DispatchDeps, DispatchReport, SendOutcome } from './dispatcher.ts'
 export type { IncomingMessage, IntakeDecision } from './inbox.ts'
 
 /**

@@ -4063,6 +4063,41 @@
         "mutationDescription": "Four mutations. (1) commitWithOutbox splits its one enqueueAll into two calls, restoring the straddle hazard; (2) removed its empty-records refusal; (3) enqueueAll drops its structuredClone defensive copy; (4) enqueueAll appends one entry at a time instead of in a single push. All restored byte-identical.",
         "failureSummary": "Reddens 3, 1, 2 and 0 cases respectively. (4) is an equivalent mutant by construction -- see the note; the guarantee is the absence of an await, not the shape of the append -- and is recorded rather than papered over with an assertion that would only pin an implementation detail."
       }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/dispatcher.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "spends the attempt and persists `sent` BEFORE handing the record to the transport",
+        "applies the receipt, and applying the same outcome twice does not ack twice",
+        "returns a failed send to pending with its attempt spent, not dead-lettered",
+        "dead-letters once the attempt budget is exhausted, and says which reason",
+        "reads the clock ONCE, so a slow transport cannot expire a later record",
+        "dispatches in priority order, so a starved low-priority record cannot jump ahead"
+      ],
+      "files": [
+        "packages/run/message-bus/src/dispatcher.ts",
+        "packages/run/message-bus/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T17:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d1833270b913e49968f1406c6be6585480d04943",
+        "testsDiscovered": 6
+      },
+      "note": "P4-06 U-stage. First freeze for this cell.\n\nPRE-FLIGHT: the registry declares core/agent/src/inbox.ts and core/agent/src/dispatch.ts for this stage, and BOTH are name-collisions with P4-06's vocabulary. BLOCKED-088 already established the first. The second was measured, not read: dispatch.ts contains ZERO occurrences of receipt/outbox/deliver/message case-insensitively -- it is Cordis event dispatch (agentEvents, emitAgentEvent, advanceAgentLifecycle), unrelated to message delivery. Two collisions out of two is a pattern: the file assignment was made by matching clause vocabulary against filenames without checking what those files do. Filed as BLOCKED-091.\n\nApplied BLOCKED-088's standing ruling -- the registry's files list is a declaration, not a gate -- and flagged the extension to the delegate rather than assuming a ruling given for one file covers a second.\n\nmust[1]'s real subject is packages/run/message-bus/src/dispatcher.ts: a loop that orders records, spends an attempt and persists `sent` BEFORE the send, applies the receipt idempotently, returns a failed send to pending rather than dead-lettering it, and reads its clock ONCE per pass.\n\nONE ASSERTION WAS REWRITTEN BEFORE FREEZING, and the reason matters more than the fix. The first version of the persist-order case read the record handed to `send` and asserted its state was `sent`. That record is built before the send in EITHER order, so the assertion could not distinguish them -- persisting after the send reddened nothing. Worse, the case carried a comment claiming it pinned the order, which is the day's recurring defect appearing inside a test written to prevent it. Rewritten to observe what has reached the durable store at the moment the send begins, which is the only thing that separates the two orders. The mutation is what exposed it; rereading the comment would not have.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations. (1) persist AFTER the send instead of before; (2) read the clock per record instead of once per pass; (3) dead-letter a failed send immediately instead of returning it to pending; (4) do not spend the attempt; (5) drop orderForDispatch and iterate in argument order. All restored byte-identical.",
+        "failureSummary": "Reddens 1, 1, 1, 2 and 1 case respectively, each on the case naming its defect. Against the FIRST draft of the suite mutation (1) reddened ZERO, because that draft's assertion read the record passed to send rather than the durable store -- the draft was rewritten rather than frozen."
+      }
     }
   ]
 }

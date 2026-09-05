@@ -27,7 +27,11 @@
       "default": "./lib/types/outbox.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./dispatcher": {
+      "types": "./lib/types/dispatcher.d.ts",
+      "default": "./lib/types/dispatcher.js"
+    }
   },
   "files": [
     "lib/index.js",

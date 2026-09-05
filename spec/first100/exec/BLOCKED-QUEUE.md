@@ -2040,3 +2040,23 @@ The delegate searched the register for `^### BLOCKED-089`, found nothing, and re
 
 This is the same structure as the flake register lagging reality (BLOCKED-080), and it gives both a shared repair: **either the fact gets exactly one home, or the second home is made unavoidable too** — a sign-off step that checks the lock row the way greening a cell forces the absorption record. **"Remember to sync" is not a repair; it is the condition that produced the gap.**
 
+### BLOCKED-091 — P4-06's declared files were chosen by NAME, not by what they do
+
+**Status: OPEN. Recorded 2026-09-05 from the U stage; generalizes BLOCKED-088 from one file to a pattern.**
+
+BLOCKED-088 found that `packages/core/agent/src/inbox.ts` is a different "inbox" from P4-06's — it holds user prompts awaiting a turn, not durable messages. The Usage stage declares two files, and **the second is the same collision**:
+
+| Declared file | What P4-06 means by the name | What the file actually is |
+|---|---|---|
+| `core/agent/src/inbox.ts` | the durable consumer that deduplicates messages | pending user prompts awaiting a turn |
+| `core/agent/src/dispatch.ts` | the loop that sends messages and marks receipts (must[1]) | Cordis event dispatch — `agentEvents`, `emitAgentEvent`, `advanceAgentLifecycle` |
+
+Measured rather than read: `dispatch.ts` contains **zero** occurrences of `receipt`, `outbox`, `deliver`, or `message`, case-insensitively. It has nothing to do with message delivery.
+
+**Two collisions out of two is a pattern, not an accident.** The file assignment for this epic was made by matching the clause's vocabulary against filenames — "inbox" to `inbox.ts`, "dispatcher" to `dispatch.ts` — without checking what those files do. That is the registry-construction analogue of the day's dominant defect: **a plausible answer produced without consulting the subject.**
+
+**What was built instead.** must[1] now has a real subject at `packages/run/message-bus/src/dispatcher.ts`: a loop that orders records, spends an attempt and persists `sent` *before* handing a record to the transport, applies the receipt idempotently, returns a failed send to `pending` rather than dead-lettering it, and reads its clock once per pass so a slow transport cannot expire a later record. Five mutations, each reddening the case that names its defect.
+
+**Applied BLOCKED-088's standing ruling rather than asking again**: the registry's `files` list is a declaration, not a gate, and nothing verifies a declared file was modified. Flagged to the delegate rather than assumed silently, because that ruling was given for one file and this extends it to a second.
+
+**What this raises and does not answer.** If P4-06's files were assigned by name-matching, other epics' may be too. That is a question about the registry as a whole, is far outside this cell, and is **not** something to sample opportunistically while implementing — a partial survey would produce exactly the kind of number BLOCKED-080 records the cost of. It needs a deliberate pass over all 101 rows, or it needs leaving alone.
