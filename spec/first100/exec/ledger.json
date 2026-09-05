@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T04:58:47.745Z",
-  "inputDigest": "89fc251cb91586662bc11aab5adacc6c472662c2cafb83bffdfa08bc954efaf9",
+  "lastUpdatedUtc": "2026-09-05T05:16:54.648Z",
+  "inputDigest": "5572dc8c124d83517c5634e1429acf5126ef0c6e14ee6e4edc9a16a864eb592e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3507,7 +3507,34 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "684d0aad2a50cf2e8bc0cb9f611172cd971114f7",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33946026079",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-684d/first100-evidence-684d0aad2a50cf2e8bc0cb9f611172cd971114f7/vitest-report.json",
+          "observationSha256": "72517b555b749ccd1f875d20af065dd777589df248a279db81d31ed0eff4d753",
+          "expectCasesMatched": [
+            "contract: the state map declares exactly the ten states must[0] names, with no extras",
+            "contract: every declared target is itself a declared state, so the map cannot name a state that does not exist",
+            "contract: waiting_tool and waiting_human are distinct states rather than one waiting state",
+            "contract: a transition with an empty reason is refused, so a recorded transition always says why",
+            "contract: a whitespace-only reason is refused too, since it records nothing a reader can use",
+            "control: the same transition with a real reason is admitted, so the refusals above measure the reason and not the edge",
+            "contract: a proposal naming a different run is refused, so one run can never advance another",
+            "contract: an edge absent from the map is refused",
+            "contract: a proposal whose source disagrees with the current state is refused, even when the edge itself is legal",
+            "contract: a strictly older epoch is refused whatever it proposes — the stale-worker case",
+            "control: the same proposal at the current epoch is admitted, so staleness is decided by the epoch and not by the edge",
+            "contract: a stale worker is refused for staleness before legality, so it never learns whether its edge would have been legal",
+            "contract: no transition leaves a terminal state, so a finished run cannot be revived or re-orphaned",
+            "contract: every waiting state, plus queued and paused, is non-consuming",
+            "contract: running and starting DO consume, so the classification is a real partition rather than a list of everything",
+            "contract: cancelling consumes, because a draining run still holds its slot",
+            "contract: an orphaned run may be reclaimed through starting, which is what issues a new epoch",
+            "contract: an orphaned run may fail safely",
+            "contract: an orphaned run may NOT resume directly as running, so a reclaim always issues a new lease",
+            "contract: every non-terminal state can reach orphaned, so any interrupted run is representable after a restart"
+          ],
+          "capturedAtUtc": "2026-09-05T05:16:54.645Z"
         },
         "P": {
           "status": "NOT_RUN"
@@ -3520,7 +3547,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": null,
+      "candidateSha": "684d0aad2a50cf2e8bc0cb9f611172cd971114f7",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
