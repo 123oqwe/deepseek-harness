@@ -22,13 +22,18 @@ name: first100 refresh single-environment snapshots
 # The diff is admission, not acceptance. Acceptance is the next ordinary run
 # comparing against the committed result.
 
+# Triggered by pushing a branch under `refresh-snapshots/`, not by
+# workflow_dispatch: dispatch requires the workflow to exist on the fork's
+# DEFAULT branch, and this program has no business pushing to that branch to
+# gain a button. A throwaway branch is the narrower path, and it leaves the
+# trigger visible in history.
 on:
-  workflow_dispatch:
-    inputs:
-      scenarios:
-        description: Space-separated scenario names to refresh
-        required: true
-        default: pwsh-tool-turn persistent-pwsh-tool-turn
+  push:
+    branches:
+      - refresh-snapshots/**
+
+env:
+  SCENARIOS: pwsh-tool-turn persistent-pwsh-tool-turn
 
 permissions:
   contents: read
@@ -62,7 +67,7 @@ jobs:
         run: |
           set -o pipefail
           filters=""
-          for scenario in ${{ inputs.scenarios }}; do
+          for scenario in $SCENARIOS; do
             filters="$filters -t $scenario"
           done
           echo "refreshing:${filters}"
