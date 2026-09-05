@@ -67,7 +67,16 @@ async function setup(ownership: OwnershipConfig = {}): Promise<Context> {
  * case can dispose it. The plugin's `name` is what the registry resolves its
  * `PluginIdentity` from in a Loader-free tree.
  */
-function mountPlugin(ctx: Context, identity: string, names: readonly string[]): Fiber {
+/**
+ * Mount one plugin that registers `names`.
+ *
+ * The return type is `ctx.plugin`'s own — `Fiber & PromiseLike<Fiber>` — and
+ * NOT plain `Fiber`. Annotating it as `Fiber` discarded the thenable half, so
+ * every `await mountPlugin(...)` read as awaiting a non-promise and the
+ * type-aware linter reported nineteen of them. The awaits were right the whole
+ * time; the helper's signature was throwing away what made them right.
+ */
+function mountPlugin(ctx: Context, identity: string, names: readonly string[]): Fiber & PromiseLike<Fiber> {
   return ctx.plugin({
     name: identity,
     inject: ['tools'],
@@ -82,7 +91,7 @@ function mountPlugin(ctx: Context, identity: string, names: readonly string[]): 
  * returns a thenable Fiber rather than a Promise, so a rejection is caught
  * here rather than through `.catch`.
  */
-async function refusalOf(mounting: Fiber): Promise<unknown> {
+async function refusalOf(mounting: PromiseLike<Fiber>): Promise<unknown> {
   try {
     await mounting
   } catch (error) {

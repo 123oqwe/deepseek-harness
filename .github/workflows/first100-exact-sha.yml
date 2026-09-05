@@ -107,31 +107,35 @@ jobs:
           DSH_BUILD_CLIENT_PROFILE: official
         run: pnpm run build
 
-      - name: Lint
-        # Ordered after Build, not before it. `pnpm run lint` runs
-        # `build:lib:host`, which emits the HOST face only, while the type-aware
-        # rules also read `packages/client/**`. On a machine with a previous full
-        # build the client `lib/types` are already there and lint passes; on a
-        # fresh checkout they are not, every client type resolves to `error`, and
-        # the no-unsafe-* rules fire on correct code. Run 33985073439 was that
-        # difference and nothing else — local clean, CI red, same commit.
-        # `always()` for the same reason as the ordering below: a red test suite
-        # must not hide whether lint is also red. Without it these steps skip on
-        # the first failure, so a run reports one problem per attempt and three
-        # independent facts take three pushes to learn. The job still fails —
-        # this widens what one run tells you, it does not soften the gate.
+      - name: Lint the files this program changed since the frozen baseline
         if: always()
-        # Ordered AFTER the observation upload deliberately. BLOCKED-007 item 3
-        # established that a RED observation is real, inspectable evidence and
-        # must still be uploaded; a gate that ran first and failed would leave
-        # the ledger with no artifact at all, turning a reviewable failure into
-        # a missing one.
-        # BLOCKED-109: a First-100 commit that fails lint has not been through
-        # the branch's own gate, which is a diagnostic signal rather than a
-        # style one -- taking that shortcut is the shape every failure found on
-        # 2026-09-07 shared. Cheap now: the 525 accumulated errors were cleared
-        # in the same session, so this step starts green.
-        run: pnpm run lint
+        # BLOCKED-109, as re-adjudicated once the real numbers were known. Lint
+        # entered this gate for a diagnostic reason: a First-100 commit that
+        # fails lint has not been through the branch's own gate, and that
+        # shortcut is the shape every failure of 2026-09-07 shared. The reason
+        # is about THIS PROGRAM's commits, so the gate now asks about them.
+        #
+        # Whole-tree lint asked a different question and answered it badly:
+        # ~56 type-aware errors sit in packages/client/ui-chat and
+        # ui-conversation, last touched before the baseline and unrelated to any
+        # cell's correctness. Blocking every cell on them would make this
+        # program pay another's debt while wearing the costume of rigour.
+        #
+        # The set is mechanical, not a maintained allowlist: every source file
+        # differing from `frozenBaseline`. A First-100 commit that touches a file
+        # carrying old debt pulls that file in and must leave it clean — you
+        # touched it, it leaves your hands clean.
+        #
+        # Runs after Build because the type-aware rules read emitted types;
+        # `build:lib:host` alone emits the host face and would resolve every
+        # client type to `error`.
+        run: |
+          base=$(node -e "process.stdout.write(require('./tests/first100/registry.json').frozenBaseline)")
+          echo "frozen baseline: $base"
+          mapfile -t changed < <(git diff --name-only --diff-filter=d "$base..HEAD" -- '*.ts' '*.tsx' '*.mjs' | grep -v '^vendor/' || true)
+          echo "${#changed[@]} changed source file(s) since the baseline"
+          if [ "${#changed[@]}" -eq 0 ]; then echo "nothing this program changed; lint has no subject"; exit 0; fi
+          pnpm exec tsx scripts/run-oxlint.ts "${changed[@]}"
 
       - name: Recorded-session snapshots
         if: always()

@@ -123,7 +123,7 @@ function assertJsonSerializable(value: unknown, path: string, errors: ManifestVa
       // true left-to-right index order even when an `undefined` element
       // sits before a later element with a deeply nested violation.
       const children: JsonSerializableFrame[] = frame.value.map((item, index) => ({
-        value: item,
+        value: item as unknown,
         path: `${frame.path}[${index}]`,
         arrayElement: true,
       }))

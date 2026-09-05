@@ -83,7 +83,11 @@ function flattenValues(value: unknown, into: string[] = []): string[] {
     }
     return into
   }
-  into.push(String(value))
+  // JSON.stringify rather than String: this walk flattens arbitrary record
+  // values, and String() on an object yields '[object Object]', which would make
+  // two records that differ only inside an object compare equal. `undefined`
+  // stringifies to `undefined` rather than a string, so it is named.
+  into.push(JSON.stringify(value) ?? 'undefined')
   return into
 }
 

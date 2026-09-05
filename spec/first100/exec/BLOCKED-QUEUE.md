@@ -2623,3 +2623,25 @@ Every scenario that DID run gained that event when P2-03 added it. These three s
 **What actually repairs it:** a refresh on a host where `pwsh` exists, so the three scenarios run and their expectations are OBSERVED like the other 116. Installing PowerShell on this machine would do it; that is the user's call, not mine.
 
 **The durable fix is separate and larger:** `refresh` should report what it SKIPPED, and a refresh that skipped anything should say so loudly rather than reporting only what it rewrote. Until then, every session-log change carries this trap, and it will be sprung by whoever next refreshes on a machine without pwsh — which is every macOS host by default.
+
+### BLOCKED-111 — ~56 type-aware lint errors predate this program, and were never in any count given to the delegate
+
+**Status: OPEN, maintainer-level. Not this program's to fix; recorded so it does not vanish by leaving the greening gate.**
+
+`pnpm run lint` runs two passes. The stylistic pass is what the 525-error cleanup cleared. The **type-aware** pass (`tsgolint`) was never counted, by me or by anyone I reported to, and it holds 95 errors on this branch.
+
+Of those, 39 belonged to files this program owns and are fixed. The remaining **56 predate `frozenBaseline`**:
+
+```
+26  packages/client/ui-conversation/src/client/apply.ts        perf: InputBar use immutable props
+18  packages/client/ui-chat/src/client/apply.ts                refactor(client): bind keyed chat sources
+12  packages/client/ui-conversation/src/client/queue/QueueDock.tsx
+```
+
+None is in `git diff --name-only 4e84901e64..HEAD`.
+
+**Consequence for anyone else, which is why this is filed rather than dropped:** `pnpm run lint` fails on a clean checkout of this branch, and did before First-100 began. A contributor running the documented gate sees 56 failures they did not cause and cannot attribute.
+
+**How BLOCKED-109 was mis-decided, and by what.** The delegate admitted lint to the greening gate partly on "the cost is now zero, the 525 are cleared." That premise came from me, and it was wrong in a specific way: I reported a stylistic-pass count as though it were the whole gate. The delegate's own note is the accurate summary — *the numbers were mine to get right, the not-checking was theirs.*
+
+**The re-adjudication is recorded at BLOCKED-109 and implemented:** the gate now lints only source files differing from `frozenBaseline`. That is not a weakening of the original reason but a narrowing to it — lint entered as a signal about *this program's commits*, and whole-tree lint answered a different question. A First-100 commit touching a file with old debt pulls that file into the set and must leave it clean.

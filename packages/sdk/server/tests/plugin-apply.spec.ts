@@ -195,7 +195,7 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
         },
       })
       const response = await harness.waitForFrame(frame => frame.id === 'refuse-1', 'initialize refusal')
-      expect(response).toMatchObject({ id: 'refuse-1', error: { message: expect.stringContaining('teleport') } })
+      expect(response).toMatchObject({ id: 'refuse-1', error: { message: expect.stringContaining('teleport') as string } })
       expect('result' in response).toBe(false)
     } finally {
       await harness.dispose()
@@ -220,7 +220,7 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
         },
       })
       const response = await harness.waitForFrame(frame => frame.id === 'range-1', 'initialize range refusal')
-      expect(response).toMatchObject({ id: 'range-1', error: { message: expect.stringContaining('no-overlapping-version') } })
+      expect(response).toMatchObject({ id: 'range-1', error: { message: expect.stringContaining('no-overlapping-version') as string } })
     } finally {
       await harness.dispose()
       await rm(storageDir, { recursive: true, force: true })
@@ -251,7 +251,7 @@ describe('dsh-sdk-jsonrpc-server plugin apply', () => {
             downgrades: [],
           },
           protocolVersions: { min: 1, max: 1 },
-          schemaFingerprint: expect.stringMatching(/^[0-9a-f]{64}$/u),
+          schemaFingerprint: expect.stringMatching(/^[0-9a-f]{64}$/u) as string,
         },
       })
       expect(harness.exits()).toEqual([])

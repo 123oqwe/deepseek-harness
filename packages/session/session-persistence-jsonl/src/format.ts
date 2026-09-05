@@ -572,7 +572,11 @@ export class SessionLogScanner {
         const expected = this.events.length
         this.events.length = rowStart
         this.recordCorruption(line, `expected seq ${expected}, got ${event.seq}`, true)
-        if (decoded.some(candidate => candidate.type === 'turn/end')) throw this.issue
+        // `issue` is the fault this fixture was constructed to raise; the
+        // non-null assertion states that a fixture without one is a broken
+        // fixture rather than a runtime case to handle.
+        // oxlint-disable-next-line typescript/no-non-null-assertion -- a fixture with no issue cannot reach this branch
+        if (decoded.some(candidate => candidate.type === 'turn/end')) throw this.issue!
         return
       }
       this.events.push(event)

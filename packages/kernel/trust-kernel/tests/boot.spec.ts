@@ -32,7 +32,11 @@ describe('createTrustKernel', () => {
     const kernel = createTrustKernel()
     expect(kernel.policyEnforcement({ payload: 'anything' })).toBe('deny')
     expect(kernel.sandboxAttestationVerifier({ payload: 'anything' })).toBe(false)
-    expect(kernel.auditAppend({ payload: 'anything' })).toBeUndefined()
+    // `auditAppend` is typed `void`, so "it returns nothing" is a compile-time
+    // fact and asserting it at runtime inspects a value that does not exist.
+    // What a runtime case can add is that the pinned kernel's sink ACCEPTS a
+    // payload rather than rejecting it, which is what this asserts.
+    expect(() => { kernel.auditAppend({ payload: 'anything' }) }).not.toThrow()
   })
 
   it('constructs a fresh value on every call -- the one process-lifetime pin is the caller\'s discipline (a single ctx.provide), not a module-level singleton', () => {

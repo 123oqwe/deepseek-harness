@@ -1389,12 +1389,18 @@ export class ToolRuntime extends Service {
    */
   declareOwner(identity: string): () => void {
     const fiber = this.ctx.fiber
-    return this.ctx.effect(function* (this: ToolRuntime) {
+    const dispose = this.ctx.effect(function* (this: ToolRuntime) {
       const uid = fiber.uid
       if (uid === null) return
       this.declaredOwners.set(uid, brandString<PluginIdentity>(identity))
       yield () => { this.declaredOwners.delete(uid) }
     }.bind(this), `tools.declareOwner(${JSON.stringify(identity)})`)
+    // `ctx.effect` hands back a disposer that returns `Promise<void>`, while
+    // this method's contract — shared with `register` and `presentAs` — is a
+    // synchronous disposer no caller awaits. Returning it directly declared the
+    // promise away silently; discarding it here says so, and keeps the returned
+    // function's type honest about what a caller gets.
+    return () => { void dispose() }
   }
 
   /**
@@ -1418,10 +1424,21 @@ export class ToolRuntime extends Service {
       const declared = fiber.uid === null ? undefined : this.declaredOwners.get(fiber.uid)
       if (declared !== undefined) return { identity: declared, origin: 'dynamic' }
     }
-    const loader = this.ctx.get('loader')
+    const loader: unknown = this.ctx.get('loader')
     if (loader !== undefined) {
+      // `loader.entries()` is untyped on the service, so every field read from
+      // it is an `any` access. The two fields this attribution actually depends
+      // on are named here instead: a running entry's fiber, and the name its
+      // cordis.yml gave it. Declaring the minimum keeps the reads checked
+      // without asserting anything about the rest of a loader entry, which this
+      // code neither reads nor should depend on.
+      interface AttributableLoaderEntry {
+        readonly fiber?: { readonly uid: number | null }
+        readonly options: { readonly name: string }
+      }
+      const entries = (loader as { entries: () => Iterable<AttributableLoaderEntry> }).entries()
       for (const fiber of chain) {
-        for (const entry of loader.entries()) {
+        for (const entry of entries) {
           if (entry.fiber !== undefined && entry.fiber.uid === fiber.uid) {
             return { identity: brandString<PluginIdentity>(entry.options.name), origin: 'static' }
           }
