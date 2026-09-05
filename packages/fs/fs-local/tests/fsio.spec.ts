@@ -878,7 +878,10 @@ describe('writeFileAtomic — temp-file safety', () => {
 
 describe('applyLiteralEdit', () => {
   it('replaces a unique match', () => {
-    expect(applyLiteralEdit('a b c', 'b', 'X', false, 'f')).toEqual({ content: 'a X c', replacements: 1 })
+    // `tier` is asserted rather than ignored: it is what tells a caller the
+    // literal search succeeded, and a loosened assertion here would stop
+    // noticing if the fallback ladder ever started handling exact matches.
+    expect(applyLiteralEdit('a b c', 'b', 'X', false, 'f')).toEqual({ content: 'a X c', replacements: 1, tier: 'exact' })
   })
 
   it('rejects zero matches', () => {
@@ -894,7 +897,7 @@ describe('applyLiteralEdit', () => {
   })
 
   it('replaces all matches with replaceAll', () => {
-    expect(applyLiteralEdit('a a a', 'a', 'X', true, 'f')).toEqual({ content: 'X X X', replacements: 3 })
+    expect(applyLiteralEdit('a a a', 'a', 'X', true, 'f')).toEqual({ content: 'X X X', replacements: 3, tier: 'exact' })
   })
 
   it('matches across normalized line endings', () => {

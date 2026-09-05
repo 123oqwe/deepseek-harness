@@ -11,6 +11,9 @@ import { chmod, link, lstat, mkdir, open, readFile, realpath, readdir, rename, r
 import type { BigIntStats, Dirent, Stats } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { TextDecoder } from 'node:util'
+
+import { applyLocatedEdit, locateEdit } from './edit-fallback.ts'
+import type { EditMatchTier } from './edit-fallback.ts'
 import { FsError, FsTargetKey, FsVersion } from '@deepseek-ai/dsh-fs'
 import { copyFileDaclWin32, replaceFileWin32 } from './win32.ts'
 
@@ -748,13 +751,24 @@ export async function readTextForDiff(
 /**
  * Apply a literal replacement to LF-normalized content. Empty or missing search text throws
  * `FS_EDIT_NOT_FOUND`; multiple matches throw `FS_AMBIGUOUS_EDIT` unless `replaceAll` is true.
+ *
+ * When exact matching finds NOTHING and a single edit was requested, the graded
+ * ladder in `./edit-fallback.ts` is consulted (Epic P9-04). The ladder runs only
+ * on that path, so every input that matched before still takes the identical
+ * route and returns the identical result: the fallback can rescue a failure, and
+ * cannot change a success.
+ *
+ * `replaceAll` never falls back. "Every place this approximately appears" is a
+ * different request from "the one place this appears", and answering the first
+ * with an approximate matcher would rewrite regions the caller never inspected.
  * @param content - the current file content, already LF-normalized.
  * @param oldString - literal text to find; CRLF inside it is normalized to LF before
  *   matching.
  * @param newString - literal replacement text, normalized the same way.
  * @param replaceAll - replace every match instead of requiring exactly one.
  * @param displayPath - the caller-facing path used in error messages.
- * @returns the edited LF-normalized content plus how many occurrences were replaced.
+ * @returns the edited LF-normalized content, how many occurrences were replaced,
+ *   and which tier matched — `'exact'` whenever the literal search succeeded.
  */
 export function applyLiteralEdit(
   content: string,
@@ -762,7 +776,7 @@ export function applyLiteralEdit(
   newString: string,
   replaceAll: boolean,
   displayPath: string,
-): { content: string; replacements: number } {
+): { content: string; replacements: number; tier: EditMatchTier } {
   const oldNorm = normalizeLineEndings(oldString)
   if (oldNorm.length === 0) {
     throw new FsError('old_string must be a non-empty string', 'FS_EDIT_NOT_FOUND')
@@ -770,12 +784,54 @@ export function applyLiteralEdit(
   const newNorm = normalizeLineEndings(newString)
   const replacements = countOccurrences(content, oldNorm)
   if (replacements === 0) {
-    throw new FsError(`old_string was not found in "${displayPath}"`, 'FS_EDIT_NOT_FOUND')
+    if (replaceAll) {
+      throw new FsError(`old_string was not found in "${displayPath}"`, 'FS_EDIT_NOT_FOUND')
+    }
+    return applyFallbackEdit(content, oldNorm, newNorm, displayPath)
   }
   if (!replaceAll && replacements > 1) {
     throw new FsError(`old_string matched ${replacements} times in "${displayPath}"; provide a more specific old_string or set replace_all to true`, 'FS_AMBIGUOUS_EDIT')
   }
-  return { content: content.split(oldNorm).join(newNorm), replacements }
+  return { content: content.split(oldNorm).join(newNorm), replacements, tier: 'exact' }
+}
+
+/**
+ * Locate and apply an edit the literal search could not find (Epic P9-04).
+ *
+ * Reached only when exact matching found zero occurrences, so it can rescue a
+ * failure and never alters a success. An ambiguity at any tier raises
+ * `FS_AMBIGUOUS_EDIT` exactly as a repeated literal match does — the caller's
+ * question had more than one answer, and which matcher discovered that does not
+ * change what they must do about it.
+ * @param content - the current file content, LF-normalized.
+ * @param oldNorm - the normalized search text.
+ * @param newNorm - the normalized replacement text.
+ * @param displayPath - the caller-facing path used in error messages.
+ * @returns the edited content and the tier that matched.
+ */
+function applyFallbackEdit(
+  content: string,
+  oldNorm: string,
+  newNorm: string,
+  displayPath: string,
+): { content: string; replacements: number; tier: EditMatchTier } {
+  const outcome = locateEdit(content, oldNorm)
+  if (outcome.located) {
+    return { content: applyLocatedEdit(content, outcome.match, newNorm), replacements: 1, tier: outcome.match.tier }
+  }
+  if (outcome.failure.reason === 'ambiguous') {
+    throw new FsError(
+      `old_string matched ${outcome.failure.startLines.length} regions in "${displayPath}" once ${outcome.failure.tier === 'trailing-whitespace' ? 'trailing whitespace' : 'indentation'} is ignored; provide a more specific old_string`,
+      'FS_AMBIGUOUS_EDIT',
+    )
+  }
+  // must[3]: point at the closest region so the caller can correct the search
+  // text in one attempt instead of guessing which part was wrong.
+  const nearest = outcome.failure.nearest
+  const hint = nearest === null
+    ? ''
+    : ` closest region begins at line ${nearest.startLine + 1} (${Math.round(nearest.similarity * 100)}% of lines matched ignoring whitespace)`
+  throw new FsError(`old_string was not found in "${displayPath}";${hint}`, 'FS_EDIT_NOT_FOUND')
 }
 
 export { normalizeLineEndings, restoreLineEndings }

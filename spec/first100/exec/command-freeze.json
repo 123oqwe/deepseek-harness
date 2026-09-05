@@ -6237,6 +6237,45 @@
         "mutationDescription": "Five targeted mutations of conformance.ts, each restored byte-identical: (M1) treated a missing behaviour as present, so untested equals passed; (M2) admitted a pass reported over zero cases; (M3) reordered the checks so failures are reported before undemonstrated behaviours; (M4) took the FIRST result for a duplicated behaviour instead of the last, so a re-run cannot supersede an earlier verdict; (M5) denied a route for demonstrating MORE than the required set.",
         "failureSummary": "All five reddened: 5, 1, 1, 1 and 1 of 13. M1 reddens five because the absent-denies rule is pinned by the empty set, a single omission, the per-behaviour sweep over all six, the ordering case and the missing-list case -- which is the intended weighting, since that one rule is what the gate is for. The other four redden exactly one each, naming the single guard removed."
       }
+    },
+    {
+      "epic": "P9-04",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/fs/fs-local/tests/edit-fallback.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-04 Provider — the ladder wired into applyLiteralEdit an exact match still reports tier \"exact\", so the fallback cannot claim credit for the literal path",
+        "P9-04 Provider — the ladder wired into applyLiteralEdit must[0]: a trailing-whitespace miss is rescued and reports the tier that matched",
+        "P9-04 Provider — the ladder wired into applyLiteralEdit must[0]: an indentation miss is rescued and the replacement lands at the FILE indentation",
+        "P9-04 Provider — the ladder wired into applyLiteralEdit replaceAll never falls back: \"every approximate place\" is a different request and stays not-found",
+        "P9-04 Provider — the ladder wired into applyLiteralEdit an ambiguity found by a fallback tier raises FS_AMBIGUOUS_EDIT, the same code a repeated literal match raises",
+        "P9-04 Provider — the ladder wired into applyLiteralEdit must[3]: a genuine miss names the closest region by line and similarity",
+        "P9-04 Provider — the ladder wired into applyLiteralEdit an existing exact-match failure mode is unchanged: a repeated literal match still fails before the ladder runs"
+      ],
+      "files": [
+        "packages/fs/fs-local/src/fsio.ts",
+        "packages/fs/fs-local/src/edit-fallback.ts",
+        "packages/fs/fs-local/tests/edit-fallback.spec.ts",
+        "packages/fs/fs-local/tests/fsio.spec.ts",
+        "packages/fs/fs-local/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T04:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "957fed699132116d710f2873b117da4b6d57a6da",
+        "testsDiscovered": 7
+      },
+      "note": "P (Provider) for P9-04: the C-stage ladder wired into applyLiteralEdit. Titles are disjoint from C's 21 -- this entry freezes only the 'P9-04 Provider' describe block, and C's cases remain frozen under their own entry (BLOCKED-018 distinctness). The ladder runs ONLY where the literal search found zero occurrences, so every input that matched before takes the identical route and returns the identical result: the fallback can rescue a failure and cannot change a success. must[2]'s version guard is untouched -- fs-local/src/index.ts:241 checks it before any edit runs, and this change does not move it. A finding worth recording for the U stage: applyLiteralEdit matches SUBSTRINGS while the ladder matches LINES, so an indent-shifted needle that is LESS indented than the file is still an exact substring hit and never reaches the ladder. Three of the first Provider cases asserted the wrong premise for exactly this reason and were corrected to inputs that genuinely miss; the surviving cases use a needle MORE indented than the file. replaceAll never falls back, because 'every place this approximately appears' is a different question from 'the one place this appears' and answering the first approximately would rewrite regions the caller never inspected. Two pre-existing fsio.spec.ts cases asserted the exact return shape and were updated to pin the new `tier: 'exact'` field rather than loosened, so they still fail if the ladder ever starts handling exact matches.",
+      "sensitivityProof": {
+        "mutationDescription": "Four targeted mutations of fsio.ts, each restored byte-identical: (M1) removed the replaceAll guard so a bulk replace falls back to approximate matching; (M2) downgraded a fallback-tier ambiguity to not-found, losing FS_AMBIGUOUS_EDIT; (M3) dropped the nearest-region hint from the not-found message (must[3]); (M4) consulted the ladder even when the literal search had already succeeded.",
+        "failureSummary": "All four reddened, one case each of 28. The narrowness is the result: each mutation removes one guard and reddens exactly the case written for it, so no case is standing in for another. M4 is the important one -- it proves the 'cannot change a success' claim is asserted rather than merely stated, since the exact-match case detects the ladder running when it should not."
+      }
     }
   ]
 }

@@ -15,6 +15,7 @@ import {
   nearestRegion,
   uniformIndentDelta,
 } from '../src/edit-fallback.ts'
+import { applyLiteralEdit } from '../src/fsio.ts'
 
 const FILE = [
   'function greet(name) {',
@@ -173,5 +174,48 @@ describe('nearestRegion', () => {
 
   it('ignores indentation when scoring, since that is what the caller most often gets wrong', () => {
     expect(nearestRegion(['      a'], ['a'])?.similarity).toBe(1)
+  })
+})
+
+describe('P9-04 Provider — the ladder wired into applyLiteralEdit', () => {
+  it('an exact match still reports tier "exact", so the fallback cannot claim credit for the literal path', () => {
+    expect(applyLiteralEdit('a b c', 'b', 'X', false, 'f')).toStrictEqual({
+      content: 'a X c',
+      replacements: 1,
+      tier: 'exact',
+    })
+  })
+
+  it('must[0]: a trailing-whitespace miss is rescued and reports the tier that matched', () => {
+    const result = applyLiteralEdit('  return x\nnext', '  return x   ', '  return y', false, 'f')
+    expect(result).toStrictEqual({ content: '  return y\nnext', replacements: 1, tier: 'trailing-whitespace' })
+  })
+
+  it('must[0]: an indentation miss is rescued and the replacement lands at the FILE indentation', () => {
+    // The search text is MORE indented than the file. The reverse would still
+    // be an exact substring hit, because applyLiteralEdit matches substrings
+    // and a less-indented needle sits inside a more-indented line.
+    const result = applyLiteralEdit('a = 1\nb', '    a = 1', '    a = 2', false, 'f')
+    expect(result).toStrictEqual({ content: 'a = 2\nb', replacements: 1, tier: 'indentation' })
+  })
+
+  it('replaceAll never falls back: "every approximate place" is a different request and stays not-found', () => {
+    expect(() => applyLiteralEdit('a = 1', '    a = 1', 'a = 2', true, 'f'))
+      .toThrow(expect.objectContaining({ code: 'FS_EDIT_NOT_FOUND' }))
+  })
+
+  it('an ambiguity found by a fallback tier raises FS_AMBIGUOUS_EDIT, the same code a repeated literal match raises', () => {
+    expect(() => applyLiteralEdit('a = 1\nb\na = 1', '    a = 1', 'z', false, 'f'))
+      .toThrow(expect.objectContaining({ code: 'FS_AMBIGUOUS_EDIT' }))
+  })
+
+  it('must[3]: a genuine miss names the closest region by line and similarity', () => {
+    expect(() => applyLiteralEdit('alpha\nbeta\ngamma', 'beta\nDELTA', 'x', false, 'f'))
+      .toThrow(/closest region begins at line 2 \(50% of lines matched/)
+  })
+
+  it('an existing exact-match failure mode is unchanged: a repeated literal match still fails before the ladder runs', () => {
+    expect(() => applyLiteralEdit('a\na', 'a', 'z', false, 'f'))
+      .toThrow(expect.objectContaining({ code: 'FS_AMBIGUOUS_EDIT' }))
   })
 })
