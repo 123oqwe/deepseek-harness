@@ -4593,6 +4593,57 @@
         "mutationDescription": "Five mutations on src/candidate.ts plus the five already recorded against src/commit.ts. Candidate: (1) fabricate `sha512-<name>-<version>` instead of marking integrity unavailable; (2) digest the manifest without sorting keys; (3) keep dependencies outside the observed set; (4) stop sorting entries; (5) count every fact as observed. All restored byte-identical.",
         "failureSummary": "Reddens 4, 1, 1, 1 and 2 cases respectively. (1) is the load-bearing one -- it is the shape of the defect this epic exists to prevent, and four independent cases see it."
       }
+    },
+    {
+      "epic": "P6-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/memory/memory/tests/record.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries content, kind, subject, provenance, times, confidence, scope, purpose, sensitivity, status and relations",
+        "distinguishes inline content from a stored reference",
+        "treats an open-ended validity as an explicit null, not an absent field",
+        "refuses a derived record naming no source event",
+        "accepts a user-asserted record, which names a responsible party instead",
+        "does not treat an empty asserter as traceable",
+        "validation[2]: a returned record carries its own provenance, not a caller-supplied one",
+        "supersedes: the winner gains a relation and the loser is marked, both surviving",
+        "disputes marks the loser disputed, not superseded",
+        "refuses a relation pointing at the record itself",
+        "refuses a duplicated relation but allows two kinds toward one target",
+        "retrieves an active, unexpired record",
+        "withholds a record whose validity has passed, and keeps one at the boundary out too",
+        "withholds revoked, superseded and disputed records alike",
+        "withholds sensitive content by default",
+        "admits sensitive content when the policy explicitly permits it",
+        "admits normal content whatever the policy says",
+        "refuses a confidence outside [0, 1], including NaN",
+        "accepts the exact bounds, so the range test is not off by one",
+        "refuses an inverted validity range but accepts an instantaneous one"
+      ],
+      "files": [
+        "packages/memory/memory/src/record.ts",
+        "packages/memory/memory/src/provenance.ts",
+        "packages/memory/memory/tests/record.spec.ts",
+        "packages/memory/memory/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T05:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "fd2524d2e6d51feebe4e984e4b4b5c5dd514c2c6",
+        "testsDiscovered": 20
+      },
+      "note": "P6-02 C-stage. FROZEN BEFORE THE FIRST LINE OF ITS STAGE WAS WRITTEN, per BLOCKED-095's repair: a per-stage list of freeze targets was made first, with C on the first line even though its answer was the file about to be created. Writing the obvious answer down is the point -- that is the friction whose absence let P1-03's C freeze be missed.\n\nTHE LIST IMMEDIATELY EARNED ITSELF on the U stage: U declares only two SOURCE files and no test file at all, so without deciding up front its freeze would later have been hung on record.spec.ts beside C's and F's, giving one file three disjoint title sets for no reason. U gets its own scope.spec.ts instead. P is N/A by the registry ('record/codec only; P6-01 supplies providers').\n\nSUBJECT EXISTENCE: memory/src/types.ts's own module doc names P6-02 as the owner of the canonical MemoryRecord that supersedes MemoryRecordView -- a DECLARED handoff, the opposite of the three name collisions found in P4-06 and P4-07.\n\nDESIGN DECISIONS THAT CARRY THEIR OWN CASES. Inline content and a stored reference are separate variants, because 'the content is empty' and 'the content lives elsewhere' are different states one nullable field cannot separate. Derived and user-asserted provenance are likewise separate, so an empty source list cannot read as 'the user said so'. validUntil is nullable rather than optional, because 'never expires' is a decision and an absent field cannot be told from one nobody considered. And recordConflict RETURNS BOTH records rather than mutating: a caller that persisted only the winner would be visibly discarding a value it was handed, which is what makes must[1]'s no-overwrite rule checkable at the call site.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations. record.ts: (1) recordConflict mutates the loser in place instead of returning a copy; (2) disputed records stay default-retrievable; (3) the confidence range written as `< 0 || > 1`, which lets NaN through since every NaN comparison is false; (4) the expiry boundary uses `<` instead of `<=`; (6) the derived-without-source check removed. provenance.ts: (5) sensitive content admitted to the index regardless of policy. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each -- six mutations, six distinct cases, no overlap. (3) is the targeted mutation in BLOCKED-085's sense: `< 0 || > 1` is the form a competent author would write, and it admits NaN, which would then pass both bounds and sort unpredictably wherever confidence is ranked."
+      }
     }
   ]
 }

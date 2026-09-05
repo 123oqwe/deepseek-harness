@@ -616,3 +616,24 @@ function toRecordView(record: ScopedMemoryRecord): MemoryRecordView {
 }
 
 export default MemoryRuntime
+export {
+  isDefaultRetrievable,
+  recordConflict,
+  validateRecord,
+} from './record.ts'
+export type {
+  MemoryContent,
+  MemoryKind,
+  MemoryProvenance,
+  MemoryRecord,
+  MemoryRelation,
+  MemoryRelationKind,
+  MemorySensitivity,
+  MemoryStatus,
+  MemorySubject,
+  RecordDefectReason,
+  RecordValidation,
+  SourceEventId,
+} from './record.ts'
+export { admitToIndex, isTraceable, withProvenance } from './provenance.ts'
+export type { IndexAdmission, IndexDenialReason, IndexingPolicy, ProvenancedRecord } from './provenance.ts'
