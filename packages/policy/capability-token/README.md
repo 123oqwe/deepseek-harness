@@ -181,17 +181,15 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as this package exports types and pure decision functions
-only and registers nothing model-facing. No export's return value is safe to
-place directly into model-visible text — only
-`redactTokenForLog`'s narrow, six-field output (acceptance[2]) is intended
-to ever reach a log or model-visible surface.
+None, as this package exports types and pure decision functions only and registers nothing model-facing.
 
 #### KV Cache effect
 
 Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
+
+- **No export's return value is safe to place directly into model-visible text.** Only `redactTokenForLog`'s narrow six-field output (acceptance[2]) is intended to reach a log or a model-visible surface; everything else carries token material.
 
 <a id="known-limitations-and-deferred-work"></a>
 

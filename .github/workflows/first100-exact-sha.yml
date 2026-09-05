@@ -60,6 +60,23 @@ jobs:
           node-version: ${{ env.PRIMARY_NODE_VERSION }}
           cache: pnpm
 
+      - name: Install a sandbox backend (bubblewrap)
+        # BLOCKED-112. Without one, `dsh-sandbox-local` refuses to run a
+        # confined command rather than silently dropping confinement — which is
+        # the right product behaviour and makes every sandboxed-bash scenario
+        # produce an error where the fixture recorded output. The choice was
+        # between giving CI the capability and letting those scenarios skip
+        # here; skipping would mean the sandboxed path is never exercised
+        # anywhere, and it is the path that decides whether a model's command
+        # runs confined.
+        #
+        # Decision A2 already lists this among the CI capabilities to land, so
+        # this is that item rather than a new one.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+          bwrap --version
+
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
 

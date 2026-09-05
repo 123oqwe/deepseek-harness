@@ -67,21 +67,12 @@ const { value, shadowRecord } = evaluateFeatureGate(
 <a id="model-experience"></a>
 ## Model Experience
 
-### Provider-stage runtime
-
-#### What the model sees
-
-Nothing. Every export here is a pure data function or a type; nothing renders into a model request, system prompt, or tool schema.
-
-#### Token effect
-
-Zero-direct: the package contributes no prompt or schema text.
+None, as this package exports pure gate predicates over caller-supplied flags only and registers nothing model-facing.
 
 #### KV Cache effect
 
-Independent: the package registers nothing that participates in a model request.
+Nothing here enters a model request, so provider cache reuse is unaffected.
 
-<a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
 - **No gate is declared for a real capability yet** -- this package computes override resolution, shadow-vs-legacy evaluation, and expiry against any `FeatureGateDeclaration` a caller supplies, but declares none itself. The policy/plugin-trust/run-journal shadow fixtures this epic's own `validation` clause calls for, and registering the `feature-gates` settings namespace (`packages/settings/settings/src/index.ts`'s `SettingsProvider.register`) for a real capability, are Composition-stage deliverables.

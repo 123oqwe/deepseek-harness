@@ -90,7 +90,7 @@ This section explains the design decisions behind the package; the observable ty
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as this package exports types and pure decision-function signatures only and registers nothing model-facing.
+None, as this package exports canonicalization and decision functions and types only and registers nothing model-facing.
 
 #### KV Cache effect
 

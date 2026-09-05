@@ -45,7 +45,11 @@ A journal entry names a step and carries data; it never carries code (must[3]). 
 
 ## Model Experience
 
-No model-visible surface. The package exports decision functions and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
+None, as this package exports resume decisions, journal compaction, and types only and registers nothing model-facing.
+
+#### KV Cache effect
+
+Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 

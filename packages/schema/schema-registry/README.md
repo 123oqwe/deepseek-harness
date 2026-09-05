@@ -89,7 +89,7 @@ Every schema this package bootstraps is still at its genuine first version (1.0)
 
 These two examples are this package's proof that every registry migration carries a bidirectional test or an explicit-irreversibility test — not a description of a real historical schema change.
 
-### Deferred: wiring into read paths
+### Not yet wired into read paths
 
 `negotiateSchema` is a complete, real function, but no call site yet invokes it during session replay, SDK `initialize`, or plugin load — that wiring is a later, U-stage concern.
 
@@ -100,13 +100,12 @@ These two examples are this package's proof that every registry migration carrie
 <a id="model-experience"></a>
 ## Model Experience
 
-None; this is an internal versioning and negotiation library with no tool surface or model-visible output.
+None, as this package exports versioning and negotiation functions only and registers nothing model-facing.
 
 #### KV Cache effect
 
-No direct effect; nothing in this package places content into a model request.
+Nothing here enters a model request, so provider cache reuse is unaffected.
 
-<a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
 - **No real second-version schema exists yet** — every bootstrapped schema is still at its own first version with an identity migration; `src/migrate.ts`'s non-identity migrations are illustrative synthetic examples, never registered against a real schemaId, because no genuine field rename/merge/removal has happened yet on a bootstrapped schema.
@@ -114,7 +113,7 @@ No direct effect; nothing in this package places content into a model request.
 - **The SDK-protocol schemaId list is hand-mirrored** — `src/index.ts`'s `PROTOCOL_WIRE_SCHEMA_IDS` must be kept in sync by hand with the schemaId doc comments in `@deepseek-ai/dsh-sdk-protocol`'s `src/types.ts`; nothing currently cross-checks them automatically.
 
 <a id="dev-note"></a>
-## Dev Note
+### Dev Note
 
 <details>
 <summary>Working context for maintainers — click to expand</summary>

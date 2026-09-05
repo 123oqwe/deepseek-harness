@@ -190,8 +190,7 @@ observable type contract is fully covered in [Use this package](#use-this-packag
 <a id="model-experience"></a>
 ## Model Experience
 
-None, as this package exports types and pure state-machine-function
-signatures only and registers nothing model-facing.
+None, as this package exports run state-machine transitions and types only and registers nothing model-facing.
 
 #### KV Cache effect
 

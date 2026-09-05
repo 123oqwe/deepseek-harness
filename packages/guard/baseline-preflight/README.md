@@ -114,11 +114,11 @@ Read these pages when the package-level contract is not enough. They move from t
 <a id="model-experience"></a>
 ## Model Experience
 
-None: this plugin adds no prompt section, schema, or tool. It either lets boot proceed unchanged or aborts it before any agent, session, or tool registers, so no model ever observes a partial or degraded composition from it.
+None, as this plugin either lets boot proceed unchanged or aborts it before any agent, session, or tool registers, so it adds no prompt section, schema, or tool.
 
 #### KV Cache effect
 
-None; boot either completes or aborts before any request is ever assembled.
+Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
