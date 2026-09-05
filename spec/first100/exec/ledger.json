@@ -1614,10 +1614,11 @@
       },
       "supplements": {},
       "candidateSha": null,
-      "independentVerdict": "PENDING",
+      "independentVerdict": "PENDING_WITH_LIVE_LOCK",
       "openFindings": [
-        "BLOCKED-094 (must[2] gate has no call site)",
-        "BLOCKED-095 (C freeze is post-hoc)"
+        "ACCEPTANCE LOCK: must[2] product-level half + acceptance[0] product-level half — the gate has zero call sites",
+        "BLOCKED-094 (the unlocked-profile policy decision must come first)",
+        "BLOCKED-095 (C freeze is post-hoc, self-declared)"
       ],
       "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": null,
@@ -1628,7 +1629,8 @@
         "ii_candidateChainConsistency": "PASS, trivially. RAN: read every cell's candidateSha from this row. RESULT: all four are f5fb9f9016, one commit, on fork/first100-exec. No ancestry comparison was needed and none is claimed.",
         "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four non-superseded freeze entries' argv and expectCases sets pairwise, and matched each set against the cited vitest-report.json. RESULT: four cells share run 33961861988; argv differ across all four; C and F share lock.spec.ts but their title sets are disjoint (16 + 18 = 34, the file's full discovery count); 16/16, 21/21, 5/5, 18/18 present-and-passing. The forbidden case -- identical frozen commands greened from one observation -- does not apply.",
         "iv_delegateSignOff": "PENDING. No live acceptance lock on this row; the two open findings are recorded as findings, not locks.",
-        "auditFormatNote": "Each field above states the command run and the file read, per BLOCKED-093. That requirement exists because P4-07's audit reported PASS for predicate (i) on the strength of a different check entirely, and a field containing only a verdict cannot be told apart from one that evaluated the wrong object."
+        "auditFormatNote": "Each field above states the command run and the file read, per BLOCKED-093. That requirement exists because P4-07's audit reported PASS for predicate (i) on the strength of a different check entirely, and a field containing only a verdict cannot be told apart from one that evaluated the wrong object.",
+        "lockCheck": "RAN: grep for gateProductionBoot across apps/ and packages/ excluding node_modules and the owning package. RESULT: zero call sites, so must[2] and acceptance[0] are proven at the decision level and not at the product level. Registered as a live acceptance lock BEFORE requesting sign-off rather than leaving the delegate to find it -- registering now costs a line, discovering it at sign-off costs a round trip."
       }
     },
     "P1-04": {

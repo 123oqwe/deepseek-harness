@@ -1693,6 +1693,7 @@ accept-blocked: P6-01
 accept-blocked: P2-03
 accept-blocked: P4-05
 accept-blocked: P4-06
+accept-blocked: P1-03
 ACCEPT-BLOCKED-END -->
 
 
@@ -2116,6 +2117,7 @@ Every lock states what its unlock will look like from the outside. Reading all f
 | P6-01 | yes, as of today's correction |
 | **P4-05** | **no** — "P4-07's lease store lands", and nothing about who then writes the assertion that can actually observe reclaim |
 | **P2-02** | **no** — "real key material and Option A both land", and nothing about who then writes the case proving must[1] |
+| **P1-03** *(registered 2026-09-06, before sign-off was requested)* | `must[2]` 生产 boot 只加载 lock 中已批准且 digest 匹配的插件 — the **product-level half only**; the gate's own decision logic is proven. | `gateProductionBoot` is complete and mutation-proved in both branches, and `apps/cli/src/profile-boot.ts`'s `composeProfile` is its real seam — but **it has zero call sites outside its own package**, so no production boot consults a lock today. The clause's coverage reaches "the gate decides correctly" and cannot reach "a real boot was refused by it". Wiring the call site requires first deciding what a production boot does with an UNLOCKED profile, and every profile in existence is unlocked because lock generation only just became reachable (BLOCKED-094). **acceptance[0] carries the same split**: the offline cold start is structurally satisfied — every input is already-resolved data with no network path to omit — but proven at the decision level, not by a real cold start. | The unlocked-profile policy decision (BLOCKED-094), then a call site in `composeProfile`. Owner: P1-03's Usage stage, as a supersession, once a lock has actually been produced on a real profile. | A case asserting that a profile whose lock was written by `dsh plugin` is REFUSED at boot when a digest drifts. That case cannot be written today, because no lock has been produced on a real profile — which is the lock, stated exactly. |
 
 **A supplier landing does not make a locked clause true. It makes the clause's assertion *writable*.** The locked epic still has to write a case it cannot write today — and "cannot write it today" is precisely why it is locked. Two distinct events, and only the first is recorded.
 
