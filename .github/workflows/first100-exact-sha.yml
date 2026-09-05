@@ -82,8 +82,17 @@ jobs:
           # actually confine anything, which is precisely the state that made
           # dsh-sandbox-local refuse in the first place. Running a real confined
           # command is the only check that distinguishes them.
-          bwrap --ro-bind / / --dev /dev --unshare-all true
-          echo "bubblewrap can confine a command on this runner"
+          # The control runs the profile the product actually uses
+          # (`bwrapProfileArgs` in packages/sandbox/sandbox-local/src/profiles.ts),
+          # not a stricter one invented here. The first attempt used
+          # `--unshare-all` and failed with
+          # `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted` —
+          # a network-namespace capability dsh never asks for. A control
+          # stricter than the subject reports a capability gap that does not
+          # exist, which is the same error as a control weaker than the subject,
+          # in the opposite direction.
+          bwrap --ro-bind / / --dev /dev --unshare-pid --proc /proc --die-with-parent true
+          echo "bubblewrap can confine a command with the profile dsh-sandbox-local uses"
 
       - name: Install (immutable)
         run: pnpm install --frozen-lockfile
