@@ -6760,6 +6760,15 @@ importers:
         specifier: workspace:^
         version: link:../../schema/schema-registry
 
+  packages/plugin/plugin-lock:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+
   packages/plugin/plugin-manifest:
     devDependencies:
       '@deepseek-ai/cordis':

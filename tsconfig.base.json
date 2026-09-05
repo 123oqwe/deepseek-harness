@@ -359,6 +359,7 @@
       "@deepseek-ai/dsh-plan-mode": ["./packages/plan/plan-mode/src"],
       "@deepseek-ai/dsh-plan-mode/invariant": ["./packages/plan/plan-mode/src/invariant.ts"],
       "@deepseek-ai/dsh-plugin-compat": ["./packages/plugin/plugin-compat/src"],
+      "@deepseek-ai/dsh-plugin-lock": ["./packages/plugin/plugin-lock/src"],
       "@deepseek-ai/dsh-plugin-manifest": ["./packages/plugin/plugin-manifest/src"],
       "@deepseek-ai/dsh-plugin-manifest/invariant": ["./packages/plugin/plugin-manifest/src/invariant.ts"],
       "@deepseek-ai/dsh-plugin-ownership": ["./packages/plugin/plugin-ownership/src"],
