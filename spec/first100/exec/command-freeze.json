@@ -3756,6 +3756,42 @@
         "testsDiscovered": 32
       },
       "note": "P8-01 F-stage, SUPERSEDING the 2026-09-05T09:30:00.000Z freeze. Supersession rather than supplement because this cell was never greened -- supplement exists to add coverage to an already-green cell without disturbing it, and there is nothing here to leave undisturbed.\n\nWHY: BLOCKED-085. The original freeze contained a case asserting that length-prefixing prevents a name containing the field separator from forging another surface. Mutation M2 removed length-prefixing entirely and reddened NOTHING. Computed rather than guessed: the fixtures {name:'a:b',schemaId:'x'} and {name:'a',schemaId:'b:x'} concatenate to \"a:bx1.0\" and \"ab:x1.0\", which differ whether or not fields are prefixed, because moving the colon also moves it relative to its neighbours. The case was a true assertion passing for a reason unrelated to the property its comment claimed.\n\nTWO CHANGES. The original case KEEPS its title and its assertion -- it is a valid difference check -- and its comment is corrected to say what it actually tests and to point at the case that tests the prefixing. Rewriting its assertion after watching a mutation survive is what BLOCKED-079 forbids.\n\nThe new case is the real collision: the BOUNDARY moves while the character sequence does not. Unprefixed, 'ab'+'c' and 'a'+'bc' both absorb as \"abc\", so no unprefixed hash can separate them. Its outcome was unknown when written -- the implementation was expected to prefix correctly, but expected is not known, and had it failed that would have been a genuine defect M2 already proved the suite could not catch.\n\nRE-MUTATED AFTER: removing length-prefixing now reddens EXACTLY ONE case, the new one. Before this change the same mutation reddened none. The suite now detects the property it claimed to."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "contract: a complete negotiation reaches the caller with every field intact",
+        "control: the server identity still arrives, so the case above measures the added fields and not a broken handshake",
+        "contract: a server that sends no negotiation is admitted, and the field is absent rather than empty",
+        "contract: a malformed range is dropped rather than repaired into a claim the peer never made",
+        "contract: a partially-formed negotiation is dropped WHOLE, not read field by field",
+        "contract: a negotiation whose capability lists are not string arrays is dropped, since a wire value is only what the peer claimed",
+        "contract: initializeNegotiated throws when the server did not agree to a mandatory capability",
+        "control: it resolves when every mandatory capability was agreed, so the refusal measures the agreement",
+        "contract: a server predating negotiation is admitted by initializeNegotiated rather than refused for agreeing to nothing"
+      ],
+      "files": [
+        "packages/sdk/client/src/client.ts",
+        "packages/sdk/protocol/src/types.ts",
+        "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+        "packages/sdk/client/tests/fake-runtime.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T11:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "c87421165cc2c718e3536322563272942dc00063",
+        "testsDiscovered": 9
+      },
+      "note": "P8-01 U-stage. FROZEN BEFORE FIRST EXECUTION -- this spec has never been run.\n\nOVERLAY, and frozen BEFORE the implementation was recorded rather than after: U's three registry-declared files are all SOURCE files with no test among them, which is the shape that produced P0-08.U's skipped freeze (implementation first, freeze never, caught only when the greening tool refused). The delegate flagged the repeat before it landed. 195 stages share this shape -- 101 U and 89 P -- so it is the normal case, not an accident, and the freeze must name the overlay test file deliberately.\n\nWRITTEN TWICE, and the first version is the reason for the second. The first draft asserted properties of literal objects: it built a reply, then checked that the literal contained what had just been written into it. Every one of those cases would have passed with the client's reader DELETED -- BLOCKED-085's defect exactly, committed within an hour of recording it. Rewritten so every case spawns the fake runtime, performs a real `initialize`, and reads what the client actually returns.\n\nfake-runtime.ts gains one env flag, `FAKE_NEGOTIATE`, carrying the JSON to merge into the initialize result. One flag rather than one per case, so a complete, partial and malformed negotiation are the same code path with different data -- and a case cannot pass because its own bespoke server branch was written to make it pass.\n\nWHAT ONLY EXISTS AT THE BOUNDARY: a complete negotiation reaches the caller intact (the client previously rebuilt its result from serverInfo alone and discarded the rest); an absent negotiation is admitted with the field ABSENT rather than empty, since absence means the peer predates negotiation and reading it as an empty agreement would refuse every older server; a malformed range is dropped rather than repaired; and a partially-formed negotiation is dropped WHOLE, because a caller would treat the fields that did arrive as authoritative."
     }
   ]
 }

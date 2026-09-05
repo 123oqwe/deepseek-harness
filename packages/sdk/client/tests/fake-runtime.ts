@@ -20,6 +20,8 @@
  * - `FAKE_INIT_ERROR_ONCE_FILE`: fail `initialize` (code 7) only when this
  *   marker file does NOT exist yet, creating it — so the first runtime
  *   process fails the handshake and a respawned one succeeds (retry probe).
+ * - `FAKE_NEGOTIATE`: JSON merged into the `initialize` result, so one flag
+ *   covers a complete, partial, or malformed negotiation.
  * - `FAKE_ECHO_CWD_IN_INIT`: reply `serverInfo.version` = this process's cwd
  *   (wire-visible spawn-cwd probe).
  * - `FAKE_MALFORMED_EVENT`: the turn's `session.event` carries a number as
@@ -218,6 +220,17 @@ reader.on('line', (line) => {
       }
       if (env.FAKE_ECHO_CWD_IN_INIT !== undefined) {
         respond({ serverInfo: { name: 'deepseek-harness-sdk-runtime', version: process.cwd() } })
+        return
+      }
+      if (env.FAKE_NEGOTIATE !== undefined) {
+        // P8-01: a server that negotiates. `FAKE_NEGOTIATE` is the JSON body
+        // to merge into the result, so one flag covers a complete
+        // negotiation, a partial one, and a malformed one without adding a
+        // flag per case.
+        respond({
+          serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' },
+          ...JSON.parse(env.FAKE_NEGOTIATE) as Record<string, unknown>,
+        })
         return
       }
       respond({ serverInfo: { name: 'deepseek-harness-sdk-runtime', version: '0.0.1' } })
