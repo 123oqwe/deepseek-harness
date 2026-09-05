@@ -43,6 +43,9 @@
     },
     {
       "path": "../../policy/capability-token"
+    },
+    {
+      "path": "../../action/action-manifest"
     }
   ]
 }

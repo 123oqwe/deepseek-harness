@@ -52,6 +52,9 @@
     },
     {
       "path": "../../schema/schema-registry"
+    },
+    {
+      "path": "../../action/action-manifest"
     }
   ]
 }

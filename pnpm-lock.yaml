@@ -4359,6 +4359,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../../action/action-manifest
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../agent
@@ -4501,6 +4504,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../../action/action-manifest
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../agent

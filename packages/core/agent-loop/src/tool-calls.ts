@@ -16,6 +16,7 @@ import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-ll
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { computeArgumentsHash, classifySideEffect } from '@deepseek-ai/dsh-action-manifest'
 
 /** One tool call after argument parsing, ready to schedule. */
 interface PlannedCall {
@@ -261,8 +262,44 @@ function appendSkippedToolCall(session: Session, turn: number, step: number, blo
 
 /** Append a started call and return the event seq that its result must cite. */
 function appendToolCall(session: Session, turn: number, step: number, block: ToolCallBlock): SessionSeq {
+  appendActionManifest(session, block, 'native-tool-call')
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
   return event.seq
+}
+
+/**
+ * Append one call's ActionManifest BEFORE its `tool/call` event, so P2-03
+ * acceptance[0] — every external write has a manifest preceding it in the log
+ * — is answerable by reading the log in order, with no clock or join needed.
+ *
+ * Placed inside {@link appendToolCall} rather than beside each caller because
+ * that function is the single point every native call passes through: a new
+ * dispatch path added later inherits the manifest by construction instead of
+ * having to remember it. P2-03 must[2] names two further paths, code-mode
+ * embedded calls and plugin RPC, which append through their own entry points.
+ *
+ * The side-effect class comes from `classifySideEffect(undefined)` here: the
+ * tool registry carries no declared class for a native call at this point, and
+ * must[2]/acceptance[2] require an unclassifiable action to default to the
+ * highest-risk class requiring approval rather than to a convenient guess. A
+ * later slice supplying real declarations narrows this without changing the
+ * default's direction.
+ * @param session - the session log to append to.
+ * @param block - the tool call about to be dispatched.
+ * @param origin - which of must[2]'s execution paths is dispatching it.
+ */
+function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'native-tool-call'): void {
+  const classification = classifySideEffect(undefined)
+  session.append('action/manifest-appended', {
+    actionId: block.id,
+    origin,
+    capability: block.name,
+    argumentsHash: computeArgumentsHash(block.arguments as never),
+    sideEffectClass: classification.sideEffectClass,
+    classified: classification.classified,
+    requiresApproval: classification.requiresApproval,
+    sequence: 0,
+  })
 }
 
 /** Append a model-ordered result linked to its call event. */
