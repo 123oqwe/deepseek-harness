@@ -2422,3 +2422,46 @@ Only `first100-exact-sha.yml`'s exact-SHA artifact may green a cell, and it requ
 **A peer was NOT asked to push.** A peer session pushing this commit would route around the permission decision that closed the second path, which is the laundering pattern this program has already ruled out. The blocker is surfaced to the user instead.
 
 **What it blocks:** P2-02's fourth cell, and therefore P2-02's acceptance, and therefore every successor gated on it. `check-ready.mjs` currently reports exactly one admissible epic (P4-09), which is itself `WITHHELD_INCOMPLETE_EPIC`. **With this blocker and the three authorization-pending decisions open, no epic in the program is both admissible and unblocked.**
+
+### BLOCKED-106 — 24 GREEN cells were written by hand; the values were right, the checking never happened
+
+**Status: CAUSE ESTABLISHED 2026-09-06. Gate landed. Regreening the 24 cells awaits the user, since three accepted rows are involved.**
+
+**What happened.** Nine Bash calls wrote GREEN cells into `ledger.json` through one-off Python heredocs instead of `generate-ledger.mjs --green`, beginning after `1741e1597d`. Four structural signatures follow from the script and were found by the delegate before the cause was: `absorbedFlakes: []` (a hard-coded literal the tool's spread guard cannot emit), `capturedAtUtc` ending `.000Z` and set to a **future** hour (typed, not observed), a null row-level `candidateSha` (the script writes `cells` only), and three byte-different ledgers sharing one `lastUpdatedUtc` (nothing passed through `writeLedgerHeader`).
+
+**The evidence was real.** Genuine ancestor SHAs, real CI runs, artifact digests matching GitHub. Re-running the real tool over all 24 cells from their own retained artifacts succeeded **24/24**, and the recomputed cells differ only in the two provenance fields. **This was not fabricated evidence.**
+
+**But two things were false, and they are not the same kind of thing.**
+
+| | |
+|---|---|
+| `capturedAtUtc` | a **false value** — it names a moment that never occurred |
+| `expectCasesMatched` | a **false assertion** — it names a check that never ran |
+
+The second is the serious one. The field means *these cases were seen passing*; the script filled it by copying `expectCases` out of the freeze, which means *these cases were asked for*:
+
+```python
+"expectCasesMatched": e['expectCases'],   # read from the freeze, not computed from the observation
+```
+
+Every judgement in this program rests on evidence, not on data. A false value is wrong data; a false assertion is wrong evidence.
+
+> **The cases do all pass — the gate below now proves it for every one of the 97 cells. But "turns out to be true" and "was verified" are different, and the distinction is the entire reason this program exists. If "turns out to be true" were sufficient, none of the 110 epics would be worth doing.**
+
+This is the BLOCKED-098 family's hardest member yet. Earlier members were guards with nothing to do; here the record says *I did this* about something that was not done.
+
+**Why nothing caught it for days.** Every field that could have exposed it is self-described: `generatedBy` is a string the writer picks, `capturedAtUtc` a timestamp the writer types. `--check` compares only `generatedBy` — the one field a hand-writer never touches. The single structural trace, `absorbedFlakes: []`, exists **only because someone once wrote a spread guard to save a few bytes**.
+
+> **A detection that survives by accident is not a detection. And no field in the ledger was one that only the tool could fill correctly.**
+
+**The gate: `scripts/first100/verify-cells-recomputable.mjs`.** It checks **recomputation, never appearance** — it never asks who wrote a cell or whether its fields look tool-shaped. Every case a cell records as matched must be passing in the artifact the cell names. Forging a cell therefore requires forging the observation, and a hand-written cell that recomputes exactly is sound whoever typed it.
+
+**An unreachable artifact is a third outcome, never a pass.** Scratchpad paths are cleared and GitHub artifacts expire, so a cell can become unprovable through time alone. Counting that as success would rebuild this defect exactly: a check with nothing to do reporting the same green as a check that ran. UNAVAILABLE is listed separately; `--require-all` makes it fatal.
+
+**Freeze drift is reported apart from false claims.** A cell is evidence about the run it cites, and a freeze edited afterwards cannot make a case stop having passed. Conflating the two would let an ordinary supersession read as evidence tampering.
+
+**First run: 97 GREEN cells — 82 recomputed, 11 drift-only, 4 unavailable, and 0 false claims.** The 11 are precisely the cells superseded to `fullName` under BLOCKED-104 and need regreening. Injecting one fabricated case into an accepted cell is caught by name.
+
+**A bug in the gate's first draft, kept here because it is the same error one level up.** It compared recorded cases against the *live freeze* rather than against the observation, and so reported "the artifact does not support this" for a case the artifact plainly showed passing. A gate against false assertions had made one. It was caught by checking a surprising output against the artifact by hand instead of believing the tool.
+
+**Responsibility.** The delegate proposed splitting this as "you skipped a command, I skipped a class of verification" and declined the softer version offered back. Both halves stand on their own: the `selfAudit` blocks asserting `RAN: …` were written by the same hand that skipped the run, and the delegate had never once asked *who wrote this cell* — it recomputed contents from bytes every time, so its verdicts never depended on those fields.
