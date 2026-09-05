@@ -772,6 +772,20 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-084 — greening accepts any 40-hex string as `--candidate-sha`, including one that is not a git object, while the correct value sits in the artifact's own filename (Supervisor, found by accident, 2026-09-05)
+
+**Found by making the mistake.** Greening P4-05.F, the Supervisor pasted a `--candidate-sha` that was not the run's real head — a hand-mangled string, `d004aee95a6ee1c2c7b1d2a0b3f8c9e4d5a6b7c8`. **The tool greened the cell.** `git cat-file -t` on that value returns *"could not get object info"*: it names no commit, tag, tree or blob in this repository.
+
+**The only validation is the shape.** `generate-ledger.mjs` checks `must be a 40-hex SHA` and nothing further at greening time. It does not cross-check the value against the observation it was handed — **and the artifact directory's own name embeds the correct SHA** (`first100-evidence-d004aee95a86329d9eb4a9bed848e177214a9aaf`), so the right answer was in the tool's input the whole time.
+
+**What limited the damage, and what did not.** A second invocation with the real SHA overwrote the cell, so nothing false persisted, and `--accept`'s predicate (ii) checks candidate-chain ancestry, which a fabricated SHA would fail. **So this is not a route to a false ACCEPTED.** What it is: a cell can carry a candidate SHA that identifies nothing, between greening and acceptance, and the evidence pointer in the ledger would be unresolvable — the exact record a later auditor uses to re-verify predicate (iii).
+
+**The shape.** A value is validated for *form* and not for *reference*. `40-hex` was treated as sufficient because it is what a SHA looks like — the same substitution recorded throughout [BLOCKED-072](#blocked-072), here in its cheapest form: checking the shape of an identifier instead of resolving it. And the resolution was free, since both the git object and the artifact filename were available.
+
+**Fix, sequenced with the other tooling work.** At greening, either resolve the SHA (`git cat-file -e`) or compare it against the SHA embedded in the observation's own path, and refuse a mismatch. **Prefer the comparison**: it catches a well-formed SHA belonging to a *different* commit, which resolution alone would admit — and pasting the wrong real SHA is the more likely mistake than inventing one.
+
+**Reported rather than quietly corrected.** The wrong value was mine, the overwrite was mine, and neither is visible in the ledger's final state; without this entry the gap would leave no trace at all.
+
 ### BLOCKED-083 — `session-lifecycle` is an island: no product path reaches an ACCEPTED epic's deliverable, and a sibling duplicates its type by structure while the two carry different contracts (delegate found, Supervisor confirmed by a second method, 2026-09-05)
 
 **Unreachable, confirmed two ways.** The delegate computed a dependency closure from the bundle's mounted plugins (156 → 221 reachable packages) and found `@deepseek-ai/dsh-session-lifecycle` outside it. The Supervisor checked differently — which manifests *declare* the dependency, rather than which packages a closure walk reaches:

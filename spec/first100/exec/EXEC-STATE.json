@@ -3,14 +3,14 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-05T05:28:41.108Z",
+  "lastUpdatedUtc": "2026-09-05T05:32:53.068Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "frozenBaselineSha": "4e84901e6471b79ec0338099867ebb4606d12bb5",
   "currentWave": 4,
   "currentSlice": null,
   "registryDigest": "c1dbdd8c53792a833e02b351431835002dd10d040e60477ea86edb42b4164af6",
-  "ledgerDigest": "0e4be2c689a07925e2345946fe655a4ff3b22acd66bc65dbefa6f6db86e94d33",
+  "ledgerDigest": "95a74b7df052fc02405d0bfd6051242d18bf9ae159cdcbb44c1753e26b29cc1a",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
     "acceptedEpics": 15,
