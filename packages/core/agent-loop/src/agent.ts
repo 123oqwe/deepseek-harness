@@ -4,6 +4,7 @@
  * @module dsh-agent-loop/agent
  */
 
+import { decideTurnAdmission } from './budget.ts'
 import type {
   Agent,
   AgentCancelCause,
@@ -71,6 +72,18 @@ function requestProposal(header: EpochHeader): LlmCallConfig {
 export class ReactLoopAgent implements Agent {
   readonly inbox: Inbox
   private phase: Phase
+  /** Turns this driver has completed; the budget's `turnsUsed` (Epic P9-07). */
+  private turnsCompleted = 0
+  /**
+   * Cost incurred so far, in USD, for the budget's spend ceiling.
+   *
+   * Zero until a caller supplies accounting: the loop does not price its own
+   * requests, and `dsh-token-meter` estimates at four characters per token
+   * until P9-05 replaces the estimator. A spend cap therefore binds only where
+   * something feeds this, which is why `maxTurns` is the ceiling a deployment
+   * can rely on today.
+   */
+  private spentUsd = 0
   private activityDone: Promise<void> = Promise.resolve()
 
   /** The agent-scoped registration boundary; the lifecycle owner unwinds it after the driver exits. */
@@ -232,7 +245,7 @@ export class ReactLoopAgent implements Agent {
 
   private async kick(): Promise<void> {
     try {
-      while (await this.turn()) {}
+      while (this.admitTurn() && await this.turn()) {}
     } catch (_error) {
       // Reported failures and cancellation are contained at the driver boundary.
     } finally {
@@ -266,6 +279,33 @@ export class ReactLoopAgent implements Agent {
   }
 
   /** Open one turn before claiming its first proposed step. */
+  /**
+   * Whether a configured budget still permits another turn (Epic P9-07 must[0]).
+   *
+   * Asked BEFORE the turn, which is what makes must[1] satisfiable: a run
+   * refused here has completed every turn it started, so the session is a whole
+   * number of turns and a later `--resume` continues from a boundary. Deciding
+   * afterwards would mean the turn that broke the budget had already run.
+   *
+   * The refusal is appended to the session before the loop stops, so why it
+   * stopped is part of what a resume reads rather than something only this
+   * process knew. Returning `false` ends the driver exactly as an ordinary
+   * "no more work" does — a budget stop is a stop, not an error.
+   * @returns whether the loop may begin another turn.
+   */
+  private admitTurn(): boolean {
+    const budget = this.options.budget
+    if (budget === undefined) return true
+    const decision = decideTurnAdmission({ turnsUsed: this.turnsCompleted, spentUsd: this.spentUsd }, budget)
+    if (decision.admitted) return true
+    this.session.append('budget/exceeded', {
+      reason: decision.reason,
+      limit: decision.limit,
+      observed: decision.observed,
+    })
+    return false
+  }
+
   private async turn(): Promise<boolean> {
     if (this.phase.kind !== 'running') {
       this.throwError(new Error(`agent "${this.id}": turn without driver reservation`))
@@ -340,6 +380,9 @@ export class ReactLoopAgent implements Agent {
       try {
         // oxlint-disable-next-line typescript/no-non-null-assertion -- every exit assigns a turn ending
         this.session.append('turn/end', { turn, reason: turnEnds! })
+        // Counted at the END of a turn, so `turnsUsed` is turns COMPLETED. A
+        // count incremented on entry would refuse the last permitted turn.
+        this.turnsCompleted += 1
       } catch (error: unknown) {
         this.throwError(error)
       }

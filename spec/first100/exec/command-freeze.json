@@ -6552,6 +6552,43 @@
         "mutationDescription": "Three targeted mutations, each restored byte-identical: (M1) the runner ignores exitStatusFor and restores the old `completed ? 0 : 1`; (M2) the typed stderr line is dropped; (M3) 'max-tokens' is given the same code as 'blocked' in the table, collapsing two classes.",
         "failureSummary": "Reddened 8, 8 and 1 of 19. M1 and M2 redden broadly because every matrix row asserts both the code and whether stderr names the class -- which is the intended coupling: a runner that stops consulting the table fails every row at once rather than one. M3 reddens exactly the distinctness case, which exists because two classes sharing a code is invisible from any single row."
       }
+    },
+    {
+      "epic": "P9-07",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/loop.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-07 Provider — the loop enforces its own budget must[0]: maxTurns=1 stops the loop after one turn, and the second prompt is never run",
+        "P9-07 Provider — the loop enforces its own budget must[1]: the refusal is APPENDED before stopping, so a resume can read why",
+        "P9-07 Provider — the loop enforces its own budget must[3]: a budget of 0 is unlimited, so a second turn still runs",
+        "P9-07 Provider — the loop enforces its own budget acceptance[2]: an unbudgeted run logs no budget event at all, so existing sessions are unchanged"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/agent.ts",
+        "packages/core/session/src/types.ts",
+        "packages/core/agent/src/runtime-types.ts",
+        "packages/core/agent-loop/tests/loop.spec.ts",
+        "docs/subsystems/core.md",
+        "packages/extensions/tool-cordis/src/api-catalog.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T12:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "66e758b1f28bc98e2a2c528c13ef31380edcaadc",
+        "testsDiscovered": 4
+      },
+      "note": "P (Provider) for P9-07: the budget wired into ReactLoopAgent, with the `budget/exceeded` session event must[1] requires. Admission is asked BEFORE the turn, so a refused run has completed a whole number of turns and --resume continues from a boundary; the refusal is appended before the loop stops, so why it stopped is in the session rather than only in the halting process. turnsCompleted increments at turn END, not entry -- counting on entry refuses the last permitted turn. Returning false ends the driver exactly as ordinary exhaustion does: a budget stop is a stop, not an error. VERIFIED, not assumed, that adding a SessionEventMap member changed no recorded session: the full snapshot suite is 113 passed / 3 skipped, unchanged, because no scenario configures a budget and 0/absent means unbounded. The Cordis catalog DID change and is regenerated. The Python SDK reads specific event types rather than enumerating them, so it needs nothing. spentUsd is 0 until a caller supplies accounting -- the loop does not price its own requests -- so maxTurns is the ceiling a deployment can rely on today, and that is stated in the field's own doc rather than left for a reader to discover.",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of agent.ts, each restored byte-identical: (M1) the loop stops consulting admitTurn; (M2) the budget/exceeded append is skipped, so the run stops silently; (M3) turnsCompleted increments on entry instead of at completion.",
+        "failureSummary": "Reddened 2, 1 and 2 of 60. M1 and M3 redden two each -- the enforcement case and the zero-means-unlimited case -- because both depend on the count meaning turns COMPLETED. M2 reddens only the logging case, which is the one written for must[1]'s 'never silently truncate': a silent stop is otherwise indistinguishable from a run that simply had nothing left to do."
+      }
     }
   ]
 }

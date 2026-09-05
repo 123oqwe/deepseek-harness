@@ -33,6 +33,15 @@ export interface AgentOptions {
   /** Maximum output tokens for each conversation-model request. */
   maxTokens?: number
   /**
+   * Hard ceilings the loop enforces for itself (Epic P9-07 must[0]).
+   *
+   * Absent means unbounded, and so does `0` in either field — see
+   * `dsh-agent-loop/budget`, where that rule is defined and pinned. A budget
+   * stated here is enforced by the loop rather than described to the model, so
+   * a model that never sees it is bounded identically.
+   */
+  budget?: { maxTurns?: number; maxSpendUsd?: number }
+  /**
    * The principal acting as this agent and its delegation chain back to
    * root, to attach as `Agent.identity` (`./types.ts`, first100 registry
    * P2-01 acceptance[0]). `Agent.identity` is `readonly`, so a constructor

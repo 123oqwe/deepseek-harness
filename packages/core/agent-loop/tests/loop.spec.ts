@@ -1534,3 +1534,60 @@ describe('agent loop', () => {
     expect(replayed.snapshotEvents().at(-1)?.type).toBe('session/end-seed')
   })
 })
+
+describe('P9-07 Provider — the loop enforces its own budget', () => {
+  it('must[0]: maxTurns=1 stops the loop after one turn, and the second prompt is never run', async () => {
+    const adapter = new MockAdapter([textResponse('first'), textResponse('second')])
+    const ctx = await harness(adapter)
+    const agent = ctx.agentLoop.create(SessionId('budget-turns'), { provider: 'mock', model: 'mock', budget: { maxTurns: 1 } })
+    send(agent, 'one')
+    await waitForIdle(ctx, agent)
+    send(agent, 'two')
+    await agent.whenIdle()
+    // The second message is in the inbox; what the budget refuses is running a
+    // turn for it, so the assertion is about turns rather than about delivery.
+    const ends = agent.session.snapshotEvents().filter(e => e.type === 'turn/end')
+    expect(ends).toHaveLength(1)
+  })
+
+  it('must[1]: the refusal is APPENDED before stopping, so a resume can read why', async () => {
+    const adapter = new MockAdapter([textResponse('first'), textResponse('second')])
+    const ctx = await harness(adapter)
+    const agent = ctx.agentLoop.create(SessionId('budget-logged'), { provider: 'mock', model: 'mock', budget: { maxTurns: 1 } })
+    send(agent, 'one')
+    await waitForIdle(ctx, agent)
+    send(agent, 'two')
+    await agent.whenIdle()
+    const exceeded = agent.session.snapshotEvents().filter(e => e.type === 'budget/exceeded')
+    expect(exceeded).toHaveLength(1)
+    expect(exceeded[0]?.type === 'budget/exceeded' ? exceeded[0].data : undefined).toStrictEqual({
+      reason: 'max-turns-reached',
+      limit: 1,
+      observed: 1,
+    })
+  })
+
+  it('must[3]: a budget of 0 is unlimited, so a second turn still runs', async () => {
+    const adapter = new MockAdapter([textResponse('first'), textResponse('second')])
+    const ctx = await harness(adapter)
+    const agent = ctx.agentLoop.create(SessionId('budget-zero'), { provider: 'mock', model: 'mock', budget: { maxTurns: 0 } })
+    send(agent, 'one')
+    await waitForIdle(ctx, agent)
+    send(agent, 'two')
+    await agent.whenIdle()
+    expect(agent.session.snapshotEvents().filter(e => e.type === 'turn/end')).toHaveLength(2)
+    expect(agent.session.snapshotEvents().filter(e => e.type === 'budget/exceeded')).toHaveLength(0)
+  })
+
+  it('acceptance[2]: an unbudgeted run logs no budget event at all, so existing sessions are unchanged', async () => {
+    const adapter = new MockAdapter([textResponse('first'), textResponse('second')])
+    const ctx = await harness(adapter)
+    const agent = ctx.agentLoop.create(SessionId('budget-absent'), { provider: 'mock', model: 'mock' })
+    send(agent, 'one')
+    await waitForIdle(ctx, agent)
+    send(agent, 'two')
+    await agent.whenIdle()
+    expect(agent.session.snapshotEvents().filter(e => e.type === 'budget/exceeded')).toHaveLength(0)
+    expect(agent.session.snapshotEvents().filter(e => e.type === 'turn/end')).toHaveLength(2)
+  })
+})

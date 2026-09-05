@@ -274,6 +274,22 @@ export interface SessionEventMap {
    * reported live and does not prevent later work.
    */
   'turn/end': { turn: number; reason: TurnEndReason }
+  /**
+   * The loop refused to begin another turn because a configured budget is
+   * spent (Epic P9-07 must[1]).
+   *
+   * Appended BEFORE the run stops, so the record of why it stopped is part of
+   * the session a `--resume` reads rather than something only the process that
+   * halted knew. `limit` and `observed` are both carried because a reader
+   * deciding whether to raise the budget needs the pair, and re-deriving
+   * `limit` from configuration months later reads whatever the configuration
+   * says THEN.
+   * @mode both
+   * @param reason - which limit stopped the run.
+   * @param limit - the configured ceiling that was reached.
+   * @param observed - what had been consumed when it was reached.
+   */
+  'budget/exceeded': { reason: 'max-turns-reached' | 'spend-cap-reached'; limit: number; observed: number }
   /** Opens step `step` of turn `turn` — one model call plus the tool executions it requested. */
   'step/start': { turn: number; step: number }
   /** Closes step `step` of turn `turn`. */

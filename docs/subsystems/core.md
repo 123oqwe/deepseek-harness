@@ -6,6 +6,8 @@ The **core** subsystem is [`packages/core`](../../packages/core/README.md) — t
 
 ## The spine, package by package
 
+Before claiming a prompt the driver asks whether a configured budget still permits a turn. `AgentOptions.budget` states hard ceilings (`maxTurns`, `maxSpendUsd`) the loop enforces for itself, so a model that never sees them is bounded identically; absent — and `0` in either field — means unbounded. The question is asked BEFORE the turn, which is what lets a refusal leave a whole number of completed turns behind for `--resume` to continue from, and the refusal is appended as `budget/exceeded` before the loop stops, so why it stopped is part of the session rather than something only the halting process knew.
+
 A turn flows through the six packages in one loop: the driver in [`agent-loop`](../../packages/core/agent-loop) claims a queued prompt, opens a turn on the [session log](session.md) (`ctx.sessions`), assembles the request prefix through [system-prompt](system-prompt.md) (`ctx.systemPrompt`) and derives history from the log, streams the model response through the [LLM seam](llm-streaming.md), dispatches tool calls through the [tool registry](tools.md) (`ctx.tools`), and appends every model-visible fact back onto the log before the next step derives from it. The conversation vocabulary the loop moves — `Message`, `ContentBlock`, `StreamChunk`, the model request — is declared by [`packages/llm`](../../packages/llm/README.md) and documented on [llm-streaming.md](llm-streaming.md).
 
 | Package | Owns | Page |
