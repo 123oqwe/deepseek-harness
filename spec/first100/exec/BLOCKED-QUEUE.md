@@ -772,6 +772,20 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-082 — the auditor's own unverified premise, checked and found sound: `expectCasesMatched` equals the frozen `expectCases` for all 67 green cells (delegate, 2026-09-05)
+
+**Recorded because it came back clean, not despite it.** [BLOCKED-081](#blocked-081) found a mechanism nobody had tested — the lock register with no enforcement. The natural next question is what *else* has been assumed, and the delegate turned it on their own audit method rather than outward.
+
+**The unverified premise.** Predicate (iii) is audited by reading each green cell's `expectCasesMatched` and confirming every title passed in the cited observation. That is sound only if `expectCasesMatched` equals the frozen `expectCases`. **If it could be a subset, every audit would report "all present and passing" by construction** — because the titles omitted would be exactly the ones that did not pass. The audit would be self-confirming, and would look identical to a real one.
+
+**Measured: 67 green cells, 0 mismatches**, comparing against live freeze entries (superseded and supplement entries excluded). Every cell's matched set is character-identical to its frozen set. The premise holds.
+
+**A second property fell out of the same comparison.** No cell is greened against a freeze that was later superseded — a stale pairing would have shown up as a mismatch. **One comparison covered the historical consistency of all 67 cells**, which no one had asked for and nobody had checked.
+
+**Why this belongs in the queue even though nothing was wrong.** A register that records only the checks that found problems misrepresents the base rate: it would suggest that interrogating a premise usually uncovers something. It usually does not, and **"this time it did not" is a result, not an absence of one**. Recording only failures also quietly discourages the check — if a clean result is unpublishable, the incentive is to check only where a finding seems likely, which is precisely where the check is least needed.
+
+**The pairing with [BLOCKED-081](#blocked-081) is the point.** Two premises, examined the same day with the same rigour: "there is a gate here" (there was not) and "I am reading the full set" (I was). **The methods were equally sound; only the answers differed.** Recording one and not the other would make the register a catalogue of failures rather than of checks.
+
 ### BLOCKED-081 — the ACCEPTANCE LOCKS register has NO mechanical enforcement; the only thing stopping a locked epic from being accepted is the delegate remembering to grep (delegate found, Supervisor confirmed independently, 2026-09-05)
 
 **The claim everyone has been relying on.** Both parties have stated, repeatedly and as fact, that a locked epic "cannot reach ACCEPTED". Neither had ever tested it.

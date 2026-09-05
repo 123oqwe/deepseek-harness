@@ -23,6 +23,8 @@
 import type { ContentBlock, ReasoningEffortId } from '@deepseek-ai/dsh-llm'
 import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { SchemaVersion } from '@deepseek-ai/dsh-schema-registry'
+import type { ProtocolVersionRange } from './version.ts'
+import type { CapabilityDeclaration, NegotiationProvenance } from './capabilities.ts'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { SubagentStopReason } from '@deepseek-ai/dsh-subagent'
 
@@ -79,6 +81,26 @@ export interface InitializeParams {
    * SDK-initialize negotiation existed.
    */
   schemaVersion?: SchemaVersion
+  /**
+   * The inclusive protocol version range this client supports (Epic P8-01
+   * must[0]).
+   *
+   * Distinct from {@link InitializeParams.schemaVersion}, which negotiates one
+   * MESSAGE's shape: this negotiates whether the two peers can work together
+   * at all, and a client needs that answer before sending a task rather than
+   * after a field silently vanishes. Optional so an older client that never
+   * sends it still connects — its absence means "this build predates range
+   * negotiation", which the server treats as the single legacy version rather
+   * than as a refusal.
+   */
+  protocolVersions?: ProtocolVersionRange
+  /**
+   * Capabilities this client declares, each marked mandatory or optional
+   * (must[1]). A mandatory capability the server does not recognise refuses
+   * the connection (must[2]); an unrecognised optional one is ignored and
+   * recorded.
+   */
+  capabilities?: readonly CapabilityDeclaration[]
 }
 
 /**
@@ -88,6 +110,22 @@ export interface InitializeParams {
 export interface InitializeResult {
   /** Wire-stable server identity (`deepseek-harness-sdk-runtime`) and version. */
   serverInfo: { name: string; version: string }
+  /**
+   * The negotiated outcome, recorded on the run's provenance (Epic P8-01
+   * acceptance[4]).
+   *
+   * Returned rather than left implicit so "what did these peers agree to" is
+   * answerable from the run record alone, without replaying a handshake that
+   * no longer exists. Optional for the same reason as
+   * {@link InitializeParams.protocolVersions}: a server predating negotiation
+   * returns none, and a client must not read its absence as an agreement to
+   * nothing.
+   */
+  negotiation?: NegotiationProvenance
+  /** The server's own supported range, so a client can report a refusal precisely. */
+  protocolVersions?: ProtocolVersionRange
+  /** The server's schema fingerprint (acceptance[2]/[3]), for drift detection across builds. */
+  schemaFingerprint?: string
 }
 
 /**
