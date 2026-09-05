@@ -173,6 +173,60 @@ async function mockCompletionServer(): Promise<{ url: string; requests: unknown[
 }
 
 describe('dsh-sdk-jsonrpc-server plugin apply', () => {
+  it('P8-01 must[2]: the server REFUSES an unknown mandatory capability over the real stdio pair', async () => {
+    // The provider-stage spec asserts the negotiation FUNCTIONS through the
+    // package face. Removing the server's call to them reddened none of those
+    // cases, because none of them ran the server. This one does: it drives a
+    // real initialize over the injected transport and requires a JSON-RPC
+    // error rather than a result.
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-apply-refuse-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const harness = await mountPlugin(storageDir)
+    try {
+      harness.send({
+        jsonrpc: '2.0',
+        id: 'refuse-1',
+        method: 'initialize',
+        params: {
+          cwd: storageDir,
+          provider: 'deepseek-official',
+          model: 'apply-model',
+          capabilities: [{ id: 'teleport', mandatory: true }],
+        },
+      })
+      const response = await harness.waitForFrame(frame => frame.id === 'refuse-1', 'initialize refusal')
+      expect(response).toMatchObject({ id: 'refuse-1', error: { message: expect.stringContaining('teleport') } })
+      expect('result' in response).toBe(false)
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('P8-01 acceptance[0]: the server REFUSES a peer whose protocol range does not overlap its own', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-apply-range-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    const harness = await mountPlugin(storageDir)
+    try {
+      harness.send({
+        jsonrpc: '2.0',
+        id: 'range-1',
+        method: 'initialize',
+        params: {
+          cwd: storageDir,
+          provider: 'deepseek-official',
+          model: 'apply-model',
+          protocolVersions: { min: 99, max: 99 },
+        },
+      })
+      const response = await harness.waitForFrame(frame => frame.id === 'range-1', 'initialize range refusal')
+      expect(response).toMatchObject({ id: 'range-1', error: { message: expect.stringContaining('no-overlapping-version') } })
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
   it('serves initialize over the injected stdio pair', async () => {
     const storageDir = await mkdtemp(join(tmpdir(), 'dsh-jsonrpc-apply-init-'))
     vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')

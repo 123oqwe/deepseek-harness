@@ -3825,7 +3825,52 @@
         "treeSha": "f5641611f60b163632413983a9141970b12c0153",
         "testsDiscovered": 7
       },
-      "note": "P8-01 P-stage. FROZEN BEFORE FIRST EXECUTION -- this spec has never been run. Overlay test file chosen BEFORE writing code, per the rule the delegate proposed after P0-08.U and P8-01.U: all three of P's registry-declared files are source files, so the freeze target had to be decided deliberately rather than discovered at bookkeeping time.\n\nWHAT THE PROVIDER STAGE ACTUALLY WAS, discovered by typecheck rather than assumed: packages/sdk/protocol/src/index.ts re-exported NONE of the Contract stage's negotiation functions. version.ts, capabilities.ts and schema-fingerprint.ts existed and were proven, and no consumer could reach them through the package face -- the server's import failed with 'has no exported member'. A definition no consumer can reach is not yet a provider surface, and closing that gap is this stage's substance.\n\nSERVER-SIDE PLACEMENT IS THE PROPERTY, not the decision: the negotiation check sits in `initialize` BEFORE adapter resolution and before any plugin mount. Refusing after mounting an LLM adapter would leave the runtime holding state for a connection it just rejected, and acceptance[1] asks the refusal to precede the TASK rather than merely precede the reply.\n\nKNOWN is deliberately a superset of SUPPORTED. must[2] separates two refusals -- an id this build never heard of means version skew, one it knows and has not implemented is a real gap -- and collapsing them would leave a peer unable to tell 'upgrade me' from 'this will never work here'.\n\nAN EXISTING TEST WAS UPDATED, NOT LOOSENED: plugin-apply.spec.ts pins the exact initialize wire reply and failed when the negotiated fields appeared. Its expectation now asserts them in full rather than being relaxed to a partial match -- relaxing it would stop it catching the next field that appears or vanishes, which is the whole reason that case pins the reply."
+      "note": "P8-01 P-stage. FROZEN BEFORE FIRST EXECUTION -- this spec has never been run. Overlay test file chosen BEFORE writing code, per the rule the delegate proposed after P0-08.U and P8-01.U: all three of P's registry-declared files are source files, so the freeze target had to be decided deliberately rather than discovered at bookkeeping time.\n\nWHAT THE PROVIDER STAGE ACTUALLY WAS, discovered by typecheck rather than assumed: packages/sdk/protocol/src/index.ts re-exported NONE of the Contract stage's negotiation functions. version.ts, capabilities.ts and schema-fingerprint.ts existed and were proven, and no consumer could reach them through the package face -- the server's import failed with 'has no exported member'. A definition no consumer can reach is not yet a provider surface, and closing that gap is this stage's substance.\n\nSERVER-SIDE PLACEMENT IS THE PROPERTY, not the decision: the negotiation check sits in `initialize` BEFORE adapter resolution and before any plugin mount. Refusing after mounting an LLM adapter would leave the runtime holding state for a connection it just rejected, and acceptance[1] asks the refusal to precede the TASK rather than merely precede the reply.\n\nKNOWN is deliberately a superset of SUPPORTED. must[2] separates two refusals -- an id this build never heard of means version skew, one it knows and has not implemented is a real gap -- and collapsing them would leave a peer unable to tell 'upgrade me' from 'this will never work here'.\n\nAN EXISTING TEST WAS UPDATED, NOT LOOSENED: plugin-apply.spec.ts pins the exact initialize wire reply and failed when the negotiated fields appeared. Its expectation now asserts them in full rather than being relaxed to a partial match -- relaxing it would stop it catching the next field that appears or vanishes, which is the whole reason that case pins the reply.",
+      "supersededBy": "2026-09-05T12:40:00.000Z"
+    },
+    {
+      "epic": "P8-01",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/sdk/server/tests/negotiation-provider.spec.ts",
+        "packages/sdk/server/tests/plugin-apply.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "provider: the package exports every negotiation function a peer needs",
+        "provider: the exported functions are the same implementations the Contract stage proved, not re-declarations",
+        "provider: a fingerprint computed through the package face equals one computed from the same surface twice",
+        "provider: the server advertises a RANGE even while it speaks one generation",
+        "provider: a peer speaking only a future generation is refused rather than silently downgraded",
+        "provider: a capability the server knows but has not implemented refuses differently from one it has never heard of",
+        "control: a capability the server both knows and supports is agreed, so the refusals above measure the sets and not the mandatory flag",
+        "P8-01 must[2]: the server REFUSES an unknown mandatory capability over the real stdio pair",
+        "P8-01 acceptance[0]: the server REFUSES a peer whose protocol range does not overlap its own",
+        "serves initialize over the injected stdio pair",
+        "waits for Loader-owned adapter registration before initialize",
+        "drives a session/prompt turn end-to-end and forwards session notifications as output frames",
+        "answers shutdown before exiting 0 exactly once, even against a racing second shutdown",
+        "still disposes and exits once when the flush callback fails",
+        "stops serving on a bare fiber dispose (HMR-style unload) without calling exit"
+      ],
+      "files": [
+        "packages/sdk/server/src/server.ts",
+        "packages/sdk/protocol/src/index.ts",
+        "packages/sdk/server/tests/negotiation-provider.spec.ts",
+        "packages/sdk/server/tests/plugin-apply.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T12:40:00.000Z",
+      "supersedes": "2026-09-05T12:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "34cf3ec3dddfd248ca4509ff9ac0813e6e20c885",
+        "testsDiscovered": 15
+      },
+      "note": "P8-01 P-stage, SUPERSEDING the 2026-09-05T12:05:00.000Z freeze. Supersession, not supplement: this cell has never greened, so there is nothing to leave undisturbed.\n\nWHY: the first freeze's seven cases asserted the negotiation functions through the package face and NOT that the server calls them. Removing the server's entire negotiation check -- both the version and capability guards -- reddened ZERO of them. The cases were true, the surface was real, and none of them ran the server.\n\nThis is BLOCKED-085's shape for the third time in one session, and the third distinct disguise: first a comment claiming a property the fixture did not exercise, then a client spec asserting properties of its own literals, now a provider spec testing a package face while the stage's substance is where the server invokes it. What caught all three was the same act, and it was never the recollection of the previous one -- it was running the mutation.\n\nTWO CASES ADDED to plugin-apply.spec.ts, which mounts a real server over an injected stdio pair: an unknown mandatory capability and a non-overlapping protocol range must each produce a JSON-RPC ERROR rather than a result. Their outcome was genuinely unknown -- both failed on first run, and the cause was my own teardown calling harness.close() where the harness exposes dispose(). The instrument was broken, not the subject, which is why the failure was read before being believed.\n\nRE-MUTATED AFTER: removing the server's negotiation check now reddens EXACTLY the two new cases. Before this supersession the same mutation reddened none."
     }
   ]
 }
