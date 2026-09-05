@@ -5159,7 +5159,7 @@
         "treeSha": "3f1801cfb0d7bcb6cc5157e64eb0b7466cc382a7",
         "testsDiscovered": 20
       },
-      "note": "P5-11 C-stage. First epic run under ALL THREE pre-flight questions, recorded per clause in spec/first100/exec/clause-subject-audit.json BEFORE any code. The title-noun check ran first and cost nothing: three nouns (Taskboard, Mailbox, Blackboard), all three packages absent -- PLANNED, not missing, which is the distinction P4-09's must[2] failed and the one place this check could produce false alarms.\n\nmust[2] IS A NEGATIVE CLAUSE and gets an assertion of ABSENCE. 'Roles, org charts and captains stay in the plugin/skill layer' cannot be satisfied by writing something; it is satisfied by the surface NOT carrying those concepts. Since 'deliberately not built' and 'forgot to build' are indistinguishable in an exported type, a case checks the task's key set for role/captain/orgchart/manager/team/seniority, and a second records that `owner` is an opaque WorkerId carrying no rank -- the board can say WHO holds a task and cannot express why they were entitled to it.\n\nTHE ATTEMPT INCREMENT IS THE WHOLE SAFETY PROPERTY, not bookkeeping: without it a worker whose claim lapsed and was reclaimed would return holding credentials indistinguishable from the new holder's. That mutation reddens 2. An attempt HIGHER than the task's current one is refused too -- attempts are issued only by the board, so a larger one did not come from it.\n\nA DEPENDENCY MUST BE VERIFIED, NOT MERELY SUBMITTED. Submitted work has produced outputs nobody checked, and releasing a dependent task on it builds on a result that may yet be rejected.\n\nONE MUTATION IS A GENUINE EQUIVALENT MUTANT, diagnosed in the cheapest-first order the delegate adopted rather than assumed. Removing the `done` memo from the cycle walk reddens nothing, and the reason was checked rather than guessed: with the memo gone all three cycle cases and the diamond still pass, because the correctness guard is `visiting` and `done` only prevents re-walking shared subtrees. Category (2), a performance-only change -- not (3), since the mutation did alter the code path, and not (1).",
+      "note": "P5-11 C-stage. First epic run under ALL THREE pre-flight questions, recorded per clause in spec/first100/exec/clause-subject-audit.json BEFORE any code. The title-noun check ran first and cost nothing: three nouns (Taskboard, Mailbox, Blackboard), all three packages absent -- PLANNED, not missing, which is the distinction P4-09's must[2] failed and the one place this check could produce false alarms.\n\nmust[2] IS A NEGATIVE CLAUSE and gets an assertion of ABSENCE. 'Roles, org charts and captains stay in the plugin/skill layer' cannot be satisfied by writing something; it is satisfied by the surface NOT carrying those concepts. Since 'deliberately not built' and 'forgot to build' are indistinguishable in an exported type, a case checks the task's key set for role/captain/orgchart/manager/team/seniority, and a second records that `owner` is an opaque WorkerId carrying no rank -- the board can say WHO holds a task and cannot express why they were entitled to it.\n\nTHE ATTEMPT INCREMENT IS THE WHOLE SAFETY PROPERTY, not bookkeeping: without it a worker whose claim lapsed and was reclaimed would return holding credentials indistinguishable from the new holder's. That mutation reddens 2. An attempt HIGHER than the task's current one is refused too -- attempts are issued only by the board, so a larger one did not come from it.\n\nA DEPENDENCY MUST BE VERIFIED, NOT MERELY SUBMITTED. Submitted work has produced outputs nobody checked, and releasing a dependent task on it builds on a result that may yet be rejected.\n\nONE MUTATION IS A GENUINE EQUIVALENT MUTANT, diagnosed in the cheapest-first order the delegate adopted rather than assumed. Removing the `done` memo from the cycle walk reddens nothing, and the reason was checked rather than guessed: with the memo gone all three cycle cases and the diamond still pass, because the correctness guard is `visiting` and `done` only prevents re-walking shared subtrees. Category (2), a performance-only change -- not (3), since the mutation did alter the code path, and not (1).\n\nTWO must[2] CASES WERE REPLACED 2026-09-06 by a supplement (supplementSeq 1) after the delegate showed they could not support their own comments. Recorded here so this entry is not read as if those two titles still carry what they claimed. The replacements are mutation-proved; the originals were not.",
       "sensitivityProof": {
         "mutationDescription": "Six mutations on src/types.ts: (1) the attempt not incremented on claim; (2) the expiry boundary relaxed so a claim lapses AT its expiry instant; (3) a dependency accepted while merely submitted; (4) isClaimCurrent accepts any attempt at or above the current; (5) the `done` memo removed from the cycle walk; (6) the self-dependency check removed. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1, 1, 0 and 1 respectively. (5) is a genuine equivalent mutant, established by re-running the cycle and diamond cases without the memo: `visiting` carries correctness, `done` carries only performance."
@@ -5296,6 +5296,41 @@
       "sensitivityProof": {
         "mutationDescription": "Three mutations on src/types.ts beyond those recorded for C: (1) the dependency check moved before the not-claimable check, inverting reason precedence; (2) only the first dependency examined instead of all; (3) an empty graph refused. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 boundary each -- 14, 12 and 19 respectively, each the boundary written for it."
+      }
+    },
+    {
+      "epic": "P5-11",
+      "stage": "C",
+      "supplements": {
+        "epic": "P5-11",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "exposes exactly the coordination fields, so ANY added field must be justified here",
+        "carries the claimant's id through UNCHANGED, deriving nothing from it"
+      ],
+      "files": [
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T17:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "424bffae2bba8cdeea3cec6d5324717015a08be8",
+        "testsDiscovered": 40
+      },
+      "note": "SUPPLEMENT to P5-11's C-stage freeze, REPLACING the two must[2] cases. The delegate found both unable to support their own comments -- and the shape is BLOCKED-098's most dangerous form, because both had accurate comments, an accurate describe name, and real assertions. A reader of that block would have concluded must[2] was covered.\n\nCASE 1 WAS A BLACKLIST. It checked the task's keys against role/captain/orgchart/manager/team/seniority -- and `rank`, `tier`, `authority`, `level`, `grade`, `supervisor`, `lead` and `chief` all pass it. A forbidden-word list in a default-deny rule invites exactly the defect it aims at, which is the second time that shape has appeared (the first was P3-13 MUST#2's draft). Replaced by a CLOSED SET of the eight coordination fields: any new field reddens whatever it is called, so whoever adds one must edit the list, and that edit is the moment they confront must[2]. The difference is between 'no counterexample was found' and 'no mechanism can produce one'.\n\nCASE 2 ASSERTED `typeof owner === 'string'`, which excludes nothing -- string is the most expressive primitive available, and 'senior-engineer:worker-a' satisfies it while being precisely what the comment said was impossible. Replaced by IDENTITY: the board must return the id it was given, proving it transports an opaque value and never derives, decorates or composes one.\n\nPROVED, which is the acceptance criterion rather than an extra: adding a `rank: string` field to Task reddens the closed set, and returning `senior-engineer:${worker}` as the owner reddens the identity case. The originals redden under NEITHER.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations. (1) A `rank: string` field added to the Task interface and its fixture. (2) decideClaim returns `senior-engineer:${worker}` as the owner instead of the worker id. Both restored byte-identical.",
+        "failureSummary": "(1) reddens 2 cases -- the new closed set and must[0]'s exact-key-set case. (2) reddens 4, including the identity case. Against the REPLACED cases, (1) reddened only must[0]'s and (2) reddened none, since a decorated string passes both a role-word blacklist and a typeof check."
       }
     }
   ]

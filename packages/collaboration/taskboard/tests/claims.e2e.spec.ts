@@ -190,24 +190,32 @@ describe('P5-11 acceptance[2]: a cyclic dependency is refused at submission', ()
 })
 
 describe('P5-11 must[2]: roles, org charts and captains stay in the plugin/skill layer', () => {
-  it('exposes NO role, captain or org-chart concept on the task surface', () => {
+  it('exposes exactly the coordination fields, so ANY added field must be justified here', () => {
     // A negative clause needs an assertion of absence, because "deliberately
-    // not built" and "forgot to build" look identical in an exported type. A
-    // role field here would make every deployment inherit one team shape,
-    // which is exactly what a general primitive must not do.
-    const keys = Object.keys(task('t1')).join(' ').toLowerCase()
-    for (const forbidden of ['role', 'captain', 'orgchart', 'manager', 'team', 'seniority']) {
-      expect(keys, forbidden).not.toContain(forbidden)
-    }
+    // not built" and "forgot to build" look identical in an exported type.
+    //
+    // Written as a CLOSED SET rather than a forbidden-word list. A blacklist
+    // of role-ish names invites the exact defect it aims at: `rank`, `tier`,
+    // `authority`, `level`, `grade`, `supervisor`, `lead` and `chief` would
+    // all pass one. A closed set reddens on ANY new field whatever it is
+    // called, so whoever adds one must edit this list -- and that edit is the
+    // moment they confront must[2].
+    expect(Object.keys(task('t1')).sort()).toEqual([
+      'attempt', 'claimExpiresAtMs', 'dependsOn', 'id', 'outputs', 'owner', 'status', 'verification',
+    ])
   })
 
-  it('identifies a claimant only by opaque worker id, carrying no rank', () => {
-    // `owner` is a WorkerId and nothing more: the board can say WHO holds a
-    // task and cannot express WHY they were entitled to it. That judgement is
-    // the plugin layer's.
+  it('carries the claimant\'s id through UNCHANGED, deriving nothing from it', () => {
+    // `typeof owner === 'string'` would exclude nothing: string is the most
+    // expressive primitive there is, and "senior-engineer:worker-a" passes it
+    // while being precisely the thing must[2] forbids.
+    //
+    // Identity is the assertion that matches the claim: the board transports
+    // an opaque id and never derives, decorates or composes one. It can say
+    // WHO holds a task and cannot express why they were entitled to it.
     const decision = decideClaim(task('t1'), WORKER_A, 1_000, 5_000, [])
     if (!decision.claimed) throw new Error('unreachable')
-    expect(typeof decision.task.owner).toBe('string')
+    expect(decision.task.owner).toBe(WORKER_A)
   })
 })
 
