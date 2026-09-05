@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T05:45:26.210Z",
-  "inputDigest": "389c9f11ca9e72fcfec840568fcb8e8199fab8cad921eed555284b80de2493cd",
+  "lastUpdatedUtc": "2026-09-05T06:31:43.685Z",
+  "inputDigest": "0b6fd3cf726346a0ee579cbc27716a746c42ca783cf9bd49f6ce4cf2a6f932e2",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -5197,17 +5197,103 @@
           "capturedAtUtc": "2026-09-05T05:45:26.208Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33949286482",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-637a/first100-evidence-637a2b944898b2970f7ba87cf0469418492ac3a8/vitest-report.json",
+          "observationSha256": "d48773eae8741112ee9d41694528af3d57eeed5b463d7ca2f631900e20b9f774",
+          "expectCasesMatched": [
+            "provider: the package exports every negotiation function a peer needs",
+            "provider: the exported functions are the same implementations the Contract stage proved, not re-declarations",
+            "provider: a fingerprint computed through the package face equals one computed from the same surface twice",
+            "provider: the server advertises a RANGE even while it speaks one generation",
+            "provider: a peer speaking only a future generation is refused rather than silently downgraded",
+            "provider: a capability the server knows but has not implemented refuses differently from one it has never heard of",
+            "control: a capability the server both knows and supports is agreed, so the refusals above measure the sets and not the mandatory flag",
+            "P8-01 must[2]: the server REFUSES an unknown mandatory capability over the real stdio pair",
+            "P8-01 acceptance[0]: the server REFUSES a peer whose protocol range does not overlap its own",
+            "serves initialize over the injected stdio pair",
+            "waits for Loader-owned adapter registration before initialize",
+            "drives a session/prompt turn end-to-end and forwards session notifications as output frames",
+            "answers shutdown before exiting 0 exactly once, even against a racing second shutdown",
+            "still disposes and exits once when the flush callback fails",
+            "stops serving on a bare fiber dispose (HMR-style unload) without calling exit"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-05T06:31:43.094Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33949286482",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-637a/first100-evidence-637a2b944898b2970f7ba87cf0469418492ac3a8/vitest-report.json",
+          "observationSha256": "d48773eae8741112ee9d41694528af3d57eeed5b463d7ca2f631900e20b9f774",
+          "expectCasesMatched": [
+            "contract: a complete negotiation reaches the caller with every field intact",
+            "control: the server identity still arrives, so the case above measures the added fields and not a broken handshake",
+            "contract: a server that sends no negotiation is admitted, and the field is absent rather than empty",
+            "contract: a malformed range is dropped rather than repaired into a claim the peer never made",
+            "contract: a partially-formed negotiation is dropped WHOLE, not read field by field",
+            "contract: a negotiation whose capability lists are not string arrays is dropped, since a wire value is only what the peer claimed",
+            "contract: initializeNegotiated throws when the server did not agree to a mandatory capability",
+            "control: it resolves when every mandatory capability was agreed, so the refusal measures the agreement",
+            "contract: a server predating negotiation is admitted by initializeNegotiated rather than refused for agreeing to nothing"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-05T06:31:43.344Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33949286482",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-637a/first100-evidence-637a2b944898b2970f7ba87cf0469418492ac3a8/vitest-report.json",
+          "observationSha256": "d48773eae8741112ee9d41694528af3d57eeed5b463d7ca2f631900e20b9f774",
+          "expectCasesMatched": [
+            "contract: a new client against an old server agrees on the highest version both support",
+            "contract: an old client against a new server reaches the same version as the reverse pairing",
+            "contract: the highest mutually supported version wins, not the lowest",
+            "contract: non-overlapping ranges refuse with a machine-readable reason and BOTH ranges, so no field silently vanishes",
+            "contract: adjacent-but-disjoint ranges refuse rather than meeting in the middle",
+            "contract: ranges touching at exactly one version agree on it",
+            "contract: an inverted range is refused rather than normalised, since it describes no version the peer claimed",
+            "control: a well-formed range is accepted, so the refusal above measures the inversion",
+            "contract: a mandatory capability this build has never heard of refuses, naming the capability",
+            "contract: a mandatory capability this build knows but does not implement refuses with a DIFFERENT reason",
+            "contract: an unknown OPTIONAL capability is ignored rather than refused, which is the point of the split",
+            "contract: ignored optional capabilities are RECORDED, not dropped, so a peer can see what was not used",
+            "contract: negotiation fails fast on the first mandatory failure rather than collecting them",
+            "control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag",
+            "contract: an empty declaration set is accepted, so a peer declaring nothing is not treated as declaring something impossible",
+            "contract: the same surface fingerprints identically across calls",
+            "contract: declaration order does not move the fingerprint, since order is not wire-visible",
+            "contract: a version bump on one method moves the fingerprint",
+            "contract: adding a method moves the fingerprint, so a new wire surface cannot ship unnoticed",
+            "contract: removing a resource type moves the fingerprint",
+            "contract: a method and an event with the same name are distinguished, so the two kinds cannot collide",
+            "contract: names containing the field separator cannot forge another surface, because fields are length-prefixed",
+            "contract: two surfaces whose fields concatenate identically still fingerprint differently, which is what length-prefixing buys",
+            "enforcement: every ordered pair of adjacent generations negotiates, and the result never exceeds either peer",
+            "enforcement: the matrix is symmetric — swapping the peers never changes the agreed version",
+            "enforcement: a peer that has dropped support for the oldest generation refuses it rather than agreeing to a version it cannot speak",
+            "enforcement: removing a mandatory capability from the supported set turns an accepted handshake into a refusal",
+            "enforcement: withdrawing a capability from the KNOWN set changes the refusal reason, so the two failures stay distinguishable",
+            "enforcement: changing a schema version on any single surface entry moves the fingerprint, so an enum or required-field edit cannot ship silently",
+            "control: an unrelated edit that changes no wire-visible field leaves the fingerprint alone, so the case above measures the change and not the act of editing",
+            "enforcement: the negotiated profile is identical across repeated derivations from one fixture",
+            "enforcement: the fixture pins the exact profile, so a second implementation has a concrete target rather than a description"
+          ],
+          "absorbedFlakes": [
+            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
+          ],
+          "capturedAtUtc": "2026-09-05T06:31:43.684Z"
         }
       },
       "supplements": {},
-      "candidateSha": "d6fe7ef9cd323f67542d97f8b5c279bf973898b9",
+      "candidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",

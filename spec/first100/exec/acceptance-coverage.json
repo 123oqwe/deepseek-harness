@@ -1285,6 +1285,149 @@
         }
       ],
       "note": "acceptance[2]: 'after a restart an orphaned Agent can be reclaimed or fail safely.' PARTIALLY COVERED, AND THE ROW CARRIES A LIVE LOCK NAMING EXACTLY THIS CLAUSE. What is covered is the state machine's half: both outcomes the clause names are reachable (reclaim through starting, or fail safely), every non-terminal state can reach orphaned so any interrupted run is representable, and a reclaim MUST pass through starting rather than resuming directly. The two F-stage cases assert the property that prohibition exists to protect -- a reclaimed run carries a strictly greater epoch, and the previous lease holder is stale afterwards -- which BLOCKED-079 recorded as asserted-by-prohibition-only until they were written.\n\nWHAT IS NOT COVERED, and why no assertion was written for it: 'after a restart' requires agent-run state surviving a process boundary, and this repository has none. Turn-level crash recovery and P4-01's Run-level persistence are neither of them Agent-level, and leaseEpoch appears nowhere outside this epic's own module. An assertion written today would pass because nothing can be orphaned ACROSS A RESTART at all -- BLOCKED-050's shape. Owner is P4-07 (Worker Lease, Heartbeat and Fencing Token), verified against the registry: its must[0] is 'every work item is owned by an epoch lease' and must[2] is 'heartbeat renews the lease; the scheduler may reclaim after expiry'. This entry records partial coverage honestly rather than citing the reachable half as if it satisfied the clause."
+    },
+    {
+      "epic": "P8-01",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: a new client against an old server agrees on the highest version both support"
+        },
+        {
+          "stage": "C",
+          "title": "contract: an old client against a new server reaches the same version as the reverse pairing"
+        },
+        {
+          "stage": "C",
+          "title": "contract: non-overlapping ranges refuse with a machine-readable reason and BOTH ranges, so no field silently vanishes"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: every ordered pair of adjacent generations negotiates, and the result never exceeds either peer"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: the matrix is symmetric — swapping the peers never changes the agreed version"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a complete negotiation reaches the caller with every field intact"
+        },
+        {
+          "stage": "P",
+          "title": "provider: a peer speaking only a future generation is refused rather than silently downgraded"
+        }
+      ],
+      "note": "acceptance[0]: 'a new client against an old server and an old client against a new server both reach a deterministic result, with no silent field loss.' BOTH DIRECTIONS are asserted, and symmetry is asserted directly rather than inferred from two examples -- the F-stage matrix negotiates every ORDERED PAIR of three adjacent generations, so a rule holding for one pairing but not another cannot pass. The no-silent-loss half is covered twice over: a refusal carries a machine-readable reason AND both ranges, so the mismatch is diagnosable without re-running the handshake; and the U-stage case proves the client no longer discards what the server sent -- it previously rebuilt its result from serverInfo alone, which was exactly the silent field loss this clause forbids, and the mutation deleting that reader reddens it."
+    },
+    {
+      "epic": "P8-01",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: a mandatory capability this build has never heard of refuses, naming the capability"
+        },
+        {
+          "stage": "C",
+          "title": "contract: a mandatory capability this build knows but does not implement refuses with a DIFFERENT reason"
+        },
+        {
+          "stage": "C",
+          "title": "contract: negotiation fails fast on the first mandatory failure rather than collecting them"
+        },
+        {
+          "stage": "U",
+          "title": "contract: initializeNegotiated throws when the server did not agree to a mandatory capability"
+        },
+        {
+          "stage": "P",
+          "title": "provider: a capability the server knows but has not implemented refuses differently from one it has never heard of"
+        },
+        {
+          "stage": "C",
+          "title": "control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag"
+        }
+      ],
+      "note": "acceptance[1]: 'an incompatible mandatory capability is refused BEFORE the task, with a machine-readable reason.' The two reasons are kept distinct throughout because a peer can act on the difference: unknown means version skew, unsupported means a real gap, and collapsing them would leave a peer unable to tell 'upgrade me' from 'this will never work here'. BEFORE THE TASK is a property of placement rather than of the decision, and it is asserted at two layers: the server refuses inside initialize ahead of adapter resolution and any plugin mount, so a rejected connection never leaves the runtime holding state for it; and the client's initializeNegotiated refuses before sending, so the caller learns from the handshake rather than from a failed task. POSITIVE CONTROL: a fully supported mandatory set is accepted, so the refusals measure the capability rather than the mandatory flag itself."
+    },
+    {
+      "epic": "P8-01",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: the same surface fingerprints identically across calls"
+        },
+        {
+          "stage": "C",
+          "title": "contract: declaration order does not move the fingerprint, since order is not wire-visible"
+        },
+        {
+          "stage": "P",
+          "title": "provider: a fingerprint computed through the package face equals one computed from the same surface twice"
+        }
+      ],
+      "note": "acceptance[2]: 'the same build produces a stable schema fingerprint.' Stability is asserted against the one thing most likely to disturb it accidentally: declaration order. Order is not wire-visible, so a fingerprint that moved with it would report drift for a refactor -- and a fingerprint that reports false drift stops being consulted, which fails acceptance[3] by a different route. This clause and the next pull in opposite directions, and the entry for acceptance[3] records the other half of the same boundary."
+    },
+    {
+      "epic": "P8-01",
+      "acceptanceIndex": 3,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: a version bump on one method moves the fingerprint"
+        },
+        {
+          "stage": "C",
+          "title": "contract: adding a method moves the fingerprint, so a new wire surface cannot ship unnoticed"
+        },
+        {
+          "stage": "C",
+          "title": "contract: removing a resource type moves the fingerprint"
+        },
+        {
+          "stage": "C",
+          "title": "contract: a method and an event with the same name are distinguished, so the two kinds cannot collide"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: changing a schema version on any single surface entry moves the fingerprint, so an enum or required-field edit cannot ship silently"
+        },
+        {
+          "stage": "F",
+          "title": "control: an unrelated edit that changes no wire-visible field leaves the fingerprint alone, so the case above measures the change and not the act of editing"
+        },
+        {
+          "stage": "F",
+          "title": "contract: two surfaces whose fields concatenate identically still fingerprint differently, which is what length-prefixing buys"
+        }
+      ],
+      "note": "acceptance[3]: 'any protocol behaviour change triggers a fixture diff.' Sensitivity is asserted across every kind of change the surface admits -- a version bump, an added method, a removed resource type, and the same name moving between the method and event kinds -- rather than on one representative edit. PAIRED CONTROL: an edit changing no wire-visible field leaves the fingerprint alone, so the sensitivity cases measure the CHANGE and not the act of editing; without it, a fingerprint over the whole source text would satisfy every case above while being useless. The length-prefixing case is here because of BLOCKED-085: the original case for it moved the separator CHARACTER, and removing length-prefixing reddened nothing; the replacement moves the field BOUNDARY ('ab'+'c' against 'a'+'bc', identical unprefixed) and the same mutation now reddens exactly it."
+    },
+    {
+      "epic": "P8-01",
+      "acceptanceIndex": 4,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "contract: a complete negotiation reaches the caller with every field intact"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a partially-formed negotiation is dropped WHOLE, not read field by field"
+        },
+        {
+          "stage": "U",
+          "title": "contract: a server that sends no negotiation is admitted, and the field is absent rather than empty"
+        },
+        {
+          "stage": "P",
+          "title": "provider: the package exports every negotiation function a peer needs"
+        }
+      ],
+      "note": "acceptance[4]: 'the negotiated result is written to each Run's provenance.' The outcome is returned from initialize as structured provenance -- agreed version, agreed capabilities, ignored capabilities, downgrades -- so 'what did these peers agree to' is answerable from the record rather than by replaying a handshake that no longer exists. Two failure modes are closed rather than one: a partially-formed negotiation is dropped WHOLE, because a caller would treat the fields that did arrive as authoritative and a half-recorded agreement is worse than none; and an ABSENT negotiation stays absent rather than becoming an empty one, since absence means the peer predates negotiation while an empty record would assert agreement to nothing. The P-stage export case is included because provenance that no consumer can construct is not provenance: before that stage the negotiation functions existed and nothing re-exported them."
     }
   ]
 }
