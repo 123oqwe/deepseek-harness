@@ -1,0 +1,198 @@
+/**
+ * Epic P8-01's Contract stage: protocol version negotiation, capability
+ * discovery, and schema fingerprinting.
+ *
+ * `contract:` asserts a promise the exported surface makes; `control:` proves
+ * the assertion beside it measures a decision rather than a constant.
+ */
+
+import { describe, expect, it } from 'vitest'
+import { isWellFormedRange, negotiateProtocolVersion } from '../src/version.ts'
+import type { ProtocolVersionRange } from '../src/version.ts'
+import { negotiateCapabilities } from '../src/capabilities.ts'
+import type { CapabilityDeclaration, CapabilityId } from '../src/capabilities.ts'
+import { computeSchemaFingerprint } from '../src/schema-fingerprint.ts'
+import type { ProtocolSurface } from '../src/schema-fingerprint.ts'
+
+/**
+ * A supported range.
+ * @param min - lowest supported version.
+ * @param max - highest supported version.
+ * @returns the range.
+ */
+function range(min: number, max: number): ProtocolVersionRange {
+  return { min, max }
+}
+
+describe('P8-01 Contract: acceptance[0] — negotiation is deterministic in both directions', () => {
+  it('contract: a new client against an old server agrees on the highest version both support', () => {
+    expect(negotiateProtocolVersion(range(1, 5), range(1, 3))).toEqual({ agreed: true, version: 3 })
+  })
+
+  it('contract: an old client against a new server reaches the same version as the reverse pairing', () => {
+    // acceptance[0] names both directions, and a rule that is not symmetric
+    // would give two peers different answers about the same pair.
+    expect(negotiateProtocolVersion(range(1, 3), range(1, 5)))
+      .toEqual(negotiateProtocolVersion(range(1, 5), range(1, 3)))
+  })
+
+  it('contract: the highest mutually supported version wins, not the lowest', () => {
+    // Lowest would silently hold both peers at the oldest shape either has
+    // ever supported, which is how a capability stops being used without
+    // anyone deciding to stop using it.
+    expect(negotiateProtocolVersion(range(2, 7), range(4, 9))).toEqual({ agreed: true, version: 7 })
+  })
+
+  it('contract: non-overlapping ranges refuse with a machine-readable reason and BOTH ranges, so no field silently vanishes', () => {
+    expect(negotiateProtocolVersion(range(1, 2), range(5, 9))).toEqual({
+      agreed: false,
+      reason: 'no-overlapping-version',
+      client: range(1, 2),
+      server: range(5, 9),
+    })
+  })
+
+  it('contract: adjacent-but-disjoint ranges refuse rather than meeting in the middle', () => {
+    expect(negotiateProtocolVersion(range(1, 3), range(4, 6)).agreed).toBe(false)
+  })
+
+  it('contract: ranges touching at exactly one version agree on it', () => {
+    expect(negotiateProtocolVersion(range(1, 4), range(4, 8))).toEqual({ agreed: true, version: 4 })
+  })
+
+  it('contract: an inverted range is refused rather than normalised, since it describes no version the peer claimed', () => {
+    expect(negotiateProtocolVersion(range(5, 1), range(1, 9)).agreed).toBe(false)
+    expect(isWellFormedRange(range(5, 1))).toBe(false)
+  })
+
+  it('control: a well-formed range is accepted, so the refusal above measures the inversion', () => {
+    expect(isWellFormedRange(range(1, 5))).toBe(true)
+    expect(negotiateProtocolVersion(range(1, 5), range(1, 9)).agreed).toBe(true)
+  })
+})
+
+describe('P8-01 Contract: must[2] — an unknown mandatory capability refuses the connection', () => {
+  const known = new Set<CapabilityId>(['streaming', 'approval', 'replay'])
+  const supported = new Set<CapabilityId>(['streaming', 'approval'])
+
+  /**
+   * One declaration.
+   * @param id - the capability id.
+   * @param mandatory - whether the peer requires it.
+   * @returns the declaration.
+   */
+  function needs(id: string, mandatory: boolean): CapabilityDeclaration {
+    return { id, mandatory }
+  }
+
+  it('contract: a mandatory capability this build has never heard of refuses, naming the capability', () => {
+    expect(negotiateCapabilities([needs('teleport', true)], known, supported))
+      .toEqual({ accepted: false, reason: 'unknown-mandatory-capability', capability: 'teleport' })
+  })
+
+  it('contract: a mandatory capability this build knows but does not implement refuses with a DIFFERENT reason', () => {
+    // must[2] distinguishes them and a peer can act on the difference:
+    // unknown means version skew, unsupported means a real gap.
+    expect(negotiateCapabilities([needs('replay', true)], known, supported))
+      .toEqual({ accepted: false, reason: 'unsupported-mandatory-capability', capability: 'replay' })
+  })
+
+  it('contract: an unknown OPTIONAL capability is ignored rather than refused, which is the point of the split', () => {
+    const result = negotiateCapabilities([needs('teleport', false)], known, supported)
+    expect(result).toEqual({ accepted: true, agreed: [], ignored: ['teleport'] })
+  })
+
+  it('contract: ignored optional capabilities are RECORDED, not dropped, so a peer can see what was not used', () => {
+    const result = negotiateCapabilities([needs('replay', false), needs('streaming', false)], known, supported)
+    expect(result).toEqual({ accepted: true, agreed: ['streaming'], ignored: ['replay'] })
+  })
+
+  it('contract: negotiation fails fast on the first mandatory failure rather than collecting them', () => {
+    // Any single mandatory failure is fatal, so a list would suggest the peer
+    // could fix them independently.
+    expect(negotiateCapabilities([needs('teleport', true), needs('replay', true)], known, supported))
+      .toEqual({ accepted: false, reason: 'unknown-mandatory-capability', capability: 'teleport' })
+  })
+
+  it('control: a fully supported mandatory set is accepted, so the refusals above measure the capability and not the mandatory flag', () => {
+    expect(negotiateCapabilities([needs('streaming', true), needs('approval', true)], known, supported))
+      .toEqual({ accepted: true, agreed: ['streaming', 'approval'], ignored: [] })
+  })
+
+  it('contract: an empty declaration set is accepted, so a peer declaring nothing is not treated as declaring something impossible', () => {
+    expect(negotiateCapabilities([], known, supported)).toEqual({ accepted: true, agreed: [], ignored: [] })
+  })
+})
+
+describe('P8-01 Contract: acceptance[2] and [3] — the fingerprint is stable per surface and moves with it', () => {
+  const surface: ProtocolSurface = {
+    methods: [
+      { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
+      { name: 'session/prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+    ],
+    events: [{ name: 'session/event', schemaId: 'sdk-protocol:SessionEvent', version: '1.0' }],
+    resourceTypes: ['session', 'agent'],
+  }
+
+  it('contract: the same surface fingerprints identically across calls', () => {
+    expect(computeSchemaFingerprint(surface)).toBe(computeSchemaFingerprint(surface))
+  })
+
+  it('contract: declaration order does not move the fingerprint, since order is not wire-visible', () => {
+    // A fingerprint that reported drift for a source reorder would report
+    // false drift for a refactor, and one that cries wolf stops being read.
+    const reordered: ProtocolSurface = {
+      methods: [...surface.methods].reverse(),
+      events: surface.events,
+      resourceTypes: [...surface.resourceTypes].reverse(),
+    }
+    expect(computeSchemaFingerprint(reordered)).toBe(computeSchemaFingerprint(surface))
+  })
+
+  it('contract: a version bump on one method moves the fingerprint', () => {
+    const bumped: ProtocolSurface = {
+      ...surface,
+      methods: [{ ...surface.methods[0]!, version: '2.0' }, surface.methods[1]!],
+    }
+    expect(computeSchemaFingerprint(bumped)).not.toBe(computeSchemaFingerprint(surface))
+  })
+
+  it('contract: adding a method moves the fingerprint, so a new wire surface cannot ship unnoticed', () => {
+    const added: ProtocolSurface = {
+      ...surface,
+      methods: [...surface.methods, { name: 'session/cancel', schemaId: 'sdk-protocol:Cancel', version: '1.0' }],
+    }
+    expect(computeSchemaFingerprint(added)).not.toBe(computeSchemaFingerprint(surface))
+  })
+
+  it('contract: removing a resource type moves the fingerprint', () => {
+    expect(computeSchemaFingerprint({ ...surface, resourceTypes: ['session'] }))
+      .not.toBe(computeSchemaFingerprint(surface))
+  })
+
+  it('contract: a method and an event with the same name are distinguished, so the two kinds cannot collide', () => {
+    const swapped: ProtocolSurface = {
+      methods: [{ name: 'ping', schemaId: 'x', version: '1.0' }],
+      events: [],
+      resourceTypes: [],
+    }
+    const asEvent: ProtocolSurface = {
+      methods: [],
+      events: [{ name: 'ping', schemaId: 'x', version: '1.0' }],
+      resourceTypes: [],
+    }
+    expect(computeSchemaFingerprint(swapped)).not.toBe(computeSchemaFingerprint(asEvent))
+  })
+
+  it('contract: names containing the field separator cannot forge another surface, because fields are length-prefixed', () => {
+    // Without length prefixing, a method named `a:b` and the pair `a`, `b`
+    // could hash identically.
+    const one: ProtocolSurface = { methods: [{ name: 'a:b', schemaId: 'x', version: '1.0' }], events: [], resourceTypes: [] }
+    const two: ProtocolSurface = {
+      methods: [{ name: 'a', schemaId: 'b:x', version: '1.0' }],
+      events: [],
+      resourceTypes: [],
+    }
+    expect(computeSchemaFingerprint(one)).not.toBe(computeSchemaFingerprint(two))
+  })
+})
