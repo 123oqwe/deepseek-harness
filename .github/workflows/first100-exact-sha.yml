@@ -130,7 +130,7 @@ jobs:
         # `build:lib:host` alone emits the host face and would resolve every
         # client type to `error`.
         run: |
-          base=$(node -e "process.stdout.write(require('./tests/first100/registry.json').frozenBaseline)")
+          base=$(node -e "process.stdout.write(require('./tests/first100/registry.json').frozenBaseline.sha)")
           echo "frozen baseline: $base"
           mapfile -t changed < <(git diff --name-only --diff-filter=d "$base..HEAD" -- '*.ts' '*.tsx' '*.mjs' | grep -v '^vendor/' || true)
           echo "${#changed[@]} changed source file(s) since the baseline"
