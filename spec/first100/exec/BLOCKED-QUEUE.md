@@ -772,6 +772,35 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-077 — P2-03 must[2]: the code-mode manifest is blocked by a stack overflow localized to the ptc call site but NOT explained; plugin-rpc has no invocation surface to gate at all (Supervisor, delegate-scoped to one round, 2026-09-05)
+
+**must[2] names three execution paths. Their real status differs, and only one is delivered.**
+
+| Path | Status |
+|---|---|
+| `native-tool-call` | **delivered and green** — the manifest is appended inside `appendToolCall`, the single point every native call passes through |
+| `code-mode-embedded` | **blocked** — a real invocation surface exists; wiring it overflows the stack (below) |
+| `plugin-rpc` | **no invocation surface exists in this repository** |
+
+**plugin-rpc: recorded, deliberately not wired.** `'plugin-rpc'` appears four times repo-wide — a member of a type union, its build artifact, one README sentence, and a test fixture. There is no dispatch point. Writing an assertion that "a plugin RPC cannot bypass the manifest" **would pass, and would keep passing with the entire gate deleted** — [BLOCKED-050](#blocked-050)'s shape exactly, where P1-07's must[1] named five load kinds and four had no load point, so the clause held because nothing could load, not because a gate refused.
+
+What makes the absence acceptable rather than a silent gap is structural and already written into the design: `assertManifestPrecedesExecution` **never branches on `origin`**. Origin is a manifest field, not a control path, so a future invocation surface inherits the gate by construction rather than by someone remembering to re-add a rule for it. **This half of must[2] cannot be falsified today; it is recorded as a finding, not claimed as delivered.**
+
+**code-mode: what one focused round MEASURED.**
+
+- Wiring `computeArgumentsHash(normalized.logged)` into `ptc.ts`'s `start()` makes `ptc.spec.ts`'s "binding arguments deeper than the structured-clone call stack" case time out at 5s. Replacing **only** that call with a literal returns the file to 91/91.
+- The call **throws** `RangeError: Maximum call stack size exceeded`. Proven with a file-writing probe.
+- **`canonicalizeArguments` is not the cause.** Both `src/` and the built `lib/` are iterative, and both hash the same shapes standalone — depth 5000 and 20000, arrays and objects, 2–21ms — **including inside a `worker_threads` worker**, so a smaller worker stack is excluded too.
+
+**What is NOT known: which code recurses.** The value is a plain detached JSON value (`walkJsonValue` is itself iterative, which is why the test's own deep walk succeeds), so the obvious explanations are already eliminated. **No cause is claimed.**
+
+**Two corrections to earlier reports, both mine.**
+
+1. I first reported the recursion defect in `canonicalizeArguments` as this blocker's cause. It was a **real** defect — overflow at depth 20000, fixed and proven byte-equivalent over 4014 inputs — but **fixing it did not clear the symptom**. Two true facts adjacent to each other are not a causal link. This is [BLOCKED-072](#blocked-072)'s hardest variant: not an unevaluated claim, but a correctly evaluated one **attached to a symptom it does not produce**. Had the iterative rewrite happened to clear the timeout for some unrelated reason, the false cause would have been frozen into the record as "fixed".
+2. I then reported that "the first call never returns." **Wrong** — it returns by throwing. That claim came from `console.error` printing nothing, and `console.error` is not captured in that worker context. **A silent channel was read as a silent subject** — the instrument again, not the thing.
+
+**Owner and unblock signal.** Owner is P2-03's remaining Usage work. **Unblock signal: `ptc.spec.ts`'s deep-arguments case passes with the manifest wiring in place.** No assertion may be written that routes around this — an assertion that passes because the wiring is absent certifies nothing.
+
 ### BLOCKED-076 — every `agent-loop` change owes a `docs/architecture.md` update that no gate enforces, the file belongs to an already-accepted epic, 21 epics will hit it, and one accepted epic already violated it (delegate ruling, Supervisor implementing, 2026-09-04)
 
 **The conflict.** Root `CLAUDE.md`: *"changing `agent-loop` requires updating `docs/architecture.md`."* P2-03's Usage stage declares `packages/core/agent-loop/src/tool-calls.ts` — the registry authorizes the loop change — but `docs/architecture.md` appears in **no** stage of P2-03. The registry authorizes the edit; the repository's own rule requires a companion edit outside the authorization.
