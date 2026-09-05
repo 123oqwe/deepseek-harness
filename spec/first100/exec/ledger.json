@@ -4785,24 +4785,107 @@
       "wave": 5,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r12/first100-evidence-2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5/vitest-report.json",
+          "observationSha256": "df52900c9fcba62d6070e322260680f52e6c3e56221de3273550fe2fa35bf1db",
+          "expectCasesMatched": [
+            "carries content, kind, subject, provenance, times, confidence, scope, purpose, sensitivity, status and relations",
+            "distinguishes inline content from a stored reference",
+            "treats an open-ended validity as an explicit null, not an absent field",
+            "refuses a derived record naming no source event",
+            "accepts a user-asserted record, which names a responsible party instead",
+            "does not treat an empty asserter as traceable",
+            "validation[2]: a returned record carries its own provenance, not a caller-supplied one",
+            "supersedes: the winner gains a relation and the loser is marked, both surviving",
+            "disputes marks the loser disputed, not superseded",
+            "refuses a relation pointing at the record itself",
+            "refuses a duplicated relation but allows two kinds toward one target",
+            "retrieves an active, unexpired record",
+            "withholds a record whose validity has passed, and keeps one at the boundary out too",
+            "withholds revoked, superseded and disputed records alike",
+            "withholds sensitive content by default",
+            "admits sensitive content when the policy explicitly permits it",
+            "admits normal content whatever the policy says",
+            "refuses a confidence outside [0, 1], including NaN",
+            "accepts the exact bounds, so the range test is not off by one",
+            "refuses an inverted validity range but accepts an instantaneous one"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T07:10:00.000Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A",
+          "reason": "registry: record/codec only; P6-01 supplies providers"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r12/first100-evidence-2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5/vitest-report.json",
+          "observationSha256": "df52900c9fcba62d6070e322260680f52e6c3e56221de3273550fe2fa35bf1db",
+          "expectCasesMatched": [
+            "permits it and reports that no boundary was crossed",
+            "treats the same tenant and session as one scope",
+            "refuses a cross-tenant merge with no authorization",
+            "refuses a cross-session merge with a DIFFERENT reason from a cross-tenant one",
+            "permits a cross-tenant merge that names both endpoints",
+            "refuses an authorization issued for a different destination",
+            "refuses an authorization issued for a different source",
+            "does not let a session-scoped authorization cover a tenant-wide merge"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T07:10:00.000Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33963744479",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r12/first100-evidence-2c854a9be2a7a84ae45bb7256ac1c0a6214a22a5/vitest-report.json",
+          "observationSha256": "df52900c9fcba62d6070e322260680f52e6c3e56221de3273550fe2fa35bf1db",
+          "expectCasesMatched": [
+            "enumerates at least twelve boundaries, each named once",
+            "fault boundary 01 confidence below zero is refused",
+            "fault boundary 02 confidence above one is refused",
+            "fault boundary 03 NaN confidence is refused, not admitted by two false comparisons",
+            "fault boundary 04 confidence exactly zero and exactly one are accepted",
+            "fault boundary 05 an inverted validity range is refused",
+            "fault boundary 06 an instantaneous validity range is accepted",
+            "fault boundary 07 validation[0] time validity: a record is retrievable up to, but not at, its end",
+            "fault boundary 08 an open-ended record never expires",
+            "fault boundary 09 validation[0] source deletion: a derived record left with no sources is refused",
+            "fault boundary 10 validation[0] source deletion: a user-asserted record survives it",
+            "fault boundary 11 validation[0] conflict chain: a relation to itself is refused",
+            "fault boundary 12 validation[0] conflict chain: a duplicated relation is refused",
+            "fault boundary 13 validation[0] conflict chain: two relation KINDS toward one target are allowed",
+            "fault boundary 14 validation[0] conflict chain: a three-record chain leaves every record present",
+            "fault boundary 15 a revoked record is withheld even while still within its validity",
+            "fault boundary 16 sensitive content is withheld from an index by default",
+            "fault boundary 17 normal content is indexable even under the strictest policy",
+            "fault boundary 18 a well-formed record validates, so the checks above refuse selectively"
+          ],
+          "absorbedFlakes": [],
+          "capturedAtUtc": "2026-09-06T07:10:00.000Z"
         }
       },
       "supplements": {},
       "candidateSha": null,
       "independentVerdict": "PENDING",
-      "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null
+      "openFindings": [
+        "BLOCKED-096: P6-01 residual lock rewritten as an outcome; both steps now owned by P6-03 (wave 8)"
+      ],
+      "status": "BLOCKED_ON_ACCEPTANCE",
+      "acceptedEvidence": null,
+      "selfAudit": {
+        "performedAtUtc": "2026-09-06T07:10:00.000Z",
+        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
+        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P6-02', cross-checked against the non-superseded P6-02 entries in spec/first100/exec/command-freeze.json, plus a count against tests/first100/registry.json's acceptance array. RESULT: 3 clauses, 3 entries covering indices 0/1/2, 17 references, 17 belonging to the frozen set of the stage each names, 0 mismatches. Built alongside the final freeze rather than after it.",
+        "ii_candidateChainConsistency": "PASS, trivially, and stated as such rather than as a comparison. RAN: read each cell's candidateSha. RESULT: all three rest on one commit, so there is no chain to compare and none is claimed.",
+        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the three freeze entries' argv and expectCases sets pairwise and matched each against the cited vitest-report.json. RESULT: C and F share record.spec.ts with disjoint title sets (20 + 19 = 39, the file's full discovery count); U has its own scope.spec.ts and its own argv; 20/20, 8/8, 19/19 present-and-passing. That C and F would share a file with disjoint sets, and U would not, was decided in this epic's pre-flight freeze-target list before either was written.",
+        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row.",
+        "pStageNote": "P is N/A by the registry ('record/codec only; P6-01 supplies providers'), so there is no P cell and none is claimed."
+      }
     },
     "P6-03": {
       "id": "P6-03",
