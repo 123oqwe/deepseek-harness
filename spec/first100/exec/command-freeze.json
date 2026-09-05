@@ -5114,6 +5114,56 @@
         "mutationDescription": "Three mutations beyond those recorded for C and P. types.ts: (1) recursion checked only against the immediate parent rather than the whole chain; (2) the agent-budget guard changed to `<= 1`, so the last agent cannot be spent. version.ts: (3) the monotonicity check skipped when the history is empty. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 boundary each -- 12, 15 and 05 respectively, each the boundary written for it."
       }
+    },
+    {
+      "epic": "P5-11",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries exactly the enumerated fields",
+        "represents an unclaimed task with explicit nulls, not absent fields",
+        "claims an open task, taking ownership and a lease",
+        "refuses a second worker while the first claim is live",
+        "leaves exactly one admitted holder after a hundred contending workers",
+        "lets a NEW worker claim once the lease has expired, at a greater attempt",
+        "holds the claim AT its expiry instant, so renew and reclaim cannot both be legal",
+        "refuses a write from the superseded holder and admits the current one",
+        "refuses an attempt number HIGHER than the task's current one",
+        "refuses a claim while a dependency is only submitted",
+        "admits the claim once the dependency is verified",
+        "refuses a claim on a finished task",
+        "refuses a two-task cycle",
+        "refuses a three-task cycle, naming the path",
+        "refuses a self-dependency distinctly from a cycle",
+        "refuses a dependency on a task not in the submitted set",
+        "accepts an acyclic graph, so the checks above refuse selectively",
+        "accepts a diamond, which shares a dependency without cycling",
+        "exposes NO role, captain or org-chart concept on the task surface",
+        "identifies a claimant only by opaque worker id, carrying no rank"
+      ],
+      "files": [
+        "packages/collaboration/taskboard/src/types.ts",
+        "packages/collaboration/taskboard/src/index.ts",
+        "packages/collaboration/taskboard/tests/claims.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T15:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "3f1801cfb0d7bcb6cc5157e64eb0b7466cc382a7",
+        "testsDiscovered": 20
+      },
+      "note": "P5-11 C-stage. First epic run under ALL THREE pre-flight questions, recorded per clause in spec/first100/exec/clause-subject-audit.json BEFORE any code. The title-noun check ran first and cost nothing: three nouns (Taskboard, Mailbox, Blackboard), all three packages absent -- PLANNED, not missing, which is the distinction P4-09's must[2] failed and the one place this check could produce false alarms.\n\nmust[2] IS A NEGATIVE CLAUSE and gets an assertion of ABSENCE. 'Roles, org charts and captains stay in the plugin/skill layer' cannot be satisfied by writing something; it is satisfied by the surface NOT carrying those concepts. Since 'deliberately not built' and 'forgot to build' are indistinguishable in an exported type, a case checks the task's key set for role/captain/orgchart/manager/team/seniority, and a second records that `owner` is an opaque WorkerId carrying no rank -- the board can say WHO holds a task and cannot express why they were entitled to it.\n\nTHE ATTEMPT INCREMENT IS THE WHOLE SAFETY PROPERTY, not bookkeeping: without it a worker whose claim lapsed and was reclaimed would return holding credentials indistinguishable from the new holder's. That mutation reddens 2. An attempt HIGHER than the task's current one is refused too -- attempts are issued only by the board, so a larger one did not come from it.\n\nA DEPENDENCY MUST BE VERIFIED, NOT MERELY SUBMITTED. Submitted work has produced outputs nobody checked, and releasing a dependent task on it builds on a result that may yet be rejected.\n\nONE MUTATION IS A GENUINE EQUIVALENT MUTANT, diagnosed in the cheapest-first order the delegate adopted rather than assumed. Removing the `done` memo from the cycle walk reddens nothing, and the reason was checked rather than guessed: with the memo gone all three cycle cases and the diamond still pass, because the correctness guard is `visiting` and `done` only prevents re-walking shared subtrees. Category (2), a performance-only change -- not (3), since the mutation did alter the code path, and not (1).",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations on src/types.ts: (1) the attempt not incremented on claim; (2) the expiry boundary relaxed so a claim lapses AT its expiry instant; (3) a dependency accepted while merely submitted; (4) isClaimCurrent accepts any attempt at or above the current; (5) the `done` memo removed from the cycle walk; (6) the self-dependency check removed. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 1, 1, 1, 0 and 1 respectively. (5) is a genuine equivalent mutant, established by re-running the cycle and diamond cases without the memo: `visiting` carries correctness, `done` carries only performance."
+      }
     }
   ]
 }
