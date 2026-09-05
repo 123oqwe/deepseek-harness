@@ -9,6 +9,7 @@ export {
   resolveLoadOrder,
   validateLock,
 } from './types.ts'
+export { planLockCommit, serializeLock, writeLockAtomically } from './commit.ts'
 export type {
   GrantedCapability,
   LockDefectReason,

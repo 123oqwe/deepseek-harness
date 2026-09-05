@@ -2114,3 +2114,21 @@ Every lock states what its unlock will look like from the outside. Reading all f
 The concrete cost is dated: P6-01's row said P6-02 would unlock it. P6-02 delivers the `scope` field the lock names, and the row **still would not unlock**, because nothing reads that field yet. Anyone arriving on the day P6-02 landed would have found a locked row whose stated unlock had visibly happened, and would have had to reconstruct why.
 
 **Repair:** P4-05 and P2-02 gain an explicit second step in the P6-01 format. Beyond those two, the register needs a rule rather than five one-off fixes — **an unlock signal must name a state a test can observe, never a delivery by another party.** "P4-07's lease store lands" is an event in someone else's schedule; "the pinned case asserting X starts failing" is a fact this repository can check.
+
+### BLOCKED-093 — A self-audit that records only its verdict cannot be told apart from one that audited the wrong thing
+
+**Status: STANDING FORMAT REQUIREMENT, delegate-adopted 2026-09-05. Applies to every future row's `selfAudit`.**
+
+P4-07's self-audit reported `i_coverageClosure: PASS`. Two checks had been run — freeze-to-ledger consistency (`expectCasesMatched` byte-identical to the frozen `expectCases`, `sensitivityProof` present) and nothing else — and **the first was reported under the second's name.** Predicate (i) is coverage closure, whose carrier is `acceptance-coverage.json`, where the epic had **zero** entries. The audit returned PASS for a predicate it never evaluated.
+
+**The shape is the one this register exists to catch, appearing inside the instrument meant to catch it.** A verdict was produced without consulting its subject, and nothing in the record could reveal that, because the record contained only the verdict.
+
+**That is the generalizable part.** A check that records `PASS` and nothing else is **indistinguishable from a check that evaluated the wrong object**. Both write the same word. No amount of care at writing time closes that: the reader has no way in.
+
+**The requirement.** Every `selfAudit` field must state **what was executed and what was read** — the command or query, and the file it consulted — so a third party can re-run it. Not more words: a record that can be *evaluated* rather than only believed.
+
+> This is exactly what the program already demands of a CI observation — argv, report path, sha256, candidate SHA, all recorded so anyone can recompute the verdict. **The same standard was never asked of the self-audit that gates on those observations.**
+
+**Why binding the coverage entries to the last cell's greening is insufficient.** That repair was proposed first and is worth doing, but it addresses only the *forgotten* case. It cannot catch this one: the entries were not forgotten in the sense of being skipped — a check genuinely ran, and its output was filed under the wrong name. **Mechanizing the pairing prevents an omission; recording the inputs is what makes a misattribution visible.** The two failures need different repairs, which is why both are recorded.
+
+**Precedent:** `sensitivityProof` became a required field for the same reason — a freeze note claiming a mutation table proved nothing until the table's inputs and results were on record.
