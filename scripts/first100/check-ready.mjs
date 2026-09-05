@@ -84,10 +84,51 @@ function declaredFiles(epic) {
  * Whether an epic has started but not landed, and so may hold a write lock on
  * its declared files.
  * @param row - the ledger row to classify.
+ * @param epicId - the epic's registry id, to resolve which stages are N/A.
+ * @param epicStages - registry stage declarations by epic id.
  * @returns true when the epic is not ACCEPTED and some stage cell has left NOT_RUN.
  */
-function isInFlight(row) {
+function isInFlight(row, epicId, epicStages) {
   if (row.status === 'ACCEPTED') return false
+  const cells = Object.values(row.cells ?? {})
+  const started = cells.some(cell => cell?.status !== undefined && cell.status !== 'NOT_RUN')
+  if (!started) return false
+  // An epic whose every started cell is GREEN has finished writing. Condition 2
+  // exists to stop two epics writing one file CONCURRENTLY; a finished epic's
+  // writes are history, not competition, so holding its files would block a
+  // conflict that can no longer happen.
+  //
+  // "not accepted" and "still writing" are different states, and treating them
+  // as one silently converts an acceptance lock into a permanent write lock:
+  // a lock exists so a row is not marked ACCEPTED while a clause is unproven,
+  // which says nothing about whether its files are still moving. Before this
+  // check, P4-05 and P6-01 -- every cell GREEN, acceptance withheld by locks --
+  // held every file they declared, and `check-ready` reported zero startable
+  // epics (BLOCKED-087).
+  //
+  // GREEN is sufficient evidence that the writes have LANDED, but only because
+  // of a coincidence between two mechanisms: a cell can be greened solely from
+  // `first100-exact-sha.yml`'s exact-SHA artifact, which runs on a pushed
+  // commit. Recorded here rather than left implicit -- if the greening path
+  // ever accepts an observation from an unpushed tree, this equivalence stops
+  // holding and this check would silently release locks on files that never
+  // landed.
+  // EVERY non-N/A cell must be GREEN, not merely every cell that has started.
+  // Checking only started cells would release an epic that finished its
+  // Contract stage while its Usage and Fault stages sit at NOT_RUN -- P2-03 is
+  // exactly that today, and it is genuinely mid-work.
+  const stages = epicStages.get(epicId) ?? {}
+  const applicable = ['C', 'P', 'U', 'F'].filter(stage => stages[stage]?.nOf !== 'N/A')
+  const everyApplicableCellGreen = applicable.every(stage => row.cells?.[stage]?.status === 'GREEN')
+  return !everyApplicableCellGreen
+}
+
+/**
+ * Whether any cell has left NOT_RUN.
+ * @param row - the ledger row to classify.
+ * @returns true when work on this epic has begun.
+ */
+function hasStarted(row) {
   return Object.values(row.cells ?? {}).some(cell => cell?.status !== undefined && cell.status !== 'NOT_RUN')
 }
 
@@ -100,6 +141,7 @@ const ledgerRows = ledger.rows
 if (ledgerRows === undefined) fail(`${LEDGER_PATH} has no "rows" — regenerate it with generate-ledger.mjs`)
 
 const byId = new Map(registryRows.map(epic => [epic.id, epic]))
+const stagesById = new Map(registryRows.map(epic => [epic.id, epic.stages ?? {}]))
 
 /**
  * Decide both start conditions for one epic against the current ledger.
@@ -124,7 +166,7 @@ function decide(id) {
   // Condition 2 — no declared-file overlap with any in-flight epic.
   const own = declaredFiles(epic)
   for (const [otherId, row] of Object.entries(ledgerRows)) {
-    if (otherId === id || !isInFlight(row)) continue
+    if (otherId === id || !isInFlight(row, otherId, stagesById)) continue
     const other = byId.get(otherId)
     if (other === undefined) fail(`in-flight ledger row ${otherId} has no registry entry — cannot compute its file set`)
     const shared = [...declaredFiles(other)].filter(path => own.has(path))
@@ -153,7 +195,12 @@ const ready = []
 for (const epic of registryRows) {
   const row = ledgerRows[epic.id]
   if (row === undefined) fail(`epic ${epic.id} has no ledger row`)
-  if (row.status === 'ACCEPTED' || isInFlight(row)) continue
+  if (row.status === 'ACCEPTED' || isInFlight(row, epic.id, stagesById)) continue
+  // An epic whose every applicable cell is GREEN has no work left to start; it
+  // is waiting on acceptance, not on capacity. It stops being in flight so it
+  // releases its file locks, but listing it as startable would send someone to
+  // an epic with nothing to do.
+  if (hasStarted(row)) continue
   if (decide(epic.id).ready) ready.push(epic.id)
 }
 

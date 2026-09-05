@@ -273,3 +273,64 @@ describe('first100 readiness gate', () => {
     expect(output).toMatch(/ {2}- \S/u)
   })
 })
+
+describe('first100 readiness gate: a finished epic releases its file locks (BLOCKED-087)', () => {
+  const allGreen = { status: 'NOT_RUN', cells: { C: { status: 'GREEN' }, U: { status: 'GREEN' }, F: { status: 'GREEN' } } }
+  const partlyGreen = { status: 'NOT_RUN', cells: { C: { status: 'GREEN' }, U: { status: 'NOT_RUN' }, F: { status: 'NOT_RUN' } } }
+  const threeStages = { C: { files: [] }, P: { nOf: 'N/A' }, U: { files: [] }, F: { files: [] } }
+
+  it('releases the lock when every applicable cell is GREEN, since its writes have landed', () => {
+    // An acceptance lock says a clause is unproven; it says nothing about
+    // whether files are still moving. Holding them would block a conflict that
+    // can no longer happen.
+    const root = fixture(
+      [
+        { id: 'DONE', wave: 1, predecessors: [], files: ['shared.ts'], stages: threeStages },
+        { id: 'B', wave: 2, predecessors: [], files: ['shared.ts'], stages: {} },
+      ],
+      { DONE: allGreen, B: notStarted },
+    )
+    expect(run(root, 'B').code).toBe(0)
+  })
+
+  it('KEEPS the lock when only some cells are GREEN, because that epic is genuinely still writing', () => {
+    // The opposite direction, without which the release above is
+    // indistinguishable from deleting the file-overlap condition entirely.
+    const root = fixture(
+      [
+        { id: 'MIDWAY', wave: 1, predecessors: [], files: ['shared.ts'], stages: threeStages },
+        { id: 'B', wave: 2, predecessors: [], files: ['shared.ts'], stages: {} },
+      ],
+      { MIDWAY: partlyGreen, B: notStarted },
+    )
+    const { code, output } = run(root, 'B')
+    expect(code).toBe(1)
+    expect(output).toContain('shares 1 file(s) with in-flight MIDWAY')
+  })
+
+  it('counts an N/A stage as satisfied, so a three-stage epic is not held open by a stage it never had', () => {
+    // P is declared N/A for several epics; requiring GREEN there would make
+    // every such epic permanently in flight.
+    const root = fixture(
+      [
+        { id: 'DONE', wave: 1, predecessors: [], files: ['shared.ts'], stages: threeStages },
+        { id: 'B', wave: 2, predecessors: [], files: ['shared.ts'], stages: {} },
+      ],
+      { DONE: { status: 'NOT_RUN', cells: { C: { status: 'GREEN' }, P: { status: 'NOT_RUN' }, U: { status: 'GREEN' }, F: { status: 'GREEN' } } }, B: notStarted },
+    )
+    expect(run(root, 'B').code).toBe(0)
+  })
+
+  it('does not list a finished epic as startable, since it is waiting on acceptance rather than capacity', () => {
+    const root = fixture(
+      [
+        { id: 'DONE', wave: 1, predecessors: [], files: ['a.ts'], stages: threeStages },
+        { id: 'FRESH', wave: 2, predecessors: [], files: ['b.ts'], stages: {} },
+      ],
+      { DONE: allGreen, FRESH: notStarted },
+    )
+    const { output } = run(root)
+    expect(output).toContain('FRESH')
+    expect(output).not.toContain('DONE')
+  })
+})
