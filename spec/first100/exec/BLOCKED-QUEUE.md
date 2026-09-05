@@ -2551,7 +2551,7 @@ DSH_SNAPSHOT=refresh   replay committed fixtures, REWRITE expected keyless
 
 ### BLOCKED-109 — the gate that decides a CELL is narrower than the gate that decides the BRANCH
 
-**Status: OPEN, proposal recorded, deliberately NOT applied unilaterally.**
+**Status: ADJUDICATED by the delegate 2026-09-07 and APPLIED. Both gates added; no backfill.**
 
 `first100-exact-sha.yml` decides every GREEN cell in this program. What it runs:
 
@@ -2579,5 +2579,14 @@ Both consequences belong to the maintainer and the delegate, not to the executor
 1. apply it after BLOCKED-108 is repaired, so the branch is green before the bar rises, and treat already-ACCEPTED epics as judged under the old bar; or
 2. apply it now and accept that nothing greens until the snapshots are refreshed; or
 3. keep cell greening as it is and run the wider gates as a separate branch-level check, accepting that a GREEN cell does not imply a releasable branch.
+
+### Adjudication (delegate, 2026-09-07)
+
+**Both gates enter. No backfill. The 19 already-ACCEPTED epics are recorded as having been greened under the OLD gate**, and a reader must not take them to have passed the new one.
+
+- **Snapshots enter because they are tests.** A cell greened on a tree with 76 red tests says less than it appears to, and P2-03's U stage is the worked example: it broke 76 and every subsequent cell greened anyway.
+- **Lint enters as a diagnostic, not a style rule.** A First-100 commit failing lint means that commit never went through the branch's own gate — and taking that shortcut is the shape every failure found today shared. The cost is now zero, because the 525 accumulated errors were cleared in the same session.
+- **No backfill follows precedent.** The `sensitivityProof` requirement went in the same way — 3 of 68 entries under the old rule, 37 of 37 under the new — and was accepted as forward-effective. What that precedent also requires is saying so plainly, which is why the old-bar note above is not optional.
+- **The schedule cost is zero.** Greening is already stopped on the push, and BLOCKED-108's repair is stopped on the same classifier. The order is one line: user approves → `refresh` repairs 108 → push → CI under the new gate → greening resumes. Adding the steps does not stop anything for an extra second.
 
 **Not filed as a defect in anyone's diligence.** The narrow gate is a reasonable design for per-cell evidence — a cell asserts that specific frozen cases pass at a SHA, which is exactly what the observation shows. What is missing is anything that ever asks the wider question, and the answer to "who runs lint" turned out to be nobody.
