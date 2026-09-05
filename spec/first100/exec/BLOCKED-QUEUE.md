@@ -2312,3 +2312,26 @@ Cheap, and it fails in the useful direction: the answer is written down for ever
 **Why the existing questions could not be stretched to cover this.** They ask whether a *declared thing* is real. This one asks whether a *required thing* is declared at all. The first pair validates what the registry says; the third checks what it fails to say — and no amount of care with the first two reaches it, because a missing declaration produces nothing to inspect.
 
 **A corroborating detail worth keeping:** the epic's own title named both missing clauses (*Detached… 与 Nested Workflow*). Neither party read it. The registry's `title` field is not merely a label — for an epic delivering several capabilities it is the shortest available statement of what completion means.
+
+### BLOCKED-102 — Replacing an assertion requires mutating the OLD one too, or a repair is indistinguishable from a redecoration
+
+**Status: STANDING RULE, delegate-adopted 2026-09-06. Scoped to replacements only.**
+
+P5-11's two `must[2]` cases were replaced after the delegate showed neither could support its own comment. The replacements were mutation-proved, which is the ordinary requirement. **The step that made the replacement legible was running the same two mutations against the ORIGINAL assertions and recording that they reddened under neither.**
+
+| What is run | What it establishes |
+|---|---|
+| mutate against the NEW assertion | the new assertion works |
+| mutate against the OLD assertion too | the replacement was **load-bearing**, not merely different |
+
+**Without the second, a repair and a redecoration produce identical evidence.** Both leave a green suite, a passing mutation table, and a diff. Only the old-assertion run distinguishes "this closed a hole" from "this is a nicer way of saying the same thing".
+
+The risk is not hypothetical: earlier the same day, P8-01's fingerprint gap was mis-diagnosed in a way that would have produced a deletion instead of an addition — a change that looks like a fix and moves nothing.
+
+> **When REPLACING an assertion, run the mutation against both the old and the new form, and record both results. A replacement whose mutation reddens the old assertion too has not repaired anything.**
+
+**Deliberately narrow.** This applies only to replacement; a newly written assertion has no predecessor to compare against, and demanding one would be ceremony.
+
+**A companion limit, from the same episode.** BLOCKED-101's third pre-flight question flagged `must[2]` in advance as *"a negative clause, and the kind most likely to end up unbuilt"* — and that flag was correct. It did not prevent the failure, because what got built was two assertions that could not carry the clause.
+
+> **The third question establishes whether a clause has a subject. It says nothing about whether the subject is sufficient. That remains mutation's job, and the two are not substitutes.**
