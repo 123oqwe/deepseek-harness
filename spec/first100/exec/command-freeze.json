@@ -4730,6 +4730,56 @@
         "mutationDescription": "The same six mutations recorded against the C stage apply to this file's subject, plus their effect on the boundary cases: recordConflict mutating in place, disputed records staying retrievable, the confidence range written as `< 0 || > 1`, the expiry boundary using `<`, sensitive content admitted regardless of policy, and the derived-without-source check removed.",
         "failureSummary": "Each reddens at least one Fault boundary in addition to its C-stage case: the boundaries are named restatements of the same behaviours, so a mutation that escaped the C case would still be caught here. The duplication is deliberate -- C asserts the behaviour, F asserts it as an enumerated boundary with the count guarded."
       }
+    },
+    {
+      "epic": "P4-08",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
+        "keeps `verified` separate from `outcome`",
+        "records artifact REFS, never inline content",
+        "skips it and reuses its recorded output",
+        "re-runs a step that never completed",
+        "re-runs a completed step that recorded no output",
+        "reconciles it even when completed AND verified",
+        "reconciles a side-effecting step that recorded no receipts at all",
+        "collects every side-effect receipt in the journal, not only those before the restart point",
+        "resumes at the first step that is not skippable, not past it",
+        "resumes at the end when every step completed and was verified",
+        "resumes at zero when the first step is unskippable, whatever follows it",
+        "does not repeat a completed child agent call: its receipt is retained and its step skipped",
+        "refuses the WHOLE resume rather than degrading to a partial one",
+        "admits an unchanged digest, so the refusal is not unconditional",
+        "drops recomputable inputs from a completed, verified, pure step",
+        "leaves an unverified or side-effecting step untouched",
+        "retains EVERY receipt, which is the evidence nothing can regenerate",
+        "reports a compaction that dropped a receipt as NOT retaining evidence"
+      ],
+      "files": [
+        "packages/workflow/workflow-journal/src/types.ts",
+        "packages/workflow/workflow-journal/src/replay.ts",
+        "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "packages/workflow/workflow-journal/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T08:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "c166f23231fae735fb5e2a323b74c3d3ed6f0695",
+        "testsDiscovered": 19
+      },
+      "note": "P4-08 C-stage. Per-stage freeze-target list made BEFORE any code, C on the first line, and the path patch for resume.e2e.spec.ts recorded before the first line too -- third application of BLOCKED-070's prevention precedent.\n\nTHE LIST EARNED ITSELF AGAIN: both P and U declare only SOURCE files and no test file, exactly the gap it caught on P6-02.U. Answered up front -- P gets session-journal.spec.ts in this package, U gets journal-host.spec.ts in workflow-worker-thread, because U's subject is the host/worker wiring and not the journal.\n\nTHE CENTRAL DISTINCTION, and the one mutation that matters most: a step that COMPLETED is not automatically a step whose result may be REUSED. A pure step's recorded output is its result; a side-effecting step's recorded output is a claim about the world that may since have become false. decideResume therefore checks effect class BEFORE verification, and swapping those two is the mutation that produces a double-charge -- verifying that a charge was RECORDED correctly says nothing about whether the charge HAPPENED. That mutation reddens 2 cases.\n\neffectClass is DECLARED by the script, never inferred from what a step did: inferring it would mean deciding after the fact whether an effect escaped, which is exactly what cannot be known from inside the process that crashed. And `verified` is a separate field from `outcome` because 'it finished' and 'we checked it' are different facts.\n\nretainsAllReceipts is EXPORTED rather than kept as a test helper, so acceptance[2]'s property is checkable by a caller and not only by this package's own tests -- and a case asserts the checker reports FALSE for a compaction that dropped a receipt, since otherwise its returning true would prove nothing.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations. types.ts: (1) side-effecting steps skipped when verified and holding receipts -- the double-charge bug; (2) the verified flag ignored; (3) the digest-mismatch refusal removed. replay.ts: (4) resumeAt counts skippable steps instead of finding the first non-skippable, so it skips PAST a rerun; (5) compaction drops receipts along with inputs; (6) receipts collected only up to resumeAt. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 1, 1, 1, 1 and 1 cases respectively. (1) is the targeted mutation in BLOCKED-085's sense: skipping a completed-and-verified step is the natural implementation, and it is precisely how a resumed workflow charges twice."
+      }
     }
   ]
 }

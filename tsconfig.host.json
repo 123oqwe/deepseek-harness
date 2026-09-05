@@ -317,6 +317,7 @@
     { "path": "./packages/experimental/tool-agent-team" },
     { "path": "./packages/experimental/agent-team-web-profile" },
     { "path": "./packages/workflow/workflow" },
+    { "path": "./packages/workflow/workflow-journal" },
     { "path": "./packages/workflow/workflow-worker-thread" },
     { "path": "./packages/workflow/tool-workflow" },
     { "path": "./packages/workflow/tool-ralph" },
