@@ -14,6 +14,7 @@ kind: "package-reference"
 - [Authority is an epoch, not a timestamp](#authority-is-an-epoch-not-a-timestamp)
 - [Why a forged-high epoch is also refused](#why-a-forged-high-epoch-is-also-refused)
 - [The expiry boundary](#the-expiry-boundary)
+- [The store is the sole issuer of epochs](#the-store-is-the-sole-issuer-of-epochs)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -32,15 +33,24 @@ A token names its work item as well as its epoch. An epoch alone is meaningless 
 
 A lease is still held at the exact instant it expires: reclaim requires `nowMs > expiresAtMs`. Stated explicitly because the alternative is the two-masters window — with `>=`, a renewal and a reclaim arriving at the same instant would both be legal.
 
+## The store is the sole issuer of epochs
+
+That is what makes `checkFencing` meaningful: a token can only carry an epoch `LeaseStore` handed out, so refusing anything that is not the item's current epoch refuses every forgery too. Epoch counters are **per work item** — a shared counter would let activity on one item advance another's, and epoch 7 of item A says nothing about item B.
+
+A heartbeat moves the deadline and does **not** issue a new epoch: the holder's authority is unchanged, and bumping it would fence the holder out of its own work. Renewal of an already-expired lease is refused rather than granted, because the scheduler may already have handed that item to someone else — reviving a lapsed holder is precisely the two-masters state.
+
+**Availability is part of the contract, not an error path.** While the store is unavailable, `acquire` refuses with `store-unavailable` and `reclaimable` returns nothing. "Nobody holds this" and "I cannot tell you who holds this" must not look alike to a scheduler: reporting an item free during an outage is how the same work reaches a second worker (acceptance[2]).
+
 ## Model Experience
 
-No model-visible surface. The package exports pure decision functions and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
+No model-visible surface. The package exports decision functions, an in-memory lease store, and types; it renders no prompt text, defines no tool, and contributes no session event, so it consumes no tokens and cannot affect KV-cache reuse.
 
 ## Known Limitations and Deferred Work
 
-- **No store yet.** `Lease` describes what a store holds, but acquisition, heartbeat renewal, and reclaim are not implemented — the Provider stage owns `src/store.ts`, including what happens when the store itself is unavailable (acceptance[2], "stop taking new work when the lease store fails").
+- **The store is in-memory and single-process.** `LeaseStore` holds leases in a `Map`, so it proves the epoch and availability rules but not the contention they exist to survive. A shared, durable store is not in this package.
 - **Nothing carries the token yet.** `FencingToken` is defined and checked, but no state write in this repository presents one. The Usage stage owns threading it through the agent dispatch path and the workflow worker host.
-- **Contention is proved sequentially.** `tests/fencing.e2e.spec.ts` runs a hundred acquisitions in order and asserts exactly one token survives. Real concurrent acquisition against a shared store is the Provider stage's to prove.
+- **Contention is proved sequentially.** `tests/fencing.e2e.spec.ts` runs a hundred acquisitions in order and asserts exactly one token survives. Genuinely concurrent acquisition needs a shared store, which does not exist here.
+- **`setAvailable` is a switch, not a health check.** Nothing detects an outage; a caller must tell the store it is unreachable.
 
 ### Dev Note
 

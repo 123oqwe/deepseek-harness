@@ -4237,6 +4237,47 @@
         "mutationDescription": "Six mutations on src/types.ts: (1) epoch equality relaxed to a less-than comparison, admitting a forged-high epoch; (2) the work-item check removed; (3) the item and epoch checks swapped; (4) the holder check removed; (5) expiry relaxed to greater-or-equal, opening the two-masters window; (6) a missing lease admitted instead of refused. All restored byte-identical.",
         "failureSummary": "Reddens 1, 2, 1, 1, 1 and 1 case respectively -- every one non-zero, each on the case naming its defect. Mutation (1) is caught ONLY by the forged-high-epoch case, which a suite testing solely stale-LOW epochs would have missed entirely."
       }
+    },
+    {
+      "epic": "P4-07",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "issues increasing epochs across successive acquisitions of one item",
+        "refuses a second worker while the incumbent lease is unexpired",
+        "keeps epochs per work item, so acquiring one does not advance another",
+        "extends the deadline without issuing a new epoch",
+        "refuses to renew an ALREADY-EXPIRED lease, rather than resurrecting it",
+        "refuses to renew on a token that is not the current authority",
+        "lists an expired item as reclaimable and an unexpired one as not",
+        "refuses the old token after reclaim, and admits the new one",
+        "refuses acquisition with a reason distinct from a free item",
+        "refuses renewal while unavailable, so a holder cannot extend blindly",
+        "offers nothing reclaimable while unavailable, even for a lapsed lease",
+        "resumes normally once the store is available again"
+      ],
+      "files": [
+        "packages/run/lease/src/store.ts",
+        "packages/run/lease/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T22:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "29c9b0ccbb40e01b681ea413532b6944bb50863c",
+        "testsDiscovered": 12
+      },
+      "note": "P4-07 P-stage. First freeze for this cell.\n\nThe store is the SOLE issuer of epochs, which is what makes the Contract stage's checkFencing meaningful: a token can carry only an epoch this store handed out, so refusing anything that is not the item's current epoch refuses every forgery too.\n\nTHREE DECISIONS carry their own cases and each names the failure it prevents. Epoch counters are PER WORK ITEM -- a shared counter would let activity on one item advance another's, and epoch 7 of item A says nothing about item B. A heartbeat moves the deadline and does NOT issue a new epoch, because bumping it would fence the holder out of its own work. Renewal of an already-expired lease is refused rather than granted: the scheduler may already have handed that item to someone else, so reviving a lapsed holder IS the two-masters state.\n\nacceptance[2] is treated as contract rather than as an error path. While unavailable, acquire refuses with 'store-unavailable' and reclaimable returns nothing -- stop-work in both directions. The reason is a distinct tag rather than a null result because 'nobody holds this' and 'I cannot tell you who holds this' must not look alike to a scheduler; reporting an item free during an outage is exactly how the same work reaches a second worker. A positive control (the store resuming once available again) sits beside the three refusal cases, because without it a store stuck permanently unavailable would satisfy every one of them.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations on src/store.ts: (1) a shared epoch counter across items instead of per item; (2) renew issues a new epoch; (3) renew permitted on an already-expired lease; (4) an unavailable store reports the item free instead of refusing; (5) an unavailable store still lists reclaimable items; (6) acquire steals an unexpired lease. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each, and each on the case naming its defect -- 6 mutations, 6 distinct cases, no overlap."
+      }
     }
   ]
 }
