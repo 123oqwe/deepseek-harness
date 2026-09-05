@@ -58,5 +58,6 @@
 | [session-projection.md](session-projection.zh.md) | 投影 seam：`SessionProjectionMap`、纯函数 `ProjectionDefinition` 单元、`ProjectionSnapshot` 的一致切面、变更馈送 |
 | [session-telemetry.md](session-telemetry.zh.md) | 对外会话上报能力 seam：`SessionTelemetryRecord`/`SessionTelemetrySeverity`、`SessionTelemetrySink` 约定和 `session-telemetry/record` 脱敏 waterfall |
 | [memory.md](memory.zh.md) | 与提供方无关的 Memory seam：propose/query/get/revise/forget/export、`MemoryAccessContext` 读取范围限定、提供方可替换性,以及 Memory 与 Session Query 的边界 |
+| [control-protocol.md](control-protocol.zh.md) | SDK 控制协议的两次协商：逐消息的 schema 版本与整体对端的协议版本区间之别、mandatory/optional 能力划分及其两种不同拒绝、wire 可见的 schema 指纹，以及为什么缺失的协商字段意味着对端早于协商机制、而非对端同意了空集 |
 
 > 这些页面上的类型声明及其 JSDoc 与源码等价，并由 `pnpm run verify-type-equiv` 检查漂移（见 [development.md](../development.zh.md#documenting-types-verbatim-ts-type-equiv)）。普通块保留完整声明；`public-api` 块保留去除实现体的公开 class 声明。Cordis 服务与事件使用每页生成的 **Cordis API** 小节。

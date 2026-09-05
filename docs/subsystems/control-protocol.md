@@ -1,5 +1,7 @@
 # Control protocol
 
+English | [中文](control-protocol.zh.md)
+
 The SDK control protocol is the JSON-RPC surface between an SDK client and the harness runtime. This page owns the negotiation rules; the message shapes themselves live with their types in `@deepseek-ai/dsh-sdk-protocol`.
 
 ## Two negotiations, answering different questions
