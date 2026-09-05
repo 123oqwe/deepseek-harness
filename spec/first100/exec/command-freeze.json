@@ -5032,6 +5032,40 @@
         "mutationDescription": "Five mutations on src/nesting.ts: (1) child limits taken from the ceiling instead of the decayed budget; (2) concurrency halved instead of inherited; (3) a refused plan returns admitted:true with the parent's limits; (4) continue-parent stops recording the failure; (5) cancellation does not propagate to the child. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each. (3) reddened 0 on a first attempt whose mutation rebuilt an equal object -- equivalent by construction, an artifact of the mutation rather than of the suite; rewritten, it reddens 1."
       }
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "TRIPWIRE: a script has no `workflow` global, so nesting cannot be started"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T13:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "fbb1f6884a297c13bd11ec73aae631ec6c29f2f9",
+        "testsDiscovered": 8
+      },
+      "note": "SUPPLEMENT to P4-09's U-stage freeze, adding one case. The original 7 stand untouched -- what they prove has not changed, so this is additive rather than a supersession.\n\nWHY A NOTE WAS NOT ENOUGH. The U freeze already said in prose that runtime.ts has no nested `workflow()` hook and that these green cells are not evidence a running worker enforces nested budgets. That is true and it is unenforced: no gate reads prose. must[3] is vacuous only until someone adds one line beside the five existing globals, and on that day this epic is long accepted and green with nothing to send anyone back to it.\n\nTHE DANGER IS CREATED BY THE LOGIC BEING GOOD. Budget decay and recursion detection are real and covered, so a future reader finds tested machinery and reasonably assumes it is connected. The gap sits exactly on the seam nobody owns.\n\nWHAT THE CASE DOES: constructs a real WorkflowExecution -- the actual runtime class, not a stand-in -- and drives the body `return typeof workflow` through it. Today the value is 'undefined'. The assertion is behavioural rather than textual: it observes what a script can actually reach, so it cannot be satisfied by a comment or defeated by a rename.\n\nTRIPWIRE PROVED INSTALLED, which is the acceptance criterion and not an optional extra: adding `workflow: (_name) => Promise.resolve(undefined)` beside the five existing hooks reddens exactly this case and nothing else; the file was then restored byte-identical (git diff empty). Without that proof it would be another BLOCKED-098 -- a guard with nothing to do.",
+      "sensitivityProof": {
+        "mutationDescription": "One mutation on packages/workflow/workflow-worker-thread/src/runtime.ts: a `workflow:` hook added to the `globals` object beside agent/parallel/pipeline/phase/log. Restored byte-identical, confirmed by an empty git diff.",
+        "failureSummary": "Reddens exactly this supplemental case and no other, so the tripwire observes the seam it names rather than something adjacent to it."
+      }
     }
   ]
 }

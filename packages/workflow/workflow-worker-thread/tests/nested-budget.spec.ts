@@ -20,6 +20,7 @@ import {
   planNestedRun,
 } from '@deepseek-ai/dsh-workflow-registry'
 import type { DefinitionDigest, NestingLimits, RunBudget } from '@deepseek-ai/dsh-workflow-registry'
+import { WorkflowExecution } from '../src/runtime.ts'
 import type { WorkerLimits } from '../src/types.ts'
 
 const LIMITS: NestingLimits = { maxDepth: 3, maxTotalAgents: 50, maxTotalTokens: 100_000 }
@@ -91,5 +92,52 @@ describe('P4-09 acceptance[2]: a child failure is handled by its declared policy
     // outcome this clause exists to prevent: an ignored failure is
     // indistinguishable from work that never ran.
     expect(applyChildFailure('continue-parent')).toEqual({ parentContinues: true, recordedFailure: true })
+  })
+})
+
+describe('P4-09 must[3]: the nesting vacuum is pinned, not merely noted', () => {
+  /**
+   * A tripwire, not a feature test.
+   *
+   * `runtime.ts` installs exactly `agent`, `parallel`, `pipeline`, `phase`,
+   * `log` and `args` as script globals. A script therefore cannot start a
+   * nested workflow at all, which is why must[3] has nothing to violate
+   * today -- and why the decayed-budget and recursion logic above, though
+   * real and covered, is wired to nothing.
+   *
+   * A note saying so would be prose that no gate reads. The moment someone
+   * adds `workflow:` beside those five hooks -- one line, in an obvious place
+   * -- must[3] becomes live, while this epic is long since accepted and green
+   * and nothing would send anyone back to it. **The danger is created by the
+   * logic being good**: a future reader finds tested machinery for budget
+   * decay and recursion and reasonably assumes it is connected.
+   *
+   * So the vacuum is asserted. This case fails on the day the hook appears,
+   * and whoever adds it must confront must[3] then rather than inherit a
+   * silent gap.
+   */
+  it('TRIPWIRE: a script has no `workflow` global, so nesting cannot be started', async () => {
+    const observed: string[] = []
+    const execution = new WorkflowExecution(
+      { name: 'tripwire', description: 'observes the installed globals' },
+      'return typeof workflow',
+      undefined,
+      { maxConcurrentAgents: 1, maxTotalAgents: 1, maxItemsPerCall: 1, syncTimeoutMs: 5_000 },
+      {
+        phase: () => {},
+        log: message => void observed.push(message),
+        agentStart: () => {},
+        agentEnd: () => {},
+      },
+      { startAgent: () => Promise.reject(new Error('no children in this tripwire')) },
+    )
+
+    const result = await execution.drive()
+
+    // 'function' means someone installed a nesting hook. When that happens,
+    // P4-09 must[3] stops being vacuous and this epic's nested-budget logic
+    // must actually be wired to it -- see the U-stage freeze note.
+    expect(result.value).toBe('undefined')
+    expect(result.stopReason).toBe('completed')
   })
 })
