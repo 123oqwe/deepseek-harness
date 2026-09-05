@@ -2362,3 +2362,42 @@ P5-11's two `must[2]` cases were **replaced**: a forbidden-word blacklist became
 **A note in the parent did not rescue it, and that is the reusable part.** The note was accurate and placed correctly, and it changed nothing: **`expectCases` is what a verifier reads, and prose beside it is not.** Same shape as BLOCKED-093 (a self-audit field recording only a verdict) and the must[3] tripwire (a note no gate reads) — the third time in this program that an accurate sentence sat next to a machine-read field and failed to affect it.
 
 **What caught it was the ordinary greening check**, comparing each frozen title against the observation before writing the cell. That check exists to confirm a case passed; here it caught a case that no longer *existed*. A verification aimed at one failure mode catching a different one is now the second such instance today, after the coverage cross-check found P1-03's unfrozen C stage.
+
+### BLOCKED-104 — A shared bare test title lets one epic's evidence green another epic's cell
+
+**Status: RESOLVED for 11 references 2026-09-06 by supersession; the mechanical check is OPEN.**
+
+`generate-ledger.mjs:242` builds one flat per-observation set holding both each case's `title` and its `fullName`. An `expectCases` entry naming a **bare title** is therefore satisfied by any same-named passing case, in any file the observation covers.
+
+Three titles were shared across epics, over 11 live freeze references:
+
+| Title | Epics |
+|---|---|
+| `enumerates at least twelve boundaries, each named once` | P1-03 P4-07 P4-08 P4-09 P5-11 P6-02 |
+| `exports no Config schema and no apply(ctx, config) plugin entry --` | P0-02 P0-05 P0-07 |
+| `starts empty on a first boot, with no store file on disk yet` | P4-01 P6-07 |
+
+**No cell was greened wrongly.** Every case exists and passes. What fails is *discrimination*: delete P5-11's own case and its F cell stays green on the five other packages' identically-named ones.
+
+> **This is BLOCKED-018 — "one proof greens several cells" — arriving through a second door. 018 closed the door marked *same frozen command*; nothing was watching the door marked *same case title*.**
+
+Each reference now names the case's `fullName`, whose `describe` block carries the epic number. Replacing a frozen string shrinks-and-regrows the set, so this went through supersession, not supplement (BLOCKED-103). Source, cases, and observations are unchanged — only which string points at them — so no acceptance signature reopens.
+
+**The open half, and why it is filed rather than done.** The existing verification checks that each `expectCases` entry matches **at least one** case. Nothing checks that it matches **exactly one**. Under BLOCKED-034 (*an invariant maintained by patrol is itself the defect*) this belongs in the freeze-time check, and the fact that a patrol found it is the evidence that it currently lives in that state.
+
+**Scope note.** The scan above groups by *distinct epic*. Two same-named cases inside a **single** epic's own observation are equally non-discriminating and this scan cannot see them; the exactly-one check would catch both, which is a further argument for mechanizing rather than re-scanning.
+
+### BLOCKED-105 — P2-02.F is evidence-complete but cannot be greened: no push path exists
+
+**Status: OPEN, awaiting the user. Not a defect in the work; a missing capability.**
+
+Commit `b206e652bb` carries P2-02's F stage: 18 frozen attenuation boundaries, six targeted mutations all reddening, `typecheck` clean, all pre-commit hooks green.
+
+Only `first100-exact-sha.yml`'s exact-SHA artifact may green a cell, and it requires a remote SHA. Both push paths are closed:
+
+- `origin` (`deepseek-ai/deepseek-harness`) — **HTTP 403**, write access denied to the authenticated account
+- `fork` (`123oqwe/deepseek-harness`) — refused by this session's permission classifier
+
+**A peer was NOT asked to push.** A peer session pushing this commit would route around the permission decision that closed the second path, which is the laundering pattern this program has already ruled out. The blocker is surfaced to the user instead.
+
+**What it blocks:** P2-02's fourth cell, and therefore P2-02's acceptance, and therefore every successor gated on it. `check-ready.mjs` currently reports exactly one admissible epic (P4-09), which is itself `WITHHELD_INCOMPLETE_EPIC`. **With this blocker and the three authorization-pending decisions open, no epic in the program is both admissible and unblocked.**
