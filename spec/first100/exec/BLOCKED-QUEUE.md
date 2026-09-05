@@ -2547,6 +2547,15 @@ DSH_SNAPSHOT=refresh   replay committed fixtures, REWRITE expected keyless
 
 **Recorded because the error is instructive.** A wrong reason produced the right verdict — BLOCKED either way — and a verdict that happens to be right is not the same as one that was established, which is BLOCKED-106's whole subject. The blocker was filed against a key that was never required.
 
+**It now blocks Phase-9 work, not just the repair.** Both remaining Provider stages among the early-cleared items change a surface a recorded snapshot observes:
+
+| stage | surface it must change | why it waits |
+|---|---|---|
+| P9-06.P | the headless runner's stdin handling and exit codes | `snapshots/session/headless.snapshot.ts` replays the shipped headless profile |
+| P9-07.P | a typed `budget-exceeded` session event | a new `SessionEventMap` member reaches every recorded session and both SDKs |
+
+With the suite red at 76, neither change can be shown snapshot-neutral: a new failure would be indistinguishable from the 76 already there, and "it was already broken" is not a verification. So these two are waiting on this entry rather than on a decision — and the only P9 work left that is genuinely clean is P9-01's mock servers, which touch no recorded surface.
+
 **Scope note for whoever repairs it.** The correct fix is not only the refresh. `SessionEventMap` gained a member, so the Python SDK's expected outputs are in the same blast radius, and `docs/architecture.md` needs updating for the agent-loop change. A re-record that greens the TypeScript snapshots alone leaves two of the three obligations unmet.
 
 ### BLOCKED-109 — the gate that decides a CELL is narrower than the gate that decides the BRANCH
