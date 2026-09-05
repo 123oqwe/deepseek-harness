@@ -772,6 +772,27 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-085 — a case that names the property it protects, and passes for a different reason: P8-01's length-prefixing test survives the removal of length-prefixing (Supervisor, own defect, 2026-09-05)
+
+**The claim.** `computeSchemaFingerprint` length-prefixes every field before hashing, and a case asserts *"names containing the field separator cannot forge another surface, because fields are length-prefixed"*, with a comment stating that without it a method named `a:b` and the pair `a`, `b` could hash identically.
+
+**The mutation.** Removing length-prefixing entirely — reducing `absorb` to a bare `hash.update(field)` — reddens **nothing**. 31/31 still pass.
+
+**Why, computed rather than guessed.** The fixtures are `{name: 'a:b', schemaId: 'x'}` against `{name: 'a', schemaId: 'b:x'}`. Concatenated without prefixes those are `"a:bx1.0"` and `"ab:x1.0"` — **different strings**, because moving the `:` also moves it *relative to the surrounding characters*. The case asserts two surfaces differ, and they do, for a reason that has nothing to do with prefixing.
+
+A genuine collision requires the **boundary** to move while the character sequence stays fixed: `{name: 'ab', schemaId: 'c'}` against `{name: 'a', schemaId: 'bc'}`, both `"abc1.0"`. That pair is what distinguishes a prefixed hash from an unprefixed one, and it is not the pair the case uses.
+
+**So the assertion is true, the property is real, the implementation is correct — and the case does not test it.** This is [BLOCKED-072](#blocked-072) at its most compact: not a mechanism skipping its subject, but a case whose *stated reason* and *actual reason* differ, with the comment supplying a confidence the code does not earn. The three preceding mutations behaved as predicted, which is exactly what made this one worth running.
+
+**Not silently repaired.** Rewriting the fixture now — after watching the mutation survive — is the move [BLOCKED-079](#blocked-079) ruled out: changing what a frozen case asserts in response to a known result. P8-01's F freeze is committed. The distinction that permitted adding cases in P4-05.F does not apply here: there the outcome of a *new* assertion was unknown; here the outcome is known, because the mutation has already been run.
+
+**What is genuinely wrong is narrower than the case.** The implementation needs no change — length-prefixing is correct and worth keeping. What overclaims is the comment, asserting the case proves something it does not. Two honest options, for the delegate:
+
+1. **Correct the comment only**, leaving the assertion as the difference-check it actually is. Titles are unchanged, so the freeze is untouched.
+2. **Add the true collision pair as a supplement**, where the outcome is genuinely unknown until run — the `ab|c` versus `a|bc` fixture.
+
+**The general point.** A comment stating why a case passes is unverified prose sitting inside a verified artifact. Every other stale-prose instance in this queue was documentation *beside* code; this one is documentation *inside a test*, which is the last place a reader expects to need to doubt it.
+
 ### BLOCKED-084 — greening accepts any 40-hex string as `--candidate-sha`, including one that is not a git object, while the correct value sits in the artifact's own filename (Supervisor, found by accident, 2026-09-05)
 
 **Found by making the mistake.** Greening P4-05.F, the Supervisor pasted a `--candidate-sha` that was not the run's real head — a hand-mangled string, `d004aee95a6ee1c2c7b1d2a0b3f8c9e4d5a6b7c8`. **The tool greened the cell.** `git cat-file -t` on that value returns *"could not get object info"*: it names no commit, tag, tree or blob in this repository.
