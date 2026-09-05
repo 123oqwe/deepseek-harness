@@ -1254,6 +1254,37 @@
         }
       ],
       "note": "acceptance[1]: 'waiting states consume no LLM or worker resource.' The classification is asserted as a real PARTITION rather than as a list: running and starting DO consume, so a classifier that returned true for everything would fail. `cancelling` consumes deliberately and is asserted so — a draining run still holds its slot, and treating it as idle would let a supervisor reclaim resources still in use, which is the opposite failure from the one this clause names. The U-stage cases carry it into dispatch, where the load-bearing property is that occupancy is DERIVED from the lifecycle rather than tracked in a counter beside it: one case asserts the slot is released in the SAME step that changes the state, so there is no window in which the state says waiting while a separate tally still says occupied. A counter would make that window possible and invisible."
+    },
+    {
+      "epic": "P4-05",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "contract: an orphaned run may be reclaimed through starting, which is what issues a new epoch"
+        },
+        {
+          "stage": "C",
+          "title": "contract: an orphaned run may fail safely"
+        },
+        {
+          "stage": "C",
+          "title": "contract: an orphaned run may NOT resume directly as running, so a reclaim always issues a new lease"
+        },
+        {
+          "stage": "C",
+          "title": "contract: every non-terminal state can reach orphaned, so any interrupted run is representable after a restart"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: a run that goes orphaned -> starting -> running carries a strictly greater epoch than before it was orphaned"
+        },
+        {
+          "stage": "F",
+          "title": "enforcement: the dead worker cannot act after the reclaim, because its epoch is now strictly older"
+        }
+      ],
+      "note": "acceptance[2]: 'after a restart an orphaned Agent can be reclaimed or fail safely.' PARTIALLY COVERED, AND THE ROW CARRIES A LIVE LOCK NAMING EXACTLY THIS CLAUSE. What is covered is the state machine's half: both outcomes the clause names are reachable (reclaim through starting, or fail safely), every non-terminal state can reach orphaned so any interrupted run is representable, and a reclaim MUST pass through starting rather than resuming directly. The two F-stage cases assert the property that prohibition exists to protect -- a reclaimed run carries a strictly greater epoch, and the previous lease holder is stale afterwards -- which BLOCKED-079 recorded as asserted-by-prohibition-only until they were written.\n\nWHAT IS NOT COVERED, and why no assertion was written for it: 'after a restart' requires agent-run state surviving a process boundary, and this repository has none. Turn-level crash recovery and P4-01's Run-level persistence are neither of them Agent-level, and leaseEpoch appears nowhere outside this epic's own module. An assertion written today would pass because nothing can be orphaned ACROSS A RESTART at all -- BLOCKED-050's shape. Owner is P4-07 (Worker Lease, Heartbeat and Fencing Token), verified against the registry: its must[0] is 'every work item is owned by an epoch lease' and must[2] is 'heartbeat renews the lease; the scheduler may reclaim after expiry'. This entry records partial coverage honestly rather than citing the reachable half as if it satisfied the clause."
     }
   ]
 }

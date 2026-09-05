@@ -1515,6 +1515,21 @@ The signed `packages/core/` classification for P0-04 was consequently authored a
 
 ## ACCEPTANCE LOCKS — epics that MUST NOT be marked ACCEPTED even with every stage cell GREEN
 
+<!-- ACCEPT-BLOCKED-BEGIN — machine-readable mirror of the live rows below.
+     Added 2026-09-05 (BLOCKED-081): the register is enforced by nobody, and a
+     checker that had to parse the prose table would be reading the same rows a
+     human already misread once. These lines are the parse target instead.
+     An epic appears here IF AND ONLY IF it has a live (unlifted) lock. A row
+     annotated LIFTED is removed from this list in the same edit that annotates
+     it, so the two cannot drift apart silently.
+accept-blocked: P1-02
+accept-blocked: P2-02
+accept-blocked: P6-01
+accept-blocked: P2-03
+accept-blocked: P4-05
+ACCEPT-BLOCKED-END -->
+
+
 This is the single place to check at wave close. A lock means the ledger row can go fully green while the clause it names remains unproven, so greenness alone must never be read as acceptance. Each lock states what must become true, who owns that work, and **what the unlock will look like from the outside** — several will surface as a *test starting to fail*, which must be recognized as the unlock signal and never patched back to green.
 
 | Epic | Locked clause | Why it cannot be satisfied today | Owner of the fix | Unlock signal |
