@@ -4198,6 +4198,45 @@
         "mutationDescription": "Six mutations. (1) transparency-log-index validity becomes a truthiness check, so index 0 is wrongly refused; (2) the source-commit check removed, leaving repo-only; (3) the observed-digest check bypassed so evidence is effectively judged first; (4) SBOM coverage ignores undeclared installed dependencies; (5) SBOM coverage counts dev entries as runtime; (6) unsigned-dev admits any profile name. All restored byte-identical.",
         "failureSummary": "Reddens 3, 2, 4, 2, 7 and 2 cases respectively -- every one non-zero, and each landing on the boundary that names its defect. Boundary 10 (index zero is valid) exists specifically to catch mutation (1), which a matrix testing only invalid indices would miss."
       }
+    },
+    {
+      "epic": "P4-07",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/fencing.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "refuses the old holder's token after the item is reclaimed at a higher epoch",
+        "admits the new holder's token against the same reclaimed lease",
+        "refuses a token whose epoch is HIGHER than any the store issued",
+        "refuses any write when the item holds no lease at all",
+        "refuses a token naming a different work item even at a live epoch",
+        "refuses a matching epoch presented by a different holder",
+        "reports the work-item mismatch even when the epoch is ALSO stale",
+        "holds the lease AT its expiry instant, so renew and reclaim cannot both be legal",
+        "decides staleness without consulting any clock, so skewed workers agree",
+        "leaves exactly one admitted holder after a hundred sequential acquisitions"
+      ],
+      "files": [
+        "packages/run/lease/src/types.ts",
+        "packages/run/lease/tests/fencing.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T21:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "5997b8a8b88aa4f5c23c37bae654c77dbf3e9304",
+        "testsDiscovered": 10
+      },
+      "note": "P4-07 C-stage. First freeze for this cell.\n\nPRE-FLIGHT, subject existence, using the SHARPENED rule (search locates candidates; the verdict requires reading whether the symbol sits on the execution path the clause changes -- never a match count). Two declared files, opposite verdicts:\n\ndispatch.ts IS a real subject. lease/fenc/token/heartbeat/reclaim all score 0, but 'epoch' scores 2 and those two hits are AgentLifecycle.epoch: LeaseEpoch -- a type already doing this work, with a 'stale-epoch' denial reason and a JSDoc reading 'a worker's authority is its lease epoch, and an update from an older epoch is refused whatever it says'. advanceAgentLifecycle is exactly the state-transition point must[1]'s fencing token attaches to. Contrast P4-06, where the SAME FILE scored 0 on ITS vocabulary and genuinely had no subject: near-identical match counts, opposite conclusions, which is why the count is an entry point and never the verdict.\n\nconsumed-work.ts is a THIRD name collision ('work item' vs 'consumed work'), and the first outside P4-06: epoch/lease/fenc/worker/authority/stale/reclaim all 0, the single 'token' hit is 'max-tokens' inside a comment, zero state writes (session.append/emit/persist all 0), and its only callers are its own tests. Recorded as a data point on BLOCKED-091 WITHOUT generalizing to 'the registry assigns files by name' -- three points do not carry a universal, a lesson paid for the same day by BLOCKED-046's retired 'always'.\n\nTWO DESIGN DECISIONS carry their own cases. A forged-HIGH epoch is refused as stale: epochs are issued only by the store, so one above the current did not come from it, and admitting it would make a forgery the strongest authority in the system -- the fail-closed direction is refusing the unknown, not accepting the larger. And a lease is still held AT its expiry instant (strictly greater, not greater-or-equal), because otherwise a renewal and a reclaim arriving together would both be legal, which is precisely acceptance[1]'s two-masters window. One comparison operator IS that clause.\n\nThe declared path fencing.e2e.ts is written at the adjudicated fencing.e2e.spec.ts, recorded before the first line (adjudication.json, P4-07-C-fencing-e2e-not-yet-created): .e2e.ts routes into the key-gated suite the exact-SHA job never observes.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations on src/types.ts: (1) epoch equality relaxed to a less-than comparison, admitting a forged-high epoch; (2) the work-item check removed; (3) the item and epoch checks swapped; (4) the holder check removed; (5) expiry relaxed to greater-or-equal, opening the two-masters window; (6) a missing lease admitted instead of refused. All restored byte-identical.",
+        "failureSummary": "Reddens 1, 2, 1, 1, 1 and 1 case respectively -- every one non-zero, each on the case naming its defect. Mutation (1) is caught ONLY by the forged-high-epoch case, which a suite testing solely stale-LOW epochs would have missed entirely."
+      }
     }
   ]
 }

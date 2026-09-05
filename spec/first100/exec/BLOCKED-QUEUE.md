@@ -1005,7 +1005,14 @@ So the epoch assertions are sound, and the coupling is real, and there is still 
 
 **The escalation recorded here was WRONG, and creating a fourth package disproved it the same day.** The original text read: "③ says that creating a package *necessarily* does, because a new package introduces a new public surface by definition — the rule escalates from *editing public exports can stale the artifact* to *creating a package always stales it*."
 
-Then `packages/run/lease` was created for P4-07, with types, a README, and both aggregate registrations. `gen-cordis-api` wrote **0 artifacts**, and the catalog test passed untouched. **One counter-example is enough to retire an "always".**
+Then `packages/run/lease` was created for P4-07, with types, a README, and both aggregate registrations. `gen-cordis-api` wrote **0 artifacts**, and the catalog test passed untouched. **One counter-example is enough to retire an "always" — once the counter-example itself is confirmed.**
+
+**PENDING CI CONFIRMATION as of this writing, and the distinction is not a formality.** The observation above is a LOCAL generator run, and this program treats local runs as advisory. "The commit contains no catalog change" and "re-running the generator produces no change" are different claims, and only the second is the counter-example. The authoritative check is whether `cordis-catalog.spec.ts` stays green in the exact-SHA run for `4898a47a1c`:
+
+- **green** — the counter-example holds and the "always" is retired.
+- **red** — the counter-example fails, and the finding becomes something worse than a wrong universal: the generator's inputs differ between local and CI.
+
+Flagged deliberately, because concluding from one local run is a close relative of the very error being corrected here — a single observation carrying more weight than it can bear.
 
 What actually distinguishes them is not established, and is deliberately not guessed at here. The observable difference is that message-bus's exported types appear in the catalog while `dsh-lease`'s do not, so catalog membership is evidently narrower than "every workspace package" — but *which* rule selects it has not been read out of the generator, and a plausible-sounding mechanism written down now would be exactly the kind of claim this register exists to catch.
 
