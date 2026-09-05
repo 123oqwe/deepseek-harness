@@ -650,10 +650,20 @@ describe('headless recorded-session snapshots', () => {
     ].join('\n'))
   })
 
+  // BLOCKED-110: a refresh that silently omits the scenarios this host cannot
+  // run rewrites some expectations and reports success, which is
+  // indistinguishable from having covered everything. The three pwsh fixtures
+  // sat a whole epic behind the rest that way — green here, red on CI. Naming
+  // the omissions is the only thing that makes a partial refresh legible, so
+  // they are collected and asserted below rather than left to the reader to
+  // notice that a number was smaller than it should have been.
+  const skippedScenarios: string[] = []
+
   for (const scenario of scenarios) {
     const skipped = scenario.manifest.platform === 'posix' && process.platform === 'win32'
       || scenario.manifest.platform === 'pwsh' && !hasPwsh
       || mode === 'record' && scenario.manifest.recording === 'authored'
+    if (skipped) skippedScenarios.push(scenario.name)
     const scenarioTest = skipped ? it.skip : mode === 'replay' ? it.concurrent : it
     scenarioTest(`${mode}s ${scenario.name} through dsh --profile headless`, async () => {
       let fixtures = await fixtureSessions(scenario)
@@ -789,4 +799,22 @@ describe('headless recorded-session snapshots', () => {
       }
     }, LOADER_SMOKE_TEST_TIMEOUT_MS)
   }
+
+  // BLOCKED-110. Deliberately an assertion rather than a console line: a
+  // warning printed among thousands of lines of vitest output is exactly what
+  // the last partial refresh already had, in the form of "116 rewritten, 176
+  // inspected" — accurate, present, and unread. A failing test is the only
+  // report an operator cannot finish without seeing.
+  //
+  // It fires ONLY while refreshing. A plain replay skipping a pwsh scenario is
+  // ordinary and correct; a REFRESH skipping one silently leaves that fixture
+  // describing an older build, and the gap is invisible until CI runs it.
+  it.runIf(mode === 'refresh')('refuses to look complete when it skipped a scenario this host cannot run', () => {
+    expect(
+      skippedScenarios,
+      `this refresh rewrote the other scenarios and left these untouched: ${skippedScenarios.join(', ')}. `
+      + 'Their expectations still describe whatever build wrote them last, and this host cannot observe otherwise. '
+      + 'Refresh again where they run (pwsh scenarios need a real pwsh), or commit knowing these are stale.',
+    ).toStrictEqual([])
+  })
 })
