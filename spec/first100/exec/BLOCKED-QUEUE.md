@@ -772,6 +772,31 @@ BLOCKED-041's finding — kind=B existence was one specific registry field that 
 
 **A different kind of finding, not a 5th stale-data item (delegate scan, 2026-09-03)**: `EXEC-STATE.currentSlice` is `null` while W4 has three Writer lanes running in parallel (P1-09-C landed, P0-04-C and P6-01-C in flight) — this is not a value that drifted wrong, it is a singular field that is now structurally incapable of being correct once parallel lanes were authorized: whichever one lane it named would misrepresent the other two as not running. Leaving it `null` is the honest state under the field's current (singular) design, not a bug to fix by picking one lane to fill in. Scope for this audit: when the field is revisited, replace it with a `currentSlices[]` array or explicitly retire it — never hand-fill a single representative value, since that would mislead a cold-start reader into thinking only one lane is active.
 
+### BLOCKED-086 — an invariant that was never true: `delegate-signoff.json`'s `rowDigestSha256` cannot match an ACCEPTED row, and checking it produces a frightening number that means nothing (delegate, self-caught, 2026-09-05)
+
+**The check that looked alarming.** Asking "are any of my sign-offs stale?" — comparing each recorded `rowDigestSha256` against the epic's current row digest — returns **8 of 8 mismatched**. Every sign-off appears invalid.
+
+**It is a property of the accept path, not a defect.** `generate-ledger.mjs` validates the sign-off at `:821` and writes the row's new state at `:847`–`:853`:
+
+```
+:821  const signoff = checkDelegateSignoff(epic, row, signoffRegistry)   ← validated here
+:847  row.independentVerdict = 'APPROVED'
+:848  row.status = 'ACCEPTED'
+:853  delegateSignoff: { ... }
+```
+
+**The digest is valid at the moment it is checked — `--accept` refuses otherwise — and the price of `--accept` succeeding is rewriting that row.** So a post-acceptance comparison asks whether a pre-acceptance digest matches a post-acceptance row, which it cannot. Attempting to strip the accept-written fields and recompute fails too, because the digest is order-sensitive and the stripping is guesswork about where the fields were inserted.
+
+**What is actually checkable:** that `--accept` succeeded at all. Because `checkDelegateSignoff` runs before any write, a successful acceptance *is* the evidence that the sign-off was valid against the row as it then stood. There is nothing further to verify after the fact.
+
+**Why this is recorded even though nothing is wrong.** This queue is full of entries reading "a check does not exist". **This one reads "a check should not exist"** — an invariant that was invented, then found not to hold. Both cost a round of investigation, and the second is harder to recognise, because **it looks exactly like a discovery**: a stark number, produced by a real script, against real data.
+
+The distinguishing question is the one that separates it from [BLOCKED-078](#blocked-078), [BLOCKED-082](#blocked-082) and [BLOCKED-084](#blocked-084) — three retrospective audits the same day that were each worth running and each came back clean:
+
+> **Before believing a comparison's result, ask whether the comparison itself is well-founded.**
+
+In those three the invariant was real and the sweep confirmed it. Here the invariant was never true, and the sweep confirmed only that. **Step one is identical in both cases: a number that demands attention.** The delegate ran the alarming result to ground rather than reporting it, which is the entire difference between this entry and a false alarm propagating into the record.
+
 ### BLOCKED-085 — a case that names the property it protects, and passes for a different reason: P8-01's length-prefixing test survives the removal of length-prefixing (Supervisor, own defect, 2026-09-05)
 
 **The claim.** `computeSchemaFingerprint` length-prefixes every field before hashing, and a case asserts *"names containing the field separator cannot forge another surface, because fields are length-prefixed"*, with a comment stating that without it a method named `a:b` and the pair `a`, `b` could hash identically.
