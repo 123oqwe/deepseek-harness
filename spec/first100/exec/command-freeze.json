@@ -5164,6 +5164,45 @@
         "mutationDescription": "Six mutations on src/types.ts: (1) the attempt not incremented on claim; (2) the expiry boundary relaxed so a claim lapses AT its expiry instant; (3) a dependency accepted while merely submitted; (4) isClaimCurrent accepts any attempt at or above the current; (5) the `done` memo removed from the cycle walk; (6) the self-dependency check removed. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1, 1, 0 and 1 respectively. (5) is a genuine equivalent mutant, established by re-running the cycle and diamond cases without the memo: `visiting` carries correctness, `done` carries only performance."
       }
+    },
+    {
+      "epic": "P5-11",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/taskboard/tests/store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "admits the first claimant and refuses every later one",
+        "lets the next worker win once the first claim lapses, at a higher attempt",
+        "persists the winning claim, so a later read sees the owner",
+        "refuses a claim on an unknown task",
+        "refuses a cyclic submission and stores nothing",
+        "refuses a FORWARD reference, which is what makes a cross-batch cycle unreachable",
+        "validates each submission against tasks ALREADY stored, not the batch alone",
+        "refuses a duplicate task id rather than overwriting",
+        "accepts an acyclic submission, so the refusals above are selective",
+        "refuses while a stored dependency is unverified, and admits once verified"
+      ],
+      "files": [
+        "packages/collaboration/taskboard/src/store.ts",
+        "packages/collaboration/taskboard/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T15:40:00.000Z",
+      "dryRunProof": {
+        "treeSha": "308d1cff46b3b9296fce33d6bc8fed04e65c9d61",
+        "testsDiscovered": 10
+      },
+      "note": "P5-11 P-stage: where a claim actually becomes atomic.\n\nTHE ATOMICITY IS STATED AT ITS REAL STRENGTH, in the module doc and here. Read-decide-write happens with no suspension point between the steps, so two callers within ONE PROCESS cannot interleave and both write themselves as owner. A shared store across processes would need the write to be conditional on the attempt number it read -- a compare-and-set the backing store enforces -- and that is NOT implemented. Recorded because 'atomic' invites more confidence than this implementation earns, the same way 'one batch' did not mean 'one transaction' in P4-06.\n\nTHE DECISION IS DELEGATED, NOT REIMPLEMENTED: claim() calls the pure decideClaim rather than repeating its rule, so the store cannot drift from the contract the Contract stage froze.\n\nA TEST OF MINE ASSERTED SOMETHING FALSE AND CHECKING IT TAUGHT ME ABOUT MY OWN DESIGN. The first version claimed a cycle could close across two separately-valid submissions and expected a refusal; it went green the other way, because `a depends on b` with b present IS acyclic. Following that: a cross-batch cycle is UNREACHABLE, since closing one needs an already-stored task to depend on a task submitted later, and such a task is refused at its own submission as an unknown dependency. So the forward-reference rule -- not the combined-graph walk -- is what rules out cross-batch cycles, and the combined walk is belt-and-braces that keeps a dependency on a stored task resolvable. The case now asserts what is actually true, and a second case covers what the combined walk really buys.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations on src/store.ts: (1) the claim decided but not persisted; (2) a refused submission stores its tasks anyway; (3) a duplicate id overwrites instead of refusing; (4) a submission validated in isolation rather than against stored tasks; (5) dependencies not resolved before deciding a claim. All restored byte-identical.",
+        "failureSummary": "Reddens 3, 2, 1, 1 and 1 respectively. (1) is the targeted mutation: a store that returns a claimed task without retaining it satisfies the single-winner assertion while losing every claim, which is the failure a contention test alone would not see."
+      }
     }
   ]
 }
