@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-05T06:35:53.070Z",
-  "inputDigest": "8c204432316b89625920423f5bb56ea5fe1025b990d9be2c23598f322b9f7947",
+  "lastUpdatedUtc": "2026-09-05T10:35:34.036Z",
+  "inputDigest": "596f6bd0d6509b1e0ed6dd4434fd047857173a9e6515187b5d853226edc8d27c",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -3887,12 +3887,42 @@
       },
       "supplements": {},
       "candidateSha": null,
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": [
         "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)"
       ],
-      "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null,
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-05T10:35:34.034Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33959624760",
+            "candidateSha": "82d5e8112233b371fe891b7489e89fc2658b109f"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-05T10:33:52.134Z",
+          "userConfirmationRef": null
+        }
+      },
       "selfAudit": {
         "performedAtUtc": "2026-09-06T00:30:00.000Z",
         "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
