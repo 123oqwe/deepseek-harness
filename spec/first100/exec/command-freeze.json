@@ -6148,6 +6148,52 @@
         "mutationDescription": "Five targeted mutations of budget.ts, each restored byte-identical: (M1) treated 0 as a real limit rather than unlimited -- the exact must[3] mistake; (M2) turn boundary >= loosened to >; (M3) spend boundary >= loosened to >; (M4) spend checked before turns, changing which reason a doubly-exhausted run reports; (M5) isBudgetEnforced rewritten as an undefined-check, so it disagrees with the admission rule about 0.",
         "failureSummary": "All five reddened: 3, 3, 2, 1 and 1 of 16. M1 and M2 redden three each because the zero-means-unlimited rule and the turn boundary are each pinned from both sides plus a composite case. M4 and M5 redden exactly one, naming the single ordering or consistency guard removed. No mutation reddened zero."
       }
+    },
+    {
+      "epic": "P9-06",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/bundle/headless/tests/scriptability.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-06 Contract — resolveTaskInput must[2]: a positional task alone resolves to the argument source",
+        "P9-06 Contract — resolveTaskInput must[2]: piped text alone resolves to the stdin source",
+        "P9-06 Contract — resolveTaskInput must[2]: supplying BOTH is refused rather than ranked, so a script is told about its bug",
+        "P9-06 Contract — resolveTaskInput must[2]: supplying neither is refused",
+        "P9-06 Contract — resolveTaskInput whitespace-only stdin is refused, since that is what a failed upstream command produces",
+        "P9-06 Contract — resolveTaskInput an empty positional argument is refused, and says so about the argument rather than stdin",
+        "P9-06 Contract — resolveTaskInput an empty POSITIONAL alongside real stdin is still ambiguous, not a fallback to stdin",
+        "P9-06 Contract — resolveTaskInput preserves the task verbatim, including internal newlines a piped document carries",
+        "P9-06 Contract — exitStatusFor must[3]: a completed run exits 0 with no failure reason",
+        "P9-06 Contract — exitStatusFor must[3]: a blocked run exits non-zero and names itself",
+        "P9-06 Contract — exitStatusFor must[3]: max-tokens is its own code, not folded into a generic error",
+        "P9-06 Contract — exitStatusFor must[3]: interrupted is its own code",
+        "P9-06 Contract — exitStatusFor must[3]: every failure class gets a DISTINCT code, so a script can branch without parsing output",
+        "P9-06 Contract — exitStatusFor must[3]: a MISSING reason is exit 1 and unknown — never success, since a turn that never ended did not complete",
+        "P9-06 Contract — exitStatusFor a reason this build does not know stays non-zero rather than falling through to success",
+        "P9-06 Contract — exitStatusFor only completion produces exit 0, across every reason the session layer defines"
+      ],
+      "files": [
+        "packages/bundle/headless/src/scriptability.ts",
+        "packages/bundle/headless/tests/scriptability.spec.ts",
+        "packages/bundle/headless/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T02:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "19e5f76b014d98d1d5810fc071a20831913a74c4",
+        "testsDiscovered": 16
+      },
+      "note": "C (Contract) for P9-06, under decision C3's early-start clearance. Scoped to must[2] and must[3], the two clauses that are pure decisions. must[0] (--resume) reuses the session layer's existing resume semantics and must[1] (stream-json) must match the SDK's recorded line format, so both are wiring against artifacts outside this module and belong to the Provider and Usage stages; the runner is untouched here. The load-bearing choice in must[2] is that a positional task and piped stdin are MUTUALLY EXCLUSIVE rather than ranked -- precedence would run one input while the other silently vanished, and a script cannot notice that. The load-bearing choice in must[3] is that each failure class carries its OWN non-zero code, so a script branches on blocked-vs-error without parsing output, and that an ABSENT turn/end reason maps to exit 1 rather than success: a turn that never ended did not complete, and reading a missing signal as completion is how a broken pipeline reports green. Cases frozen by fullName per BLOCKED-104.",
+      "sensitivityProof": {
+        "mutationDescription": "Five targeted mutations of scriptability.ts, each restored byte-identical: (M1) removed the both-inputs check so stdin silently takes precedence; (M2) accepted whitespace-only input as a task; (M3) mapped a missing turn/end reason to exit 0; (M4) collapsed every failure class to exit 1; (M5) mapped an unrecognized future reason to 'blocked' instead of 'unknown'.",
+        "failureSummary": "All five reddened: 2, 1, 1, 4 and 1 of 16. M4 reddens four because the distinct-code property is asserted per class and again as a set. M1 reddens two -- the explicit both-inputs case and the empty-positional-with-real-stdin case that exists precisely because precedence would make it appear to work. No mutation reddened zero."
+      }
     }
   ]
 }
