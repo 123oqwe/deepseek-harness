@@ -61,6 +61,15 @@ jobs:
         # partial-refresh failure this workflow exists to escape.
         run: pwsh --version
 
+      - name: Build (the scenarios launch a real dsh process)
+        # The headless snapshot scenarios boot the shipped profile, which
+        # resolves built `lib/typert.host.js` artifacts. Without this the run
+        # fails with ERR_MODULE_NOT_FOUND and reports it as a scenario failure —
+        # the artifact plane missing, misread as the source plane being wrong.
+        env:
+          DSH_BUILD_CLIENT_PROFILE: official
+        run: pnpm run build
+
       - name: Refresh the named scenarios
         env:
           DSH_SNAPSHOT: refresh
