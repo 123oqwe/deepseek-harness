@@ -95,7 +95,7 @@ describe('P5-10 Contract — must[2]: a redelivered control message changes noth
     // never happened.
     const decision = decideControl(message('continue', 9), 'cancelling', new Set([9]))
     expect(decision.applied).toBe(false)
-    expect(decision.applied === false ? decision.denial.reason : undefined).toBe('already-applied')
+    expect(!decision.applied ? decision.denial.reason : undefined).toBe('already-applied')
   })
 
   it('a different epoch of the same kind is a new message', () => {

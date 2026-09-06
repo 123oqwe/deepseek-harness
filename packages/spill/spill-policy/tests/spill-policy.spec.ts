@@ -199,6 +199,11 @@ describe('outer PTC mode failure capture', () => {
       session: {
         header: { id: SessionId('code-spill'), cwd: '/workspace' },
         append: (_type: string, data: unknown) => { events.push(data) },
+        // The PTC dispatch path appends an ActionManifest and reads this to
+        // number it (P2-03). A double missing it throws inside the scheduler
+        // lane, where the failure shows up as a timeout somewhere unrelated
+        // rather than as a missing member (BLOCKED-126).
+        countEventsOfType: () => 0,
       },
     }
 
@@ -248,6 +253,11 @@ describe('the durable dispatch-log arm', () => {
       session: {
         header: { id: SessionId('dispatch-spill'), cwd: '/workspace' },
         append: (type: string, data: unknown) => { events.push({ type, data }) },
+        // Counts what it captured, the way a real Session counts what it
+        // accepted: the PTC dispatch path reads this to number an
+        // ActionManifest (P2-03), and a double missing it throws inside the
+        // scheduler lane where the failure reads as a timeout (BLOCKED-126).
+        countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
@@ -331,6 +341,10 @@ describe('the durable dispatch-log arm', () => {
       session: {
         header: { id: SessionId('dispatch-slow-spill'), cwd: '/workspace' },
         append: (type: string, data: unknown) => { events.push({ type, data }) },
+        // The PTC dispatch path reads this to number an ActionManifest
+        // (P2-03); a double missing it throws inside the scheduler lane,
+        // where the failure reads as a timeout (BLOCKED-126).
+        countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
@@ -389,6 +403,10 @@ describe('the durable dispatch-log arm', () => {
       session: {
         header: { id: SessionId('dispatch-spill-bound'), cwd: '/workspace' },
         append: (type: string, data: unknown) => { events.push({ type, data }) },
+        // The PTC dispatch path reads this to number an ActionManifest
+        // (P2-03); a double missing it throws inside the scheduler lane,
+        // where the failure reads as a timeout (BLOCKED-126).
+        countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
@@ -441,6 +459,10 @@ describe('the durable dispatch-log arm', () => {
       session: {
         header: { id: SessionId('dispatch-spill-fail'), cwd: '/workspace' },
         append: (type: string, data: unknown) => { events.push({ type, data }) },
+        // The PTC dispatch path reads this to number an ActionManifest
+        // (P2-03); a double missing it throws inside the scheduler lane,
+        // where the failure reads as a timeout (BLOCKED-126).
+        countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))

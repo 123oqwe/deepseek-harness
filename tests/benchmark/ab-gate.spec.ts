@@ -22,12 +22,12 @@ describe('P9-09 Contract — promotion requires a difference the sample supports
   it('acceptance[2]: a WORSE challenger is refused, and the denial says it was worse', () => {
     const decision = decidePromotion(CHAMPION, { variant: 'worse', passed: 50, total: 100 })
     expect(decision.promoted).toBe(false)
-    expect(decision.promoted === false ? decision.denial.reason : undefined).toBe('not-better')
+    expect(!decision.promoted ? decision.denial.reason : undefined).toBe('not-better')
   })
 
   it('acceptance[2]: an EQUAL challenger is refused — a tie is not evidence to change', () => {
     const decision = decidePromotion(CHAMPION, { variant: 'tie', passed: 80, total: 100 })
-    expect(decision.promoted === false ? decision.denial.reason : undefined).toBe('not-better')
+    expect(!decision.promoted ? decision.denial.reason : undefined).toBe('not-better')
   })
 
   it('must[2]: a better-but-insignificant challenger is refused, so noise cannot promote itself', () => {
@@ -35,7 +35,7 @@ describe('P9-09 Contract — promotion requires a difference the sample supports
     // extra success would move it. Promoting here would adopt a coin flip.
     const decision = decidePromotion(CHAMPION, { variant: 'small-sample', passed: 9, total: 10 })
     expect(decision.promoted).toBe(false)
-    expect(decision.promoted === false ? decision.denial.reason : undefined).toBe('not-significant')
+    expect(!decision.promoted ? decision.denial.reason : undefined).toBe('not-significant')
   })
 
   it('must[2]: a challenger whose interval clears the champion\'s is promoted', () => {
@@ -48,7 +48,7 @@ describe('P9-09 Contract — promotion requires a difference the sample supports
     // A variant that never ran and one that ran and lost are different facts,
     // and only the second is evidence about the prompt.
     const decision = decidePromotion(CHAMPION, { variant: 'never-ran', passed: 0, total: 0 })
-    expect(decision.promoted === false ? decision.denial.reason : undefined).toBe('no-trials')
+    expect(!decision.promoted ? decision.denial.reason : undefined).toBe('no-trials')
   })
 
   it('the decision carries BOTH intervals, so the record shows what it rested on', () => {
@@ -69,7 +69,7 @@ describe('P9-09 Contract — a tampered report cannot promote anything', () => {
       { variant: 'challenger', passed: 90, total: 100 },
     )
     expect(decision.promoted).toBe(false)
-    expect(decision.promoted === false ? decision.denial.reason : undefined).toBe('report-tampered')
+    expect(!decision.promoted ? decision.denial.reason : undefined).toBe('report-tampered')
   })
 
   it('a matching digest scores the comparison normally', () => {
@@ -86,7 +86,7 @@ describe('P9-09 Contract — must[4]: a guideline change faces the benchmark', (
   it('a significant drop refuses the change', () => {
     const verdict = admitGuidelineChange({ variant: 'before', passed: 90, total: 100 }, { variant: 'after', passed: 40, total: 100 })
     expect(verdict.admitted).toBe(false)
-    expect(verdict.admitted === false ? verdict.drop : 0).toBeCloseTo(0.5)
+    expect(!verdict.admitted ? verdict.drop : 0).toBeCloseTo(0.5)
   })
 
   it('an ordinary wobble does NOT refuse the change', () => {

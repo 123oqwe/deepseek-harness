@@ -265,7 +265,7 @@ describe('P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash conf
     if (Array.isArray(value)) return value.map(reorderKeys)
     if (value !== null && typeof value === 'object') {
       const entries = Object.entries(value).reverse()
-      return Object.fromEntries(entries.map(([key, nested]) => [key, reorderKeys(nested as JsonValue)]))
+      return Object.fromEntries(entries.map(([key, nested]) => [key, reorderKeys(nested)]))
     }
     return value
   }

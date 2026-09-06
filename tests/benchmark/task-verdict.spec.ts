@@ -69,7 +69,7 @@ describe('P9-08 Contract — the judge cannot be edited by the run it scores', (
   it('acceptance[1]: a changed judge digest fails the task', () => {
     const verdict = judgeTaskWithIntegrity('digest-before', 'digest-after', CHECKS, satisfied)
     expect(verdict.passed).toBe(false)
-    expect(verdict.passed === false ? verdict.failure.reason : undefined).toBe('judge-tampered')
+    expect(!verdict.passed ? verdict.failure.reason : undefined).toBe('judge-tampered')
   })
 
   it('tampering is reported AHEAD of the checks, even when every check reports satisfied', () => {
@@ -77,7 +77,7 @@ describe('P9-08 Contract — the judge cannot be edited by the run it scores', (
     // have made them pass. Reporting `check-failed` here would name the wrong
     // cause, and reporting `passed` would be the exploit succeeding.
     const verdict = judgeTaskWithIntegrity('before', 'after', CHECKS, satisfied)
-    expect(verdict.passed === false ? verdict.failure.reason : undefined).toBe('judge-tampered')
+    expect(!verdict.passed ? verdict.failure.reason : undefined).toBe('judge-tampered')
   })
 
   it('an unchanged digest scores the task normally', () => {
