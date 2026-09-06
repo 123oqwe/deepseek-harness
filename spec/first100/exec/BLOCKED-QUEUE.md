@@ -2969,3 +2969,29 @@ Both take a `KeyPairKeyObjectResult` — `initializeCA(keyPair, ctLog?, clock?)`
 **Two product-type changes this needs, neither made yet.** `SigstoreProvenanceEvidence` carries an issuer, a subject and a log index but no BUNDLE, and a verifier has nothing to check without one. `TrustKernelTrustAnchor`'s sigstore variant carries only `trustedIssuer`, and real verification needs the trusted root — which is the public TUF document, so it stays public material and the "no secret anywhere" property holds.
 
 **Why it was not half-built.** A verification path proven only by refusals is indistinguishable from one that refuses everything; the positive control — a genuinely valid bundle verifying — is the case that makes the rest mean anything, and it is the step whose convergence is least certain. Landing the plumbing without it would produce exactly the shape this program has refused five times today.
+
+## BLOCKED-122 — the ledger cannot pass 18 without decisions nobody in this session may take
+
+**Status:** ANALYSIS, for the maintainer. Nothing here is a request to change a decision; it is what the numbers mean.
+
+`check-ready` reports two epics ready to start (P4-09, withheld by BLOCKED-100; P5-10, now built) and one in flight (P2-03, two thirds locked). Seventy-two are blocked by predecessors. **The predecessors are seven epics whose cells are green and which are not accepted.**
+
+| epic | cells | why it is not accepted | direct dependents |
+|---|---|---|---|
+| **P4-06** | C/P/U/F green | lock-listed, three open findings | **8** |
+| **P4-07** | C/P/U/F green | NOT lock-listed — sign-off was WITHDRAWN, must[3] rests on a clause with no subject; needs registry re-anchoring | **7** |
+| **P8-01** | C/P/U/F green | NOT lock-listed — same withdrawal, same cause at must[4] | **5** |
+| **P1-02** | C/P/U/F green | lock narrowed today: offline half closed, Sigstore half open, and Sigstore is the model C10 chose | **4** |
+| **P1-03** | C/P/U/F green | lock-listed, three open findings | **3** |
+| **P6-01** | C/P/U/F green | residual lock, owner P6-03 | **2** |
+| **P4-05** | C/U/F green, P NOT_RUN | lock-listed, acceptance[2] needs P4-07's lease store | **1** |
+
+**Thirty direct dependents behind seven rows.** Every one of those rows is green in the sense the pipeline measures, and none of them is finishable by writing more code here:
+
+- **Two need a registry re-anchoring decision** (P4-07 must[3], P8-01 must[4]). Their sign-offs were withdrawn because a clause named something the repository does not have. Re-anchoring the clause changes what the registry says an epic promised, which is the user's authority, and a relay through another session is explicitly not sufficient for it.
+- **Two need key material and a vendored `Fiber` fix** (P1-02, and P2-02 behind it). The Sigstore half now has a named dependency, an approved plan, and installed packages; what it does not have is the slice built, and building it is work rather than a decision.
+- **Three need another epic to deliver first** (P4-05 ← P4-07, P6-01 ← P6-03, P4-06's findings).
+
+**What this session can still move without any decision:** P2-03's unlocked third, P5-10's remaining cells once an observation covers them, and the Sigstore slice. **What it cannot move is the accepted count**, and reporting steady progress on stage work while that number sits at 18 would describe activity rather than advance.
+
+**One thing the maintainer may want to know first.** P4-07 and P8-01 are the two largest dependency holders that are NOT lock-listed. They are stuck on a question of what their own clauses mean, not on missing infrastructure — which makes them the cheapest of the seven to unstick, and the only two whose unsticking needs no engineering at all.
