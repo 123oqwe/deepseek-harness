@@ -124,6 +124,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-06T00:01:42.984Z",
       "note": "gq-92 independent verify against the cited observation (run 33971207960 @ 4c9d4356d0, 19745 passed / 0 failed). (i) 3 acceptance clauses, 3 coverage entries covering indices 0/1/2, 18 case references, 0 unreal, 0 outside the live frozen set. (ii) single candidate SHA across all four cells, so no chain to compare and none is claimed; 4c9d4356d0 independently confirmed an ancestor of fork/first100-exec and byte-identical to the observation run's headSha. (iii) 64 live frozen titles (C20/P10/U14/F20, post-supersede) all present-and-passing in the cited vitest JSON; 0 ambiguous bare titles after the BLOCKED-104 fullName migration; the two must[2] replacement cases (closed key set; owner identity) verified load-bearing by mutation in both directions and the original cases verified insensitive to the same mutations. must[2] itself: read the epic title (Taskboard/Mailbox/Blackboard) and confirmed all three nouns have built subjects. accept-blocked: 0 hits. Cells regenerated through cmdGreen at 0125c9dc0c; provenance now tool-written."
+    },
+    {
+      "epic": "P4-07",
+      "rowDigestSha256": "95ab7c4a7e1eaa816509693870c5a2dec46309a1b7eb8e6b9d4ee710b894b168",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-06T06:08:25.438Z",
+      "note": "gq-92 re-sign after must[3] moved to P4-12 (C11 delegation, BLOCKED-100, clause provenance recorded at P4-12.must[5]). Independent verify against the cited observation (run 33959624760 @ 82d5e81122, 19523 passed / 0 failed): (i) 3 acceptance clauses, 3 coverage entries covering 0/1/2, 19 refs, 0 outside the live frozen set; (ii) single candidate SHA across all four cells, ancestor of fork/first100-exec confirmed; (iii) 51 live frozen titles all present-and-passing, 0 ambiguous. Registry now shows P4-07 must[0..2] only; the moved clause carries clauseProvenance {movedFrom: P4-07 must[3]} on P4-12. accept-blocked: 0. openFindings: 1 -- 'unfenced advanceAgentLifecycle is a public export' -- ACKNOWLEDGED: not a fencing defect (fencing at the dispatch seam holds and is mutation-proved), an encapsulation residual owned by P4-05 (the only epic declaring packages/core/agent/src/dispatch.ts in files[]), pinned by a characterization case that goes red when the export is sealed. Prior sign-off of 2026-09-05T10:33Z was withdrawn for must[3] having no subject; this sign-off is on the row as re-anchored."
     }
   ]
 }
