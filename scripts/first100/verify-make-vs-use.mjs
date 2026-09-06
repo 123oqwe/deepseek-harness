@@ -112,10 +112,28 @@ function main() {
     const row = rows.get(key)
     let state = 'VERIFIED'
 
+    // Field-shape check first: a record missing what the spec requires has not
+    // answered the question, and the states below would describe a claim nobody
+    // made. `make-vs-use-plan.md` §0 is the single field spec.
+    const REQUIRED = ['ledgerRow', 'card', 'verdict', 'adopted', 'rejectedAbsent', 'standardsOwned', 'residual', 'probes', 'gapCheck', 'recordedBeforeFirstLine']
+    const missing = REQUIRED.filter(field => !(field in declared))
+    if (missing.length > 0) {
+      findings.push(`${key}: preFlight.makeVsUse is missing ${missing.join(', ')} — an incomplete record is UNRECORDED, not a passing one`)
+      states.push([key, 'UNRECORDED'])
+      continue
+    }
+
     for (const adopted of declared.adopted ?? []) {
-      const name = typeof adopted === 'string' ? adopted : adopted.name
-      const form = typeof adopted === 'string' ? 'runtime' : adopted.form ?? 'runtime'
-      const pkg = String(name).split('@').slice(0, name.startsWith('@') ? 2 : 1).join('@')
+      // The npm name is what a file can import; `name` is the ledger's own
+      // label for the project (`sigstore/sigstore-js`), which appears in no
+      // import statement anywhere.
+      const pkg = adopted.npm ?? adopted.name
+      const form = adopted.form ?? 'runtime'
+      if (pkg === undefined) {
+        findings.push(`${key}: an adopted entry names neither an npm package nor a project`)
+        state = 'MISMATCHED'
+        continue
+      }
       if (form === 'runtime' && epic !== undefined && findImport(pkg, files) === undefined) {
         findings.push(`${key}: adopts ${pkg} as runtime, but no declared file imports it`)
         state = 'MISMATCHED'

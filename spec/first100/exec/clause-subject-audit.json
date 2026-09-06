@@ -182,11 +182,60 @@
       "recordedBeforeFirstLine": true,
       "kind": "infrastructure slice, not an epic cell",
       "makeVsUse": {
+        "ledgerRow": null,
+        "card": {
+          "heading": "#### P2-05",
+          "sheetCommit": "d59da69a57"
+        },
         "verdict": "PROVIDER_ADAPT",
+        "verdictSecondary": null,
         "adopted": [
-          "@cedar-policy/cedar-wasm@4.12.0"
+          {
+            "name": "cedar-policy/cedar",
+            "npm": "@cedar-policy/cedar-wasm",
+            "version": "4.12.0",
+            "form": "runtime",
+            "reason": "The authorization engine. Zero runtime dependencies, Apache-2.0, 13.1 MB unpacked, and 4.12.0 is the current latest (published 2026-07-28), so the pin is not stale."
+          }
         ],
-        "residual": "Everything this repository must still write: the ctx.policy Service Definition (provider-neutral, decide(manifest, identity, token, world, facts)); the policy-engine-cedar provider that translates a request into Cedar's entity/context shape and back; the conformance cases; and the fail-closed loader. Cedar decides; nothing about how a dsh action becomes a Cedar request exists upstream, and that translation is the clause subject."
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [
+          {
+            "standard": "Cedar policy language",
+            "from": "upstream @cedar-policy/cedar-wasm"
+          }
+        ],
+        "residual": "Everything this repository must still write: the ctx.policy Service Definition (provider-neutral, decide(manifest, identity, token, world, facts)); the policy-engine-cedar provider that translates a request into Cedar's entity/context shape and back; the conformance cases; and the fail-closed loader. Cedar decides; nothing about how a dsh action becomes a Cedar request exists upstream, and that translation is the clause subject. ledgerRow is null because this is an infrastructure slice, not one of the 109 ledger rows; its card is P2-05's, the first consumer.",
+        "probes": [
+          {
+            "claim": "the package adds one graph node rather than a subtree",
+            "how": "npm view @cedar-policy/cedar-wasm@4.12.0 dependencies",
+            "result": "ok",
+            "evidence": "{} — zero declared runtime dependencies."
+          },
+          {
+            "claim": "forbid overrides permit, default deny, matched-policy explain, partial eval",
+            "how": "NOT YET PROBED — decision semantics, covered by the slice's third deliverable (conformance cases)",
+            "result": "differs",
+            "evidence": "Recorded as unverified rather than carried from the ledger's report. The slice is unwritten; this row exists so the claim is not later mistaken for a checked one."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-permission-rules",
+            "gap": "first-match semantics (nearer user allow overrides baseline deny) → not monotonic; tools-only PEP",
+            "clause": "outOfScope: P2-05 owns the PEP; this slice delivers the engine and the provider-neutral seam"
+          },
+          {
+            "community": "dsh-auto-mode",
+            "gap": "Inputs are raw ToolExecution, not identity/capability-token/ActionManifest/ExecutionWorld facts",
+            "clause": "outOfScope: P2-05"
+          }
+        ],
+        "expectedDeletedPct": null,
+        "recordedBeforeFirstLine": true,
+        "realized": null
       },
       "verifiedIndependently": {
         "checkedOn": "2026-09-06",
@@ -208,21 +257,60 @@
       "whyAfterTheFact": "P1-02 was accepted on 2026-09-06 before the fourth pre-flight question existed. Recorded now so the mechanical check has a positive control of the `runtime` form -- an epic whose adoption is a settled fact, verifiable in the tree, rather than a claim about future work.",
       "makeVsUse": {
         "ledgerRow": "P1-02",
+        "card": {
+          "heading": "#### P1-02",
+          "sheetCommit": "d59da69a57"
+        },
         "verdict": "PROVIDER_ADAPT",
+        "verdictSecondary": "CONTRACT_WRITE",
         "adopted": [
           {
-            "name": "@sigstore/verify",
+            "name": "sigstore/sigstore-js",
+            "npm": "@sigstore/verify",
+            "version": "workspace-resolved",
             "form": "runtime",
-            "reason": "Verifies a Sigstore bundle against its trusted root, with the certificate identity enforced by the verifier's own policy rather than compared afterwards."
+            "reason": "Verifies a Sigstore bundle against the trusted root its admitted anchor declares, with the certificate identity enforced by the verifier's own policy rather than compared afterwards. Imported at packages/plugin/plugin-provenance/src/signature.ts:52."
           },
           {
-            "name": "@sigstore/mock",
+            "name": "sigstore/sigstore-js",
+            "npm": "@sigstore/mock",
+            "version": "workspace-resolved",
             "form": "oracle",
-            "reason": "Builds a local CA, CT log and transparency log inside the test process, so the provenance tests exercise this product's verification path and never Sigstore's availability."
+            "reason": "Builds a CA, CT log and transparency log inside the test process, so the provenance cases exercise this product's verification path and never Sigstore's availability. Reproduced by the P1-02 F frozen cases under 'the Sigstore path is verified, not believed'."
           }
         ],
-        "residual": "Everything the repository owns: which anchors are admitted, that an unregistered issuer is refused, where the trusted root comes from, that revocation works in both directions, and that the offline path is not the weaker one. sigstore-js does the cryptography; none of those decisions exist upstream.",
-        "standardsOwned": []
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [
+          {
+            "standard": "Sigstore bundle v0.3",
+            "from": "upstream @sigstore/verify"
+          }
+        ],
+        "residual": "Which anchors are admitted, that an unregistered issuer is refused, where the trusted root comes from, that revocation works in both directions, and that the offline path is not the weaker one. sigstore-js does the cryptography; none of those decisions exist upstream.",
+        "probes": [
+          {
+            "claim": "a bundle issued to a DIFFERENT identity is refused even though it verifies cryptographically",
+            "how": "P1-02 F frozen case 'a bundle issued to a DIFFERENT identity is refused, even though it verifies cryptographically'",
+            "result": "ok",
+            "evidence": "Refused by the verifier's own identity policy rather than by a post-hoc comparison; the genuine-bundle positive control passes alongside, so the refusals are selective."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-provenance",
+            "gap": "parses SLSA attestation but its own source says it does NOT verify the sigstore signature; no roots, no SBOM",
+            "clause": "must[0]"
+          },
+          {
+            "community": "hol-guard",
+            "gap": "targets third-party package installs, not dsh plugin signing with TrustKernel-held roots",
+            "clause": "outOfScope: package-install provenance is P1-03/P1-12"
+          }
+        ],
+        "expectedDeletedPct": "55",
+        "recordedBeforeFirstLine": false,
+        "realized": null
       }
     },
     "P2-03": {
@@ -230,18 +318,51 @@
       "whyAfterTheFact": "Recorded during the 2026-09-06 RFC 8785 correction, which is when this epic first adopted a package at all.",
       "makeVsUse": {
         "ledgerRow": "P2-03",
+        "card": {
+          "heading": "#### P2-03",
+          "sheetCommit": "d59da69a57"
+        },
         "verdict": "CONTRACT_WRITE",
+        "verdictSecondary": null,
         "adopted": [
           {
-            "name": "canonicalize",
+            "name": "erdtman/canonicalize",
+            "npm": "canonicalize",
+            "version": "2.1.0",
             "form": "oracle",
-            "reason": "A differential oracle in devDependencies, never a runtime dependency. Every JS RFC 8785 implementation recurses and overflows at depth 5000, and the code-mode dispatch path produces arguments that deep, so the canonicalizer stays hand-written -- and a property case asserts byte-identical agreement with the reference over 1000 generated values, which is what keeps that exception auditable. Mutating the key sort to localeCompare passes all four named properties and fails only this oracle."
+            "reason": "A differential oracle in devDependencies, never a runtime dependency. The hard constraint it documents is reproduced by the frozen case 'canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written', which asserts this implementation succeeds at depth 5000 where the reference throws."
           }
         ],
-        "residual": "The canonicalizer itself, the manifest value-domain refusal, and the manifest-before-execution placement on both dispatch paths. The library decides nothing here; it only says whether the implementation agrees with the standard.",
+        "rejectedAbsent": [],
         "standardsOwned": [
           "RFC 8785"
-        ]
+        ],
+        "standardsImported": [],
+        "residual": "The canonicalizer itself, the manifest value-domain refusal, and the manifest-before-execution placement on both dispatch paths. The library decides nothing here; it only says whether the implementation agrees with the standard.",
+        "probes": [
+          {
+            "claim": "every JS RFC 8785 implementation is recursive and overflows on the depths the code-mode path produces",
+            "how": "frozen case 'canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written'",
+            "result": "hard-constraint",
+            "evidence": "canonicalize@2.1.0: depth 1000 ok, 5000 THREW, 20000 THREW. canonicalize@4.0.0 and json-canonicalize@3.0.0: 5000 THREW. ptc.spec.ts dispatches at depth 5000."
+          },
+          {
+            "claim": "the reference distinguishes NFC from NFD and collapses key order, number spelling and escape spelling",
+            "how": "frozen case 'produces byte-identical output to `canonicalize` for every generated JSON value' (1000 runs)",
+            "result": "ok",
+            "evidence": "Sorting keys by localeCompare passes all four named properties and fails ONLY this differential case, which is what the oracle buys over a property list."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-permission-rules",
+            "gap": "src/call-id.ts binds decisions to call ids; not a manifest",
+            "clause": "must[0]"
+          }
+        ],
+        "expectedDeletedPct": "25",
+        "recordedBeforeFirstLine": false,
+        "realized": null
       }
     }
   },
