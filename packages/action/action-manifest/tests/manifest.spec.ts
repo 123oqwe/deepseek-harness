@@ -9,6 +9,7 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createUserPrincipal, PrincipalId, RunId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
 import fc from 'fast-check'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { describe, expect, it } from 'vitest'
 import {
   assertManifestPrecedesExecution,
