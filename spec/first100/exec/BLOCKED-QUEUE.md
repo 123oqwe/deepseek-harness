@@ -231,6 +231,35 @@ These are NOT open questions. They live here because `## Open` means "waiting on
   4. That future epic's independent Reviewer must personally construct and run a real "deserialize a forged admin claim" attack before accepting any rehydration-authority design -- reading a self-report is not sufficient, matching this program's now-standing pattern for security-foundation-tier verification (BLOCKED-022/024).
 - **Status:** PARKED (ANSWERED-BY-DELEGATE(gq-92) sets the parking terms and ratifies the current design; the substantive rehydration-authority question remains open until the future epic that needs it).
 
+### BLOCKED-131 — P2-04's C/P stage split cannot be built: a package without `src/index.ts` breaks the repository build
+
+**State: OPEN. Needs a registry decision, which is not mine to take. The C-stage code is written and measured; it is not in the tree.**
+
+**The conflict, measured.** P2-04's registry stages put `src/types.ts`, `src/classify.ts` and `tests/classify.spec.ts` in **C**, and `packages/policy/risk-taxonomy/src/index.ts` in **P**. The root `tsdown.config.ts` builds `workspace: ['vendor/*', 'packages/*/*', 'apps/cli']` with a fixed entry glob `lib/types/{index,invariant,startup}.js` (`tsdown.config.ts:19-20`). There is no per-package exclusion. So the moment the package directory exists without an `index.ts`, `pnpm run typecheck` fails with `Cannot find entry`. Every other package in the repository has one — measured: `risk-taxonomy` was the only `packages/*/*` without `src/index.ts` while it existed.
+
+**Both ways out were tried and both fail.**
+
+1. **Registered in the aggregates, no `index.ts`** — build fails: `[@deepseek-ai/dsh-risk-taxonomy] Cannot find entry: ["lib/types/{index,invariant,startup}.js"]`.
+2. **Not registered in the aggregates** — `typecheck` fails with two `TS6307`s: the files are not listed within any project. Repointing `main`/`types`/`exports` at `classify` does not help, because the entry glob is in the root tsdown config, not read from `package.json`.
+
+**Writing `src/index.ts` now would be a stage skip**, which the standing rules forbid, so it was not done.
+
+**What exists.** The C-stage code is complete and was exercised before removal: 14 cases passing, and **four mutations each caught** — unknown default lowered to `read` (3 fail), the composite maximum flipped to a minimum (2 fail), the acceptance[2] refusal deleted (1 fail), `confidence` pinned to 1 (1 fail). `oxlint` clean. It is saved outside the tree at the executor's scratchpad path `p2-04-c/risk-taxonomy/` and is **not committed**, because committing it breaks the branch build for every other epic's observation.
+
+**One design finding is worth keeping regardless of how the split is resolved.** The first version of the acceptance[2] check refused any policy whose hard-deny list omitted a kernel class — which would have rejected an organisation merely *adding* one, and left "switching a hard deny off" unexpressible and therefore unrefusable. The policy type now separates `addedHardDenyClasses` from `removedHardDenyClasses` so the refusal has a real subject. A single list would have passed its own test by never being reachable, which is this queue's most-recorded shape.
+
+**Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
+
+### BLOCKED-130 — the fiber-store pin is a vendored patch, and a re-vendor removes it with nothing going red
+
+**State: OPEN, durable pointer. Not schedulable work — a standing condition on the vendor sync procedure.**
+
+`vendor/README.md` local modification 20 makes `Fiber.store` an accessor and adds `Fiber.pinStoreName`, which is what stops a plugin on any non-root fiber forging `ctx.trustKernel` for itself and its subtree (SLICE-fiber-A, delegate ruling of 2026-09-06, option 2). The measurement that motivated it: with the patch absent, a plugin doing `ctx.fiber.store['trustKernel'] = forged` reads that forgery straight back from `ctx.trustKernel`, while `ctx.get('trustKernel')` stays correct — so the two resolution paths disagree, and only the one plugins reach most naturally is poisoned.
+
+**Why it needs an entry rather than only the vendor log.** Re-vendoring restores upstream `fiber.ts`. The pin then silently returns to protecting the root fiber alone, `pinTrustKernel` still runs, `ctx.get` still resolves correctly, and **no test fails** — the cases that would have caught it are P0-02's three `residual vector` characterizations, which this patch makes red and which are superseded in the same change. That is the exact shape this queue has recorded repeatedly: a fact recorded and nothing reading it. The reader is this entry plus the vendor log; the *test* reader arrives only when the superseding cases land, and until then a re-vendor is silent.
+
+**Reinstatement condition.** The sync procedure re-applies modification 20, and `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts`'s replacement cases — asserting the forgery is REFUSED on a non-root fiber — pass against the re-vendored tree.
+
 ### BLOCKED-127 — RESOLVED 2026-09-06: `test:snapshot:record` overwrote real expectations with the output of an unreachable provider
 
 **What it did.** Run without `DEEPSEEK_API_KEY`, `record` did not stop. Every scenario executed, every turn ended with `MISSING_CREDENTIAL`, and the write-back replaced committed expectations with what an unreachable provider produced: **22 files, 81 insertions against 874 deletions.** Caught on `git diff --stat` before anything was committed, and reverted.
