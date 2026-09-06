@@ -688,3 +688,57 @@ describe('P1-02 must[2] — a kernel configured with anchors holds them', () => 
     expect(configuredTrustAnchors(kernel.signatureRoots)).toHaveLength(1)
   })
 })
+
+/**
+ * P1-02 — the Sigstore path's remaining gap, pinned so it fails when closed.
+ *
+ * The lock's first unlock criterion was "the tamper-and-rewrite case starts
+ * failing", and it did. But that criterion was written when the root was empty
+ * and both branches were equally hollow. The offline branch is now
+ * cryptographic; the Sigstore branch is not, and Sigstore keyless is the model
+ * the deployment chose (C10) — so the lock narrows rather than lifts, and this
+ * case is its new criterion.
+ */
+describe('P1-02 KNOWN GAP (Sigstore path) — an ADMITTED issuer is believed without proof', () => {
+  it('KNOWN GAP: a claim naming an admitted Sigstore issuer verifies with no certificate and no inclusion proof -- asserts CURRENT behavior; wiring @sigstore/verify MUST break this test', () => {
+    // The attacker does not need a key here. They need the issuer URL of an
+    // anchor the deployment admitted, which is public by construction, plus
+    // any non-negative transparency-log index. No Fulcio certificate binds the
+    // identity and no Rekor inclusion proof is checked, so "signed by GitHub
+    // Actions" is currently a string the claim asserts about itself.
+    const kernel = kernelWithFixtureAnchors()
+    const forged = buildInput({
+      claim: buildClaim({
+        mode: 'sigstore',
+        issuer: sigstoreEvidence.issuer,
+        subject: 'repo:attacker/not-the-real-repo:ref:refs/heads/main',
+        transparencyLogIndex: 1,
+      }),
+    })
+    const result = verifyPluginProvenance(forged, kernel.signatureRoots)
+
+    // Narrowed rather than cast: when this build starts REJECTING an unproved
+    // Sigstore claim, the assertion fails outright instead of reading a
+    // property off the refusal branch.
+    expect(result.trust).toBe('trusted')
+    if (result.trust !== 'trusted') throw new Error('unreachable: asserted trusted above')
+    // The subject is the attacker's own repository, and nothing checked it.
+    expect(JSON.stringify(forged.claim.evidence)).toContain('attacker/not-the-real-repo')
+  })
+
+  it('the same forgery on the OFFLINE path is already refused, so this gap is one branch and not both', () => {
+    // The control that keeps the case above honest: it is not saying "this
+    // package verifies nothing", it is saying which branch still does not.
+    const kernel = kernelWithFixtureAnchors()
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const forged = buildInput({
+      claim: {
+        ...unsigned,
+        evidence: { ...signedOfflineEvidence(unsigned), signature: new Uint8Array([1, 2, 3, 4]) },
+      },
+    })
+    const result = verifyPluginProvenance(forged, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
+  })
+})

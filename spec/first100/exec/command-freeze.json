@@ -7114,6 +7114,46 @@
         "failureSummary": "Reddened 1, 1 and 2 of 10. M3 reddens two because taking the residual against the raw estimate makes the factor re-apply its own correction each round, so both the convergence case and the monotonic-narrowing case see it overshoot. M1 and M2 each redden exactly the case written for them; the remaining seven stay green under all three, which is what says the purity and boundary cases are not accidentally sensitive to the arithmetic."
       },
       "note": "C (Contract) for P9-05, DELIBERATELY HALF THE EPIC. BLOCKED-107 established that must[0] (exact DeepSeek counting) and must[2] (p95 error against four corpora) both need a tokenizer whose source is a maintainer's decision, and that must[1] and must[3] are reachable today. This is must[1] and must[3] only; the other two are untouched and remain blocked. TWO OF MY OWN ASSERTIONS WERE FALSE AND WERE CORRECTED BY RUNNING THEM. (1) I asserted the error narrows strictly every round; on constant-density content the factor reaches the truth in two rounds, so the third comparison demanded better than exact. (2) I asserted a converged estimate is never exact — false for uniform content, where it can be. The real limitation is different and is now the case that states it: on content whose density VARIES the single factor oscillates, tracking whichever content came last, and twenty observations buy nothing the first two did not. That is the honest form of why must[0] needs a tokenizer."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/control-router.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 Provider — an admitted message reaches its Agent operation must[0]: each kind maps onto the operation that kind names",
+        "P5-10 Provider — an admitted message reaches its Agent operation acceptance[0]: a steer arriving while cancelling reaches the Agent NOT AT ALL",
+        "P5-10 Provider — an admitted message reaches its Agent operation acceptance[0]: cancel arriving BESIDE a steer is applied first, whatever order they arrived in",
+        "P5-10 Provider — an admitted message reaches its Agent operation acceptance[2]: a redelivered message dispatches once, not twice",
+        "P5-10 Provider — acceptance[1]: an answer reaches the waiting point that asked an answer for the open question is delivered to that waiting point",
+        "P5-10 Provider — acceptance[1]: an answer reaches the waiting point that asked an answer naming a different waiting point is delivered NOWHERE",
+        "P5-10 Provider — acceptance[1]: an answer reaches the waiting point that asked a child that is running answers nobody",
+        "P5-10 Provider — must[3]: cancellation is not terminal until participants stop a cancelled child stays in cancelling until the child itself reports stopped",
+        "P5-10 Provider — must[3]: cancellation is not terminal until participants stop a registered participant that has not stopped holds the barrier, and is named",
+        "P5-10 Provider — must[3]: cancellation is not terminal until participants stop a participant stopping during an ORDINARY run does not make the child terminal",
+        "P5-10 Provider — must[3]: cancellation is not terminal until participants stop nothing at all reaches the Agent once the child is terminal"
+      ],
+      "files": [
+        "packages/subagent/subagent/src/control-router.ts",
+        "packages/subagent/subagent/tests/control-router.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T22:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "57ddc74bf976c624d75473d413a8555231f75890",
+        "testsDiscovered": 11
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/subagent/subagent/src/control-router.ts, each restored byte-identical: (M1) a refused message is dispatched anyway; (M2) convergence makes the child terminal from any phase, not only from cancelling; (M3) a batch is applied in arrival order instead of by priority.",
+        "failureSummary": "Reddened 6, 1 and 1 of 11. M1 reddening six is the point of this stage: the Contract cases all still pass under it, because the DECISION is unchanged and only the dispatch is wrong — a router that decides correctly and acts anyway is exactly what the Provider stage exists to catch. M2 and M3 each redden the single case written for them."
+      },
+      "note": "P (Provider) for P5-10: the decisions reach a real Agent, or nothing happens. Every case asserts on what the AGENT was asked to do rather than on the decision returned, because a router that decided correctly and dispatched anyway would satisfy every Contract case while still waking a cancelled child. The child's phase is NOT AgentStatus, which is only idle|running: cancelling, awaiting-human and terminal are states this router owns, since they describe the child's own lifecycle rather than whether a turn is executing. must[3]'s barrier registers only `child` at construction and takes further participants through addParticipant, so the absent world/actions suppliers (BLOCKED-116) join without this module knowing their shape."
     }
   ]
 }
