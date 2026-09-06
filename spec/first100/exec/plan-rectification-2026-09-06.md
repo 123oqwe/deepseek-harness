@@ -262,6 +262,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 - **REUSE_UPSTREAM 中无 planError 的 10 条**(P3-03 · P4-10 · P4-11 · P5-09 · P6-06 · P6-10 · P7-08 · P8-03 · P8-05 · P8-10):账本判定"上游已有部分实现",**BASE-ALIGN-v2(2026-09-03)已按 gap-over-upstream 逐条缩范围**(`spec/first100/sources/base-align-v2/23-partial-rescope-spec.md`),registry 现在的 must/files 就是缩后的缺口。本令不再动;开工三问时读 rescope spec 的对应条目即可。
 - **CONTRACT_WRITE / PROVIDER_WRITE / CONSUMER_WRITE 中无 planError 的**:契约和 provider 要自己写,账本没有开源替代,计划没错,不在本令范围。
+- **P3-13**(PTC 后端策略绑定,W7/W8):**不在造用账本里**——账本 2026-09-02 生成时 P3-13 同日才由用户批准收录(109→110)。它没有 verdict / oss / deletedPct。**开工三问时补一次单条 make-vs-use 判断**:它接的是 P3-01/02/04/08/10 已建的 ExecutionWorld + 策略设施(组合不是从头造),预期 verdict = CONSUMER_WRITE,依赖 §3.2 的 sandbox-runtime rung。
 - **R10**(131 slice,W19 后串行)——另议
 - **P9-08 / P9-09**(PREMATURE,R10 后)
 - **7 条已验收行的灵敏度回填**(已下令,等冻结表稳定)
