@@ -3,9 +3,9 @@
     "name": "first100-p9-verification",
     "version": "1.0"
   },
-  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33998988841",
-  "candidateSha": "ee247cc6eef8545e82ebc0d981563a0d3652947f",
-  "observationSha256": "8f88d20435607e8adbc040aab9282ec5480bef378a14e20bb1823584ae84b272",
+  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34001537762",
+  "candidateSha": "8a640f1aca27af8c938daac7c9664fa9b57dd640",
+  "observationSha256": "ee44eb883adb59a7b6e802c702a1e22fc11175d07ae2649f5dd628a28c49d13f",
   "epics": [
     {
       "epic": "P9-01",
@@ -19,13 +19,21 @@
     },
     {
       "epic": "P9-02",
-      "verifiedStages": [],
+      "verifiedStages": [
+        "C",
+        "P"
+      ],
       "terminalState": "IN_PROGRESS"
     },
     {
       "epic": "P9-03",
-      "verifiedStages": [],
-      "terminalState": "IN_PROGRESS"
+      "verifiedStages": [
+        "C",
+        "P",
+        "U",
+        "F"
+      ],
+      "terminalState": "VERIFIED"
     },
     {
       "epic": "P9-04",
@@ -47,17 +55,20 @@
       "verifiedStages": [
         "C",
         "P",
+        "U",
         "F"
       ],
-      "terminalState": "IN_PROGRESS"
+      "terminalState": "VERIFIED"
     },
     {
       "epic": "P9-07",
       "verifiedStages": [
         "C",
-        "P"
+        "P",
+        "U",
+        "F"
       ],
-      "terminalState": "IN_PROGRESS"
+      "terminalState": "VERIFIED"
     },
     {
       "epic": "P9-08",
@@ -102,35 +113,16 @@
     {
       "epic": "P9-02",
       "stage": "C",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 11,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-02 Contract — route templates must[0]: each protocol template carries protocol, endpoint, model, credential ref, and timeout",
-        "P9-02 Contract — route templates must[0]: all three protocol families have a template, and they are distinct",
-        "P9-02 Contract — route templates must[2]: a key pasted where the variable NAME goes is refused",
-        "P9-02 Contract — route templates must[2]: the refusal does NOT echo the suspected key back into a log or a bug report",
-        "P9-02 Contract — route templates must[2]: a template never carries an inline key field of any kind",
-        "P9-02 Contract — route templates must[1]: a missing endpoint names baseURL rather than failing later on a request",
-        "P9-02 Contract — route templates must[1]: a malformed URL is refused, and so is one with a protocol nothing can call",
-        "P9-02 Contract — route templates must[1]: an empty model and a non-positive timeout each name their own field",
-        "P9-02 Contract — route templates an explicit timeout overrides the default rather than being ignored",
-        "P9-02 Contract — route templates must[5]: a template ranks nothing and defaults no route — selection stays the router's",
-        "P9-02 Contract — route templates an unknown template name is not a template name"
-      ]
+      "matchedCases": 11
     },
     {
       "epic": "P9-02",
       "stage": "P",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 4,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-02 Provider — templates resolve through the real config layer acceptance[0]: a settings fragment built from a template resolves to a usable route",
-        "P9-02 Provider — templates resolve through the real config layer acceptance[2]: no configured route at all is the dormant posture, not an error",
-        "P9-02 Provider — templates resolve through the real config layer acceptance[2]: a template route resolves alongside a hand-written route without disturbing it",
-        "P9-02 Provider — templates resolve through the real config layer the credential stays a REFERENCE through resolution, never a materialized value"
-      ]
+      "matchedCases": 4
     },
     {
       "epic": "P9-02",
@@ -157,55 +149,30 @@
     {
       "epic": "P9-03",
       "stage": "C",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 9,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-03 Contract — --model resolution must[0]: splits a registered route from its model",
-        "P9-03 Contract — --model resolution must[0]: an unregistered route is refused AND the refusal names the routes that exist",
-        "P9-03 Contract — --model resolution must[0]: a missing separator is refused, because a bare model id names no adapter",
-        "P9-03 Contract — --model resolution an empty half is refused by the half that is empty, so the message says which one",
-        "P9-03 Contract — --model resolution only the FIRST colon separates: a model id may carry its own colons",
-        "P9-03 Contract — --model resolution the model half is NOT checked against a local list, so a route keeps its new models reachable",
-        "P9-03 Contract — --model resolution a profile with no registered route says so, instead of printing an empty list",
-        "P9-03 Contract — --model resolution the failure CARRIES the routes, so a caller cannot print a list different from the one checked",
-        "P9-03 Contract — --model resolution the carried list is detached: mutating the caller's array cannot rewrite a recorded failure"
-      ]
+      "matchedCases": 9
     },
     {
       "epic": "P9-03",
       "stage": "P",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 5,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-03 Provider — --model selects the route the run uses must[0]: a registered route and model become the agent's options",
-        "P9-03 Provider — --model selects the route the run uses acceptance[0]: the SAME task on a different --model differs only in the route it ran on",
-        "P9-03 Provider — --model selects the route the run uses acceptance[1]: an unregistered route exits non-zero and names the routes that exist",
-        "P9-03 Provider — --model selects the route the run uses acceptance[1]: a malformed argument fails the same way, rather than being read as a bare model",
-        "P9-03 Provider — --model selects the route the run uses without --model the configured default is used and nothing about the run changes"
-      ]
+      "matchedCases": 5
     },
     {
       "epic": "P9-03",
       "stage": "U",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 2,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-03 Usage — --model reaches a real dsh --profile headless run acceptance[0]: the same task on two --model values is answered by two different routes",
-        "P9-03 Usage — --model reaches a real dsh --profile headless run acceptance[1]: an unregistered route exits non-zero, names the registered routes, and answers nothing"
-      ]
+      "matchedCases": 2
     },
     {
       "epic": "P9-03",
       "stage": "F",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 1,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-03 Fault — --model against a profile with no registered route says the profile has no routes rather than printing an empty list"
-      ]
+      "matchedCases": 1
     },
     {
       "epic": "P9-04",
@@ -272,14 +239,9 @@
     {
       "epic": "P9-06",
       "stage": "U",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 3,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-06 Usage — stream-json is emitted by the product, in the recorded format must[1]: every line parses, events precede exactly one final result line",
-        "P9-06 Usage — stream-json is emitted by the product, in the recorded format must[1]: the emitted envelopes carry the same keys as the recorded SDK fixture",
-        "P9-06 Usage — stream-json is emitted by the product, in the recorded format an unknown --output-format is refused with the accepted list, not silently treated as text"
-      ]
+      "matchedCases": 3
     },
     {
       "epic": "P9-06",
@@ -305,31 +267,16 @@
     {
       "epic": "P9-07",
       "stage": "U",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 7,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-07 Usage — the configured-agent row carries a budget must[2]: a budget written on a cordis.yml agent row survives config validation",
-        "P9-07 Usage — the configured-agent row carries a budget must[3]: an explicit zero survives too, so \"unlimited\" can be stated in a profile",
-        "P9-07 Usage — the configured-agent row carries a budget a row with no budget stays absent rather than acquiring a default that would bound existing runs",
-        "P9-07 Usage — the configured-agent row carries a budget a negative maxTurns is refused at load, not carried into a loop that can never admit a turn",
-        "P9-07 Usage — the configured-agent row carries a budget a fractional maxTurns is refused: turns are counted, and rounding is a choice nobody stated",
-        "P9-07 Usage — the configured-agent row carries a budget a negative maxSpendUsd is refused, while a fractional one is money and stays legal",
-        "P9-07 Usage — the configured-agent row carries a budget the checked row is the one with no exact identity too, which the identity loop skips early"
-      ]
+      "matchedCases": 7
     },
     {
       "epic": "P9-07",
       "stage": "F",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 4,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-07 Fault — a budget stop is durable, resumable, and per-run acceptance[0]: a session stopped by its budget persists whole, and the reason survives reload",
-        "P9-07 Fault — a budget stop is durable, resumable, and per-run acceptance[0]: resuming with a raised budget continues the run rather than stopping again",
-        "P9-07 Fault — a budget stop is durable, resumable, and per-run the turn allowance is PER RUN, so a resume at the same limit gets a fresh one",
-        "P9-07 Fault — a budget stop is durable, resumable, and per-run BLOCKED-114: maxSpendUsd cannot bind today, and this pins that rather than implying it works"
-      ]
+      "matchedCases": 4
     },
     {
       "epic": "P9-08",
