@@ -618,3 +618,9 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 - **给 P2-06 的 pointer**:审批必须同时绑 manifest digest **和** assessment digest,否则分类在批准与执行之间可变。写进 P2-06 卡片。
 - **`@modelcontextprotocol/sdk` 的接法**:`form: runtime`,注明 **type-only import**、包已是 workspace 依赖(mcp-client)、零新增图节点;**不 vendor 一份类型定义**——那是 MCP 形状的第二份声明(§7.3)。四个 hint 永远只作输入(账本 risk 原话)。
 - 其余 preFlight 字段按执行者所写;`[P]` 文件在 P2-03 签后再动;probes 在本树复验 hint 名与语义后填。
+
+### 10.6 两条裁决记录(2026-09-06 16:45 EDT)
+
+**P2-03 签发暂缓(机械原因)**:观测 run 34051669730 @ `144d41cb76` 的 vitest report 四处 sha256 一致、20189/0 failed、四格冻结标题逐条在场;但 run 结论 `failure`——scoped lint 7 条错中 **6 条在 P2-03 自己的 `manifest.spec.ts`**(`as never` ×6),修复 `da94ed35ff` 在**观测之后**。候选不可变 + BLOCKED-014 slice gate set 不许选子集 → 在 tip 重观测后签,candidate 记新 SHA。另:`accept-blocked: P2-03` 未解——两个解锁信号已满足(code-mode 半:U.1 三条 + ptc deep-arguments passed;plugin-rpc 半:C12 拆到 P1-06 must[4]),执行者记 LIFTED 后签。snapshot `persistent-pwsh-tool-turn` 红不在 P2-03 范围,需 flake-registry 引用或 BLOCKED 根因。
+
+**Fiber-A → 裁 2(最小 vendored 改动)**:探针实测非 root fiber 上 `ctx.fiber.store['trustKernel'] = forged` 后 `ctx.trustKernel` 返回伪造物(`ctx.get` 不返回)——P0-02 的 pin 只护 root + `ctx.get`,dsh 侧覆盖不到每个 fiber 的属性读路径(`reflect.ts:157`),§10.4 ① 的"dsh 侧最小路径"是**待做的工作而非现状**,且 P0-02 已试过。不选 3(收窄 must[1] 为 `ctx.get` 语义 = 来源附和消费者)。形状二选一按 diff 最小实测:(A) `store` 私有 + `reflect.ts:293/302` 受控 provide/revoke 并对内核名在任何 fiber 拒绝;(B) `fiber.ts:324/647` 建 store 处加 `storeGuard` 契约点,dsh 侧注册守卫将内核名 defineProperty 不可写——不改 `store` 类型。判据:探针翻转、P0-02 vector-2 仍绿、fiber 生命周期不变。登记 `vendor/README.md`,过 vendor manifest guard;**re-vendor 必须带补丁**(BLOCKED durable pointer)。characterization 落 slice:现在断言伪造成功 = RED,修好翻绿。
