@@ -2,8 +2,25 @@
 
 **签发**:guanjieqiao-92(delegate,C7 常设委托 + C11 registry re-anchor 委托)
 **执行**:dsh-first100-clean-ca,执行前按 C11 惯例向用户确认一次委托仍有效
-**来源**:`First-100 造用账本`(artifact 2e874903,109 行,字段 verdict / oss / deletedPct / planError / residual),2026-09-02 由 gq-92 用三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测生成
-**对照**:`tests/first100/registry.json` @ `dbeb6082a9`(21/101 ACCEPTED)
+**来源**:`First-100 造用账本`(artifact 2e874903,109 行 × 16 字段;**仓库镜像 `make-vs-use-ledger.json`**),2026-09-02 由 gq-92 用三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测生成
+**对照**:`tests/first100/registry.json`(签发时 `dbeb6082a9`,21/101 ACCEPTED;之后的 registry 改动各带 provenance)
+
+### 阅读指南(2026-09-07 加,只做导航,不改内容)
+
+本文件是**按日期追加的裁决日志**:§0–§6 是 09-06 签发的原令,§7–§9 是同日晚间的附录。**看某条 epic 该怎么做,不要读本文件——读 `make-vs-use-plan.md` 那张执行卡**,它把本文件所有适用于该 epic 的裁决叠加在一张卡上(派生生成,不会漏)。本文件只回答"为什么这么裁"。
+
+| 要找什么 | 在哪 |
+|---|---|
+| 某条 planError 怎么改 registry | §2(29 条)+ §7.10(补漏 10 条) |
+| 共用引擎 slice(Cedar / sandbox-runtime / OTel / attestation envelope) | §3.1–3.3 + §7.2 R1(= §3.4) |
+| 执行顺序 | §4;开工第四问 §4.1 |
+| 已验收 21 条的开源采用核验 | §7.1;裁决 §7.2 R1–R7;R6 判据 §7.9 |
+| 标准词汇谁定形状 | §7.3 |
+| P2-03 canonicalizer 终态 | **§7.8**(取代 §7.2 R2 与 §7.4 ①;§7.5 修正 §7.4 ⑤;§7.6 收敛归 R1) |
+| 接一个开源库的步骤 | §8(九步 SOP) |
+| 「可省代码」「社区覆盖」两列的用法 + 机械门 | §9 |
+
+**已被后文取代的裁决**(原文保留,行内已标):§7.2 R2 与 §7.4 ① "换库" → §7.8 保留迭代实现 + 库作 oracle;§7.4 ⑤ "F 不动" → §7.5 F 也 supersede。
 
 ## 0. 这份文档做什么、不做什么
 
@@ -342,7 +359,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 ### 7.2 裁决
 
 - **R1 · §3.4 新增共用引擎:attestation envelope(in-toto Statement v1 + DSSE)。** 传播最广的标准(15 条未开工 epic 消费:P1-11/12 · P2-03 · P3-07/09 · P4-04/09 · P6-08/09 · P7-01/02/04/05/10 · P8-10),本该由 P0-01/P0-07/P1-02 定下,三条采用数为 0。in-toto 是 spec 无 npm;DSSE PAE 编码十行。做法:contract 层小包 `packages/attestation/envelope`——`Statement` zod schema(`_type/subject[]/predicateType/predicate`,subject 用 ResourceDescriptor)、`dsseEnvelope(payloadType, payload, signer)` 按 spec 做 PAE、verify 走 P0-02 kernel `signatureRoots`;signer 可插(现在 kernel Ed25519,发布走 P1-02 的 Sigstore 验证器)。**P0-07 的 `attest.ts` 改为发 Statement+DSSE、`canonicalJson` 换 §R2 的库**——账本 risk 已判"reshape 可接受,evidence package 是 per-run 产物";P0-01 的 fingerprint 表示对齐 `subject[]`。**落地时点:P4-04 开工前**(最早要 DSSE 签名的消费者);不重开 P0-01/P0-07 的格子,作为 infra slice 记 EXEC-STATE,P0-07 的 evidence 用例随 slice 重观测。
-- **R2 · P2-03 签发前整改(执行者动作,§7.4)。** `canonicalizeArguments` 换 `canonicalize`(erdtman,RFC 8785 参考实现,已在 lock 里作 sigstore 传递依赖);去掉值与 key 的 NFC;fuzz 套件保留但改为**对库的 conformance**(性质:key 顺序 / 数字拼写 / `é` 与 `é` 字面等价 → 同 hash;NFC≠NFD → **不同** hash)。validation[2] 措辞按 C11 A 类由我改(§7.4 给原文)。C 阶段冻结用例 supersede,重观测;U/U.1/F 不动。另三份手写 canonicalJson:`attest.ts` 随 R1 换;`session-snapshot` / `repeat-tool-reminder` 不做安全绑定,不动,记 BLOCKED-QUEUE。
+- **R2 · P2-03 签发前整改(执行者动作,§7.4)。**【“换库”部分已由 §7.8 取代:保留迭代实现,库作 devDep 差分 oracle;其余(删 NFC / 措辞 / supersede)仍有效】 `canonicalizeArguments` 换 `canonicalize`(erdtman,RFC 8785 参考实现,已在 lock 里作 sigstore 传递依赖);去掉值与 key 的 NFC;fuzz 套件保留但改为**对库的 conformance**(性质:key 顺序 / 数字拼写 / `é` 与 `é` 字面等价 → 同 hash;NFC≠NFD → **不同** hash)。validation[2] 措辞按 C11 A 类由我改(§7.4 给原文)。C 阶段冻结用例 supersede,重观测;U/U.1/F 不动。另三份手写 canonicalJson:`attest.ts` 随 R1 换;`session-snapshot` / `repeat-tool-reminder` 不做安全绑定,不动,记 BLOCKED-QUEUE。
 - **R3 · 词汇债不重开已验收行;"首个跨线消费者"拥有对齐。** 规则:词汇在**第一次跨进程/跨语言/跨系统**时必须是标准名,内部字段名可保留但要有单向映射函数并冻结用例。所有权:SPIFFE → P8-06;CloudEvents → P8-05(P4-06 的 dedup-on-id 可直接用现有 `id`);PROV-DM → P7-04(ClaimGraph)与 P6-03;Confluent 兼容词汇 → P8-07;OTel `enduser.id`/`gen_ai.*` → P7-07。写进各拥有者 epic 的 `preFlight.makeVsUse.standardsOwned`。
 - **R4 · P1-01 代码缺陷:`dshVersionRange` 未校验。** E 类(不改 registry)。挂到 P1-03(lockfile 本来要解析 range):加 `semver.validRange`,无效即 manifest 拒绝;冻结一个 `dshVersionRange: "not a range"` 被拒的用例。
 - **R5 · P1-02 半做部分**(SBOM/CycloneDX、SLSA provenance、tuf-js 根更新)归 P1-03(lockfile 与 SBOM 同源)与 P1-12(信任等级要 SLSA level)。不重开 P1-02。
@@ -374,14 +391,14 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 ### 7.4 P2-03 整改令(给执行者)
 
-1. `packages/action/action-manifest/src/canonicalize.ts`:`canonicalizeArguments` 改为 `import canonicalize from 'canonicalize'` 后直接调用;删除 NFC 归一化、迭代栈实现、以及"retained copy of the recursive form"的等价测试(库的正确性由库自己的套件验,§4.1)。`canonicalize` 加进 `action-manifest/package.json` 直接依赖(已在 lock 作传递依赖,版本 2.1.0;账本注 4.0.0 ESM 亦可,由执行者按仓库 ESM 约定选,**理由写进 preFlight**)。
+1. 【已由 §7.8 取代——不换库,保留迭代实现并删 NFC;库进 devDependencies 作差分 oracle】`packages/action/action-manifest/src/canonicalize.ts`:`canonicalizeArguments` 改为 `import canonicalize from 'canonicalize'` 后直接调用;删除 NFC 归一化、迭代栈实现、以及"retained copy of the recursive form"的等价测试(库的正确性由库自己的套件验,§4.1)。`canonicalize` 加进 `action-manifest/package.json` 直接依赖(已在 lock 作传递依赖,版本 2.1.0;账本注 4.0.0 ESM 亦可,由执行者按仓库 ESM 约定选,**理由写进 preFlight**)。
 2. 值域声明:JSON only(`JsonValue`),非有限数与 bigint 在进入 `createActionManifest` 前拒绝(账本 risk:"JCS forbids non-finite numbers and big ints — define the argument value domain explicitly")。冻结一个拒绝用例。
 3. conformance 用例(替换现 fuzz 里的等价断言):(a) key 顺序不同 → 同 hash;(b) `1.0` / `1` / `1e0` → 同 hash;(c) `"é"` 与 `"é"` 字面 → 同 hash;(d) **NFC `é` 与 NFD `é` → 不同 hash**(这条是安全边界,必须冻结并做变异:把 (d) 断言反向,套件必须红)。
 4. registry P2-03 validation[2] 措辞(C11 A 类,delegate 裁决,`rewordedFrom` 记原文):
    - 原:「fuzz canonicalizer,禁止 key order/Unicode/number 表示导致 hash 混淆。」
    - 新:「canonicalizer 遵循 RFC 8785(JCS):key 顺序、数字拼写、JSON 转义拼写(`é` 与字面 `é`)不同的同一 JSON 值得到相同 hash;不同 code point 序列(含 NFC 与 NFD)是不同值,必须得到不同 hash。fuzz 覆盖以上四类。」
    - 计入 `planCorrectedClauses`(用户规则:reword 单独计数)。
-5. 冻结:C 阶段受影响用例 **supersede**(替换,BLOCKED-103),不 supplement;`sensitivityProof` 记 (d) 的反向变异;U/U.1/F 的冻结不动,但 U 的 `argumentsHash` 期望值若在 fixture 里写死,随之更新并说明。
+5. 冻结:C 阶段受影响用例 **supersede**(替换,BLOCKED-103),不 supplement;`sensitivityProof` 记 (d) 的反向变异;U/U.1/F 的冻结不动【§7.5 修正:F 那条 Unicode fuzz 用例也 supersede 并反转】,但 U 的 `argumentsHash` 期望值若在 fixture 里写死,随之更新并说明。
 6. 完成后 C 重观测 → 我跑四谓词 → 签。**在此之前不签 P2-03,P2-04 不开。**
 
 ### 7.5 P2-03 整改令的三处修正(执行者 preFlight 发现,2026-09-06 晚)

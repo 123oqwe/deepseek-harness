@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `45434d476f4f54a1`)+ `ledger.json` 状态 + `p9-verification.json`;**生成时间** 2026-09-06T14:03-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON 或整改令,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `45434d476f4f54a1`)+ `ledger.json` 状态 + `p9-verification.json`;**生成时间** 2026-09-06T14:09-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON 或整改令,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)
 
@@ -82,7 +82,7 @@
 `Capability-seam architecture checker (ACCEPTED)` · L6_QUALIFICATION · **PROVIDER_ADAPT + PROVIDER_WRITE** · 可省 50% · 状态 **ACCEPTED (W3)**
 
 **用(adapt)**:
-- **sverweij/dependency-cruiser**(npm `dependency-cruiser` · MIT · 7,128★) — npm 18.2.0; forbidden rules from.path/to.path, deep-import ban, --output-type baseline known-violations
+- **sverweij/dependency-cruiser**(npm `dependency-cruiser` · MIT · 7,128★) — npm 18.2.0; forbidden rules from.path/to.path, deep-import ban, --output-type baseline known-violations **⟶ 裁决取代:§7.9:已验收,不采用;判据见 §7.9**
 **可选(optional,不进依赖不进 CI)**:antoine-coulon/skott(Alternative, weaker rule language) · acrazing/dpdm(Alternative, weaker rule language) · javierbrea/eslint-plugin-boundaries(Alternative) · softarc-consulting/sheriff(npm 404 — UNVERIFIED on npm) · oxlint no-restricted-imports(Already devDep; zero-new-dep partial alternative for deep-import ban)
 **自己写(residual)**:Family roles as rule-generator input, dated/owned allowlist (owner, removalDate), and the definition+provider fixture+composition test+rollback test presence check.
 **禁令/风险(risk)**:Already accepted as hand-rolled (~700 lines); only worth revisiting if P0-04 adopts dependency-cruiser (shared engine, one config); use --cache on ~300 packages.
@@ -99,7 +99,7 @@
 `Layered dependency + no-cycle rules (TODO)` · L6_QUALIFICATION · **PROVIDER_ADAPT + REUSE_UPSTREAM** · 可省 60-70% · 状态 **ACCEPTED (W4)**
 
 **用(adapt)**:
-- **sverweij/dependency-cruiser**(npm `dependency-cruiser` · MIT · 7,128★) — no-circular with cycle path, layered forbidden rules from a layer manifest, tsConfig aliases, dynamic import/require detection, baseline
+- **sverweij/dependency-cruiser**(npm `dependency-cruiser` · MIT · 7,128★) — no-circular with cycle path, layered forbidden rules from a layer manifest, tsConfig aliases, dynamic import/require detection, baseline **⟶ 裁决取代:§7.9:已验收,不采用;判据见 §7.9**
 **可选(optional,不进依赖不进 CI)**:antoine-coulon/skott(Fallback) · acrazing/dpdm(Fallback)
 **不用(reject)**:pahen/madge——npm 8.0.0 from 2024-08 — stale
 **自己写(residual)**:docs/architecture/layering.md + layer manifest, ADR-required exemption format (adr: + owner), global-singleton-bypass grep check, 10 s budget test + 3 cycle fixtures; package-level cycles reuse scripts/package-graph.ts sinkCycles.
@@ -153,7 +153,7 @@
 - **in-toto/attestation**(NOASSERTION · 371★) — predicates/test-result.md: result PASSED\|WARNED\|FAILED, configuration[], passedTests/warnedTests/failedTests
 - **secure-systems-lab/dsse**(Apache-2.0 · 110★) — Envelope format for the reserved signature field
 - **slsa-framework/slsa**(1,921★) — Provenance v1 for artifact binding
-- **sigstore/sigstore-js**(npm `@sigstore/sign` · Apache-2.0 · 181★) — @sigstore/sign 5.0.0 / verify 4.1.2 / bundle 5.0.0; pluggable Signer → local-key DSSE bundle offline; Fulcio/Rekor keyless optional
+- **sigstore/sigstore-js**(npm `@sigstore/sign` · Apache-2.0 · 181★) — @sigstore/sign 5.0.0 / verify 4.1.2 / bundle 5.0.0; pluggable Signer → local-key DSSE bundle offline; Fulcio/Rekor keyless optional **⟶ 裁决取代:R1:签名由 §3.4 envelope slice 用 kernel Ed25519 做 DSSE;Sigstore 只在 P1-02 验证器**
 **可选(optional,不进依赖不进 CI)**:ctrf-io/ctrf(npm 0.3.0 for test-count JSON)
 **不用(reject)**:in-toto/witness——Go binary via subprocess, unaware of dsh gates
 **标准(绑定词汇)**:in-toto Attestation Statement v1 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · DSSE envelope (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · in-toto test-result/v0.1 predicate (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · SLSA Provenance v1 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
@@ -438,9 +438,9 @@
 `Attenuable capability tokens + subagent delegation` · L2_PROVIDER · **PROVIDER_ADAPT** · 可省 60-70% · 状态 **NOT_RUN (W4)**
 
 **用(adapt)**:
-- **eclipse-biscuit/biscuit**(Apache-2.0 · 1,143★) — Spec, push 2025-10-21
-- **eclipse-biscuit/biscuit-rust**(249★) — Core, push 2026-08-17
-- **eclipse-biscuit/biscuit-wasm**(npm `@biscuit-auth/biscuit-wasm` · Apache-2.0 · 29★) — 0.6.0, 2.5 MB, node>=22, ESM-only; verified locally: attenuation-by-construction, per-block revocation ids, authorizer denies write on read-only child
+- **eclipse-biscuit/biscuit**(Apache-2.0 · 1,143★) — Spec, push 2025-10-21 **⟶ 裁决取代:§3:Biscuit 降为 optional;attenuation 在 Fiber Option A 后由 kernel 签名 capability token 自写**
+- **eclipse-biscuit/biscuit-rust**(249★) — Core, push 2026-08-17 **⟶ 裁决取代:§3:同上**
+- **eclipse-biscuit/biscuit-wasm**(npm `@biscuit-auth/biscuit-wasm` · Apache-2.0 · 29★) — 0.6.0, 2.5 MB, node>=22, ESM-only; verified locally: attenuation-by-construction, per-block revocation ids, authorizer denies write on read-only child **⟶ 裁决取代:§3:同上**
 **不用(reject)**:ucan-wg/spec——UCAN: @ucanto/core 10.4.6 pulls IPLD/CAR/multiformats/DIDs; ts-ucan stale 2024-03 · storacha/ucanto——Drags IPLD/CAR/multiformats + DID principals · ucan-wg/ts-ucan——Stale 2024-03, npm last 2022-12 · go-macaroon/js-macaroon——Stale 2022-04; HMAC chain — any verifier holds the mint key · nitram509/macaroons.js——2024-12; symmetric-key verification · panva/jose (nested JWT)——6.2.3; hand-rolled chains lose attenuation-by-construction
 **自己写(residual)**:dsh fact vocabulary as Datalog facts+checks (~150–250 LOC), revocation-id store + propagation (sqlite), TrustKernel root keypair behind signatureRoots, attachment to ToolRunContext/SubagentRequest/plugin RPC/ExecutionWorld, digest-only logging, property tests.
 **禁令/风险(risk)**:Node 22 launcher needs --experimental-wasm-modules via re-exec/NODE_OPTIONS or a byte-instantiation loader (~1 day); small JS-binding community (29★) but Eclipse-governed core; keep behind ctx.capabilityTokens so the format is swappable.
@@ -452,7 +452,7 @@
 `First-class ActionManifest` · L1_CONTRACT · **CONTRACT_WRITE** · 可省 25% · 状态 **NOT_RUN (W4)**
 
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0 ESM, 17 KB, RFC 8785 reference-conformant — deletes canonicalize.ts and its fuzz surface
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0 ESM, 17 KB, RFC 8785 reference-conformant — deletes canonicalize.ts and its fuzz surface **⟶ 裁决取代:§7.8:不换库、不删 canonicalize.ts;保留迭代实现(库全递归,depth 5000 溢出)、删 NFC;canonicalize@2.1.0 进 devDependencies 作差分 oracle**
 - **in-toto/attestation**(371★) — Statement {_type, subject[], predicateType, predicate} envelope
 - **openid/authzen**(156★) — Authorization API 1.0 + MCP profile mapping tools/call into subject/action/resource
 - **modelcontextprotocol spec**(npm `@modelcontextprotocol/sdk` · 9,112★) — ToolAnnotations (readOnlyHint/destructiveHint/idempotentHint/openWorldHint) already in installed sdk
@@ -510,7 +510,7 @@
 `Approval bound to canonical args, resources, preconditions` · L2_PROVIDER · **PROVIDER_WRITE** · 可省 5% · 状态 **NOT_RUN (W7)**
 
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — Digest = JCS(manifest) from P2-03
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — Digest = JCS(manifest) from P2-03 **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 - **@agentclientprotocol/sdk**(npm `@agentclientprotocol/sdk`) — 1.4.0 already installed; RequestPermissionRequest {sessionId, toolCall, options[]}
 **标准(绑定词汇)**:ACP RequestPermissionRequest.toolCall as the wire projection (**本 epic 首个采用者,定形状**)
 **自己写(residual)**:Extend ApprovalRequest with manifest digest + redacted view + riskClass + expectedDiff + expiresAt, preconditions.ts (inode/mtime/etag/remote version capture and re-check), re-validate digest+token+policy version before dispatch, invalidate-on-change, one-to-one approval↔action audit link.
@@ -886,7 +886,7 @@
 `RunPlan (executable plan data)` · L1_CONTRACT · **CONTRACT_WRITE** · 可省 5% · 状态 **NOT_RUN (W8)**
 
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; JCS + sha256 via existing @noble/hashes → byte-stable plan ids
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; JCS + sha256 via existing @noble/hashes → byte-stable plan ids **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 **不用(reject)**:serverlessworkflow/specification——Control-flow DSL; RunPlan is a resource/topology/budget/gate plan (sdk-typescript 88★) · ChristopheBougere/asl-validator——AWS ASL control-flow DSL — no fit · z3 wasm / logic-solver——SAT solver adds MBs for a ~100 LOC deletion-based minimal conflict set
 **标准(绑定词汇)**:RFC 8785 JCS + sha256 for deterministic plan id (首个采用者 P2-03,import 其定义)
 **自己写(residual)**:Satisfiability over typed constraints (capability ⊆ available, budget ≤ cap, policy allow) + deletion-based minimal conflict set (~100 LOC); verificationContractRef as versioned opaque ref (P7-01 fills it).
@@ -901,7 +901,7 @@
 `Plan freeze, kernel signature, amendment CAS` · L1_CONTRACT · **CONTRACT_WRITE** · 可省 10-15% · 状态 **NOT_RUN (W9)**
 
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0 (alt snowyu/json-canonicalize 9★ MIT 3.0.0)
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0 (alt snowyu/json-canonicalize 9★ MIT 3.0.0) **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 - **secure-systems-lab/dsse**(Apache-2.0 · 110★) — Envelope; payloadType application/vnd.dsh.runplan+json
 - **in-toto/attestation**(371★) — Later supply-chain alignment
 - **node:crypto Ed25519** — Zero new crypto dep rather than @noble/curves
@@ -1487,7 +1487,7 @@
 **用(adapt)**:
 - **in-toto/attestation**(Apache-2.0 · 371★) — Statement v1 envelope
 - **in-toto/in-toto**(Apache-2.0 · 1,036★) — Layout spec only (functionaries = VerifierIndependence, threshold = quorum); not the Python verifier or Link metadata
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; or reuse scripts/first100/attest.ts canonicalJson — pick one
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; or reuse scripts/first100/attest.ts canonicalJson — pick one **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛**
 - **colinhacks/zod**(npm `zod` · MIT) — 4.4.3 in 38 pkgs; native toJSONSchema for TS↔Python codec contract
 **标准(绑定词汇)**:in-toto Statement v1 + in-toto layout semantics (steps/inspections/functionaries/threshold) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · JSON Schema 2020-12 via zod4 toJSONSchema (首个采用者 P0-06,import 其定义) · RFC 8785 JCS canonical hash (首个采用者 P2-03,import 其定义)
 **自己写(residual)**:Claim/CheckSpec/EvidenceRequirement/AcceptanceRule/confidence policy types, freeze semantics inside RunPlan, PlanAmendment re-approval path, ledger events with schemaVersion.
@@ -1698,7 +1698,7 @@
 
 **用(adapt)**:
 - **modelcontextprotocol/modelcontextprotocol**(NOASSERTION · 9,112★) — Spec only; initialize shape
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; fingerprint = sha256(JCS(JSON Schema)); ~100 lines — inline the sort if the dependency bar is not met
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; fingerprint = sha256(JCS(JSON Schema)); ~100 lines — inline the sort if the dependency bar is not met **⟶ 裁决取代:§7.2 R7:已验收,手排 fingerprint 记录不改;P8-07 若需 Python 复算再换**
 - **npm/node-semver**(npm `semver` · ISC · 5,460★) — 7.8.5 range matching
 - **colinhacks/zod**(npm `zod` · MIT) — 4.4.3 z.toJSONSchema from Typert zod (already dep of typert/registry)
 - **paulmillr/noble-hashes**(npm `@noble/hashes` · MIT) — Present
@@ -2131,6 +2131,22 @@ add('P1-02 P1-04 P1-06', '§9.2 生态迁移目标:~70 个 market 类插件走�
 add('P2-04', '§9:第一条按 §9 走的 epic——preFlight 含全部 community 缺口逐项对子句;§9.1 的 verify-make-vs-use 门在其 preFlight 前建好')
 add('P3-13', '§6:不在账本内(09-02 同日收录);开工时补单条 make-vs-use 判断,预期 CONSUMER_WRITE,依赖 §3.2 rung')
 
+# ledger oss notes overridden by a ruling: (epic, oss name) -> what stands now
+SUP = {
+ ('P2-03','erdtman/canonicalize'): '§7.8:不换库、不删 canonicalize.ts;保留迭代实现(库全递归,depth 5000 溢出)、删 NFC;canonicalize@2.1.0 进 devDependencies 作差分 oracle',
+ ('P2-06','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库',
+ ('P4-03','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库',
+ ('P4-04','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库',
+ ('P7-01','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛',
+ ('P8-01','erdtman/canonicalize'): '§7.2 R7:已验收,手排 fingerprint 记录不改;P8-07 若需 Python 复算再换',
+ ('P2-02','eclipse-biscuit/biscuit'): '§3:Biscuit 降为 optional;attenuation 在 Fiber Option A 后由 kernel 签名 capability token 自写',
+ ('P2-02','eclipse-biscuit/biscuit-rust'): '§3:同上',
+ ('P2-02','eclipse-biscuit/biscuit-wasm'): '§3:同上',
+ ('P0-03','sverweij/dependency-cruiser'): '§7.9:已验收,不采用;判据见 §7.9',
+ ('P0-04','sverweij/dependency-cruiser'): '§7.9:已验收,不采用;判据见 §7.9',
+ ('P0-07','sigstore/sigstore-js'): 'R1:签名由 §3.4 envelope slice 用 kernel Ed25519 做 DSSE;Sigstore 只在 P1-02 验证器',
+}
+
 # accepted-row audit verdicts (§7.1)
 AUD = {
  'P0-01':'整改-传播(R1):in-toto Statement 0 · ResourceDescriptor 0',
@@ -2244,7 +2260,10 @@ for r in rows:
         w('**用(adapt)**:')
         for o in adapt:
             meta = ' · '.join(x for x in [o.get('npm') and f'npm `{o["npm"]}`', o.get('license'), o.get('stars') and f'{o["stars"]:,}★'] if x)
-            w(f'- **{o["name"]}**' + (f'({meta})' if meta else '') + (f' — {esc(o.get("note"))}' if o.get('note') else ''))
+            line = f'- **{o["name"]}**' + (f'({meta})' if meta else '') + (f' — {esc(o.get("note"))}' if o.get('note') else '')
+            sup = SUP.get((eid, o['name']))
+            if sup: line += f' **⟶ 裁决取代:{sup}**'
+            w(line)
     else:
         w('**用(adapt)**:— 无(账本找过,没有合适的开源;主体自写)')
     if opt:
