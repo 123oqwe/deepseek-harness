@@ -385,6 +385,25 @@
         }
       }
     },
+    "scaffoldFiles": {
+      "epicIds": [
+        "P2-04"
+      ],
+      "note": "Files a repository-wide convention forces into an epic that its clauses never named. Admitted under B4(f) without counting against the stage limit, because the epic did not choose to write them. Each entry names the convention, so the admission is reversible when the convention is.",
+      "entries": {
+        "P2-04": {
+          "added": [
+            {
+              "path": "packages/policy/risk-taxonomy/src/index.ts",
+              "stage": "C"
+            }
+          ],
+          "convention": "tsdown.config.ts builds `workspace: ['vendor/*', 'packages/*/*', 'apps/cli']` against the fixed entry glob `lib/types/{index,invariant,startup}.js` with no per-package exclusion, so a package directory without an `index.ts` fails `pnpm run typecheck` the moment it exists. Measured: while it was absent, risk-taxonomy was the only packages/*/* in the repository without one.",
+          "reason": "The registry declares src/index.ts at epic level but assigns it to P while the rest of the package is C, which cannot be built in that order (BLOCKED-131). This adds STAGE membership only -- the path was always declared. Admitted to C as a type-only barrel -- exactly one statement, `export type * from ./types.ts` -- so the Contract stage stays a contract: nothing re-exported can execute, and the runtime exports remain the Provider stage deliverable. Pinned by the frozen case \"src/index.ts is exactly one statement and it re-exports types only\", because the cheapest way to fix a later missing export is to add a runtime one here.",
+          "authorization": "delegate ruling, 2026-09-06 (BLOCKED-131), citing B4(f)"
+        }
+      }
+    },
     "hotZoneRelocated": {
       "epicIds": [
         "P3-01",
@@ -3496,9 +3515,10 @@
             "packages/policy/risk-taxonomy/src/types.ts",
             "packages/policy/risk-taxonomy/src/classify.ts",
             "packages/policy/risk-taxonomy/tests/classify.spec.ts",
-            "packages/action/action-manifest/src/types.ts"
+            "packages/action/action-manifest/src/types.ts",
+            "packages/policy/risk-taxonomy/src/index.ts"
           ],
-          "count": 4
+          "count": 5
         },
         "P": {
           "nOf": null,

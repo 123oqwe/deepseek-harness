@@ -207,6 +207,33 @@ const FILES_REDUCED = {
   'P7-07': { removed: ['observability/otel-exporter/src/index.ts'], reason: 'packages/session/session-telemetry-otel IS the OTel backend; a TracerProvider pipeline belongs there, not in a second exporter package.' },
   'P2-10': { removed: ['policy/policy-language/src/parser.ts', 'policy/policy-language/src/compiler.ts'], reason: 'A homemade policy language. The engine is Cedar; explain is its isAuthorized diagnostics and dry-run its isAuthorizedPartial residuals.' },
 }
+/**
+ * Files ADDED to an epic because a repository-wide convention forces them,
+ * not because the epic's own clauses ask for them.
+ *
+ * The mirror image of {@link FILES_REDUCED}: that records a file the plan
+ * named and the tree does not need; this records a file the tree needs and
+ * the plan did not name. Both are edits to a pinned file list, so both are
+ * recorded rather than left to be inferred from a diff.
+ *
+ * `B4(f)` admits such a file into its stage's slice without counting against
+ * the stage's size limit, because the epic did not choose to write it. The
+ * limit exists to bound the work an epic takes on; scaffolding the repository
+ * demands of every package is not that.
+ *
+ * Each entry names the CONVENTION that forces the file, so a later reader can
+ * check whether it still holds. If the convention goes, the file's admission
+ * goes with it.
+ */
+const SCAFFOLD_FILES = {
+  'P2-04': {
+    added: [{ path: 'packages/policy/risk-taxonomy/src/index.ts', stage: 'C' }],
+    convention: "tsdown.config.ts builds `workspace: ['vendor/*', 'packages/*/*', 'apps/cli']` against the fixed entry glob `lib/types/{index,invariant,startup}.js` with no per-package exclusion, so a package directory without an `index.ts` fails `pnpm run typecheck` the moment it exists. Measured: while it was absent, risk-taxonomy was the only packages/*/* in the repository without one.",
+    reason: 'The registry declares src/index.ts at epic level but assigns it to P while the rest of the package is C, which cannot be built in that order (BLOCKED-131). This adds STAGE membership only -- the path was always declared. Admitted to C as a type-only barrel -- exactly one statement, `export type * from ./types.ts` -- so the Contract stage stays a contract: nothing re-exported can execute, and the runtime exports remain the Provider stage deliverable. Pinned by the frozen case "src/index.ts is exactly one statement and it re-exports types only", because the cheapest way to fix a later missing export is to add a runtime one here.',
+    authorization: 'delegate ruling, 2026-09-06 (BLOCKED-131), citing B4(f)',
+  },
+}
+
 const HOT_ZONE_RELOCATED = {
   'P3-01': { removed: ['core/agent-loop/src/runtime-context.ts'], reason: 'The world handle arrives through sandbox-policy\'s runtime-context snapshot contribution; the loop is unchanged.' },
   'P3-05': { removed: ['sandbox/sandbox-local/src/index.ts', 'sandbox/sandbox-local/src/profiles.ts'], reason: 'A new sandbox-srt rung over @anthropic-ai/sandbox-runtime carries the per-platform mapping. THIS LEAVES P3-05 WITH NO [B] FILE AT ALL, which is intended and is CONDITIONAL: sandbox-local today selects its runner from a hardcoded table (`PLATFORM_CHAINS` at src/index.ts:159, `linux: [bwrap, landlock]`), so there is no contribution point to mount a rung on. Converting that table into one is the §3.2 sandbox-srt slice\'s own deliverable, landing before W7 while P3-05 is W9. If §3.2 finds the table cannot become a contribution point -- runner selection may have a reason it cannot move -- P3-05 takes back one [B] line then, as that slice\'s finding rather than as a guess made here.' },
@@ -674,6 +701,20 @@ for (const id of ids) {
       : {}),
     ...(clauseProvenanceFor(id).length > 0 ? { clauseProvenance: clauseProvenanceFor(id) } : {}),
   }
+  for (const scaffold of SCAFFOLD_FILES[id]?.added ?? []) {
+    // Epic-level `files` already declares the path -- the registry named it,
+    // it just named it in the wrong STAGE. Only the stage membership is new,
+    // so appending to `files` here would duplicate the row.
+    if (!epic.files.some(file => file.path === scaffold.path)) {
+      throw new Error(`${id}: scaffold file ${scaffold.path} is not among the epic's declared files`)
+    }
+    const stage = epic.stages[scaffold.stage]
+    if (stage === undefined || stage.files === undefined) {
+      throw new Error(`${id}: scaffold file names stage ${scaffold.stage}, which this epic does not have`)
+    }
+    stage.files = [...stage.files, scaffold.path]
+    stage.count = stage.files.length
+  }
   for (const entry of clauseProvenanceFor(id)) {
     // A movement or split is always a MUST clause today; a reword names its own
     // channel, because P4-06's pair spans `must` and `acceptance`. Checking the
@@ -825,6 +866,11 @@ const registry = {
             epicIds: Object.keys(FILES_REDUCED).sort(),
             order: 'spec/first100/exec/plan-rectification-2026-09-06.md §C',
             entries: FILES_REDUCED,
+          },
+          scaffoldFiles: {
+            epicIds: Object.keys(SCAFFOLD_FILES).sort(),
+            note: 'Files a repository-wide convention forces into an epic that its clauses never named. Admitted under B4(f) without counting against the stage limit, because the epic did not choose to write them. Each entry names the convention, so the admission is reversible when the convention is.',
+            entries: SCAFFOLD_FILES,
           },
           hotZoneRelocated: {
             epicIds: Object.keys(HOT_ZONE_RELOCATED).sort(),

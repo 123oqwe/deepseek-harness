@@ -6869,6 +6869,12 @@ importers:
         specifier: workspace:^
         version: link:../../kernel/trust-kernel
 
+  packages/policy/risk-taxonomy:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+
   packages/preset/agent-presets:
     dependencies:
       '@deepseek-ai/schemastery':

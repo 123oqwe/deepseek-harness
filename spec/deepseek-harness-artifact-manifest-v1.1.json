@@ -9,11 +9,11 @@
     "spec/deepseek-harness-optimization-manifest-v1.1.yaml": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
-      "bytes": 369717,
-      "sha256": "d08814582b89a7c619dc728d82c5cfc668e2ba4c464688c4063b993d076056f6",
-      "gitBlobOid": "0d60ff3b7ba846bea8ef98dc34cf7d07f14bc317",
+      "bytes": 369763,
+      "sha256": "b78c8892ec1b443dc05e7fa312e3780a9384b631ac8df2821b4a1ed03efb198f",
+      "gitBlobOid": "6adc7a2346b2ebe00637050b506e5af48391dc52",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "d95e571cadcaa77ed3601c2d97a285e2b49f637c92eb957698296387a3a40463"
+      "sourceDigest": "1c492698e40b16d897bcdb9e2d901e84e382cfef167cc7f96ed052aa7bad5460"
     },
     "spec/first100-clause-coverage-report.json": {
       "role": "derived-projection",
@@ -22,7 +22,7 @@
       "sha256": "848b685f5197dff75ff33ffb0529597d239c0c4e35dab41c9cf67958e764959b",
       "gitBlobOid": "e489881572be647cb95414e9b0f52148d0bd92ae",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "19f7e1fd3779b7d14ab661df6096f188d2a3d00c121cccd4849b359ff0790b2f"
+      "sourceDigest": "831fb770f627686e53f6e205c92d7fe5e9f895885eaec9dc523214cdedb8a38f"
     },
     "spec/first100-command-registry.json": {
       "role": "derived-projection",
@@ -31,7 +31,7 @@
       "sha256": "eca2bfc92ee7e8bb4d83f19a80c969fd00e505f5672f04e9aa35fae61a0b6c1d",
       "gitBlobOid": "9a1106df2045f2d5b8cad219cc1893cf52eb8d9b",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "d95e571cadcaa77ed3601c2d97a285e2b49f637c92eb957698296387a3a40463"
+      "sourceDigest": "1c492698e40b16d897bcdb9e2d901e84e382cfef167cc7f96ed052aa7bad5460"
     },
     "spec/first100-dependency-graph.json": {
       "role": "derived-projection",
@@ -40,7 +40,7 @@
       "sha256": "1bcdffa9a9783a16821b98f5c183c265e0b99ed8d7e9aab7049273f6f3ffcb3b",
       "gitBlobOid": "611a3c463589887837dee80a359fe1f9f6cd35cc",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "d95e571cadcaa77ed3601c2d97a285e2b49f637c92eb957698296387a3a40463"
+      "sourceDigest": "1c492698e40b16d897bcdb9e2d901e84e382cfef167cc7f96ed052aa7bad5460"
     },
     "spec/first100-evidence.schema.json": {
       "role": "derived-projection",
@@ -49,16 +49,16 @@
       "sha256": "23b017be8f409f9f727749f37a3706795ba8b35a23798380aea7fc387035cb72",
       "gitBlobOid": "c3d1c20a65557c82fd6ca5f8eb346d4205b451e7",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "d95e571cadcaa77ed3601c2d97a285e2b49f637c92eb957698296387a3a40463"
+      "sourceDigest": "1c492698e40b16d897bcdb9e2d901e84e382cfef167cc7f96ed052aa7bad5460"
     },
     "spec/first100-generated-digests.json": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
       "bytes": 990,
-      "sha256": "da7b47883bb8ee979673d320ed421bb825de3699072c8d16df59111c36e1de6b",
-      "gitBlobOid": "c423cd85803bf3cf33bb5fc555643b26ba0a82fe",
+      "sha256": "dd74442b89b9a82413a53436aa5b0fd0b0c6da10edee93013cea125c0dc2ea6a",
+      "gitBlobOid": "dc5df3ae8c622b197c5746aafbeec5c0a27f0f14",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "02732499136a5346b0290c7102e67de585a41405d50aa94af4509661e04d886a"
+      "sourceDigest": "ec0cf38aa0c5a552c8fb6f3a2ffce77ed026672be4dacde106d4cdd22d196032"
     },
     "spec/first100-owner-map.json": {
       "role": "derived-projection",
@@ -67,7 +67,7 @@
       "sha256": "3d4d8ada318979cade0d8dbed796f77405514022fb3ca240e9bc86252b3ee1b2",
       "gitBlobOid": "9bd5c6a418dc630ef59c6f5c1d7babd132a89f31",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "d95e571cadcaa77ed3601c2d97a285e2b49f637c92eb957698296387a3a40463"
+      "sourceDigest": "1c492698e40b16d897bcdb9e2d901e84e382cfef167cc7f96ed052aa7bad5460"
     },
     "spec/first100-thresholds.yaml": {
       "role": "derived-projection",
@@ -76,7 +76,7 @@
       "sha256": "d241956d7a0381f96ee23e80e876aa918006d15c9e17d44dc3cd2ad934ed05c9",
       "gitBlobOid": "7898989848e9f897583c46c359c2f4d5cce8f5bf",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "d95e571cadcaa77ed3601c2d97a285e2b49f637c92eb957698296387a3a40463"
+      "sourceDigest": "1c492698e40b16d897bcdb9e2d901e84e382cfef167cc7f96ed052aa7bad5460"
     },
     "spec/first100/sources/v1.0/deepseek-harness-artifact-manifest-v1.json": {
       "role": "canonical-vendored-source",
@@ -126,9 +126,9 @@
     "tests/first100/registry.json": {
       "role": "canonical-input",
       "schemaVersion": "1.1",
-      "bytes": 518579,
-      "sha256": "017c58778b7401619d6e7225cec384d33aefd467f0918edc56a8bc94e2b9c413",
-      "gitBlobOid": "a62ad369594d68bad0d4f230d3e7fc512c5fc11c",
+      "bytes": 520371,
+      "sha256": "4c29927d05a50282e605e3e8636c3b205a1749977d87e89264a27c9164d6d6a4",
+      "gitBlobOid": "e5ac8d54810ed70049986fbf4229c6a212a41639",
       "generator": "scripts/first100/extract-registry.mjs",
       "sourceDigest": "df8481362420a615d98825112115f84acdc0e86e27d57bd21f052b824020d3e0"
     }

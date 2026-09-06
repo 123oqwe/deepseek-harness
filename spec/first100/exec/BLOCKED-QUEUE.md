@@ -231,9 +231,9 @@ These are NOT open questions. They live here because `## Open` means "waiting on
   4. That future epic's independent Reviewer must personally construct and run a real "deserialize a forged admin claim" attack before accepting any rehydration-authority design -- reading a self-report is not sufficient, matching this program's now-standing pattern for security-foundation-tier verification (BLOCKED-022/024).
 - **Status:** PARKED (ANSWERED-BY-DELEGATE(gq-92) sets the parking terms and ratifies the current design; the substantive rehydration-authority question remains open until the future epic that needs it).
 
-### BLOCKED-131 — P2-04's C/P stage split cannot be built: a package without `src/index.ts` breaks the repository build
+### BLOCKED-131 — RESOLVED 2026-09-06: P2-04's C/P stage split could not be built; the barrel is now B4(f) scaffold in C
 
-**State: OPEN. Needs a registry decision, which is not mine to take. The C-stage code is written and measured; it is not in the tree.**
+**State: RESOLVED by delegate ruling, 2026-09-06.** `src/index.ts` is admitted to the C stage as B4(f) scaffold — a convention-forced file that does not count against the stage limit — and is kept **type-only**, exactly one statement, pinned by its own frozen case so a later runtime export cannot quietly turn the Contract stage into an implementation. Recorded as `SCAFFOLD_FILES` in `extract-registry.mjs`, which names the convention that forces it so the admission is reversible when the convention is. The package is back in the tree; typecheck, lint and the registry gate set are green. **The record below is what was open.**
 
 **The conflict, measured.** P2-04's registry stages put `src/types.ts`, `src/classify.ts` and `tests/classify.spec.ts` in **C**, and `packages/policy/risk-taxonomy/src/index.ts` in **P**. The root `tsdown.config.ts` builds `workspace: ['vendor/*', 'packages/*/*', 'apps/cli']` with a fixed entry glob `lib/types/{index,invariant,startup}.js` (`tsdown.config.ts:19-20`). There is no per-package exclusion. So the moment the package directory exists without an `index.ts`, `pnpm run typecheck` fails with `Cannot find entry`. Every other package in the repository has one — measured: `risk-taxonomy` was the only `packages/*/*` without `src/index.ts` while it existed.
 

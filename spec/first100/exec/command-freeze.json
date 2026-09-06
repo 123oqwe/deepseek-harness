@@ -7661,6 +7661,48 @@
         "mutationDescription": "Locally (never committed) reverted the WHOLE vendored change under proof -- `git checkout -- vendor/cordis/src/fiber.ts packages/kernel/trust-kernel/src/index.ts`, restoring upstream `Fiber.store` as a plain writable field and removing the `pinStoreName` call -- then re-ran packages/kernel/trust-kernel/tests/pin-hardening.spec.ts. The patch was re-applied from a saved diff immediately afterwards and the full file re-run to confirm restoration. The mutation is the absence of the fix rather than a hand-edited branch, because these three cases exist to observe exactly that difference.",
         "failureSummary": "Without the fix: 3 failed | 3 passed (6). The three failures are exactly the three new cases -- \"refuses a write to the attacking plugin's own fiber store...\", \"refuses the ancestor-store write...\", and \"re-seals the pinned name when the store field is reassigned...\" -- while the three pre-existing protection cases (impl.value, root-store key write, reflect.props) still passed, so the mutation is discriminating rather than breaking the file wholesale. With the fix restored: 6 passed (6), and 53/53 across packages/kernel/trust-kernel. This is a RED->GREEN proof in both directions on the superseding cases themselves. Recorded caveat, per the rule this program has already written down twice: a mutation proof shows the suite is SENSITIVE to what it asserts and says nothing about whether the assertion is correct -- the correctness argument here is the probe that first measured the forgery succeeding (propertyForged: true on a non-root fiber) before any fix existed."
       }
+    },
+    {
+      "epic": "P2-04",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/risk-taxonomy",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "must[0]: the taxonomy is exactly the eight named classes, in ascending risk order",
+        "must[0]: the order is total and strict, so \"highest risk\" has exactly one meaning",
+        "must[1]: the SAME declared tag classifies differently under two organisation policies",
+        "must[1]: a declared tag no policy rule mentions does not carry the plugin's own suggestion into the result",
+        "must[2]: a rule-decided classification names the tag that decided it and reports full confidence",
+        "must[2]: the grounds distinguish a class reached BY A RULE from the same class reached by the unknown default",
+        "must[3]: an action no rule matches classifies at the HIGHEST class, not the lowest",
+        "must[3]: a composite action takes the MAXIMUM risk of its matched tags",
+        "must[3]: one unrecognised tag beside a matched one does NOT escalate the whole action",
+        "acceptance[1]: adding a low-risk tag beside a high-risk one cannot lower the result",
+        "acceptance[1]: the classifier CAN return the low class when the policy alone says so, so the case above is not a constant",
+        "acceptance[2]: an organisation can add a hard-deny class of its own",
+        "acceptance[2]: a policy that switches off a kernel hard-deny class is REFUSED, naming the class",
+        "acceptance[2]: a policy adding nothing and removing nothing still hard-denies the kernel class",
+        "src/index.ts is exactly one statement and it re-exports types only"
+      ],
+      "files": [
+        "packages/policy/risk-taxonomy/src/types.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts",
+        "packages/policy/risk-taxonomy/src/index.ts",
+        "packages/policy/risk-taxonomy/tests/classify.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T21:30:00.000Z",
+      "note": "P2-04 Contract stage. Pre-flight make-vs-use recorded BEFORE the first line (clause-subject-audit.json, P2-04): no package adopted, because the published risk taxonomies are capability-mechanism lists or CVSS-style vulnerability severities and must[0] asks for neither. The probe found the load-bearing fact -- this repository already has TWO side-effect taxonomies (plugin-manifest SideEffectClass, action-manifest ActionSideEffectClass), both classifying MECHANISM, while must[0]'s eight classify RISK; `read` and `destructive` appear in all three with different meanings, and in action-manifest `destructive` is additionally the fail-closed default. src/index.ts is admitted to C as B4(f) scaffold (SCAFFOLD_FILES in extract-registry.mjs; delegate ruling on BLOCKED-131), type-only and pinned by its own case, so the Contract stage stays a contract. NOT claimed: this stage does NOT map ActionSideEffectClass onto a RiskClass -- that mapping needs action-manifest/src/types.ts, the [P] file P2-03 owns, and it must be total and monotone or acceptance[1] is unenforceable through the seam. Recorded in the package README's Known Limitations, not silently omitted. Honest process note: spec and implementation were written together, so there was no separate RED phase for the 14 behaviour cases. The mutation proof below stands in for it, with the caveat this program has already recorded twice -- sensitivity is not correctness.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations, applied locally one at a time to packages/policy/risk-taxonomy/src/ and reverted from a saved copy after each, re-running the whole package suite between them. On classify.ts: (1) UNKNOWN_DEFAULT_CLASS lowered from 'safety-critical' to 'read'; (2) the composite maximum comparison `riskRank(rule) > riskRank(decided)` flipped to `<`; (3) the assertPolicyKeepsKernelHardDenies call deleted; (4) confidence pinned to a constant 1. On index.ts: (5) a runtime export appended to the barrel; (6) `export type *` widened to `export *`.",
+        "failureSummary": "Each mutation failed cases, and the counts discriminate rather than breaking the file: (1) 3 failed / 11 passed; (2) 2 failed / 12 passed; (3) 1 failed / 13 passed; (4) 1 failed / 13 passed; (5) 1 failed / 14 passed; (6) 1 failed / 14 passed. Restored: 15 passed (15). Mutations 5 and 6 are what make the scaffold pin load-bearing -- without them the barrel case would pass against any index.ts that merely compiled."
+      }
     }
   ]
 }

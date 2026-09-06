@@ -1,0 +1,44 @@
+{
+  "name": "@deepseek-ai/dsh-risk-taxonomy",
+  "description": "Contract-stage risk vocabulary and pure classifier for Epic P2-04: the eight-class risk taxonomy (read, local-reversible, internal-write, external-communication, destructive, financial, security-sensitive, safety-critical), organisation-policy-decided mapping of plugin-declared domain tags, classification confidence and grounds, and the unknown-classifies-higher default",
+  "version": "0.1.2-alpha.4",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
+    "directory": "packages/policy/risk-taxonomy"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./classify": {
+      "types": "./lib/types/classify.d.ts",
+      "default": "./lib/types/classify.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "workspace:^"
+  }
+}

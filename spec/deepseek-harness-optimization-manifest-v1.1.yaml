@@ -2550,8 +2550,8 @@ epics:
     stages:
     C:
       nOf: null
-      files: ["packages/policy/risk-taxonomy/src/types.ts", "packages/policy/risk-taxonomy/src/classify.ts", "packages/policy/risk-taxonomy/tests/classify.spec.ts", "packages/action/action-manifest/src/types.ts"]
-      count: 4
+      files: ["packages/policy/risk-taxonomy/src/types.ts", "packages/policy/risk-taxonomy/src/classify.ts", "packages/policy/risk-taxonomy/tests/classify.spec.ts", "packages/action/action-manifest/src/types.ts", "packages/policy/risk-taxonomy/src/index.ts"]
+      count: 5
     P:
       nOf: null
       files: ["packages/policy/risk-taxonomy/src/index.ts"]
