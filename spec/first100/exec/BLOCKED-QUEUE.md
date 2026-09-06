@@ -2857,3 +2857,25 @@ So `index.ts` is owned by an ACCEPTED epic and claimed by two that have not begu
 **Why P0-02's acceptance did not catch the empty root — and why it should not be withdrawn.** Read against its clauses: must[1] says the kernel OWNS the signature roots; acceptance[0] says no plugin can replace the verifier; acceptance[2] says an uninitialized kernel fails closed. **Not one of them says the roots contain key material.** P0-02 was accepted for what it claimed, and it claimed ownership and non-replaceability, not cryptographic substance. The hollow root is not a missed defect in that epic's own terms — it is a clause nobody wrote, discovered later by an epic that needed it.
 
 That is worth recording anyway, because it is the general shape: **an epic can be correctly accepted and still leave the thing a later epic assumed it delivered.** The register catches it here only because P1-02's lock names the file. Nothing systematic would have.
+
+## BLOCKED-118 — `--green` never read `openFindings`, so a withheld row could be re-greened by anyone
+
+**Status:** CLOSED by a fail-closed check in the same change that found it.
+
+Scanning a green observation for cells that could be greened turned up six: every one of them P4-09's. All of P4-09's frozen cases pass in run `34002615162`, and its ledger row says:
+
+```
+independentVerdict: WITHHELD_INCOMPLETE_EPIC
+openFindings: ["BLOCKED-100: must[2] (detached) has no implementation;
+                must[3] (nested runtime) is decisions only"]
+```
+
+Its cells had been green before, and were withdrawn precisely because that greenness did not mean what it looked like. **`cmdGreen` consulted none of it** — it checked the freeze, the observation, the flake registry and the digests, then wrote GREEN. Nothing between a withheld row and a fully green line but whoever remembered why it was withheld.
+
+**This is [BLOCKED-081](#blocked-081) one layer down.** That entry found the acceptance-lock register enforced by nobody at `--accept`. This is the same gap at `--green`, and it is worse in one respect: a lock is a document a person consults, while `openFindings` is a machine-readable field sitting in the row the tool was already writing to.
+
+**Fix, in this change.** `--green` refuses a row carrying open findings, prints them, and writes nothing. An explicit `--acknowledge-open-findings` override keeps a legitimate re-green possible after a finding is resolved, and keeps it greppable. Both directions observed rather than argued: P4-09 refused with exit 1 and an unchanged ledger, and P2-02.F greened normally earlier the same day on a row with no findings.
+
+**Five rows carry findings today** — P1-03, P4-06, P4-07, P4-09 (all `BLOCKED_ON_ACCEPTANCE`) and P6-02 (ACCEPTED, one residual). The check now covers all five.
+
+**What it does not do.** It does not decide whether a finding is still live; it only refuses to act as if none existed. Retiring a finding stays a judgement, and the override is where that judgement is recorded.

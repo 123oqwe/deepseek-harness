@@ -526,6 +526,28 @@ function cmdGreen() {
     console.error(`unknown epic ${epic} (not in tests/first100/registry.json)`)
     process.exit(1)
   }
+  // A row carrying open findings has already been judged: its cells were green
+  // and that greenness was found not to mean what it looked like. Re-greening
+  // it silently restores the appearance the finding exists to deny -- P4-09's
+  // four cells all pass in a current observation while BLOCKED-100 records that
+  // two of its four must clauses have no subject at all.
+  //
+  // This is BLOCKED-081 one layer down. That entry found the acceptance lock
+  // register consulted by nobody; this is the same gap at greening, where the
+  // only thing standing between a withheld row and a full green line was
+  // whoever remembered why it was withheld.
+  //
+  // Refused rather than warned, with an explicit override so a legitimate
+  // re-green after a finding is resolved stays possible and stays greppable.
+  const openFindings = rows[epic].openFindings
+  if (Array.isArray(openFindings) && openFindings.length > 0 && !argv.includes('--acknowledge-open-findings')) {
+    console.error(
+      `REFUSED: ${epic} carries ${String(openFindings.length)} open finding(s), so a green cell would overstate what is proven:\n  `
+      + `${openFindings.join('\n  ')}\n`
+      + 'Resolve the finding, or pass --acknowledge-open-findings to record this cell anyway.',
+    )
+    process.exit(1)
+  }
   rows[epic].cells[stage] = {
     status: 'GREEN',
     candidateSha,
