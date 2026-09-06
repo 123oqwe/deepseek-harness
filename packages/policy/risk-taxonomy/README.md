@@ -30,6 +30,15 @@ default would fire on every real action, since no policy enumerates every tag.
 action under two policies gives two answers, and neither is a property of this
 module.
 
+## Table of Contents
+
+- [This is a third side-effect vocabulary, deliberately](#a-third-vocabulary)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+
+-----
+
+<a id="a-third-vocabulary"></a>
 ## This is a third side-effect vocabulary, deliberately
 
 `@deepseek-ai/dsh-plugin-manifest`'s `SideEffectClass` and
@@ -45,6 +54,7 @@ fail-closed default returned when classification fails entirely. Any mapping
 between them must therefore be total and monotone, or a plugin could choose a
 mechanism tag to obtain a lower risk band.
 
+<a id="model-experience"></a>
 ## Model Experience
 
 This package is pure types and a pure function. It contributes no tool, no
@@ -53,6 +63,7 @@ has no KV-cache effect. What reaches a model is whatever a consuming
 Consumer chooses to say about a classification; that choice belongs to the
 consumer, not here.
 
+<a id="known-limitations-and-deferred-work"></a>
 ## Known Limitations and Deferred Work
 
 - **The mechanism-to-risk mapping is not declared.** Nothing here maps
@@ -67,3 +78,14 @@ consumer, not here.
 - **`confidence` is 1 or 0, not a measurement.** It distinguishes "a rule
   decided this" from "nothing matched". Any finer grading would need a source
   of evidence this Contract stage does not have.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+The open question is whether `confidence` should ever be anything but 1 or 0. Today it distinguishes "a rule decided this" from "nothing matched", which is all the Contract stage can honestly report. A finer grading needs a source of evidence about how well a tag fits an action, and no such source exists yet; inventing one here would produce a number that looks measured and is not.
+
+</details>
