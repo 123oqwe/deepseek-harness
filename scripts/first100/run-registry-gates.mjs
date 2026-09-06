@@ -63,15 +63,6 @@ const GATES = [
  * stated end is how a temporary hole becomes permanent.
  */
 const HELD_BACK = new Map([
-  ['first100:verify-freeze-in-candidate-tree', {
-    reason:
-      '19 of 108 GREEN cells carry a live freeze entry that is absent from the tree their observation ran on. The evidence itself stands — the titles passed '
-      + 'in the cited report, coverage closure holds, and verify-cells-recomputable still recomputes each verdict — but the ORDERING link does not, and that '
-      + 'link is what stops a case being written to fit a run already seen.',
-    until:
-      'the 19 cells are re-observed on a tree containing their live freeze entries (delegate ruling of 2026-09-06, one re-observation for all 19, recorded '
-      + 'as `reattested` on each row). The gate turns green by that re-observation, never by relaxing the predicate.',
-  }],
   ['verify-translation-pairing', {
     reason:
       '14 bilingual doc pairs are out of sync — the English side of several READMEs and docs/subsystems/core.md moved without its Chinese counterpart. '

@@ -103,6 +103,44 @@ const opt = (name, fallback) => {
 }
 
 const LEDGER_PATH = resolve(REPO_ROOT, opt('ledger', 'spec/first100/exec/ledger.json'))
+const RENAMES_PATH = resolve(REPO_ROOT, 'spec/first100/exec/frozen-title-renames.json')
+
+/**
+ * The registered rename for each frozen title, old name to new.
+ *
+ * A renamed case is not a missing one, and the register exists to say so
+ * (BLOCKED-040). `verify-frozen-titles-resolvable.mjs` has consulted it since
+ * it was created, and `verify-frozen-titles-in-tree.mjs` was corrected to do
+ * the same — but the GREENING path never did, so a cell whose case had been
+ * renamed since its last observation could not be re-greened at all. It
+ * surfaced re-attesting P0-05.C: the freeze holds the old title, the tree and
+ * the report hold the new one, the register maps between them, and greening
+ * refused anyway.
+ *
+ * Resolution stays exact rather than fuzzy: the register is keyed by the old
+ * title and reviewed when written, so this admits one named replacement and
+ * nothing else.
+ * @returns the mapping, keyed by the old title.
+ */
+function registeredRenames() {
+  if (!existsSync(RENAMES_PATH)) return new Map()
+  return new Map(JSON.parse(readFileSync(RENAMES_PATH, 'utf8')).entries.map(entry => [entry.oldTitle, entry.newTitle]))
+}
+
+/**
+ * Frozen titles absent from an observation, resolving registered renames.
+ * @param expectCases - the frozen titles.
+ * @param titles - the passing titles the report carries.
+ * @returns the titles neither present nor renamed to something present.
+ */
+function missingFrozenTitles(expectCases, titles) {
+  const renames = registeredRenames()
+  return expectCases.filter((title) => {
+    if (titles.has(title)) return false
+    const renamed = renames.get(title)
+    return renamed === undefined || !titles.has(renamed)
+  })
+}
 const LEDGER_MD_PATH = LEDGER_PATH.replace(/\.json$/, '.md')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
@@ -614,7 +652,7 @@ function cmdGreen() {
   const used = usedObservationDigests(rows, freeze)
   checkSharedObservationAllowed(used, observationSha256, `${epic}.${stage}`, frozen, reportPath)
 
-  const missing = frozen.expectCases.filter((title) => !titles.has(title))
+  const missing = missingFrozenTitles(frozen.expectCases, titles)
   if (missing.length > 0) {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
@@ -742,7 +780,7 @@ function cmdGreenSupplement() {
   const used = usedObservationDigests(rows, freeze)
   checkSharedObservationAllowed(used, observationSha256, `${epic}.${key} (supplement)`, frozen, reportPath)
 
-  const missing = frozen.expectCases.filter((title) => !titles.has(title))
+  const missing = missingFrozenTitles(frozen.expectCases, titles)
   if (missing.length > 0) {
     console.error(`RED: ${missing.length}/${frozen.expectCases.length} frozen case title(s) not found passing in the report:\n  ${missing.join('\n  ')}`)
     process.exit(1)
