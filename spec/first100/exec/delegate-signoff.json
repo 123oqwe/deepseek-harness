@@ -116,6 +116,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-05T18:18:25.539Z",
       "reason": "must[4] (protocol schema artifacts enter release evidence and golden compatibility fixtures) has no subject: scripts/release/collect-evidence.mjs (341 lines) contains zero occurrences of 'schema'; no test in packages/sdk/protocol pins a literal fingerprint value, so every fingerprint assertion is relative and cannot detect an algorithm change. Found by clause-subject-audit 2026-09-05; independently confirmed by gq-92. Signature of 2026-09-05T06:34:49Z was given without checking clause subjects; withdrawn."
+    },
+    {
+      "epic": "P5-11",
+      "rowDigestSha256": "b1eba167c36db65bf4fec11e5c34c43a40a140a66f3d5ffaf244c55583d12220",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-06T00:01:42.984Z",
+      "note": "gq-92 independent verify against the cited observation (run 33971207960 @ 4c9d4356d0, 19745 passed / 0 failed). (i) 3 acceptance clauses, 3 coverage entries covering indices 0/1/2, 18 case references, 0 unreal, 0 outside the live frozen set. (ii) single candidate SHA across all four cells, so no chain to compare and none is claimed; 4c9d4356d0 independently confirmed an ancestor of fork/first100-exec and byte-identical to the observation run's headSha. (iii) 64 live frozen titles (C20/P10/U14/F20, post-supersede) all present-and-passing in the cited vitest JSON; 0 ambiguous bare titles after the BLOCKED-104 fullName migration; the two must[2] replacement cases (closed key set; owner identity) verified load-bearing by mutation in both directions and the original cases verified insensitive to the same mutations. must[2] itself: read the epic title (Taskboard/Mailbox/Blackboard) and confirmed all three nouns have built subjects. accept-blocked: 0 hits. Cells regenerated through cmdGreen at 0125c9dc0c; provenance now tool-written."
     }
   ]
 }
