@@ -373,3 +373,86 @@ describe('subagent interrupt Remote', () => {
     )
   })
 })
+
+/**
+ * P5-10 Usage — the control sequence decides on the REAL Remote surface.
+ *
+ * The Contract stage pinned the decisions and the Provider stage put an Agent
+ * behind them. Neither could show that the shipped `subagent.prompt` consults
+ * them: a browser reaching this service after an interrupt is the case
+ * acceptance[0] is actually about, and until now the runtime had no memory that
+ * an interrupt had happened at all.
+ *
+ * Every case here goes through the public methods and asserts on whether the
+ * prompt was DELIVERED, not on a decision object.
+ */
+describe('P5-10 Usage — a prompt that races an interrupt', () => {
+  it('acceptance[0]: after an interrupt, the next prompt is refused and never reaches the child', async () => {
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+
+    await expect(subagents.prompt(promptRequest(), signal))
+      .rejects.toMatchObject({ code: 'subagent/not-resumable' })
+    // The refusal is the whole claim: delivery was never attempted, so no
+    // content was admitted and no turn could open.
+    expect(delivery).not.toHaveBeenCalled()
+  })
+
+  it('a child that was never interrupted takes its prompt as before', async () => {
+    // The control. Without it the case above would pass against a build that
+    // refused every prompt.
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    await expect(subagents.prompt(promptRequest(), signal)).resolves.toMatchObject({ messageId: 'm1' })
+    expect(delivery).toHaveBeenCalledTimes(1)
+  })
+
+  it('acceptance[2]: the same request id delivered twice opens one turn, not two', async () => {
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    await expect(subagents.prompt(promptRequest(), signal)).resolves.toMatchObject({ messageId: 'm1' })
+    await expect(subagents.prompt(promptRequest(), signal))
+      .rejects.toMatchObject({ code: 'subagent/duplicate-request' })
+    expect(delivery).toHaveBeenCalledTimes(1)
+  })
+
+  it('a redelivery is refused as a DUPLICATE, not as a child that cannot resume', async () => {
+    // Two different facts for the caller: "your message already arrived" and
+    // "this child cannot take one". Collapsing them would send a caller
+    // hunting for a lifecycle problem that does not exist.
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    promptDelivery(subagents).mockResolvedValue('m1' as MessageId)
+    await subagents.prompt(promptRequest(), signal)
+    await expect(subagents.prompt(promptRequest(), signal))
+      .rejects.toMatchObject({ code: 'subagent/duplicate-request' })
+  })
+
+  it('a DIFFERENT request id after a delivered one is a new prompt', async () => {
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    await subagents.prompt(promptRequest(), signal)
+    await expect(subagents.prompt(
+      { ...promptRequest(), requestId: 'req-2' as SubagentPromptRequestId },
+      signal,
+    )).resolves.toMatchObject({ messageId: 'm1' })
+    expect(delivery).toHaveBeenCalledTimes(2)
+  })
+
+  it('a FAILED delivery does not spend the request id, so the caller may retry it', async () => {
+    // Idempotency protects against a repeated EFFECT. A delivery that was
+    // refused had none, and burning the id there would make a transient
+    // failure permanent.
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockRejectedValueOnce(new SubagentError('busy', 'DRAINING'))
+    await expect(subagents.prompt(promptRequest(), signal))
+      .rejects.toMatchObject({ code: 'subagent/delivery-unavailable' })
+    delivery.mockResolvedValue('m1' as MessageId)
+    await expect(subagents.prompt(promptRequest(), signal)).resolves.toMatchObject({ messageId: 'm1' })
+  })
+})

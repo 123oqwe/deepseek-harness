@@ -39,6 +39,8 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { SessionId } from '@deepseek-ai/dsh-session'
 import { canonicalClientTimeZone } from '@deepseek-ai/dsh-util-time'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
+import { decideControl } from './control-convergence.ts'
+import type { ChildPhase } from './control-convergence.ts'
 import {
   catalogView, rejectCatalogRead, rejectPrompt, validateControlRequest,
 } from './control.ts'
@@ -188,8 +190,38 @@ interface BrowserPromptSource {
 }
 
 /** Named provider registry with one-shot runs, durable discovery, and continuable-child operations. */
+/**
+ * A stable number for one prompt request id (Epic P5-10 acceptance[2]).
+ *
+ * The id is an opaque branded string while the idempotency ledger is numeric,
+ * so this hashes rather than parses: two deliveries of one request must
+ * collide, and two distinct requests must not. FNV-1a over the id's characters,
+ * which is enough for a per-child set holding one session's requests.
+ * @param requestId - the browser's own request id.
+ * @returns a stable non-negative integer for that id.
+ */
+function promptEpoch(requestId: string): number {
+  let hash = 2_166_136_261
+  for (let index = 0; index < requestId.length; index++) {
+    hash ^= requestId.charCodeAt(index)
+    hash = Math.imul(hash, 16_777_619)
+  }
+  return hash >>> 0
+}
+
 export class SubagentRuntime extends TypertRemoteService {
   private providers = new Map<string, SubagentProvider>()
+  /**
+   * Per-child control state for Epic P5-10's browser-facing surface: which
+   * phase each child is in, and which prompt request ids have already been
+   * applied to it.
+   *
+   * Held here rather than derived per call because both facts are about the
+   * SEQUENCE of control messages, which no single request can see. A child
+   * that was interrupted looks exactly like an idle one to the next prompt
+   * unless something remembers the interrupt happened.
+   */
+  private readonly controlState = new Map<SessionId, { phase: ChildPhase; appliedEpochs: Set<number> }>()
   private continuations: SubagentContinuationManager | undefined
   /**
    * The contained lifecycle-edge publisher. Built here because scoped dispatch
@@ -428,6 +460,26 @@ export class SubagentRuntime extends TypertRemoteService {
         { parentSessionId },
       )
     }
+    // P5-10 acceptance[0] and acceptance[2] on the real surface: a prompt that
+    // races an interrupt must not wake the child, and the same request id
+    // delivered twice must not open a second turn. Both are decided from the
+    // child's own control sequence before any content is admitted, so a refusal
+    // costs no attachment work.
+    const control = this.controlFor(childSessionId)
+    const decision = decideControl(
+      { kind: 'continue', controlEpoch: promptEpoch(request.requestId) },
+      control.phase,
+      control.appliedEpochs,
+    )
+    if (!decision.applied) {
+      throw new RemoteError(
+        decision.denial.reason === 'already-applied' ? 'subagent/duplicate-request' : 'subagent/not-resumable',
+        decision.denial.reason === 'already-applied'
+          ? 'this prompt request was already delivered'
+          : `subagent "${childSessionId}" is ${control.phase} and cannot take a prompt`,
+        { childSessionId, reason: decision.denial.reason },
+      )
+    }
     const source: BrowserPromptSource = {
       kind: 'user',
       rpcId: request.requestId,
@@ -444,15 +496,15 @@ export class SubagentRuntime extends TypertRemoteService {
         if (attachments === undefined) throw new Error('subagent image prompt requires an attachment store')
         content = await admitPromptContent(attachments, request.content)
       }
-      return {
-        messageId: await this[queueSubagentPrompt](
-          parent,
-          childSessionId,
-          content,
-          source,
-          signal,
-        ),
-      }
+      const messageId = await this[queueSubagentPrompt](parent, childSessionId, content, source, signal)
+      // Recorded only after DELIVERY succeeds. Recording it at admission would
+      // spend the id on an attempt that never reached the child: an existing
+      // case drives five different delivery failures through one request id,
+      // and every retry after the first would have been refused as a duplicate
+      // of something that never happened. Idempotency protects against a
+      // repeated EFFECT, and a refused delivery had none.
+      control.appliedEpochs.add(promptEpoch(request.requestId))
+      return { messageId }
     } catch (error: unknown) {
       return rejectPrompt(error, childSessionId, signal)
     }
@@ -481,6 +533,10 @@ export class SubagentRuntime extends TypertRemoteService {
     validateControlRequest('subagent.interrupt', { childSessionId, parentSessionId, mode })
     try {
       this.interrupt(childSessionId, { kind: 'user', parentSessionId })
+      // The interrupt is what makes the NEXT prompt refusable. Recorded after
+      // the primitive accepts it, so a refused interrupt leaves the child
+      // promptable.
+      this.controlFor(childSessionId).phase = 'cancelling'
     } catch (error: unknown) {
       if (error instanceof SubagentError && error.code === 'UNAUTHORIZED') {
         throw new RemoteError(
@@ -566,6 +622,20 @@ export class SubagentRuntime extends TypertRemoteService {
    * presence on the provider IS the capability, so a provider without it is
    * rejected before the manager reserves any child resources.
    */
+  /**
+   * This child's control state, created on first use.
+   * @param childSessionId - the child to read.
+   * @returns its mutable control state.
+   */
+  private controlFor(childSessionId: SessionId): { phase: ChildPhase; appliedEpochs: Set<number> } {
+    let state = this.controlState.get(childSessionId)
+    if (state === undefined) {
+      state = { phase: 'running', appliedEpochs: new Set() }
+      this.controlState.set(childSessionId, state)
+    }
+    return state
+  }
+
   private async prepareContinuable(
     name: string,
     request: ContinuableCreateRequest,

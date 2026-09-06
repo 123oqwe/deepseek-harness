@@ -132,8 +132,23 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
     'subagent/invalid-time-zone': { readonly value: string }
     /** No live Agent carries the addressed parent session. */
     'subagent/parent-unavailable': { readonly parentSessionId: SessionId }
-    /** The addressed child cannot take a continuation. */
-    'subagent/not-resumable': { readonly childSessionId: SessionId }
+    /**
+     * The addressed child cannot take a continuation.
+     *
+     * `reason` was added for Epic P5-10: a child refused because it is
+     * cancelling is a different fact from one refused because it cannot resume
+     * at all, and a caller deciding whether to retry needs to tell them apart.
+     */
+    'subagent/not-resumable': { readonly childSessionId: SessionId; readonly reason?: string }
+    /**
+     * This exact prompt request id was already delivered to this child
+     * (Epic P5-10 acceptance[2]).
+     *
+     * Distinct from a refusal: the caller's message DID arrive, and answering
+     * "already applied" is what stops a redelivery from opening a second turn
+     * while still telling the caller their request was not lost.
+     */
+    'subagent/duplicate-request': { readonly childSessionId: SessionId; readonly reason: string }
     /** The claimed parent does not own the addressed child. */
     'subagent/unauthorized': { readonly childSessionId: SessionId }
     /** Image admission or model image-capability refusal. */

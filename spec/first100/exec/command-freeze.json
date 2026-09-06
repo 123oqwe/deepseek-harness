@@ -7188,6 +7188,42 @@
         "failureSummary": "Reddened 1 and 1 of 5. M2 reddened NOTHING on its first run, and the diagnosis was NOT a weak suite: the fixture's ratio exceeded the per-observation step bound, so a larger ratio clamped to the same 1.25 and the mutant was EQUIVALENT under it. The fixture now uses usage 90 against an anchor the heuristic prices at 80 — a ratio of 1.125, inside the bound — and the case pins that exact value instead of a direction, which makes the estimate's composition load-bearing and reddens M2."
       },
       "note": "P (Provider) for P9-05 under the delegate's BLOCKED-120 ruling, option 1: the correction is REPORTED and measure() is untouched. The reasoning matters more than the choice. Folding the factor into the estimated baseline turned a text-only measurement of 14 tokens into 18, because the ratio had been learned from a call whose content priced differently -- so the real question is not which branch corrects but WHICH CONTENT a factor is valid for, and that is must[2]'s question, still blocked on the tokenizer source (BLOCKED-107). The service therefore delivers the observation with its caveat in the JSDoc and leaves the judgement with the caller rather than making it invisibly inside a measurement. calibration() is derived from the latest anchor on every call, never accumulated: it feeds a query, and an accumulator inside one would make two identical reads over an unchanged log disagree."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/control.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 Usage — a prompt that races an interrupt acceptance[0]: after an interrupt, the next prompt is refused and never reaches the child",
+        "P5-10 Usage — a prompt that races an interrupt a child that was never interrupted takes its prompt as before",
+        "P5-10 Usage — a prompt that races an interrupt acceptance[2]: the same request id delivered twice opens one turn, not two",
+        "P5-10 Usage — a prompt that races an interrupt a redelivery is refused as a DUPLICATE, not as a child that cannot resume",
+        "P5-10 Usage — a prompt that races an interrupt a DIFFERENT request id after a delivered one is a new prompt",
+        "P5-10 Usage — a prompt that races an interrupt a FAILED delivery does not spend the request id, so the caller may retry it"
+      ],
+      "files": [
+        "packages/subagent/subagent/src/index.ts",
+        "packages/subagent/subagent/src/control-types.ts",
+        "packages/subagent/subagent/tests/control.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T23:45:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b27997dc8449c0ab725dae1b1db15f263aa7a865",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/subagent/subagent/src/index.ts, each restored byte-identical: (M1) the interrupt no longer records the cancelling phase; (M2) a delivered request id is never recorded; (M3) the id is recorded BEFORE delivery instead of after.",
+        "failureSummary": "Reddened 1, 2 and 1 of 6. M3 is the mutation that matters most: it is what the code originally did, and an EXISTING case caught it -- five delivery failures driven through one request id, every retry after the first refused as a duplicate of something that never happened. The retry case now pins that directly. The two control cases (an uninterrupted child still takes its prompt; a different id is a new prompt) stay green under all three, which is what says the refusals are selective rather than blanket."
+      },
+      "note": "U (Usage) for P5-10 on the shipped Remote surface. The Contract stage pinned the decisions and the Provider stage put an Agent behind them; neither could show that `subagent.prompt` CONSULTS them, and until this the runtime had no memory that an interrupt had happened. Every case asserts on whether the prompt was DELIVERED rather than on a decision object. The request id is recorded only after delivery SUCCEEDS: recording at admission spends the id on an attempt that never reached the child, which an existing case immediately exposed. Idempotency protects against a repeated EFFECT, and a refused delivery had none. A redelivery answers `subagent/duplicate-request`, not `not-resumable` -- 'your message already arrived' and 'this child cannot take one' are different facts, and collapsing them sends a caller hunting a lifecycle problem that does not exist."
     }
   ]
 }
