@@ -456,3 +456,78 @@ describe('P5-10 Usage — a prompt that races an interrupt', () => {
     await expect(subagents.prompt(promptRequest(), signal)).resolves.toMatchObject({ messageId: 'm1' })
   })
 })
+
+/**
+ * P5-10 Fault — control state is per child, and it is retained.
+ *
+ * must[2] asks for control messages to be idempotent. Idempotency held in one
+ * shared ledger would be worse than none: one child's redelivery would suppress
+ * another child's FIRST delivery of a message that happens to hash alike, and
+ * the symptom would be a silently missing turn rather than an error.
+ *
+ * The second half of this stage is the cost of remembering: the runtime keeps a
+ * control record for every child it has seen, and nothing releases it. That is
+ * a real bound this slice does not close, pinned here rather than left for
+ * someone to discover in a long-lived host.
+ */
+describe('P5-10 Fault — one child\'s control state cannot decide another\'s', () => {
+  it('an interrupt on one child leaves a sibling promptable', async () => {
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+
+    await expect(subagents.prompt(
+      { ...promptRequest(), childSessionId: OTHER },
+      signal,
+    )).resolves.toMatchObject({ messageId: 'm1' })
+    expect(delivery).toHaveBeenCalledTimes(1)
+  })
+
+  it('the SAME request id delivered to two different children is two deliveries', async () => {
+    // A shared ledger would swallow the second one, and the caller would see a
+    // child that simply never answered.
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    await subagents.prompt(promptRequest(), signal)
+    await expect(subagents.prompt(
+      { ...promptRequest(), childSessionId: OTHER },
+      signal,
+    )).resolves.toMatchObject({ messageId: 'm1' })
+    expect(delivery).toHaveBeenCalledTimes(2)
+  })
+
+  it('interrupting a child that was never prompted still refuses its next prompt', async () => {
+    // The state is created on first use by either path, so an interrupt that
+    // arrives before any prompt is not forgotten.
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    const delivery = promptDelivery(subagents)
+    delivery.mockResolvedValue('m1' as MessageId)
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+    await expect(subagents.prompt(promptRequest(), signal))
+      .rejects.toMatchObject({ code: 'subagent/not-resumable' })
+    expect(delivery).not.toHaveBeenCalled()
+  })
+
+  it('KNOWN GAP: control state is retained for every child seen, and nothing releases it', async () => {
+    // Asserts CURRENT behavior, not desired behavior. Each child that is
+    // prompted or interrupted gains a record that lives as long as the service,
+    // so a long-lived host accumulates one per child forever. Bounding it needs
+    // the child-settlement path to release the record, which this slice does not
+    // reach — `interrupt` delegates to the continuation manager and never learns
+    // that a child finished.
+    //
+    // When a release lands, this case starts FAILING. That is the signal, not a
+    // regression: delete it and assert the release instead.
+    const { subagents } = await bench({ [PARENT]: { status: 'running' } })
+    promptDelivery(subagents).mockResolvedValue('m1' as MessageId)
+    subagents.interruptByParent(CHILD, PARENT, 'continuable')
+    // Reading the private map is deliberate: the retention is not observable
+    // through any public surface, which is precisely why it needs pinning.
+    const retained = (subagents as unknown as { controlState: Map<unknown, unknown> }).controlState
+    expect(retained.size).toBe(1)
+    subagents.interruptByParent(OTHER, PARENT, 'continuable')
+    expect(retained.size).toBe(2)
+  })
+})

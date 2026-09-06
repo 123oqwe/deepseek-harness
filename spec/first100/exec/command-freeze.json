@@ -7224,6 +7224,39 @@
         "failureSummary": "Reddened 1, 2 and 1 of 6. M3 is the mutation that matters most: it is what the code originally did, and an EXISTING case caught it -- five delivery failures driven through one request id, every retry after the first refused as a duplicate of something that never happened. The retry case now pins that directly. The two control cases (an uninterrupted child still takes its prompt; a different id is a new prompt) stay green under all three, which is what says the refusals are selective rather than blanket."
       },
       "note": "U (Usage) for P5-10 on the shipped Remote surface. The Contract stage pinned the decisions and the Provider stage put an Agent behind them; neither could show that `subagent.prompt` CONSULTS them, and until this the runtime had no memory that an interrupt had happened. Every case asserts on whether the prompt was DELIVERED rather than on a decision object. The request id is recorded only after delivery SUCCEEDS: recording at admission spends the id on an attempt that never reached the child, which an existing case immediately exposed. Idempotency protects against a repeated EFFECT, and a refused delivery had none. A redelivery answers `subagent/duplicate-request`, not `not-resumable` -- 'your message already arrived' and 'this child cannot take one' are different facts, and collapsing them sends a caller hunting a lifecycle problem that does not exist."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/control.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 Fault — one child's control state cannot decide another's an interrupt on one child leaves a sibling promptable",
+        "P5-10 Fault — one child's control state cannot decide another's the SAME request id delivered to two different children is two deliveries",
+        "P5-10 Fault — one child's control state cannot decide another's interrupting a child that was never prompted still refuses its next prompt",
+        "P5-10 Fault — one child's control state cannot decide another's KNOWN GAP: control state is retained for every child seen, and nothing releases it"
+      ],
+      "files": [
+        "packages/subagent/subagent/src/index.ts",
+        "packages/subagent/subagent/tests/control.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T00:05:00.000Z",
+      "dryRunProof": {
+        "treeSha": "cb056675f8b433e77e107ff8aaec38f2fb6851f5",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One targeted mutation of packages/subagent/subagent/src/index.ts, restored byte-identical: every child shares ONE control record instead of holding its own.",
+        "failureSummary": "Reddened 2 of 4 -- the sibling-promptable case and the same-id-to-two-children case, which are exactly the two that describe isolation. The interrupt-before-prompt case stays green because it involves one child, and the retention case stays green because a shared record is still retained. Both are correct to stay green: a mutation that reddened all four would mean the cases were not distinguishing isolation from retention."
+      },
+      "note": "F (Fault) for P5-10, two halves. Isolation: idempotency held in ONE shared ledger would be worse than none, because a second child's FIRST delivery would be swallowed as a duplicate and the symptom would be a silently missing turn rather than an error. Retention: the runtime keeps a control record for every child it has seen and nothing releases it, so a long-lived host accumulates one per child forever. That bound is NOT closed here -- closing it needs the child-settlement path to release the record, and `interrupt` delegates to the continuation manager without ever learning a child finished. It is pinned as a KNOWN GAP case asserting current behaviour, which starts failing the day a release lands; the case reads the private map deliberately, since the retention is invisible through every public surface, which is exactly why it needs pinning rather than trusting."
     }
   ]
 }
