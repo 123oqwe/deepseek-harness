@@ -431,11 +431,28 @@ const P9_EXTENSION_ITEM_COUNT = 9
 function deriveProgramGate(totals) {
   const everyEpicAccepted = totals.acceptedEpics === totals.totalEpics
   const p9 = existsSync(P9_VERIFICATION_PATH) ? loadJson(P9_VERIFICATION_PATH).epics ?? [] : []
-  // A P9 item counts as settled when it is VERIFIED; PREMATURE and IN_PROGRESS
-  // do not, and an empty record does not either — nothing observed is not
-  // everything settled.
-  const p9Settled = p9.length > 0 && p9.every((epic) => epic.terminalState === 'VERIFIED')
-  return everyEpicAccepted && p9Settled && totals.r10Passed === true ? 'GO' : 'NO-GO'
+  return everyEpicAccepted && p9ItemsSettled(p9) && totals.r10Passed === true ? 'GO' : 'NO-GO'
+}
+
+/**
+ * Whether every P9 item has reached a state the program's goal admits.
+ *
+ * The goal says "VERIFIED **or** scheduled-BLOCKED on record", so both count.
+ * Requiring VERIFIED alone would hold the program at NO-GO over an item whose
+ * every stage had settled — some proved, the rest parked on a recorded, still
+ * open blocker — which is exactly the state the goal admits. P9-05 became the
+ * first item ever in it on 2026-09-06; before that the omission cost nothing,
+ * which is why it went unseen.
+ *
+ * PREMATURE, IN_PROGRESS and STALE_BLOCKER do not count, and an EMPTY record
+ * does not either: nothing observed is not everything settled, and a gate that
+ * read an absent file as success would pass hardest when it knew least.
+ * @param p9 - the recorded per-item terminal states.
+ * @returns whether every item is settled.
+ */
+export function p9ItemsSettled(p9) {
+  const settled = new Set(['VERIFIED', 'VERIFIED_OR_BLOCKED'])
+  return p9.length > 0 && p9.every((epic) => settled.has(epic.terminalState))
 }
 
 function syncExecState(ledgerBytes, rows) {

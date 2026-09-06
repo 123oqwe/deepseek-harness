@@ -84,3 +84,11 @@ export function checkDelegateSignoff(
   signoffRegistry: unknown,
   userConfirmationTierEpics?: Set<string>,
 ): DelegateSignoffResult
+
+/**
+ * Whether every P9 item has reached a state the program's goal admits —
+ * VERIFIED or scheduled-BLOCKED. An empty record is not settled.
+ * @param p9 - the recorded per-item terminal states.
+ * @returns whether every item is settled.
+ */
+export function p9ItemsSettled(p9: readonly { terminalState: string }[]): boolean

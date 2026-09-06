@@ -33,6 +33,7 @@ import {
   checkFailureSetAgainstFlakeRegistry,
   findAmbiguousCaseMatches,
   findDuplicateFrozenCases,
+  p9ItemsSettled,
   checkObservationDistinctness,
   rowDigest,
 } from './generate-ledger.mjs'
@@ -464,5 +465,31 @@ describe('checkDelegateSignoff — withdrawal (delegate ruling, 2026-09-07)', ()
       entries: [{ epic: 'P4-07', rowDigestSha256: digest, conclusion: 'WITHDRAWN', reason: 'must[3] has no subject' }],
     }
     expect(checkDelegateSignoff('P4-07', row, registry).matchedEntry?.reason).toBe('must[3] has no subject')
+  })
+})
+
+describe('the program gate counts a P9 item the goal admits', () => {
+  it('a scheduled-BLOCKED item is settled, because the goal says VERIFIED **or** blocked', () => {
+    // P9-05 is the first item ever in this state. Requiring VERIFIED alone
+    // would hold the whole program at NO-GO over an item whose every stage had
+    // settled — some proved, the rest parked on a recorded, still-open blocker.
+    expect(p9ItemsSettled([
+      { terminalState: 'VERIFIED' },
+      { terminalState: 'VERIFIED_OR_BLOCKED' },
+    ])).toBe(true)
+  })
+
+  it('an unfinished item is not settled', () => {
+    // The control: without it, a predicate returning true for anything would
+    // satisfy the case above.
+    for (const terminalState of ['IN_PROGRESS', 'PREMATURE', 'STALE_BLOCKER']) {
+      expect(p9ItemsSettled([{ terminalState: 'VERIFIED' }, { terminalState }]), terminalState).toBe(false)
+    }
+  })
+
+  it('an EMPTY record is not settled — nothing observed is not everything settled', () => {
+    // A gate reading an absent record as success would pass hardest when it
+    // knew least.
+    expect(p9ItemsSettled([])).toBe(false)
   })
 })
