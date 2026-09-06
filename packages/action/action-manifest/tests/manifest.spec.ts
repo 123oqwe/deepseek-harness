@@ -8,9 +8,11 @@
 
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createUserPrincipal, PrincipalId, RunId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
+import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import {
   assertManifestPrecedesExecution,
+  canonicalizeArguments,
   classifySideEffect,
   computeArgumentsHash,
   createActionManifest,
@@ -219,5 +221,100 @@ describe('P2-03 Contract — acceptance[2]: 无法分类副作用的动作默认
     const classification = classifySideEffect('read')
     expect(classification.classified).toBe(true)
     expect(classification.sideEffectClass).toBe('read')
+  })
+})
+
+/**
+ * P2-03 Fault — validation[2]: the canonicalizer is fuzzed for hash confusion.
+ *
+ * The Contract stage pinned three named confusions with one example each: key
+ * order, NFC versus NFD, and `100` versus `1e2`. Three examples cannot say
+ * whether the property holds generally, and the clause asks for fuzzing
+ * precisely because a canonicalizer fails on the input nobody thought to write.
+ *
+ * Two directions, and both are needed. **Same value, different spelling must
+ * collide** — otherwise a replay of an identical action is refused as tampering.
+ * **Different value must not collide** — otherwise a substituted argument passes
+ * as the one that was authorised, which is the attack the hash exists to stop.
+ * A canonicalizer that returned a constant satisfies the first alone; one that
+ * hashed raw bytes satisfies the second alone.
+ */
+describe('P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion', () => {
+  /** A JSON value generator, kept shallow enough that shrinking reports something readable. */
+  const jsonValue = fc.letrec<{ value: JsonValue }>(tie => ({
+    value: fc.oneof(
+      { depthSize: 'small' },
+      fc.constant(null),
+      fc.boolean(),
+      fc.integer({ min: -1000, max: 1000 }),
+      fc.string(),
+      fc.array(tie('value'), { maxLength: 4 }),
+      fc.dictionary(fc.string({ minLength: 1, maxLength: 6 }), tie('value'), { maxKeys: 4 }),
+    ),
+  })).value
+
+  /** Rebuild an object graph with every object's keys in a different order. */
+  const reorderKeys = (value: JsonValue): JsonValue => {
+    if (Array.isArray(value)) return value.map(reorderKeys)
+    if (value !== null && typeof value === 'object') {
+      const entries = Object.entries(value).reverse()
+      return Object.fromEntries(entries.map(([key, nested]) => [key, reorderKeys(nested as JsonValue)]))
+    }
+    return value
+  }
+
+  it('key order never changes the hash, over generated values rather than one example', () => {
+    fc.assert(fc.property(jsonValue, (value) => {
+      expect(computeArgumentsHash(reorderKeys(value))).toBe(computeArgumentsHash(value))
+    }), { numRuns: 500 })
+  })
+
+  it('a Unicode form change never changes the hash, over generated strings that HAVE two forms', () => {
+    // Built from characters that decompose, not filtered from arbitrary strings.
+    // A filter looked right and starved: `fc.string()` almost never produces a
+    // value whose NFD differs from its NFC, so the generator spends its budget
+    // rejecting and the case hangs rather than failing — a property that cannot
+    // find an input to test is not a passing property.
+    const composed = fc.stringMatching(/^[\u00e0-\u00ff\u0100-\u017f]{1,8}$/)
+    fc.assert(fc.property(composed, (text) => {
+      const nfd = text.normalize('NFD')
+      const nfc = text.normalize('NFC')
+      fc.pre(nfd !== nfc)
+      expect(computeArgumentsHash({ text: nfd })).toBe(computeArgumentsHash({ text: nfc }))
+    }), { numRuns: 200 })
+  })
+
+  it('two values that differ do NOT collide, which is the half a constant hash would satisfy', () => {
+    fc.assert(fc.property(jsonValue, jsonValue, (a, b) => {
+      // Compared through the canonical form rather than through deep equality:
+      // the claim is about what the hash distinguishes, and two values with the
+      // same canonical string SHOULD hash alike — that is the point of the
+      // first two cases.
+      fc.pre(canonicalizeArguments(a) !== canonicalizeArguments(b))
+      expect(computeArgumentsHash(a)).not.toBe(computeArgumentsHash(b))
+    }), { numRuns: 500 })
+  })
+
+  it('a key containing the separator does not collide with a value spelled to look like one', () => {
+    // WHAT THIS DOES AND DOES NOT SHOW, corrected after running the mutation.
+    // It was first written claiming to prove what length-prefixing buys — which
+    // is wrong twice over: this canonicalizer does not length-prefix (that is
+    // `computeSchemaFingerprint`, a different function in a different package),
+    // and unquoting the key so `:` stops being escaped reddens NOTHING here.
+    //
+    // The reason is structural and worth stating rather than patching over: every
+    // emitted value is self-delimiting — strings arrive quoted, numbers as
+    // numeric literals, containers in braces — so no key spelling can produce the
+    // byte sequence another value produces. The separator confusion this case is
+    // named for cannot be constructed against this canonicalizer at all.
+    //
+    // The case is kept because it is a true difference check over generated
+    // pairs, and the assertion is NOT rewritten to chase the surviving mutation
+    // (BLOCKED-079). What changed is the claim above it.
+    fc.assert(fc.property(fc.string({ minLength: 1 }), fc.string({ minLength: 1 }), (left, right) => {
+      fc.pre(left !== right)
+      expect(computeArgumentsHash({ [`${left}:${right}`]: 1 }))
+        .not.toBe(computeArgumentsHash({ [left]: `${right}:1` }))
+    }), { numRuns: 300 })
   })
 })
