@@ -3,9 +3,9 @@
     "name": "first100-p9-verification",
     "version": "1.0"
   },
-  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34002615162",
-  "candidateSha": "3c6fcfcbc533360c0fbc97baf7d1445015625ad3",
-  "observationSha256": "bb8bddebba18c0937ab4c3ee6b3822df9351a7ceae69f735716fe397317754ff",
+  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34004425088",
+  "candidateSha": "1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3",
+  "observationSha256": "0990137dbdda89561d5cc94edae1d30c273ffa2745f14bfd1e9673753c8659d5",
   "epics": [
     {
       "epic": "P9-01",
@@ -49,7 +49,9 @@
     },
     {
       "epic": "P9-05",
-      "verifiedStages": [],
+      "verifiedStages": [
+        "C"
+      ],
       "terminalState": "IN_PROGRESS"
     },
     {
@@ -199,12 +201,23 @@
     {
       "epic": "P9-05",
       "stage": "C",
-      "status": "UNFROZEN"
+      "status": "VERIFIED",
+      "frozenCases": 10,
+      "matchedCases": 10
     },
     {
       "epic": "P9-05",
       "stage": "P",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 5,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-05 Provider — calibration is advisory must[1]: a real response yields a correction derived from what the provider reported",
+        "P9-05 Provider — calibration is advisory a session with no real response reports NO correction rather than an invented one",
+        "P9-05 Provider — calibration is advisory a call that reported no usage teaches nothing",
+        "P9-05 Provider — calibration is advisory BLOCKED-120: measure() does NOT apply it — the numbers are identical either way",
+        "P9-05 Provider — calibration is advisory reading the calibration twice over an unchanged log gives the same answer"
+      ]
     },
     {
       "epic": "P9-05",
