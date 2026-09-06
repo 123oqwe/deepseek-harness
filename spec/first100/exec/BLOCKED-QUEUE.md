@@ -2955,3 +2955,17 @@ PROBE ok: rootCert=429B tlogKey=91B
 Both take a `KeyPairKeyObjectResult` — `initializeCA(keyPair, ctLog?, clock?)`, `initializeTLog(url, keyPair, clock?)` — which the first attempt got wrong by calling them with no arguments. Recorded so the next attempt does not rediscover it.
 
 **What remains, and why it is a slice rather than a step.** A valid bundle has to be assembled from the mock CA's certificate and the mock log's entry, trusted material has to be built from kernel-private anchors instead of read off the branded handle (P0-02 pins that its one member is the brand), and the offline path must verify the bundle's own inclusion proof rather than degrading to unverified. The unlock criterion is already pinned as a failing-when-fixed case: `KNOWN GAP (Sigstore path): a claim naming an admitted Sigstore issuer verifies with no certificate and no inclusion proof`.
+
+**The remaining unknowns, named so the next attempt starts here rather than at the beginning.** Everything below was read out of the installed packages, not guessed:
+
+| step | what is known | what is not |
+|---|---|---|
+| build a bundle | `@sigstore/bundle`'s `toMessageSignatureBundle({ digest, signature, certificate })` and `toDSSEBundle` | whether the tlog entry attaches through the builder or has to be placed on `verificationMaterial.tlogEntries` afterwards |
+| issue a certificate | `initializeCA(keyPair, ctLog?, clock?)` returns `{ rootCertificate, issueCertificate({ publicKey, subjectAltName, extensions }) }` | which extension OID carries the OIDC issuer this product will match on |
+| log the entry | `initializeTLog(url, keyPair, clock?)` returns `{ publicKey, log(entry), logV2(entry) }` | the exact proposed-entry shape `log()` accepts |
+| build trusted material | `toTrustMaterial(root: TrustedRoot, keys?)` | assembling a `TrustedRoot` protobuf from the mock CA's root certificate and the log's public key — **the fiddliest step, and the one that decides whether this converges** |
+| verify | `new Verifier(material, { tlogThreshold, ctlogThreshold, timestampThreshold }).verify(entity, policy)` | which policy expresses "this claim's builder identity must equal the certificate's SAN" |
+
+**Two product-type changes this needs, neither made yet.** `SigstoreProvenanceEvidence` carries an issuer, a subject and a log index but no BUNDLE, and a verifier has nothing to check without one. `TrustKernelTrustAnchor`'s sigstore variant carries only `trustedIssuer`, and real verification needs the trusted root — which is the public TUF document, so it stays public material and the "no secret anywhere" property holds.
+
+**Why it was not half-built.** A verification path proven only by refusals is indistinguishable from one that refuses everything; the positive control — a genuinely valid bundle verifying — is the case that makes the rest mean anything, and it is the step whose convergence is least certain. Landing the plumbing without it would produce exactly the shape this program has refused five times today.
