@@ -41,6 +41,13 @@ jobs:
         with:
           ref: ${{ steps.resolve-sha.outputs.sha }}
           persist-credentials: false
+          # Full history, because the registry gate set asks git questions about
+          # commits other than HEAD: verify-baseline-file-references resolves the
+          # frozen baseline 4e84901e and refuses when it is not locally
+          # reachable. Under the default depth-1 checkout that gate could never
+          # pass in CI, which is why it went unnoticed until the set was wired —
+          # it had only ever run on developer machines with full clones.
+          fetch-depth: 0
 
       # Fail loud if the checked-out tree is not actually at the requested
       # SHA (a moved branch ref, a typo'd short SHA) — every downstream
