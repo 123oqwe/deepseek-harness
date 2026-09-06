@@ -7434,6 +7434,79 @@
         "failureSummary": "Reddened 3 of 7. The live-surface pin and the reordering CONTROL both fail because the surface no longer produces the pinned digest, and  fails because the committed artifact no longer matches a fresh generation -- which IS the fixture diff. The four that stay green are the ones that read only the committed artifact or hash files, and they are correct to: they describe the artifact as committed, not the surface. Without the CONTROL among the reddened, a fingerprint that moved on any edit at all would have looked identical here."
       },
       "note": "P8-01 must[4] supplement, seq 1. Not a re-freeze: the four primary cells' cases do not touch must[4], and none is edited here.\n\nWHAT must[4] ASKS AND WHAT WAS BUILDABLE. Two halves -- the protocol schema artifact enters GOLDEN COMPATIBILITY FIXTURES, and it enters RELEASE EVIDENCE. The first is built as a generated artifact with a `--check` mode, which is what makes it a fixture rather than a report: a committed file that must match a fresh generation, so acceptance[3] is enforced instead of asserted. The `--check` gate runs in the registry gate set, so a protocol change cannot land without regenerating it.\n\nGENERATED FROM THE SURFACE, NEVER TRANSCRIBED BESIDE IT. The document is built from SERVER_PROTOCOL_SURFACE, the same value initialize fingerprints for a peer. That constant is newly exported for this: a hand-maintained schema file would be a second declaration of the surface, free to disagree with the one peers actually meet, and a golden fixture pinning a disagreeing copy reports drift that is not there while missing drift that is.\n\nTHE FINGERPRINT IS PINNED AS A LITERAL, and both directions are asserted -- the committed artifact holds it, AND the live surface produces it. Either alone is satisfiable by a fixture that agrees only with itself: a stale digest in the file passes the first, and a test recomputing the digest from the surface it is checking passes no matter what the surface says.\n\nTHE CONTROL IS NOT DECORATION. Reordering the surface must NOT move the fingerprint. Without that case, a fingerprint that moved on any edit at all -- including ones no peer can observe -- would satisfy the acceptance[3] case, and a fixture that cries wolf stops being consulted. The mutation proof confirms it discriminates: the CONTROL reddens under a real wire-visible change and holds under a reorder.\n\nRELEASE EVIDENCE USES THE REAL COLLECTOR, P0-07's scripts/release/collect-evidence.mjs, against a throwaway checkout carrying a real copy of the artifact -- `init` binds a captured baseline whose gitSha must equal HEAD, so running it against this repository would either fail or write into it. The case asserts the recorded digest equals the artifact's real bytes AND that the package accepts only because the declared artifact is present; a second case proves the digest tracks the file, which a collector recording a constant or hashing the path would fail."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/tool-calls.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 — every appended manifest carries its own position the first manifest is 1, and a second call in the same session is 2",
+        "P2-03 — every appended manifest carries its own position a manifest precedes the tool/call it describes, which is what the position is for",
+        "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[0]: three calls in one turn produce three manifest-then-call pairs, not one manifest and three calls",
+        "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[0]: each manifest names the actionId of the call that follows it, so the pairing is by identity and not by adjacency",
+        "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[2]: an unclassifiable action reaches the LOG as highest-risk and approval-requiring, not merely as a return value",
+        "P2-03 Usage — every dispatched call is preceded by its own manifest validation[0]: a deliberately created bypass — a tool/call with no manifest — is DETECTED by the same reading"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/session/src/index.ts",
+        "packages/core/agent-loop/tests/tool-calls.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T10:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "f47ab9fff90915d4acfe126bac1295a977ac980d",
+        "testsDiscovered": 6
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations of packages/core/agent-loop/src/tool-calls.ts, each restored byte-identical: (M1) appendActionManifest is not called from appendToolCall, so a native dispatch writes no manifest; (M2)  reverts to the literal 0 it carried before 2026-09-06.",
+        "failureSummary": "MEASURED, and one prediction was wrong. M1 reddens all SIX, not five: with no manifest appended there is nothing to precede a call and nothing to number, and the bypass case fails too -- it asserts two calls against exactly one manifest, and M1 leaves two calls against zero. The freeze note first claimed that case would stay green as a control; running the mutation says otherwise, and the observation is what is recorded. It remains a control for what it was written for -- that the pairing reader NOTICES an unmanifested call -- but it is not insensitive to the manifest disappearing everywhere. M2 reddens exactly one, the position case, which is what says that case measures the field rather than the append."
+      },
+      "note": "P2-03 U-stage, native path. First freeze for this cell.\n\nSCOPE. must[2] names three execution paths and this cell covers the two that have a subject: native-tool-call here, code-mode-embedded in supplement seq 1. The plugin-RPC half was re-anchored to P1-06 on 2026-09-06 (decisions-approved.md C12) because the out-of-process host that would create a dispatch point is P1-06's own must[0], four waves later -- an assertion about it here would have passed with the entire gate deleted.\n\nWHY THE PAIRING IS ASSERTED PER CALL AND BY IDENTITY. A single manifest ahead of a three-call batch satisfies 'a manifest precedes the first call' while leaving two executions unmanifested, and three manifests for one action satisfies order while proving nothing about which execution each authorises. One case pins the count, another pins the actionId correspondence.\n\nvalidation[0] IS A CONTROL, NOT A SCENARIO. The clause asks for a deliberately created bypass to make a test fail. The bypass is a `tool/call` appended straight to the log with no manifest -- what a future dispatch path that skipped `appendToolCall` would produce -- and the case asserts the same reader notices. Without it the pairing assertions would be satisfied by a reader that never looked.\n\nTHE POSITION FIELD IS NOW A NUMBER THAT MOVES. `sequence` was the literal 0 on every manifest ever written; acceptance[0] asks whether a manifest PRECEDES its execution, and a position that never advances cannot answer that for any pair. The counter moved to the Session on 2026-09-06 so both writing paths read one number: each had counted for itself by scanning the log, O(manifests) per call, unnoticed natively and quadratic inside a code-mode program. It is a generic per-type count rather than a manifest field because `SessionEvent` in core/session does not include `action/manifest-appended` at all -- that type is merge-extended downstream, and naming it there would invert the dependency the event map exists to allow."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/tools/tests/ptc.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a manifest precedes each dispatch-start, and each names the sub-call that follows it",
+        "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest the manifest records the code-mode origin and the highest-risk default, so the log says which path ran",
+        "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a dispatch abandoned before it starts writes NO manifest, so the log records no action that never happened"
+      ],
+      "files": [
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/tests/ptc.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T10:31:00.000Z",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "dryRunProof": {
+        "treeSha": "f47ab9fff90915d4acfe126bac1295a977ac980d",
+        "testsDiscovered": 3
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation of packages/core/tools/src/ptc.ts, restored byte-identical: the appendCodeModeManifest call is removed from the dispatch lane's start(), so a code-mode sub-dispatch executes with no manifest.",
+        "failureSummary": "Reddens all three, and each for its own reason: the pairing case finds no manifest before any dispatch-start, the origin case finds no record to read  from, and the abandoned-dispatch case finds zero manifests against a non-zero number of starts. Restoring returns 94/94."
+      },
+      "note": "P2-03 U-stage supplement seq 1, code-mode path. Not a re-freeze: the primary U entry covers the native path and none of its cases touches code-mode.\n\nBLOCKED WHY, AND FOR HOW LONG. This wiring was blocked from 2026-09-05 to 2026-09-06 by BLOCKED-077, recorded as an unexplained stack overflow. The cause was a stale `packages/action/action-manifest/src/canonicalize.js` holding the SUPERSEDED recursive implementation beside the iterative `.ts`; the module resolver ran the artifact. A round of investigation had already excluded that function by reading `src/` and the built `lib/` -- both iterative, both correct, and neither the code that ran.\n\nA SECOND FALSE TRAIL, recorded because it cost an afternoon. With the overflow fixed, appending the manifest still timed out ten of this file's cases, and the cause was this file's own `fakeAgent`: a structural fake carrying `append` and `header`, cast through `as unknown as Agent`. Reaching any third member throws inside the scheduler lane, the dispatch never settles, and unrelated cases time out -- which reads as a concurrency defect. Isolating it to a single statement is what found it; two hypotheses about production code were formed first and both were wrong. A double narrower than the interface it stands for does not fail where the member is missing.\n\nTHE ABANDONED-DISPATCH CASE IS WHY THE PLACEMENT IS AT `start`. A queued call the run settlement abandons never executes, and a manifest for it would record an action that did not happen -- the opposite failure from the one acceptance[0] names, and just as wrong. Appending at binding entry would have produced exactly that."
     }
   ]
 }
