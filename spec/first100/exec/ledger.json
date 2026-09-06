@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-06T07:57:23.584Z",
-  "inputDigest": "dc044a92a474d88fe0d6a4bb485a1bd2b3dc314fde24fe4465877f310481613c",
+  "lastUpdatedUtc": "2026-09-06T08:14:35.480Z",
+  "inputDigest": "82e6ecea9abf9ce5a232150553d5dd2716aa69702332a1165d43701d8c333e44",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1527,10 +1527,40 @@
       },
       "supplements": {},
       "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
-      "independentVerdict": "WITHHELD_LIVE_LOCK",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-06T08:14:35.479Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33777363033",
+            "candidateSha": "75ad08e71873ed4f46c2594f0b52520250e8393c"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+            "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33850765792",
+            "candidateSha": "32753707c1cfeec1739c0ecf5efe70657bf9bd77"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+            "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-06T08:13:27.263Z",
+          "userConfirmationRef": null
+        }
+      }
     },
     "P1-03": {
       "id": "P1-03",

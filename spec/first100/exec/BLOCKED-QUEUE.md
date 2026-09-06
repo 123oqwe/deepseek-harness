@@ -9,6 +9,28 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-125 — the freeze schema cannot say "this case ran, but it is not this stage's evidence", so a shared spec file inflates every count taken from a cell (Supervisor found answering a delegate question about P8-01, 2026-09-06)
+
+**The question was whether P8-01's C and F stages sharing 22 case titles is design or an unseparated freeze. It is neither.**
+
+The registry declares `packages/sdk/protocol/tests/version-negotiation.spec.ts` to BOTH stages, and both freeze the same command against it — `vitest run <that file>`. C froze 22 cases; F froze 32, being the same 22 plus 10. There is no fault injection and nothing was left unseparated: **the frozen command runs the whole file, so the earlier stage's cases necessarily appear in the later stage's observation.**
+
+F's own evidence is the 10: nine `enforcement:` cases (the N-2/N-1/N matrix, deliberate breakage, cross-implementation profile agreement) and one `contract:` case added by BLOCKED-085's supersession.
+
+**The defect is in what a freeze entry can express.** `expectCases` has exactly one meaning — titles this cell's observation must contain — and no field distinguishes *this stage proved it* from *the command ran it on the way past*. So any tool or reader counting a cell's cases reads 32 where 10 are new, and the program's "independent evidence per stage" reading of predicate (iii) is measured against an inflated denominator.
+
+**P8-01 is the first epic to hit this, not the only one exposed to it.** Any epic whose registry stage files name one spec for two stages produces the same shape, and today nothing reports that it is happening.
+
+**Not fixed by editing P8-01's freeze note.** That entry is green; changing its prose after the fact rewrites a record the ledger already bound. The fix belongs in the schema (a field marking a cited-but-not-owned title) or in a convention (a later stage lists only its own additions), and either is a maintainer decision about the record format rather than about this epic.
+
+**RULED 2026-09-06 by the delegate (`guanjieqiao-92`).** Three parts:
+
+1. **A convention, not a schema field.** When one spec file is declared to two stages, the later stage's `expectCases` lists only the cases it adds. A "cited but not owned" marker would be a second declaration of what a title means, free to drift from `expectCases` itself — the same shape this program has already paid for elsewhere.
+2. **P8-01.F is not rewritten.** The cell is green and editing a frozen entry rewrites a record the ledger already bound. Recorded here instead, for whoever reads that cell later: **P8-01.F's 32 titles are C's 22 plus F's own 10** — nine `enforcement:` cases and one `contract:` case added by BLOCKED-085's supersession.
+3. **A future check may warn, never fail.** Two stages of one epic whose `expectCases` intersect can be reported as a warning; it must not be red, because existing entries legitimately have that shape and a gate that is red on arrival gates nothing ([BLOCKED-057](#blocked-057)).
+
+P8-01 was signed off and accepted under this ruling: the shared titles are a reporting gap, not a coverage one, and every mechanical predicate passes on its own terms.
+
 ### BLOCKED-124 — wiring the registry gate set into CI is blocked on 14 out-of-sync bilingual doc pairs, which only the user may authorize fixing (Supervisor found while wiring, delegate-approved wiring, 2026-09-06)
 
 **The wiring itself is settled.** The delegate approved putting `first100:slice-gate-registry` into the exact-SHA workflow, before the test suite, on the reasoning that the gate set asks whether the registry ITSELF is sound — generated artifacts byte-identical, declared file references valid, frozen titles resolvable — which is a precondition of the observation rather than part of it. If the registry is wrong, the run proves nothing.

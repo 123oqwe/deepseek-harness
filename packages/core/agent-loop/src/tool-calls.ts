@@ -268,6 +268,19 @@ function appendToolCall(session: Session, turn: number, step: number, block: Too
 }
 
 /**
+ * How many manifests this session's log already carries.
+ * @param session - the session to count in.
+ * @returns the count of `action/manifest-appended` events so far.
+ */
+function countAppendedManifests(session: Session): number {
+  let count = 0
+  for (const event of session.snapshotEvents()) {
+    if (event.type === 'action/manifest-appended') count += 1
+  }
+  return count
+}
+
+/**
  * Append one call's ActionManifest BEFORE its `tool/call` event, so P2-03
  * acceptance[0] — every external write has a manifest preceding it in the log
  * — is answerable by reading the log in order, with no clock or join needed.
@@ -288,19 +301,6 @@ function appendToolCall(session: Session, turn: number, step: number, block: Too
  * @param block - the tool call about to be dispatched.
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
-/**
- * How many manifests this session's log already carries.
- * @param session - the session to count in.
- * @returns the count of `action/manifest-appended` events so far.
- */
-function countAppendedManifests(session: Session): number {
-  let count = 0
-  for (const event of session.snapshotEvents()) {
-    if (event.type === 'action/manifest-appended') count += 1
-  }
-  return count
-}
-
 function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'native-tool-call'): void {
   const classification = classifySideEffect(undefined)
   session.append('action/manifest-appended', {
