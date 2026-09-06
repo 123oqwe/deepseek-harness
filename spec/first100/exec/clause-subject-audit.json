@@ -364,6 +364,56 @@
         "recordedBeforeFirstLine": false,
         "realized": null
       }
+    },
+    "P2-04": {
+      "makeVsUse": {
+        "ledgerRow": "P2-04",
+        "card": {
+          "heading": "#### P2-04",
+          "sheetCommit": null
+        },
+        "verdict": "CONTRACT_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The whole of it. must[0] fixes eight class names, and no external package supplies that vocabulary: the published risk/permission taxonomies are either capability-mechanism lists (what an operation touches) or CVSS-style severity scores for vulnerabilities, and this clause asks for neither. The classifier, its confidence and grounds, its unknown-goes-higher default, and the organisation-policy override are all owned here.",
+        "probes": [
+          {
+            "claim": "this repository already has a side-effect taxonomy that must[0] could adopt instead of adding a third",
+            "how": "grep for riskLevel/RiskLevel/actionClass/destructive across packages/*/*/src",
+            "result": "hard-constraint",
+            "evidence": "TWO already exist and neither matches. `SideEffectClass` (plugin-manifest/src/types.ts:72) has six values none|read|write|network|process|destructive; `ActionSideEffectClass` (action-manifest/src/types.ts:123) has five, deliberately mirroring the first as a separate type rather than importing it. Both classify MECHANISM (what the operation touches). must[0]'s eight classify RISK (read, local-reversible, internal-write, external-communication, destructive, financial, security-sensitive, safety-critical). They are different axes, so this is a third vocabulary by necessity, not by omission."
+          },
+          {
+            "claim": "the three vocabularies can coexist without a reader conflating them",
+            "how": "compare the value sets for shared spellings",
+            "result": "finding",
+            "evidence": "`read` and `destructive` appear in all three with different meanings. In action-manifest, `destructive` is additionally the FAIL-CLOSED DEFAULT that classifySideEffect returns when it cannot classify at all. A third `destructive` meaning a risk band is a live conflation hazard, and any mapping between them must be total and monotone or must[1]/acceptance[1] (a plugin cannot downgrade) is unenforceable through the seam."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "dsh-plugin-manifest",
+            "gap": "SideEffectClass is a declared mechanism tag, not a decided risk band; nothing consumes it as policy",
+            "clause": "must[0]"
+          },
+          {
+            "community": "dsh-action-manifest",
+            "gap": "ActionSideEffectClass carries the fail-closed default but has no organisation-policy override and no confidence or grounds",
+            "clause": "must[1], must[2]"
+          },
+          {
+            "community": "dsh-permission-presets",
+            "gap": "presets select a whole policy value for a session; they do not classify an individual action",
+            "clause": "acceptance[2]"
+          }
+        ],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": true,
+        "realized": null
+      }
     }
   },
   "methodCorrections": [
