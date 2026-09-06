@@ -9,6 +9,22 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-126 — `as unknown as X` in a test double turns off the one check that would have caught it (delegate rule, from the P2-03 code-mode round, 2026-09-06)
+
+**What happened.** `packages/core/tools/tests/ptc.spec.ts`'s `fakeAgent` is
+
+```ts
+const agent = { session: { header, append } } as unknown as Agent
+```
+
+Two members, cast to the whole interface. Production code reaching a third member throws inside the scheduler lane, the dispatch never settles, and **ten unrelated cases time out** — which reads as a concurrency defect. It cost an afternoon on P2-03's code-mode manifest, during which two hypotheses about production code were formed and both were wrong.
+
+**Why it is worse than an ordinary wrong instrument.** A grep with a broken pattern returns zero and you can see it. A double missing a member returns normally until something far downstream fails in a different shape. `as unknown as X` is the syntax that switches off the type check which would have named the missing member at compile time.
+
+**Rule.** A test double either implements the interface — `satisfies Agent`, so the compiler names what is missing — or declares itself partial and the production code takes a partial path. Every remaining `as unknown as X` carries a line saying why.
+
+**Scope, deliberately narrow.** `ptc.spec.ts` only, and only when a stage next touches that file for its own clause. Its U cell was frozen on 2026-09-06 and editing a frozen file afterwards is [BLOCKED-103](#blocked-103)'s shape. Other files' casts change when something else brings a reader to them; **this is not a repository-wide sweep**, which would mean editing dozens of unbroken files for a rule none of them currently violates in a way anyone has felt.
+
 ### BLOCKED-125 — the freeze schema cannot say "this case ran, but it is not this stage's evidence", so a shared spec file inflates every count taken from a cell (Supervisor found answering a delegate question about P8-01, 2026-09-06)
 
 **The question was whether P8-01's C and F stages sharing 22 case titles is design or an unseparated freeze. It is neither.**
