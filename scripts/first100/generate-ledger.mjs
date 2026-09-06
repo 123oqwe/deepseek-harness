@@ -317,7 +317,7 @@ function checkCaseMatchesAreUnique(expectCases, matchCounts, reportPath) {
   process.exit(1)
 }
 
-function parseVitestJsonReport(reportPath) {
+export function parseVitestJsonReport(reportPath) {
   const raw = readFileSync(reportPath, 'utf8')
   const report = JSON.parse(raw)
   const titles = new Set()

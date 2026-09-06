@@ -1,0 +1,184 @@
+/**
+ * Verify the P9 extension items against a real CI observation.
+ *
+ * The nine P9 items are not ledger rows (maintainer decision C3), so the
+ * ledger's greening path cannot record them: it indexes `rows[epic]` and a P9
+ * id is not there. This script answers the same question the ledger asks — does
+ * a real observation show every frozen case for this cell PASSING — and writes
+ * the answer to `spec/first100/exec/p9-verification.json`.
+ *
+ * **It reuses the ledger's own report parser rather than re-reading the JSON.**
+ * BLOCKED-106 was a set of cells whose recorded case counts had been copied
+ * from the freeze instead of computed from the artifact; the counts here are
+ * derived by `parseVitestJsonReport`, the same function the ledger greens with,
+ * so the two can never disagree about what "passing" means.
+ *
+ * Three outcomes per cell, and only the first is a pass:
+ *
+ * | VERIFIED | every frozen case is present and passing in this observation |
+ * | INCOMPLETE | at least one frozen case is absent or not passing here |
+ * | UNFROZEN | the stage has no freeze entry yet, so there is nothing to verify |
+ *
+ * An epic reaches `VERIFIED` only when all four stages do. Anything else is
+ * reported as what it is; nothing is ever inferred from a sibling stage.
+ *
+ * Usage:
+ *   node scripts/first100/verify-p9-cells.mjs \
+ *     --report <vitest-report.json> --ci-run-url <url> --candidate-sha <sha40>
+ *   node scripts/first100/verify-p9-cells.mjs --check
+ *
+ * `--check` re-reads the recorded file and re-derives nothing: it reports what
+ * is on record. Use the recording form to change it.
+ *
+ * @module scripts/first100/verify-p9-cells
+ */
+import { createHash } from 'node:crypto'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { parseVitestJsonReport } from './generate-ledger.mjs'
+
+const here = dirname(fileURLToPath(import.meta.url))
+const REPO_ROOT = resolve(here, '..', '..')
+const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
+const REGISTRY_EXTENSION_PATH = join(REPO_ROOT, 'tests/first100/registry-extension.json')
+const OUTPUT_PATH = join(REPO_ROOT, 'spec/first100/exec/p9-verification.json')
+
+/** Every stage a P9 epic must clear before it counts as verified. */
+const STAGES = ['C', 'P', 'U', 'F']
+
+/** @param {string} text @returns {string} lowercase hex sha256. */
+function sha256(text) {
+  return createHash('sha256').update(text).digest('hex')
+}
+
+/** @param {string} path @returns {unknown} parsed JSON. */
+function loadJson(path) {
+  return JSON.parse(readFileSync(path, 'utf8'))
+}
+
+/**
+ * Read one flag's value from argv, or `undefined`.
+ * @param {readonly string[]} argv - process arguments.
+ * @param {string} flag - the flag to read, including its leading dashes.
+ * @returns {string | undefined} the value that followed it.
+ */
+function flag(argv, flag_) {
+  const index = argv.indexOf(flag_)
+  return index === -1 ? undefined : argv[index + 1]
+}
+
+/**
+ * Verify every frozen P9 cell against one observation.
+ *
+ * A cell is VERIFIED only when EVERY frozen case is found passing. A partial
+ * match is INCOMPLETE and names what was missing, because "most of the cases
+ * passed" is the shape of a stage that silently lost coverage.
+ * @param {{ entries: readonly object[] }} freeze - the command freeze.
+ * @param {Set<string>} passing - case names observed passing, from the ledger's parser.
+ * @param {readonly string[]} p9Ids - every P9 epic id, from the registry extension.
+ * @returns {object[]} one record per (epic, stage), in stage order.
+ */
+export function verifyCells(freeze, passing, p9Ids) {
+  const cells = []
+  for (const epic of p9Ids) {
+    for (const stage of STAGES) {
+      const frozen = freeze.entries.filter(entry => entry.epic === epic && entry.stage === stage).at(-1)
+      if (frozen === undefined) {
+        cells.push({ epic, stage, status: 'UNFROZEN' })
+        continue
+      }
+      const missing = frozen.expectCases.filter(title => !passing.has(title))
+      cells.push({
+        epic,
+        stage,
+        status: missing.length === 0 ? 'VERIFIED' : 'INCOMPLETE',
+        frozenCases: frozen.expectCases.length,
+        // Computed from the observation, never copied from the freeze.
+        matchedCases: frozen.expectCases.length - missing.length,
+        ...missing.length === 0 ? {} : { missingCases: missing },
+      })
+    }
+  }
+  return cells
+}
+
+/**
+ * Fold per-cell outcomes into one terminal state per epic.
+ * @param {readonly object[]} cells - per-(epic, stage) records.
+ * @param {readonly string[]} p9Ids - every P9 epic id.
+ * @returns {object[]} one record per epic.
+ */
+export function foldEpics(cells, p9Ids) {
+  return p9Ids.map((epic) => {
+    const own = cells.filter(cell => cell.epic === epic)
+    const verified = own.filter(cell => cell.status === 'VERIFIED').map(cell => cell.stage)
+    return {
+      epic,
+      verifiedStages: verified,
+      terminalState: verified.length === STAGES.length ? 'VERIFIED' : 'IN_PROGRESS',
+    }
+  })
+}
+
+function main() {
+  const argv = process.argv.slice(2)
+  const registry = loadJson(REGISTRY_EXTENSION_PATH)
+  const rows = Array.isArray(registry) ? registry : (registry.epics ?? [])
+  const p9Ids = rows.map(row => row.id).filter(id => typeof id === 'string' && id.startsWith('P9-'))
+
+  if (argv.includes('--check')) {
+    if (!existsSync(OUTPUT_PATH)) {
+      console.error(`verify-p9-cells: nothing on record at ${OUTPUT_PATH}`)
+      process.exit(1)
+    }
+    const record = loadJson(OUTPUT_PATH)
+    const verified = record.epics.filter(epic => epic.terminalState === 'VERIFIED')
+    console.log(`verify-p9-cells: ${verified.length}/${p9Ids.length} P9 epics VERIFIED on record (observation ${record.candidateSha})`)
+    for (const epic of record.epics) {
+      console.log(`  ${epic.epic}: ${epic.terminalState} [${epic.verifiedStages.join('') || '-'}]`)
+    }
+    return
+  }
+
+  const reportPath = flag(argv, '--report')
+  const ciRunUrl = flag(argv, '--ci-run-url')
+  const candidateSha = flag(argv, '--candidate-sha')
+  if (reportPath === undefined || ciRunUrl === undefined || candidateSha === undefined) {
+    console.error('usage: verify-p9-cells.mjs --report <path> --ci-run-url <url> --candidate-sha <sha> | --check')
+    process.exit(1)
+  }
+  if (!/^[0-9a-f]{40}$/.test(candidateSha)) {
+    console.error(`verify-p9-cells: --candidate-sha must be a full 40-character sha, got "${candidateSha}"`)
+    process.exit(1)
+  }
+  if (!existsSync(reportPath)) {
+    console.error(`verify-p9-cells: report not found: ${reportPath}`)
+    process.exit(1)
+  }
+
+  const { raw, titles } = parseVitestJsonReport(reportPath)
+  const freeze = loadJson(COMMAND_FREEZE_PATH)
+  const cells = verifyCells(freeze, titles, p9Ids)
+  const epics = foldEpics(cells, p9Ids)
+  const record = {
+    schema: { name: 'first100-p9-verification', version: '1.0' },
+    ciRunUrl,
+    candidateSha,
+    observationSha256: sha256(raw),
+    epics,
+    cells,
+  }
+  writeFileSync(OUTPUT_PATH, `${JSON.stringify(record, null, 2)}\n`)
+  const verified = epics.filter(epic => epic.terminalState === 'VERIFIED')
+  console.log(`verify-p9-cells: wrote ${OUTPUT_PATH}`)
+  console.log(`verify-p9-cells: ${verified.length}/${p9Ids.length} P9 epics VERIFIED, from observation ${candidateSha}`)
+  for (const cell of cells) {
+    if (cell.status === 'INCOMPLETE') {
+      console.log(`  INCOMPLETE ${cell.epic}.${cell.stage}: ${cell.matchedCases}/${cell.frozenCases} cases passing here`)
+    }
+  }
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) main()

@@ -2752,7 +2752,9 @@ The normalization landed and `bash-tool` stayed red. Reading the actual diff —
 
 ## BLOCKED-113 — a 5s timeout in `check-capability-seams.spec.ts`, seen once, not yet registrable
 
-**Status:** OPEN — one occurrence, and one is not evidence.
+**Status:** RESOLVED as evidence, ROUTED for classification — the re-run at the identical SHA PASSED.
+
+Run `33998988841` attempt 2, same candidate `ee247cc6ee`, same suite: 20000 cases, 0 failed. That is BLOCKED-023's standard (b) satisfied by direct proof — a deterministic failure cannot flip to passing on a byte-identical retry. The entry is now registrable, and registering it is C7 scope: it goes to the delegate, not written here.
 
 CI run `33998988841` (candidate `ee247cc6eef8545e82ebc0d981563a0d3652947f`) failed 1 of 20000 cases:
 

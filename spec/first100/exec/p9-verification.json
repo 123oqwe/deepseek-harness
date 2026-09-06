@@ -1,0 +1,322 @@
+{
+  "schema": {
+    "name": "first100-p9-verification",
+    "version": "1.0"
+  },
+  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33998988841",
+  "candidateSha": "ee247cc6eef8545e82ebc0d981563a0d3652947f",
+  "observationSha256": "8f88d20435607e8adbc040aab9282ec5480bef378a14e20bb1823584ae84b272",
+  "epics": [
+    {
+      "epic": "P9-01",
+      "verifiedStages": [
+        "C",
+        "P",
+        "U",
+        "F"
+      ],
+      "terminalState": "VERIFIED"
+    },
+    {
+      "epic": "P9-02",
+      "verifiedStages": [],
+      "terminalState": "IN_PROGRESS"
+    },
+    {
+      "epic": "P9-03",
+      "verifiedStages": [],
+      "terminalState": "IN_PROGRESS"
+    },
+    {
+      "epic": "P9-04",
+      "verifiedStages": [
+        "C",
+        "P",
+        "U",
+        "F"
+      ],
+      "terminalState": "VERIFIED"
+    },
+    {
+      "epic": "P9-05",
+      "verifiedStages": [],
+      "terminalState": "IN_PROGRESS"
+    },
+    {
+      "epic": "P9-06",
+      "verifiedStages": [
+        "C",
+        "P",
+        "F"
+      ],
+      "terminalState": "IN_PROGRESS"
+    },
+    {
+      "epic": "P9-07",
+      "verifiedStages": [
+        "C",
+        "P"
+      ],
+      "terminalState": "IN_PROGRESS"
+    },
+    {
+      "epic": "P9-08",
+      "verifiedStages": [],
+      "terminalState": "IN_PROGRESS"
+    },
+    {
+      "epic": "P9-09",
+      "verifiedStages": [],
+      "terminalState": "IN_PROGRESS"
+    }
+  ],
+  "cells": [
+    {
+      "epic": "P9-01",
+      "stage": "C",
+      "status": "VERIFIED",
+      "frozenCases": 13,
+      "matchedCases": 13
+    },
+    {
+      "epic": "P9-01",
+      "stage": "P",
+      "status": "VERIFIED",
+      "frozenCases": 9,
+      "matchedCases": 9
+    },
+    {
+      "epic": "P9-01",
+      "stage": "U",
+      "status": "VERIFIED",
+      "frozenCases": 8,
+      "matchedCases": 8
+    },
+    {
+      "epic": "P9-01",
+      "stage": "F",
+      "status": "VERIFIED",
+      "frozenCases": 19,
+      "matchedCases": 19
+    },
+    {
+      "epic": "P9-02",
+      "stage": "C",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-02",
+      "stage": "P",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-02",
+      "stage": "U",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-02",
+      "stage": "F",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-03",
+      "stage": "C",
+      "status": "INCOMPLETE",
+      "frozenCases": 9,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-03 Contract — --model resolution must[0]: splits a registered route from its model",
+        "P9-03 Contract — --model resolution must[0]: an unregistered route is refused AND the refusal names the routes that exist",
+        "P9-03 Contract — --model resolution must[0]: a missing separator is refused, because a bare model id names no adapter",
+        "P9-03 Contract — --model resolution an empty half is refused by the half that is empty, so the message says which one",
+        "P9-03 Contract — --model resolution only the FIRST colon separates: a model id may carry its own colons",
+        "P9-03 Contract — --model resolution the model half is NOT checked against a local list, so a route keeps its new models reachable",
+        "P9-03 Contract — --model resolution a profile with no registered route says so, instead of printing an empty list",
+        "P9-03 Contract — --model resolution the failure CARRIES the routes, so a caller cannot print a list different from the one checked",
+        "P9-03 Contract — --model resolution the carried list is detached: mutating the caller's array cannot rewrite a recorded failure"
+      ]
+    },
+    {
+      "epic": "P9-03",
+      "stage": "P",
+      "status": "INCOMPLETE",
+      "frozenCases": 5,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-03 Provider — --model selects the route the run uses must[0]: a registered route and model become the agent's options",
+        "P9-03 Provider — --model selects the route the run uses acceptance[0]: the SAME task on a different --model differs only in the route it ran on",
+        "P9-03 Provider — --model selects the route the run uses acceptance[1]: an unregistered route exits non-zero and names the routes that exist",
+        "P9-03 Provider — --model selects the route the run uses acceptance[1]: a malformed argument fails the same way, rather than being read as a bare model",
+        "P9-03 Provider — --model selects the route the run uses without --model the configured default is used and nothing about the run changes"
+      ]
+    },
+    {
+      "epic": "P9-03",
+      "stage": "U",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-03",
+      "stage": "F",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-04",
+      "stage": "C",
+      "status": "VERIFIED",
+      "frozenCases": 21,
+      "matchedCases": 21
+    },
+    {
+      "epic": "P9-04",
+      "stage": "P",
+      "status": "VERIFIED",
+      "frozenCases": 7,
+      "matchedCases": 7
+    },
+    {
+      "epic": "P9-04",
+      "stage": "U",
+      "status": "VERIFIED",
+      "frozenCases": 5,
+      "matchedCases": 5
+    },
+    {
+      "epic": "P9-04",
+      "stage": "F",
+      "status": "VERIFIED",
+      "frozenCases": 9,
+      "matchedCases": 9
+    },
+    {
+      "epic": "P9-05",
+      "stage": "C",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-05",
+      "stage": "P",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-05",
+      "stage": "U",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-05",
+      "stage": "F",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-06",
+      "stage": "C",
+      "status": "VERIFIED",
+      "frozenCases": 16,
+      "matchedCases": 16
+    },
+    {
+      "epic": "P9-06",
+      "stage": "P",
+      "status": "VERIFIED",
+      "frozenCases": 3,
+      "matchedCases": 3
+    },
+    {
+      "epic": "P9-06",
+      "stage": "U",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-06",
+      "stage": "F",
+      "status": "VERIFIED",
+      "frozenCases": 6,
+      "matchedCases": 6
+    },
+    {
+      "epic": "P9-07",
+      "stage": "C",
+      "status": "VERIFIED",
+      "frozenCases": 16,
+      "matchedCases": 16
+    },
+    {
+      "epic": "P9-07",
+      "stage": "P",
+      "status": "VERIFIED",
+      "frozenCases": 4,
+      "matchedCases": 4
+    },
+    {
+      "epic": "P9-07",
+      "stage": "U",
+      "status": "INCOMPLETE",
+      "frozenCases": 7,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-07 Usage — the configured-agent row carries a budget must[2]: a budget written on a cordis.yml agent row survives config validation",
+        "P9-07 Usage — the configured-agent row carries a budget must[3]: an explicit zero survives too, so \"unlimited\" can be stated in a profile",
+        "P9-07 Usage — the configured-agent row carries a budget a row with no budget stays absent rather than acquiring a default that would bound existing runs",
+        "P9-07 Usage — the configured-agent row carries a budget a negative maxTurns is refused at load, not carried into a loop that can never admit a turn",
+        "P9-07 Usage — the configured-agent row carries a budget a fractional maxTurns is refused: turns are counted, and rounding is a choice nobody stated",
+        "P9-07 Usage — the configured-agent row carries a budget a negative maxSpendUsd is refused, while a fractional one is money and stays legal",
+        "P9-07 Usage — the configured-agent row carries a budget the checked row is the one with no exact identity too, which the identity loop skips early"
+      ]
+    },
+    {
+      "epic": "P9-07",
+      "stage": "F",
+      "status": "INCOMPLETE",
+      "frozenCases": 4,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run acceptance[0]: a session stopped by its budget persists whole, and the reason survives reload",
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run acceptance[0]: resuming with a raised budget continues the run rather than stopping again",
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run the turn allowance is PER RUN, so a resume at the same limit gets a fresh one",
+        "P9-07 Fault — a budget stop is durable, resumable, and per-run BLOCKED-114: maxSpendUsd cannot bind today, and this pins that rather than implying it works"
+      ]
+    },
+    {
+      "epic": "P9-08",
+      "stage": "C",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-08",
+      "stage": "P",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-08",
+      "stage": "U",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-08",
+      "stage": "F",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-09",
+      "stage": "C",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-09",
+      "stage": "P",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-09",
+      "stage": "U",
+      "status": "UNFROZEN"
+    },
+    {
+      "epic": "P9-09",
+      "stage": "F",
+      "status": "UNFROZEN"
+    }
+  ]
+}
