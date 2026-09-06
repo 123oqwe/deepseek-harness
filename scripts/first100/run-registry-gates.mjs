@@ -43,6 +43,7 @@ const GATES = [
   'first100:verify-baseline-file-references',
   'first100:verify-frozen-titles-resolvable',
   'first100:verify-p9-cells',
+  'verify-no-artifacts-in-src',
   'verify-control-protocol-schema',
   'verify-module-graph',
   'verify-export-jsdoc',
