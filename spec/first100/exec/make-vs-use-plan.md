@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `d477505079`);**生成时间** 2026-09-06T14:54-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `cab06ebfc3`);**生成时间** 2026-09-06T14:59-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -5258,7 +5258,10 @@
 - acceptance[0] kit 对 `llm-deepseek` + pi-ai 三协议路由全绿且总 case 数 ≥ 40
 - acceptance[1] 对六类行为各注入一处夹具偏差（含 SSE 单字节切分/合并帧边界），kit 逐一红
 - acceptance[2] 进入 CI：任何 `packages/llm/**` 改动触发
-- validation(单字符串,extension 形状) 全量 kit 运行；分帧边界注入；abort 时序（首 token 前/工具增量中/收尾）三点验证。
+- validation[0] 全量 kit 运行
+- validation[1] 分帧边界注入
+- validation[2] abort 时序（首 token 前/工具增量中/收尾）三点验证
+- nonGoals:不新写任何 wire-protocol 实现（pi-ai 已有） / 不测模型输出质量，只测协议行为
 - predecessors:P0-06
 - files:[B] `packages/llm/llm/src/index.ts` · [B] `packages/llm/llm/src/types.ts` · [B] `packages/llm/llm-deepseek/src/adapter.ts` · [B] `packages/llm/llm-pi-ai/src/provider.ts` · [N] `packages/llm/llm-conformance/src/kit.ts` · [N] `packages/llm/llm-conformance/src/mock-server.ts` · [N] `packages/llm/llm-conformance/tests/deepseek.conformance.spec.ts` · [N] `packages/llm/llm-conformance/tests/pi-ai-routes.conformance.spec.ts`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
@@ -5318,7 +5321,8 @@
 - acceptance[0] 只写一段 settings（无代码改动）即可让 headless 任务经 mock openai-compat 服务全链路完成（含 ≥3 次工具调用）
 - acceptance[1] 三类协议模板 conformance 全绿
 - acceptance[2] 无 key 时该路由状态为显式 dormant，`deepseek-official` 不受影响
-- validation(单字符串,extension 形状) mock 服务 headless E2E + 配置负例 5 类（缺字段/坏 URL/坏协议名/重复路由/key env 缺失）全部 fail closed + conformance 全量。
+- validation[0] mock 服务 headless E2E + 配置负例 5 类（缺字段/坏 URL/坏协议名/重复路由/key env 缺失）全部 fail closed + conformance 全量
+- nonGoals:不写新 wire protocol / 不做 per-vendor 深度特化（能力差异走 P5-03 协商声明） / 不动上游 `llm` 核心抽象（上游 llm 月 206 commits，避撞）
 - predecessors:P9-01
 - files:[B] `packages/llm/llm-pi-ai/src/provider.ts` · [P] `packages/llm/llm-pi-ai/src/catalog.ts` · [P] `packages/llm/llm-pi-ai/src/config.ts` · [P] `packages/bundle/base/cordis.patch.yml` · [N] `packages/llm/llm-pi-ai/tests/route-activation.spec.ts` · [N] `docs/user/guide/providers.md`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
@@ -5362,7 +5366,8 @@
 - must[2] 选择进 session 事件（可审计），不写死进代码
 - acceptance[0] 同一 headless 任务，仅换 `--model` 参数分别经 2 条不同路由（mock）跑通，session 事件记录正确路由
 - acceptance[1] 错误 model 参数 fail closed 且提示可用列表
-- validation(单字符串,extension 形状) e2e 切换 + 负例 + `--help` 文本与实际行为一致性检查（现有 `--help` 仍宣传已删除的 tui profile，顺带修正）。
+- validation[0] e2e 切换 + 负例 + `--help` 文本与实际行为一致性检查（现有 `--help` 仍宣传已删除的 tui profile，顺带修正）
+- nonGoals:不做自动选型（P5-02） / 不做图形配置 UI / 不改上游 args 框架结构
 - predecessors:P9-02
 - files:[P] `apps/cli/src/args.ts` · [B] `packages/boot/app-boot` · [B] `packages/llm/llm/src/call-config.ts` · [N] `tests/e2e/model-switch.e2e.ts` · [P] `docs/user/guide/providers.md`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
@@ -5406,7 +5411,8 @@
 - acceptance[0] 夹具集：尾随空白差异、CRLF/LF 差异、整体缩进 +2/-2 三类均一次命中且 diff 标注层级
 - acceptance[1] 歧义夹具（两处近似）仍 fail closed
 - acceptance[2] 现有全部 fs 测试不回归
-- validation(单字符串,extension 形状) 夹具全量 + fs 包回归 + 一次 headless 真实编辑任务对比（改动前后各跑同一任务记录重试次数）。
+- validation[0] 夹具全量 + fs 包回归 + 一次 headless 真实编辑任务对比（改动前后各跑同一任务记录重试次数）
+- nonGoals:不引入模糊语义匹配/AST 匹配 / 不改 str_replace_editor 的对外 schema / 不做 patch/hunk 新格式（避免与上游工具面撞车）
 - files:[P] `packages/fs/fs-local/src/fsio.ts` · [P] `packages/fs/tool-fs/src/edit.ts` · [N] `packages/fs/fs-local/tests/edit-fallback.spec.ts`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
 - C:1 条有效冻结 / 21 个具名用例 / 变异证明 1/1
@@ -5461,7 +5467,8 @@
 - acceptance[1] 启发路径 p95 ≤ 冻结阈值
 - acceptance[2] 校准闭环在含 3 次真实（mock usage）响应的会话内把误差单调收窄
 - acceptance[3] compaction-basic 现有测试不回归
-- validation(单字符串,extension 形状) 语料夹具 + 校准收敛测试 + compaction 触发点前后对比。
+- validation[0] 语料夹具 + 校准收敛测试 + compaction 触发点前后对比
+- nonGoals:不为每家第三方模型 vendor 打包 tokenizer / 不改 compaction 策略本身（P6-06 域）
 - files:[P] `packages/llm/token-meter/src/estimate.ts` · [B] `packages/llm/token-meter/src/index.ts` · [N] `packages/llm/token-meter/src/tokenizer-deepseek.ts` · [N] `packages/llm/token-meter/src/usage-calibration.ts` · [N] `packages/llm/token-meter/tests/accuracy.spec.ts`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
 - C:1 条有效冻结 / 10 个具名用例 / 变异证明 1/1
@@ -5508,7 +5515,8 @@
 - acceptance[0] e2e：任务 A 运行→中断→`--resume` 完成，全程 stream-json 可逐行 parse 且事件序完整
 - acceptance[1] `echo task \| dsh --profile headless --output-format json` 输出可 parse 且含最终消息与 usage
 - acceptance[2] 退出码矩阵 4 类夹具全对
-- validation(单字符串,extension 形状) e2e 三件套 + 与 SDK expected.jsonl 口径 diff + 崩溃中断恢复夹具。
+- validation[0] e2e 三件套 + 与 SDK expected.jsonl 口径 diff + 崩溃中断恢复夹具
+- nonGoals:不做 TUI / 不改 session 存储格式 / 不做多任务队列（P4 域）
 - files:[P] `packages/bundle/headless/src/startup.ts` · [P] `packages/bundle/headless/src/index.ts` · [P] `apps/cli/src/args.ts` · [N] `packages/bundle/headless/tests/scriptability.e2e.ts` · [N] `docs/user/guide/headless.md`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
 - C:1 条有效冻结 / 16 个具名用例 / 变异证明 1/1
@@ -5553,7 +5561,8 @@
 - acceptance[0] 夹具：maxTurns=3 的循环在第 3 turn 边界停且事件/落盘齐全，`--resume` 可继续
 - acceptance[1] 花费上限夹具同理
 - acceptance[2] 不设预算时行为与现状 bit-for-bit 一致（回归）
-- validation(单字符串,extension 形状) 预算夹具 + 恢复续跑 + 无预算回归对照。
+- validation[0] 预算夹具 + 恢复续跑 + 无预算回归对照
+- nonGoals:不做多 agent 全局调度预算（P4-10） / 不做计费系统（P3-10 资源配额域）
 - files:[P] `packages/core/agent-loop/src/agent.ts` · [P] `packages/core/agent-loop/src/constants.ts` · [P] `packages/bundle/headless/src/startup.ts` · [N] `packages/core/agent-loop/tests/budget.spec.ts`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
 - C:1 条有效冻结 / 16 个具名用例 / 变异证明 1/1
@@ -5605,7 +5614,8 @@
 - acceptance[0] 固定 SHA + 固定路由/模型上产出 ≥20 任务基线报告，双跑方差达标
 - acceptance[1] 判分器负例（伪造输出/改判分文件）必须判 FAIL
 - acceptance[2] nightly 在 fork 真实跑通一次（成功或显式 BLOCKED-无 key，均为合法结果）
-- validation(单字符串,extension 形状) 双跑对比 + 判分负例 + 成本与 token-meter 核对。
+- validation[0] 双跑对比 + 判分负例 + 成本与 token-meter 核对
+- nonGoals:不追公开榜单可比口径 / 不在本项内做提升（P9-09） / 不测安全/混沌（P7-10 已有）
 - predecessors:P0-08 P7-09 P9-06
 - files:[P] `BENCHMARK.md` · [B] `apps/cli/tests/profiles/headless/tests/coding-task.e2e.ts` · [N] `benchmarks/tasks/` · [N] `benchmarks/judge/` · [N] `scripts/benchmark/run.mjs` · [N] `scripts/benchmark/report.mjs` · [N] `.github/workflows/benchmark-nightly.yml`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
@@ -5652,7 +5662,8 @@
 - acceptance[0] 准则 v1 落进默认 bundle 且 headless 冒烟不回归
 - acceptance[1] 完成至少一轮真实 champion–challenger：变体/双方分数/显著性/决定记录齐全
 - acceptance[2] 注入已知更差变体，门必须拒绝晋级
-- validation(单字符串,extension 形状) `ab-gate.spec.ts` 以 vitest 覆盖晋级门负例（更差变体拒晋、显著性不足拒晋、报告篡改检出），使本项具备标准 RED→GREEN 落点。
+- validation[0] `ab-gate.spec.ts` 以 vitest 覆盖晋级门负例（更差变体拒晋、显著性不足拒晋、报告篡改检出），使本项具备标准 RED→GREEN 落点
+- nonGoals:不做在线自动 prompt 演化（每次晋级人批） / 不动模型参数策略（P5-02/04） / 不做 per-vendor prompt 编译管道（P5-03 已有，本项产出作为其输入内容）
 - predecessors:P9-08 P5-03 P7-10
 - files:[P] `packages/preset/persona` · [P] `packages/bundle/base/cordis.patch.yml` · [B] `packages/core/system-prompt` · [B] `packages/core/agent-tool-presentation` · [N] `benchmarks/ab/` · [N] `scripts/benchmark/ab-compare.mjs` · [N] `benchmarks/ab/tests/ab-gate.spec.ts` · [N] `docs/engineering/prompt-iteration.md`
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**

@@ -39,7 +39,7 @@
 | 步 | 动作 | 出处 |
 |---|---|---|
 | 2.1 | 冻结:加用例 → `supplements`;替换/删除 → `supersedes`;每条冻结带 `sensitivityProof {mutationDescription, failureSummary}`,failureSummary 写"哪些用例仍绿、为什么" | BLOCKED-103;`command-freeze.schema.json` |
-| 2.2 | 变异存活的诊断顺序 **③→②→①**(变异没改行为 → 真等价 → 套件弱),按代价不按可能性;替换断言时新旧都变异 | **尚未成文**(执行者 2026-09-05 提出、gq-92 采纳,只在会话消息里)→ 执行者记入 BLOCKED `## Standing` 并编号后,此处补号。在此之前本行是唯一记录,这违反本文件"不含新规则"的原则,故标出 |
+| 2.2 | 变异存活的诊断顺序 **③→②→①**(变异没改行为 → 真等价 → 套件弱),按代价不按可能性;替换断言时新旧都变异;不得改断言去追存活的变异;变异证明说明套件对断言敏感、不说明断言对 | BLOCKED-129(`## Standing`,2026-09-06);对偶见整改令 §7.5 |
 | 2.3 | 测试替身不许 `as unknown as X`;类型级构造要过 typecheck | BLOCKED-126 / BLOCKED-029 |
 | 2.4 | "变异证明只证明套件对要求敏感,不证明要求对"——要求的对错看 registry 措辞 + 账本 risk + 安全后果 | 整改令 §7.5 |
 | 2.5 | 跑套件看**退出码**,不只 grep 计数;unhandled rejection 是 error 不是 fail | 执行者自查 2026-09-06;BLOCKED-078 |
