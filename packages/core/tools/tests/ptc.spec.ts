@@ -887,9 +887,18 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
       const { agent, events } = fakeAgent()
       runtime.behavior = async (request) => {
         const tools = request.bindings[0]!.functions
-        void tools.exclusive_write!({ id: 'a' })
-        void tools.exclusive_write!({ id: 'b' })
+        // Caught, not `void`ed. Run settlement REJECTS an abandoned dispatch,
+        // and a floating promise turns that into an unhandled rejection —
+        // which vitest reports as an error with ZERO failed tests, so the suite
+        // exits non-zero with nothing in `assertionResults` to explain it. That
+        // is exactly what this case did to CI run 34046829027: 20116 passed, 0
+        // failed, job red. The local run said "94 passed" and I read only that.
+        const abandoned = [
+          tools.exclusive_write!({ id: 'a' }),
+          tools.exclusive_write!({ id: 'b' }),
+        ].map(pending => pending.catch(() => undefined))
         await expect.poll(() => exclusive.pending()).toBeGreaterThanOrEqual(1)
+        void abandoned
         return { logs: [], value: 'returned while calls are still queued' }
       }
       await runCode(ctx, 'program', { agent })
