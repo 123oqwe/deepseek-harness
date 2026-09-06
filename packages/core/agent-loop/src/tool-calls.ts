@@ -288,6 +288,19 @@ function appendToolCall(session: Session, turn: number, step: number, block: Too
  * @param block - the tool call about to be dispatched.
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
+/**
+ * How many manifests this session's log already carries.
+ * @param session - the session to count in.
+ * @returns the count of `action/manifest-appended` events so far.
+ */
+function countAppendedManifests(session: Session): number {
+  let count = 0
+  for (const event of session.snapshotEvents()) {
+    if (event.type === 'action/manifest-appended') count += 1
+  }
+  return count
+}
+
 function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'native-tool-call'): void {
   const classification = classifySideEffect(undefined)
   session.append('action/manifest-appended', {
@@ -298,7 +311,17 @@ function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'n
     sideEffectClass: classification.sideEffectClass,
     classified: classification.classified,
     requiresApproval: classification.requiresApproval,
-    sequence: 0,
+    // The manifest's own position in this session's manifest log, counted from
+    // the events already appended. It was the literal `0` on every manifest
+    // ever written, which made a field documented as "the monotonic append
+    // position" a constant — acceptance[0] asks whether a manifest PRECEDES its
+    // execution, and a position that never advances cannot answer that.
+    //
+    // Counted rather than taken from the event's own `seq`: the payload is
+    // built before the append that assigns one, and a reader wanting the log
+    // position already has `seq` on the envelope. This numbers manifests among
+    // manifests, which is the sequence the field's own JSDoc describes.
+    sequence: countAppendedManifests(session) + 1,
   })
 }
 

@@ -767,3 +767,68 @@ describe('PTC mode native-tool denial through the agent loop', () => {
     })
   })
 })
+
+/**
+ * P2-03 — the manifest's recorded position advances.
+ *
+ * `action/manifest-appended` documents `sequence` as "the monotonic append
+ * position this manifest occupies in the durable log", and every manifest ever
+ * written carried the literal `0`. Nothing asserted on this event's payload at
+ * all, which is why a constant survived in a field whose whole purpose is to
+ * distinguish one manifest's position from another's.
+ *
+ * acceptance[0] asks whether a manifest PRECEDES its execution. A position that
+ * never advances cannot answer that question for any pair of manifests.
+ */
+/** A tool that settles immediately, so these cases are about manifests and not about scheduling. */
+function manifestEchoTool() {
+  return defineContentToolFixture({
+    name: 'noop',
+    description: 'settles immediately',
+    parameters: {},
+    async execute() {
+      return [{ type: 'text', text: 'ok' }]
+    },
+  })
+}
+
+describe('P2-03 — every appended manifest carries its own position', () => {
+  it('the first manifest is 1, and a second call in the same session is 2', async () => {
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: {} }]),
+      multiCall([{ id: 'c2', name: 'noop', args: {} }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-sequence'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const sequences = events(agent)
+      .filter(event => event.type === 'action/manifest-appended')
+      .map(event => event.data.sequence)
+    expect(sequences.length).toBeGreaterThanOrEqual(2)
+    // Strictly increasing from 1: each manifest names a position no other
+    // manifest in this session holds.
+    expect(sequences).toStrictEqual(sequences.map((_, index) => index + 1))
+  })
+
+  it('a manifest precedes the tool/call it describes, which is what the position is for', async () => {
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: {} }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-order'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const ordered = events(agent)
+      .filter(event => event.type === 'action/manifest-appended' || event.type === 'tool/call')
+      .map(event => event.type)
+    expect(ordered[0]).toBe('action/manifest-appended')
+    expect(ordered[1]).toBe('tool/call')
+  })
+})
