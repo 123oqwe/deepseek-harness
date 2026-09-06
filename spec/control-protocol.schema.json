@@ -1,0 +1,39 @@
+{
+  "schema": {
+    "name": "deepseek-harness-control-protocol",
+    "version": "1.0"
+  },
+  "generatedBy": "scripts/gen-control-protocol-schema.ts",
+  "source": "packages/sdk/server/src/server.ts SERVER_PROTOCOL_SURFACE",
+  "fingerprint": "d2d4c61600a16bde85365893ed6a0498fd1d34ec691fc7b91ace36c6671701fe",
+  "surface": {
+    "methods": [
+      {
+        "name": "initialize",
+        "schemaId": "sdk-protocol:InitializeParams",
+        "version": "1.0"
+      },
+      {
+        "name": "session.prompt",
+        "schemaId": "sdk-protocol:SessionPromptParams",
+        "version": "1.0"
+      }
+    ],
+    "events": [
+      {
+        "name": "session.event",
+        "schemaId": "sdk-protocol:SessionEventNotification",
+        "version": "1.0"
+      },
+      {
+        "name": "session.status",
+        "schemaId": "sdk-protocol:SessionStatusNotification",
+        "version": "1.0"
+      }
+    ],
+    "resourceTypes": [
+      "session",
+      "agent"
+    ]
+  }
+}

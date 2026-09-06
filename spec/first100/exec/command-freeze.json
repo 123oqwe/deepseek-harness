@@ -7391,6 +7391,49 @@
         "failureSummary": "Reddened 4, 1 and 1 across the package. M1 reddens four because the whole Sigstore branch stops deciding anything; M2 reddens only the different-identity case, which is the one written for it; M3 reddens only the rootless-anchor case. The positive control -- the genuine bundle verifying -- stays green under M2 and M3 and reddens under none of them, which is what says the refusals are selective rather than blanket."
       },
       "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader."
+    },
+    {
+      "epic": "P8-01",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/first100/fixtures/P8-01.composition.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture the committed artifact pins the exact fingerprint, as a literal a second implementation can target",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture the live server surface produces that same fingerprint, so the artifact describes what peers actually meet",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture `--check` passes against the committed artifact",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture acceptance[3]: a wire-visible change moves the fingerprint, so a protocol change CANNOT land without a fixture diff",
+        "P8-01 must[4] — the schema artifact is a golden compatibility fixture CONTROL: reordering the surface does NOT move the fingerprint, so the fixture measures the wire and not the edit",
+        "P8-01 must[4] — the schema artifact is a real release-evidence input collect-evidence hashes the artifact into requiredBuildArtifacts, with the digest of its real bytes",
+        "P8-01 must[4] — the schema artifact is a real release-evidence input the recorded digest tracks the artifact: a changed artifact yields a different digest"
+      ],
+      "files": [
+        "scripts/gen-control-protocol-schema.ts",
+        "spec/control-protocol.schema.json",
+        "packages/sdk/server/src/server.ts",
+        "tests/first100/fixtures/P8-01.composition.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-06T07:00:00.000Z",
+      "supplements": {
+        "epic": "P8-01",
+        "stage": "C"
+      },
+      "supplementSeq": 1,
+      "dryRunProof": {
+        "treeSha": "c609ed5a94ed121fbe5117a2c660a4694b921fb6",
+        "testsDiscovered": 7
+      },
+      "sensitivityProof": {
+        "mutationDescription": "One mutation of packages/sdk/server/src/server.ts, restored byte-identical: SERVER_PROTOCOL_SURFACE's session.prompt entry declares schema version 1.1 instead of 1.0 -- a wire-visible change, exactly the kind acceptance[3] says must produce a fixture diff.",
+        "failureSummary": "Reddened 3 of 7. The live-surface pin and the reordering CONTROL both fail because the surface no longer produces the pinned digest, and  fails because the committed artifact no longer matches a fresh generation -- which IS the fixture diff. The four that stay green are the ones that read only the committed artifact or hash files, and they are correct to: they describe the artifact as committed, not the surface. Without the CONTROL among the reddened, a fingerprint that moved on any edit at all would have looked identical here."
+      },
+      "note": "P8-01 must[4] supplement, seq 1. Not a re-freeze: the four primary cells' cases do not touch must[4], and none is edited here.\n\nWHAT must[4] ASKS AND WHAT WAS BUILDABLE. Two halves -- the protocol schema artifact enters GOLDEN COMPATIBILITY FIXTURES, and it enters RELEASE EVIDENCE. The first is built as a generated artifact with a `--check` mode, which is what makes it a fixture rather than a report: a committed file that must match a fresh generation, so acceptance[3] is enforced instead of asserted. The `--check` gate runs in the registry gate set, so a protocol change cannot land without regenerating it.\n\nGENERATED FROM THE SURFACE, NEVER TRANSCRIBED BESIDE IT. The document is built from SERVER_PROTOCOL_SURFACE, the same value initialize fingerprints for a peer. That constant is newly exported for this: a hand-maintained schema file would be a second declaration of the surface, free to disagree with the one peers actually meet, and a golden fixture pinning a disagreeing copy reports drift that is not there while missing drift that is.\n\nTHE FINGERPRINT IS PINNED AS A LITERAL, and both directions are asserted -- the committed artifact holds it, AND the live surface produces it. Either alone is satisfiable by a fixture that agrees only with itself: a stale digest in the file passes the first, and a test recomputing the digest from the surface it is checking passes no matter what the surface says.\n\nTHE CONTROL IS NOT DECORATION. Reordering the surface must NOT move the fingerprint. Without that case, a fingerprint that moved on any edit at all -- including ones no peer can observe -- would satisfy the acceptance[3] case, and a fixture that cries wolf stops being consulted. The mutation proof confirms it discriminates: the CONTROL reddens under a real wire-visible change and holds under a reorder.\n\nRELEASE EVIDENCE USES THE REAL COLLECTOR, P0-07's scripts/release/collect-evidence.mjs, against a throwaway checkout carrying a real copy of the artifact -- `init` binds a captured baseline whose gitSha must equal HEAD, so running it against this repository would either fail or write into it. The case asserts the recorded digest equals the artifact's real bytes AND that the package accepts only because the declared artifact is present; a second case proves the digest tracks the file, which a collector recording a constant or hashing the path would fail."
     }
   ]
 }
