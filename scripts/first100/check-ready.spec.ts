@@ -510,6 +510,43 @@ describe('first100 readiness gate: a finished epic releases its file locks (BLOC
     expect(run(root, 'B').code).toBe(0)
   })
 
+  it('an epic holding only N/A and NOT_RUN cells has NOT started, so it locks nothing', () => {
+    // `generate-ledger.mjs` writes `N/A` into the INITIAL row for every stage
+    // the registry declares `nOf: 'N/A'`. It is there before the first line is
+    // written, so reading it as "left NOT_RUN" made P3-03, P5-05, P5-06 and
+    // P8-08 in flight from birth and permanently locked every file they
+    // declare. It was the sole reason P2-04 and P4-12 read as file-blocked.
+    const root = fixture(
+      [
+        { id: 'UNTOUCHED', wave: 1, predecessors: [], files: ['shared.ts'], stages: threeStages },
+        { id: 'B', wave: 2, predecessors: [], files: ['shared.ts'], stages: {} },
+      ],
+      {
+        UNTOUCHED: { status: 'NOT_RUN', cells: { C: { status: 'NOT_RUN' }, P: { status: 'N/A' }, U: { status: 'NOT_RUN' }, F: { status: 'NOT_RUN' } } },
+        B: notStarted,
+      },
+    )
+    expect(run(root, 'B').code).toBe(0)
+  })
+
+  it('KEEPS the lock when a cell has genuinely started beside an N/A stage', () => {
+    // The positive control for the case above: without it, that case would
+    // also pass if N/A handling were fixed by deleting the lock entirely.
+    const root = fixture(
+      [
+        { id: 'WRITING', wave: 1, predecessors: [], files: ['shared.ts'], stages: threeStages },
+        { id: 'B', wave: 2, predecessors: [], files: ['shared.ts'], stages: {} },
+      ],
+      {
+        WRITING: { status: 'NOT_RUN', cells: { C: { status: 'RED' }, P: { status: 'N/A' }, U: { status: 'NOT_RUN' }, F: { status: 'NOT_RUN' } } },
+        B: notStarted,
+      },
+    )
+    const { code, output } = run(root, 'B')
+    expect(code).toBe(1)
+    expect(output).toContain('shares 1 file(s) with in-flight WRITING')
+  })
+
   it('does not list a finished epic as startable, since it is waiting on acceptance rather than capacity', () => {
     const root = fixture(
       [

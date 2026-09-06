@@ -94,9 +94,7 @@ function declaredFiles(epic) {
  */
 function isInFlight(row, epicId, epicStages) {
   if (row.status === 'ACCEPTED') return false
-  const cells = Object.values(row.cells ?? {})
-  const started = cells.some(cell => cell?.status !== undefined && cell.status !== 'NOT_RUN')
-  if (!started) return false
+  if (!hasStarted(row)) return false
   // An epic whose every started cell is GREEN has finished writing. Condition 2
   // exists to stop two epics writing one file CONCURRENTLY; a finished epic's
   // writes are history, not competition, so holding its files would block a
@@ -143,12 +141,23 @@ function everyApplicableCellGreen(row, epicId, epicStages) {
 }
 
 /**
- * Whether any cell has left NOT_RUN.
+ * Whether any cell has left NOT_RUN through work rather than inapplicability.
+ *
+ * `N/A` is not evidence of work: `generate-ledger.mjs` writes it into the
+ * INITIAL row for every stage the registry declares `nOf: 'N/A'`, so it is
+ * present before the first line is written and never leaves. Counting it as
+ * "started" made four epics — P3-03, P5-05, P5-06, P8-08, each `C/U/F` with no
+ * Provider stage — permanently in flight from birth, holding a write lock on
+ * every file they declare while doing nothing. A lock that can never be
+ * released is indistinguishable in the output from a peer genuinely mid-write,
+ * which is why this is stated as its own predicate rather than repeated inline.
  * @param row - the ledger row to classify.
  * @returns true when work on this epic has begun.
  */
 function hasStarted(row) {
-  return Object.values(row.cells ?? {}).some(cell => cell?.status !== undefined && cell.status !== 'NOT_RUN')
+  return Object.values(row.cells ?? {}).some(
+    cell => cell?.status !== undefined && cell.status !== 'NOT_RUN' && cell.status !== 'N/A',
+  )
 }
 
 const registry = readJson(REGISTRY_PATH)
