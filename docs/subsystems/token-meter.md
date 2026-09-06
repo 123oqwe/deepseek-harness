@@ -69,6 +69,29 @@ Replay owner for one service-wide estimator and isolated per-session folds.
 
 ```ts cordis-catalog
 /**
+ * What the latest real response says this session's heuristic is off by
+ * (Epic P9-05 must[1]).
+ *
+ * **Advisory. `measure()` does not apply it, and its numbers are unchanged.**
+ * The factor is learned from whatever content the last anchored call carried,
+ * and applying it to an estimate of different content over-corrects: an
+ * attempt to fold it into the estimated baseline turned a text-only
+ * measurement of 14 tokens into 18, because the ratio had come from a call
+ * whose content was priced differently. `token-meter.spec.ts`'s
+ * heuristic-anchor case caught that, and it was right to.
+ *
+ * **So a caller must confirm the content it is pricing resembles what the
+ * factor was learned from before applying it.** Which contents a factor is
+ * valid for is the question P9-05 must[2] answers with per-corpus ground
+ * truth, and must[2] is blocked on choosing a tokenizer source
+ * (BLOCKED-107). Until then this reports what was observed and leaves the
+ * judgement with the caller, rather than making it invisibly here.
+ * @param session - the session to read the latest anchored call from.
+ * @returns the correction implied by the latest real response; `UNCALIBRATED` when there is none.
+ */
+calibration(session: Session): CalibrationState
+
+/**
  * Measure current request pressure and surface through the durable tail.
  *
  * The effective envelope's routed provider/model selects the request-image
