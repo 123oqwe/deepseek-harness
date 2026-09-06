@@ -724,3 +724,84 @@ describe('malformed replay and listener lifecycle', () => {
     await secondFiber.dispose()
   })
 })
+
+/**
+ * P9-05 Provider — the correction is REPORTED, and `measure()` is untouched.
+ *
+ * The delegate's ruling on BLOCKED-120, and the reasoning behind it matters
+ * more than the choice: an attempt to fold the factor into the estimated
+ * baseline turned a text-only measurement of 14 tokens into 18, because the
+ * ratio had been learned from a call whose content priced differently. The
+ * question a caller faces is not "which branch corrects" but "is this factor
+ * valid for what I am pricing" — and that is P9-05 must[2]'s question, still
+ * blocked on choosing a tokenizer source.
+ *
+ * So the Provider stage delivers the observation and leaves the judgement with
+ * the caller, rather than making it invisibly inside a measurement.
+ */
+describe('P9-05 Provider — calibration is advisory', () => {
+  it('must[1]: a real response yields a correction derived from what the provider reported', () => {
+    const service = meter()
+    const session = Session.create(SessionId('calibrated'))
+    const requestHeader = header('deepseek-v4-flash', { system: 'system context' })
+    appendSuccessfulCall(session, requestHeader, {
+      providerText: 'abcd'.repeat(64),
+      // 90 against an anchor the heuristic prices at 80: a ratio of 1.125,
+      // deliberately INSIDE the per-observation step bound. A larger gap clamps
+      // to the bound, and a clamped factor is the same number whatever the
+      // estimate was — which made the first version of this case blind to how
+      // the estimate is composed (see the mutation note below).
+      usage: { inputTokens: 90, outputTokens: 0 },
+    })
+    const calibration = service.calibration(session)
+    expect(calibration.samples).toBe(1)
+    // Exact, not a direction. `> 1` passed even when the anchor's assistant
+    // output was dropped from the estimate, because the resulting larger ratio
+    // clamped to the same bound. Pinning the value makes the composition
+    // load-bearing.
+    expect(calibration.factor).toBeCloseTo(1.125, 10)
+  })
+
+  it('a session with no real response reports NO correction rather than an invented one', () => {
+    const service = meter()
+    const session = Session.create(SessionId('uncalibrated'))
+    expect(service.calibration(session)).toStrictEqual({ factor: 1, samples: 0 })
+  })
+
+  it('a call that reported no usage teaches nothing', () => {
+    const service = meter()
+    const session = Session.create(SessionId('no-usage'))
+    appendSuccessfulCall(session, header('deepseek-v4-flash'), { providerText: 'answer' })
+    expect(service.calibration(session).samples).toBe(0)
+  })
+
+  it('BLOCKED-120: measure() does NOT apply it — the numbers are identical either way', () => {
+    // The case that keeps this stage honest. A correction exists and is
+    // non-trivial; the measurement is unchanged by it, which is exactly what
+    // the heuristic-anchor case above defends.
+    const service = meter()
+    const session = Session.create(SessionId('advisory-only'))
+    const requestHeader = header('deepseek-v4-flash', { system: 'system context' })
+    appendSuccessfulCall(session, requestHeader, {
+      providerText: 'abcd'.repeat(64),
+      usage: { inputTokens: 900, outputTokens: 40 },
+    })
+    const calibration = service.calibration(session)
+    expect(calibration.factor).not.toBe(1)
+    const measured = service.measure(session, header('another-model', { system: 'system context' }))
+    // Recomputed from the estimate with no correction applied.
+    expect(measured.totalTokens).toBe(measured.baseline.tokens + measured.surfaceDeltaTokens)
+  })
+
+  it('reading the calibration twice over an unchanged log gives the same answer', () => {
+    // Derived, never accumulated: an accumulator inside a query would make two
+    // identical reads disagree.
+    const service = meter()
+    const session = Session.create(SessionId('idempotent'))
+    appendSuccessfulCall(session, header('deepseek-v4-flash'), {
+      providerText: 'abcd'.repeat(64),
+      usage: { inputTokens: 900, outputTokens: 40 },
+    })
+    expect(service.calibration(session)).toStrictEqual(service.calibration(session))
+  })
+})

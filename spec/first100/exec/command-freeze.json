@@ -7154,6 +7154,40 @@
         "failureSummary": "Reddened 6, 1 and 1 of 11. M1 reddening six is the point of this stage: the Contract cases all still pass under it, because the DECISION is unchanged and only the dispatch is wrong — a router that decides correctly and acts anyway is exactly what the Provider stage exists to catch. M2 and M3 each redden the single case written for them."
       },
       "note": "P (Provider) for P5-10: the decisions reach a real Agent, or nothing happens. Every case asserts on what the AGENT was asked to do rather than on the decision returned, because a router that decided correctly and dispatched anyway would satisfy every Contract case while still waking a cancelled child. The child's phase is NOT AgentStatus, which is only idle|running: cancelling, awaiting-human and terminal are states this router owns, since they describe the child's own lifecycle rather than whether a turn is executing. must[3]'s barrier registers only `child` at construction and takes further participants through addParticipant, so the absent world/actions suppliers (BLOCKED-116) join without this module knowing their shape."
+    },
+    {
+      "epic": "P9-05",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/token-meter/tests/token-meter.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-05 Provider — calibration is advisory must[1]: a real response yields a correction derived from what the provider reported",
+        "P9-05 Provider — calibration is advisory a session with no real response reports NO correction rather than an invented one",
+        "P9-05 Provider — calibration is advisory a call that reported no usage teaches nothing",
+        "P9-05 Provider — calibration is advisory BLOCKED-120: measure() does NOT apply it — the numbers are identical either way",
+        "P9-05 Provider — calibration is advisory reading the calibration twice over an unchanged log gives the same answer"
+      ],
+      "files": [
+        "packages/llm/token-meter/src/index.ts",
+        "packages/llm/token-meter/tests/token-meter.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T23:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "ea60407bfdc2d30be367195603cb15ae98568cb6",
+        "testsDiscovered": 5
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two targeted mutations of packages/llm/token-meter/src/index.ts, each restored byte-identical: (M1) a call that reported no usage is folded as an observation anyway; (M2) the anchor's own estimate omits the assistant output it was priced with.",
+        "failureSummary": "Reddened 1 and 1 of 5. M2 reddened NOTHING on its first run, and the diagnosis was NOT a weak suite: the fixture's ratio exceeded the per-observation step bound, so a larger ratio clamped to the same 1.25 and the mutant was EQUIVALENT under it. The fixture now uses usage 90 against an anchor the heuristic prices at 80 — a ratio of 1.125, inside the bound — and the case pins that exact value instead of a direction, which makes the estimate's composition load-bearing and reddens M2."
+      },
+      "note": "P (Provider) for P9-05 under the delegate's BLOCKED-120 ruling, option 1: the correction is REPORTED and measure() is untouched. The reasoning matters more than the choice. Folding the factor into the estimated baseline turned a text-only measurement of 14 tokens into 18, because the ratio had been learned from a call whose content priced differently -- so the real question is not which branch corrects but WHICH CONTENT a factor is valid for, and that is must[2]'s question, still blocked on the tokenizer source (BLOCKED-107). The service therefore delivers the observation with its caveat in the JSDoc and leaves the judgement with the caller rather than making it invisibly inside a measurement. calibration() is derived from the latest anchor on every call, never accumulated: it feeds a query, and an accumulator inside one would make two identical reads over an unchanged log disagree."
     }
   ]
 }
