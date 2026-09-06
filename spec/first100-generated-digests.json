@@ -2,13 +2,13 @@
   "schemaVersion": "1.1",
   "generatedFrom": "tests/first100/registry.json",
   "digests": {
-    "spec/deepseek-harness-optimization-manifest-v1.1.yaml": "eee02a7f06538e0c1348164564d3396ac98ecc7561de181e235e62d18f7f703c",
+    "spec/deepseek-harness-optimization-manifest-v1.1.yaml": "d08814582b89a7c619dc728d82c5cfc668e2ba4c464688c4063b993d076056f6",
     "spec/first100-clause-coverage-report.json": "848b685f5197dff75ff33ffb0529597d239c0c4e35dab41c9cf67958e764959b",
     "spec/first100-command-registry.json": "eca2bfc92ee7e8bb4d83f19a80c969fd00e505f5672f04e9aa35fae61a0b6c1d",
     "spec/first100-dependency-graph.json": "1bcdffa9a9783a16821b98f5c183c265e0b99ed8d7e9aab7049273f6f3ffcb3b",
     "spec/first100-evidence.schema.json": "23b017be8f409f9f727749f37a3706795ba8b35a23798380aea7fc387035cb72",
-    "spec/first100-owner-map.json": "e41e587dece4e1f4f9178dfefd09f36ee2e8312a984a1496ac6fc1010af14bfa",
+    "spec/first100-owner-map.json": "3d4d8ada318979cade0d8dbed796f77405514022fb3ca240e9bc86252b3ee1b2",
     "spec/first100-thresholds.yaml": "d241956d7a0381f96ee23e80e876aa918006d15c9e17d44dc3cd2ad934ed05c9",
-    "tests/first100/registry.json": "293ca5efaca2ff6dc115ed247d75af2a86c38b6f986332b1ce6301cdde74946a"
+    "tests/first100/registry.json": "c753d9cf7191cf62b55f68f6639b45dc1dc5471a2a5f7c18d9a526a0904d9113"
   }
 }

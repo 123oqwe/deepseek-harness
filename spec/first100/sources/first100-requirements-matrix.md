@@ -453,7 +453,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W7 / `P2-05`、`P0-05`。
 - **问题 → 目标：** 如果 policy 只散落在插件 listener 和 preset 中，无法回答“为什么允许/拒绝”、无法模拟升级影响。 → 让组织能版本化、测试、审查权限规则，并在强制前观察影响。
-- **Files：** target `packages/interaction/permission-presets/src/index.ts` [B]；`packages/settings/settings/src/index.ts` [B]；`packages/policy/policy-engine/src/index.ts` [P]；new `packages/policy/policy-language/src/index.ts` [N]；`packages/policy/policy-language/src/parser.ts` [N]；`packages/policy/policy-language/src/compiler.ts` [N]；`packages/policy/policy-language/tests/golden.spec.ts` [N]；`docs/policy/language.md` [N]。
+- **Files：** target `packages/interaction/permission-presets/src/index.ts` [B]；`packages/settings/settings/src/index.ts` [B]；`packages/policy/policy-engine/src/index.ts` [P]；new `packages/policy/policy-language/src/index.ts` [N]；`packages/policy/policy-language/tests/golden.spec.ts` [N]；`docs/policy/language.md` [N]。
 - **MUST：** 定义有限、无任意代码执行的声明式 policy language。；支持 unit tests、shadow evaluation、version pin、diff explain。；Explain 输出命中规则和安全摘要，不暴露秘密。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -500,7 +500,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W7 / `P0-03`、`P2-05`。
 - **问题 → 目标：** 现有 sandbox seam 主要描述同一世界中的文件执行策略；无法统一表达世界生命周期、身份、网络、秘密、快照、资源和 attestation。 → 把本地 shell、容器、microVM、远程 VM、浏览器等统一为可替换、可证明、受策略约束的执行世界。
-- **Files：** target `packages/sandbox/sandbox/src/index.ts` [B]；`packages/sandbox/sandbox/src/escalation.ts` [B]；`packages/sandbox/sandbox/src/roots.ts` [B]；`packages/core/tools/src/types.ts` [B]；`packages/core/agent-loop/src/runtime-context.ts` [B]；new `packages/execution/execution-world/src/index.ts` [N]；`packages/execution/execution-world/src/types.ts` [N]；`packages/execution/execution-world/src/lifecycle.ts` [N]；`packages/execution/execution-world/tests/world.spec.ts` [N]；`docs/subsystems/execution-world.md` [N]。
+- **Files：** target `packages/sandbox/sandbox/src/index.ts` [B]；`packages/sandbox/sandbox/src/escalation.ts` [B]；`packages/sandbox/sandbox/src/roots.ts` [B]；`packages/core/tools/src/types.ts` [B]；new `packages/execution/execution-world/src/index.ts` [N]；`packages/execution/execution-world/src/types.ts` [N]；`packages/execution/execution-world/src/lifecycle.ts` [N]；`packages/execution/execution-world/tests/world.spec.ts` [N]；`docs/subsystems/execution-world.md` [N]。
 - **MUST：** 定义 WorldSpec、WorldHandle、WorldAttestation、WorldSnapshot、execute/terminate/snapshot/restore 接口。；WorldSpec 覆盖 filesystem、network、process、IPC、devices、secrets、resources、lifetime、tenant。；旧 SandboxExecution 作为 local provider 的兼容适配层，不在 Agent Loop 硬编码。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -556,7 +556,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W9 / `P3-02`。
 - **问题 → 目标：** 文件根限制不能阻止 ptrace、process enumeration、Unix socket、device node 和 privileged syscall。 → 阻止 Agent 观察/操纵宿主进程、Docker、SSH agent、剪贴板、摄像头、GPU 或任意设备。
-- **Files：** target `packages/sandbox/sandbox-local/src/index.ts` [B]；`packages/sandbox/sandbox-local/src/profiles.ts` [B]；`packages/execution/execution-world/src/types.ts` [P]；new `packages/execution/local-isolation/src/linux.ts` [N]；`packages/execution/local-isolation/src/macos.ts` [N]；`packages/execution/local-isolation/src/windows.ts` [N]；`packages/execution/local-isolation/tests/process-isolation.e2e.ts` [N]。
+- **Files：** target `packages/execution/execution-world/src/types.ts` [P]；new `packages/execution/local-isolation/src/linux.ts` [N]；`packages/execution/local-isolation/src/macos.ts` [N]；`packages/execution/local-isolation/src/windows.ts` [N]；`packages/execution/local-isolation/tests/process-isolation.e2e.ts` [N]。
 - **MUST：** Linux 组合 user/mount/pid/net namespaces、seccomp/Landlock/bwrap；macOS 使用 Seatbelt profile；Windows 使用 restricted token/job object/ACL。；显式控制 Unix sockets、named pipes、clipboard、camera/microphone、GPU、USB、Docker daemon、SSH agent。；平台能力不足时报告 unsupported，不提供伪安全。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -584,7 +584,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W10 / `P3-02`、`P3-05`。
 - **问题 → 目标：** 本地平台实现能力不同；若某个限制失败而仍继续执行，会形成隐蔽降级。 → 把 sandbox-local 从便利 provider 提升为可测量、可证明、语义一致的本地执行后端。
-- **Files：** target `packages/sandbox/sandbox-local/src/index.ts` [B]；`packages/sandbox/sandbox-local/src/profiles.ts` [B]；new `packages/sandbox/sandbox-local/src/capabilities.ts` [N]；`packages/sandbox/sandbox-local/src/attestation.ts` [N]；`packages/sandbox/sandbox-local/tests/conformance.e2e.ts` [N]。
+- **Files：** target new `packages/sandbox/sandbox-local/src/capabilities.ts` [N]；`packages/sandbox/sandbox-local/src/attestation.ts` [N]；`packages/sandbox/sandbox-local/tests/conformance.e2e.ts` [N]。
 - **MUST：** 启动时生成 attestation；开发降级需显式 flag。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -855,7 +855,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W14 / `P4-08`、`P4-12`、`P4-13`。
 - **问题 → 目标：** Session persistence 能修复损坏尾部，但不能恢复半完成 turn；Schedule/Goal 若依赖活进程也不足以支持长期个人/企业任务。 → 从“修复日志尾部并关闭 turn”升级为可安全恢复未完成工作，并支持跨时触发。
-- **Files：** target `packages/core/session/src/repair.ts` [B]；`packages/core/session/src/preparation.ts` [B]；`packages/session/session-persistence/src/preparations.ts` [B]；`packages/core/agent-loop/src/agent.ts` [B]；`packages/schedule/README.md` [B]；`packages/goal/README.md` [B]；new `packages/run/turn-checkpoint/src/index.ts` [N]；`packages/run/turn-checkpoint/src/types.ts` [N]；`packages/run/trigger-service/src/index.ts` [N]；`packages/run/trigger-service/tests/resume.e2e.ts` [N]。
+- **Files：** target `packages/core/session/src/repair.ts` [B]；`packages/core/session/src/preparation.ts` [B]；`packages/session/session-persistence/src/preparations.ts` [B]；`packages/core/agent-loop/src/agent.ts` [B]；`packages/schedule/README.md` [B]；`packages/goal/README.md` [B]；new `packages/run/trigger-service/src/index.ts` [N]；`packages/run/trigger-service/tests/resume.e2e.ts` [N]。
 - **MUST：** 在模型请求、tool call、tool result、assistant commit 后写 checkpoint boundary。；恢复时根据 ActionLedger/WorkflowJournal 判定继续、重放纯步骤或 reconciliation。；Schedule/Goal 触发写 durable trigger event，由 scheduler claim。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -902,7 +902,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W11 / `P5-02`、`P0-06`。
 - **问题 → 目标：** 不同 provider 对 system prompt、reasoning、tool schema、structured output 和 token accounting 的能力不同；直接复用同一 prompt 会造成隐性退化。 → 在保持上层 RunPlan 语义一致的同时，适配不同模型的工具、推理、内容块和上下文限制。
-- **Files：** target `packages/llm/llm/src/content.ts` [B]；`packages/llm/llm/src/message.ts` [B]；`packages/llm/llm/src/assembler.ts` [B]；`packages/llm/llm/src/call-config.ts` [B]；`packages/core/session/src/request-header.ts` [B]；new `packages/llm/prompt-compiler/src/index.ts` [N]；`packages/llm/prompt-compiler/src/types.ts` [N]；`packages/llm/prompt-compiler/src/compile.ts` [N]；`packages/llm/prompt-compiler/tests/golden.spec.ts` [N]。
+- **Files：** target `packages/llm/llm/src/content.ts` [B]；`packages/llm/llm/src/message.ts` [B]；`packages/llm/llm/src/assembler.ts` [B]；`packages/llm/llm/src/call-config.ts` [B]；`packages/core/session/src/request-header.ts` [B]；new `packages/llm/prompt-compiler/src/index.ts` [N]；`packages/llm/prompt-compiler/src/types.ts` [N]；`packages/llm/prompt-compiler/tests/golden.spec.ts` [N]。
 - **MUST：** 定义 provider-neutral PromptIR，包含 instructions、context slices、tool surface、output contract、policy notices。；Adapter compiler 只做语义保持转换；不擅自删除安全/验收约束。；编译结果与 capability negotiation 写入 EpochHeader，确保可重建。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -930,7 +930,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W9 / `P2-02`、`P4-03`。
 - **问题 → 目标：** 当前外部 provider 主要收到任务文本和工作目录；父上下文、persona、tool filter、深度、验证和 capability delegation 不完整。 → 让内部和外部子 Agent 接收一致的目标、上下文、权限、预算、世界和输出合同。
-- **Files：** target `packages/subagent/subagent/src/descriptor.ts` [B]；`packages/subagent/subagent/src/descriptor-seed.ts` [B]；`packages/subagent/subagent/src/depth.ts` [B]；`packages/subagent/subagent/src/types.ts` [B]；`packages/subagent/subagent/src/client.ts` [B]；new `packages/subagent/subagent/src/request.ts` [N]；`packages/subagent/subagent/tests/request-contract.spec.ts` [N]。
+- **Files：** target `packages/subagent/subagent/src/types.ts` [B]；new `packages/subagent/subagent/src/request.ts` [N]；`packages/subagent/subagent/tests/request-contract.spec.ts` [N]。
 - **MUST：** Request 包含 objective、deliverables、context refs、artifact refs、capability token、WorldSpec、budget、output schema、verification obligations、parent trace。；传引用而非复制全部父上下文；provider 决定如何 materialize。；所有字段进入 session/run event，敏感值仅用引用。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -944,7 +944,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W11 / `P5-05`、`P6-09`。
 - **问题 → 目标：** 当前外部 Agent 适配容易退化为最终文本 RPC，父级无法验证中间行为和真实结果。 → 让父 Agent/Verifier 接收 artifact、diff、trace、cost、evidence、checkpoint，而不是只相信最终文本。
-- **Files：** target `packages/subagent/subagent/src/assistant-output.ts` [B]；`packages/subagent/subagent/src/types.ts` [B]；`packages/subagent/subagent/src/lifecycle.ts` [B]；`packages/workflow/workflow/src/types.ts` [B]；new `packages/subagent/subagent/src/result.ts` [N]；`packages/subagent/subagent/tests/result-contract.spec.ts` [N]。
+- **Files：** target `packages/subagent/subagent/src/types.ts` [B]；`packages/workflow/workflow/src/types.ts` [B]；new `packages/subagent/subagent/src/result.ts` [N]；`packages/subagent/subagent/tests/result-contract.spec.ts` [N]。
 - **MUST：** Result 包含 status、summary、structured output、artifacts、state diffs、action receipts、tool trace refs、usage/cost、verification hints、continuation token。；大结果存 Artifact Store，只在 Result 放内容寻址引用。；失败保留 partial artifacts 和明确 failure class。；先以通用 ArtifactRef/ActivityRef 回传原始证据入口；P7-02 再统一升级为 EvidenceRef。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -958,7 +958,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W12 / `P5-05`、`P5-06`、`P8-04`。
 - **问题 → 目标：** 现有 `run.ts`/`wire.ts` 已有 app-server 集成基础，但需完整映射 thread/turn/item、approval、diff、tests、usage 和 continuation。 → 把 Codex 从一次性文本子进程提升为可治理的外部 Agent Provider。
-- **Files：** target `packages/subagent/subagent-codex/src/index.ts` [B]；`packages/subagent/subagent-codex/src/run.ts` [B]；`packages/subagent/subagent-codex/src/wire.ts` [B]；`packages/subagent/subagent/src/request.ts` [P]；`packages/subagent/subagent/src/result.ts` [P]；new `packages/subagent/subagent-codex/src/map-events.ts` [N]；`packages/subagent/subagent-codex/src/continuation.ts` [N]；`packages/subagent/subagent-codex/tests/structured.e2e.ts` [N]。
+- **Files：** target `packages/subagent/subagent-codex/src/index.ts` [B]；`packages/subagent/subagent-codex/src/run.ts` [B]；`packages/subagent/subagent-codex/src/wire.ts` [B]；`packages/subagent/subagent/src/request.ts` [P]；`packages/subagent/subagent/src/result.ts` [P]；new `packages/subagent/subagent-codex/tests/structured.e2e.ts` [N]。
 - **MUST：** tool/approval 请求回到父 Policy。；支持 resume/fork，并保存 provider continuation identity。；收集 diff、test output、usage、artifacts，不只最终 answer。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -972,7 +972,7 @@
 
 - **Priority / Wave / 依赖：** P1 / W12 / `P5-05`、`P5-06`、`P8-04`。
 - **问题 → 目标：** 现有 `process.ts`/`run.ts` 具备进程封装，但通用 Harness 需要完整进度、tool、usage、checkpoint、worktree 和 continuation 语义。 → 让 Claude Code 作为受同一 RunPlan/Policy/Verification 管理的 provider。
-- **Files：** target `packages/subagent/subagent-claude-code/src/index.ts` [B]；`packages/subagent/subagent-claude-code/src/process.ts` [B]；`packages/subagent/subagent-claude-code/src/run.ts` [B]；`packages/subagent/subagent/src/request.ts` [P]；`packages/subagent/subagent/src/result.ts` [P]；new `packages/subagent/subagent-claude-code/src/map-events.ts` [N]；`packages/subagent/subagent-claude-code/src/continuation.ts` [N]；`packages/subagent/subagent-claude-code/tests/structured.e2e.ts` [N]。
+- **Files：** target `packages/subagent/subagent-claude-code/src/index.ts` [B]；`packages/subagent/subagent-claude-code/src/process.ts` [B]；`packages/subagent/subagent-claude-code/src/run.ts` [B]；`packages/subagent/subagent/src/request.ts` [P]；`packages/subagent/subagent/src/result.ts` [P]；new `packages/subagent/subagent-claude-code/tests/structured.e2e.ts` [N]。
 - **MUST：** 解析结构化输出/事件而非屏幕文本；映射 tools、subagents、diff、tests、usage。；支持 provider session resume/interrupt 和 worktree identity。；所有外部动作仍由父 policy/action ledger 管理。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
@@ -1276,7 +1276,7 @@
 
 - **Priority / Wave / 依赖：** P0 / W13 / `P4-06`、`P6-10`、`P7-02`、`P2-05`。
 - **问题 → 目标：** 现有 Session Telemetry 明确是 best-effort、handoff cursor 而非 delivered cursor，默认无内置 redaction；它也主要围绕 Session event，缺少 Run/Action/Policy/Approval/World/Verifier 的统一因果图。 → 让一次 Run 的每个决定、动作、权限、证据、成本和结果能跨进程完整追踪且崩溃不丢。
-- **Files：** target `packages/session/session-telemetry/src/coordinator.ts` [B]；`packages/session/session-telemetry/src/index.ts` [B]；`packages/core/session/src/types.ts` [B]；`packages/core/agent-loop/src/runtime-context.ts` [B]；`packages/interaction/user-approval/src/types.ts` [B]；new `packages/observability/causal-trace/src/index.ts` [N]；`packages/observability/causal-trace/src/types.ts` [N]；`packages/observability/telemetry-outbox/src/index.ts` [N]；`packages/observability/telemetry-outbox/src/store.ts` [N]；`packages/observability/otel-exporter/src/index.ts` [N]；`packages/observability/causal-trace/tests/crash-delivery.e2e.ts` [N]。
+- **Files：** target `packages/session/session-telemetry/src/coordinator.ts` [B]；`packages/session/session-telemetry/src/index.ts` [B]；`packages/core/session/src/types.ts` [B]；`packages/core/agent-loop/src/runtime-context.ts` [B]；`packages/interaction/user-approval/src/types.ts` [B]；new `packages/observability/causal-trace/src/index.ts` [N]；`packages/observability/causal-trace/src/types.ts` [N]；`packages/observability/telemetry-outbox/src/index.ts` [N]；`packages/observability/telemetry-outbox/src/store.ts` [N]；`packages/observability/causal-trace/tests/crash-delivery.e2e.ts` [N]。
 - **MUST：** 定义 trace/span/link vocabulary，覆盖 run/turn/step/tool/action/policy/approval/subagent/world/evidence/verifier/repair。；以 runId、actionId、parentSpanId 和 causationId 连接 Session ledger、Action Ledger、Evidence 和 OutcomePackage。；实现 per-sink durable outbox、ack cursor、at-least-once delivery、receiver dedupe 与 retention；不得阻塞 agent hot path。；默认挂载安全 redaction/classification policy；共享状态必须明确 full/feedback-only/disabled，并记录真实交付状态而非只记录 handoff。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不把 telemetry backend SDK 的内部实现写死在核心 Service Definition。

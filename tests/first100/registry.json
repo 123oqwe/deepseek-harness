@@ -48,7 +48,7 @@
   },
   "sourcePins": {
     "first100-requirements-matrix.md": {
-      "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+      "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
       "role": "verbatim acceptance/nonGoals/files/must/validation/command source"
     },
     "implementation-wave-map.md": {
@@ -302,7 +302,7 @@
     "extractor": "scripts/first100/extract-registry.mjs",
     "vendoredSources": "spec/first100/sources/",
     "sourceShas": {
-      "spec/first100/sources/first100-requirements-matrix.md": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+      "spec/first100/sources/first100-requirements-matrix.md": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
       "spec/first100/sources/implementation-wave-map.md": "8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41",
       "spec/first100/sources/r0-decision-package.md": "6e119b61957c73f64c54c674b3b8439a8d430bfc1262a4272ce0dcf260650d32"
     },
@@ -331,6 +331,107 @@
       "priorMatrixSha256": "401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa",
       "rescopeSpec": "spec/first100/sources/base-align-v2/23-partial-rescope-spec.md",
       "note": "These canonical epics' `must` text was narrowed in-place in first100-requirements-matrix.md to the delta not yet covered by upstream 4e84901e, per the rescope spec's own per-epic evidence (BLOCKED-012 discipline: only a MUST fragment with direct, fully-covering upstream evidence was removed; a partially-covered fragment was kept in full). acceptance/files/validation/nonGoals were left untouched for every epic rescoped so far. priorMatrixSha256 is the matrix doc's content hash BEFORE this rescope; sourceShas above reflects the state AFTER."
+    },
+    "filesReduced": {
+      "epicIds": [
+        "P2-10",
+        "P4-14",
+        "P5-03",
+        "P5-07",
+        "P5-08",
+        "P7-07"
+      ],
+      "order": "spec/first100/exec/plan-rectification-2026-09-06.md §C",
+      "entries": {
+        "P5-07": {
+          "removed": [
+            "subagent-codex/src/map-events.ts",
+            "subagent-codex/src/continuation.ts"
+          ],
+          "reason": "@openai/codex 0.149.1 already ships thread/resume, thread/fork, turn/steer, turn/interrupt, thread/list and item requestApproval."
+        },
+        "P5-08": {
+          "removed": [
+            "subagent-claude-code/src/map-events.ts",
+            "subagent-claude-code/src/continuation.ts"
+          ],
+          "reason": "@anthropic-ai/claude-agent-sdk 0.3.241 already ships resume/continue, forkSession, canUseTool and hooks."
+        },
+        "P5-03": {
+          "removed": [
+            "llm/prompt-compiler/src/compile.ts"
+          ],
+          "reason": "Per-provider compilation already exists as pi-ai compat flags plus llm-pi-ai toPiContext and llm-deepseek translate."
+        },
+        "P4-14": {
+          "removed": [
+            "run/turn-checkpoint/src/index.ts",
+            "run/turn-checkpoint/src/types.ts"
+          ],
+          "reason": "Redundant with upstream session events and repair.ts; what remains is a resume classifier over the signals those already produce."
+        },
+        "P7-07": {
+          "removed": [
+            "observability/otel-exporter/src/index.ts"
+          ],
+          "reason": "packages/session/session-telemetry-otel IS the OTel backend; a TracerProvider pipeline belongs there, not in a second exporter package."
+        },
+        "P2-10": {
+          "removed": [
+            "policy/policy-language/src/parser.ts",
+            "policy/policy-language/src/compiler.ts"
+          ],
+          "reason": "A homemade policy language. The engine is Cedar; explain is its isAuthorized diagnostics and dry-run its isAuthorizedPartial residuals."
+        }
+      }
+    },
+    "hotZoneRelocated": {
+      "epicIds": [
+        "P3-01",
+        "P3-05",
+        "P3-07",
+        "P5-05",
+        "P5-06"
+      ],
+      "order": "spec/first100/exec/plan-rectification-2026-09-06.md §D",
+      "entries": {
+        "P3-01": {
+          "removed": [
+            "core/agent-loop/src/runtime-context.ts"
+          ],
+          "reason": "The world handle arrives through sandbox-policy's runtime-context snapshot contribution; the loop is unchanged."
+        },
+        "P3-05": {
+          "removed": [
+            "sandbox/sandbox-local/src/index.ts",
+            "sandbox/sandbox-local/src/profiles.ts"
+          ],
+          "reason": "A new sandbox-srt rung over @anthropic-ai/sandbox-runtime carries the per-platform mapping. NOTE: this leaves P3-05 with no [B] file at all, so its rung must be MOUNTED by contribution rather than by editing a hot file -- stated because zero hot files is the intended outcome here, not an omission."
+        },
+        "P3-07": {
+          "removed": [
+            "sandbox/sandbox-local/src/index.ts",
+            "sandbox/sandbox-local/src/profiles.ts"
+          ],
+          "reason": "Same rung as P3-05. Its own additions -- the attestation predicate schema and the requested-subset-of-supported check -- are new files inside sandbox-local, which is adding to the package without editing its hot path."
+        },
+        "P5-05": {
+          "removed": [
+            "subagent/src/descriptor.ts",
+            "subagent/src/descriptor-seed.ts",
+            "subagent/src/depth.ts",
+            "subagent/src/client.ts"
+          ],
+          "reason": "Five hot files down to one. New request fields land in [N] request.ts as capability flags; types.ts stays only as the re-export point."
+        },
+        "P5-06": {
+          "removed": [
+            "subagent/src/assistant-output.ts",
+            "subagent/src/lifecycle.ts"
+          ],
+          "reason": "Result contract extensions land in [N] result.ts; types.ts stays as the re-export point."
+        }
+      }
     },
     "clauseMovements": {
       "destinations": [
@@ -408,7 +509,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 36
       },
       "validation": [
@@ -548,7 +649,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 50
       },
       "validation": [
@@ -677,7 +778,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 64
       },
       "validation": [
@@ -793,7 +894,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 78
       },
       "validation": [
@@ -915,7 +1016,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 92
       },
       "validation": [
@@ -1043,7 +1144,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 106
       },
       "validation": [
@@ -1167,7 +1268,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 120
       },
       "validation": [
@@ -1295,7 +1396,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 134
       },
       "validation": [
@@ -1434,7 +1535,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 153
       },
       "validation": [
@@ -1562,7 +1663,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 167
       },
       "validation": [
@@ -1684,7 +1785,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 181
       },
       "validation": [
@@ -1804,7 +1905,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 195
       },
       "validation": [
@@ -1924,7 +2025,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 209
       },
       "validation": [
@@ -2055,7 +2156,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 223
       },
       "validation": [
@@ -2198,7 +2299,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 237
       },
       "validation": [
@@ -2318,7 +2419,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 251
       },
       "validation": [
@@ -2438,7 +2539,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 265
       },
       "validation": [
@@ -2561,7 +2662,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 279
       },
       "validation": [
@@ -2702,7 +2803,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 293
       },
       "validation": [
@@ -2833,7 +2934,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 307
       },
       "validation": [
@@ -2961,7 +3062,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 326
       },
       "validation": [
@@ -3092,7 +3193,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 340
       },
       "validation": [
@@ -3224,7 +3325,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 354
       },
       "validation": [
@@ -3361,7 +3462,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 368
       },
       "validation": [
@@ -3494,7 +3595,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 382
       },
       "validation": [
@@ -3620,7 +3721,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 396
       },
       "validation": [
@@ -3749,7 +3850,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 410
       },
       "validation": [
@@ -3872,7 +3973,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 424
       },
       "validation": [
@@ -3990,7 +4091,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 438
       },
       "validation": [
@@ -4084,14 +4185,6 @@
           "kind": "N"
         },
         {
-          "path": "packages/policy/policy-language/src/parser.ts",
-          "kind": "N"
-        },
-        {
-          "path": "packages/policy/policy-language/src/compiler.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/policy/policy-language/tests/golden.spec.ts",
           "kind": "N"
         },
@@ -4116,7 +4209,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 452
       },
       "validation": [
@@ -4237,7 +4330,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 466
       },
       "validation": [
@@ -4368,7 +4461,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 480
       },
       "validation": [
@@ -4465,10 +4558,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/core/agent-loop/src/runtime-context.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/execution/execution-world/src/index.ts",
           "kind": "N"
         },
@@ -4505,7 +4594,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 499
       },
       "validation": [
@@ -4638,7 +4727,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 513
       },
       "validation": [
@@ -4765,7 +4854,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 527
       },
       "validation": [
@@ -4894,7 +4983,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 541
       },
       "validation": [
@@ -4971,14 +5060,6 @@
       "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "files": [
         {
-          "path": "packages/sandbox/sandbox-local/src/index.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/sandbox/sandbox-local/src/profiles.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/execution/execution-world/src/types.ts",
           "kind": "P"
         },
@@ -5017,7 +5098,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 555
       },
       "validation": [
@@ -5147,7 +5228,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 569
       },
       "validation": [
@@ -5227,14 +5308,6 @@
       "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "files": [
         {
-          "path": "packages/sandbox/sandbox-local/src/index.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/sandbox/sandbox-local/src/profiles.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/sandbox/sandbox-local/src/capabilities.ts",
           "kind": "N"
         },
@@ -5262,7 +5335,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 583
       },
       "validation": [
@@ -5380,7 +5453,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 597
       },
       "validation": [
@@ -5503,7 +5576,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 611
       },
       "validation": [
@@ -5631,7 +5704,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 625
       },
       "validation": [
@@ -5754,7 +5827,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 639
       },
       "validation": [
@@ -5888,7 +5961,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 653
       },
       "validation": [
@@ -6177,7 +6250,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 672
       },
       "validation": [
@@ -6301,7 +6374,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 686
       },
       "validation": [
@@ -6424,7 +6497,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 700
       },
       "validation": [
@@ -6542,7 +6615,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 714
       },
       "validation": [
@@ -6660,7 +6733,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 728
       },
       "validation": [
@@ -6786,7 +6859,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 742
       },
       "validation": [
@@ -6930,7 +7003,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 756
       },
       "validation": [
@@ -7068,7 +7141,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 770
       },
       "validation": [
@@ -7199,7 +7272,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 784
       },
       "validation": [
@@ -7330,7 +7403,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 798
       },
       "validation": [
@@ -7466,7 +7539,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 812
       },
       "validation": [
@@ -7597,7 +7670,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 826
       },
       "validation": [
@@ -7735,7 +7808,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 840
       },
       "validation": [
@@ -7839,14 +7912,6 @@
           "kind": "B"
         },
         {
-          "path": "packages/run/turn-checkpoint/src/index.ts",
-          "kind": "N"
-        },
-        {
-          "path": "packages/run/turn-checkpoint/src/types.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/run/trigger-service/src/index.ts",
           "kind": "N"
         },
@@ -7871,7 +7936,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 854
       },
       "validation": [
@@ -8007,7 +8072,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 873
       },
       "validation": [
@@ -8138,7 +8203,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 887
       },
       "validation": [
@@ -8244,10 +8309,6 @@
           "kind": "N"
         },
         {
-          "path": "packages/llm/prompt-compiler/src/compile.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/llm/prompt-compiler/tests/golden.spec.ts",
           "kind": "N"
         }
@@ -8269,7 +8330,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 901
       },
       "validation": [
@@ -8398,7 +8459,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 915
       },
       "validation": [
@@ -8476,23 +8537,7 @@
       "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "files": [
         {
-          "path": "packages/subagent/subagent/src/descriptor.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/subagent/subagent/src/descriptor-seed.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/subagent/subagent/src/depth.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/subagent/subagent/src/types.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/subagent/subagent/src/client.ts",
           "kind": "B"
         },
         {
@@ -8521,7 +8566,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 929
       },
       "validation": [
@@ -8599,15 +8644,7 @@
       "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "files": [
         {
-          "path": "packages/subagent/subagent/src/assistant-output.ts",
-          "kind": "B"
-        },
-        {
           "path": "packages/subagent/subagent/src/types.ts",
-          "kind": "B"
-        },
-        {
-          "path": "packages/subagent/subagent/src/lifecycle.ts",
           "kind": "B"
         },
         {
@@ -8641,7 +8678,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 943
       },
       "validation": [
@@ -8738,14 +8775,6 @@
           "kind": "P"
         },
         {
-          "path": "packages/subagent/subagent-codex/src/map-events.ts",
-          "kind": "N"
-        },
-        {
-          "path": "packages/subagent/subagent-codex/src/continuation.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/subagent/subagent-codex/tests/structured.e2e.ts",
           "kind": "N"
         }
@@ -8766,7 +8795,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 957
       },
       "validation": [
@@ -8867,14 +8896,6 @@
           "kind": "P"
         },
         {
-          "path": "packages/subagent/subagent-claude-code/src/map-events.ts",
-          "kind": "N"
-        },
-        {
-          "path": "packages/subagent/subagent-claude-code/src/continuation.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/subagent/subagent-claude-code/tests/structured.e2e.ts",
           "kind": "N"
         }
@@ -8896,7 +8917,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 971
       },
       "validation": [
@@ -9021,7 +9042,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 985
       },
       "validation": [
@@ -9144,7 +9165,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 999
       },
       "validation": [
@@ -9279,7 +9300,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1013
       },
       "validation": [
@@ -9413,7 +9434,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1027
       },
       "validation": [
@@ -9544,7 +9565,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1046
       },
       "validation": [
@@ -9664,7 +9685,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1060
       },
       "validation": [
@@ -9786,7 +9807,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1074
       },
       "validation": [
@@ -9923,7 +9944,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1088
       },
       "validation": [
@@ -10048,7 +10069,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1102
       },
       "validation": [
@@ -10174,7 +10195,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1116
       },
       "validation": [
@@ -10309,7 +10330,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1130
       },
       "validation": [
@@ -10453,7 +10474,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1144
       },
       "validation": [
@@ -10588,7 +10609,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1158
       },
       "validation": [
@@ -10725,7 +10746,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1172
       },
       "validation": [
@@ -10862,7 +10883,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1191
       },
       "validation": [
@@ -11011,7 +11032,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1205
       },
       "validation": [
@@ -11160,7 +11181,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1219
       },
       "validation": [
@@ -11299,7 +11320,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1233
       },
       "validation": [
@@ -11446,7 +11467,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1247
       },
       "validation": [
@@ -11594,7 +11615,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1261
       },
       "validation": [
@@ -11714,10 +11735,6 @@
           "kind": "N"
         },
         {
-          "path": "packages/observability/otel-exporter/src/index.ts",
-          "kind": "N"
-        },
-        {
           "path": "packages/observability/causal-trace/tests/crash-delivery.e2e.ts",
           "kind": "N"
         }
@@ -11741,7 +11758,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1275
       },
       "validation": [
@@ -11888,7 +11905,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1289
       },
       "validation": [
@@ -12049,7 +12066,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1303
       },
       "validation": [
@@ -12219,7 +12236,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1317
       },
       "validation": [
@@ -12366,7 +12383,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1336
       },
       "validation": [
@@ -12520,7 +12537,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1350
       },
       "validation": [
@@ -12663,7 +12680,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1364
       },
       "validation": [
@@ -12810,7 +12827,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1378
       },
       "validation": [
@@ -12948,7 +12965,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1392
       },
       "validation": [
@@ -13096,7 +13113,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1406
       },
       "validation": [
@@ -13246,7 +13263,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1420
       },
       "validation": [
@@ -13392,7 +13409,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1434
       },
       "validation": [
@@ -13543,7 +13560,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1448
       },
       "validation": [
@@ -13717,7 +13734,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff",
+        "sha256": "2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b",
         "line": 1462
       },
       "validation": [

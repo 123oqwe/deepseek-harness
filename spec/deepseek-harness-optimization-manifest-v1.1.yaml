@@ -1297,9 +1297,9 @@ remainingPending:
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 443
+  writtenFiles: 433
   statusCounts:
-    sole: 416
+    sole: 406
     sequential: 23
     serialized: 4
     conflict: 0
@@ -2845,10 +2845,6 @@ epics:
       kind: "P"
     - path: "packages/policy/policy-language/src/index.ts"
       kind: "N"
-    - path: "packages/policy/policy-language/src/parser.ts"
-      kind: "N"
-    - path: "packages/policy/policy-language/src/compiler.ts"
-      kind: "N"
     - path: "packages/policy/policy-language/tests/golden.spec.ts"
       kind: "N"
     - path: "docs/policy/language.md"
@@ -2998,8 +2994,6 @@ epics:
     - path: "packages/sandbox/sandbox/src/roots.ts"
       kind: "B"
     - path: "packages/core/tools/src/types.ts"
-      kind: "B"
-    - path: "packages/core/agent-loop/src/runtime-context.ts"
       kind: "B"
     - path: "packages/execution/execution-world/src/index.ts"
       kind: "N"
@@ -3206,10 +3200,6 @@ epics:
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:
-    - path: "packages/sandbox/sandbox-local/src/index.ts"
-      kind: "B"
-    - path: "packages/sandbox/sandbox-local/src/profiles.ts"
-      kind: "B"
     - path: "packages/execution/execution-world/src/types.ts"
       kind: "P"
     - path: "packages/execution/local-isolation/src/linux.ts"
@@ -3310,10 +3300,6 @@ epics:
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:
-    - path: "packages/sandbox/sandbox-local/src/index.ts"
-      kind: "B"
-    - path: "packages/sandbox/sandbox-local/src/profiles.ts"
-      kind: "B"
     - path: "packages/sandbox/sandbox-local/src/capabilities.ts"
       kind: "N"
     - path: "packages/sandbox/sandbox-local/src/attestation.ts"
@@ -4363,10 +4349,6 @@ epics:
       kind: "B"
     - path: "packages/goal/README.md"
       kind: "B"
-    - path: "packages/run/turn-checkpoint/src/index.ts"
-      kind: "N"
-    - path: "packages/run/turn-checkpoint/src/types.ts"
-      kind: "N"
     - path: "packages/run/trigger-service/src/index.ts"
       kind: "N"
     - path: "packages/run/trigger-service/tests/resume.e2e.ts"
@@ -4529,8 +4511,6 @@ epics:
       kind: "N"
     - path: "packages/llm/prompt-compiler/src/types.ts"
       kind: "N"
-    - path: "packages/llm/prompt-compiler/src/compile.ts"
-      kind: "N"
     - path: "packages/llm/prompt-compiler/tests/golden.spec.ts"
       kind: "N"
     stages:
@@ -4621,15 +4601,7 @@ epics:
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:
-    - path: "packages/subagent/subagent/src/descriptor.ts"
-      kind: "B"
-    - path: "packages/subagent/subagent/src/descriptor-seed.ts"
-      kind: "B"
-    - path: "packages/subagent/subagent/src/depth.ts"
-      kind: "B"
     - path: "packages/subagent/subagent/src/types.ts"
-      kind: "B"
-    - path: "packages/subagent/subagent/src/client.ts"
       kind: "B"
     - path: "packages/subagent/subagent/src/request.ts"
       kind: "N"
@@ -4672,11 +4644,7 @@ epics:
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:
-    - path: "packages/subagent/subagent/src/assistant-output.ts"
-      kind: "B"
     - path: "packages/subagent/subagent/src/types.ts"
-      kind: "B"
-    - path: "packages/subagent/subagent/src/lifecycle.ts"
       kind: "B"
     - path: "packages/workflow/workflow/src/types.ts"
       kind: "B"
@@ -4731,10 +4699,6 @@ epics:
       kind: "P"
     - path: "packages/subagent/subagent/src/result.ts"
       kind: "P"
-    - path: "packages/subagent/subagent-codex/src/map-events.ts"
-      kind: "N"
-    - path: "packages/subagent/subagent-codex/src/continuation.ts"
-      kind: "N"
     - path: "packages/subagent/subagent-codex/tests/structured.e2e.ts"
       kind: "N"
     stages:
@@ -4783,10 +4747,6 @@ epics:
       kind: "P"
     - path: "packages/subagent/subagent/src/result.ts"
       kind: "P"
-    - path: "packages/subagent/subagent-claude-code/src/map-events.ts"
-      kind: "N"
-    - path: "packages/subagent/subagent-claude-code/src/continuation.ts"
-      kind: "N"
     - path: "packages/subagent/subagent-claude-code/tests/structured.e2e.ts"
       kind: "N"
     stages:
@@ -5927,8 +5887,6 @@ epics:
     - path: "packages/observability/telemetry-outbox/src/index.ts"
       kind: "N"
     - path: "packages/observability/telemetry-outbox/src/store.ts"
-      kind: "N"
-    - path: "packages/observability/otel-exporter/src/index.ts"
       kind: "N"
     - path: "packages/observability/causal-trace/tests/crash-delivery.e2e.ts"
       kind: "N"

@@ -52,7 +52,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = '7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff'
+const MATRIX_SHA = '2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -178,6 +178,42 @@ const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11'
  * Every entry is checked against the extracted MUST text below: a record whose
  * clause the matrix does not actually give that epic fails the extraction.
  */
+
+/**
+ * `files[]` reductions and hot-zone relocations from the 2026-09-06
+ * rectification order (spec/first100/exec/plan-rectification-2026-09-06.md).
+ *
+ * Neither touches a clause, which is why neither appears in `clauseProvenance`
+ * and neither reaches the coverage report: what an epic must DO is unchanged,
+ * and only where it may write has moved.
+ *
+ * **A reduction** drops a declared new file whose feature the pinned dependency
+ * already ships — the epic still owes the behaviour, it just no longer owes a
+ * file to put it in. **A relocation** drops an upstream-hot `[B]` file so the
+ * capability arrives as a new rung, plugin or contribution instead. P5-10 is the
+ * worked example: its convergence barrier took participants through
+ * `addParticipant` rather than editing the subagent hot path, and its four cells
+ * are green.
+ *
+ * Recorded here rather than inferred from the diff, because "this file is gone
+ * because upstream ships it" and "this file is gone because we stopped editing
+ * a hot path" are different decisions with different reversals.
+ */
+const FILES_REDUCED = {
+  'P5-07': { removed: ['subagent-codex/src/map-events.ts', 'subagent-codex/src/continuation.ts'], reason: '@openai/codex 0.149.1 already ships thread/resume, thread/fork, turn/steer, turn/interrupt, thread/list and item requestApproval.' },
+  'P5-08': { removed: ['subagent-claude-code/src/map-events.ts', 'subagent-claude-code/src/continuation.ts'], reason: '@anthropic-ai/claude-agent-sdk 0.3.241 already ships resume/continue, forkSession, canUseTool and hooks.' },
+  'P5-03': { removed: ['llm/prompt-compiler/src/compile.ts'], reason: 'Per-provider compilation already exists as pi-ai compat flags plus llm-pi-ai toPiContext and llm-deepseek translate.' },
+  'P4-14': { removed: ['run/turn-checkpoint/src/index.ts', 'run/turn-checkpoint/src/types.ts'], reason: 'Redundant with upstream session events and repair.ts; what remains is a resume classifier over the signals those already produce.' },
+  'P7-07': { removed: ['observability/otel-exporter/src/index.ts'], reason: 'packages/session/session-telemetry-otel IS the OTel backend; a TracerProvider pipeline belongs there, not in a second exporter package.' },
+  'P2-10': { removed: ['policy/policy-language/src/parser.ts', 'policy/policy-language/src/compiler.ts'], reason: 'A homemade policy language. The engine is Cedar; explain is its isAuthorized diagnostics and dry-run its isAuthorizedPartial residuals.' },
+}
+const HOT_ZONE_RELOCATED = {
+  'P3-01': { removed: ['core/agent-loop/src/runtime-context.ts'], reason: 'The world handle arrives through sandbox-policy\'s runtime-context snapshot contribution; the loop is unchanged.' },
+  'P3-05': { removed: ['sandbox/sandbox-local/src/index.ts', 'sandbox/sandbox-local/src/profiles.ts'], reason: 'A new sandbox-srt rung over @anthropic-ai/sandbox-runtime carries the per-platform mapping. NOTE: this leaves P3-05 with no [B] file at all, so its rung must be MOUNTED by contribution rather than by editing a hot file -- stated because zero hot files is the intended outcome here, not an omission.' },
+  'P3-07': { removed: ['sandbox/sandbox-local/src/index.ts', 'sandbox/sandbox-local/src/profiles.ts'], reason: 'Same rung as P3-05. Its own additions -- the attestation predicate schema and the requested-subset-of-supported check -- are new files inside sandbox-local, which is adding to the package without editing its hot path.' },
+  'P5-05': { removed: ['subagent/src/descriptor.ts', 'subagent/src/descriptor-seed.ts', 'subagent/src/depth.ts', 'subagent/src/client.ts'], reason: 'Five hot files down to one. New request fields land in [N] request.ts as capability flags; types.ts stays only as the re-export point.' },
+  'P5-06': { removed: ['subagent/src/assistant-output.ts', 'subagent/src/lifecycle.ts'], reason: 'Result contract extensions land in [N] result.ts; types.ts stays as the re-export point.' },
+}
 
 /**
  * Clauses REWORDED against the pinned source, because the plan was wrong about
@@ -775,6 +811,16 @@ const registry = {
       : {}),
     ...(Object.keys(CLAUSE_MOVEMENTS).length > 0
       ? {
+          filesReduced: {
+            epicIds: Object.keys(FILES_REDUCED).sort(),
+            order: 'spec/first100/exec/plan-rectification-2026-09-06.md §C',
+            entries: FILES_REDUCED,
+          },
+          hotZoneRelocated: {
+            epicIds: Object.keys(HOT_ZONE_RELOCATED).sort(),
+            order: 'spec/first100/exec/plan-rectification-2026-09-06.md §D',
+            entries: HOT_ZONE_RELOCATED,
+          },
           clauseMovements: {
             destinations: Object.keys(CLAUSE_MOVEMENTS).sort(),
             count: Object.values(CLAUSE_MOVEMENTS).reduce((n, entries) => n + entries.length, 0),
