@@ -37,6 +37,22 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(here, '..', '..')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
+const RENAMES_PATH = join(REPO_ROOT, 'spec/first100/exec/frozen-title-renames.json')
+
+/**
+ * The registered rename for each frozen title, old name to new.
+ *
+ * A renamed case is not a deleted one, and the register already exists to say
+ * so — `verify-frozen-titles-resolvable.mjs` has consulted it since BLOCKED-040.
+ * Omitting it here made this gate report P0-05.C's renamed case as an orphan
+ * whose replacement was sitting in the register the whole time: a gate that
+ * reports a recorded fact as a finding trains its reader to ignore it.
+ * @returns the mapping, keyed by the old title.
+ */
+function registeredRenames() {
+  const register = JSON.parse(readFileSync(RENAMES_PATH, 'utf8'))
+  return new Map(register.entries.map(entry => [entry.oldTitle, entry.newTitle]))
+}
 
 /**
  * Every test name the suite can produce, as vitest reports them.
@@ -77,11 +93,15 @@ function main() {
     live.set(`${entry.epic}.${entry.stage}`, entry)
   }
   const producible = collectProducibleTitles()
+  const renames = registeredRenames()
 
   const orphans = []
   for (const [key, entry] of live) {
     for (const title of entry.expectCases) {
-      if (!producible.has(title)) orphans.push({ key, title })
+      if (producible.has(title)) continue
+      const renamed = renames.get(title)
+      if (renamed !== undefined && producible.has(renamed)) continue
+      orphans.push({ key, title, ...renamed === undefined ? {} : { renamed } })
     }
   }
 
@@ -96,7 +116,12 @@ function main() {
     `verify-frozen-titles-in-tree: ${String(orphans.length)} frozen title(s) no test produces. A replaced or deleted case `
     + 'needs its freeze entry superseded (BLOCKED-103), not left pointing at a title that is gone:',
   )
-  for (const { key, title } of orphans) console.error(`  ${key}: ${title}`)
+  for (const { key, title, renamed } of orphans) {
+    console.error(`  ${key}: ${title}`)
+    // A registered rename that ALSO names nothing producible is worse than an
+    // unregistered one: the register says the replacement exists.
+    if (renamed !== undefined) console.error(`    registered rename to "${renamed}", which no test produces either`)
+  }
   process.exit(1)
 }
 

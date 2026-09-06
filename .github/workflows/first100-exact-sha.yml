@@ -100,6 +100,15 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      # Runs BEFORE the suite, because it asks a question the suite cannot: a
+      # frozen title no test can produce is invisible to a run — the case simply
+      # is not there, and the observation is silent about it. Deleting a frozen
+      # case without superseding its entry happened twice in one day, both times
+      # caught by a person reading. `vitest list` collects without executing, so
+      # this costs seconds against the suite that follows.
+      - name: Every live frozen case title exists in the tree
+        run: pnpm run first100:verify-frozen-titles-in-tree
+
       - name: Full test suite (verbose json reporter — the ledger's observation input)
         run: |
           mkdir -p .artifacts/first100/observations
