@@ -87,7 +87,81 @@ function scriptSources() {
     .map(name => ({ name, text: readFileSync(join(dir, name), 'utf8') }))
 }
 
+/**
+ * Report every `verify-*.mjs` in this directory that no caller invokes.
+ *
+ * The same defect as an unread field, one level up: a gate nobody runs records
+ * nothing, and it took a person noticing to find the last two —
+ * `verify-baseline-file-references.mjs` and `verify-frozen-titles-resolvable.mjs`
+ * were both built and left unwired, the second sitting red where a real
+ * regression would have been indistinguishable from the standing failure.
+ *
+ * A caller is a `package.json` script or a workflow step naming the file, so
+ * both the local gate sets and CI count. Reported, never fatal, for the same
+ * reason the field scan is: a checker still being written has no caller yet.
+ * @returns one line per uncalled gate.
+ */
+function uncalledGates() {
+  const dir = join(REPO_ROOT, 'scripts/first100')
+  // A `package.json` entry is a NAME, not a caller: a script nobody invokes is
+  // the very shape this scan exists to catch, so being listed there does not
+  // count. Only membership in an executed gate set or a workflow step does.
+  const NOT_A_GATE = new Map([
+    ['verify-fields-are-read.mjs', 'this scan — a reporter that always exits 0, so putting it in a gate set would add noise carrying no signal'],
+    ['verify-cells-recomputable.mjs', 'exits 1 today on the KNOWN P1-02.P/F freeze drift; wiring a gate that is already red makes a later real regression indistinguishable from the standing failure (BLOCKED-057). Wire it the moment those two cells regreen — the exemption is timed, not permanent.'],
+  ])
+  const scripts = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).scripts ?? {}
+  // Reachability, not mention: start from what CI actually runs and follow
+  // `pnpm run <name>` through the gate aggregates. A `package.json` entry that
+  // nothing reaches is a name for a gate, not a caller of one — which is the
+  // distinction the whole scan turns on.
+  const workflows = join(REPO_ROOT, '.github/workflows')
+  const callers = readdirSync(workflows)
+    .filter(name => name.endsWith('.yml') || name.endsWith('.yaml'))
+    .map(name => readFileSync(join(workflows, name), 'utf8'))
+  const reached = new Set()
+  const frontier = callers.flatMap(text => [...text.matchAll(/(?:npm|pnpm) run ([\w:-]+)/g)].map(m => m[1]))
+  while (frontier.length > 0) {
+    const name = frontier.pop()
+    if (reached.has(name) || scripts[name] === undefined) continue
+    reached.add(name)
+    callers.push(scripts[name])
+    for (const match of scripts[name].matchAll(/(?:npm|pnpm) run ([\w:-]+)/g)) frontier.push(match[1])
+  }
+  // The weaker tier: a gate set someone must type. `first100:slice-gate-registry`
+  // is reached by no workflow, so everything in it runs on a person remembering
+  // to — worth telling apart from a gate wired to nothing at all.
+  const manual = Object.values(scripts)
+  return readdirSync(dir)
+    .filter(name => name.startsWith('verify-') && name.endsWith('.mjs'))
+    .filter(name => !callers.some(text => text.includes(`scripts/first100/${name}`)))
+    .map(name => ({
+      name,
+      reason: NOT_A_GATE.get(name),
+      inManualGateSet: manual.some(command => command.includes(`scripts/first100/${name}`)),
+    }))
+}
+
 function main() {
+  const uncalled = uncalledGates()
+  const unexplained = uncalled.filter(gate => gate.reason === undefined && !gate.inManualGateSet)
+  if (uncalled.length > 0) {
+    console.log(`verify-fields-are-read: ${uncalled.length} gate(s) in scripts/first100 that nothing CI runs reaches:`)
+    for (const { name, reason, inManualGateSet } of uncalled) {
+      const status = reason !== undefined
+        ? `deliberately not a gate: ${reason}`
+        : inManualGateSet
+          ? 'in a gate set no workflow runs — it fires only when someone types the command'
+          : 'built, wired to nothing'
+      console.log(`  ${name} -- ${status}`)
+    }
+  } else {
+    console.log('verify-fields-are-read: every verify-*.mjs gate is reachable from something CI runs.')
+  }
+  if (unexplained.length > 0) {
+    console.log(`  ${unexplained.length} of those reach no caller at all and carry no stated reason — a gate nobody runs records nothing.`)
+  }
+
   const keys = new Set()
   for (const path of RECORD_PATHS) {
     try {
