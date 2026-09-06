@@ -245,12 +245,36 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 ③ §3.1 Cedar slice(P2-05 开之前)
 
-④ W5–W7 按波走;每条 epic 开工三问时,preFlight 先读本令对应条目
+④ W5–W7 按波走;每条 epic 开工时四问(见 §4.1),preFlight 先读本令对应条目
 
 ⑤ §3.2 sandbox-srt slice(W7 开之前)
 
 ⑥ §3.3 OTel pipeline(W12 开之前)
 ```
+
+### 4.1 开工第四问:这条 epic 账本判的是造还是用?(自 P2-04 起为标准动作)
+
+前三问(BLOCKED-101):主体在不在执行路径上 / 冻结挂哪 / 每条子句的主体是什么。**第四问在三问之后、第一行代码之前**,答案写进 `clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse` 字段:`{ verdict, adopted: [...], residual }`。
+
+**来源**:造用账本(artifact `2e874903`)该 epic 那一行——`verdict` / `oss[]`(每条带 `role`)/ `deletedPct` / `residual`。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**
+
+| verdict | 动作 |
+|---|---|
+| `PROVIDER_ADAPT` | **用。** 只接 `oss[]` 里 `role: adapt` 的那条,按其 `note` 接;`residual` 写的是接完还剩什么要自己写 |
+| `REUSE_UPSTREAM` | **不写。** 上游已有;缺口在 `spec/first100/sources/base-align-v2/23-partial-rescope-spec.md`;活是核缺口 + 接线 |
+| `CONTRACT_WRITE` / `PROVIDER_WRITE` / `CONSUMER_WRITE` | **写。** 账本找过,没有合适的开源;契约和定义本来就没有 |
+| `KERNEL_WRITE` | **写。** 仅 P0-02 |
+| 无判定(P3-13 及任何后续收录) | 开工时补一次:**只有我们定义的 → 写;公认难题且失败模式静默 → 用**,用的话过下面四道过滤 |
+
+**`role` 的含义**:`adapt` 接进依赖;`optional` 不进依赖,至多作可选 provider 且不进 CI;`reject` 不接(原因在条目里);`reference` 只读设计。**`reject` 的比 `adapt` 的多**,原因全是仓库自己的约束——外部 daemon 不当默认(keyless CI、自包含)、不开第二个 seam(SQLCipher 重开 node:sqlite、trpc 是第三个 RPC、BAML 是第二个 IR)、许可证(AGPL 不嵌入)、维护状态(archived / deprecated)。
+
+**验收标准不因用开源而降。** 四谓词 + 双向变异验的是**我们写的接线**:fail-closed 有没有、配置从哪来、策略谁强制、降级路径有没有。**P1-02 是模板**——sigstore-js 做密码学,我们的用例测"未注册签发者拒不拒 / trusted root 从哪来 / 身份由 verifier 自己的 policy 强制 / 离线用 bundle 内含证明不降级"。**库的内部由库自己的套件验,不重验。**
+
+**两个不许犯的错**:
+1. **包一层库就叫做完。** 子句的主体必须在我们的代码里——adapter、fail-closed 检查、conformance 用例。"接了 Cedar" ≠ P2-05 做完;"`decide()` 在 forbid > permit 上 fail-closed 且 explain 带 matched policy id" 才是。
+2. **接一个"第二份声明"。** 手写 schema 而 surface 是源(P8-01 的教训);Cedar 已是引擎再接一个策略语言 parser(P2-10 的 planError)。
+
+**必须自己写的,不因"复用"动摇**:内核六样(根身份 / 签名根 / 策略执行入口 / 审计 append / secret broker / sandbox attestation)、全部 contract 与 definition(第 2 层)、账本判 WRITE 的 32 条。**没有开源,不是因为没找,是因为它们是这个程序的身份。**
 
 ## 5. 验证
 
