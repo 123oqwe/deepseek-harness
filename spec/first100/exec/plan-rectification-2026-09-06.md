@@ -256,7 +256,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 前三问(BLOCKED-101):主体在不在执行路径上 / 冻结挂哪 / 每条子句的主体是什么。**第四问在三问之后、第一行代码之前**,答案写进 `clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse` 字段:`{ verdict, adopted: [...], residual }`。
 
-**来源**:造用账本(artifact `2e874903`)该 epic **整行 16 个字段**,不是两列。开工时必读并逐项回答的七个:`verdict` **和 `verdictSecondary`**(80/109 行有第二判定——"CONTRACT_WRITE + PROVIDER_ADAPT" 意思是契约自己写、provider 接开源,两半分开答)/ `oss[]` 里 `role: adapt` 的每一条**及其 `note`**(note 是接法,不是介绍)/ **`standards[]`**(71/109 行有;是绑定词汇,见 §7.3)/ **`risk`**(109/109 行有;里面有具体禁令,例:P2-03 "do not write a second canonicalizer")/ `residual`(接完还要自己写什么)/ `deletedPct` / `community`(只作设计参考,不接——CATALOG_ADOPT 为 0 已对抗复核)。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**(2026-09-06 晚修订:本段原只列四个字段,§7 记录了只读四字段造成的漏检。)
+**来源**:造用账本(artifact `2e874903`;**仓库副本 `spec/first100/exec/make-vs-use-ledger.json`,`rows[].id` 索引,2026-09-06 晚落盘,此前只在 artifact 和 /tmp**)该 epic **整行 16 个字段**,不是两列。开工时必读并逐项回答的七个:`verdict` **和 `verdictSecondary`**(80/109 行有第二判定——"CONTRACT_WRITE + PROVIDER_ADAPT" 意思是契约自己写、provider 接开源,两半分开答)/ `oss[]` 里 `role: adapt` 的每一条**及其 `note`**(note 是接法,不是介绍)/ **`standards[]`**(71/109 行有;是绑定词汇,见 §7.3)/ **`risk`**(109/109 行有;里面有具体禁令,例:P2-03 "do not write a second canonicalizer")/ `residual`(接完还要自己写什么)/ `deletedPct` / `community`(只作设计参考,不接——CATALOG_ADOPT 为 0 已对抗复核)。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**(2026-09-06 晚修订:本段原只列四个字段,§7 记录了只读四字段造成的漏检。)
 
 | verdict | 动作 |
 |---|---|
@@ -404,3 +404,9 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 **裁决**:②③⑤ 全在 P0-01/P0-07 的脚本里,正是 **R1 §3.4 attestation-envelope slice 要改写的文件**,收敛归该 slice(它本来就要把 evidence/baseline 改发 Statement+DSSE),不挂 P2-03——否则 P2-03 重观测范围从 C+F 膨胀到五个包。④ 和 repeat-tool-reminder 不动,按 BLOCKED-126 的范围规矩:**下次有 stage 因自己的子句碰到该文件时顺手换库**,不为一条规矩去动没坏的文件。记 BLOCKED-QUEUE 一条 durable pointer。
 
 **扫描方法归档**:找"第二份声明"按行为扫(`sort.*keys|sortKeysDeep|Object\.keys\(.*\)\.sort` + 后接 `stringify` + 喂 `createHash`),名字扫会漏。
+
+### 7.7 账本落盘(2026-09-06 晚,用户追问「每一点的接法你更新了吗」后)
+
+账本的 **237 条 adapt 级 `oss[].note`(每条的接法:版本、体积、本地验过的行为、要避开的坑)此前只在 artifact 和 `/tmp`**,仓库里没有副本——§4.1 让执行者"开工时读账本那一行",而它手里没有带版本的一份。现在:`spec/first100/exec/make-vs-use-ledger.json`(109 行 × 16 字段,`source` 段记 artifact id / 生成方式 / 提取时间 / `oss.role` 语义)。**第四问从这个文件读,不从 artifact 读**;`preFlight.makeVsUse` 必须引用 `rows[].id` 和所用 `oss[].name`。账本本身若要修(例:§3 P2-02 Biscuit 已被 Fiber 事实超越),改这个文件并在本节追加一行,不改 artifact。
+
+**状态说明(对用户)**:本附录的裁决 R1–R7 里,**代码层已修的是 0 条**——delegate 不改代码。R2(P2-03)执行者已按 preFlight 开工;R1(§3.4 slice)排在 Cedar 之后、P4-04 之前;R3–R7 是归属与规则,在各拥有者 epic 开工时兑现。
