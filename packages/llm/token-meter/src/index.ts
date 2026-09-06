@@ -145,26 +145,6 @@ export class TokenMeter extends Service {
   }
 
   /**
-   * Measure current request pressure and surface through the durable tail.
-   *
-   * The effective envelope's routed provider/model selects the request-image
-   * pricing every node is priced under: a route whose adapter declares image
-   * pricing charges each retained image its visual tokens plus its
-   * model-visible text, while other routes keep the fixed heuristic. Provider
-   * usage is reused only when the latest successful call's canonical request
-   * envelope matches `requestHeader` and its total is no lower than that
-   * call's full route-priced anchor; otherwise the complete envelope and
-   * surface are repriced.
-   *
-   * `requestHeader` replaces the latest logged envelope for pressure and node
-   * pricing; the node set always describes the current session surface. Every
-   * call clones those positional nodes, so measurement is O(surface).
-   *
-   * @param session - session to replay through its current durable tail.
-   * @param requestHeader - optional effective request envelope replacing the latest logged header.
-   * @returns a detached deeply immutable pressure and surface measurement.
-   */
-  /**
    * What the latest real response says this session's heuristic is off by
    * (Epic P9-05 must[1]).
    *
@@ -190,6 +170,26 @@ export class TokenMeter extends Service {
     return calibrationFromAnchor(state.anchor, this._routeImagePricing(state.header))
   }
 
+  /**
+   * Measure current request pressure and surface through the durable tail.
+   *
+   * The effective envelope's routed provider/model selects the request-image
+   * pricing every node is priced under: a route whose adapter declares image
+   * pricing charges each retained image its visual tokens plus its
+   * model-visible text, while other routes keep the fixed heuristic. Provider
+   * usage is reused only when the latest successful call's canonical request
+   * envelope matches `requestHeader` and its total is no lower than that
+   * call's full route-priced anchor; otherwise the complete envelope and
+   * surface are repriced.
+   *
+   * `requestHeader` replaces the latest logged envelope for pressure and node
+   * pricing; the node set always describes the current session surface. Every
+   * call clones those positional nodes, so measurement is O(surface).
+   *
+   * @param session - session to replay through its current durable tail.
+   * @param requestHeader - optional effective request envelope replacing the latest logged header.
+   * @returns a detached deeply immutable pressure and surface measurement.
+   */
   measure(session: Session, requestHeader?: EpochHeader): TokenMeasurement {
     const state = this._sync(session)
     const header = requestHeader === undefined

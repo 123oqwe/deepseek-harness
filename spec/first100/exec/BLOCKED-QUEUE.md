@@ -3010,3 +3010,22 @@ Three findings cost a round each and are recorded in the file so the next attemp
 **What this session can still move without any decision:** P2-03's unlocked third, P5-10's remaining cells once an observation covers them, and the Sigstore slice. **What it cannot move is the accepted count**, and reporting steady progress on stage work while that number sits at 18 would describe activity rather than advance.
 
 **One thing the maintainer may want to know first.** P4-07 and P8-01 are the two largest dependency holders that are NOT lock-listed. They are stuck on a question of what their own clauses mean, not on missing infrastructure — which makes them the cheapest of the seven to unstick, and the only two whose unsticking needs no engineering at all.
+
+## BLOCKED-123 — a deleted frozen case now has a reader, and it found a third one
+
+**Status:** GATE ADDED, P1-02 superseded, one pre-existing orphan surfaced for the delegate.
+
+BLOCKED-103's rule is that replacing or deleting a frozen case requires superseding its freeze entry. It was missed **twice in one day**: P5-11's must[2] cases in the morning, and P1-02's two KNOWN GAP cases in the afternoon, deleted the moment their unlock signal fired. Both times a person caught it. The rule lived in this queue and the moment of deletion consulted nothing.
+
+`scripts/first100/verify-frozen-titles-in-tree.mjs` asks, for every live frozen title, whether any test still produces it.
+
+**Two implementations were tried and the first was abandoned as a gate that could not fail.** Matching frozen titles against string literals in the test sources looked cheap, but `it.each` builds names from data, so the literal never appears whole — 240 false orphans. Loosening the match to tolerate templates produced **zero** orphans, including the two titles known to be deleted. A checker tuned until it reports nothing is worse than no checker, because it also reports nothing when something is wrong.
+
+The second implementation asks vitest. `vitest list --json` collects without executing and returns the exact names the suite would produce — 19,997 of them, both projects — so the comparison is an equality rather than a guess. Titles are matched in both spellings, full name and bare `it` text, because freezes recorded before the BLOCKED-104 migration hold bare titles. Collection costs about 90 seconds, which makes this a pre-push check rather than a per-commit one.
+
+**On the current tree it reports three, then one.** The two P1-02 titles the delegate found — reproduced mechanically, which is the point — and:
+
+| P0-05.C | `has exactly one statement: a type-only \`export type * from './types.ts'\`` |
+|---|---|
+
+**Nothing in the tree produces that title.** The nearest real one belongs to P0-07: `is exactly one statement: ...` — a different epic and a different verb. P0-05 is ACCEPTED, so this is a frozen reference in an accepted row that no test satisfies, and it predates everything done today. **Not touched here**: how an accepted epic's freeze is corrected is the delegate's call, and the two candidate readings — a renamed case that was never superseded, or a title recorded from a run that no longer exists — have different remedies.

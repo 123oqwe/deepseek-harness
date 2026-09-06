@@ -2390,7 +2390,8 @@
         "treeSha": "b70b48513e95f59476dba74ed21a1d74cdfca55e",
         "testsDiscovered": 11
       },
-      "note": "P-stage RED scaffold for P1-02, attempt/P1-02-P branched from land-base-align-v2 and rebased onto 3a5e069294; treeSha is that base tree (git rev-parse HEAD^{tree} at freeze time, before the RED commit). 11/11 genuinely failed on real not-implemented errors ('not implemented: computePackageDigest over 24/25 bytes'), zero module/syntax errors, verified by parsing the JSON reporter rather than reading console output; C-stage provenance.spec.ts independently re-confirmed still green (13/13) after the change, and tsc -b on the package exits 0. GENUINELY NEW AT P-STAGE: acceptance[0]'s '篡改一个字节' vector is NOT proven by the C stage. Its tampered-byte case compares two unrelated fixture strings ('sha256:9f2c...real-package-tarball' against 'sha256:9f2c...one-byte-tampered'); no package bytes exist anywhere in provenance.spec.ts, so the case would pass identically if verifyPackageSignature compared any two distinct strings. P adds computePackageDigest(packageBytes: Uint8Array): PackageDigest -- a real sha256 over real bytes -- and the new spec builds a byte array, flips exactly one byte, recomputes, and lets the Contract stage's existing rule table reach the verdict. No second rule table is added and no C-stage decision is changed. acceptance[1] becomes real as a direct consequence: the C-stage offline case passes the identical fixture object to both entrypoints, so they agree by construction; the P case re-derives the locked package's digest inside a separately loaded module instance (vi.resetModules() + dynamic import, sharing no value or closure) and asserts the same trusted verdict, plus that the offline path rejects the same one-byte tampering the online path does. HONEST SCOPE, ASSERTED IN AN EXECUTED CASE: computePackageDigest binds the artifact to the claim, never the claim to an authority. The final case executes the attacker who tampers with the bytes AND rewrites the claim's packageDigest to match, and asserts that this STILL VERIFIES as trusted. Detecting it needs a signature over the claim against a trust root. BLOCKED, NOT SATISFIED, AND NO CASE CLAIMS OTHERWISE (BLOCKED-050): createTrustKernel() mints signatureRoots/rootIdentity/secretBroker as Object.freeze({}), policyEnforcement always returns 'deny' and auditAppend is a no-op -- verified at runtime, not read from prose: a probe spec printed signatureRootsKeys=[], rootIdentityKeys=[], secretBrokerKeys=[], policy='deny', audit=undefined. verifyPackageSignature performs no cryptographic verification at all: string equality on caller-supplied facts, then non-emptiness checks on evidence fields; OfflineSignedProvenanceEvidence.signature is only ever tested for .length === 0, and trustRoot is used solely as a WeakMap key, never read, which is why an empty frozen object serves as one. The same probe verified that a fully attacker-authored, internally self-consistent claim carrying a never-registered issuer returns { trust: 'trusted', trustAnchorId: 'sigstore:https://issuer.attacker.example' }. must[0] (Sigstore or org offline signing), must[2] ('TrustKernel 持有可信根'), must[3]'s meaningful half, and acceptance[0]'s remaining two vectors are therefore BLOCKED and are NOT addressed by this stage. On those two vectors specifically: observedSourceCommit and observedBuilderIdentity are ATTESTATIONS, NOT RECOMPUTABLE LOCAL FACTS -- there is nothing on the installed package a verifier can hash to learn which repo it came from or who built it; that binding exists only inside a signed attestation. Without a trust root, `observed` is a second copy of the attacker's claim. No non-cryptographic check closes them. must[3]'s structural half (the handle is deep-frozen, only createTrustKernel() mints one, no function accepts a plugin-supplied substitute) is already true and already covered at C. must[4] and acceptance[2] are real and complete at C; P adds nothing to them. DELIBERATELY NOT BUILT (coordinator-approved): a durable trust-anchor store. It needs no keys and would be real, but an anchor set living in a plugin-module store while must[2] is blocked would read as must[2] closed -- a real mechanism sitting where a reader expects the blocked one -- and the store would have to go inside signature.ts, making a pure decision module I/O-bearing to route around a scope boundary. ALSO DELIBERATELY NOT CHANGED (coordinator-approved): first-sight trust. verifyPackageSignature verifies a claim whose issuer or key fingerprint was never registered, synthesizing a TrustAnchorId from the claim's own issuer string. Tightening it to fail closed would break the frozen C case that verifies trusted with no anchor registered, and a parallel strict mode would be a second rule table; this is a C-stage decision with its own freeze. DECLARED-SCOPE DEVIATION, reported for audit: packages/kernel/trust-kernel/src/types.ts (the other P-stage declared file) was read in full and deliberately NOT modified. The only honest candidate there is a key-bearing member on TrustKernelSignatureRoots, whose sole constructor (createTrustKernel in trust-kernel/src/index.ts) is outside this stage's scope -- the member would be a dead type and would make must[2] look addressed while changing nothing. git status confirms zero changes to that package, and no docs/architecture.md update is implied. PLATFORM: every case is pure in-memory node:crypto over Uint8Array values the spec constructs -- no filesystem, clock, network, temp path, or platform-dependent behavior -- so a pass is the same signal on macOS and Linux (P1-07 acceptance[1] lesson). No package.json or tsconfig.json edit was needed and no dependency edge was added. expectExit=0 is the GREEN target per the P0-01.C precedent. TITLE RE-FREEZE (coordinator instruction during GREEN): the eleventh case's title was rewritten to carry the warning in the only place guaranteed to be read. A fully green suite now contains a case asserting that an attack SUCCEEDS, and a reader scanning passing test names would otherwise take it for desired behavior. The title names it a known gap, cites BLOCKED-050, says current-not-desired explicitly, and states that giving the kernel real key material MUST break it -- that failure is P1-02's unlock signal, not a regression to patch back to green. BLOCKED-050 records the same pointer in the other direction."
+      "note": "P-stage RED scaffold for P1-02, attempt/P1-02-P branched from land-base-align-v2 and rebased onto 3a5e069294; treeSha is that base tree (git rev-parse HEAD^{tree} at freeze time, before the RED commit). 11/11 genuinely failed on real not-implemented errors ('not implemented: computePackageDigest over 24/25 bytes'), zero module/syntax errors, verified by parsing the JSON reporter rather than reading console output; C-stage provenance.spec.ts independently re-confirmed still green (13/13) after the change, and tsc -b on the package exits 0. GENUINELY NEW AT P-STAGE: acceptance[0]'s '篡改一个字节' vector is NOT proven by the C stage. Its tampered-byte case compares two unrelated fixture strings ('sha256:9f2c...real-package-tarball' against 'sha256:9f2c...one-byte-tampered'); no package bytes exist anywhere in provenance.spec.ts, so the case would pass identically if verifyPackageSignature compared any two distinct strings. P adds computePackageDigest(packageBytes: Uint8Array): PackageDigest -- a real sha256 over real bytes -- and the new spec builds a byte array, flips exactly one byte, recomputes, and lets the Contract stage's existing rule table reach the verdict. No second rule table is added and no C-stage decision is changed. acceptance[1] becomes real as a direct consequence: the C-stage offline case passes the identical fixture object to both entrypoints, so they agree by construction; the P case re-derives the locked package's digest inside a separately loaded module instance (vi.resetModules() + dynamic import, sharing no value or closure) and asserts the same trusted verdict, plus that the offline path rejects the same one-byte tampering the online path does. HONEST SCOPE, ASSERTED IN AN EXECUTED CASE: computePackageDigest binds the artifact to the claim, never the claim to an authority. The final case executes the attacker who tampers with the bytes AND rewrites the claim's packageDigest to match, and asserts that this STILL VERIFIES as trusted. Detecting it needs a signature over the claim against a trust root. BLOCKED, NOT SATISFIED, AND NO CASE CLAIMS OTHERWISE (BLOCKED-050): createTrustKernel() mints signatureRoots/rootIdentity/secretBroker as Object.freeze({}), policyEnforcement always returns 'deny' and auditAppend is a no-op -- verified at runtime, not read from prose: a probe spec printed signatureRootsKeys=[], rootIdentityKeys=[], secretBrokerKeys=[], policy='deny', audit=undefined. verifyPackageSignature performs no cryptographic verification at all: string equality on caller-supplied facts, then non-emptiness checks on evidence fields; OfflineSignedProvenanceEvidence.signature is only ever tested for .length === 0, and trustRoot is used solely as a WeakMap key, never read, which is why an empty frozen object serves as one. The same probe verified that a fully attacker-authored, internally self-consistent claim carrying a never-registered issuer returns { trust: 'trusted', trustAnchorId: 'sigstore:https://issuer.attacker.example' }. must[0] (Sigstore or org offline signing), must[2] ('TrustKernel 持有可信根'), must[3]'s meaningful half, and acceptance[0]'s remaining two vectors are therefore BLOCKED and are NOT addressed by this stage. On those two vectors specifically: observedSourceCommit and observedBuilderIdentity are ATTESTATIONS, NOT RECOMPUTABLE LOCAL FACTS -- there is nothing on the installed package a verifier can hash to learn which repo it came from or who built it; that binding exists only inside a signed attestation. Without a trust root, `observed` is a second copy of the attacker's claim. No non-cryptographic check closes them. must[3]'s structural half (the handle is deep-frozen, only createTrustKernel() mints one, no function accepts a plugin-supplied substitute) is already true and already covered at C. must[4] and acceptance[2] are real and complete at C; P adds nothing to them. DELIBERATELY NOT BUILT (coordinator-approved): a durable trust-anchor store. It needs no keys and would be real, but an anchor set living in a plugin-module store while must[2] is blocked would read as must[2] closed -- a real mechanism sitting where a reader expects the blocked one -- and the store would have to go inside signature.ts, making a pure decision module I/O-bearing to route around a scope boundary. ALSO DELIBERATELY NOT CHANGED (coordinator-approved): first-sight trust. verifyPackageSignature verifies a claim whose issuer or key fingerprint was never registered, synthesizing a TrustAnchorId from the claim's own issuer string. Tightening it to fail closed would break the frozen C case that verifies trusted with no anchor registered, and a parallel strict mode would be a second rule table; this is a C-stage decision with its own freeze. DECLARED-SCOPE DEVIATION, reported for audit: packages/kernel/trust-kernel/src/types.ts (the other P-stage declared file) was read in full and deliberately NOT modified. The only honest candidate there is a key-bearing member on TrustKernelSignatureRoots, whose sole constructor (createTrustKernel in trust-kernel/src/index.ts) is outside this stage's scope -- the member would be a dead type and would make must[2] look addressed while changing nothing. git status confirms zero changes to that package, and no docs/architecture.md update is implied. PLATFORM: every case is pure in-memory node:crypto over Uint8Array values the spec constructs -- no filesystem, clock, network, temp path, or platform-dependent behavior -- so a pass is the same signal on macOS and Linux (P1-07 acceptance[1] lesson). No package.json or tsconfig.json edit was needed and no dependency edge was added. expectExit=0 is the GREEN target per the P0-01.C precedent. TITLE RE-FREEZE (coordinator instruction during GREEN): the eleventh case's title was rewritten to carry the warning in the only place guaranteed to be read. A fully green suite now contains a case asserting that an attack SUCCEEDS, and a reader scanning passing test names would otherwise take it for desired behavior. The title names it a known gap, cites BLOCKED-050, says current-not-desired explicitly, and states that giving the kernel real key material MUST break it -- that failure is P1-02's unlock signal, not a regression to patch back to green. BLOCKED-050 records the same pointer in the other direction.",
+      "supersededBy": "P1-02.P-sigstore-verification"
     },
     {
       "epic": "P1-08",
@@ -4203,7 +4204,8 @@
       "sensitivityProof": {
         "mutationDescription": "Six mutations. (1) transparency-log-index validity becomes a truthiness check, so index 0 is wrongly refused; (2) the source-commit check removed, leaving repo-only; (3) the observed-digest check bypassed so evidence is effectively judged first; (4) SBOM coverage ignores undeclared installed dependencies; (5) SBOM coverage counts dev entries as runtime; (6) unsigned-dev admits any profile name. All restored byte-identical.",
         "failureSummary": "Reddens 3, 2, 4, 2, 7 and 2 cases respectively -- every one non-zero, and each landing on the boundary that names its defect. Boundary 10 (index zero is valid) exists specifically to catch mutation (1), which a matrix testing only invalid indices would miss."
-      }
+      },
+      "supersededBy": "P1-02.F-sigstore-verification"
     },
     {
       "epic": "P4-07",
@@ -7257,6 +7259,138 @@
         "failureSummary": "Reddened 2 of 4 -- the sibling-promptable case and the same-id-to-two-children case, which are exactly the two that describe isolation. The interrupt-before-prompt case stays green because it involves one child, and the retention case stays green because a shared record is still retained. Both are correct to stay green: a mutation that reddened all four would mean the cases were not distinguishing isolation from retention."
       },
       "note": "F (Fault) for P5-10, two halves. Isolation: idempotency held in ONE shared ledger would be worse than none, because a second child's FIRST delivery would be swallowed as a duplicate and the symptom would be a silently missing turn rather than an error. Retention: the runtime keeps a control record for every child it has seen and nothing releases it, so a long-lived host accumulates one per child forever. That bound is NOT closed here -- closing it needs the child-settlement path to release the record, and `interrupt` delegates to the continuation manager without ever learning a child finished. It is pinned as a KNOWN GAP case asserting current behaviour, which starts failing the day a release lands; the case reads the private map deliberately, since the retention is invisible through every public surface, which is exactly why it needs pinning rather than trusting."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 Provider — computePackageDigest over real bytes digests the exact bytes it was given, matching an independently computed sha256 of the same bytes",
+        "P1-02 Provider — computePackageDigest over real bytes returns the same digest for the same bytes across separate calls, so a verdict does not depend on call order",
+        "P1-02 Provider — computePackageDigest over real bytes changes the digest when a single byte of a real package payload is flipped",
+        "P1-02 Provider — computePackageDigest over real bytes changes the digest when two bytes are swapped, so it depends on byte order and not only on content",
+        "P1-02 Provider — computePackageDigest over real bytes changes the digest when one byte is appended, so it depends on length and not only on the leading bytes",
+        "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture",
+        "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes rejects a package whose installed bytes differ from the claimed ones by a single flipped byte",
+        "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes rejects a tampered byte at the very first and very last positions alike, leaving no unchecked region of the artifact",
+        "P1-02 Provider — acceptance[1]: the same locked package verifies offline reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance",
+        "P1-02 Provider — acceptance[1]: the same locked package verifies offline rejects the same one-byte tampering offline that it rejects online, so the offline path is not the weaker one",
+        "P1-02 Provider — a tamper-and-rewrite attacker is refused by the trust root acceptance[0] vector 2: recomputing BOTH digests from tampered bytes no longer verifies",
+        "P1-02 Provider — a tamper-and-rewrite attacker is refused by the trust root the same tamper-and-rewrite is still refused when OTHER anchors are registered"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/kernel/trust-kernel/src/types.ts",
+        "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
+        "packages/plugin/plugin-provenance/tests/fixtures/sigstore-chain.ts",
+        "packages/plugin/plugin-provenance/README.md"
+      ],
+      "frozenAtUtc": "2026-09-06T01:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "04a1a760e89addefbd9f192f21842bc6ce21fb2b",
+        "testsDiscovered": 12
+      },
+      "supersedes": "P1-02.P (frozen before the lock closed)",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/plugin/plugin-provenance/src/signature.ts, each restored byte-identical: (M1) the Sigstore bundle is never checked; (M2) the identity policy is dropped from the verify call; (M3) an anchor with no trusted root is treated as verified.",
+        "failureSummary": "Reddened 4, 1 and 1 across the package. M1 reddens four because the whole Sigstore branch stops deciding anything; M2 reddens only the different-identity case, which is the one written for it; M3 reddens only the rootless-anchor case. The positive control -- the genuine bundle verifying -- stays green under M2 and M3 and reddens under none of them, which is what says the refusals are selective rather than blanket."
+      },
+      "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader."
+    },
+    {
+      "epic": "P1-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-02 Contract — must clauses must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted",
+        "P1-02 Contract — must clauses must[0]: a claim backed by an organization offline-signing key verifies as trusted",
+        "P1-02 Contract — must clauses must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch",
+        "P1-02 Contract — must clauses must[2]: the trust root a verification checks evidence against is literally TrustKernel's own signatureRoots handle",
+        "P1-02 Contract — must clauses must[3]: an ordinary caller cannot substitute a plugin-supplied trust root — registerTrustAnchor only accepts the frozen, kernel-issued signatureRoots handle",
+        "P1-02 Contract — must clauses must[4]: an explicit dev-profile opt-in recognized by policy is admitted with a persistent untrusted banner",
+        "P1-02 Contract — must clauses must[4]: a profile name outside the deployment's recognized dev profiles is refused, never silently admitted as unsigned-dev",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a single tampered byte (a changed observed package digest) is rejected for digest mismatch",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a swapped source repo (observed repo URL differs from the claimed one) is rejected for source-repo mismatch",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch",
+        "P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source repo、伪造 builder 三种情况都拒绝 a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch",
+        "P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证 the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter",
+        "P1-02 Contract — acceptance[2]: Inventory 和审计事件记录验证结果而不记录密钥 recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material",
+        "P1-02 Fault — rejection-boundary matrix enumerates at least twelve rejection boundaries, each named once",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 01 tampered package digest is refused for digest mismatch",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 02 swapped source repo is refused for source-repo mismatch",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 03 forged commit in the same repo is refused distinctly from a repo swap",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 04 forged builder identity is refused for builder-identity mismatch",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 05 several mismatches at once still refuse, naming the first checked fact",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 06 sigstore evidence with an empty issuer is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 07 sigstore evidence with an empty subject is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 08 sigstore evidence with a negative transparency log index is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 09 sigstore evidence with a non-integer log index is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 10 log index zero is VALID, so the check is not an accidental truthiness test",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 11 offline evidence with an empty signature is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 12 offline evidence with an empty key fingerprint is refused as invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 13 a fact mismatch is reported even when the evidence is ALSO invalid",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 14 an SBOM omitting an installed runtime dependency is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 15 a declared runtime dependency that is NOT installed is refused",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 16 a dev-only SBOM entry absent from the installed set is NOT a fault",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 17 unsigned-dev is refused for a profile the deployment does not call dev",
+        "P1-02 Fault — rejection-boundary matrix fault boundary 18 an admitted unsigned-dev profile still carries a persistent untrusted banner",
+        "P1-02 Fault — rejection-boundary matrix validation[3]: an identity nobody registered is REFUSED, so revocation can mean something",
+        "P1-02 Fault — rejection-boundary matrix validation[3]: a REVOKED anchor stops verifying, while the untouched one keeps working",
+        "P1-02 Fault — rejection-boundary matrix revoking an id this root never held reports false rather than pretending",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 1: a tampered package digest no longer matches the signature",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 2: rewriting the digest in BOTH claim and observation still fails the signature",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 3: a swapped source repo and a forged builder identity each fail the signature",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors an anchor admitted with NO public key refuses rather than accepting anything",
+        "P1-02 Provider — a real signature refuses all three acceptance[0] vectors a signature made by a DIFFERENT key is refused, so the anchor's key is the one that decides",
+        "P1-02 must[2] — a kernel configured with anchors holds them a configured offline anchor verifies a claim with no registerTrustAnchor call at all",
+        "P1-02 must[2] — a kernel configured with anchors holds them a kernel configured with NOTHING refuses the same claim, so the configuration is what admitted it",
+        "P1-02 must[2] — a kernel configured with anchors holds them a configured anchor for a DIFFERENT key does not admit this one",
+        "P1-02 must[2] — a kernel configured with anchors holds them a configured anchor can be revoked at runtime, so configuration is not a second, unwithdrawable channel",
+        "P1-02 must[2] — a kernel configured with anchors holds them the anchors are frozen against a caller that keeps its own array",
+        "P1-02 — the Sigstore path is verified, not believed acceptance[0]: a claim naming an admitted issuer with NO bundle is refused",
+        "P1-02 — the Sigstore path is verified, not believed a bundle issued to a DIFFERENT identity is refused, even though it verifies cryptographically",
+        "P1-02 — the Sigstore path is verified, not believed a bundle signing DIFFERENT claim bytes is refused, so a bundle cannot be moved between claims",
+        "P1-02 — the Sigstore path is verified, not believed an admitted issuer whose anchor carries NO trusted root cannot verify, and refuses",
+        "P1-02 — the Sigstore path is verified, not believed the genuine bundle for the genuine claim verifies, so the refusals above are selective"
+      ],
+      "files": [
+        "packages/plugin/plugin-provenance/src/signature.ts",
+        "packages/plugin/plugin-provenance/src/index.ts",
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/kernel/trust-kernel/src/types.ts",
+        "packages/plugin/plugin-provenance/tests/provenance.spec.ts",
+        "packages/plugin/plugin-provenance/tests/fixtures/sigstore-chain.ts",
+        "packages/plugin/plugin-provenance/README.md"
+      ],
+      "frozenAtUtc": "2026-09-06T01:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "04a1a760e89addefbd9f192f21842bc6ce21fb2b",
+        "testsDiscovered": 50
+      },
+      "supersedes": "P1-02.F (frozen before the lock closed)",
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/plugin/plugin-provenance/src/signature.ts, each restored byte-identical: (M1) the Sigstore bundle is never checked; (M2) the identity policy is dropped from the verify call; (M3) an anchor with no trusted root is treated as verified.",
+        "failureSummary": "Reddened 4, 1 and 1 across the package. M1 reddens four because the whole Sigstore branch stops deciding anything; M2 reddens only the different-identity case, which is the one written for it; M3 reddens only the rootless-anchor case. The positive control -- the genuine bundle verifying -- stays green under M2 and M3 and reddens under none of them, which is what says the refusals are selective rather than blanket."
+      },
+      "note": "SUPERSEDES the pre-closure freeze. Both KNOWN GAP cases were deleted when their unlock signal fired and the old entries still named them; the delegate caught it, and `verify-frozen-titles-in-tree.mjs` (added in the same change) reproduces the finding mechanically. This is BLOCKED-103's rule -- replace or delete a frozen case, supersede its entry -- missed for the second time in one day, which is why the rule now has a reader."
     }
   ]
 }

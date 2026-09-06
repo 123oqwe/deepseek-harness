@@ -463,6 +463,19 @@ function findRegisteredAnchor(
   return undefined
 }
 
+/**
+ * Admit one trust anchor under `trustRoot` (must[1]).
+ *
+ * The only way to call this successfully is to already hold a real
+ * `TrustKernelSignatureRoots` handle, which `createTrustKernel()` alone
+ * produces, so no ordinary plugin can substitute a trust root of its own.
+ * Registration decides WHETHER a claim verifies, not merely which anchor id a
+ * verdict names: {@link verifyPackageSignature} refuses evidence naming an
+ * anchor this root never admitted.
+ * @param trustRoot - the kernel's own signature-roots handle.
+ * @param declaration - the Sigstore issuer or offline key to admit.
+ * @returns a fresh {@link TrustAnchorId} referencing the admitted anchor.
+ */
 export function registerTrustAnchor(
   trustRoot: TrustKernelSignatureRoots,
   declaration: TrustAnchorDeclaration,

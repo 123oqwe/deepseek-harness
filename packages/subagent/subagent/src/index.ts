@@ -189,7 +189,6 @@ interface BrowserPromptSource {
   readonly clientTimeZone?: string
 }
 
-/** Named provider registry with one-shot runs, durable discovery, and continuable-child operations. */
 /**
  * A stable number for one prompt request id (Epic P5-10 acceptance[2]).
  *
@@ -209,6 +208,7 @@ function promptEpoch(requestId: string): number {
   return hash >>> 0
 }
 
+/** Named provider registry with one-shot runs, durable discovery, and continuable-child operations. */
 export class SubagentRuntime extends TypertRemoteService {
   private providers = new Map<string, SubagentProvider>()
   /**

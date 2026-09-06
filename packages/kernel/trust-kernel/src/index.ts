@@ -107,6 +107,7 @@ export function configuredTrustAnchors(
  * `sandboxAttestationVerifier` rejects, and `auditAppend` no-ops: no
  * concrete policy, audit-chain, or attestation provider exists behind these
  * entrypoints yet (see this module's own doc comment above).
+ * @param config - the deployment's own configuration; its trust anchors are copied and frozen into the kernel's private state.
  * @returns a frozen `TrustKernel`; every opaque handle member is likewise frozen.
  */
 export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {

@@ -103,7 +103,10 @@ export class ChildControlRouter {
     return state
   }
 
-  /** Note that the child is waiting on a specific human question (must[0]). */
+  /**
+   * Note that the child is waiting on a specific human question (must[0]).
+   * @param waitingPointId - the question the child is blocked on.
+   */
   awaitHuman(waitingPointId: string): void {
     if (this.phase !== 'running') return
     this.waitingPointId = waitingPointId
