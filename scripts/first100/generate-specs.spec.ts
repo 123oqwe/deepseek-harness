@@ -1038,6 +1038,8 @@ interface ClauseReportShape {
     unmatchedSourceClauses: number
     inventedUndocumentedClauses: number
     inventedDocumentedDefaultBoundaryClauses: number
+    planCorrectedClauses?: number
+    supersededSourceClauses?: number
   }
   epics: Record<string, Record<'must' | 'acceptance' | 'nonGoals', ClauseReportChannel>>
   baseAlignV2Rescope23?: { epicIds: string[]; divergedClauses: Record<string, unknown> }

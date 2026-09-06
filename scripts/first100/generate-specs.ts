@@ -1624,6 +1624,16 @@ export interface ClauseCoverageTotals {
   unmatchedSourceClauses: number
   inventedUndocumentedClauses: number
   inventedDocumentedDefaultBoundaryClauses: number
+  /**
+   * Clauses that REPLACE the pinned source's wording because the plan was wrong
+   * about reality (user ruling, 2026-09-06). Counted apart from matched and
+   * from invented alike: calling a correction `undocumented` reports an
+   * approved decision as a defect, and folding it into the matched count claims
+   * a provenance it does not have.
+   */
+  planCorrectedClauses: number
+  /** The source wordings those corrections supersede; equal to the count above by construction. */
+  supersededSourceClauses: number
 }
 
 export interface ClauseCoverageReportV11 {
