@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `03586cb790`);**生成时间** 2026-09-06T14:28-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `fb54431a06`);**生成时间** 2026-09-06T14:41-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -19,15 +19,15 @@
 {
   "ledgerRow": "P2-05",                 // rows[].id;账本外的(P3-13 / SLICE-*)填 null 并在 residual 说明
   "card": { "heading": "#### P2-05", "sheetCommit": "<make-vs-use-plan.md 当时的 git 短 sha>" },   // 卡片 = 本文件里以该 heading 开头的小节;不是行号
-  "verdict": "PROVIDER_ADAPT", "verdictSecondary": "PROVIDER_WRITE" | null,
+  "verdict": "PROVIDER_ADAPT", "verdictSecondary": null,          // P2-05 真实值;有副判定的填账本原文
   "adopted": [ { "name": "cedar-policy/cedar",            // 账本 oss[].name 原文
                  "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",
                  "form": "runtime" | "oracle" | "optional" | "vendored",
                  "reason": "为什么是这个形态(oracle 必须指向复现硬约束的冻结用例)" } ],
   "rejectedAbsent": [ "@openfeature/server-sdk", "…" ],   // preFlight 时 = 账本 reject 条目里**有 npm 名的**名单(无 npm 名的不可核,不列);
                                                           // 门 (b) 对这些名在 files[] 里核 0 import;结果写进 realized.rejectedAbsent(布尔),不在这里
-  "standardsOwned": [ "AuthZEN request/response vocabulary" ],           // 本 epic 是首个采用者的标准(§7.3);不是则 []
-  "standardsImported": [ { "standard": "RFC 8785 JCS", "from": "P2-03" } ],
+  "standardsOwned": [],                                   // P2-05 不是任何标准的形状所有者(AuthZEN 的所有者是 P2-03,见 §1 表)
+  "standardsImported": [ { "standard": "AuthZEN request/response vocabulary", "from": "P2-03" } ],
   "residual": "接完还要自己写什么(账本 residual,可收窄,收窄写原因)",
   "probes": [ { "claim": "forbid overrides permit",        // 账本 note 里“verified locally”的那句
                 "how": "node -e … | 或 tests/…spec.ts 的用例标题",   // 可重跑
@@ -49,27 +49,38 @@
 
 ## 1. 标准词汇所有权(首个采用者定形状,其余 import)
 
-| 标准族 | 首个采用者 | 采用情况 | 全部采用者(registry 顺序) |
+| 标准(按子规范) | 形状所有者 | 依据 | 全部涉及者(registry 顺序;~~划掉~~ = 已验收但未采用,所有权已转移) |
 |---|---|---|---|
-| in-toto / DSSE / SLSA | P0-01 | ✗ 未采用 → R1 slice 定形状 | P0-01 P0-07 P1-02 P1-11 P1-12 P2-03 P3-07 P3-09 P4-04 P4-09 P6-08 P6-09 P7-01 P7-02 P7-04 P7-05 P7-10 P8-10 |
-| RFC 8785 JCS | P2-03 | 在途,R2 后由差分 oracle 担保 | P2-03 P4-03 P4-04 P7-01 P7-05 P8-01 P8-09 |
-| CloudEvents | P4-01 | ✗ 未采用 → P8-05 拥有映射 | P4-01 P4-06 P8-04 P8-05 |
-| SPIFFE | P0-02 | ✗ 未采用 → P8-06 拥有 | P0-02 P2-01 P3-06 P3-09 P8-06 |
-| W3C PROV-DM | P5-11 | ✗ 未采用 → P7-04/P6-03 拥有 | P5-11 P6-02 P6-09 P7-04 |
-| OTel semconv | P2-01 | ✗ 未采用 → P7-07 拥有 | P2-01 P3-03 P3-10 P5-03 P5-06 P6-05 P7-07 P8-09 |
-| A2A | P4-01 | ✗ 未采用 → P4-05/P5-05 首次对外时定 | P4-01 P4-05 P5-05 P5-06 |
-| MCP | P2-03 | 在途 | P2-03 P2-04 P2-12 P4-01 P4-05 P8-01 P8-04 |
-| ACP | P2-06 | 未开工 | P2-06 P2-07 P2-12 P5-06 P5-09 P8-04 |
-| AuthZEN | P2-03 | 未开工 | P2-03 P2-05 P2-07 |
-| OCI runtime/image-spec | P3-01 | 未开工 | P3-01 P3-02 P3-08 P3-10 P5-05 P6-09 |
-| JSON Schema 2020-12 | P0-06 | △ zod 在,schema-registry 无 JSON Schema 输出 → P8-07 硬前置 | P0-06 P1-01 P2-11 P4-02 P5-03 P5-05 P7-01 P8-07 |
-| RFC 6902 JSON Patch | P4-13 | 未开工 | P4-13 P7-08 |
-| semver | P1-01 | ✗ 未采用(R4 → P1-03) | P1-01 |
-| W3C DPV | P6-02 | ✗ 未采用 → P6-10 | P6-02 P6-10 |
-| Sigstore bundle | P1-02 | ✓ | P1-02 |
-| Idempotency-Key | P4-12 | 未开工 | P4-12 P8-03 |
-| K8s resource model | P8-02 | 未开工 | P8-02 P8-03 |
-| OpenFeature | P0-05 | △ optional,1 提及 | P0-05 P7-10 |
+| in-toto / DSSE / SLSA | **SLICE-3.4** | R1:envelope slice 在 P4-04(W9)前落地 | ~~P0-01~~ ~~P0-07~~ ~~P1-02~~ P1-11 P1-12 P2-03 P3-07 P3-09 P4-04 P4-09 P6-08 P6-09 P7-01 P7-02 P7-04 P7-05 P7-10 P8-10 |
+| RFC 8785 JCS | **P2-03** | 最早涉及者(未验收) | P2-03 P4-03 P4-04 P7-01 P7-05 ~~P8-01~~ P8-09 |
+| CloudEvents | **P4-06** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P4-01~~ P4-06 P8-04 P8-05 |
+| SPIFFE ID format | **P3-09** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P0-02~~ ~~P2-01~~ P3-09 P8-06 |
+| SPIFFE SVID lifetime rules | **P3-06** | 最早涉及者(未验收) | P3-06 |
+| W3C PROV-DM | **P6-09** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P5-11~~ ~~P6-02~~ P6-09 P7-04 |
+| OTel GenAI semconv gen_ai.* | **SLICE-3.3** | §3.3:名字来自 @opentelemetry/semantic-conventions 常量包,slice 接 pipeline;时点改为 W11 前(P5-03/P5-06 首发 gen_ai.usage.*) | P5-03 P5-06 P6-05 P7-07 |
+| OTel resource/error/process semconv | **npm @opentelemetry/semantic-conventions** | 常量包按需 import,无人定形状 | ~~P2-01~~ P3-03 |
+| A2A TaskState | **P4-05** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P4-01~~ P4-05 |
+| A2A Message/Part/Artifact | **P5-05** | 最早涉及者(未验收) | P5-05 P5-06 |
+| MCP ToolAnnotations | **P2-04** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P2-03~~ P2-04 |
+| MCP TaskStatus names | **P4-05** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P4-01~~ P4-05 |
+| MCP initialize/capabilities | **P8-01** | 已验收且已采用 | P8-01 |
+| MCP elicitation/create | **P2-12** | 最早涉及者(未验收) | P2-12 P8-04 |
+| AuthZEN (+MCP profile) | **P2-05** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P2-03~~ P2-05 P2-07 |
+| ACP request_permission payload | **P2-06** | 最早涉及者(未验收) | P2-06 P2-07 P2-12 P8-04 |
+| ACP session/* lifecycle | **P2-12** | 最早涉及者(未验收) | P2-12 P5-06 P5-09 |
+| OCI runtime-spec | **P3-01** | 最早涉及者(未验收) | P3-01 P3-02 P3-08 P3-10 |
+| OCI image-spec Descriptor | **P6-09** | 最早涉及者(未验收) | P6-09 |
+| OCI-style sha256:<hex> refs | **P5-05** | 最早涉及者(未验收) | P5-05 |
+| JSON Schema 2020-12 | **P0-06** | 已验收且已采用 | P0-06 P1-01 P2-11 P4-02 P5-03 P5-05 P7-01 P8-07 |
+| RFC 6902 JSON Patch | **P4-13** | 最早涉及者(未验收) | P4-13 P7-08 |
+| semver | **P1-03** | R4:validRange 在 P1-03 加 | ~~P1-01~~ |
+| W3C DPV | **P6-10** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P6-02~~ P6-10 |
+| Sigstore bundle | **P1-02** | 已验收且已采用 | P1-02 |
+| Idempotency-Key | **P4-12** | 最早涉及者(未验收) | P4-12 P8-03 |
+| K8s resource model | **P8-02** | 最早涉及者(未验收) | P8-02 P8-03 |
+| OpenFeature | **P0-05** | 已验收且已采用 | P0-05 P7-10 |
+
+**规则**:形状所有者 = 最早**已验收且真正采用**该标准的 epic;没有则为最早的未验收涉及者。已验收但未采用的(划掉)不再拥有,由 R3 指定的下游拥有(卡片"裁决叠加"里写明)。所有权按**子规范**算——MCP / ACP / OCI 各含多个互不相干的子规范,一个 epic 只拥有自己那条。
 
 ## 2. 逐条执行卡
 
@@ -82,7 +93,7 @@
 **用(adapt)**:
 - **in-toto/attestation**(NOASSERTION · 371★) — Emit fingerprint as in-toto subject[] {name, digest:{sha256}} so P0-07 binds by digest
 - **node:crypto sha256** — Already used in scripts/release/baseline-fingerprint.mjs:130; no dependency needed
-**标准(绑定词汇)**:in-toto Statement v1 subject[]/ResourceDescriptor (**本 epic 首个采用者,未采用 → 见裁决叠加**)
+**标准(绑定词汇)**:in-toto Statement v1 subject[]/ResourceDescriptor (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加)
 **自己写(residual)**:Everything except the hash primitive stays (291-line walker + spec); only representational alignment to in-toto subject[] remains.
 **禁令/风险(risk)**:None; keep as built and do not add a dependency for sha256 of ~100 files.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -98,7 +109,7 @@
 **用(adapt)**:
 - **paulmillr/noble-hashes**(npm `@noble/hashes` · MIT · 913★) — Crypto primitives only (already a dep); signature roots must not be hand-rolled crypto
 - **Node WebCrypto** — Crypto primitives allowed inside the kernel
-**标准(绑定词汇)**:SPIFFE-style URI ids (**本 epic 首个采用者,未采用 → 见裁决叠加**)
+**标准(绑定词汇)**:SPIFFE-style URI ids (本 epic 未采用/不采用;所有者 P3-09,见裁决叠加)
 **自己写(residual)**:100% hand-written by design: root identity, signature roots, policy entrypoint, audit append, secret-broker handle, attestation verifier (442 lines built).
 **禁令/风险(risk)**:Any OSS policy engine (OPA/Cedar/Casbin) belongs behind the enforcement entrypoint as a provider, never in the kernel.
 **planError**:validation[1] 'kernel must not depend on Cordis product packages' should be enforced by the P0-04 layer rule, not by review.
@@ -158,7 +169,7 @@
 - uber/piranha — Code-rewrite tool for expired flags, not applicable to YAML gates
 **只读参考(reference)**:
 - github/scientist — Shadow pattern reference
-**标准(绑定词汇)**:OpenFeature evaluation API (optional) (**本 epic 首个采用者,定形状**)
+**标准(绑定词汇)**:OpenFeature evaluation API (optional) (**本 epic 是形状所有者**)
 **自己写(residual)**:Tri-state off\|shadow\|enforce semantics, redacted shadow-diff record, owner/introducedVersion/removalVersion, kernel-gated non-downgrade of enforce, --dump-config provenance chain (>80% dsh-specific; 611 lines built).
 **禁令/风险(risk)**:OpenFeature adds an SDK in the boot path for little deletion and cannot model 'run legacy AND new, record diff'; keep hand-rolled.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -181,7 +192,7 @@
 - StefanTerdell/zod-to-json-schema — ARCHIVED 2026-03
 **只读参考(reference)**:
 - confluentinc/schema-registry — Vocabulary only
-**标准(绑定词汇)**:JSON Schema 2020-12 as interchange (**本 epic 首个采用者,定形状**) · Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]
+**标准(绑定词汇)**:JSON Schema 2020-12 as interchange (**本 epic 是形状所有者**) · Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]
 **自己写(residual)**:Registry API, negotiation errors (SCHEMA_MAJOR_MISMATCH), migration functions, replay/SDK-initialize/plugin-load hooks; goldens become derived artifacts from emitted JSON Schema.
 **禁令/风险(risk)**:json-schema-diff maintenance is thin — treat as optional; do not introduce a second schema language (TypeSpec/Avro/Protobuf).
 **planError**:Registry is TS-type-only (524 lines) with no machine-readable schema, so goldens and additive-vs-breaking checks are hand-asserted.
@@ -204,7 +215,7 @@
 - ctrf-io/ctrf — npm 0.3.0 for test-count JSON
 **不用(reject,理由)**:
 - in-toto/witness — Go binary via subprocess, unaware of dsh gates
-**标准(绑定词汇)**:in-toto Attestation Statement v1 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · DSSE envelope (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · in-toto test-result/v0.1 predicate (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · SLSA Provenance v1 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:in-toto Attestation Statement v1 (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加) · DSSE envelope (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加) · in-toto test-result/v0.1 predicate (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加) · SLSA Provenance v1 (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加)
 **自己写(residual)**:Gate manifest, blocking-gate completeness rule (accepted=true impossible with skipped gate), tamper fixtures, pnpm evidence:* scripts; implement signature as DSSE via @sigstore/sign local Signer rather than a second envelope.
 **禁令/风险(risk)**:Re-shaping persisted JSON now is a P0-06 major bump; acceptable because evidence packages are per-run artifacts.
 **planError**:Built bespoke envelope (grep in-toto/dsse/slsa = 0 hits) with signature reserved but unimplemented and no envelope standard chosen.
@@ -250,7 +261,7 @@
 
 **用(adapt)**:
 - **npm/node-semver**(npm `semver` · ISC · 5,460★) — 7.8.5 already transitive in pnpm-lock; semver.validRange for dshVersionRange
-**标准(绑定词汇)**:JSON Schema 2020-12 (already) (首个采用者 P0-06,import 其定义) · semver ranges (**本 epic 首个采用者,未采用 → 见裁决叠加**) · VS Code contributes/capabilities.untrustedWorkspaces vocabulary  · Chrome MV3 permissions/host_permissions vocabulary
+**标准(绑定词汇)**:JSON Schema 2020-12 (already) (所有者 P0-06,import 其定义) · semver ranges (本 epic 未采用/不采用;所有者 P1-03,见裁决叠加) · VS Code contributes/capabilities.untrustedWorkspaces vocabulary  · Chrome MV3 permissions/host_permissions vocabulary
 **自己写(residual)**:dshVersionRange never validated (add semver.validRange); observed-side effect fields don't exist (BLOCKED-027) — needs P1-08/P1-09 to thread identity/effects through registrations.
 **禁令/风险(risk)**:None; don't reopen the format (933 src + 933 test lines, 9 fixtures).
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -274,7 +285,7 @@
 - anchore/syft — Sidecar only
 - slsa-framework/slsa-verifier — Sidecar only
 - sigstore/cosign — Sidecar only
-**标准(绑定词汇)**:in-toto Statement v1 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · SLSA provenance v1 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · Sigstore bundle v0.3 (**本 epic 首个采用者,定形状**) · CycloneDX 1.6  · SPDX
+**标准(绑定词汇)**:in-toto Statement v1 (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加) · SLSA provenance v1 (本 epic 未采用/不采用;所有者 SLICE-3.4,见裁决叠加) · Sigstore bundle v0.3 (**本 epic 是形状所有者**) · CycloneDX 1.6  · SPDX
 **自己写(residual)**:Pin roots into TrustKernelSignatureRoots; scope→identity policy; revocation list; SLSA buildDefinition source-commit == manifest repo check; SBOM-vs-pnpm-lock completeness; unsigned-dev profile gating + inventory/audit events.
 **禁令/风险(risk)**:Keyless (Fulcio/Rekor/TUF CDN) is hosted → optional only; local default = org Ed25519 key in Sigstore bundle format with keySelector + TUF forceCache; @sigstore/verify Verifier/toTrustMaterial API UNVERIFIED in session.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -470,7 +481,7 @@
 - dbos-inc/dbos-transact-ts — Postgres
 - timgit/pg-boss — Postgres
 - taskforcesh/bullmq — Redis
-**标准(绑定词汇)**:in-toto Statement as the proposal artifact (subject = definition digest) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:in-toto Statement as the proposal artifact (subject = definition digest) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Proposal store, stage deadlines + durable state (storage-sqlite / jobs / agent-team task DAG CAS), canary, rollback to previous version, 'no browser → no hang'; stages compose P1-05/P1-02/P1-06/P2-06/P1-03.
 **禁令/风险(risk)**:tool-cordis/cordis-host-runner are upstream hot zones → add a proposal stage before startHostHalf, don't rewrite the runner.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -490,7 +501,7 @@
 **可选(optional,不进依赖不进 CI)**:
 - ossf/scorecard — Sidecar
 - MicroMilo/upstream-radar — 0.45.0, 15,045 dl; compat evidence input
-**标准(绑定词汇)**:SLSA levels (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · in-toto attestation bundle bound to package digest (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · SARIF sections  · OpenSSF Scorecard checks
+**标准(绑定词汇)**:SLSA levels (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · in-toto attestation bundle bound to package digest (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · SARIF sections  · OpenSSF Scorecard checks
 **自己写(residual)**:Level policy (discovered → metadata-checked → signed → sandbox-verified → official-reviewed), offline org minimum-level policy, report signing, market-consumes-attestations rule; extend fixture-only dsh plugin verify to per-section digest-bound reports.
 **禁令/风险(risk)**:Hosted attestation stores (Rekor, npm attestations endpoint) optional only; local = signed report file next to lock.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -513,7 +524,7 @@
 **不用(reject,理由)**:
 - w3c/did-core — DIDs add key-resolution machinery a local harness does not need
 - decentralized-identity/did-jwt — 8.0.18; same reason
-**标准(绑定词汇)**:SPIFFE ID URI for principal ids (首个采用者 P0-02,✗ 未采用 → P8-06 拥有) · RFC 8693 act nesting for delegation chain  · OTel semconv enduser.id/service.name (**本 epic 首个采用者,未采用 → 见裁决叠加**)
+**标准(绑定词汇)**:SPIFFE ID URI for principal ids (本 epic 未采用/不采用;所有者 P3-09,见裁决叠加) · RFC 8693 act nesting for delegation chain  · OTel semconv enduser.id/service.name (本 epic 未采用/不采用;所有者 npm @opentelemetry/semantic-conventions,见裁决叠加)
 **自己写(residual)**:Attach IdentityContext refs to ToolExecutionContext, SubagentRequest, SDK request/SessionEvent envelope; runtime tenant check at the PEP; static scan forbidding createAdmin*Principal outside identity/boot.
 **禁令/风险(risk)**:None from OSS; ~80% already written fork-side in packages/identity/principal (1,614 lines incl. tests).
 **planError**:Plan lists packages/identity/principal/src/{index,types,chain}.ts as new — they exist; re-scope to the wiring gap.
@@ -556,7 +567,7 @@
 - **modelcontextprotocol spec**(npm `@modelcontextprotocol/sdk` · 9,112★) — ToolAnnotations (readOnlyHint/destructiveHint/idempotentHint/openWorldHint) already in installed sdk
 **只读参考(reference)**:
 - cyberphone/json-canonicalization — Java reference impl
-**标准(绑定词汇)**:RFC 8785 JCS (**本 epic 首个采用者,定形状**) · in-toto Statement envelope (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · MCP ToolAnnotations as side-effect hint input (**本 epic 首个采用者,定形状**) · AuthZEN subject/action/resource/context (+ MCP profile / COAZ-MCP binding) (**本 epic 首个采用者,定形状**)
+**标准(绑定词汇)**:RFC 8785 JCS (**本 epic 是形状所有者**) · in-toto Statement envelope (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · MCP ToolAnnotations as side-effect hint input (本 epic 未采用/不采用;所有者 P2-04,见裁决叠加) · AuthZEN subject/action/resource/context (+ MCP profile / COAZ-MCP binding) (本 epic 未采用/不采用;所有者 P2-05,见裁决叠加)
 **自己写(residual)**:Manifest type (actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence), durable append before tools/pre-execute at prepareExecution (~line 1450), code-mode/PTC and plugin-RPC coverage, replay pairing test.
 **禁令/风险(risk)**:JCS forbids non-finite numbers and big ints — define the argument value domain (JSON only) explicitly; do not write a second canonicalizer.
 **planError**:Today the tools/pre-execute waterfall runs before any durable record.
@@ -565,6 +576,7 @@
 **裁决叠加(整改令)**:
 - §2.F 已解决(durable append 先于 pre-execute);§7.4/§7.5/§7.6/§7.8 R2:保留迭代 canonicalizer、删 NFC、canonicalize@2.1.0 作 devDep 差分 oracle、validation[2] 重述、C+F supersede 重观测
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
+- §7.11:MCP ToolAnnotations / AuthZEN 不采用——registry must[0] 定死字段名,这不是词汇债;所有权顺延 P2-04 / P2-05
 
 #### P2-04 · 通用副作用与风险分类体系
 
@@ -574,7 +586,7 @@
 - **OWASP/www-project-top-10-for-large-language-model-applications**(1,383★) — Tag vocabulary, not code
 - **mitre-atlas/atlas-data**(179★) — Tag vocabulary (AML.T00xx), data only
 - **@modelcontextprotocol/sdk ToolAnnotations**(npm `@modelcontextprotocol/sdk`) — 4 hints map onto the 8 classes as inputs, never trusted outputs
-**标准(绑定词汇)**:MCP ToolAnnotations (首个采用者 P2-03,import 其定义) · P1-01 SideEffectClass  · OWASP LLM Top-10 2025 (LLM06 Excessive Agency)  · MITRE ATLAS technique ids
+**标准(绑定词汇)**:MCP ToolAnnotations (**本 epic 是形状所有者**) · P1-01 SideEffectClass  · OWASP LLM Top-10 2025 (LLM06 Excessive Agency)  · MITRE ATLAS technique ids
 **自己写(residual)**:Classifier with confidence+evidence, org policy override table with kernel hard-deny floor, unknown → higher class, 200-fixture corpus, mapping table from P1-01's 6 classes to the epic's 8.
 **禁令/风险(risk)**:No OSS 'action risk classifier' exists for tool calls; LLM-based classification is deliberately not the answer (adversarial descriptions).
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -583,6 +595,7 @@
 - dsh-auto-approve 12★ 覆盖≈23% — Deterministic danger list (rm -rf, dd/mkfs, force-push, curl\|sh, destructive SQL, fork bombs)
 **裁决叠加(整改令)**:
 - §9:第一条按 §9 走的 epic——preFlight 含全部 community 缺口逐项对子句;§9.1 的 verify-make-vs-use 门在其 preFlight 前建好
+- §7.11:MCP ToolAnnotations 形状所有者(P2-03 未采用,顺延)
 
 #### P2-05 · Policy Decision Service 与单调拒绝
 
@@ -600,7 +613,7 @@
 - ory/keto — ReBAC server
 **只读参考(reference)**:
 - cedar-policy/cedar-spec — Lean proofs of the authorizer
-**标准(绑定词汇)**:AuthZEN request/response vocabulary (首个采用者 P2-03,import 其定义)
+**标准(绑定词汇)**:AuthZEN request/response vocabulary (**本 epic 是形状所有者**)
 **自己写(residual)**:ctx.policy Service Definition decide(manifest, identity, token, world, facts), Cedar entity/schema design, PEP unification (prepareExecution + code-mode + workflow + SDK + subagent), kernel enforcement replacing the inert policyEnforcement body pinned like pinTrustKernel, plugin forbid-only API, version drift marking on replay, explain redaction.
 **禁令/风险(risk)**:BLOCKED-011: vendored Cordis Fiber fix (Option A) is a documented hard prerequisite before wiring a real enforcement point; Cedar package is heavy (13 MB) and CJS-loaded — fine for host, not browser.
 **planError**:P2-05 is gated on BLOCKED-011 which the wave-6 schedule does not show.
@@ -611,6 +624,7 @@
 - §2.G 开工前设计决定已定(见该 epic 行)
 - §3.1 共用引擎 Cedar(@cedar-policy/cedar-wasm 4.12.0)在 P2-05 开工前作为 infra slice 接入;本 epic 只写 adapter/PEP/explain
 - §9.2 生态迁移目标:5 个权限插件挂 tools/pre-execute + approval answerer 链——PEP 坐该位置;现有 YAML 规则可作 policy source 导入;负用例:first-match 非单调(dsh-permission-rules)必须转换为 forbid > permit
+- §7.11:AuthZEN 形状所有者(P2-03 字段由 registry must[0] 定,不采用 AuthZEN 名;顺延至此作 decide() 输入形状)
 
 #### P2-06 · 审批绑定完整规范化参数、资源与前置状态
 
@@ -619,7 +633,7 @@
 **用(adapt)**:
 - **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — Digest = JCS(manifest) from P2-03 **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 - **@agentclientprotocol/sdk**(npm `@agentclientprotocol/sdk`) — 1.4.0 already installed; RequestPermissionRequest {sessionId, toolCall, options[]}
-**标准(绑定词汇)**:ACP RequestPermissionRequest.toolCall as the wire projection (**本 epic 首个采用者,定形状**)
+**标准(绑定词汇)**:ACP RequestPermissionRequest.toolCall as the wire projection (**本 epic 是形状所有者**)
 **自己写(residual)**:Extend ApprovalRequest with manifest digest + redacted view + riskClass + expectedDiff + expiresAt, preconditions.ts (inode/mtime/etag/remote version capture and re-check), re-validate digest+token+policy version before dispatch, invalidate-on-change, one-to-one approval↔action audit link.
 **禁令/风险(risk)**:TOCTOU/precondition semantics are dsh-specific; Unicode-confusable display via NFC + highlighting, hash stays over raw canonical value.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -640,7 +654,7 @@
 - dbos-inc/dbos-transact-ts — Postgres required
 - inngest/inngest — Go server
 - timgit/pg-boss — 12.29 Postgres
-**标准(绑定词汇)**:AuthZEN Access Request & Approval Profile Draft 1 (首个采用者 P2-03,import 其定义) · ACP allow_always/reject_always option kinds (首个采用者 P2-06,import 其定义)
+**标准(绑定词汇)**:AuthZEN Access Request & Approval Profile Draft 1 (所有者 P2-05,import 其定义) · ACP allow_always/reject_always option kinds (所有者 P2-06,import 其定义)
 **自己写(residual)**:sqlite table (requested/approved/denied/expired/revoked/consumed, digest, policy version, actor, deadline), CAS consume, waiting_for_approval handoff to P4-01 run service, multi-client subscription, SDK reconnect, crash-injection tests; design so the sqlite store is one provider.
 **禁令/风险(risk)**:storage-sqlite has no explicit transactions — the approval store needs BEGIN IMMEDIATE locally in approval-store/src/sqlite.ts; do not widen the storage seam.
 **planError**:Durable-execution engines cannot be P2-07's default (server/Postgres) — only optional P4-01 providers.
@@ -716,7 +730,7 @@
 
 **用(adapt)**:
 - **schemastery (vendored)** — Settled seam for the ProfileSpec schema; profiles are dsh config composition
-**标准(绑定词汇)**:Codex sandbox_mode/approval_policy names (already mirrored)  · JSON Schema export for serialization/--dump (首个采用者 P0-06,import 其定义)
+**标准(绑定词汇)**:Codex sandbox_mode/approval_policy names (already mirrored)  · JSON Schema export for serialization/--dump (所有者 P0-06,import 其定义)
 **自己写(residual)**:schema.ts (execution world, fs/network/process/secrets vocab from P3-02, risk thresholds from P2-04, approval rules, plugin trust, budget, retention), 4 shipped profiles, capability-diff-before-switch, hot demotion vs approval-gated promotion, provenance display.
 **禁令/风险(risk)**:Keep custom derivation semantics (derive() in permission-presets) — profiles must remain a fold over knob events so replay stays truthful.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -734,7 +748,7 @@
 **不用(reject,理由)**:
 - open-feature/js-sdk — 1.23.0; evaluation API only, no persistence/broadcast/lease semantics → relocation not deletion
 - open-feature/flagd — Same reason
-**标准(绑定词汇)**:MCP elicitation/create (首个采用者 P2-03,import 其定义) · ACP session/request_permission / elicitation_create (首个采用者 P2-06,import 其定义) · ACP session/cancel (首个采用者 P2-06,import 其定义)
+**标准(绑定词汇)**:MCP elicitation/create (**本 epic 是形状所有者**) · ACP session/request_permission / elicitation_create (所有者 P2-06,import 其定义) · ACP session/cancel (**本 epic 是形状所有者**)
 **自己写(residual)**:control-plane (persisted stop state, kernel-broadcast event, lease/action gate every worker checks, explicit audited resume, cross-surface projection), in-flight policy (terminate vs reconciliation-required via P4-06 outbox), human-channel Service Definition askQuestion/requestApproval/notify implemented by MCP-elicitation, ACP, CLI, web and IM answerers.
 **禁令/风险(risk)**:The seam is the deliverable: today every remote plugin re-implements approval+question transport on approval/request and user-questions/request.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -757,7 +771,7 @@
 - e2b-dev/E2B — npm e2b 2.46.0 MIT; SDK surface as reference (already dep 2.29.1)
 - daytonaio/daytona — gh license field null; npm 0.207.1 Apache-2.0
 - kubernetes-sigs/agent-sandbox — CRD naming (Sandbox/SandboxTemplate/SandboxWarmPool) informative
-**标准(绑定词汇)**:OCI runtime-spec lifecycle/state (creating/created/running/stopped) (**本 epic 首个采用者,定形状**) · E2B/Daytona SDK shape as reference
+**标准(绑定词汇)**:OCI runtime-spec lifecycle/state (creating/created/running/stopped) (**本 epic 是形状所有者**) · E2B/Daytona SDK shape as reference
 **自己写(residual)**:WorldSpec/WorldHandle/WorldAttestation/WorldSnapshot types, lifecycle (create/attach/snapshot/restore/terminate), unforgeable branded kernel-issued handle, fake-world conformance suite; operational seam is already ctx.fs + ctx.subprocess + ctx.shell.sandboxMode.
 **禁令/风险(risk)**:Sandbox is a hot zone — keep the new package a facade over existing seams; do NOT re-plumb tool-bash/tool-fs.
 **planError**:Epic lists B packages/core/agent-loop/src/runtime-context.ts (hot zone) — attach the world handle via the sandbox-policy runtime-context snapshot contribution pattern, no loop edits.
@@ -776,7 +790,7 @@
 - **opencontainers/runtime-spec**(Apache-2.0 · 3,669★) — Field names/semantics for process/IPC/device/resource dimensions — adopt names, not the container-centric JSON wholesale
 - **anthropics/sandbox-runtime**(npm `@anthropic-ai/sandbox-runtime` · Apache-2.0 · 5,113★) — 0.0.75; sandbox-schemas.ts zod: network allow/deny domains(+port), allowUnixSockets, allowLocalBinding, fs denyRead/allowRead/allowWrite/denyWrite; supportedPolicyFeatures
 - **moby/moby default seccomp profile**(Apache-2.0 · 72,030★) — Baseline syscall allowlist
-**标准(绑定词汇)**:OCI runtime-spec config.json linux.{namespaces,seccomp,devices,resources,rlimits}, mounts (首个采用者 P3-01,import 其定义) · Landlock ABI rights names  · srt SandboxRuntimeConfig schema
+**标准(绑定词汇)**:OCI runtime-spec config.json linux.{namespaces,seccomp,devices,resources,rlimits}, mounts (所有者 P3-01,import 其定义) · Landlock ABI rights names  · srt SandboxRuntimeConfig schema
 **自己写(residual)**:dsh union type, closed-allowlist validator, supportedPolicyFeatures per provider + solver (weak cannot impersonate strong), serialization/audit fields; srt's seccomp-availability warning must become fail-closed.
 **禁令/风险(risk)**:Don't adopt OCI JSON wholesale (container-centric, huge); Windows WFP fence covers TCP/UDP only (named pipes need ACLs) → record partial.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -790,7 +804,7 @@
 
 **用(adapt)**:
 - **anthropics/sandbox-runtime**(npm `@anthropic-ai/sandbox-runtime` · Apache-2.0 · 5,113★) — sandbox-violation-store.ts, linux-violation-monitor.ts, seatbelt log tap — violations keyed by commandId = true OOB channel for local worlds
-**标准(绑定词汇)**:RFC 9457 problem details on SDK/web wire  · OTel semconv error.type (首个采用者 P2-01,✗ 未采用 → P7-07 拥有) · POSIX/GNU exit-status conventions 124/125/126/127/128+n
+**标准(绑定词汇)**:RFC 9457 problem details on SDK/web wire  · OTel semconv error.type (所有者 npm @opentelemetry/semantic-conventions:常量包按需 import,无人定形状) · POSIX/GNU exit-status conventions 124/125/126/127/128+n
 **自己写(residual)**:Full outcome union (policy_denied/sandbox_unavailable/resource_exhausted/timeout/cancelled/tool_failed/world_lost), mapping table per provider, artifact/control separation, retry-policy hook; upstream already gives SANDBOX_UNAVAILABLE + denialSignatures + runnerFailureRules.
 **禁令/风险(risk)**:Upstream denial model is stderr-substring based (model-controllable text); OOB via srt only on local — container/remote need exit-code + API status.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -870,7 +884,7 @@
 **不用(reject,理由)**:
 - bitwarden sdk-napi — SEELICENSE
 - trufflesecurity/trufflehog — AGPL
-**标准(绑定词汇)**:OAuth token-exchange RFC 8693 delegation semantics (borrowed)  · SPIFFE SVID lifetime rules (borrowed) (首个采用者 P0-02,✗ 未采用 → P8-06 拥有)
+**标准(绑定词汇)**:OAuth token-exchange RFC 8693 delegation semantics (borrowed)  · SPIFFE SVID lifetime rules (borrowed) (**本 epic 是形状所有者**)
 **自己写(residual)**:SecretLease bound to principal/ActionManifest/world/purpose/expiry, revoke-on-kill, delegation to subagents/plugins, session-log/error/crash-dump taint via settings/redact.ts + llm content, FD/socket injection for non-HTTP secrets (git credential helper, ssh-agent proxy, DB URLs).
 **禁令/风险(risk)**:Vault (BSL 1.1), Bitwarden (SEELICENSE), trufflehog (AGPL) → license blockers; srt's masking is HTTP-egress-centric.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -891,7 +905,7 @@
 - **anthropics/sandbox-runtime (probe/violation logic + e2e fixtures)**(npm `@anthropic-ai/sandbox-runtime` · Apache-2.0 · 5,113★) — Test fixtures seed for the conformance/escape corpus (qualification)
 **可选(optional,不进依赖不进 CI)**:
 - sigstore/sigstore-js — 5.0.0 / @sigstore/sign 5.0.0 / @sigstore/verify 4.1.2; DSSE signing with a local key (no Fulcio needed); adds ~2 MB deps
-**标准(绑定词汇)**:in-toto Statement v1 + DSSE envelope for the attestation artifact (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · SLSA-style predicate (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:in-toto Statement v1 + DSSE envelope for the attestation artifact (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · SLSA-style predicate (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Predicate schema (os, kernel, provider, version, supportedPolicyFeatures, enforcement), requested ⊆ supported check at each execute, explicit dev-degrade flag, conformance e2e across 3 platforms; verified by the trust-kernel sandboxAttestationVerifier stub.
 **禁令/风险(risk)**:sigstore-js adds ~2 MB deps; hand-rolling DSSE is acceptable but keep the FORMAT.
 **planError**:P3-07 lists B sandbox-local/src edits — hot zone; upstream already has functional probes and refuse-not-warn.
@@ -913,7 +927,7 @@
 - google/gvisor — runsc via HostConfig.Runtime
 - containers/podman — Rootless default
 - sigstore/sigstore-js @sigstore/verify — cosign-signed image digests / SLSA provenance when a public key is pinned
-**标准(绑定词汇)**:OCI runtime-spec HostConfig knobs (ReadonlyRootfs, Tmpfs, SecurityOpt no-new-privileges/seccomp, CapDrop ALL, PidsLimit, Memory, NanoCpus) (首个采用者 P3-01,import 其定义)
+**标准(绑定词汇)**:OCI runtime-spec HostConfig knobs (ReadonlyRootfs, Tmpfs, SecurityOpt no-new-privileges/seccomp, CapDrop ALL, PidsLimit, Memory, NanoCpus) (所有者 P3-01,import 其定义)
 **自己写(residual)**:WorldSpec→HostConfig mapping, egress-proxy wiring (network=none + unix-socket or proxy sidecar sharing netns — design decision), secret-lease injection (tmpfs file/FD, not env), attestation predicate (image digest, runtime, rootless), validator rejecting docker.sock/$HOME mounts, conformance provider tests.
 **禁令/风险(risk)**:Docker/Podman daemon optional (macOS CI has no Docker by default → provider reports unavailable, fail-closed).
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -940,7 +954,7 @@
 - apple/container — macOS 26 raw hypervisor
 **只读参考(reference)**:
 - kubernetes-sigs/agent-sandbox — k8s CRD, informative only
-**标准(绑定词汇)**:in-toto/DSSE attestation (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · SPIFFE ID format for tenant/world identity (首个采用者 P0-02,✗ 未采用 → P8-06 拥有)
+**标准(绑定词汇)**:in-toto/DSSE attestation (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · SPIFFE ID format for tenant/world identity (**本 epic 是形状所有者**)
 **自己写(residual)**:Reconnect/reconciliation (idempotent action-lease ledger), tenant-scoped attach tokens, partition tests, provider-signed in-toto Statement (image digest, policy hash, tenant, proxy config hash, secret-injection mode) with hardware: none\|sev-snp\|tdx field.
 **禁令/风险(risk)**:TPM/SEV-SNP/TDX attestation out of scope (no provider surfaces it; Go-only tooling); microsandbox needs KVM/HVF → GitHub Linux runners without nested virt fall to unavailable (fail-closed).
 **planError**:TPM/SEV-SNP attestation is not achievable with any keyless/local default — declare software attestation with explicit hardware:none.
@@ -951,6 +965,7 @@
 **裁决叠加(整改令)**:
 - §2.B 子句不动、加实现约束(见该 epic 小节)
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
+- §7.11:SPIFFE ID 格式形状所有者(P0-02/P2-01 未采用,顺延);P8-06 import
 
 #### P3-10 · CPU/Memory/Disk/Time/Process/Network 资源配额
 
@@ -963,7 +978,7 @@
 - **packages/subprocess/win32-process (existing)** — FFI base for CreateJobObject/SetInformationJobObject
 **可选(optional,不进依赖不进 CI)**:
 - google/nsjail — --cgroup_mem_max --cgroup_pids_max --cgroup_cpu_ms_per_sec --rlimit_* --time_limit
-**标准(绑定词汇)**:OCI linux.resources names (首个采用者 P3-01,import 其定义) · OTel process.* semconv (首个采用者 P2-01,✗ 未采用 → P7-07 拥有)
+**标准(绑定词汇)**:OCI linux.resources names (所有者 P3-01,import 其定义) · OTel process.* semconv
 **自己写(residual)**:BudgetSpec (per action/run/tenant; wall, cpu, mem, disk, pids, net bytes, tool calls, agents), scheduler reservation, hierarchical accounting across subagents, typed resource_exhausted outcome + cleanup, reconciliation with telemetry.
 **禁令/风险(risk)**:macOS local has no cgroup equivalent (ulimit soft caps, -v breaks binaries) → provider reports partial and attests it; disk quota on local = polling or tmpfs size.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1048,7 +1063,7 @@
 - dbos-inc/dbos-transact-ts — Postgres-only
 - statelyai/xstate — 5.32.6; v5 silently ignores unhandled events, no append-only log
 - event-driven-io/emmett — License unverified; sqlite adapter peer-deps native sqlite3
-**标准(绑定词汇)**:CloudEvents attribute names (id/source/type/time/subject/datacontenttype) (**本 epic 首个采用者,未采用 → 见裁决叠加**) · A2A TaskState / MCP TaskStatus names at surfaces (**本 epic 首个采用者,未采用 → 见裁决叠加**)
+**标准(绑定词汇)**:CloudEvents attribute names (id/source/type/time/subject/datacontenttype) (本 epic 未采用/不采用;所有者 P4-06,见裁决叠加) · A2A TaskState / MCP TaskStatus names at surfaces (本 epic 未采用/不采用;所有者 P4-05,见裁决叠加)
 **自己写(residual)**:10-state table (~80 LOC), sqlite runs/run_events tables via node:sqlite, restart scan of non-terminal runs, cross-refs to sessions.
 **禁令/风险(risk)**:No engine can be the keyless local default (server / Postgres / BSL / SSPL) and a Run owned by an external engine breaks 'session log is source of truth' — recommend no engine provider even as optional.
 **planError**:run/* event types must be added to core/session known-event-types (closed list) or the run log lives in its own sqlite tables with session refs — decide explicitly; plugin-side event registration does not work (dsh-llm-fallbacks #52).
@@ -1067,7 +1082,7 @@
 - W3C PROV (per-field provenance) — Overkill
 **只读参考(reference)**:
 - a2aproject/A2A Task/Message — Naming reference only
-**标准(绑定词汇)**:JSON Schema for the profile via zod (none exists for the concept) (首个采用者 P0-06,import 其定义)
+**标准(绑定词汇)**:JSON Schema for the profile via zod (none exists for the concept) (所有者 P0-06,import 其定义)
 **自己写(residual)**:Pure dsh vocabulary: goal ref, hard/soft constraints with source+confidence, side-effect class (unknown ≠ none), open questions routed to packages/interaction/user-questions; vitest golden fixtures.
 **禁令/风险(risk)**:Vertical creep is the risk, not OSS; keep fields generic per must#1.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1083,7 +1098,7 @@
 - serverlessworkflow/specification — Control-flow DSL; RunPlan is a resource/topology/budget/gate plan (sdk-typescript 88★)
 - ChristopheBougere/asl-validator — AWS ASL control-flow DSL — no fit
 - z3 wasm / logic-solver — SAT solver adds MBs for a ~100 LOC deletion-based minimal conflict set
-**标准(绑定词汇)**:RFC 8785 JCS + sha256 for deterministic plan id (首个采用者 P2-03,import 其定义)
+**标准(绑定词汇)**:RFC 8785 JCS + sha256 for deterministic plan id (所有者 P2-03,import 其定义)
 **自己写(residual)**:Satisfiability over typed constraints (capability ⊆ available, budget ≤ cap, policy allow) + deletion-based minimal conflict set (~100 LOC); verificationContractRef as versioned opaque ref (P7-01 fills it).
 **禁令/风险(risk)**:Keep verificationContractRef opaque and versioned.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1100,7 +1115,7 @@
 - **secure-systems-lab/dsse**(Apache-2.0 · 110★) — Envelope; payloadType application/vnd.dsh.runplan+json
 - **in-toto/attestation**(371★) — Later supply-chain alignment
 - **node:crypto Ed25519** — Zero new crypto dep rather than @noble/curves
-**标准(绑定词汇)**:DSSE envelope over RFC 8785 JCS (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · Ed25519 via node:crypto  · in-toto/attestation alignment for later P5/P6 (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:DSSE envelope over RFC 8785 JCS (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · Ed25519 via node:crypto  · in-toto/attestation alignment for later P5/P6 (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Trust-kernel signing entrypoint (signatureRoots is an empty placeholder, index.ts:79), mutable-field declaration, amendment record + sqlite CAS on active_revision, re-run policy/budget/approval, replay from run_events.
 **禁令/风险(risk)**:Don't invent an envelope; DSSE keeps P4-04 compatible with supply-chain chapters.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1120,7 +1135,7 @@
 **不用(reject,理由)**:
 - statelyai/xstate — Would add a 30k★ runtime dep to reject 10 illegal edges
 - matthewp/robot — Same reason
-**标准(绑定词汇)**:A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required) (首个采用者 P4-01,✗ 未采用 → P4-05/P5-05 首次对外时定)
+**标准(绑定词汇)**:A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required) (**本 epic 是形状所有者**)
 **自己写(residual)**:10-state validated transition table with {reason, runId, leaseEpoch}, stale-epoch rejection, orphan reclaim on restart, back-compat mapping to idle\|running (~150 LOC + fast-check); upstream already has inbox projection, consumed-work, holder model.
 **禁令/风险(risk)**:Wave inversion: P4-05 (wave 5) needs leaseEpoch from P4-07 (wave 6) — declare leaseEpoch as opaque number now, enforce fencing in P4-07.
 **planError**:P4-05 depends on lease epoch from P4-07 scheduled a wave later — declare the field early.
@@ -1144,7 +1159,7 @@
 **不用(reject,理由)**:
 - cloudevents/sdk-javascript — 10.0.0; adopt attribute names, not the HTTP-binding SDK
 - better-queue — Stale 2024-06
-**标准(绑定词汇)**:CloudEvents attribute names; dedup on id (首个采用者 P4-01,✗ 未采用 → P8-05 拥有映射)
+**标准(绑定词汇)**:CloudEvents attribute names; dedup on id (**本 epic 是形状所有者**)
 **自己写(residual)**:Outbox tables + BEGIN IMMEDIATE transactional write (cannot use KV seam), dispatcher receipts, consumer dedup by (messageId, epoch), priority/deadline/DLQ/backpressure, tenant column checks (~400 LOC + fault matrix).
 **禁令/风险(risk)**:'Exactly-once' is at-least-once + idempotent consumer; say so in the contract.
 **planError**:P4-06 should say 'at-least-once + idempotent consumer' not 'exactly-once'; transactional outbox cannot use the storage KV seam (single-statement by design).
@@ -1153,6 +1168,7 @@
 - dsh-lark-link 覆盖≈0% — 'At-least-once zero-loss' is a notify bridge
 **裁决叠加(整改令)**:
 - §2.A 子句措辞改(标题/must[0]/acc[0] → at-least-once + 幂等消费,BEGIN IMMEDIATE 事务)
+- §7.11:CloudEvents 属性名形状所有者——新 [N] 文件直接采用标准名(id/source/type/time/subject/datacontenttype),不自造
 
 #### P4-07 · Worker Lease、Heartbeat 与 Fencing Token
 
@@ -1203,7 +1219,7 @@
 **不用(reject,理由)**:
 - serverlessworkflow/specification — Saved format — rejected
 - OCI artifacts / ORAS — Overkill
-**标准(绑定词汇)**:sha256 content digest + DSSE signature (P4-04) for saved definitions (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:sha256 content digest + DSSE signature (P4-04) for saved definitions (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Signed-artifact load path that never executes unverified code, detached ownership by the Run service, nested budget/capability/trace decay, recursion/cycle rejection at compile, parent-cancel propagation (~400 LOC).
 **禁令/风险(risk)**:Detached runs need durable job records — jobs-local is in-memory and can't own them; the Run service must.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1257,7 +1273,7 @@
 **用(adapt)**:— 无(账本找过,没有合适的开源;主体自写)
 **不用(reject,理由)**:
 - idempotency-key (npm) — Does not exist on npm; other idempotency packages are Express middlewares / in-memory
-**标准(绑定词汇)**:IETF draft-ietf-httpapi-idempotency-key-header-07 Idempotency-Key passthrough (**本 epic 首个采用者,定形状**) · Stripe same-key-different-params reject
+**标准(绑定词汇)**:IETF draft-ietf-httpapi-idempotency-key-header-07 Idempotency-Key passthrough (**本 epic 是形状所有者**) · Stripe same-key-different-params reject
 **自己写(residual)**:sqlite ledger(key, params_digest, state prepared\|sent\|confirmed\|ambiguous\|compensated, epoch, receipt_digest) with CAS reserve, stale-epoch rejection from P4-07, ambiguous → P4-13 (~300 LOC + fast-check crash campaign).
 **禁令/风险(risk)**:Batch actions need per-item rows; provider-native keys must be passed through verbatim per the IETF header semantics.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1274,7 +1290,7 @@
 - node-sagas — Stale 2023-01
 - workflow-es sagas — Stale, mongo/redis
 - @node-ts/bus — Not on npm
-**标准(绑定词汇)**:JSON Patch RFC 6902 for StateDiff/repair-option representation (**本 epic 首个采用者,定形状**)
+**标准(绑定词汇)**:JSON Patch RFC 6902 for StateDiff/repair-option representation (**本 epic 是形状所有者**)
 **自己写(residual)**:observeState/compareExpected/compensate tool-declared hooks; engine as a workflow over the Run service emitting compensation ActionManifests (policy/approval/ledger/evidence); compensation runs as a nested run (P4-09) (~350 LOC).
 **禁令/风险(risk)**:Never fabricate rollback: irreversible ⇒ manual intervention; verify external state, not agent self-report.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1351,7 +1367,7 @@
 - BoundaryML/baml — Own DSL + codegen — second language
 - vercel/ai — Second IR next to the settled pi-ai twin
 - microsoft/prompty — Asset format
-**标准(绑定词汇)**:JSON Schema for the output contract (首个采用者 P0-06,import 其定义) · OTel GenAI semconv gen_ai.usage.* for token-estimate telemetry (首个采用者 P2-01,✗ 未采用 → P7-07 拥有)
+**标准(绑定词汇)**:JSON Schema for the output contract (所有者 P0-06,import 其定义) · OTel GenAI semconv gen_ai.usage.* for token-estimate telemetry (所有者 SLICE-3.3:§3.3:名字来自 @opentelemetry/semantic-conventions 常量包,slice 接 pipeline;时点改为 W11 前(P5-03/P5-06 首发 gen_ai.usage.*))
 **自己写(residual)**:PromptIR types (instructions / context slices / tool surface / output contract / policy notices), IR→dsh Message[] lowering (one function), clause-preservation golden tests, negotiation + IR hash written into EpochHeader via request-header.ts foldRequestHeader.
 **禁令/风险(risk)**:Do not create a second provider-translation layer; token estimate uses CHARS_PER_TOKEN=4 until the tokenizer epic lands.
 **planError**:Planned packages/llm/prompt-compiler/src/compile.ts per provider already exists as pi-ai compat + llm-pi-ai/src/context.ts toPiContext + llm-deepseek/src/translate.ts.
@@ -1391,7 +1407,7 @@
 **不用(reject,理由)**:
 - ucan-wg/ts-ucan — Stale 2024-03; token format belongs to P4-03/Trust Kernel, not here
 - biscuit-auth/biscuit — Token format is not this epic's concern — carry only a reference
-**标准(绑定词汇)**:A2A Message/Part/Artifact vocabulary (首个采用者 P4-01,✗ 未采用 → P4-05/P5-05 首次对外时定) · JSON Schema for outputSchema (首个采用者 P0-06,import 其定义) · W3C Trace Context traceparent  · OCI-style sha256:<hex> content-addressed refs (首个采用者 P3-01,import 其定义)
+**标准(绑定词汇)**:A2A Message/Part/Artifact vocabulary (**本 epic 是形状所有者**) · JSON Schema for outputSchema (所有者 P0-06,import 其定义) · W3C Trace Context traceparent  · OCI-style sha256:<hex> content-addressed refs (**本 epic 是形状所有者**)
 **自己写(residual)**:request.ts (objective, deliverables, context refs, artifact refs, capability token ref, WorldSpec, budget, verification obligations, parent trace), capability flags per new field, provider conformance suite across 4 providers.
 **禁令/风险(risk)**:All B-files are in packages/subagent/subagent/src = upstream hot zone (~7,200 commits/month) — keep additive and land the seam change upstream first.
 **planError**:P5-05 patches packages/subagent/subagent/src/* (hot zone) — land upstream, keep fork-side work to conformance tests.
@@ -1409,7 +1425,7 @@
 **用(adapt)**:
 - **a2aproject/A2A**(npm `@a2a-js/sdk` · Apache-2.0 · 25,602★) — Artifact{artifactId,name,description,parts,metadata}, TaskState
 - **@agentclientprotocol/sdk**(npm `@agentclientprotocol/sdk` · Apache-2.0 · 4,132★) — 1.4.0 already dep; update vocabulary
-**标准(绑定词汇)**:A2A Artifact + TaskState enum (incl. input-required/auth-required/rejected) as failure class (首个采用者 P4-01,✗ 未采用 → P4-05/P5-05 首次对外时定) · ACP session/update tool_call ids for tool-trace refs (首个采用者 P2-06,import 其定义) · OTel GenAI gen_ai.usage.* for usage/cost (首个采用者 P2-01,✗ 未采用 → P7-07 拥有)
+**标准(绑定词汇)**:A2A Artifact + TaskState enum (incl. input-required/auth-required/rejected) as failure class (所有者 P5-05,import 其定义) · ACP session/update tool_call ids for tool-trace refs (所有者 P2-12,import 其定义) · OTel GenAI gen_ai.usage.* for usage/cost (所有者 SLICE-3.3:§3.3:名字来自 @opentelemetry/semantic-conventions 常量包,slice 接 pipeline;时点改为 W11 前(P5-03/P5-06 首发 gen_ai.usage.*))
 **自己写(residual)**:result.ts (status, summary, artifact refs, state diffs, action receipts, tool trace refs, usage/cost, verification hints, continuation token), Artifact Store spill for large results, per-provider capability flags; keep structured validation provider-owned.
 **禁令/风险(risk)**:Same hot-zone caveat; cost reconciliation needs token-meter route pricing (route-pricing.ts exists).
 **planError**:P5-06 patches the upstream subagent hot zone — land upstream first.
@@ -1461,7 +1477,7 @@
 - **agentclientprotocol/agent-client-protocol**(npm `@agentclientprotocol/sdk` · Apache-2.0 · 4,132★) — SDK 1.4.0 (fork pin; npm latest 1.3.0) methods verified in dist; no event cursor
 **可选(optional,不进依赖不进 CI)**:
 - a2aproject/A2A — tasks/resubscribe + push notifications fit HTTP-remote better — a future subagent-a2a provider, not an ACP extension
-**标准(绑定词汇)**:ACP 1.4.0 session/load, session/resume, session/fork, session/list, session/request_permission, authenticate, sessionCapabilities (首个采用者 P2-06,import 其定义)
+**标准(绑定词汇)**:ACP 1.4.0 session/load, session/resume, session/fork, session/list, session/request_permission, authenticate, sessionCapabilities (所有者 P2-12,import 其定义)
 **自己写(residual)**:Negotiate sessionCapabilities at initialize, session/load\|resume on reconnect, session/request_permission → parent policy, session/fork; dsh-side monotonic cursor on the child's session log (ACP has none); Trust-Kernel-signed continuation token for identity anti-forgery.
 **禁令/风险(risk)**:Protocol version pinning (PROTOCOL_VERSION 2; fork pins 1.4.0 while npm latest is 1.3.0 — confirm channel); authenticated steer beyond prompt/cancel is not an ACP method.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1497,7 +1513,7 @@
 - timgit/pg-boss — Postgres-only
 - taskforcesh/bullmq — Redis-only
 - graphile/worker — Postgres; claim+lease is ~100 lines over node:sqlite BEGIN IMMEDIATE
-**标准(绑定词汇)**:W3C PROV-DM field names for blackboard provenance (wasGeneratedBy, wasAttributedTo, wasDerivedFrom) (**本 epic 首个采用者,未采用 → 见裁决叠加**)
+**标准(绑定词汇)**:W3C PROV-DM field names for blackboard provenance (wasGeneratedBy, wasAttributedTo, wasDerivedFrom) (本 epic 未采用/不采用;所有者 P6-09,见裁决叠加)
 **自己写(residual)**:Attempt/lease/owner fields, multi-process single-winner claim (sqlite BEGIN IMMEDIATE + UPDATE … WHERE owner IS NULL), receipt-driven status advance, blackboard (structured facts + artifact refs + provenance), moving roster/captain out to plugin layer.
 **禁令/风险(risk)**:Planned packages/collaboration/* would be a second implementation beside agent-team's 700+ lines of DAG/mailbox.
 **planError**:P5-11 plans packages/collaboration/* from scratch next to agent-team — promote agent-team's DAG/mailbox into the Service Definition instead.
@@ -1572,7 +1588,7 @@
 - **dubzzz/fast-check**(npm `fast-check` · MIT) — Already dev dep; arbitraries over the zod schema
 **只读参考(reference)**:
 - getzep/graphiti — Field naming precedent
-**标准(绑定词汇)**:W3C PROV-DM relations wasDerivedFrom/wasGeneratedBy/wasAttributedTo (首个采用者 P5-11,✗ 未采用 → P7-04/P6-03 拥有) · Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at  · W3C DPV for purpose & personal-data categories (**本 epic 首个采用者,未采用 → 见裁决叠加**)
+**标准(绑定词汇)**:W3C PROV-DM relations wasDerivedFrom/wasGeneratedBy/wasAttributedTo (本 epic 未采用/不采用;所有者 P6-09,见裁决叠加) · Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at  · W3C DPV for purpose & personal-data categories (本 epic 未采用/不采用;所有者 P6-10,见裁决叠加)
 **自己写(residual)**:Record/zod schema, conflict chain, sensitivity-gated indexing; vocabulary adoption only.
 **禁令/风险(risk)**:No library models 'agent memory record'; inventing new provenance names when PROV exists would be the mistake.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1605,8 +1621,6 @@
 - dsh-memory-system 9★ — Approval-gated lease-lock writes
 - meow-memory 73★ — node:sqlite 7-layer
 - dsh-layered-memory — Hybrid BM25+vector
-**裁决叠加(整改令)**:
-- §7.2 R3:W3C PROV-DM 词汇(wasDerivedFrom/wasGeneratedBy/wasAttributedTo)由本 epic 首次对外使用;P5-11/P6-02 内部名保留 + 映射
 
 #### P6-04 · Context Graph 与 Retrieval Planner
 
@@ -1639,7 +1653,7 @@
 
 **用(adapt)**:
 - **open-telemetry/semantic-conventions**(npm `@opentelemetry/semantic-conventions` · Apache-2.0 · 642★) — 1.43.0; @opentelemetry/* already deps; carried by existing session-telemetry-otel
-**标准(绑定词汇)**:OTel semconv gen_ai.* attribute names (+ dsh.context.source_id / selection_reason) (首个采用者 P2-01,✗ 未采用 → P7-07 拥有)
+**标准(绑定词汇)**:OTel semconv gen_ai.* attribute names (+ dsh.context.source_id / selection_reason) (所有者 SLICE-3.3:§3.3:名字来自 @opentelemetry/semantic-conventions 常量包,slice 接 pipeline;时点改为 W11 前(P5-03/P5-06 首发 gen_ai.usage.*))
 **自己写(residual)**:Declarative shared/private/retrievable zones in RunPlan + stable telemetry record (source ids, token counts, reasons, redacted previews); upstream child-agent.ts seed boundary + telemetry redaction waterfall cover 'child does not inherit full history'.
 **禁令/风险(risk)**:Telemetry token counts come from the CHARS/4 heuristic — label them estimated or adopt a real tokenizer.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1702,7 +1716,7 @@
 **不用(reject,理由)**:
 - sqlcipher/sqlcipher — Needs better-sqlite3; dsh is on node:sqlite
 - m4heshd/better-sqlite3-multiple-ciphers — 13.0.3; second native driver reopens a settled seam
-**标准(绑定词汇)**:RFC 6962-style hash chain  · DSSE/in-toto statements for signed tree heads (P0-07 format) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:RFC 6962-style hash chain  · DSSE/in-toto statements for signed tree heads (P0-07 format) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Per-tenant KEK/DEK keyring semantics, encrypting KvUnit/session-row codec wrapper (hook exists in session-persistence-sqlite compression.ts), RFC 6962 chain + signed anchors behind trustKernel.auditAppend (no-op stub), tamper corpus, residency route policy.
 **禁令/风险(risk)**:Row/line-level envelope encryption leaves seq/type/time metadata in clear — state it; full-database encryption would force a driver swap; key-loss = data-loss must be documented.
 **planError**:SQLCipher would reopen the node:sqlite seam; keytar is archived.
@@ -1733,7 +1747,7 @@
 **不用(reject,理由)**:
 - multiformats/js-multiformats — CIDs not needed
 - isomorphic-git/isomorphic-git — Git object store — heavier, wrong semantics
-**标准(绑定词汇)**:OCI image-spec Descriptor {mediaType, digest sha256:…, size, annotations} for ArtifactRef (首个采用者 P3-01,import 其定义) · OpenLineage Run/Job/Dataset + facets for lineage events  · W3C PROV vocabulary (首个采用者 P5-11,✗ 未采用 → P7-04/P6-03 拥有) · in-toto attestation for verification links (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:OCI image-spec Descriptor {mediaType, digest sha256:…, size, annotations} for ArtifactRef (**本 epic 是形状所有者**) · OpenLineage Run/Job/Dataset + facets for lineage events  · W3C PROV vocabulary (**本 epic 是形状所有者**) · in-toto attestation for verification links (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:ArtifactRef schema (OCI Descriptor + tenant/producer/parents/retention/sensitivity/schema), lineage edges/DAG, signed access tokens, range reads over cacache streams, retention hooks to P6-07; keep attachment-local untouched.
 **禁令/风险(risk)**:cacache is single-directory, no ACL, no ranges natively; per-tenant roots cost cross-tenant dedup; OpenLineage standardizes the event shape but the store is still dsh.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1742,6 +1756,7 @@
 - dsh-popout-sidebar 197★ — Artifact listing UI
 **裁决叠加(整改令)**:
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
+- §7.11:W3C PROV-DM 与 OCI image-spec Descriptor 两个形状的所有者;P7-04 import PROV
 
 #### P6-10 · Privacy Classification、Redaction、Fork/Snapshot Lineage 与导出/擦除
 
@@ -1757,7 +1772,7 @@
 **不用(reject,理由)**:
 - trufflesecurity/trufflehog — AGPL
 - solvvy/redact-pii — Stale 2023
-**标准(绑定词汇)**:W3C DPV for purpose/personal-data categories (首个采用者 P6-02,✗ 未采用 → P6-10) · public/internal/confidential/restricted tiers (convention, no formal standard)
+**标准(绑定词汇)**:W3C DPV for purpose/personal-data categories (**本 epic 是形状所有者**) · public/internal/confidential/restricted tiers (convention, no formal standard)
 **自己写(residual)**:Classification taxonomy + taint propagation through events/artifacts/memory/context, purpose-filtered fork/snapshot (default: no secrets/grants), cross-fork export/erase traversal with legal-hold report, PII canary set (Luhn/email/phone regex keyless default); note redact.ts fail-open TODO for unions.
 **禁令/风险(risk)**:PII NER needs a model → Presidio sidecar or ONNX only as optional providers; keyless default stays regex+canary.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1778,7 +1793,7 @@
 - **in-toto/in-toto**(Apache-2.0 · 1,036★) — Layout spec only (functionaries = VerifierIndependence, threshold = quorum); not the Python verifier or Link metadata
 - **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; or reuse scripts/first100/attest.ts canonicalJson — pick one **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛**
 - **colinhacks/zod**(npm `zod` · MIT) — 4.4.3 in 38 pkgs; native toJSONSchema for TS↔Python codec contract
-**标准(绑定词汇)**:in-toto Statement v1 + in-toto layout semantics (steps/inspections/functionaries/threshold) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · JSON Schema 2020-12 via zod4 toJSONSchema (首个采用者 P0-06,import 其定义) · RFC 8785 JCS canonical hash (首个采用者 P2-03,import 其定义)
+**标准(绑定词汇)**:in-toto Statement v1 + in-toto layout semantics (steps/inspections/functionaries/threshold) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · JSON Schema 2020-12 via zod4 toJSONSchema (所有者 P0-06,import 其定义) · RFC 8785 JCS canonical hash (所有者 P2-03,import 其定义)
 **自己写(residual)**:Claim/CheckSpec/EvidenceRequirement/AcceptanceRule/confidence policy types, freeze semantics inside RunPlan, PlanAmendment re-approval path, ledger events with schemaVersion.
 **禁令/风险(risk)**:Predecessors P4-03/P4-04 (RunPlan) do not exist in the tree; freeze semantics have nowhere to attach yet.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1803,7 +1818,7 @@
 - multiformats/js-multiformats — 14.0.5 CID id format only
 **不用(reject,理由)**:
 - isomorphic-git/isomorphic-git — Git object store — heavier; fair alternative only if artifacts must be git-addressable
-**标准(绑定词汇)**:in-toto ResourceDescriptor as EvidenceRef (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · DSSE envelope for sealed EvidenceEnvelope (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:in-toto ResourceDescriptor as EvidenceRef (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · DSSE envelope for sealed EvidenceEnvelope (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Collection hooks at tool-completion / subagent-result / artifact-commit / approval boundaries, raw-vs-projection split with permission+token-budget filter, dedupe keyed by (hash, principal, time-context), retention policy, HTTP request/response summary capture, crash ordering (CAS commit before ledger ref).
 **禁令/风险(risk)**:cacache stores in its own dir layout; if the storage chapter mandates storage-sqlite, cacache is a second store → fall back to a ~150-LOC CAS over node:sqlite blobs.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1838,7 +1853,7 @@
 - **dubzzz/fast-check**(npm `fast-check` · MIT · 5,129★) — 'No verified claim without evidence' property
 **可选(optional,不进依赖不进 CI)**:
 - graphology/graphology — 0.26.0 graph + traversal + cycle detection (~15%); a Map<claimId, edges> is fine if the graph stays small
-**标准(绑定词汇)**:W3C PROV-DM relations (wasDerivedFrom, wasGeneratedBy, wasInvalidatedBy, wasAttributedTo) (首个采用者 P5-11,✗ 未采用 → P7-04/P6-03 拥有) · in-toto SCAI predicate (attributes + evidence + conditions) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:W3C PROV-DM relations (wasDerivedFrom, wasGeneratedBy, wasInvalidatedBy, wasAttributedTo) (所有者 P6-09,import 其定义) · in-toto SCAI predicate (attributes + evidence + conditions) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Status lattice (proposed/verified/stale/conflicted/unverified), propagation on expiry/revocation/contradiction, verifier-only verified transition, projector from ledger, OutcomePackage rendering that never drops contradictions.
 **禁令/风险(risk)**:graphology is optional; vertical scoring tables are out of scope (nonGoal).
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1848,7 +1863,7 @@
 - graph-memory 591★ — Typed-node memory — not claims
 **裁决叠加(整改令)**:
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
-- §7.2 R3:W3C PROV-DM 词汇(wasDerivedFrom/wasGeneratedBy/wasAttributedTo)由本 epic 首次对外使用;P5-11/P6-02 内部名保留 + 映射
+- §7.11(修订 R3):PROV-DM 形状所有者是 P6-09(W10),本 epic import;P5-11/P6-02 内部名的映射在首次对外处做
 
 #### P7-05 · AcceptanceGate 与 OutcomePackage：只有被证明的结果才能完成 Run
 
@@ -1862,7 +1877,7 @@
 - sigstore/sigstore-js — 5.x; keyless Fulcio/Rekor = hosted → optional only
 - open-policy-agent/npm-opa-wasm — 1.10.0; AcceptanceRule engine only if the policy chapter standardizes on it
 - cedar-policy/cedar — 4.12.0; same — decide once with P2/P3/P5
-**标准(绑定词汇)**:SLSA Verification Summary Attestation (in-toto vsa.md) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · in-toto Statement + DSSE envelope (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状) · RFC 8785 JCS (首个采用者 P2-03,import 其定义) · Ed25519 via node:crypto under Trust Kernel signatureRoots
+**标准(绑定词汇)**:SLSA Verification Summary Attestation (in-toto vsa.md) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · in-toto Statement + DSSE envelope (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · RFC 8785 JCS (所有者 P2-03,import 其定义) · Ed25519 via node:crypto under Trust Kernel signatureRoots
 **自己写(residual)**:Run-state machine (verifying/accepted/rejected/needs-human/compensating), OutcomePackage fields, hand-written pure gate truth table, ledger reconstruction, SDK contract change ('final assistant text ≠ success'); reuse evidence-format's accepted:true structural trick.
 **禁令/风险(risk)**:Do NOT make sigstore keyless the default (needs Fulcio/Rekor network + OIDC); DSSE + local ed25519 satisfies keyless CI.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -1909,7 +1924,7 @@
 **不用(reject,理由)**:
 - traceloop/openllmetry-js — 0.27.0 monkey-patches vendor SDKs — wrong layer for pi-ai/own adapters
 - Arize-ai/openinference — 2.8.0 competing attribute spec; emit gen_ai.* only
-**标准(绑定词汇)**:OTel GenAI semantic conventions (gen_ai.agent.*, conversation.id, operation.name, request/response.*, usage.*, evaluation.*) (首个采用者 P2-01,✗ 未采用 → P7-07 拥有) · W3C Trace Context traceparent/tracestate  · OTLP/HTTP wire (首个采用者 P2-01,✗ 未采用 → P7-07 拥有)
+**标准(绑定词汇)**:OTel GenAI semantic conventions (gen_ai.agent.*, conversation.id, operation.name, request/response.*, usage.*, evaluation.*) (所有者 SLICE-3.3:§3.3:名字来自 @opentelemetry/semantic-conventions 常量包,slice 接 pipeline;时点改为 W11 前(P5-03/P5-06 首发 gen_ai.usage.*)) · W3C Trace Context traceparent/tracestate  · OTLP/HTTP wire
 **自己写(residual)**:Trace vocabulary as a Service Definition, ~250-LOC durable outbox over node:sqlite (per-sink table, ack cursor advanced on exporter success, receiver dedupe via deterministic span ids) as an additive layer under SessionTelemetrySink.emit(), redaction-required-to-start rule, delivery-status recording, cost aggregation, cardinality control, dsh.* attribute namespace.
 **禁令/风险(risk)**:Reopens two documented upstream decisions (span mapping rejected 'for this revival'; outbox deferred) — frame as the 'future consumer with real span queries' the note anticipates, keep emit() unchanged.
 **planError**:Plan creates packages/observability/otel-exporter while packages/session/session-telemetry-otel already is the OTel backend — add a TracerProvider pipeline there instead.
@@ -1923,7 +1938,7 @@
 **裁决叠加(整改令)**:
 - §2.C 缩范围:files[] 删与上游/已有实现重复的 [N] 文件,residual 收窄
 - §3.3 OTel:在既有 packages/session/session-telemetry-otel 上加 TracerProvider pipeline;不建 otel-exporter 包;gen_ai.* 用 @opentelemetry/semantic-conventions
-- §7.2 R3:OTel enduser.id / gen_ai.* 由本 epic 拥有;P2-01 内部字段映射
+- §7.11(修订 R3):OTel 名字来自 @opentelemetry/semantic-conventions 常量包,无人定形状;§3.3 slice 提前到 W11 前(P5-03/P5-06 首发 gen_ai.usage.*);本 epic 做 P2-01 enduser.id 映射
 - §9.2 生态迁移目标:4 个各接 OTel 或自签 HMAC 链——session-telemetry-otel 唯一 backend,插件只加 processor/exporter
 
 #### P7-08 · Deterministic Replay、Simulation 与 Decision Diff
@@ -1943,7 +1958,7 @@
 - mswjs/msw — No built-in recorder
 - rr-debugger/rr — Process-level, Linux — wrong layer
 - temporalio replay (Worker.runReplayHistory) — Requires Temporal's workflow model — replaces the loop
-**标准(绑定词汇)**:RFC 6902 JSON Patch for DecisionDiff (首个采用者 P4-13,import 其定义)
+**标准(绑定词汇)**:RFC 6902 JSON Patch for DecisionDiff (所有者 P4-13,import 其定义)
 **自己写(residual)**:ReplayBundle schema (schema fingerprints, RunPlan, policy inputs, seeds, artifact refs), replay-mode enforcement 'no real network/write' through sandbox/tool seams, non-HTTP world observations (fs/process) recording, shadow replay of Router/Policy/Prompt Compiler, version-mismatch refusal/migration.
 **禁令/风险(risk)**:SnapshotAgent is flagged experimental by undici — pin the version and keep nock as fallback; policy replay needs the policy engine to be pure over recorded inputs.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2000,7 +2015,7 @@
 - grafana/k6 — External tool only, never a dep
 - UKGovernmentBEIS/inspect_ai — Sidecar only — not worth it when promptfoo/evalite are TS-native
 - confident-ai/deepeval — npm deepeval 0.9.13 is an unrelated TS package
-**标准(绑定词汇)**:OpenFeature as the champion/challenger flag standard (only if the routing chapter also adopts it) (首个采用者 P0-05,import 其定义) · DSSE-signed EvolutionProposal (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:OpenFeature as the champion/challenger flag standard (only if the routing chapter also adopts it) (所有者 P0-05,import 其定义) · DSSE-signed EvolutionProposal (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:Metric definitions over dsh's ledger/OutcomePackage (verified task success, policy violation, duplicate side effect, router regret, memory pollution, evidence completeness), EvolutionProposal lifecycle (static scan → offline eval → security eval → canary → approval → signed release), not-auto-evolvable list, candidate read-only copied-stream isolation, general-purpose-gate.yml.
 **禁令/风险(risk)**:promptfoo pulls a large dependency tree — dev/CI-only or npx, never runtime; OpenFeature worth it only if the routing chapter also uses it — cross-chapter decision.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2029,7 +2044,7 @@
 **不用(reject,理由)**:
 - microsoft/vscode-languageserver-node (vscode-jsonrpc) — 9.0.2 frames with LSP Content-Length not NDJSON, no Python twin — would break the hand-written Python client
 - open-rpc/generator — Last push 2025-10-22 (stale)
-**标准(绑定词汇)**:MCP initialize protocolVersion + capabilities shape (首个采用者 P2-03,import 其定义) · LSP ClientCapabilities pattern  · RFC 8785 JCS for schema fingerprints (首个采用者 P2-03,import 其定义)
+**标准(绑定词汇)**:MCP initialize protocolVersion + capabilities shape (**本 epic 是形状所有者**) · LSP ClientCapabilities pattern  · RFC 8785 JCS for schema fingerprints (本 epic 未采用/不采用;所有者 P2-03,见裁决叠加)
 **自己写(residual)**:version.ts (range algebra over SchemaVersion major/minor + wire protocolVersion), capabilities.ts (mandatory/optional sets, fail-fast, compatibility-adapter registry recording degradations into trace/provenance), N-2/N-1/N golden fixtures, Python mirror of negotiation in client.py (~50 lines); replace the hand-mirrored registry ID list with the generated fingerprint set.
 **禁令/风险(risk)**:Do NOT swap transport.ts for vscode-jsonrpc; InitializeParams carries only schemaVersion today — gap is real but narrow.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2056,7 +2071,7 @@
 **只读参考(reference)**:
 - kubernetes/kubernetes — Pattern only
 - aip-dev/google.aip.dev — Pattern only
-**标准(绑定词汇)**:Kubernetes resource model (metadata.uid/resourceVersion/creationTimestamp, spec/status, list+watch, resourceVersion precondition) (**本 epic 首个采用者,定形状**) · Google AIP-158 page_token pagination  · Google AIP-160 filter grammar
+**标准(绑定词汇)**:Kubernetes resource model (metadata.uid/resourceVersion/creationTimestamp, spec/status, list+watch, resourceVersion precondition) (**本 epic 是形状所有者**) · Google AIP-158 page_token pagination  · Google AIP-160 filter grammar
 **自己写(residual)**:5 resource projections (action/approval/artifact/verification/world) as @Remote Typert methods reading P4-01/P6-09/P7-05/P2-07 definitions, shared ResourceEnvelope (tenant, classification, revision, timestamps, provenance, allowedActions), opaque keyset cursor, filter parser, watch = existing mux stream, 100k/1M sqlite pagination test; upstream has session(~Run)+agent get/list with cursor+limit+authorized filtering.
 **禁令/风险(risk)**:Any OpenAPI/tRPC/Connect/ts-rest adoption is a THIRD RPC seam beside stdio JSON-RPC and Typert Remote — violates 'not a settled seam'.
 **planError**:Files list references packages/host/apiproxy/src/api-proxy.ts which no longer exists (removed 2026-08-10; session.export is now an exact Fetch route in session-log-export).
@@ -2076,7 +2091,7 @@
 - temporalio/temporal — Durable-execution engines replace the Agent loop itself
 - restatedev/restate — Same
 - dbos-inc/dbos-transact-ts — Same
-**标准(绑定词汇)**:IETF draft-ietf-httpapi-idempotency-key-header semantics (首个采用者 P4-12,import 其定义) · AIP-151 long-running Operation {done, metadata, response, error}  · K8s resourceVersion precondition (首个采用者 P8-02,import 其定义)
+**标准(绑定词汇)**:IETF draft-ietf-httpapi-idempotency-key-header semantics (所有者 P4-12,import 其定义) · AIP-151 long-running Operation {done, metadata, response, error}  · K8s resourceVersion precondition (所有者 P8-02,import 其定义)
 **自己写(residual)**:commands.ts wire types (commandId, idempotencyKey, expectedRevision, reason), command ledger sqlite table keyed (tenant, commandId) → result + fingerprint, explicit state-transition table, pause-at-checkpoint (P4-05/13), cascade cancel + compensation to subagent/workflow/world/leases, fork inheritance rules (no secrets/grants/leases), race + kill-at-boundary tests; upstream has cancel, fork, idempotent create.
 **禁令/风险(risk)**:Cascade cancel/compensation touches core/agent dispatch.ts, inbox.ts, subagent lifecycle.ts (hot zones) — keep fork-side changes to hooks/events.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2094,7 +2109,7 @@
 - **@modelcontextprotocol/sdk**(npm `@modelcontextprotocol/sdk`) — 1.29.0 present; elicitation shape maps to clarification.request
 - **agentclientprotocol/agent-client-protocol**(npm `@agentclientprotocol/sdk` · Apache-2.0 · 4,132★) — 1.3.0 present; request_permission maps to approval.request with options
 - **node:crypto Ed25519** — Response signing bound to actionHash + expectedRevision (attest.ts pattern)
-**标准(绑定词汇)**:MCP elicitation/create server→client request shape (首个采用者 P2-03,import 其定义) · ACP session/request_permission payload shape (首个采用者 P2-06,import 其定义) · CloudEvents-style id/source/subject on the request envelope (首个采用者 P4-01,✗ 未采用 → P8-05 拥有映射)
+**标准(绑定词汇)**:MCP elicitation/create server→client request shape (所有者 P2-12,import 其定义) · ACP session/request_permission payload shape (所有者 P2-06,import 其定义) · CloudEvents-style id/source/subject on the request envelope (所有者 P4-06,import 其定义)
 **自己写(residual)**:server-requests.ts envelope (requestId, runId, actionHash binding, deadline, eligible principals, scopes registration, expectedRevision), reconnection re-delivery of pending requests, late/duplicate response rejection, credential-consent request that never carries secrets; ~40% of scope lands in P2-07/09/12; wire already supports server→client requests both directions.
 **禁令/风险(risk)**:Do not model this as MCP itself (dsh is not an MCP server to its own clients); borrow shapes so third-party MCP/ACP clients map 1:1.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2113,7 +2128,7 @@
 - redis/ioredis — 6.0.0 Redis Streams — optional provider
 **不用(reject,理由)**:
 - tulios/kafkajs — Last push 2024-08-02 — stale
-**标准(绑定词汇)**:CloudEvents 1.0 attributes id/source/type/time/subject + sequence extension (首个采用者 P4-01,✗ 未采用 → P8-05 拥有映射) · SSE Last-Event-ID semantics  · NATS JetStream durable-consumer ack model (ack pending, max_ack_pending, slow-consumer eviction)
+**标准(绑定词汇)**:CloudEvents 1.0 attributes id/source/type/time/subject + sequence extension (所有者 P4-06,import 其定义) · SSE Last-Event-ID semantics  · NATS JetStream durable-consumer ack model (ack pending, max_ack_pending, slow-consumer eviction)
 **自己写(residual)**:event-stream.ts contract (eventId, resourceRevision, causationId, classification, lossy flag), per-tenant monotonic cursor over the sqlite outbox, client ACK persistence, replay from lastAck+1 with eventId dedupe, retention + cursor-expired → snapshot+delta, max in-flight + slow-consumer disconnect on the mux, chaos + 10M-event tests; upstream journal-stream.ts has snapshot-first open, resumeCursor, cursor algebra, repair, heartbeat.
 **禁令/风险(risk)**:Keyless CI and local-default rules forbid a daemon as the default; JetStream/Redis only behind the same seam.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2121,7 +2136,7 @@
 - dsh-pocket 900★ 覆盖≈0% — Same
 - dsh-mobile 186★ 覆盖≈0% — Same
 **裁决叠加(整改令)**:
-- §7.2 R3:CloudEvents 属性名在本 epic 首次跨线;P4-01 内部字段(id/runId/seq/occurredAt)保留,本 epic 拥有映射层
+- §7.11(修订 R3):CloudEvents 形状所有者是 P4-06(W5,新文件直接采用标准名);本 epic 拥有 P4-01 内部字段(id/runId/seq/occurredAt)→ CloudEvents 的映射层
 - §6:REUSE_UPSTREAM 已按 gap-over-upstream 缩范围,开工时读 spec/first100/sources/base-align-v2/23-partial-rescope-spec.md 对应条目
 
 #### P8-06 · Authenticated Principal、Tenant Boundary、RBAC/ABAC 与 API Scope
@@ -2143,7 +2158,7 @@
 - nextauthjs/next-auth — Same
 - lucia-auth/lucia — v3 deprecated into a guide
 - osohq/oso — Last push 2025-02-26, library deprecated
-**标准(绑定词汇)**:SPIFFE ID format for ServiceAccount ids (首个采用者 P0-02,✗ 未采用 → P8-06 拥有) · OIDC/JWT
+**标准(绑定词汇)**:SPIFFE ID format for ServiceAccount ids (所有者 P3-09,import 其定义) · OIDC/JWT
 **自己写(residual)**:identity/auth Service Definition (Principal/ServiceAccount/Tenant/Org/Role/Attribute/scoped session), pluggable AuthProvider seam on client-connection/webServer, LocalPrincipalProvider wrapping existing browser-auth cookie + stdio parent identity, tenant-first lookup discipline in every resolver, non-null tenant on all entities (workspace entity.ts has none), CapabilityToken depth, 403/404 non-leak, authorization-matrix test generator.
 **禁令/风险(risk)**:Cedar vs Casbin decision belongs with P2-10 (which plans a hand-written policy language); P2-01 principals cannot be rehydrated across the wire (BLOCKED-025) — this authority IS P8-06.
 **planError**:P2-10 plans a hand-written policy language; recommend Cedar there so P8-06/P8-09 consume one engine.
@@ -2156,7 +2171,7 @@
 **裁决叠加(整改令)**:
 - §2.G 开工前设计决定已定(见该 epic 行)
 - §3.1 共用引擎 Cedar(@cedar-policy/cedar-wasm 4.12.0)在 P2-05 开工前作为 infra slice 接入;本 epic 只写 adapter/PEP/explain
-- §7.2 R3:SPIFFE ID 格式在本 epic 首次跨线,本 epic 拥有 PrincipalId/TenantId/ServiceAccount 的 SPIFFE 映射(P0-02/P2-01 内部 id 保留,单向映射 + 冻结用例)
+- §7.11(修订 R3):SPIFFE ID 形状所有者是 P3-09(W8),本 epic import;本 epic 拥有 P0-02/P2-01 内部 id → SPIFFE 的单向映射(ServiceAccount)+ 冻结用例
 - §9.2 生态迁移目标:≥7 套登录门各自 wrap http server——AuthProvider seam 在 http server 之前;负用例:provider 拿不到 core session secret(@xgone/dsh-remote 的 seam 违规)
 
 #### P8-07 · Schema-Generated TS/Python SDK Parity 与 Contract Test Matrix
@@ -2181,7 +2196,7 @@
 - pact-foundation/pact-js — 17.1.3 HTTP-only
 - apiaryio/dredd — ARCHIVED
 - microsoft/typespec / Smithy / Buf — Second source of truth beside Typert TS types
-**标准(绑定词汇)**:JSON Schema 2020-12 as the versioned artifact (首个采用者 P0-06,import 其定义) · OpenRPC document format for methods
+**标准(绑定词汇)**:JSON Schema 2020-12 as the versioned artifact (所有者 P0-06,import 其定义) · OpenRPC document format for methods
 **自己写(residual)**:packages/sdk/codegen (~300 lines: walk Typert registry → control-protocol.json as OpenRPC methods + JSON Schema components; TS/Python method-client stubs), bidirectional golden fixtures + wire snapshots, error-code/retryability mapping table, CI git diff --exit-code on generated artifacts, N-1 fixture runs, wheel/exe smoke tests.
 **禁令/风险(risk)**:Python method client wrapper stays hand-written (ergonomic wrapper only, per must[1]).
 **裁决叠加(整改令)**:
@@ -2232,7 +2247,7 @@
 - animir/node-rate-limiter-flexible — 11.2.0 request rate only, no sqlite store, no domain counters — write quota
 - google/trillian — Transparency-log daemon — overkill
 - sigstore/rekor — Daemon — overkill
-**标准(绑定词汇)**:OCSF as SIEM-facing audit event schema  · OTLP logs as optional transport (首个采用者 P2-01,✗ 未采用 → P7-07 拥有) · RFC 8785 JCS for hash-chain canonicalization (首个采用者 P2-03,import 其定义)
+**标准(绑定词汇)**:OCSF as SIEM-facing audit event schema  · OTLP logs as optional transport  · RFC 8785 JCS for hash-chain canonicalization (所有者 P2-03,import 其定义)
 **自己写(residual)**:org-policy types + source attribution UI, quota admission (concurrency/CPU/mem/net/tokens/cost/storage/artifact/workflow) integrated with the scheduler, retention/erase/legal-hold jobs across Session/Run/Action/Evidence/Artifact/Memory/Telemetry outbox incl. forks/snapshots/indexes, paginated incremental export cursor, redaction-by-default.
 **禁令/风险(risk)**:Transparency logs are overkill; a prev-hash chain + periodic Ed25519 checkpoint meets 'missing/tamper 100% detected'.
 **planError**:Files list cites removed packages/host/apiproxy/src/session-export.ts (now packages/session/session-log-export).
@@ -2264,7 +2279,7 @@
 **不用(reject,理由)**:
 - restic/restic — Go CLI sidecar cost, no gain over typage + backup()
 - getsops/sops — Same
-**标准(绑定词汇)**:SLSA/in-toto attestation (optional) (首个采用者 P0-01,✗ 未采用 → R1 slice 定形状)
+**标准(绑定词汇)**:SLSA/in-toto attestation (optional) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地)
 **自己写(residual)**:config-compiler typed diff/plan (validate rows via schemastery without executing !!js/plugin code, capability graph, policy impact, plugin permissions), config-migration per persisted domain with pre-snapshot + auto-rollback, protocol/schema ABI gate = registry FieldChange + diff of P8-07 control-protocol.json, DR drill e2e (backup → wipe → restore → resume pending approval/workflow → ledger check), release-gate.yml into the P0-07 package, pnpm general-purpose-gate; provenance already done upstream (dump-config.ts, renderConfigDump, feature-gate chains).
 **禁令/风险(risk)**:K8s managedFields / Terraform plan / Flagger are patterns, not libraries; keyless-signing (sigstore) is hosted-only → optional.
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
@@ -2519,11 +2534,11 @@ add('P1-11 P1-12 P2-03 P3-07 P3-09 P4-04 P4-09 P6-08 P6-09 P7-01 P7-02 P7-04 P7-
 add('P4-03 P4-04 P7-01 P7-05 P8-09', '§7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份')
 add('P1-03', '§7.2 R4:P1-01 `dshVersionRange` 只查是字符串(validate.ts:393)→ 本 epic 加 semver.validRange + 拒绝用例;R5:P1-02 的 SBOM(CycloneDX)与 lockfile 同源,在本 epic 建')
 add('P1-12', '§7.2 R5:P1-02 未建的 SLSA provenance / 信任等级在本 epic 接(slsa-framework)')
-add('P8-06', '§7.2 R3:SPIFFE ID 格式在本 epic 首次跨线,本 epic 拥有 PrincipalId/TenantId/ServiceAccount 的 SPIFFE 映射(P0-02/P2-01 内部 id 保留,单向映射 + 冻结用例)')
-add('P8-05', '§7.2 R3:CloudEvents 属性名在本 epic 首次跨线;P4-01 内部字段(id/runId/seq/occurredAt)保留,本 epic 拥有映射层')
-add('P7-04 P6-03', '§7.2 R3:W3C PROV-DM 词汇(wasDerivedFrom/wasGeneratedBy/wasAttributedTo)由本 epic 首次对外使用;P5-11/P6-02 内部名保留 + 映射')
+add('P8-06', '§7.11(修订 R3):SPIFFE ID 形状所有者是 P3-09(W8),本 epic import;本 epic 拥有 P0-02/P2-01 内部 id → SPIFFE 的单向映射(ServiceAccount)+ 冻结用例')
+add('P8-05', '§7.11(修订 R3):CloudEvents 形状所有者是 P4-06(W5,新文件直接采用标准名);本 epic 拥有 P4-01 内部字段(id/runId/seq/occurredAt)→ CloudEvents 的映射层')
+add('P7-04', '§7.11(修订 R3):PROV-DM 形状所有者是 P6-09(W10),本 epic import;P5-11/P6-02 内部名的映射在首次对外处做')
 add('P8-07', '§7.2 R3:Confluent 兼容词汇 BACKWARD/FORWARD/FULL 在 SDK 导出处对齐;§7.8:TS/Python parity 矩阵必须含 depth-5000 argumentsHash 用例(Python JCS 库也递归,默认 recursion limit 1000)')
-add('P7-07', '§7.2 R3:OTel enduser.id / gen_ai.* 由本 epic 拥有;P2-01 内部字段映射')
+add('P7-07', '§7.11(修订 R3):OTel 名字来自 @opentelemetry/semantic-conventions 常量包,无人定形状;§3.3 slice 提前到 W11 前(P5-03/P5-06 首发 gen_ai.usage.*);本 epic 做 P2-01 enduser.id 映射')
 add('P0-03 P0-04', '§7.2 R6 + §7.9:账本 leverage2 建议退掉手写扫描器换 dependency-cruiser,**推翻**——两者均为 TS AST 实现、三通道覆盖动态 import/require/path alias、规则逻辑(dated allowlist/ADR 豁免/kernel-vendor 绑定)dependency-cruiser 不提供;无下游传播;不为行数重写在跑的门')
 add('P1-08 P8-01', '§7.2 R7:整数 API level / 手排 fingerprint 记录不改;P8-07 若需 Python 复算 fingerprint 则换 JCS')
 add('P0-08', '§7.1:harbor 未接,归 P9-08(其 adapt 亦为 harbor)')
@@ -2545,6 +2560,12 @@ add('P3-11 P1-10', '§9.2 生态迁移目标:≥5 个快照/回滚实现互相�
 add('P7-07', '§9.2 生态迁移目标:4 个各接 OTel 或自签 HMAC 链——session-telemetry-otel 唯一 backend,插件只加 processor/exporter')
 add('P1-02 P1-04 P1-06', '§9.2 生态迁移目标:~70 个 market 类插件走裸 pnpm add——安装必须经 harness 的 lockfile/--ignore-scripts/隔离;负用例:自动批 build scripts(dsh-plugin-mall)、扫描器搞崩 boot')
 add('P2-04', '§9:第一条按 §9 走的 epic——preFlight 含全部 community 缺口逐项对子句;§9.1 的 verify-make-vs-use 门在其 preFlight 前建好')
+add('P4-06', '§7.11:CloudEvents 属性名形状所有者——新 [N] 文件直接采用标准名(id/source/type/time/subject/datacontenttype),不自造')
+add('P3-09', '§7.11:SPIFFE ID 格式形状所有者(P0-02/P2-01 未采用,顺延);P8-06 import')
+add('P6-09', '§7.11:W3C PROV-DM 与 OCI image-spec Descriptor 两个形状的所有者;P7-04 import PROV')
+add('P2-04', '§7.11:MCP ToolAnnotations 形状所有者(P2-03 未采用,顺延)')
+add('P2-05', '§7.11:AuthZEN 形状所有者(P2-03 字段由 registry must[0] 定,不采用 AuthZEN 名;顺延至此作 decide() 输入形状)')
+add('P2-03', '§7.11:MCP ToolAnnotations / AuthZEN 不采用——registry must[0] 定死字段名,这不是词汇债;所有权顺延 P2-04 / P2-05')
 add('P3-13', '§6:不在账本内(09-02 同日收录);开工时补单条 make-vs-use 判断,预期 CONSUMER_WRITE,依赖 §3.2 rung')
 
 # ledger oss notes overridden by a ruling: (epic, oss name) -> what stands now
@@ -2591,16 +2612,44 @@ AUD = {
 # standards families (same map as §7.3)
 FAM = [
  ('in-toto / DSSE / SLSA', r'in-toto|DSSE|SLSA'), ('RFC 8785 JCS', r'8785|JCS'), ('CloudEvents', r'CloudEvents'),
- ('SPIFFE', r'SPIFFE'), ('W3C PROV-DM', r'PROV'), ('OTel semconv', r'OTel|OTLP'), ('A2A', r'\bA2A\b'), ('MCP', r'\bMCP\b'),
- ('ACP', r'\bACP\b'), ('AuthZEN', r'AuthZEN'), ('OCI runtime/image-spec', r'\bOCI\b'), ('JSON Schema 2020-12', r'JSON Schema'),
- ('RFC 6902 JSON Patch', r'6902|JSON Patch'), ('semver', r'semver'), ('W3C DPV', r'DPV'), ('Sigstore bundle', r'Sigstore'),
- ('Idempotency-Key', r'Idempotency|idempotency-key'), ('K8s resource model', r'Kubernetes|K8s|resourceVersion'), ('OpenFeature', r'OpenFeature'),
+ ('SPIFFE ID format', r'SPIFFE(-style| ID)'), ('SPIFFE SVID lifetime rules', r'SPIFFE SVID'), ('W3C PROV-DM', r'PROV'),
+ ('OTel GenAI semconv gen_ai.*', r'gen_ai|GenAI'), ('OTel resource/error/process semconv', r'OTel semconv (enduser|error|process)'),
+ ('A2A TaskState', r'A2A TaskState'), ('A2A Message/Part/Artifact', r'A2A (Message|Artifact)'),
+ ('MCP ToolAnnotations', r'MCP ToolAnnotations'), ('MCP TaskStatus names', r'MCP TaskStatus'), ('MCP initialize/capabilities', r'MCP initialize'),
+ ('MCP elicitation/create', r'MCP elicitation'), ('AuthZEN (+MCP profile)', r'AuthZEN'),
+ ('ACP request_permission payload', r'ACP (RequestPermissionRequest|session/request_permission|allow_always)'), ('ACP session/* lifecycle', r'ACP (1\.4\.0 session|session/cancel|session/update)'),
+ ('OCI runtime-spec', r'OCI (runtime-spec|linux\.resources)'), ('OCI image-spec Descriptor', r'OCI image-spec'), ('OCI-style sha256:<hex> refs', r'OCI-style'),
+ ('JSON Schema 2020-12', r'JSON Schema'), ('RFC 6902 JSON Patch', r'6902|JSON Patch'), ('semver', r'semver'), ('W3C DPV', r'DPV'),
+ ('Sigstore bundle', r'Sigstore'), ('Idempotency-Key', r'Idempotency|idempotency-key'), ('K8s resource model', r'Kubernetes|K8s|resourceVersion'), ('OpenFeature', r'OpenFeature'),
 ]
 order = {r['id']: i for i, r in enumerate(rows)}
+ACCEPTED_IDS = {k for k, v in status_rows.items() if v.get('status') == 'ACCEPTED'}
+NOT_ADOPTED = {  # rows that did (or by design will) not adopt the standard they list (§7.1 / §7.11); ownership passes on
+ ('in-toto / DSSE / SLSA','P0-01'), ('in-toto / DSSE / SLSA','P0-07'), ('in-toto / DSSE / SLSA','P1-02'),   # P1-02 adopted Sigstore bundle only
+ ('RFC 8785 JCS','P8-01'),                                   # hand-sorted fingerprint of its own surface (R7)
+ ('OTel resource/error/process semconv','P2-01'), ('A2A TaskState','P4-01'), ('MCP TaskStatus names','P4-01'), ('CloudEvents','P4-01'),
+ ('SPIFFE ID format','P0-02'), ('SPIFFE ID format','P2-01'), ('W3C PROV-DM','P5-11'), ('W3C PROV-DM','P6-02'),
+ ('semver','P1-01'), ('W3C DPV','P6-02'),
+ ('MCP ToolAnnotations','P2-03'), ('AuthZEN (+MCP profile)','P2-03'),   # by design: registry must[0] fixes P2-03's field names (§7.11)
+}
+OWNER_OVERRIDE = {  # a ruling names the owner instead of the earliest pending consumer
+ 'in-toto / DSSE / SLSA': ('SLICE-3.4', 'R1:envelope slice 在 P4-04(W9)前落地'),
+ 'semver': ('P1-03', 'R4:validRange 在 P1-03 加'),
+ 'OTel GenAI semconv gen_ai.*': ('SLICE-3.3', '§3.3:名字来自 @opentelemetry/semantic-conventions 常量包,slice 接 pipeline;时点改为 W11 前(P5-03/P5-06 首发 gen_ai.usage.*)'),
+ 'OTel resource/error/process semconv': ('npm @opentelemetry/semantic-conventions', '常量包按需 import,无人定形状'),
+}
+def owner_of(name, ids):
+    """owner = ruling override; else earliest accepted row that actually adopted; else earliest not-yet-accepted row that will adopt."""
+    if name in OWNER_OVERRIDE: return OWNER_OVERRIDE[name][0], 'override'
+    for i in ids:
+        if i in ACCEPTED_IDS and (name, i) not in NOT_ADOPTED: return i, 'accepted'
+    for i in ids:
+        if i not in ACCEPTED_IDS and (name, i) not in NOT_ADOPTED: return i, 'pending'
+    return ids[0], 'all-accepted-none-adopted'
 first = {}
 for name, pat in FAM:
     ids = sorted([r['id'] for r in rows if any(re.search(pat, s) for s in r['standards'])], key=lambda i: order[i])
-    if ids: first[name] = ids[0]
+    if ids: first[name] = owner_of(name, ids)[0]
 ADOPTED = {  # accepted first adopters: did they actually adopt (from §7.1)
  ('in-toto / DSSE / SLSA','P0-01'):'✗ 未采用 → R1 slice 定形状', ('RFC 8785 JCS','P2-03'):'在途,R2 后由差分 oracle 担保',
  ('OTel semconv','P2-01'):'✗ 未采用 → P7-07 拥有', ('JSON Schema 2020-12','P0-06'):'△ zod 在,schema-registry 无 JSON Schema 输出 → P8-07 硬前置', ('MCP','P2-03'):'在途',
@@ -2643,15 +2692,15 @@ w('```jsonc')
 w('{')
 w('  "ledgerRow": "P2-05",                 // rows[].id;账本外的(P3-13 / SLICE-*)填 null 并在 residual 说明')
 w('  "card": { "heading": "#### P2-05", "sheetCommit": "<make-vs-use-plan.md 当时的 git 短 sha>" },   // 卡片 = 本文件里以该 heading 开头的小节;不是行号')
-w('  "verdict": "PROVIDER_ADAPT", "verdictSecondary": "PROVIDER_WRITE" | null,')
+w('  "verdict": "PROVIDER_ADAPT", "verdictSecondary": null,          // P2-05 真实值;有副判定的填账本原文')
 w('  "adopted": [ { "name": "cedar-policy/cedar",            // 账本 oss[].name 原文')
 w('                 "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",')
 w('                 "form": "runtime" | "oracle" | "optional" | "vendored",')
 w('                 "reason": "为什么是这个形态(oracle 必须指向复现硬约束的冻结用例)" } ],')
 w('  "rejectedAbsent": [ "@openfeature/server-sdk", "…" ],   // preFlight 时 = 账本 reject 条目里**有 npm 名的**名单(无 npm 名的不可核,不列);')
 w('                                                          // 门 (b) 对这些名在 files[] 里核 0 import;结果写进 realized.rejectedAbsent(布尔),不在这里')
-w('  "standardsOwned": [ "AuthZEN request/response vocabulary" ],           // 本 epic 是首个采用者的标准(§7.3);不是则 []')
-w('  "standardsImported": [ { "standard": "RFC 8785 JCS", "from": "P2-03" } ],')
+w('  "standardsOwned": [],                                   // P2-05 不是任何标准的形状所有者(AuthZEN 的所有者是 P2-03,见 §1 表)')
+w('  "standardsImported": [ { "standard": "AuthZEN request/response vocabulary", "from": "P2-03" } ],')
 w('  "residual": "接完还要自己写什么(账本 residual,可收窄,收窄写原因)",')
 w('  "probes": [ { "claim": "forbid overrides permit",        // 账本 note 里“verified locally”的那句')
 w('                "how": "node -e … | 或 tests/…spec.ts 的用例标题",   // 可重跑')
@@ -2677,13 +2726,17 @@ w(f'**副判定** {sec}/109 · **带标准** {std}/109 · **adapt 级 OSS 条目
 w('')
 w('## 1. 标准词汇所有权(首个采用者定形状,其余 import)')
 w('')
-w('| 标准族 | 首个采用者 | 采用情况 | 全部采用者(registry 顺序) |')
+w('| 标准(按子规范) | 形状所有者 | 依据 | 全部涉及者(registry 顺序;~~划掉~~ = 已验收但未采用,所有权已转移) |')
 w('|---|---|---|---|')
 for name, pat in FAM:
     ids = sorted([r['id'] for r in rows if any(re.search(pat, s) for s in r['standards'])], key=lambda i: order[i])
     if not ids: continue
-    fa = ids[0]; ad = ADOPTED.get((name, fa), '未开工')
-    w(f'| {name} | {fa} | {ad} | {" ".join(ids)} |')
+    own, why = owner_of(name, ids)
+    basis = {'override': OWNER_OVERRIDE.get(name, ('', ''))[1], 'accepted': '已验收且已采用', 'pending': ('最早将采用的未验收涉及者(先前者未采用,所有权顺延)' if any((name, i) in NOT_ADOPTED for i in ids if own in order and order[i] < order[own]) else '最早涉及者(未验收)'), 'all-accepted-none-adopted': '全部已验收且均未采用'}[why]
+    shown = ' '.join((f'~~{i}~~' if (name, i) in NOT_ADOPTED else i) for i in ids)
+    w(f'| {name} | **{own}** | {basis} | {shown} |')
+w('')
+w('**规则**:形状所有者 = 最早**已验收且真正采用**该标准的 epic;没有则为最早的未验收涉及者。已验收但未采用的(划掉)不再拥有,由 R3 指定的下游拥有(卡片"裁决叠加"里写明)。所有权按**子规范**算——MCP / ACP / OCI 各含多个互不相干的子规范,一个 epic 只拥有自己那条。')
 w('')
 w('## 2. 逐条执行卡')
 w('')
@@ -2735,11 +2788,19 @@ for r in rows:
             fams = [n for n, p in FAM if re.search(p, s)]
             own = ''
             if fams:
-                fa = first.get(fams[0]); ad = ADOPTED.get((fams[0], fa), '')
+                fa = first.get(fams[0])
                 if fa == eid:
-                    own = '(**本 epic 首个采用者,未采用 → 见裁决叠加**)' if ad.startswith('✗') else '(**本 epic 首个采用者,定形状**)'
+                    own = '(**本 epic 是形状所有者**)' if eid not in ACCEPTED_IDS or (fams[0], eid) not in NOT_ADOPTED else '(本 epic 已验收但未采用,所有权已转移,见裁决叠加)'
+                elif (fams[0], eid) in NOT_ADOPTED:
+                    own = f'(本 epic 未采用/不采用;所有者 {fa},见裁决叠加)'
                 else:
-                    own = f'(首个采用者 {fa}' + (f',{ad}' if ad.startswith('✗') else ',import 其定义') + ')'
+                    my_w = status_rows.get(eid, {}).get('wave'); ow_w = status_rows.get(fa, {}).get('wave')
+                    if fa not in status_rows:
+                        own = f'(所有者 {fa}:{OWNER_OVERRIDE.get(fams[0], ("", "见 §1 表"))[1]})'; owned.append(f'{esc(s)} {own}'); continue
+                    if isinstance(my_w, int) and isinstance(ow_w, int) and ow_w > my_w:
+                        own = f'(所有者 {fa} 在 W{ow_w},晚于本 epic W{my_w}:本 epic 用内部名不声明该标准形状,所有者落地时提供单向映射)'
+                    else:
+                        own = f'(所有者 {fa},import 其定义)'
             owned.append(f'{esc(s)} {own}')
         w('**标准(绑定词汇)**:' + ' · '.join(owned))
     w(f'**自己写(residual)**:{esc(r["residual"])}')

@@ -229,7 +229,7 @@ must[2]「consumer 按 message id/epoch 去重」不动——它就是幂等消�
 
 **时机**:W7 开之前(P3-01 在 W7)。
 
-### 3.3 OpenTelemetry(用已有的 `packages/session/session-telemetry-otel`)
+### 3.3 OpenTelemetry(用已有的 `packages/session/session-telemetry-otel`)【§7.11:落地时点由 W12 前改为 **W11 前**——P5-03/P5-06(W11)先于 P6-05/P7-07 发 gen_ai.usage.*】
 
 **消费者**:P7-07(W13)· P6-05(W12)· P8-09 export(W18)
 **不是新接入,是不新建**:计划里的 `packages/observability/otel-exporter` 删掉,TracerProvider pipeline 加在已有包里。
@@ -381,7 +381,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 - **R1 · §3.4 新增共用引擎:attestation envelope(in-toto Statement v1 + DSSE)。** 传播最广的标准(15 条未开工 epic 消费:P1-11/12 · P2-03 · P3-07/09 · P4-04/09 · P6-08/09 · P7-01/02/04/05/10 · P8-10),本该由 P0-01/P0-07/P1-02 定下,三条采用数为 0。in-toto 是 spec 无 npm;DSSE PAE 编码十行。做法:contract 层小包 `packages/attestation/envelope`——`Statement` zod schema(`_type/subject[]/predicateType/predicate`,subject 用 ResourceDescriptor)、`dsseEnvelope(payloadType, payload, signer)` 按 spec 做 PAE、verify 走 P0-02 kernel `signatureRoots`;signer 可插(现在 kernel Ed25519,发布走 P1-02 的 Sigstore 验证器)。**P0-07 的 `attest.ts` 改为发 Statement+DSSE、`canonicalJson` 换 §R2 的库**——账本 risk 已判"reshape 可接受,evidence package 是 per-run 产物";P0-01 的 fingerprint 表示对齐 `subject[]`。**落地时点:P4-04 开工前**(最早要 DSSE 签名的消费者);不重开 P0-01/P0-07 的格子,作为 infra slice 记 EXEC-STATE,P0-07 的 evidence 用例随 slice 重观测。
 - **R2 · P2-03 签发前整改(执行者动作,§7.4)。**【“换库”部分已由 §7.8 取代:保留迭代实现,库作 devDep 差分 oracle;其余(删 NFC / 措辞 / supersede)仍有效】 `canonicalizeArguments` 换 `canonicalize`(erdtman,RFC 8785 参考实现,已在 lock 里作 sigstore 传递依赖);去掉值与 key 的 NFC;fuzz 套件保留但改为**对库的 conformance**(性质:key 顺序 / 数字拼写 / `é` 与 `é` 字面等价 → 同 hash;NFC≠NFD → **不同** hash)。validation[2] 措辞按 C11 A 类由我改(§7.4 给原文)。C 阶段冻结用例 supersede,重观测;U/U.1/F 不动。另三份手写 canonicalJson:`attest.ts` 随 R1 换;`session-snapshot` / `repeat-tool-reminder` 不做安全绑定,不动,记 BLOCKED-QUEUE。
-- **R3 · 词汇债不重开已验收行;"首个跨线消费者"拥有对齐。** 规则:词汇在**第一次跨进程/跨语言/跨系统**时必须是标准名,内部字段名可保留但要有单向映射函数并冻结用例。所有权:SPIFFE → P8-06;CloudEvents → P8-05(P4-06 的 dedup-on-id 可直接用现有 `id`);PROV-DM → P7-04(ClaimGraph)与 P6-03;Confluent 兼容词汇 → P8-07;OTel `enduser.id`/`gen_ai.*` → P7-07。写进各拥有者 epic 的 `preFlight.makeVsUse.standardsOwned`。
+- **R3 · 词汇债不重开已验收行;"首个跨线消费者"拥有对齐。**【所有权归属四处有误,已由 §7.11 修订;规则本身不变】 规则:词汇在**第一次跨进程/跨语言/跨系统**时必须是标准名,内部字段名可保留但要有单向映射函数并冻结用例。所有权:SPIFFE → P8-06;CloudEvents → P8-05(P4-06 的 dedup-on-id 可直接用现有 `id`);PROV-DM → P7-04(ClaimGraph)与 P6-03;Confluent 兼容词汇 → P8-07;OTel `enduser.id`/`gen_ai.*` → P7-07。写进各拥有者 epic 的 `preFlight.makeVsUse.standardsOwned`。
 - **R4 · P1-01 代码缺陷:`dshVersionRange` 未校验。** E 类(不改 registry)。挂到 P1-03(lockfile 本来要解析 range):加 `semver.validRange`,无效即 manifest 拒绝;冻结一个 `dshVersionRange: "not a range"` 被拒的用例。
 - **R5 · P1-02 半做部分**(SBOM/CycloneDX、SLSA provenance、tuf-js 根更新)归 P1-03(lockfile 与 SBOM 同源)与 P1-12(信任等级要 SLSA level)。不重开 P1-02。
 - **R6 · P0-03/P0-04 不重写。** 手写检查器在跑、有变异证明、无下游传播;为 deletedPct 重写等于拿工作的东西换风险。记录为"账本判 adapt 未采用"的两条,**不算整改项**。
@@ -549,3 +549,20 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 4. **反模式 = 负用例**:社区已犯的错冻结成"必须拒绝"的用例(上表已列三条)。
 
 **执行卡改动**:community 全列(不止 top-1),缺口不截断;上表目标 epic 加「生态迁移目标」叠加。**P2-04 是第一条按 §9 走的 epic**:preFlight 含缺口核对;§9.1 的门在其 preFlight 前建好。
+
+### 7.11 标准词汇所有权修订(2026-09-06 14:55 EDT,按数据重算后)
+
+§7.3 表按 registry 顺序取"首个采用者",没考虑三件事:已验收行是否**真采用**了、P2-03 是否会采用、所有者是否**晚于**某个消费者的 wave。重算(算法在执行卡 §1,数据驱动)后,R3 的四处归属要改,§3.3 时点要提前:
+
+| 标准 | R3 原归属 | 修订 | 理由 |
+|---|---|---|---|
+| CloudEvents | P8-05 | **P4-06(W5)定形状**;P8-05 只拥有 P4-01 内部字段 → CloudEvents 的映射 | P4-06 是新 [N] 文件,直接用标准名比日后映射便宜;P8-05 W17 晚于 P4-06 十二个 wave |
+| SPIFFE ID 格式 | P8-06 | **P3-09(W8)定形状**;P8-06 import 并做 ServiceAccount 映射 | P3-09 的 tenant/world 身份先要 ID 格式;P3-06 只借 SVID 生命周期规则(拆成两个子规范) |
+| W3C PROV-DM | P7-04 与 P6-03 | **P6-09(W10)定形状**;P7-04 import | 一个标准只能一个所有者;P6-03 根本不在 PROV 涉及者名单里(R3 误列);P6-09 早于 P7-04(W14) |
+| OTel semconv | P7-07 | **名字来自 `@opentelemetry/semantic-conventions` 常量包,无人定形状**;§3.3 slice 只接 pipeline,时点 **W11 前** | P5-03/P5-06(W11)先发 gen_ai.usage.*,P3-03/P3-10(W8)用 error.type/process.*——都早于 W12 |
+| in-toto / DSSE / SLSA | P0-01 首个 | **SLICE-3.4**(R1,P4-04 W9 前) | P0-01 / P0-07 / **P1-02** 三条已验收行均未采用(P1-02 只用了 Sigstore bundle) |
+| RFC 8785 JCS | P8-01 △ | **P2-03** | P8-01 是自家 surface 的手排 hash,不是 JCS 采用(R7) |
+| MCP ToolAnnotations / AuthZEN | P2-03 | **P2-04 / P2-05** | P2-03 代码核过:两者均未采用——must[0] 定死了字段名(actionId/actor/capability/target…),这是 registry 决定,**不算债**;顺延到 taxonomy(P2-04)和 decide() 输入(P2-05) |
+| semver | P1-01 | **P1-03**(R4) | 唯一涉及者 P1-01 已验收未采用 |
+
+**规则补两条**:(a) 所有权按**子规范**算(MCP 四个、ACP 两个、OCI 三个、SPIFFE 两个、A2A 两个、OTel 两个互不相干);(b) 所有者 wave **晚于**某消费者时,早的消费者用内部名、不声明该标准形状,所有者落地时提供单向映射(卡片上已按 wave 自动标出)。**执行卡 §1 是唯一的所有权表**,§7.3 保留作历史。
