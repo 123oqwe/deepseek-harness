@@ -2879,3 +2879,25 @@ Its cells had been green before, and were withdrawn precisely because that green
 **Five rows carry findings today** — P1-03, P4-06, P4-07, P4-09 (all `BLOCKED_ON_ACCEPTANCE`) and P6-02 (ACCEPTED, one residual). The check now covers all five.
 
 **What it does not do.** It does not decide whether a finding is still live; it only refuses to act as if none existed. Retiring a finding stays a judgement, and the override is where that judgement is recorded.
+
+## BLOCKED-119 — a computed list of fields this program writes and never reads
+
+**Status:** SCAN BUILT, three real findings from its first run, none of them fixed yet.
+
+Six defects in one day shared a shape: a fact was recorded and nothing consulted it — `ledgerDigest`, `absorbedFlakes`, `parallelWithR10`, `openFindings`, and two others. Each was caught by a person noticing, which is what made it a recurring defect rather than six unrelated ones.
+
+The delegate proposed a register of such fields. **The register would have been the next unread file.** So it is computed instead: `scripts/first100/verify-fields-are-read.mjs` takes every key appearing in this program's own JSON records and asks whether any script mentions it anywhere other than its write site. Derived, not remembered.
+
+**It reports candidates and exits zero, deliberately.** Some fields are evidence for a human reader — freeze prose, attribution, timestamps — and a gate that failed on those would be disabled within a week. Those are exempted by name WITH their reason, because an unexplained exemption is how a real finding gets silenced.
+
+**First run: 57 candidates. Three are worth acting on.**
+
+| field | finding |
+|---|---|
+| `dryRunProof.treeSha` | **Every freeze entry records one and nothing verifies it.** `issue-runner.ts`'s `treeSha` is an unrelated local. A whole session's freezes were computed with `git write-tree` and the number was never read back — the proof exists and is unchecked. |
+| `frozenBaselineSha` (EXEC-STATE) | Referenced by no script and no workflow. The lint gate reads `registry.json`'s `frozenBaseline.sha` instead — **two copies of one fact**. They agree today (`4e84901e64…`), which is the only reason this is a latent defect rather than a live one. |
+| `programGate` (EXEC-STATE) | Reads `NO-GO`. Nothing consults it. The program's own go/no-go marker gates nothing. |
+
+The rest are mostly evidence written for review, which is legitimate. The scan's value is that the three above surfaced without anyone remembering to look, and that the next six will surface the same way.
+
+**Not fixed here.** Making `treeSha` verifiable means deciding what it should be checked against — the tree at freeze time no longer exists on a later checkout — and that is a design question, not a repair.
