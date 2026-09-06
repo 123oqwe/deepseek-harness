@@ -122,6 +122,9 @@ function isBudgetWithinParent(requested: TokenBudget | undefined, parentBudget: 
  * `TrustKernelSignatureRoots` handle
  * (`@deepseek-ai/dsh-trust-kernel`'s `createTrustKernel()`).
  * @param _trustRoot - the real `TrustKernelSignatureRoots` handle every issued token is signed under.
+ * Underscore-prefixed because the body never reads it: holding a real handle is
+ * the precondition this parameter enforces, and the signature stays a fixed byte
+ * sequence until real key material exists (BLOCKED-050).
  * @param request - the root grant's subject, tenant, capability, verbs, resources, constraints, and expiry.
  * @param nonce - a fresh, caller-generated {@link CapabilityTokenNonce}.
  * @returns a freshly signed root {@link SignedCapabilityToken}.
@@ -154,6 +157,9 @@ export function issueToken(
  * `signed.token.nonce` is absent from `context.seenNonces` — refusing
  * fail-closed on the first check that fails.
  * @param _trustRoot - the real `TrustKernelSignatureRoots` handle to verify `signed.signature` against.
+ * Underscore-prefixed because the body never reads it: holding a real handle is
+ * the precondition this parameter enforces, and the signature stays a fixed byte
+ * sequence until real key material exists (BLOCKED-050).
  * @param signed - the candidate signed token to verify.
  * @param context - the pure expiry/replay-check inputs (`now`, `seenNonces`).
  * @returns `{ verified: true, token }`, or `{ verified: false, reason }` naming the first failed check.
@@ -183,6 +189,9 @@ export function verifyToken(
  * `parent.token.delegationDepth + 1`, and `parentDigest` is
  * `digestToken(parent.token)`.
  * @param _trustRoot - the real `TrustKernelSignatureRoots` handle the child is signed under.
+ * Underscore-prefixed because the body never reads it: holding a real handle is
+ * the precondition this parameter enforces, and the signature stays a fixed byte
+ * sequence until real key material exists (BLOCKED-050).
  * @param parent - the already-verified parent token being attenuated.
  * @param request - the requested child scope: `subject`, `verbs`, `resources`, `constraints`, `expiresAt`, `nonce`.
  * @returns `{ accepted: true, child }` with the freshly signed, strictly-narrower

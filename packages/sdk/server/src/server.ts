@@ -17,7 +17,7 @@ import {
   negotiateCapabilities,
   negotiateProtocolVersion,
 } from '@deepseek-ai/dsh-sdk-protocol'
-import type { CapabilityId, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
+import type { CapabilityId, ProtocolSurface, ProtocolVersionRange } from '@deepseek-ai/dsh-sdk-protocol'
 import type { SchemaId } from '@deepseek-ai/dsh-schema-registry'
 import { carrierKeyOf, type Scoped } from '@deepseek-ai/dsh-scope'
 import type { SessionId } from '@deepseek-ai/dsh-session'
@@ -115,17 +115,28 @@ const SUPPORTED_CAPABILITIES: ReadonlySet<CapabilityId> = new Set(['streaming', 
  * @returns the hex digest of this build's wire surface.
  */
 function serverSchemaFingerprint(): string {
-  return computeSchemaFingerprint({
-    methods: [
-      { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
-      { name: 'session.prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
-    ],
-    events: [
-      { name: 'session.event', schemaId: 'sdk-protocol:SessionEventNotification', version: '1.0' },
-      { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
-    ],
-    resourceTypes: ['session', 'agent'],
-  })
+  return computeSchemaFingerprint(SERVER_PROTOCOL_SURFACE)
+}
+
+/**
+ * The wire surface this build answers, as data (must[4]).
+ *
+ * Exported so the release artifact can be GENERATED from the same value the
+ * handshake fingerprints, rather than transcribed beside it. A schema document
+ * maintained separately would be a second declaration of the surface, free to
+ * disagree with the one peers actually meet — and a golden fixture that pins a
+ * disagreeing copy reports drift that is not there and misses drift that is.
+ */
+export const SERVER_PROTOCOL_SURFACE: ProtocolSurface = {
+  methods: [
+    { name: 'initialize', schemaId: 'sdk-protocol:InitializeParams', version: '1.0' },
+    { name: 'session.prompt', schemaId: 'sdk-protocol:SessionPromptParams', version: '1.0' },
+  ],
+  events: [
+    { name: 'session.event', schemaId: 'sdk-protocol:SessionEventNotification', version: '1.0' },
+    { name: 'session.status', schemaId: 'sdk-protocol:SessionStatusNotification', version: '1.0' },
+  ],
+  resourceTypes: ['session', 'agent'],
 }
 
 /**

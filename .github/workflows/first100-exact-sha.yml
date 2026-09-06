@@ -100,6 +100,19 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
+      # The registry gate set, which until 2026-09-06 no workflow ran at all —
+      # every gate in it fired only when someone typed the command, and five
+      # days of that missed twelve build artifacts committed under a source
+      # directory, 23 JSDoc violations, three stale generated documents and
+      # three malformed `files` arrays.
+      #
+      # It asks whether the registry ITSELF is sound, which is a precondition of
+      # the observation below rather than part of it: if the registry is wrong,
+      # the run proves nothing. One gate is held back, and the runner prints
+      # which, why, and what reinstates it, on every run.
+      - name: First-100 registry gate set
+        run: pnpm run first100:registry-gates
+
       # Runs BEFORE the suite, because it asks a question the suite cannot: a
       # frozen title no test can produce is invisible to a run — the case simply
       # is not there, and the observation is silent about it. Deleting a frozen
