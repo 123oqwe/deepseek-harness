@@ -480,6 +480,51 @@ function cmdInit() {
   console.log(`wrote ${LEDGER_PATH} and ${LEDGER_MD_PATH}: ${Object.keys(rows).length} rows`)
 }
 
+/**
+ * Append this absorption to the flake registry's occurrence list.
+ *
+ * The registry's own `backfillNote` records why this exists: the count was
+ * maintained by remembering to append, read 8, and an artifact scan put it at
+ * 26. Greening a cell REQUIRES the absorption, and nothing required the record
+ * — so the number that decides whether a flake is still a flake was maintained
+ * by the one party with a reason not to look.
+ *
+ * Idempotent per (run, sha, cell): re-greening the same cell from the same run
+ * records nothing new, so a retried command cannot inflate the rate the entry
+ * is judged by.
+ * @param absorbedFlakes - the registered full names this observation absorbed.
+ * @param ciRunUrl - the run the observation came from.
+ * @param candidateSha - the commit it was taken at.
+ * @param cell - the cell this absorption greened, as `EPIC.STAGE`.
+ */
+function recordFlakeOccurrences(absorbedFlakes, ciRunUrl, candidateSha, cell) {
+  if (absorbedFlakes.length === 0 || !existsSync(FLAKE_REGISTRY_PATH)) return
+  const registry = loadJson(FLAKE_REGISTRY_PATH)
+  let appended = 0
+  for (const entry of registry.entries ?? []) {
+    if (!absorbedFlakes.includes(entry.testFullName)) continue
+    entry.occurrences ??= []
+    const already = entry.occurrences.some(
+      (occurrence) => occurrence.ciRunUrl === ciRunUrl
+        && occurrence.candidateSha === candidateSha
+        && occurrence.absorbedByCell === cell,
+    )
+    if (already) continue
+    entry.occurrences.push({
+      ciRunUrl,
+      candidateSha,
+      observedAtUtc: nowIso(),
+      outcome: 'failed',
+      verifiedBy: 'vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption',
+      absorbedByCell: cell,
+    })
+    appended += 1
+  }
+  if (appended === 0) return
+  writeFileSync(FLAKE_REGISTRY_PATH, `${JSON.stringify(registry, null, 2)}\n`, 'utf8')
+  console.log(`BLOCKED-080: recorded ${String(appended)} flake occurrence(s) against ${cell}`)
+}
+
 function cmdGreen() {
   const epic = opt('epic')
   const stage = opt('stage')
@@ -586,6 +631,7 @@ function cmdGreen() {
   const inputsConsumed = { epic, stage, reportSha256: observationSha256, ciRunUrl, candidateSha, frozenEntry: frozen }
   const ledger = writeLedgerHeader(rows, inputsConsumed)
   renderMarkdown(ledger)
+  recordFlakeOccurrences(absorbedFlakes, ciRunUrl, candidateSha, `${epic}.${stage}`)
   console.log(`greened ${epic}.${stage} (column ${STAGE_TO_COLUMN[stage]}) from ${reportPath} @ ${candidateSha}`)
 }
 
@@ -686,6 +732,7 @@ function cmdGreenSupplement() {
   const inputsConsumed = { epic, stage, supplementSeq, reportSha256: observationSha256, ciRunUrl, candidateSha, frozenEntry: frozen }
   const ledger = writeLedgerHeader(rows, inputsConsumed)
   renderMarkdown(ledger)
+  recordFlakeOccurrences(absorbedFlakes, ciRunUrl, candidateSha, `${epic}.${key}`)
   console.log(`greened supplement ${epic}.${key} from ${reportPath} @ ${candidateSha}`)
 }
 

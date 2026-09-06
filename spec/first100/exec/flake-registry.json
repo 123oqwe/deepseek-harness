@@ -197,6 +197,78 @@
           "outcome": "failed",
           "verifiedBy": "vitest-report.json artifact; the run's only failure",
           "absorbedByCell": "P4-06.P"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:12.127Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P1-02.P"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:22.128Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P1-02.F"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:22.338Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P5-10.U"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:22.544Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P5-10.F"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:22.751Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P4-09.C"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:22.963Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P4-09.P"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:23.174Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P4-09.U"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:23.380Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P4-09.F"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34019035439",
+          "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
+          "observedAtUtc": "2026-09-06T07:57:23.590Z",
+          "outcome": "failed",
+          "verifiedBy": "vitest-report.json artifact; recorded by generate-ledger.mjs at the moment of absorption",
+          "absorbedByCell": "P8-01.C.1"
         }
       ],
       "unrelatedNote": "Four occurrences across four distinct candidate SHAs, none touching packages/experimental/inspector or its dependencies. Two of the four (03a7321e23 and 6decdacb89) are First-100 process-only commits (BLOCKED-QUEUE.md/decisions-approved.md/goal.md/EXEC-STATE.json edits) touching zero product code at all -- the strongest possible unrelatedness evidence, since no source change of any kind was present when the failure occurred. The other two (c60c0f3a4f, af01a06bc96) touch only tests/release/baseline-fingerprint.spec.ts and scripts/release/baseline-fingerprint.mjs (P0-01 slice work), an unrelated package with no dependency relationship to packages/experimental/inspector. Every occurrence reruns clean with zero code changes (confirmed for af01a06bc96 via a same-SHA CI rerun, run 33473101218's second attempt, success). Failure mode each time: a single real-Worker isolated-realm-session test, consistent with a timing-sensitive worker-thread integration test, matching this repo's own history of similar fixes elsewhere (e.g. 'bind fixture servers to OS-assigned ports').",
@@ -213,7 +285,8 @@
         "last80Runs": "9 of 80 = 11.3%",
         "totalRecordedOccurrences": 26,
         "note": "4 recorded occurrences predate the scan window and could not be re-verified by this method; they are retained. The true lifetime count is therefore at least this figure, not exactly it."
-      }
+      },
+      "countingNote": "An occurrence is one ABSORPTION, not one failing run. Since 2026-09-06 generate-ledger.mjs appends automatically at the moment it absorbs, and a single run that greens nine cells produces nine occurrences sharing one ciRunUrl — run 34019035439 is exactly that. To compute a failure RATE, count distinct ciRunUrl values, not entries; the automatic append is idempotent per (run, sha, cell), so re-greening a cell cannot inflate either number."
     },
     {
       "testFile": "tests/architecture/check-capability-seams.spec.ts",
