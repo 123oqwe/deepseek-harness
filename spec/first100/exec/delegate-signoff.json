@@ -148,6 +148,13 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-06T08:16:19.910Z",
       "note": "gq-92 re-sign after must[4] was built (the 2026-09-05T06:34Z sign-off was withdrawn for must[4] having no subject). must[4] now has one: spec/control-protocol.schema.json is GENERATED from SERVER_PROTOCOL_SURFACE (the same value initialize fingerprints for the peer), the fingerprint is pinned as a literal in both directions (committed artifact and live surface), a CONTROL case proves reordering the surface does not move it, and the artifact enters release evidence through P0-07's real collect-evidence.mjs on a throwaway checkout. (i) 5 acceptance clauses, 5 coverage entries covering 0..4, 27 refs, 0 outside the live frozen set. (ii) cells cite two candidate SHAs (637a2b9448, d6fe7ef9cd), both ancestors, chain linear; supplement C.1 cites 00815e8acc, ancestor. (iii) 78 live frozen titles across cells C22/P15/U9/F32 all present-and-passing in their cited runs (33947070508 / 33949286482); supplement C.1's 7 titles all passing in run 34019035439; 0 missing, 0 ambiguous. Noted, not blocking: C and F freeze the same version-negotiation.spec.ts file, so F's 32 include C's 22 -- F's own evidence is its 10 enforcement/collision cases; a queue entry records the convention that a later stage sharing a spec file lists only its own additions. accept-blocked: 0. openFindings: 0."
+    },
+    {
+      "epic": "P2-03",
+      "rowDigestSha256": "ff2ca4c48205114bb0ed6dcd74f5417bb5dd895e6723846ad96a82498d8275cc",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-06T23:17:27.948Z"
     }
   ]
 }
