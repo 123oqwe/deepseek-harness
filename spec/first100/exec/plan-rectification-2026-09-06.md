@@ -383,3 +383,13 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
    - 计入 `planCorrectedClauses`(用户规则:reword 单独计数)。
 5. 冻结:C 阶段受影响用例 **supersede**(替换,BLOCKED-103),不 supplement;`sensitivityProof` 记 (d) 的反向变异;U/U.1/F 的冻结不动,但 U 的 `argumentsHash` 期望值若在 fixture 里写死,随之更新并说明。
 6. 完成后 C 重观测 → 我跑四谓词 → 签。**在此之前不签 P2-03,P2-04 不开。**
+
+### 7.5 P2-03 整改令的三处修正(执行者 preFlight 发现,2026-09-06 晚)
+
+执行者按令先列清单、未动文件,清单纠正了 §7.4 两处、补了一条测量规则:
+
+1. **F 阶段也要 supersede**(§7.4 ⑤ 说"U/U.1/F 不动"——错)。F 里有一条 fuzz 用例「a Unicode form change never changes the hash, over generated strings that HAVE two forms」,断言的正是要禁止的行为,**且带变异证明(去掉 NFC 它变红)**——一个对错误要求的正确证明。supersede 为反向:生成器只取 NFC≠NFD(按 code point 序列)的串,断言 hash **不同**;反向变异(改成"相同")套件必须红。重观测范围:C + F;U/U.1 候选链仍有效(执行者核过 U fixture 未写死 argumentsHash)。
+2. **`canonicalize` 版本定 2.1.0**(lock 里已作 sigstore 传递依赖,零新增图节点;一个库在树里只留一份,与"第二份声明"同一原则)。执行者用 2.1.0 实测四条性质全部成立(NFC≠NFD 不同 hash / key 顺序 / `1.0`·`1`·`1e0` / 转义与字面)。4.0.0 ESM-only 无行为差异,不为它多一个版本节点。sigstore 日后升版本时随之升。
+3. **NFD 用例的测量规则**:源码里的 NFD 字面量会被 shell/编辑器归一化成 NFC,两个输入进 node 时已是同一个串——用例测的是"同一个串等于自己"。**NFD 一律用 `'é'` 转义构造,不写字面量**;`sensitivityProof.failureSummary` 记这条。这是当天第四次"仪器不回答问的问题",执行者自己抓住的。
+
+**教训归档**:变异证明只证明"套件对这条要求敏感",不证明"这条要求对"。要求本身的对错由 registry 措辞 + 账本 `risk` + 安全后果推演定——本次三者都指向反方向,而 F 用例是在读账本前冻的。
