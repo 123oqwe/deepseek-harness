@@ -580,6 +580,29 @@ export class Session {
   /** Cached immutable full snapshot of the private append-only log. */
   private eventsSnapshot: readonly SessionEvent[] | undefined
 
+  /** How many events of each type this log has accepted. */
+  private readonly typeCounts = new Map<string, number>()
+
+  /**
+   * How many events of one type this log carries.
+   *
+   * Maintained per append rather than scanned, because a caller that needs a
+   * running position pays O(log) for every scan: unnoticed where the count is
+   * small, quadratic where a hot path writes one event per operation. P2-03's
+   * ActionManifest `sequence` is such a position, and it is written from two
+   * different call sites — the native tool path and the PTC code-mode
+   * sub-dispatch — which must read one number for the field to mean one thing.
+   *
+   * Deliberately generic: this Session knows nothing about manifests, and the
+   * event type is merge-extended by downstream packages, so a counter naming one
+   * of them here would invert the dependency the event map exists to allow.
+   * @param type - the event type to count.
+   * @returns how many events of that type the log has accepted.
+   */
+  countEventsOfType(type: string): number {
+    return this.typeCounts.get(type) ?? 0
+  }
+
   /**
    * Return the immutable event stored at one exact sequence number.
    * @param seq - event sequence number.
@@ -705,6 +728,7 @@ export class Session {
         callbacks = collectSessionCallbacks(entry.emitCtx, [entry.carrier, 'session/event', ...callbackArgs])
       }
       this.log.push(event as SessionEvent)
+      this.typeCounts.set(type, (this.typeCounts.get(type) ?? 0) + 1)
       this.eventsSnapshot = undefined
       if (callbacks !== undefined && entry !== undefined) {
         invokeContainedSessionObservers(entry.emitCtx, 'session/event', entry.id, callbackArgs, callbacks)

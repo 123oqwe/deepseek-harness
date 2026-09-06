@@ -11,6 +11,7 @@ import { createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
+import { classifySideEffect, computeArgumentsHash } from '@deepseek-ai/dsh-action-manifest'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
 import type { PtcDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
@@ -163,6 +164,45 @@ function jsonNormalizeArgs(value: unknown): { dispatched: unknown; logged: unkno
     throw new Error('tool arguments could not be detached for durable logging')
   }
   return { dispatched: snapshot, logged }
+}
+
+/**
+ * Append one code-mode sub-dispatch's ActionManifest (P2-03 must[2]).
+ *
+ * Mirrors the native path field for field, including the unclassifiable
+ * default: no side-effect declaration reaches this point, and acceptance[2]
+ * requires an action that cannot be classified to default to the highest-risk
+ * class requiring approval rather than to a convenient guess.
+ *
+ * `sequence` is read from the session's own per-type counter, the same number
+ * the native path reads. Counting by scanning the log here broke ten of
+ * `ptc.spec.ts`'s cases and is quadratic besides — a code-mode program makes
+ * many calls, and each scan is O(manifests already written).
+ * @param exec - the run context carrying the agent whose session is logged to.
+ * @param subCallId - the sub-dispatch's own call id, which the manifest names as its action.
+ * @param name - the tool being dispatched.
+ * @param loggedArguments - the detached sibling copy of the dispatched arguments.
+ */
+function appendCodeModeManifest(
+  exec: ToolRunContext,
+  subCallId: ToolCallId,
+  name: string,
+  loggedArguments: unknown,
+): void {
+  const agent = exec.agent
+  if (agent === undefined) return
+  const classification = classifySideEffect(undefined)
+  const sequence = agent.session.countEventsOfType('action/manifest-appended') + 1
+  agent.session.append('action/manifest-appended', {
+    actionId: subCallId,
+    origin: 'code-mode-embedded',
+    capability: name,
+    argumentsHash: computeArgumentsHash(loggedArguments as JsonValue),
+    sideEffectClass: classification.sideEffectClass,
+    classified: classification.classified,
+    requiresApproval: classification.requiresApproval,
+    sequence,
+  })
 }
 
 /** Two-space JSON presentation, matching the existing shallow `run_code` text contract. */
@@ -531,6 +571,14 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               reject(new Error(`run_code run is over (${String(runController.signal.reason)}); ${name} tool call abandoned`))
             },
             async start(): Promise<void> {
+              // P2-03 must[2], code-mode half: the manifest is appended BEFORE
+              // the dispatch-start event, so reading the log in order shows a
+              // manifest preceding every code-mode execution exactly as it does
+              // a native one. Placed at `start` rather than at binding entry
+              // because this is where the call actually begins — a queued entry
+              // abandoned by run settlement never executes, and a manifest for
+              // it would record an action that never happened.
+              appendCodeModeManifest(exec, subCallId, name, normalized.logged)
               exec.agent?.session.append('tool/code-dispatch-start', {
                 rootCallId: exec.rootCallId,
                 parentCallId: exec.callId,

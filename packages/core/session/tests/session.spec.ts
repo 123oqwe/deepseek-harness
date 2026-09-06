@@ -1129,6 +1129,37 @@ describe('Session', () => {
 })
 
 
+describe('Session per-type event counts', () => {
+  it('counts what the log accepted, and the counter agrees with the log', () => {
+    // The invariant: a running counter and a scan of the same log must give the
+    // same answer. They are two ways of knowing one fact, and this is what says
+    // they have not drifted — a counter that missed an append would still look
+    // monotonic while being wrong.
+    const session = Session.create(SessionId('type-counts'))
+    for (let i = 0; i < 3; i += 1) {
+      session.append('turn/start', { turn: i + 1 })
+      session.append('turn/end', { turn: i + 1, reason: { kind: 'completed' } })
+    }
+    session.append('turn/start', { turn: 4 })
+
+    const scanned = (type: string): number =>
+      session.snapshotEvents().filter(event => event.type === type).length
+    expect(session.countEventsOfType('turn/start')).toBe(4)
+    expect(session.countEventsOfType('turn/start')).toBe(scanned('turn/start'))
+    expect(session.countEventsOfType('turn/end')).toBe(3)
+    expect(session.countEventsOfType('turn/end')).toBe(scanned('turn/end'))
+  })
+
+  it('reports zero for a type this log has never carried, rather than undefined', () => {
+    // The control. A counter returning something truthy for every type would
+    // satisfy the case above; a caller adding 1 to `undefined` gets NaN, which
+    // is how a position field becomes silently meaningless.
+    const session = Session.create(SessionId('type-counts-empty'))
+    expect(session.countEventsOfType('turn/start')).toBe(0)
+    expect(session.countEventsOfType('never/emitted')).toBe(0)
+  })
+})
+
 describe('SessionStore', () => {
   it('creates sessions, emits session/created and session/event', async () => {
     const ctx = new Context()

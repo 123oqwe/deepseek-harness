@@ -95,6 +95,13 @@ function fakeAgent(): { agent: Agent; events: { type: string; data: unknown }[] 
     session: {
       header: { cwd: '/workspace' },
       append: (type: string, data: unknown) => { events.push({ type, data }) },
+      // Counts what it captured, the way a real Session counts what it accepted.
+      // A fake narrower than the interface it stands for does not fail where it
+      // is missing a member: the call throws inside the scheduler lane and the
+      // dispatch never settles, so ten unrelated cases time out and the defect
+      // reads as a concurrency bug. That is how P2-03's code-mode manifest
+      // looked "blocked for an unknown reason" for an afternoon.
+      countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
     },
   } as unknown as Agent
   return { agent, events }
