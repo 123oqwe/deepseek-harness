@@ -625,3 +625,18 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 **P2-03 签发暂缓(机械原因)**:观测 run 34051669730 @ `144d41cb76` 的 vitest report 四处 sha256 一致、20189/0 failed、四格冻结标题逐条在场;但 run 结论 `failure`——scoped lint 7 条错中 **6 条在 P2-03 自己的 `manifest.spec.ts`**(`as never` ×6),修复 `da94ed35ff` 在**观测之后**。候选不可变 + BLOCKED-014 slice gate set 不许选子集 → 在 tip 重观测后签,candidate 记新 SHA。另:`accept-blocked: P2-03` 未解——两个解锁信号已满足(code-mode 半:U.1 三条 + ptc deep-arguments passed;plugin-rpc 半:C12 拆到 P1-06 must[4]),执行者记 LIFTED 后签。snapshot `persistent-pwsh-tool-turn` 红不在 P2-03 范围,需 flake-registry 引用或 BLOCKED 根因。
 
 **Fiber-A → 裁 2(最小 vendored 改动)**:探针实测非 root fiber 上 `ctx.fiber.store['trustKernel'] = forged` 后 `ctx.trustKernel` 返回伪造物(`ctx.get` 不返回)——P0-02 的 pin 只护 root + `ctx.get`,dsh 侧覆盖不到每个 fiber 的属性读路径(`reflect.ts:157`),§10.4 ① 的"dsh 侧最小路径"是**待做的工作而非现状**,且 P0-02 已试过。不选 3(收窄 must[1] 为 `ctx.get` 语义 = 来源附和消费者)。形状二选一按 diff 最小实测:(A) `store` 私有 + `reflect.ts:293/302` 受控 provide/revoke 并对内核名在任何 fiber 拒绝;(B) `fiber.ts:324/647` 建 store 处加 `storeGuard` 契约点,dsh 侧注册守卫将内核名 defineProperty 不可写——不改 `store` 类型。判据:探针翻转、P0-02 vector-2 仍绿、fiber 生命周期不变。登记 `vendor/README.md`,过 vendor manifest guard;**re-vendor 必须带补丁**(BLOCKED durable pointer)。characterization 落 slice:现在断言伪造成功 = RED,修好翻绿。
+
+## 11. 冻结先于观测的链条断了 19 处(2026-09-06 19:30 EDT,BLOCKED-132 追查,delegate 亲核)
+
+**发现链**:执行者想把 BLOCKED-095(P1-03.C 事后冻结)机械化,发现账本 `capturedAtUtc` 是记账时间;我指出 vitest 报告顶层 `startTime` 是离线可得的观测时间;执行者用它跑出 38 格"冻结晚于观测";我再用两个**机器时间**核:冻结记录首次进 git 的提交时间 vs 观测 run 的创建时间——59 条 `frozenAtUtc` 晚于观测里,**真正记录晚于观测进 git 的只有 12**(其余 47 条是手写字段补录,执行者的读法 2)。最后用最干净的判据——**被引用观测的候选 SHA 的树里是否含该条 live 冻结记录**——得 **114 组中 19 组不含**:P0-01.F · P0-02.C · P0-02.F · P0-05.C · P0-06.U · P0-07.C · P0-07.F · P1-03.F · P2-01.F · P4-01.P · P4-06.C · P4-07.F · P4-08.F · P5-11.C · P5-11.F · P6-01.C · P6-02.F · P6-07.P · P8-01.C。成因两类:记录在观测后才写;或 supersede 后未重观测。
+
+**它意味着什么(不夸大也不缩小)**:这 19 格的实质证据仍在——标题在候选上真跑真过、coverage 100/100 使"挑选过的标题"无法漏掉子句、recompute 门 VERIFIED、部分有变异证明。**缺的是"先承诺后观测"这一属性**,它防的是"看着结果写用例"(空洞用例)——coverage 闭合挡住"少写",挡不住"写空";空洞由变异证明挡,而已验收行的变异回填还没做(§6 已列)。所以这 19 格是**证据链缺一环**,不是"结果是假的"。
+
+**裁决**:
+1. **新谓词 (v),机械化,不用时间戳**:`verify-freeze-in-candidate-tree.mjs`——对每个 GREEN 格,其每条 live 冻结记录(按 epic/stage/expectCases 全集)必须存在于 `candidateSha:spec/first100/exec/command-freeze.json`;状态 VERIFIED / MISSING;MISSING 不通过。进 registry gate set 与 `--accept`。`frozenAtUtc` 降为信息字段,不再被任何门读。
+2. **一次重观测修 19 格**:run `34063737869` @ `d4034a8f4c` 的树含全部 live 记录;若它对这 19 格的标题全过,执行者从该报告重绿这 19 格,candidate 记 `d4034a8f4c`,行上记 `reattested: {candidateSha, ciRunUrl, reason: "§11"}`;**验收状态不撤**(实质证据在,链条补齐)。若任一标题不过 → 该行 `--conclusion WITHDRAWN`,修好再签。
+3. **变异回填提到最前**(§6 那条):这 12 条已验收行的每条 live 冻结记录补 `sensitivityProof`,期限 P2-05 开工前;没有变异证明的格,重观测也只补了一环。
+4. **supersede 规则补一条**(BLOCKED-103):supersede 之后该格**自动降为 NOT_RUN**直到用含新记录的树重观测——由谓词 (v) 机械保证,不靠人记得。
+5. BLOCKED-095 改记为"19 分之一",BLOCKED-132 记本节结论;执行者的两次自纠(先说不可建、再说 38)都留在记录里——**方法比结论重要,三次判据一次比一次硬**。
+
+**P1-03 BLOCKED-133 一并裁**:解锁信号保持端到端,不改写成单元替身。U 的 files[] 加 `[N] apps/cli/tests/profiles/plugin-lock.e2e.ts`(能驱动 `dsh plugin` 与 profile boot 的 e2e,与 headless e2e 同形),provenance `testFileAdded(BLOCKED-133)`;调用点代码与这个测试文件同一 slice 落地,RED 先于 GREEN。
