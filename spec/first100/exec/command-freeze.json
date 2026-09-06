@@ -7028,6 +7028,53 @@
         "failureSummary": "Reddened 2, 2 and 1 of 11. M1 reddens the unobserved case AND the fabricated-observation case, which is the point of writing both: a fabricated observation only fails because the check it displaced went unobserved, so the two share one mechanism and a mutation that breaks it must break both. M3 reddens only the empty-suite case; the ratio case stays green because a suite that ran is unaffected, which is what makes the null a statement about emptiness rather than a changed formula."
       },
       "note": "C (Contract) for P9-08: scoring is mechanical and a model never judges (must[0]) -- an LLM judge would make the metric depend on a second model, and a regression would be indistinguishable from judge drift. Fails closed three separate ways because each is a different mistake: an unobserved check is not a pass, a task with no checks is not a pass, and an observation for an undeclared check adds no credit. acceptance[1]'s two cheats are both things the executor can really do, since it works in the workspace the checks describe. The spec lives in tests/benchmark/ following the existing harness-capability precedent: vitest's include list does not cover benchmarks/**, and a cell whose test the suite never runs could not be greened by any observation."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/subagent/subagent/tests/control-convergence.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it steer and continue are admitted while running",
+        "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it acceptance[0]: a steer arriving while the child is CANCELLING is refused, not queued",
+        "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it acceptance[0]: a continue arriving while cancelling is refused for the same reason",
+        "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it nothing at all is admitted in terminal — a message after the end has nothing to act on",
+        "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it a SECOND cancel while cancelling is admitted: a caller who did not see the first land",
+        "P5-10 Contract — must[0]/must[1]: each kind acts only in the phases that admit it inject is admitted while awaiting a human, since it adds context without driving a turn",
+        "P5-10 Contract — acceptance[1]: a human answer reaches one waiting point an answer for the waiting point the child is at is admitted",
+        "P5-10 Contract — acceptance[1]: a human answer reaches one waiting point an answer naming a DIFFERENT waiting point is refused, and the denial names both",
+        "P5-10 Contract — acceptance[1]: a human answer reaches one waiting point an answer arriving while the child waits for nobody is refused by phase",
+        "P5-10 Contract — must[2]: a redelivered control message changes nothing acceptance[2]: the same controlEpoch twice is refused as a redelivery",
+        "P5-10 Contract — must[2]: a redelivered control message changes nothing a redelivery is reported as a redelivery even when the phase ALSO forbids it now",
+        "P5-10 Contract — must[2]: a redelivered control message changes nothing a different epoch of the same kind is a new message",
+        "P5-10 Contract — must[1]: cancel outranks whatever arrived beside it acceptance[0]: cancel is ordered ahead of steer and continue that arrived together",
+        "P5-10 Contract — must[1]: cancel outranks whatever arrived beside it order within one kind is arrival order, so equal-urgency messages are not reshuffled",
+        "P5-10 Contract — must[3]: cancellation converges before terminal a participant that has not stopped keeps the barrier closed, and is named",
+        "P5-10 Contract — must[3]: cancellation converges before terminal every participant stopped converges, and the report says which took part",
+        "P5-10 Contract — must[3]: cancellation converges before terminal an EMPTY participant set does NOT converge",
+        "P5-10 Contract — must[3]: cancellation converges before terminal one stopped participant beside one running one does not converge"
+      ],
+      "files": [
+        "packages/subagent/subagent/src/control-convergence.ts",
+        "packages/subagent/subagent/tests/control-convergence.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T21:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "d829e05d92b317b73565a4224e3417b0390f1742",
+        "testsDiscovered": 18
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four targeted mutations of packages/subagent/subagent/src/control-convergence.ts, each restored byte-identical: (M1) the empty-participant guard is deleted so a barrier over nothing converges; (M2) `steer` is admitted while cancelling; (M3) the idempotency check is disabled; (M4) `cancel` loses its priority rank.",
+        "failureSummary": "Reddened 1, 1, 2 and 1 of 18. M3 reddens two because acceptance[2]'s redelivery case and the ordering case that pins redelivery ahead of the phase check both rest on it. The other three redden exactly one case each, which is the intent: each clause has its own case, and a mutation that broke two would mean two clauses were sharing one assertion."
+      },
+      "note": "C (Contract) for P5-10 under the delegate's ruling of 2026-09-05, scoped to the clauses that have subjects. must[0]/[1]/[2] and acceptance[0]/[1]/[2] are built; must[3]'s barrier is built over `child` alone. TWO PRE-FLIGHT FINDINGS, both from reading before writing. (1) The epic TITLE names four things and must[0] names five — `inject` is absent from the title; the frozen cases follow the must, not the title. (2) `epoch` already exists in continuation.ts as a residency counter, which is NOT must[2]'s per-message idempotency epoch: same word, different thing, and a grep for `epoch` would have reported the clause already satisfied. The field is therefore named `controlEpoch` and the module says why. must[3]'s `world` and `actions` have no runtime subject (BLOCKED-116); the barrier takes a SET of participants with one member today and deliberately defines NO interface for the absent suppliers to implement, since fixing that shape before P3-01 designs ExecutionWorld would create exactly the unread hook this program has recorded several times."
     }
   ]
 }
