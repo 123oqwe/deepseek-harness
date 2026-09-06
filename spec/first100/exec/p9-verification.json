@@ -3,9 +3,9 @@
     "name": "first100-p9-verification",
     "version": "1.0"
   },
-  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34001537762",
-  "candidateSha": "8a640f1aca27af8c938daac7c9664fa9b57dd640",
-  "observationSha256": "ee44eb883adb59a7b6e802c702a1e22fc11175d07ae2649f5dd628a28c49d13f",
+  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34002615162",
+  "candidateSha": "3c6fcfcbc533360c0fbc97baf7d1445015625ad3",
+  "observationSha256": "bb8bddebba18c0937ab4c3ee6b3822df9351a7ceae69f735716fe397317754ff",
   "epics": [
     {
       "epic": "P9-01",
@@ -21,9 +21,11 @@
       "epic": "P9-02",
       "verifiedStages": [
         "C",
-        "P"
+        "P",
+        "U",
+        "F"
       ],
-      "terminalState": "IN_PROGRESS"
+      "terminalState": "VERIFIED"
     },
     {
       "epic": "P9-03",
@@ -127,24 +129,16 @@
     {
       "epic": "P9-02",
       "stage": "U",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 2,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-02 Usage — a settings fragment alone activates a template route acceptance[0]: a headless task completes over a mock gateway after three tool calls",
-        "P9-02 Usage — a settings fragment alone activates a template route must[2]: the key reaches the gateway from the environment, and only from there"
-      ]
+      "matchedCases": 2
     },
     {
       "epic": "P9-02",
       "stage": "F",
-      "status": "INCOMPLETE",
+      "status": "VERIFIED",
       "frozenCases": 2,
-      "matchedCases": 0,
-      "missingCases": [
-        "P9-02 Fault — an unserviceable settings fragment stops the run a protocol name nothing implements is refused, naming the route",
-        "P9-02 Fault — an unserviceable settings fragment stops the run a credential reference whose variable is unset fails the request rather than sending an empty key"
-      ]
+      "matchedCases": 2
     },
     {
       "epic": "P9-03",

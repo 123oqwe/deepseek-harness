@@ -175,6 +175,20 @@ function main() {
     console.error(`verify-p9-cells: --candidate-sha must be a full 40-character sha, got "${candidateSha}"`)
     process.exit(1)
   }
+  // The SHA must be the one the ARTIFACT carries, not one the caller typed.
+  // A well-formed but wrong sha passed every check here until 2026-09-05, when
+  // one was recorded by hand and caught only by re-reading the run: the format
+  // check proved the string was a sha, never that it was THIS observation's.
+  // GitHub's artifact directory is named `<artifact>-<sha>`, so the evidence
+  // for this is in the path already.
+  const shaFromArtifactPath = /-([0-9a-f]{40})(?:\/|$)/.exec(dirname(reportPath))?.[1]
+  if (shaFromArtifactPath !== undefined && shaFromArtifactPath !== candidateSha) {
+    console.error(
+      `verify-p9-cells: --candidate-sha ${candidateSha} does not match the artifact it was read from `
+      + `(${shaFromArtifactPath}); the report and the sha must describe the same run`,
+    )
+    process.exit(1)
+  }
   if (!existsSync(reportPath)) {
     console.error(`verify-p9-cells: report not found: ${reportPath}`)
     process.exit(1)
