@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `45434d476f4f54a1`)+ `ledger.json` 状态 + `p9-verification.json`;**生成时间** 2026-09-06T14:09-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON 或整改令,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `a356aa783b`);**生成时间** 2026-09-06T14:16-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)
 
@@ -9,9 +9,34 @@
 3. 本文件 —— **每条 epic 的造/用执行卡**(派生),开工第四问按它答,`preFlight.makeVsUse` 引用本文件的 epic 小节 + `rows[].id` + 所用 `oss[].name`。
 4. `make-vs-use-ledger.json` —— 数据源(artifact 2e874903 的完整镜像:ROWS + META + MARKET + VERDICTS + CHAPTERS)。
 
+**状态列是生成时快照**(见文首生成时间);实时状态以 `ledger.json` / `p9-verification.json` 为准。
+
+**维护规则**:卡片 = 账本行(自动)+「裁决叠加」(生成器里的 overlay 表,**由 delegate 手工维护**)。整改令每追加一条裁决,delegate 同步更新 overlay 并重新生成;生成器源码在文末,执行者也可重跑但不改 overlay。卡片上 **⟶ 裁决取代** 标记的是被裁决推翻的账本 note。
+
+**`preFlight.makeVsUse` 唯一字段规范**(§4.1 / §7 / §8 / §9 四处增量合并于此,以此为准;`clause-subject-audit.json` 该 epic 的 preFlight 下):
+
+```json
+{
+  "ledgerRow": "P2-05",                          // rows[].id
+  "card": "make-vs-use-plan.md#p2-05",           // 本文件小节
+  "verdict": "PROVIDER_ADAPT", "verdictSecondary": null,
+  "adopted": [ { "name": "cedar-policy/cedar", "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",
+                 "form": "runtime | oracle | optional | vendored", "reason": "…" } ],
+  "rejectedAbsent": ["open-policy-agent/opa", "…"],   // 账本 reject 名单,门 (b) 核 0 import
+  "standardsOwned": ["AuthZEN request/response vocabulary"],   // 本 epic 是首个采用者的标准;不是则填 []
+  "standardsImported": [ { "standard": "RFC 8785 JCS", "from": "P2-03" } ],
+  "residual": "…",                               // 接完还要自己写什么(账本 residual,可收窄)
+  "probes": [ { "claim": "forbid overrides permit", "how": "…", "result": "ok | hard-constraint" } ],   // §8 第 3 步本树复验
+  "gapCheck": [ { "community": "dsh-auto-mode", "gap": "…", "clause": "must[1]" | "outOfScope: P2-07" } ],   // §9.2
+  "expectedDeletedPct": "50",
+  "realized": { "adoptedOnPath": [ { "name": "…", "importedIn": ["packages/…/src/x.ts"] } ],   // F 阶段填
+                "rejectedAbsent": true, "note": "…" }
+}
+```
+
 **判定含义**(账本 VERDICTS 原文):`PROVIDER_ADAPT` 薄 adapter 包 OSS · `REUSE_UPSTREAM` 上游已做大半 · `QUALIFICATION_REUSE` 复用开源测试集 · `CONTRACT_WRITE` 自写接口·采标准 · `PROVIDER_WRITE` 自写 provider · `CONSUMER_WRITE` 自写接线 · `KERNEL_WRITE` 内核焊死 · `CATALOG_ADOPT` 社区插件直接用
 
-**`oss[].role`**:`adapt` 接进依赖(按 note)· `optional` 不进依赖不进 CI · `reject` 不接(note 是理由)· `reference` 只读设计。**`oracle`**(§7.8 新增形态):adapt 级库因有记录的硬约束不能进运行时时,进 devDependencies 作差分测试 oracle。
+**`oss[].role`**:`adapt` 接进依赖(按 note)· `optional` 不进依赖不进 CI · `reject` 不接(note 是理由)· `reference` 只读设计。**接法 `form`**(preFlight 字段,不是账本 role):`runtime` 默认 · `oracle`(§7.8:有记录的硬约束 → devDependencies 作差分 oracle)· `optional` · `vendored`。
 
 **109 行判定分布**:REUSE_UPSTREAM 26 · PROVIDER_WRITE 25 · PROVIDER_ADAPT 22 · CONTRACT_WRITE 22 · CONSUMER_WRITE 9 · QUALIFICATION_REUSE 4 · KERNEL_WRITE 1
 **副判定** 80/109 · **带标准** 71/109 · **adapt 级 OSS 条目** 237 · **CATALOG_ADOPT** 0(对抗复核后最高 47%)
@@ -2206,7 +2231,9 @@ out = []
 w = out.append
 w('# First-100 造用执行表(派生文档)')
 w('')
-w(f'**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `{ledger_sha}`)+ `ledger.json` 状态 + `p9-verification.json`;**生成时间** {datetime.datetime.now().astimezone().isoformat(timespec="minutes")};生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON 或整改令,重新生成。')
+import subprocess
+rect_sha = subprocess.check_output(['git','log','-1','--format=%h','--',RECT]).decode().strip()
+w(f'**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `{ledger_sha}`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `{rect_sha}`);**生成时间** {datetime.datetime.now().astimezone().isoformat(timespec="minutes")};生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。')
 w('')
 w('## 0. 文档优先级(执行者与 delegate 共同遵守)')
 w('')
@@ -2215,9 +2242,34 @@ w('2. `plan-rectification-2026-09-06.md` —— **裁决**:与账本冲突时以
 w('3. 本文件 —— **每条 epic 的造/用执行卡**(派生),开工第四问按它答,`preFlight.makeVsUse` 引用本文件的 epic 小节 + `rows[].id` + 所用 `oss[].name`。')
 w('4. `make-vs-use-ledger.json` —— 数据源(artifact 2e874903 的完整镜像:ROWS + META + MARKET + VERDICTS + CHAPTERS)。')
 w('')
+w('**状态列是生成时快照**(见文首生成时间);实时状态以 `ledger.json` / `p9-verification.json` 为准。')
+w('')
+w('**维护规则**:卡片 = 账本行(自动)+「裁决叠加」(生成器里的 overlay 表,**由 delegate 手工维护**)。整改令每追加一条裁决,delegate 同步更新 overlay 并重新生成;生成器源码在文末,执行者也可重跑但不改 overlay。卡片上 **⟶ 裁决取代** 标记的是被裁决推翻的账本 note。')
+w('')
+w('**`preFlight.makeVsUse` 唯一字段规范**(§4.1 / §7 / §8 / §9 四处增量合并于此,以此为准;`clause-subject-audit.json` 该 epic 的 preFlight 下):')
+w('')
+w('```json')
+w('{')
+w('  "ledgerRow": "P2-05",                          // rows[].id')
+w('  "card": "make-vs-use-plan.md#p2-05",           // 本文件小节')
+w('  "verdict": "PROVIDER_ADAPT", "verdictSecondary": null,')
+w('  "adopted": [ { "name": "cedar-policy/cedar", "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",')
+w('                 "form": "runtime | oracle | optional | vendored", "reason": "…" } ],')
+w('  "rejectedAbsent": ["open-policy-agent/opa", "…"],   // 账本 reject 名单,门 (b) 核 0 import')
+w('  "standardsOwned": ["AuthZEN request/response vocabulary"],   // 本 epic 是首个采用者的标准;不是则填 []')
+w('  "standardsImported": [ { "standard": "RFC 8785 JCS", "from": "P2-03" } ],')
+w('  "residual": "…",                               // 接完还要自己写什么(账本 residual,可收窄)')
+w('  "probes": [ { "claim": "forbid overrides permit", "how": "…", "result": "ok | hard-constraint" } ],   // §8 第 3 步本树复验')
+w('  "gapCheck": [ { "community": "dsh-auto-mode", "gap": "…", "clause": "must[1]" | "outOfScope: P2-07" } ],   // §9.2')
+w('  "expectedDeletedPct": "50",')
+w('  "realized": { "adoptedOnPath": [ { "name": "…", "importedIn": ["packages/…/src/x.ts"] } ],   // F 阶段填')
+w('                "rejectedAbsent": true, "note": "…" }')
+w('}')
+w('```')
+w('')
 w('**判定含义**(账本 VERDICTS 原文):' + ' · '.join(f'`{k}` {v}' for k, v in VD.items()))
 w('')
-w('**`oss[].role`**:`adapt` 接进依赖(按 note)· `optional` 不进依赖不进 CI · `reject` 不接(note 是理由)· `reference` 只读设计。**`oracle`**(§7.8 新增形态):adapt 级库因有记录的硬约束不能进运行时时,进 devDependencies 作差分测试 oracle。')
+w('**`oss[].role`**:`adapt` 接进依赖(按 note)· `optional` 不进依赖不进 CI · `reject` 不接(note 是理由)· `reference` 只读设计。**接法 `form`**(preFlight 字段,不是账本 role):`runtime` 默认 · `oracle`(§7.8:有记录的硬约束 → devDependencies 作差分 oracle)· `optional` · `vendored`。')
 w('')
 # summary counts
 cnt = collections.Counter(r['verdict'] for r in rows)

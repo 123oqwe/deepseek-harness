@@ -3,7 +3,7 @@
   "artifact": "https://claude.ai/code/artifact/2e874903-4d49-4d5c-a8ea-25a9c88ac107",
   "generatedBy": "guanjieqiao-92 (delegate), 2026-09-02, three-way scan catalog 2937 / topic 13k / radar 17.5k + extension-point probes",
   "extractedFromArtifactAt": "2026-09-06T04:42+08:00",
-  "committedAt": "2026-09-06T13:39-04:00",
+  "committedAt": "2026-09-06T13:39-04:00 (rows); 13:59 (artifactSections); 14:20 (source notes)",
   "fields": [
    "id",
    "chapter",
@@ -26,9 +26,10 @@
    "adapt": "wire in as a dependency, per `note`",
    "optional": "not a dependency; at most an optional provider, never in CI",
    "reject": "do not wire (reason in `note`)",
-   "reference": "read for design only"
+   "reference": "read for design only",
+   "(form:oracle)": "not a ledger role: a preFlight wiring form (§7.8) — an adapt-level library that cannot run in production for a recorded hard constraint is wired into devDependencies as a differential test oracle"
   },
-  "readBy": "plan-rectification-2026-09-06.md §4.1 fourth pre-flight question; §7 audit",
+  "readBy": "make-vs-use-plan.md (derived per-epic cards; the entry document) and plan-rectification-2026-09-06.md §4.1 / §7 / §8 / §9",
   "artifactSections": {
    "note": "Verbatim mirror of the artifact's non-row constants so the repo copy is the whole ledger, not only ROWS. Strings contain the artifact's own inline HTML.",
    "META": {

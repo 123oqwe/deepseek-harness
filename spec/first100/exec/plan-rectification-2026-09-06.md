@@ -5,9 +5,9 @@
 **来源**:`First-100 造用账本`(artifact 2e874903,109 行 × 16 字段;**仓库镜像 `make-vs-use-ledger.json`**),2026-09-02 由 gq-92 用三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测生成
 **对照**:`tests/first100/registry.json`(签发时 `dbeb6082a9`,21/101 ACCEPTED;之后的 registry 改动各带 provenance)
 
-### 阅读指南(2026-09-07 加,只做导航,不改内容)
+### 阅读指南(2026-09-06 14:09 EDT 加,只做导航,不改内容)
 
-本文件是**按日期追加的裁决日志**:§0–§6 是 09-06 签发的原令,§7–§9 是同日晚间的附录。**看某条 epic 该怎么做,不要读本文件——读 `make-vs-use-plan.md` 那张执行卡**,它把本文件所有适用于该 epic 的裁决叠加在一张卡上(派生生成,不会漏)。本文件只回答"为什么这么裁"。
+本文件是**按日期追加的裁决日志**:§0–§6 是 09-06 上午签发的原令,§7–§9 是同日 13:10–14:05 EDT 的附录(先前误标"晚/深夜",已按提交时间改正)。**看某条 epic 该怎么做,不要读本文件——读 `make-vs-use-plan.md` 那张执行卡**,它把本文件所有适用于该 epic 的裁决叠加在一张卡上(派生生成,不会漏)。本文件只回答"为什么这么裁"。
 
 | 要找什么 | 在哪 |
 |---|---|
@@ -20,13 +20,15 @@
 | 接一个开源库的步骤 | §8(九步 SOP) |
 | 「可省代码」「社区覆盖」两列的用法 + 机械门 | §9 |
 
+**引用约定**:§2 的七类写作 §2.A–§2.G(早期个别处写作 §A,同义)。
+
 **已被后文取代的裁决**(原文保留,行内已标):§7.2 R2 与 §7.4 ① "换库" → §7.8 保留迭代实现 + 库作 oracle;§7.4 ⑤ "F 不动" → §7.5 F 也 supersede。
 
 ## 0. 这份文档做什么、不做什么
 
-**做**:把造用账本里 29 条 `planError` 逐条落到 registry 的具体改动上,并把 3 个被多条 epic 共用的开源引擎定为"消费者到来之前先接入"的独立 slice。
+**做**:把造用账本里 29 条 `planError` 逐条落到 registry 的具体改动上,并把 3 个被多条 epic 共用的开源引擎定为"消费者到来之前先接入"的独立 slice。【14:15 EDT 标注:账本 planError 实为 **40** 条,补漏 10 条在 §7.10;共用引擎实为 **4** 个,第 4 个(attestation envelope)在 §3.4 → §7.2 R1】
 
-**不做**:不改 110 的收录范围;不动任何已 ACCEPTED 的行;不预造任何 epic 的实现。
+**不做**:不改 110 的收录范围;不动任何已 ACCEPTED 的行;不预造任何 epic 的实现。【标注:"不动已 ACCEPTED 的行"指不重开格子、不改验收状态;R1(P0-07 attest.ts 改发 DSSE)与 R4(P1-01 校验缺陷在 P1-03 修)改的是代码,格子不动,与此不矛盾】
 
 **为什么现在做**:P2-03 收后 P2-04 开,W5–W7 的 23 条随之进入管线。那 23 条里 11 条带 planError。**每条 planError 若在开工时才撞上,代价是一次 BLOCKED + 一次裁决 + 一次重锚(今天 P4-07 / P8-01 / P2-03 各花了 2–4 小时)。批量在此处裁完,是一天。**
 
@@ -196,7 +198,7 @@ must[2]「consumer 按 message id/epoch 去重」不动——它就是幂等消�
 | **P8-06** W17 | 策略引擎**一次定**:Cedar。P2-10 / P2-05 / P2-08 / P8-06 / P8-09 五条 epic 共用一个引擎 | 见 §3 |
 | **P2-05** W6 | 账本 planError 原文是「gated on BLOCKED-011 which the wave-6 schedule does not show」——**BLOCKED-011 已于 2026-09-01 DE-ESCALATED 并关闭**(三向量 vendor-free 闭合 + 机械门,残留降级为 known-limitation),排期不再受它约束。P2-05 剩下的开工前决定同上一行:Cedar 作为它的引擎,且它是 Cedar 的第一个消费者(§3.1 的 slice 排在它开工之前) | planError 已过时;§3.1 |
 
-## 3. 三个共用引擎:消费者到来之前先接入
+## 3. 三个共用引擎:消费者到来之前先接入【14:15 EDT 标注:现为四个,§3.4 见下】
 
 **原则**:一个开源引擎被 ≥2 条 epic 消费,且第一个消费者到来时它还没接入,第一个消费者会自造一个,后面的再迁——**两份实现在任一方改动的第一天就分叉**。所以在第一个消费者开工前,作为独立 slice 接入。
 
@@ -239,6 +241,10 @@ must[2]「consumer 按 message id/epoch 去重」不动——它就是幂等消�
 
 **时机**:W12 开之前。**最不急的一个**,但要在 §C 的 P7-07 缩范围时一并把 files[] 指向这里。
 
+### 3.4 attestation envelope(in-toto Statement v1 + DSSE)——13:10 EDT 由 §7.2 R1 增设
+
+正文在 **§7.2 R1**:`packages/attestation/envelope`(contract 层小包:Statement zod schema + DSSE PAE + verify 走 kernel signatureRoots,signer 可插);**P4-04 开工前落地**;P0-07 的 `attest.ts` 改发 Statement+DSSE、`canonicalJson` 收敛(§7.6);15 条消费者见 §7.3 第一行。SOP 见 §8。
+
 ### 其余 PROVIDER_ADAPT(各服务一条 epic,到 epic 自己开工时接,不需要提前)
 
 pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· dockerode(P3-08)· git plumbing(P3-11)· cockatiel + rate-limiter-flexible(P5-04)· WebCrypto + noble + keyring(P6-08)· cacache(P7-02)· jose + openid-client(P8-06)· zod(P8-07)· file-type + yauzl(P3-12)
@@ -269,16 +275,31 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 ⑥ §3.3 OTel pipeline(W12 开之前)
 ```
 
+**14:15 EDT 增补(原块保留,以下为现行顺序,与上块冲突处以此为准)**:
+
+```
+②′ P2-03:R2 整改(§7.8 终态)→ C+F 重观测 → 四谓词 → 签 → P2-04 开        ← 现在在这里
+②″ P2-04 preFlight 之前:执行者建 §9.1 的 verify-make-vs-use 门(进 registry gate set)
+③  §3.1 Cedar slice(P2-05 开之前;preFlight 已在 clause-subject-audit.json:SLICE-3.1-cedar)
+④  W5–W7 按波走;每条 epic 开工:三问 + 第四问(§4.1)+ §8 SOP + §9.2 缺口核对
+⑤  §3.2 sandbox-srt slice(W7 开之前;同时把 sandbox-local PLATFORM_CHAINS 改成 contribution point)
+⑤′ §3.4 attestation envelope slice(P4-04 开之前;含 P0-07 attest.ts 改发 DSSE)
+⑥  §3.3 OTel pipeline(W12 开之前)
+已完成的一次性项:P9-08 路径修正(6b110e275a)、P2-03 manifest 层非 JSON 拒绝(6b110e275a)
+```
+
 ### 4.1 开工第四问:这条 epic 账本判的是造还是用?(自 P2-04 起为标准动作)
 
 前三问(BLOCKED-101):主体在不在执行路径上 / 冻结挂哪 / 每条子句的主体是什么。**第四问在三问之后、第一行代码之前**,答案写进 `clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse` 字段:`{ verdict, adopted: [...], residual }`。
 
-**来源**:造用账本(artifact `2e874903`;**仓库副本 `spec/first100/exec/make-vs-use-ledger.json`,`rows[].id` 索引,2026-09-06 晚落盘,此前只在 artifact 和 /tmp**)该 epic **整行 16 个字段**,不是两列。开工时必读并逐项回答的七个:`verdict` **和 `verdictSecondary`**(80/109 行有第二判定——"CONTRACT_WRITE + PROVIDER_ADAPT" 意思是契约自己写、provider 接开源,两半分开答)/ `oss[]` 里 `role: adapt` 的每一条**及其 `note`**(note 是接法,不是介绍)/ **`standards[]`**(71/109 行有;是绑定词汇,见 §7.3)/ **`risk`**(109/109 行有;里面有具体禁令,例:P2-03 "do not write a second canonicalizer")/ `residual`(接完还要自己写什么)/ `deletedPct` / `community`(只作设计参考,不接——CATALOG_ADOPT 为 0 已对抗复核)。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**(2026-09-06 晚修订:本段原只列四个字段,§7 记录了只读四字段造成的漏检。)
+**来源**:造用账本(artifact `2e874903`;**仓库副本 `spec/first100/exec/make-vs-use-ledger.json`,`rows[].id` 索引,2026-09-06 13:40 EDT 落盘,此前只在 artifact 和 /tmp**)该 epic **整行 16 个字段**,不是两列。开工时必读并逐项回答的七个:`verdict` **和 `verdictSecondary`**(80/109 行有第二判定——"CONTRACT_WRITE + PROVIDER_ADAPT" 意思是契约自己写、provider 接开源,两半分开答)/ `oss[]` 里 `role: adapt` 的每一条**及其 `note`**(note 是接法,不是介绍)/ **`standards[]`**(71/109 行有;是绑定词汇,见 §7.3)/ **`risk`**(109/109 行有;里面有具体禁令,例:P2-03 "do not write a second canonicalizer")/ `residual`(接完还要自己写什么)/ `deletedPct` / `community`(只作设计参考,不接——CATALOG_ADOPT 为 0 已对抗复核)。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**(2026-09-06 13:10 EDT 修订:本段原只列四个字段,§7 记录了只读四字段造成的漏检。)
 
 | verdict | 动作 |
 |---|---|
 | `PROVIDER_ADAPT` | **用。** 只接 `oss[]` 里 `role: adapt` 的那条,按其 `note` 接;`residual` 写的是接完还剩什么要自己写 |
-| `REUSE_UPSTREAM` | **不写。** 上游已有;缺口在 `spec/first100/sources/base-align-v2/23-partial-rescope-spec.md`;活是核缺口 + 接线 |
+| `PROVIDER_ADAPT` 但库有**有记录的硬约束**不能进运行时 | **oracle 形态**(§7.8):库进 devDependencies 作差分测试 oracle,手写实现"经测试与标准一致";硬约束必须能被一条冻结用例复现 |
+| `PROVIDER_ADAPT` 但已验收且手写在跑 | **不重写**(§7.9 判据:AST 级覆盖 / 规则逻辑库不提供 / 无下游传播);记为"账本判 adapt 未采用",不算整改项 |
+| `REUSE_UPSTREAM` | **先核上游,再决定。** 上游已有 → 只核缺口 + 接线(缺口在 `spec/first100/sources/base-align-v2/23-partial-rescope-spec.md`);上游经核实**没有**该原语(P5-11:agent-team 无 claim/lease,§7.10)→ 写,并把核实结果记进 preFlight。原文"不写"过于绝对,14:15 EDT 改 |
 | `CONTRACT_WRITE` / `PROVIDER_WRITE` / `CONSUMER_WRITE` | **写。** 账本找过,没有合适的开源;契约和定义本来就没有 |
 | `KERNEL_WRITE` | **写。** 仅 P0-02 |
 | 无判定(P3-13 及任何后续收录) | 开工时补一次:**只有我们定义的 → 写;公认难题且失败模式静默 → 用**,用的话过下面四道过滤 |
@@ -299,7 +320,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 - **三个 slice**:各自过独立 Reviewer(BLOCKED-010 五视角)+ conformance 用例 + 双向变异证明;**不挂任何 epic 的格子**,作为 infra slice 记在 EXEC-STATE
 - **本令的落地本身**:执行者在 registry 提交里引用本文件路径;§0–§6 不再改写,后续只允许**追加带日期的附录章节**(§7 起),其余变更走 BLOCKED-QUEUE 追加
 
-## 6. 本令不覆盖的
+## 6. 本令不覆盖的【14:15 EDT 标注:本节写于 §7–§9 之前。下列各行现已被 §7.3(标准词汇所有权)、§8(SOP)、§9.2(缺口核对)**横向覆盖**——不覆盖的只是"不改它们的 registry 子句",不是"开工时没有规矩"】
 
 - **REUSE_UPSTREAM 中无 planError 的 10 条**(P3-03 · P4-10 · P4-11 · P5-09 · P6-06 · P6-10 · P7-08 · P8-03 · P8-05 · P8-10):账本判定"上游已有部分实现",**BASE-ALIGN-v2(2026-09-03)已按 gap-over-upstream 逐条缩范围**(`spec/first100/sources/base-align-v2/23-partial-rescope-spec.md`),registry 现在的 must/files 就是缩后的缺口。本令不再动;开工三问时读 rescope spec 的对应条目即可。
 - **CONTRACT_WRITE / PROVIDER_WRITE / CONSUMER_WRITE 中无 planError 的**:契约和 provider 要自己写,账本没有开源替代,计划没错,不在本令范围。
@@ -309,7 +330,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 - **7 条已验收行的灵敏度回填**(已下令,等冻结表稳定)
 - **BLOCKED-124**(14 对双语文档,等用户 `/dsh-translate-docs`)
 
-## 7. 附录(2026-09-06 晚):台账全字段核验——只读两列造成的漏检
+## 7. 附录(2026-09-06 13:10 EDT):台账全字段核验——只读两列造成的漏检
 
 ### 7.0 漏了什么
 
@@ -335,7 +356,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 | P0-03 | PROVIDER_ADAPT + PROVIDER_WRITE | dependency-cruiser:**0**(手写图检查器) | — | 沉没成本,不重写(R6) |
 | P0-04 | PROVIDER_ADAPT + REUSE_UPSTREAM | dependency-cruiser:**0** | — | 同上 |
 | P0-05 | PROVIDER_WRITE + CONTRACT_WRITE | 无 adapt(全 reject) | OpenFeature(optional):1 提及 | OK |
-| P0-06 | CONTRACT_WRITE | zod ✓ · ajv ✓(2) | 2020-12/toJSONSchema ✓(5);Confluent BACKWARD/FORWARD 词汇:0(只有 `SCHEMA_MAJOR_MISMATCH`) | 词汇债 → P8-07 |
+| P0-06 | CONTRACT_WRITE | zod ✓ · ajv ✓(2) | ~~2020-12/toJSONSchema ✓(5)~~【误归,命中在 typert/registry 与 plugin-manifest;schema-registry 无 JSON Schema 输出,见 §7.10】;Confluent 词汇:0 | **planError 未解决**(§7.10)+ 词汇债 → P8-07 |
 | P0-07 | CONTRACT_WRITE + PROVIDER_ADAPT | in-toto/DSSE/SLSA:**0**;`@sigstore/sign`:**0** | 四项标准全 **0**;`scripts/first100/attest.ts` 自造信封 + 自写 `canonicalJson` | **整改-传播**(R1) |
 | P0-08 | QUALIFICATION_REUSE + REUSE_UPSTREAM | fast-check ✓(9 文件);harbor:0 | — | harbor 归 P9-08(它的 adapt 也是 harbor) |
 | P1-01 | CONTRACT_WRITE | semver:**0**——`dshVersionRange` 只查"是字符串"(`plugin-manifest/src/validate.ts:393`),任意垃圾串通过 | VS Code / MV3 词汇:0 | **代码缺陷**(R4) |
@@ -401,7 +422,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 5. 冻结:C 阶段受影响用例 **supersede**(替换,BLOCKED-103),不 supplement;`sensitivityProof` 记 (d) 的反向变异;U/U.1/F 的冻结不动【§7.5 修正:F 那条 Unicode fuzz 用例也 supersede 并反转】,但 U 的 `argumentsHash` 期望值若在 fixture 里写死,随之更新并说明。
 6. 完成后 C 重观测 → 我跑四谓词 → 签。**在此之前不签 P2-03,P2-04 不开。**
 
-### 7.5 P2-03 整改令的三处修正(执行者 preFlight 发现,2026-09-06 晚)
+### 7.5 P2-03 整改令的三处修正(执行者 preFlight 发现,2026-09-06 13:36 EDT)
 
 执行者按令先列清单、未动文件,清单纠正了 §7.4 两处、补了一条测量规则:
 
@@ -411,7 +432,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 **教训归档**:变异证明只证明"套件对这条要求敏感",不证明"这条要求对"。要求本身的对错由 registry 措辞 + 账本 `risk` + 安全后果推演定——本次三者都指向反方向,而 F 用例是在读账本前冻的。
 
-### 7.6 canonical JSON 的收敛归 R1,不进 P2-03(执行者逐份核后,2026-09-06 晚)
+### 7.6 canonical JSON 的收敛归 R1,不进 P2-03(执行者逐份核后,2026-09-06 13:38 EDT)
 
 执行者按**行为**(排 key + stringify + 是否喂 hash + 是否喂授权)而非名字逐份核,找到 **5 份**(比我按 `function canonical*` 名字扫到的 4 份多 `scripts/release/collect-evidence.mjs:89`),并把两件事分开:
 
@@ -422,13 +443,13 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 **扫描方法归档**:找"第二份声明"按行为扫(`sort.*keys|sortKeysDeep|Object\.keys\(.*\)\.sort` + 后接 `stringify` + 喂 `createHash`),名字扫会漏。
 
-### 7.7 账本落盘(2026-09-06 晚,用户追问「每一点的接法你更新了吗」后)
+### 7.7 账本落盘(2026-09-06 13:40 EDT,用户追问「每一点的接法你更新了吗」后)
 
 账本的 **237 条 adapt 级 `oss[].note`(每条的接法:版本、体积、本地验过的行为、要避开的坑)此前只在 artifact 和 `/tmp`**,仓库里没有副本——§4.1 让执行者"开工时读账本那一行",而它手里没有带版本的一份。现在:`spec/first100/exec/make-vs-use-ledger.json`(109 行 × 16 字段,`source` 段记 artifact id / 生成方式 / 提取时间 / `oss.role` 语义)。**第四问从这个文件读,不从 artifact 读**;`preFlight.makeVsUse` 必须引用 `rows[].id` 和所用 `oss[].name`。账本本身若要修(例:§3 P2-02 Biscuit 已被 Fiber 事实超越),改这个文件并在本节追加一行,不改 artifact。
 
 **状态说明(对用户)**:本附录的裁决 R1–R7 里,**代码层已修的是 0 条**——delegate 不改代码。R2(P2-03)执行者已按 preFlight 开工;R1(§3.4 slice)排在 Cedar 之后、P4-04 之前;R3–R7 是归属与规则,在各拥有者 epic 开工时兑现。
 
-### 7.8 P2-03 R2 的最终形态:手写迭代实现 + 库作差分 oracle(2026-09-06 深夜,执行者实测后)
+### 7.8 P2-03 R2 的最终形态:手写迭代实现 + 库作差分 oracle(2026-09-06 13:44 EDT,执行者实测后)
 
 **事实**(执行者三库实测,未提交):`canonicalize@2.1.0` / `@4.0.0` / `json-canonicalize@3.0.0` 全是递归实现,depth 5000 栈溢出;code-mode dispatch 真会产生 depth 5000 的参数(`packages/core/tools/tests/ptc.spec.ts:1551` 钉的就是这条边界,BLOCKED-077 的来源)。换库当场把 077 的症状带回来。HEAD 的迭代实现去掉两处 NFC 后 depth 20000 可用、四条性质全过。
 
@@ -492,7 +513,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 **接 OSS 不降验收**(§4.1 原话):四谓词 + 双向变异验的是我们的接线。**P1-02 是模板,P2-03 R2 是 oracle 形态的模板。**
 
-## 9. 「可省代码」与「社区插件最高覆盖」两列怎么变成动作(2026-09-06 深夜,用户指出这两列的细节没用上)
+## 9. 「可省代码」与「社区插件最高覆盖」两列怎么变成动作(2026-09-06 14:03 EDT,用户指出这两列的细节没用上)
 
 账本表头六列里,我把「判决」「用什么」用足了,**「可省代码」「社区插件最高覆盖」只当展示**。它们各自是一个动作。
 
