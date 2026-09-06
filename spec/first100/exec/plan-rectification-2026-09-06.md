@@ -284,7 +284,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 ④  W5–W7 按波走;每条 epic 开工:三问 + 第四问(§4.1)+ §8 SOP + §9.2 缺口核对
 ⑤  §3.2 sandbox-srt slice(W7 开之前;同时把 sandbox-local PLATFORM_CHAINS 改成 contribution point)
 ⑤′ §3.4 attestation envelope slice(P4-04 开之前;含 P0-07 attest.ts 改发 DSSE)
-⑥  §3.3 OTel pipeline(W12 开之前)
+⑥  §3.3 OTel pipeline(W11 开之前——§7.11 由 W12 提前;P5-03/P5-06 是 W11)
 已完成的一次性项:P9-08 路径修正(6b110e275a)、P2-03 manifest 层非 JSON 拒绝(6b110e275a)
 ```
 
