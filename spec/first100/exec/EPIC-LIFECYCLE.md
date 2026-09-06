@@ -62,7 +62,7 @@
 |---|---|---|
 | 4.1 | 四谓词:(i) coverage 闭合 (ii) candidate 链 (iii) 观测互异且冻结标题在观测里全绿 (iv) delegate 签字 | `generate-ledger.mjs --accept`;BLOCKED-068 / 018 |
 | 4.2 | `accept-blocked:` 锁与 `openFindings` 为空 | BLOCKED-QUEUE `## ACCEPTANCE LOCKS` |
-| 4.3 | F 阶段填 `preFlight.makeVsUse.realized`;`verify-make-vs-use` 对本 epic VERIFIED | 整改令 §9.1 |
+| 4.3 | F 阶段填 `preFlight.makeVsUse.realized`;`verify-make-vs-use` 对本 epic VERIFIED(含 (e):账本每条 adapt / 每个标准都有下落——adopted 或 deviations 三类理由之一) | 整改令 §9.1 |
 | 4.4 | delegate 跑四谓词 → `--record-signoff` → 提交只含 `delegate-signoff.json` → 执行者 `--accept` | BLOCKED-036 / 068 |
 | 4.5 | 用户级确认门:P0-02 / P0-07 / P2-01 的最终 ACCEPT;钱 / 钥匙 / 不可逆触点 | BLOCKED-022 / 024;C7 |
 

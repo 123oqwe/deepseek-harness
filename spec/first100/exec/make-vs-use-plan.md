@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `bd6de9fb8e`);**生成时间** 2026-09-06T15:14-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `337205da5a`);**生成时间** 2026-09-06T16:29-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -24,6 +24,7 @@
                  "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",
                  "form": "runtime" | "oracle" | "optional" | "vendored",
                  "reason": "为什么是这个形态(oracle 必须指向复现硬约束的冻结用例)" } ],
+  "deviations": [ { "name": "erdtman/canonicalize", "reason": "hard-constraint: all JS JCS libs recurse, depth 5000 overflows (frozen case …)", "ruling": "§7.8" } ],   // 账本 adapt 条目未按原样采用的每一条;理由只能三类:与 registry 冲突 / 实测硬约束(附复现用例)/ 账本被事实超越;门 (e) 核"每条 adapt 有下落"
   "rejectedAbsent": [ "@openfeature/server-sdk", "…" ],   // preFlight 时 = 账本 reject 条目里**有 npm 名的**名单(无 npm 名的不可核,不列);
                                                           // 门 (b) 对这些名在 files[] 里核 0 import;结果写进 realized.rejectedAbsent(布尔),不在这里
   "standardsOwned": [],                                   // P2-05 不是任何标准的形状所有者(AuthZEN 的所有者是 P2-03,见 §1 表)
@@ -1387,13 +1388,13 @@
     - P2-03 Contract — must clauses must[2]: a plugin RPC call is admitted when its manifest precedes it, and refused exactly like a native call w
     - …共 18 条(分布在 1 个冻结条目),见 command-freeze.json
 - P:N/A(registry stages.P.nOf = N/A;accept 谓词按 registry 判,ledger 格子显示 NOT_RUN 是渲染惯例)
-- U:2 条有效冻结 / 9 个具名用例 / 变异证明 2/2 / 格子 NOT_RUN · 有 supplement
+- U:2 条有效冻结 / 9 个具名用例 / 变异证明 2/2 / 格子 GREEN · 有 supplement
     - P2-03 — every appended manifest carries its own position the first manifest is 1, and a second call in the same session is 2
     - P2-03 — every appended manifest carries its own position a manifest precedes the tool/call it describes, which is what the position is for
     - P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[0]: three calls in one turn produce three manifest-then-call
     - P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[0]: each manifest names the actionId of the call that follows
     - …共 9 条(分布在 2 个冻结条目),见 command-freeze.json
-- F:1 条有效冻结 / 4 个具名用例 / 变异证明 1/1 / 格子 NOT_RUN · 有 supersede
+- F:1 条有效冻结 / 4 个具名用例 / 变异证明 1/1 / 格子 GREEN · 有 supersede
     - P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion key order never changes the hash, over generated values rather tha
     - P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion SECURITY: NFD and NFC never share a hash, over generated strings t
     - P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion two values that differ do NOT collide, which is the half a constan
@@ -5950,6 +5951,7 @@ w('  "adopted": [ { "name": "cedar-policy/cedar",            // 账本 oss[].nam
 w('                 "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",')
 w('                 "form": "runtime" | "oracle" | "optional" | "vendored",')
 w('                 "reason": "为什么是这个形态(oracle 必须指向复现硬约束的冻结用例)" } ],')
+w('  "deviations": [ { "name": "erdtman/canonicalize", "reason": "hard-constraint: all JS JCS libs recurse, depth 5000 overflows (frozen case …)", "ruling": "§7.8" } ],   // 账本 adapt 条目未按原样采用的每一条;理由只能三类:与 registry 冲突 / 实测硬约束(附复现用例)/ 账本被事实超越;门 (e) 核"每条 adapt 有下落"')
 w('  "rejectedAbsent": [ "@openfeature/server-sdk", "…" ],   // preFlight 时 = 账本 reject 条目里**有 npm 名的**名单(无 npm 名的不可核,不列);')
 w('                                                          // 门 (b) 对这些名在 files[] 里核 0 import;结果写进 realized.rejectedAbsent(布尔),不在这里')
 w('  "standardsOwned": [],                                   // P2-05 不是任何标准的形状所有者(AuthZEN 的所有者是 P2-03,见 §1 表)')
