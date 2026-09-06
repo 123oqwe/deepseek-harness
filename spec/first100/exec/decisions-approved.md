@@ -155,3 +155,17 @@
   2. 审查强度不变：三谓词（覆盖闭合/候选链一致性/观测互异性）+ 该 epic 专属安全属性逐条在真实观测内证实 + 相关守卫的灵敏度证明（若适用），一项不减；仍须通过 `--record-signoff` 机械记录（`generate-ledger.mjs --accept` 第(iv)项签署门，`BLOCKED-036`），仍须绑定当时的 ledger 行摘要。
   3. **不追溯**：P0-02/P2-01/P0-07 已经完成的用户直接确认（含本条之前的 §C9 等）保持原状，不因本条变更需要重新走一遍。
   4. `decisions-approved.md` 本条为 append-only 新增记录，不改写既有条文；C7§②对"109 项收录范围"等其余保留事项的一般规则不因本条而放宽——本条仅缩小 `BLOCKED-022`/`BLOCKED-024` 这一具体子类的用户直接确认要求，用户随时可一句话收回。
+
+## C10 (2026-09-05) — plugin signing model: Sigstore keyless (delegate ruling, user preference recorded)
+
+**Recorded as a delegate ruling with the user's stated preference as its input — NOT as a user approval.** The user's word, relayed by `guanjieqiao-92` from their own session, was the single character **「A」**, answering a two-option question: Sigstore-style keyless, or organization offline signing. The delegate ruled it a type-A technical decision inside their own authority (P1-02 must[0] contains the word "or"; the choice changes no registry row, no scope, and no spend, and the code can change later). The Supervisor records it, and labels it as what it is: **delegate ruling, user preference** — the distinction matters because a relayed word is not an approval, and this file is where that difference has to be visible.
+
+**What A means concretely.** The signing identity is a GitHub Actions OIDC identity (repo plus workflow), not a key anyone holds. The trust root is Sigstore's public TUF root — Fulcio's CA and Rekor's log keys — which is a public file that can be committed and read in CI. The verification chain is a short-lived Fulcio certificate binding the OIDC identity, plus a Rekor inclusion proof. **There is no long-lived private key at any point**, which is why this model needs nothing secret from the user or from CI.
+
+**Consequences already identified, before any Sigstore code is written:**
+
+- **acceptance[1] (the same locked package verifies offline)** must be satisfied by a bundle that carries its own Rekor inclusion proof, verified against the local TUF root. It must NOT degrade to "offline means unverified" — that is fail-open, and this program has refused that shape everywhere else.
+- **acceptance[2] (no key is recorded)** is trivially true with no keys, but the audit record must still carry the OIDC IDENTITY: which repository and which workflow signed.
+- **must[4] (the unsigned-dev banner)** becomes buildable. Its lock text said that under a hollow root "there is no state in which the product can truthfully display trusted"; once a real verification chain exists, that state exists and the banner has something to distinguish.
+
+**Sequence.** Steps ①–④ (fail-closed on an unadmitted anchor, roots read from configuration, real signing in tests, revocation) are model-independent groundwork and proceed under P1-02 regardless. The Sigstore chain follows, and the delegate requires the implementation plan — make-vs-use for the dependency, bundle format, offline path — before its first line.

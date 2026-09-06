@@ -11,6 +11,7 @@
  * branded fixture data.
  */
 
+import { generateKeyPairSync, sign as signBytes } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import { describe, expect, it } from 'vitest'
@@ -22,6 +23,7 @@ import {
   verifyLockedPackageOffline,
   verifyPluginProvenance,
 } from '../src/index.ts'
+import { signedClaimBytes } from '../src/signature.ts'
 import type { PluginProvenanceInput, PluginProvenanceVerification } from '../src/index.ts'
 import type {
   BuilderIdentity,
@@ -63,8 +65,36 @@ const sigstoreEvidence: SigstoreProvenanceEvidence = {
   transparencyLogIndex: 918273,
 }
 
+/**
+ * A real signing key pair, generated when this file loads (P1-02 lock, step ③).
+ *
+ * Ephemeral by construction: it exists for the duration of the test process and
+ * is never written anywhere. That is not a precaution to remember — a verifier
+ * needs only the PUBLIC half, so there is no secret this repository or its CI
+ * could be asked to hold, and none to leak.
+ *
+ * Ed25519 because it signs the message directly with no digest choice to get
+ * wrong, which keeps the fixture about provenance rather than about algorithm
+ * agility.
+ */
+const signingKeys = generateKeyPairSync('ed25519')
+const offlinePublicKeyPem = signingKeys.publicKey.export({ type: 'spki', format: 'pem' }).toString()
+
 /** The fixtures' offline key fingerprint, registered by {@link kernelWithFixtureAnchors}. */
 const offlineFingerprint = brandString<PublicKeyFingerprint>('sha256:acme-offline-key-fingerprint')
+
+/**
+ * Sign `claim` with the ephemeral key, producing evidence that really verifies.
+ * @param claim - the claim to sign.
+ * @returns offline evidence carrying a genuine signature over the claim.
+ */
+function signedOfflineEvidence(claim: PackageProvenanceClaim): OfflineSignedProvenanceEvidence {
+  return {
+    mode: 'offline-signed',
+    signature: signBytes(null, signedClaimBytes(claim), signingKeys.privateKey),
+    publicKeyFingerprint: offlineFingerprint,
+  }
+}
 
 function offlineEvidence(fingerprint: PublicKeyFingerprint): OfflineSignedProvenanceEvidence {
   return {
@@ -124,6 +154,7 @@ function kernelWithFixtureAnchors(): ReturnType<typeof createTrustKernel> {
     mode: 'offline-signed',
     publicKeyFingerprint: offlineFingerprint,
     owner: 'acme release engineering',
+    publicKeyPem: offlinePublicKeyPem,
   })
   return kernel
 }
@@ -138,7 +169,11 @@ describe('P1-02 Contract — must clauses', () => {
 
   it('must[0]: a claim backed by an organization offline-signing key verifies as trusted', () => {
     const kernel = kernelWithFixtureAnchors()
-    const input = buildInput({ claim: buildClaim(offlineEvidence(offlineFingerprint)) })
+    // Signed for real against the ephemeral key the anchor declares, so this
+    // case now proves the signature verifies rather than that its bytes are
+    // non-empty.
+    const unsignedClaim = buildClaim(offlineEvidence(offlineFingerprint))
+    const input = buildInput({ claim: { ...unsignedClaim, evidence: signedOfflineEvidence(unsignedClaim) } })
     const result = verifyPluginProvenance(input, kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
     if (result.trust === 'trusted') expect(typeof result.trustAnchorId).toBe('string')
@@ -446,9 +481,11 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
       mode: 'offline-signed',
       publicKeyFingerprint: offlineFingerprint,
       owner: 'acme release engineering',
+      publicKeyPem: offlinePublicKeyPem,
     })
     registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
-    const offlineInput = buildInput({ claim: buildClaim(offlineEvidence(offlineFingerprint)) })
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const offlineInput = buildInput({ claim: { ...unsigned, evidence: signedOfflineEvidence(unsigned) } })
     expect(verifyPluginProvenance(offlineInput, kernel.signatureRoots).trust).toBe('trusted')
 
     expect(revokeTrustAnchor(kernel.signatureRoots, revoked)).toBe(true)
@@ -466,5 +503,112 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
       trustedIssuer: sigstoreEvidence.issuer,
     })
     expect(revokeTrustAnchor(kernel.signatureRoots, foreign)).toBe(false)
+  })
+})
+
+/**
+ * P1-02 Provider — acceptance[0]'s three attacks against a REAL signature.
+ *
+ * The lock's step ③: the fixture generates a key pair at load, registers the
+ * public half, and signs the claim. Every case below is therefore about the
+ * signature actually failing to verify, not about an evidence field being
+ * empty — which is what the same three vectors used to test.
+ *
+ * The private half never leaves this process and never needs to: a verifier
+ * takes only the public key, so there is no secret here to protect.
+ */
+describe('P1-02 Provider — a real signature refuses all three acceptance[0] vectors', () => {
+  /** A claim signed genuinely, then handed to a caller who alters it. */
+  function signedThenAltered(alter: (claim: PackageProvenanceClaim) => PackageProvenanceClaim): PluginProvenanceInput {
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const signed: PackageProvenanceClaim = { ...unsigned, evidence: signedOfflineEvidence(unsigned) }
+    return buildInput({ claim: alter(signed) })
+  }
+
+  it('vector 1: a tampered package digest no longer matches the signature', () => {
+    const kernel = kernelWithFixtureAnchors()
+    // The digest comparison against `observed` catches this first, so the
+    // altered claim is refused before the signature is even checked. Both
+    // gates hold; this pins that the first one still reports its own reason.
+    const input = signedThenAltered(claim => ({ ...claim, packageDigest: brandString<PackageDigest>('sha256:rewritten') }))
+    const result = verifyPluginProvenance(input, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+  })
+
+  it('vector 2: rewriting the digest in BOTH claim and observation still fails the signature', () => {
+    // This is the tamper-and-rewrite attacker the old KNOWN GAP case described.
+    // The two digests agree, so the equality checks pass — and the signature,
+    // made over the original claim, does not.
+    const kernel = kernelWithFixtureAnchors()
+    const rewritten = brandString<PackageDigest>('sha256:rewritten-by-the-attacker')
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const signed: PackageProvenanceClaim = { ...unsigned, evidence: signedOfflineEvidence(unsigned) }
+    const input = buildInput({
+      claim: { ...signed, packageDigest: rewritten },
+      observed: buildObserved({ observedDigest: rewritten }),
+    })
+    const result = verifyPluginProvenance(input, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
+  })
+
+  it('vector 3: a swapped source repo and a forged builder identity each fail the signature', () => {
+    const kernel = kernelWithFixtureAnchors()
+    for (const [alteredClaim, alteredObserved] of [
+      [
+        (claim: PackageProvenanceClaim) => ({ ...claim, sourceCommit: { ...claim.sourceCommit, repoUrl: 'https://github.com/attacker/fork' } }),
+        buildObserved({ observedSourceCommit: { ...realSourceCommit, repoUrl: 'https://github.com/attacker/fork' } }),
+      ],
+      [
+        (claim: PackageProvenanceClaim) => ({ ...claim, builderIdentity: brandString<BuilderIdentity>('attacker-builder') }),
+        buildObserved({ observedBuilderIdentity: brandString<BuilderIdentity>('attacker-builder') }),
+      ],
+    ] as const) {
+      const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+      const signed: PackageProvenanceClaim = { ...unsigned, evidence: signedOfflineEvidence(unsigned) }
+      const result = verifyPluginProvenance(
+        buildInput({ claim: alteredClaim(signed), observed: alteredObserved }),
+        kernel.signatureRoots,
+      )
+      // Both halves rewritten so the equality checks agree — exactly the case
+      // the README called "structurally present and semantically empty" while
+      // no signature covered the claim. It is neither now.
+      expect(result.trust).toBe('rejected')
+      if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
+    }
+  })
+
+  it('an anchor admitted with NO public key refuses rather than accepting anything', () => {
+    // An anchor that cannot verify is not an anchor that verifies everything.
+    const kernel = createTrustKernel()
+    registerTrustAnchor(kernel.signatureRoots, {
+      mode: 'offline-signed',
+      publicKeyFingerprint: offlineFingerprint,
+      owner: 'an anchor registered before its key was configured',
+    })
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const input = buildInput({ claim: { ...unsigned, evidence: signedOfflineEvidence(unsigned) } })
+    const result = verifyPluginProvenance(input, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('anchor-has-no-key')
+  })
+
+  it('a signature made by a DIFFERENT key is refused, so the anchor\'s key is the one that decides', () => {
+    const kernel = kernelWithFixtureAnchors()
+    const otherKeys = generateKeyPairSync('ed25519')
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const input = buildInput({
+      claim: {
+        ...unsigned,
+        evidence: {
+          mode: 'offline-signed',
+          signature: signBytes(null, signedClaimBytes(unsigned), otherKeys.privateKey),
+          publicKeyFingerprint: offlineFingerprint,
+        },
+      },
+    })
+    const result = verifyPluginProvenance(input, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
   })
 })

@@ -43,7 +43,7 @@
  * @module @deepseek-ai/dsh-plugin-provenance/signature
  */
 
-import { createHash, randomUUID } from 'node:crypto'
+import { createHash, createPublicKey, randomUUID, verify as verifySignature } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Branded } from '@deepseek-ai/dsh-brand'
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
@@ -122,7 +122,10 @@ export interface SigstoreProvenanceEvidence {
 /** Organization offline-signing evidence (must[0]). */
 export interface OfflineSignedProvenanceEvidence {
   readonly mode: 'offline-signed'
-  /** Raw signature bytes over the package digest. Never the signing key itself. */
+  /**
+   * Raw signature bytes over {@link signedClaimBytes} of this claim. Never the
+   * signing key itself.
+   */
   readonly signature: Uint8Array
   /** Fingerprint of the offline key that produced {@link signature}; resolved against a registered {@link TrustAnchorId}. */
   readonly publicKeyFingerprint: PublicKeyFingerprint
@@ -205,6 +208,17 @@ export type SignatureRejectionReason =
    * verifies.
    */
   | 'trust-anchor-unregistered'
+  /**
+   * The anchor is admitted and holds a public key, and the signature does not
+   * verify against it (P1-02 lock, step ③).
+   */
+  | 'signature-invalid'
+  /**
+   * The anchor is admitted but carries no public key, so nothing can check the
+   * signature. Refused rather than accepted: an anchor that cannot verify is
+   * not an anchor that verifies everything.
+   */
+  | 'anchor-has-no-key'
 
 /**
  * The outcome of {@link verifyPackageSignature}: either every must[1] fact
@@ -223,6 +237,18 @@ export interface OfflineTrustAnchorDeclaration {
   readonly publicKeyFingerprint: PublicKeyFingerprint
   /** Human-readable owner of this key, for audit display only. */
   readonly owner: string
+  /**
+   * The anchor's PUBLIC key, SPKI PEM, against which a claim's signature is
+   * checked (P1-02 lock, step ③).
+   *
+   * Public only, and that is a property of the design rather than a rule anyone
+   * has to follow: a verifier needs no private key, so there is no secret this
+   * repository or its CI could hold. Optional while `signatureRoots` has no
+   * configured source (step ②) — an anchor without one still gates WHICH
+   * issuers are admitted, and evidence against it is refused as unverifiable
+   * rather than accepted.
+   */
+  readonly publicKeyPem?: string
 }
 
 /** A trusted Sigstore OIDC issuer, declared by issuer URL only. */
@@ -272,6 +298,50 @@ function anchorsFor(trustRoot: TrustKernelSignatureRoots): Map<TrustAnchorId, Tr
  * same issuer (`'sigstore'`) or key fingerprint (`'offline-signed'`) as
  * `evidence`, if any.
  */
+/**
+ * The exact bytes an offline signature is made over (P1-02 lock, step ③).
+ *
+ * Every authenticated fact is included and the evidence is not: a signature
+ * cannot cover itself, and the fingerprint identifies which key to check rather
+ * than being something the key attests to. Fields are joined with a separator
+ * that cannot occur in any of them, so two different claims cannot serialize
+ * to the same bytes by concatenation — `a|b` and `ab|` would otherwise sign
+ * alike.
+ * @param claim - the claim being signed or verified.
+ * @returns the canonical bytes to sign.
+ */
+export function signedClaimBytes(claim: PackageProvenanceClaim): Uint8Array {
+  const fields = [claim.packageDigest, claim.sourceCommit.repoUrl, claim.sourceCommit.commitHash, claim.builderIdentity, claim.sbomDigest]
+  return new TextEncoder().encode(fields.map(field => encodeURIComponent(field)).join('\n'))
+}
+
+/**
+ * Check an offline signature against an admitted anchor's public key.
+ * @param declaration - the admitted anchor.
+ * @param claim - the claim whose canonical bytes were signed.
+ * @param evidence - the offline evidence carrying the signature.
+ * @returns `undefined` when it verifies, or the reason it did not.
+ */
+function checkOfflineSignature(
+  declaration: OfflineTrustAnchorDeclaration,
+  claim: PackageProvenanceClaim,
+  evidence: OfflineSignedProvenanceEvidence,
+): 'signature-invalid' | 'anchor-has-no-key' | undefined {
+  const { publicKeyPem } = declaration
+  if (publicKeyPem === undefined) return 'anchor-has-no-key'
+  try {
+    const key = createPublicKey(publicKeyPem)
+    // `null` algorithm: Ed25519 and Ed448 carry their own digest, and passing
+    // one throws. An RSA or EC key reaches the same call with the digest the
+    // key type implies.
+    return verifySignature(null, signedClaimBytes(claim), key, evidence.signature) ? undefined : 'signature-invalid'
+  } catch {
+    // An unreadable key or a malformed signature is a failed verification, not
+    // a crash: the caller asked whether this claim verifies, and it does not.
+    return 'signature-invalid'
+  }
+}
+
 function findRegisteredAnchor(
   trustRoot: TrustKernelSignatureRoots,
   evidence: ProvenanceEvidence,
@@ -372,6 +442,12 @@ export function verifyPackageSignature(
       }
       const trustAnchorId = findRegisteredAnchor(trustRoot, evidence)
       if (trustAnchorId === undefined) return { verified: false, reason: 'trust-anchor-unregistered' }
+      const declaration = anchorsFor(trustRoot).get(trustAnchorId)
+      if (declaration === undefined || declaration.mode !== 'offline-signed') {
+        return { verified: false, reason: 'trust-anchor-unregistered' }
+      }
+      const failure = checkOfflineSignature(declaration, claim, evidence)
+      if (failure !== undefined) return { verified: false, reason: failure }
       return { verified: true, trustAnchorId }
     }
   }
