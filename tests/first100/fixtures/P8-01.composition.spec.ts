@@ -53,7 +53,10 @@ describe('P8-01 must[4] — the schema artifact is a golden compatibility fixtur
     expect(computeSchemaFingerprint(SERVER_PROTOCOL_SURFACE)).toBe(PINNED_FINGERPRINT)
   })
 
-  it('`--check` passes against the committed artifact', () => {
+  // Spawns `pnpm exec tsx` on the generator, which is slower than the default
+  // budget allows under a loaded suite — same reasoning as the collector case
+  // below.
+  it('`--check` passes against the committed artifact', { timeout: 60_000 }, () => {
     const output = execFileSync('pnpm', ['exec', 'tsx', generatorPath, '--check'], { cwd: repoRoot, encoding: 'utf8' })
     expect(output).toContain('matches the live protocol surface')
   })
@@ -77,7 +80,12 @@ describe('P8-01 must[4] — the schema artifact is a golden compatibility fixtur
 })
 
 describe('P8-01 must[4] — the schema artifact is a real release-evidence input', () => {
-  it('collect-evidence hashes the artifact into requiredBuildArtifacts, with the digest of its real bytes', () => {
+  // Four subprocesses — git init/commit, a baseline capture, and two collector
+  // invocations — so the default 5s budget is a bet on the machine being idle.
+  // It passed alone and in CI and timed out inside the full suite, which is the
+  // same load-dependent shape the session-snapshot wait had this morning: a
+  // budget that decides the outcome is not a test of the thing it names.
+  it('collect-evidence hashes the artifact into requiredBuildArtifacts, with the digest of its real bytes', { timeout: 60_000 }, () => {
     // The REAL collector (P0-07's `scripts/release/collect-evidence.mjs`), not a
     // description of it: must[4]'s claim is that this artifact enters release
     // evidence, and only the collector that builds a release's evidence can

@@ -1942,6 +1942,116 @@
         }
       ],
       "note": "acceptance[2]: 'a cyclic dependency is refused at submission.' Refused when the graph is submitted rather than discovered when a claim deadlocks -- a cycle found at claim time presents as 'nothing is claimable', indistinguishable from a board whose dependencies are merely unfinished, so an operator would wait instead of fixing it. The store-level case checks that a refused submission stores NOTHING, since a partially-stored graph would let a later claim reach a task the board declined. The diamond cases are the necessary counterweight: a validator refusing every re-encountered node would pass every cycle test and reject legitimate shared dependencies."
+    },
+    {
+      "epic": "P1-02",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "a single tampered byte (a changed observed package digest) is rejected for digest mismatch"
+        },
+        {
+          "stage": "C",
+          "title": "a swapped source repo (observed repo URL differs from the claimed one) is rejected for source-repo mismatch"
+        },
+        {
+          "stage": "C",
+          "title": "a forged commit hash within the same claimed source repo (repo URL unchanged, observed commit hash differs) is rejected for source-commit mismatch, distinct from source-repo mismatch"
+        },
+        {
+          "stage": "C",
+          "title": "a forged builder identity (observed builder differs from the claimed one) is rejected for builder-identity mismatch"
+        },
+        {
+          "stage": "P",
+          "title": "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture"
+        },
+        {
+          "stage": "P",
+          "title": "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes rejects a package whose installed bytes differ from the claimed ones by a single flipped byte"
+        },
+        {
+          "stage": "P",
+          "title": "P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes rejects a tampered byte at the very first and very last positions alike, leaving no unchecked region of the artifact"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Fault — rejection-boundary matrix fault boundary 01 tampered package digest is refused for digest mismatch"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Fault — rejection-boundary matrix fault boundary 02 swapped source repo is refused for source-repo mismatch"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Fault — rejection-boundary matrix fault boundary 03 forged commit in the same repo is refused distinctly from a repo swap"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Fault — rejection-boundary matrix fault boundary 04 forged builder identity is refused for builder-identity mismatch"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Fault — rejection-boundary matrix fault boundary 05 several mismatches at once still refuse, naming the first checked fact"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 1: a tampered package digest no longer matches the signature"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 2: rewriting the digest in BOTH claim and observation still fails the signature"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Provider — a real signature refuses all three acceptance[0] vectors vector 3: a swapped source repo and a forged builder identity each fail the signature"
+        }
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter"
+        },
+        {
+          "stage": "P",
+          "title": "P1-02 Provider — acceptance[1]: the same locked package verifies offline reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance"
+        },
+        {
+          "stage": "P",
+          "title": "P1-02 Provider — acceptance[1]: the same locked package verifies offline rejects the same one-byte tampering offline that it rejects online, so the offline path is not the weaker one"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证 the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter"
+        }
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
+        },
+        {
+          "stage": "U",
+          "title": "attaches a provenance audit record to every permission state it builds, so the inventory reports a verification state for each live plugin entry"
+        },
+        {
+          "stage": "U",
+          "title": "keeps every value of a signature and key fingerprint the package own dsh field carries out of the built permission state, checked over the whole serialized state and not only its top-level field names"
+        },
+        {
+          "stage": "F",
+          "title": "P1-02 Contract — acceptance[2]: Inventory 和审计事件记录验证结果而不记录密钥 recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
+        }
+      ]
     }
   ]
 }
