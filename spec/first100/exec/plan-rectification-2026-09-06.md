@@ -410,3 +410,17 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 账本的 **237 条 adapt 级 `oss[].note`(每条的接法:版本、体积、本地验过的行为、要避开的坑)此前只在 artifact 和 `/tmp`**,仓库里没有副本——§4.1 让执行者"开工时读账本那一行",而它手里没有带版本的一份。现在:`spec/first100/exec/make-vs-use-ledger.json`(109 行 × 16 字段,`source` 段记 artifact id / 生成方式 / 提取时间 / `oss.role` 语义)。**第四问从这个文件读,不从 artifact 读**;`preFlight.makeVsUse` 必须引用 `rows[].id` 和所用 `oss[].name`。账本本身若要修(例:§3 P2-02 Biscuit 已被 Fiber 事实超越),改这个文件并在本节追加一行,不改 artifact。
 
 **状态说明(对用户)**:本附录的裁决 R1–R7 里,**代码层已修的是 0 条**——delegate 不改代码。R2(P2-03)执行者已按 preFlight 开工;R1(§3.4 slice)排在 Cedar 之后、P4-04 之前;R3–R7 是归属与规则,在各拥有者 epic 开工时兑现。
+
+### 7.8 P2-03 R2 的最终形态:手写迭代实现 + 库作差分 oracle(2026-09-06 深夜,执行者实测后)
+
+**事实**(执行者三库实测,未提交):`canonicalize@2.1.0` / `@4.0.0` / `json-canonicalize@3.0.0` 全是递归实现,depth 5000 栈溢出;code-mode dispatch 真会产生 depth 5000 的参数(`packages/core/tools/tests/ptc.spec.ts:1551` 钉的就是这条边界,BLOCKED-077 的来源)。换库当场把 077 的症状带回来。HEAD 的迭代实现去掉两处 NFC 后 depth 20000 可用、四条性质全过。
+
+**两条路**:(A) 保留库 + 深度上限——是产品行为变更(合法深层调用变错误),且**深度上限的主体是 P3-12(恶意输入边界),不是 P2-03**;在 P2-03 里做等于替 P3-12 决定产品接受什么输入。(B) 保留迭代实现,只删 NFC——修真缺陷、不改行为、不引运行时依赖,但树里留一份手写 canonical JSON。
+
+**裁决:(B),加一层——库作差分 oracle。** "四条性质过"证明的是四条性质,不是 RFC 8785 一致(JCS 还有 key 按 UTF-16 code unit 排序、数字按 ES6 Number::toString、`-0`→`0`、字符串按 JSON.stringify 转义等)。`canonicalize@2.1.0` 进 `action-manifest` **devDependencies**(不进运行时),加一条**差分 conformance 性质用例**:fast-check 生成 JSON 值(depth ≤ 200;字符串含 NFC/NFD/转义/代理对;数字含 `-0`、`1e21`、`1e-7`、大整数;嵌套数组/对象),断言 `canonicalizeArguments(x) === canonicalize(x)`。变异:让排序用 `localeCompare` 或去掉排序 → 差分用例必须红。**"retained recursive copy"等价测试删除**——对自己旧代码的等价证明弱于对参考实现的等价证明。`canonicalize.ts` 文件头写明:与 RFC 8785 参考实现差分等价(指向用例);手写仅因所有 JS JCS 实现递归、在 code-mode 产生的深度上溢出(指向 ptc.spec 行号)。
+
+**规则(§4.1 `role` 语义补一条)**:`adapt` 级的库若因**有记录的硬约束**不能进运行时,但它定义了标准,则**以差分 oracle 形式接入 devDependencies**——手写实现由此成为"经测试与标准一致",不再是"第二份声明"。判据:硬约束要能被一条冻结用例复现(这里是 depth 5000 溢出)。
+
+**给 P3-12 的 pointer**:参数深度上限(拒绝而非溢出)是它的主体,preFlight 时读本节。
+
+其余不变:C 新增 (a)(b)(c)(d) + 非 JSON 值拒绝 + 差分 conformance;F 那条反转;validation[2] 措辞照 §7.4 ④(「遵循 RFC 8785」由差分用例担保);supersede 照 §7.4 ⑤。
