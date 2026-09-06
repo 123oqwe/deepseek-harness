@@ -68,7 +68,7 @@
 
 ## 5. 跨 epic 的固定顺序(现行)
 
-见整改令 §4 的 **14:15 EDT 增补块**:②′ P2-03 → ②″ verify-make-vs-use 门 → ③ Cedar slice → ④ W5–W7 → ⑤ sandbox-srt(W7 前)→ ⑤′ attestation envelope(P4-04 W9 前)→ ⑥ OTel(**W11 前**,§7.11 修订)。标准形状所有者以执行卡 §1 表为准。
+**提速令(整改令 §10,2026-09-06 15:25 EDT)**:三条 Writer lane 同时开——**L1** P2-03 签 → P2-04 → P2-05;**L2** §3.5 SLICE-fiber-A + 内核密钥材料 → P2-02 验收(同时解锁 P2-05 内核执行点);**L3** P4-06 → P4-05 → P4-09;Cedar slice 在 L1 等观测时插入;P1-03 在 BLOCKED-094 裁决(§10.3)后任一空档。之后:W5–W7 → §3.2 sandbox-srt(W7 前)→ §3.4 envelope(P4-04 W9 前)→ §3.3 OTel(W11 前)。标准形状所有者以执行卡 §1 为准。CI 按 push 批处理;delegate SLA 30 分钟。
 
 ## 6. 谁决定什么
 

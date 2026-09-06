@@ -566,3 +566,35 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 | semver | P1-01 | **P1-03**(R4) | 唯一涉及者 P1-01 已验收未采用 |
 
 **规则补两条**:(a) 所有权按**子规范**算(MCP 四个、ACP 两个、OCI 三个、SPIFFE 两个、A2A 两个、OTel 两个互不相干);(b) 所有者 wave **晚于**某消费者时,早的消费者用内部名、不声明该标准形状,所有者落地时提供单向映射(卡片上已按 wave 自动标出)。**执行卡 §1 是唯一的所有权表**,§7.3 保留作历史。
+
+## 10. 提速令(2026-09-06 15:25 EDT,用户令「加速且保质保量」)——重叠,不砍门
+
+**数据**:21 ACCEPTED;**7 条四格全绿但上锁**(P2-02 / P6-01 / P1-03 / P4-05 / P4-06 / P4-09 / P5-10)+ P2-03 在观测。`generate-ledger` 不把 predecessors 当机械门(只展示),wave 是投影;真正的闸是**锁**和**文件面**。最便宜的 +8 不在造,在解锁。
+
+### 10.1 三条 Writer lane(C5 预授权 2–3 条;文件面已核互不相交),即刻同时开
+
+| lane | 内容 | 顺序 | 文件面 |
+|---|---|---|---|
+| **L1 关键路径** | P2-03 签 → **P2-04**(preFlight 现在写,签后立刻开;与 P2-03 共 `core/tools/src/types.ts`、`action-manifest/src/types.ts`,故签后再动)→ P2-05(需 §3.1 Cedar + §3.5 Fiber A) | 串行 | policy/risk-taxonomy、permission-presets |
+| **L2 关键解锁** | **§3.5 SLICE-fiber-A**:vendored Cordis `Fiber.store` 修复(Option A,BLOCKED-011/050)+ P0-02 `signatureRoots` 真实密钥材料(见 10.3)→ P2-02 must[1] 的 supersession 用例 → P2-02 验收。**同时解锁 P2-05 的内核执行点** | 串行 | vendor/cordis、trust-kernel、capability-token |
+| **L3 独立解锁** | P4-06:(b) `BEGIN IMMEDIATE` 事务(§2.A 重述后的 must[0])+(a) 去重信号(见 10.3)→ 验收;→ P4-05 acceptance[2] 用例(供给方 P4-07 已验收,按 BLOCKED-092 第二步写 supersession)→ 验收;→ P4-09 nesting 半题 | 串行(共 `agent/src/dispatch.ts`、`inbox.ts`) | run/message-bus、core/agent、workflow |
+| **infra(L1 等观测时插入)** | §3.1 Cedar slice(preFlight 已在 clause-subject-audit:SLICE-3.1-cedar)→ P2-05 前落地 | — | 新包 policy-engine-cedar,零冲突 |
+
+P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用点)排 L3 之后或任一 lane 空档。P6-01 残余锁归 P6-03(W8),不动。P5-10 的 actions 半在 P2-03 验收后按 10.3 钉住,world 半等 P3-01。
+
+### 10.2 节奏(C5 已批,现在执行)
+
+- CI **按 push 批处理**(一 push 多 slice),不按 slice 触发;本地只跑冻结命令 + typecheck + 相关包;全量只在 wave 边界。
+- **delegate SLA**:preFlight 收到 30 分钟内答;观测绿 + 产物到手 30 分钟内跑四谓词并签;可批量签。
+- **不变的门**:冻结先于写、RED 在 parent SHA、变异证明、独立 Reviewer、四谓词、锁。提速全部来自重叠,不来自跳过。
+
+### 10.3 三个解锁所需的裁决(delegate 定,附判据)
+
+1. **BLOCKED-094 · P1-03 未上锁 profile 的 boot 策略**:策略是 **profile 字段**(`plugins.lock: "required" | "warn"`),按仓库规矩走显式 `resolve()`,不许隐式默认。`production-controlled`(P2-11 预置名)= `required`:无 lock 或 digest 漂移 → **拒绝**(must[2] 字面);其余预置 = `warn`:无 lock → 发 typed 事件 `plugin/lock-missing` 继续;**有 lock 而 digest 漂移 → 一律拒绝**(这条不分档)。lock 生成的所有者 = **P1-03 自己的 U 阶段**(`dsh plugin lock` 对真实 profile 写 lock)——"没有所有者"的状态由本裁决结束。理由:must[2] 的主体是"有 lock 时只按 lock 加载",不是"没 lock 时拒绝";`warn` 只对无 lock 的 profile 成立,且有 sunset(lock 生成同 slice 落地)。
+2. **P4-06(a) 去重信号**:判据 = "认领该消息的 turn 已提交"。**不新增 session 事件类型**(闭合事件表规矩,dsh-llm-fallbacks #52):用既有 `turn/end` 事件——认领 turn 的 `turn/end` reason 非 `interrupted` → 消息 consumed;reason 为 `interrupted` 或无 `turn/end`(崩溃)→ 消息可被 goal-round-driver 恢复。执行者三问核 `turn/end` 在该路径上真实存在且 reason 可读;不存在则报 BLOCKED,不自造事件。
+3. **P0-02 `signatureRoots` 真实密钥材料**(P2-02 前置):内核签名根 = **每安装一份 Ed25519 密钥对**,首次 boot 由内核生成,私钥只在内核私有状态,持久化经 credentials provider(P6-08 keychain 落地前:dsh home 下 0600 文件,profile 标 `dev`,`production-controlled` 拒绝文件后端);公钥进 `signatureRoots`,可轮换(旧根保留验证到 expiry)。**不引入任何长期公网密钥**(用户规则);发布签名仍走 P1-02 Sigstore keyless。P2-02 must[1] 的用例对这套材料写。
+4. **P5-10 actions 半的供给方钉为 P2-03**:in-flight action = 已 append manifest 而无配对终态记录;cancel 后 barrier 观测"不再接纳新 manifest 且每个已 append 的 manifest 得到配对终态记录"再进终态。P2-03 验收后 P5-10 写此用例;world 半等 P3-01。
+
+### 10.4 §3.5 SLICE-fiber-A(新增共用前置)
+
+vendored Cordis `vendor/cordis/src/fiber.ts:198` `public store` 改为受控(Option A,BLOCKED-011 三向量之一),过 vendor manifest guard;conformance:ctx 介导的内核执行点在 Fiber 上不可绕过(P2-02 must[1] 与 P2-05 内核执行点共用);第一个消费者 P2-02 端到端接通作证明(§8 共用引擎两条)。**P2-05 开工前落地,与 Cedar slice 并行。**
