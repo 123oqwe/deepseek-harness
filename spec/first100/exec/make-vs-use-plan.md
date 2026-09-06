@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `cab06ebfc3`);**生成时间** 2026-09-06T15:04-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `ca38cb30e4`);**生成时间** 2026-09-06T15:11-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -2700,7 +2700,7 @@
 **裁决叠加(整改令)**:
 - §2.A 子句措辞改(标题/must[0]/acc[0] → at-least-once + 幂等消费,BEGIN IMMEDIATE 事务)
 - §7.11:CloudEvents 属性名形状所有者——新 [N] 文件直接采用标准名(id/source/type/time/subject/datacontenttype),不自造
-- §10 L3 + §10.3-2:(b) BEGIN IMMEDIATE 事务;(a) 去重信号 = 认领 turn 的既有 turn/end 事件(reason 非 interrupted → consumed;interrupted/缺失 → 可恢复),不新增事件类型
+- §10 L3 + §10.3-2(15:50 修订):(a)(b) 合一——durable inbox 表 {messageId, epoch, claimedByTurn, state} 与 outbox 同一 SQLite BEGIN IMMEDIATE 事务;seen = state=consumed 的键集;classifyIntake 保持纯函数;生产调用点 = core/agent/src/inbox.ts intake 路径,归 U 格(supersede/supplement 按现有用例定);不新增事件类型;原“用 turn/end”撤回(三问核否:纯函数无 session、零生产调用点)
 
 #### P4-07 · Worker Lease、Heartbeat 与 Fencing Token
 
@@ -5810,7 +5810,7 @@ add('P2-05', '§7.11:AuthZEN 形状所有者(P2-03 字段由 registry must[0] �
 add('P2-03', '§7.11:MCP ToolAnnotations / AuthZEN 不采用——registry must[0] 定死字段名,这不是词汇债;所有权顺延 P2-04 / P2-05')
 add('P2-02', '§10 L2:四格全绿上锁——解锁 = §3.5 SLICE-fiber-A(vendored Cordis Fiber.store,Option A)+ §10.3-3 内核 signatureRoots 每安装 Ed25519 密钥对 → must[1] supersession 用例;同时解锁 P2-05 内核执行点')
 add('P1-03', '§10.3-1 裁决 BLOCKED-094:profile 字段 plugins.lock required|warn(显式 resolve);production-controlled=required;有 lock 而 digest 漂移一律拒绝;lock 生成所有者 = 本 epic U 阶段(dsh plugin lock)→ composeProfile 调用点 → 验收')
-add('P4-06', '§10 L3 + §10.3-2:(b) BEGIN IMMEDIATE 事务;(a) 去重信号 = 认领 turn 的既有 turn/end 事件(reason 非 interrupted → consumed;interrupted/缺失 → 可恢复),不新增事件类型')
+add('P4-06', '§10 L3 + §10.3-2(15:50 修订):(a)(b) 合一——durable inbox 表 {messageId, epoch, claimedByTurn, state} 与 outbox 同一 SQLite BEGIN IMMEDIATE 事务;seen = state=consumed 的键集;classifyIntake 保持纯函数;生产调用点 = core/agent/src/inbox.ts intake 路径,归 U 格(supersede/supplement 按现有用例定);不新增事件类型;原“用 turn/end”撤回(三问核否:纯函数无 session、零生产调用点)')
 add('P4-05', '§10 L3:供给方 P4-07 已验收 → 按 BLOCKED-092 第二步写 acceptance[2] 的 supersession 用例(重启后孤儿 agent 经 lease store 回收/安全失败)→ 验收;排在 P4-06 之后(共 dispatch.ts/inbox.ts)')
 add('P5-10', '§10.3-4:actions 半供给方钉为 P2-03(in-flight = 已 append manifest 无配对终态记录);P2-03 验收后写该用例;world 半等 P3-01')
 add('P2-05', '§10:开工前置 = §3.1 Cedar slice + §3.5 SLICE-fiber-A(内核执行点);不等 P2-02 验收(predecessors 非机械门),但共用 Fiber A')
