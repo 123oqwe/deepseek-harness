@@ -1,8 +1,8 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `03586cb790`);**生成时间** 2026-09-06T14:21-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `03586cb790`);**生成时间** 2026-09-06T14:28-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
-## 0. 文档优先级(执行者与 delegate 共同遵守)
+## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
 1. `tests/first100/registry.json` —— **做什么**(must / acceptance / validation / files);唯一验收依据。
 2. `plan-rectification-2026-09-06.md` —— **裁决**:与账本冲突时以它为准(§2 逐条、§3 共用引擎、§7 审计与 R1–R7、§8 OSS 接入 SOP)。
@@ -13,24 +13,30 @@
 
 **维护规则**:卡片 = 账本行(自动)+「裁决叠加」(生成器里的 overlay 表,**由 delegate 手工维护**)。整改令每追加一条裁决,delegate 同步更新 overlay 并重新生成;生成器源码在文末,执行者也可重跑但不改 overlay。卡片上 **⟶ 裁决取代** 标记的是被裁决推翻的账本 note。
 
-**`preFlight.makeVsUse` 唯一字段规范**(§4.1 / §7 / §8 / §9 四处增量合并于此,以此为准;`clause-subject-audit.json` 该 epic 的 preFlight 下):
+**`preFlight.makeVsUse` 唯一字段规范**(§4.1 / §7 / §8 / §9 四处增量合并于此,以此为准;写在 `clause-subject-audit.json` → `preFlight[<epic 或 SLICE-id>].makeVsUse`;`verify-make-vs-use` 门按此校验,缺字段 = UNRECORDED):
 
-```json
+```jsonc
 {
-  "ledgerRow": "P2-05",                          // rows[].id
-  "card": "make-vs-use-plan.md#p2-05",           // 本文件小节
-  "verdict": "PROVIDER_ADAPT", "verdictSecondary": null,
-  "adopted": [ { "name": "cedar-policy/cedar", "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",
-                 "form": "runtime | oracle | optional | vendored", "reason": "…" } ],
-  "rejectedAbsent": ["open-policy-agent/opa", "…"],   // 账本 reject 名单,门 (b) 核 0 import
-  "standardsOwned": ["AuthZEN request/response vocabulary"],   // 本 epic 是首个采用者的标准;不是则填 []
+  "ledgerRow": "P2-05",                 // rows[].id;账本外的(P3-13 / SLICE-*)填 null 并在 residual 说明
+  "card": { "heading": "#### P2-05", "sheetCommit": "<make-vs-use-plan.md 当时的 git 短 sha>" },   // 卡片 = 本文件里以该 heading 开头的小节;不是行号
+  "verdict": "PROVIDER_ADAPT", "verdictSecondary": "PROVIDER_WRITE" | null,
+  "adopted": [ { "name": "cedar-policy/cedar",            // 账本 oss[].name 原文
+                 "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",
+                 "form": "runtime" | "oracle" | "optional" | "vendored",
+                 "reason": "为什么是这个形态(oracle 必须指向复现硬约束的冻结用例)" } ],
+  "rejectedAbsent": [ "@openfeature/server-sdk", "…" ],   // preFlight 时 = 账本 reject 条目里**有 npm 名的**名单(无 npm 名的不可核,不列);
+                                                          // 门 (b) 对这些名在 files[] 里核 0 import;结果写进 realized.rejectedAbsent(布尔),不在这里
+  "standardsOwned": [ "AuthZEN request/response vocabulary" ],           // 本 epic 是首个采用者的标准(§7.3);不是则 []
   "standardsImported": [ { "standard": "RFC 8785 JCS", "from": "P2-03" } ],
-  "residual": "…",                               // 接完还要自己写什么(账本 residual,可收窄)
-  "probes": [ { "claim": "forbid overrides permit", "how": "…", "result": "ok | hard-constraint" } ],   // §8 第 3 步本树复验
-  "gapCheck": [ { "community": "dsh-auto-mode", "gap": "…", "clause": "must[1]" | "outOfScope: P2-07" } ],   // §9.2
-  "expectedDeletedPct": "50",
-  "realized": { "adoptedOnPath": [ { "name": "…", "importedIn": ["packages/…/src/x.ts"] } ],   // F 阶段填
-                "rejectedAbsent": true, "note": "…" }
+  "residual": "接完还要自己写什么(账本 residual,可收窄,收窄写原因)",
+  "probes": [ { "claim": "forbid overrides permit",        // 账本 note 里“verified locally”的那句
+                "how": "node -e … | 或 tests/…spec.ts 的用例标题",   // 可重跑
+                "result": "ok" | "hard-constraint" | "differs",
+                "evidence": "数字/输出摘要(硬约束必须有数字,如 depth 5000 THREW)" } ],
+  "gapCheck": [ { "community": "dsh-auto-mode", "gap": "缺口原句", "clause": "must[1]" | "outOfScope: P2-07" } ],   // §9.2;P2-04 起必填;之前三条 preFlight 回填
+  "expectedDeletedPct": "50" | "0-5" | null,
+  "recordedBeforeFirstLine": true,
+  "realized": null   // F 阶段填:{ "adoptedOnPath": [{ "name", "importedIn": ["packages/…/src/x.ts"] }], "rejectedAbsent": true, "note": "…" }
 }
 ```
 
@@ -2620,7 +2626,7 @@ import subprocess
 rect_sha = subprocess.check_output(['git','log','-1','--format=%h','--',RECT]).decode().strip()
 w(f'**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `{ledger_sha}`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `{rect_sha}`);**生成时间** {datetime.datetime.now().astimezone().isoformat(timespec="minutes")};生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。')
 w('')
-w('## 0. 文档优先级(执行者与 delegate 共同遵守)')
+w('## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色')
 w('')
 w('1. `tests/first100/registry.json` —— **做什么**(must / acceptance / validation / files);唯一验收依据。')
 w('2. `plan-rectification-2026-09-06.md` —— **裁决**:与账本冲突时以它为准(§2 逐条、§3 共用引擎、§7 审计与 R1–R7、§8 OSS 接入 SOP)。')
@@ -2631,24 +2637,30 @@ w('**状态列是生成时快照**(见文首生成时间);实时状态以 `ledge
 w('')
 w('**维护规则**:卡片 = 账本行(自动)+「裁决叠加」(生成器里的 overlay 表,**由 delegate 手工维护**)。整改令每追加一条裁决,delegate 同步更新 overlay 并重新生成;生成器源码在文末,执行者也可重跑但不改 overlay。卡片上 **⟶ 裁决取代** 标记的是被裁决推翻的账本 note。')
 w('')
-w('**`preFlight.makeVsUse` 唯一字段规范**(§4.1 / §7 / §8 / §9 四处增量合并于此,以此为准;`clause-subject-audit.json` 该 epic 的 preFlight 下):')
+w('**`preFlight.makeVsUse` 唯一字段规范**(§4.1 / §7 / §8 / §9 四处增量合并于此,以此为准;写在 `clause-subject-audit.json` → `preFlight[<epic 或 SLICE-id>].makeVsUse`;`verify-make-vs-use` 门按此校验,缺字段 = UNRECORDED):')
 w('')
-w('```json')
+w('```jsonc')
 w('{')
-w('  "ledgerRow": "P2-05",                          // rows[].id')
-w('  "card": "make-vs-use-plan.md#p2-05",           // 本文件小节')
-w('  "verdict": "PROVIDER_ADAPT", "verdictSecondary": null,')
-w('  "adopted": [ { "name": "cedar-policy/cedar", "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",')
-w('                 "form": "runtime | oracle | optional | vendored", "reason": "…" } ],')
-w('  "rejectedAbsent": ["open-policy-agent/opa", "…"],   // 账本 reject 名单,门 (b) 核 0 import')
-w('  "standardsOwned": ["AuthZEN request/response vocabulary"],   // 本 epic 是首个采用者的标准;不是则填 []')
+w('  "ledgerRow": "P2-05",                 // rows[].id;账本外的(P3-13 / SLICE-*)填 null 并在 residual 说明')
+w('  "card": { "heading": "#### P2-05", "sheetCommit": "<make-vs-use-plan.md 当时的 git 短 sha>" },   // 卡片 = 本文件里以该 heading 开头的小节;不是行号')
+w('  "verdict": "PROVIDER_ADAPT", "verdictSecondary": "PROVIDER_WRITE" | null,')
+w('  "adopted": [ { "name": "cedar-policy/cedar",            // 账本 oss[].name 原文')
+w('                 "npm": "@cedar-policy/cedar-wasm", "version": "4.12.0",')
+w('                 "form": "runtime" | "oracle" | "optional" | "vendored",')
+w('                 "reason": "为什么是这个形态(oracle 必须指向复现硬约束的冻结用例)" } ],')
+w('  "rejectedAbsent": [ "@openfeature/server-sdk", "…" ],   // preFlight 时 = 账本 reject 条目里**有 npm 名的**名单(无 npm 名的不可核,不列);')
+w('                                                          // 门 (b) 对这些名在 files[] 里核 0 import;结果写进 realized.rejectedAbsent(布尔),不在这里')
+w('  "standardsOwned": [ "AuthZEN request/response vocabulary" ],           // 本 epic 是首个采用者的标准(§7.3);不是则 []')
 w('  "standardsImported": [ { "standard": "RFC 8785 JCS", "from": "P2-03" } ],')
-w('  "residual": "…",                               // 接完还要自己写什么(账本 residual,可收窄)')
-w('  "probes": [ { "claim": "forbid overrides permit", "how": "…", "result": "ok | hard-constraint" } ],   // §8 第 3 步本树复验')
-w('  "gapCheck": [ { "community": "dsh-auto-mode", "gap": "…", "clause": "must[1]" | "outOfScope: P2-07" } ],   // §9.2')
-w('  "expectedDeletedPct": "50",')
-w('  "realized": { "adoptedOnPath": [ { "name": "…", "importedIn": ["packages/…/src/x.ts"] } ],   // F 阶段填')
-w('                "rejectedAbsent": true, "note": "…" }')
+w('  "residual": "接完还要自己写什么(账本 residual,可收窄,收窄写原因)",')
+w('  "probes": [ { "claim": "forbid overrides permit",        // 账本 note 里“verified locally”的那句')
+w('                "how": "node -e … | 或 tests/…spec.ts 的用例标题",   // 可重跑')
+w('                "result": "ok" | "hard-constraint" | "differs",')
+w('                "evidence": "数字/输出摘要(硬约束必须有数字,如 depth 5000 THREW)" } ],')
+w('  "gapCheck": [ { "community": "dsh-auto-mode", "gap": "缺口原句", "clause": "must[1]" | "outOfScope: P2-07" } ],   // §9.2;P2-04 起必填;之前三条 preFlight 回填')
+w('  "expectedDeletedPct": "50" | "0-5" | null,')
+w('  "recordedBeforeFirstLine": true,')
+w('  "realized": null   // F 阶段填:{ "adoptedOnPath": [{ "name", "importedIn": ["packages/…/src/x.ts"] }], "rejectedAbsent": true, "note": "…" }')
 w('}')
 w('```')
 w('')
