@@ -6926,6 +6926,68 @@
         "failureSummary": "Reddened 2, 2 and 1 of 15. M1 reddens both must[2] key cases together, which is why the second one was rewritten: its first version captured the failure inside its own try/catch, so `expect.unreachable()` was swallowed and the case could not fail when nothing threw. M2 reddens the two must[0] cases that read the protocol back. M3 reddens only the field-naming case, the one written for it."
       },
       "note": "P (Provider) for P9-02: the template's output goes through resolveProfiles, the product's own explicit resolve step, so 'the template works' means the real validator accepted it rather than that two of my own functions agreed. The first version of the coexistence case used a hand-written 'deepseek-official' neighbour that the resolver REJECTED (the installed catalog does not describe it here), which is why the neighbour is now a route that resolves on its own terms."
+    },
+    {
+      "epic": "P9-02",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/pi-ai-template-route.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-02 Usage — a settings fragment alone activates a template route acceptance[0]: a headless task completes over a mock gateway after three tool calls",
+        "P9-02 Usage — a settings fragment alone activates a template route must[2]: the key reaches the gateway from the environment, and only from there"
+      ],
+      "files": [
+        "apps/cli/tests/pi-ai-template-route.spec.ts",
+        "packages/llm/llm-pi-ai/src/templates.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:36:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2de7cc82624b4de88c5c2a410c74d4e386decadd",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two targeted mutations of packages/llm/llm-pi-ai/src/templates.ts against the real-bin run, each restored byte-identical: (M1) the template stops carrying apiKeyEnv; (M2) the template stops declaring its model list.",
+        "failureSummary": "Reddened 2 of 2 and 2 of 2. M2 reddened NOTHING on its first attempt, and that was a defect in the test rather than an equivalent mutant: the settings fragment transcribed the model list by hand, so the fixture was supplying what the template was supposed to supply. The fragment is now serialized from the profile object whole, and M2 reddens."
+      },
+      "note": "U (Usage) for P9-02 acceptance[0], which is a claim about what a DEPLOYMENT must do rather than what a function returns: write one llm-pi-ai settings section, change no code, and a headless task completes over an OpenAI-compatible gateway. The gateway is a real local HTTP server speaking chat-completions, scripted for three tool rounds then an answer; dsh-llm-mock-server was considered and does not fit -- its behaviours are one per server, and this needs a four-step sequence. The route is selected with P9-03's --model rather than by overriding the default model, so the settings fragment stays the only configuration this case adds."
+    },
+    {
+      "epic": "P9-02",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/pi-ai-template-route.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-02 Fault — an unserviceable settings fragment stops the run a protocol name nothing implements is refused, naming the route",
+        "P9-02 Fault — an unserviceable settings fragment stops the run a credential reference whose variable is unset fails the request rather than sending an empty key"
+      ],
+      "files": [
+        "apps/cli/tests/pi-ai-template-route.spec.ts",
+        "packages/llm/llm-pi-ai/src/templates.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:37:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2de7cc82624b4de88c5c2a410c74d4e386decadd",
+        "testsDiscovered": 2
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two targeted mutations of packages/llm/llm-pi-ai/src/templates.ts against the real-bin run, each restored byte-identical: (M1) the template stops carrying apiKeyEnv; (M2) the template stops declaring its model list.",
+        "failureSummary": "Reddened 2 of 2 and 2 of 2. M2 reddened NOTHING on its first attempt, and that was a defect in the test rather than an equivalent mutant: the settings fragment transcribed the model list by hand, so the fixture was supplying what the template was supposed to supply. The fragment is now serialized from the profile object whole, and M2 reddens."
+      },
+      "note": "F (Fault) for P9-02: what a user can still write by hand into the settings document after a template built a valid profile -- the path a template cannot guard, because the file is theirs to edit. An unimplemented protocol name is refused before any endpoint is reached (the gateway records zero requests), and an unset credential variable ends the run with the typed error exit rather than sending an unauthenticated request. That exit is 4, not 1: the route mounts and the run STARTS, so the failure is classified as an error by P9-06's exit map; 1 is the unknown-outcome code, and expecting it would have been expecting the run to fail in a way it explicitly classifies."
     }
   ]
 }
