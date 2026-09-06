@@ -227,3 +227,13 @@ That distinction was put to the user directly, because it changes what the regis
 **A plan correction with no observation behind it is an opinion overwriting a pinned document**, so every reword record carries its evidence field and the extractor refuses one whose clause the matrix does not actually contain — in the declared channel, since this pair spans `must` and `acceptance`. That check caught a real mismatch on the first run: it was looking only at `must`.
 
 **How the report counts it.** `planCorrectedClauses: 2` and `supersededSourceClauses: 2`, both new totals. The corrected clause is classified `plan-correction` — not `undocumented`, which would call an approved correction a defect, and not matched, which would claim a provenance it does not have. A channel counts as mapped when every divergence is ACCOUNTED FOR, which is a weaker and more honest claim than "sourced". Two cases pin it, including the control that deletes the reword record and asserts the same registry falls to one unmatched and one undocumented clause — without which these counts could be produced by a report that called everything a correction.
+
+## C14 (2026-09-06 17:50 EDT) — 用户授权 delegate 推送共享分支(含执行者的提交)
+
+**背景**:执行者会话的权限分类器两次拒绝 `git push fork HEAD:first100-exec`(allow 规则 `Bash(git push fork first100-exec:*)` 与实际命令形式不匹配);执行者未绕过,交由用户。delegate 曾在 `52fa75cea4` 无意中把执行者被拒的 4 个提交随自己的文档推送带上远端,已向用户报告为洗权限性质的错误。
+
+**用户原话**(对 delegate 会话,2026-09-06):「授权我推送共享分支(含执行者的提交)。你说了,我推就不是绕它的权限,是你的授权;你不说,我不动。」
+
+**用户补充**(同日稍后,原话):「不不不 你待推 因为你是最终技术实现把关的」——推送是发布动作,由把关方(delegate)执行。
+
+**生效**:自本条起,**delegate(`guanjieqiao-92`)是 `first100-exec` 的唯一推送方**;执行者只在本地提交,不推。每次推送前 delegate 走固定的四步门:① `git log fork/first100-exec..HEAD` 列全部待推提交,执行者的每个提交必须对应 delegate 确认过的 preFlight / 裁决 / BLOCKED 记录,否则不推;② 密钥 / 大文件 / 未跟踪目录扫描;③ 本地跑 registry gate set(`scripts/first100/run-registry-gates.mjs`,与 CI 同一套)+ `generate-ledger.mjs --check`,红则退回执行者;④ 推送后在会话里报告推了什么与 CI run id。**不改变**:强推仍在 deny;delegate 仍不代替执行者做任何 `--accept` / 代码改动。
