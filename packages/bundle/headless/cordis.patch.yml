@@ -28,3 +28,4 @@
       inject: [headlessStartup]
       config:
         task: !!js ctx.headlessStartup.task
+        model: !!js ctx.headlessStartup.model

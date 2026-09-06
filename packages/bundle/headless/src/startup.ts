@@ -22,6 +22,14 @@ export const HEADLESS_STARTUP_SERVICE = 'headlessStartup'
 export interface HeadlessStartupValues {
   /** The task text this invocation asked for. */
   task: string
+  /**
+   * The `--model <provider:model>` argument as typed (Epic P9-03 must[0]).
+   *
+   * Carried unparsed: validating it needs the registered adapter routes, and
+   * no adapter has mounted while the command line is being parsed. The runner
+   * resolves it after the application settles, where the route list is real.
+   */
+  model?: string
 }
 
 /**
@@ -34,9 +42,12 @@ function headlessCommand(): Command {
     .description('Answer one task, stream reasoning to stderr, print the final assistant message, and exit.')
     .helpOption('-h, --help', 'show this help')
     .argument('[task...]', 'the task text; multiple words are joined by spaces')
+    .option('--model <provider:model>', 'run on a specific registered route and model instead of the configured default')
     .addHelpText('after', `
 Examples:
   dsh --profile headless "run the tests"     answer one task and exit
+  dsh --profile headless --model deepseek:deepseek-chat "run the tests"
+                                             answer it on a specific route and model
 `)
 }
 
@@ -51,7 +62,11 @@ export function apply(ctx: Context): void {
   program.action(() => {
     const task = program.args.join(' ')
     if (task.trim() === '') program.error('error: a task is required, for example: dsh --profile headless "run the tests"')
-    ctx.provide(HEADLESS_STARTUP_SERVICE, { task } satisfies HeadlessStartupValues)
+    const { model } = program.opts<{ model?: string }>()
+    ctx.provide(HEADLESS_STARTUP_SERVICE, {
+      task,
+      ...model === undefined ? {} : { model },
+    } satisfies HeadlessStartupValues)
   })
   parseCmdline(ctx, program)
 }

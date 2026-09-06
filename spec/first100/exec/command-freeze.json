@@ -6658,6 +6658,76 @@
         "testsDiscovered": 4
       },
       "note": "F (Fault) for P9-07 acceptance[0]: what a budget stop leaves behind. Two findings. (1) A session stopped by its budget could not be resumed AT ALL: budget/exceeded was added to SessionEventMap at the Provider stage without regenerating known-event-types.ts, so the persistence read path refused the log as written by a newer harness — the exact silent truncation must[1] forbids, produced by the mechanism meant to prevent it. Fixed by regenerating the catalog, which first required removing an @mode tag a log event may not carry. (2) acceptance[1] (spend cap) is UNMET and unmeetable: nothing converts tokens to money, so spentUsd is always 0. Recorded as BLOCKED-114 and routed to the maintainer; the fourth case pins the vacuity and is written to FAIL when a cost source lands."
+    },
+    {
+      "epic": "P9-03",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/bundle/headless/tests/model-selection.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-03 Contract — --model resolution must[0]: splits a registered route from its model",
+        "P9-03 Contract — --model resolution must[0]: an unregistered route is refused AND the refusal names the routes that exist",
+        "P9-03 Contract — --model resolution must[0]: a missing separator is refused, because a bare model id names no adapter",
+        "P9-03 Contract — --model resolution an empty half is refused by the half that is empty, so the message says which one",
+        "P9-03 Contract — --model resolution only the FIRST colon separates: a model id may carry its own colons",
+        "P9-03 Contract — --model resolution the model half is NOT checked against a local list, so a route keeps its new models reachable",
+        "P9-03 Contract — --model resolution a profile with no registered route says so, instead of printing an empty list",
+        "P9-03 Contract — --model resolution the failure CARRIES the routes, so a caller cannot print a list different from the one checked",
+        "P9-03 Contract — --model resolution the carried list is detached: mutating the caller's array cannot rewrite a recorded failure"
+      ],
+      "files": [
+        "packages/bundle/headless/src/model-selection.ts",
+        "packages/bundle/headless/tests/model-selection.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "06ad5fd1e4b4dc8f8e139a5d46cc5fdbab5b822e",
+        "testsDiscovered": 9
+      },
+      "note": "C (Contract) for P9-03 must[0]: parse, check the route exists, list what exists, fail closed. The argument names a ROUTE and a model together because a model id alone identifies no adapter, and the available routes travel WITH the failure so a caller cannot print a list different from the one checked."
+    },
+    {
+      "epic": "P9-03",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/bundle/headless/tests/headless.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-03 Provider — --model selects the route the run uses must[0]: a registered route and model become the agent's options",
+        "P9-03 Provider — --model selects the route the run uses acceptance[0]: the SAME task on a different --model differs only in the route it ran on",
+        "P9-03 Provider — --model selects the route the run uses acceptance[1]: an unregistered route exits non-zero and names the routes that exist",
+        "P9-03 Provider — --model selects the route the run uses acceptance[1]: a malformed argument fails the same way, rather than being read as a bare model",
+        "P9-03 Provider — --model selects the route the run uses without --model the configured default is used and nothing about the run changes"
+      ],
+      "files": [
+        "packages/bundle/headless/src/index.ts",
+        "packages/bundle/headless/src/startup.ts",
+        "packages/bundle/headless/cordis.patch.yml",
+        "packages/bundle/headless/tests/headless.spec.ts",
+        "packages/bundle/headless/README.md",
+        "packages/bundle/headless/README.zh.md",
+        "packages/bundle/headless/README.i18n.yaml",
+        "apps/cli/src/args.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:01:00.000Z",
+      "dryRunProof": {
+        "treeSha": "06ad5fd1e4b4dc8f8e139a5d46cc5fdbab5b822e",
+        "testsDiscovered": 5
+      },
+      "note": "P (Provider) for P9-03: the flag exists and the runner CALLS the resolver, with the routes that really have an adapter. Resolution happens after loader settlement because no adapter is registered while the command line is parsed. Mutations: forcing the default branch reddens 4; disabling the route-existence check reddens 4. must[2] (auditable selection) is met by the existing request/header event, which already carries the effective provider and model — a second event would give one fact two homes."
     }
   ]
 }

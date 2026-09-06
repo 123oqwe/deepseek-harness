@@ -61,7 +61,9 @@ runner 是核心 API 载体之上的直接驱动器：它通过注册表创建�
 
 ### 运行流程
 
-runner 等待整个应用结算（`ctx.get('loader')?.await()`），确保已组合的工具与适配器不会半挂载，读取共享的 [`agentDefaultModel`](../../core/agent-default-model/README.zh.md) 选择，用该 provider 与模型创建一个全新的持久化 Agent（智能体），并把任务作为普通用户消息提交。它把该 Agent 的非空推理增量流式写入 stderr、等待完全停稳，然后 flush Session，并把所属区间（从 `firstSeq` 起）折叠为最后一条非空 `assistant/message` 文本与最终 `turn/end` 原因。最后，它把最终文本写入 stdout 并请求退出。
+runner 等待整个应用结算（`ctx.get('loader')?.await()`），确保已组合的工具与适配器不会半挂载，解析本次运行使用的路由——给了 `--model <provider:model>` 就用它，否则用共享的 [`agentDefaultModel`](../../core/agent-default-model/README.zh.md) 选择——用该 provider 与模型创建一个全新的持久化 Agent（智能体），并把任务作为普通用户消息提交。它把该 Agent 的非空推理增量流式写入 stderr、等待完全停稳，然后 flush Session，并把所属区间（从 `firstSeq` 起）折叠为最后一条非空 `assistant/message` 文本与最终 `turn/end` 原因。最后，它把最终文本写入 stdout 并请求退出。
+
+`--model` 在这里解析，而不是在解析命令行时解析：它要比对的那些路由，要到应用结算之后才存在。它同时指定路由和模型（`deepseek:deepseek-chat`），因为单独一个模型 id 指认不了任何适配器；只有第一个冒号用于分隔，所以带命名空间的模型 id 能完整保留。无法解析的参数或未注册的路由，会把原因和已注册路由写入 stderr 并以 1 退出——绝不回退到默认路由，因为「由调用方没有要求的模型回答的任务」看起来与「由它要求的模型回答的任务」完全一样。
 
 ### 叠加在 base 之上的 patch 表层
 

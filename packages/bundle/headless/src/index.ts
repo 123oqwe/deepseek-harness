@@ -13,6 +13,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { exitStatusFor } from './scriptability.ts'
+import { resolveModelSelection } from './model-selection.ts'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
@@ -45,11 +46,20 @@ export interface Config {
    * first time either changed.
    */
   resumeSessionId?: string
+  /**
+   * `--model <provider:model>` as typed, or absent to use the configured
+   * default (Epic P9-03 must[0]).
+   *
+   * Unparsed here for the same reason the startup provider does not parse it:
+   * the routes it is checked against exist only after the application settles.
+   */
+  model?: string
 }
 
 export const Config: z<Config> = z.object({
   task: z.string().required(),
   resumeSessionId: z.string(),
+  model: z.string(),
 })
 
 /** Outcome of one owned run interval. */
@@ -177,7 +187,7 @@ function fail(io: HeadlessIo, error: unknown): void {
  * @param task - one-shot task text.
  * @param io - process-facing effects.
  */
-async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?: string): Promise<void> {
+async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?: string, model?: string): Promise<void> {
   // Loader siblings mount concurrently. Await the complete application before
   // creating an Agent so its scoped tools and adapters are not half-composed.
   await ctx.get('loader')?.await()
@@ -187,7 +197,15 @@ async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?:
   // Early process shutdown can dispose the tree while settlement is pending.
   if (agents === undefined || defaultModel === undefined || sessions === undefined) return
 
-  const selection = defaultModel.currentSelection()
+  // Resolved HERE rather than while parsing the command line: `--model` names
+  // a registered route, and no adapter has mounted until the settlement above
+  // completes. A rejection throws, which `apply`'s catch turns into a stderr
+  // line and exit 1 — the run never falls back to the default route, because a
+  // task answered by a model the caller did not ask for is indistinguishable
+  // from one that was (Epic P9-03 must[0]).
+  const selection = model === undefined
+    ? defaultModel.currentSelection()
+    : resolveModelSelection(model, (ctx.get('llm')?.listProviders() ?? []).map(({ id }) => id))
   // This bundle composes no preset roster, so the model-facing rows sit in the
   // host plane and the agent reads them from the global layer. A deployment
   // that DOES configure one has to join it here first
@@ -254,5 +272,5 @@ export function apply(ctx: Context, config: Config): void {
     throw new Error('headless-runner: the launcher must provide ctx.appExit before the tree mounts')
   }
   const io: HeadlessIo = { stdout: internals.stdout, stderr: internals.stderr, exit }
-  void run(ctx, config.task, io, config.resumeSessionId).catch((error: unknown) => { fail(io, error) })
+  void run(ctx, config.task, io, config.resumeSessionId, config.model).catch((error: unknown) => { fail(io, error) })
 }

@@ -61,7 +61,9 @@ The runner is a direct driver over the core API carrier: it creates one fresh Ag
 
 ### Run flow
 
-The runner awaits the complete application (`ctx.get('loader')?.await()`) so the composed tools and adapters are not half-mounted, reads the shared [`agentDefaultModel`](../../core/agent-default-model/README.md) selection, creates one fresh persisted Agent with that provider and model, and submits the task as an ordinary user message. It streams that Agent's non-empty reasoning deltas to stderr, waits for quiescence, then flushes the Session and folds the owned interval (`firstSeq` onward) into the last non-empty `assistant/message` text and final `turn/end` reason. It writes the final text to stdout and requests exit.
+The runner awaits the complete application (`ctx.get('loader')?.await()`) so the composed tools and adapters are not half-mounted, resolves the route to run on — `--model <provider:model>` when given, otherwise the shared [`agentDefaultModel`](../../core/agent-default-model/README.md) selection — creates one fresh persisted Agent with that provider and model, and submits the task as an ordinary user message. It streams that Agent's non-empty reasoning deltas to stderr, waits for quiescence, then flushes the Session and folds the owned interval (`firstSeq` onward) into the last non-empty `assistant/message` text and final `turn/end` reason. It writes the final text to stdout and requests exit.
+
+`--model` is resolved here rather than while parsing the command line, because the routes it is checked against exist only after that settlement. It names a route AND a model (`deepseek:deepseek-chat`), since a model id alone identifies no adapter; only the first colon separates the two, so a namespaced model id survives. An unparseable argument or an unregistered route writes the reason and the registered routes to stderr and exits 1 — the run never falls back to the default, because a task answered by a model the caller did not ask for looks exactly like one that was.
 
 ### Patch surface over base
 

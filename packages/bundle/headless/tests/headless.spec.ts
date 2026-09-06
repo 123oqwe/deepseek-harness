@@ -3,12 +3,23 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import AgentRegistry, { Inbox } from '@deepseek-ai/dsh-agent'
-import type { Agent, AgentHandle, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
+import type { Agent, AgentHandle, AgentOptions, CreateAgentOptions } from '@deepseek-ai/dsh-agent'
+import LlmRuntime from '@deepseek-ai/dsh-llm'
+import type { LlmAdapter } from '@deepseek-ai/dsh-llm'
 import AgentDefaultModelConfig from '@deepseek-ai/dsh-agent-default-model'
 import { createAssistantMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore from '@deepseek-ai/dsh-session'
 import type { Session, UserMessage } from '@deepseek-ai/dsh-session'
 import { apply, Config, internals } from '../src/index.ts'
+
+/** The smallest thing `registerAdapter` accepts: routes exist, requests never run. */
+function adapterStub(): LlmAdapter {
+  return {
+    providerInfo: (provider: string) => ({ id: provider, name: provider }),
+    providerRetryPolicy: () => undefined,
+    generate: () => Promise.reject(new Error('the model-route cases never dispatch a request')),
+  } as unknown as LlmAdapter
+}
 
 const originalInternals = { ...internals }
 afterEach(() => { Object.assign(internals, originalInternals) })
@@ -47,10 +58,25 @@ function appendTurn(
   })
 }
 
+/**
+ * Extra composition a case needs beyond the default one.
+ *
+ * `routes` mounts a real `LlmRuntime` and registers an adapter for each name,
+ * which is what makes `--model` resolvable: the runner checks the argument
+ * against the routes that actually have an adapter, so a test that asserted
+ * against a hand-written list would be asserting against itself.
+ */
+interface BenchOptions {
+  routes?: readonly string[]
+  config?: Partial<Config>
+}
+
 /** Mount the real registries around a small scripted Agent factory. */
-async function bench(script: Script): Promise<{
+async function bench(script: Script, options: BenchOptions = {}): Promise<{
   ctx: Context
   output(): { out: string; err: string; order: string[] }
+  /** Per-agent options the runner asked the factory for — where the resolved route lands. */
+  requested(): AgentOptions | undefined
   run(): Promise<{ code: number; out: string; err: string; order: string[] }>
 }> {
   const ctx = new Context()
@@ -60,8 +86,14 @@ async function bench(script: Script): Promise<{
   await ctx.plugin(SessionStore)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentDefaultModelConfig, { provider: 'test-provider', model: 'test-model' })
+  if (options.routes !== undefined) {
+    await ctx.plugin(LlmRuntime)
+    for (const route of options.routes) ctx.llm.registerAdapter([route], adapterStub())
+  }
+  let requested: AgentOptions | undefined
   ctx.agents.setFactory({
     async createAgent(ownerCtx: Context, options: CreateAgentOptions): Promise<AgentHandle> {
+      requested = options.agentOptions
       const session = ctx.sessions.create(options.sessionId, {
         ...options.meta === undefined ? {} : { meta: options.meta },
       })
@@ -96,6 +128,7 @@ async function bench(script: Script): Promise<{
   return {
     ctx,
     output: () => ({ out, err, order: [...order] }),
+    requested: () => requested,
     run: async () => {
       ctx.on('session/flush', () => { order.push('flush') })
       internals.stdout = { write: (chunk: string) => { out += chunk; return true } }
@@ -103,7 +136,7 @@ async function bench(script: Script): Promise<{
       const exited = new Promise<number>((resolve) => {
         ctx.provide('appExit', (code: number) => { order.push('exit'); resolve(code) })
       })
-      apply(ctx, { task: 'do the thing' })
+      apply(ctx, { task: 'do the thing', ...options.config })
       return { code: await exited, out, err, order }
     },
   }
@@ -448,5 +481,69 @@ describe('P9-06 Fault — acceptance[2], the exit-code matrix through the real r
     const codes = rows.filter(row => row.kind !== 'completed').map(row => row.code)
     expect(new Set(codes).size).toBe(codes.length)
     expect(codes).not.toContain(0)
+  })
+})
+
+/**
+ * P9-03 Provider — `--model` reaches the agent, or the run stops.
+ *
+ * The Contract stage pinned the resolver; what it could not pin is that the
+ * runner CALLS it, and calls it with the routes that really have an adapter.
+ * These cases run the whole `apply` path, so a resolver wired to a hand-written
+ * list, wired before the application settles, or not wired at all fails here.
+ */
+describe('P9-03 Provider — --model selects the route the run uses', () => {
+  const answer: Script = {
+    afterPrompt: (session, message) => { appendTurn(session, 1, message, 'answered', true) },
+  }
+
+  it('must[0]: a registered route and model become the agent\'s options', async () => {
+    const test = await bench(answer, {
+      routes: ['mock-a', 'mock-b'],
+      config: { model: 'mock-b:some-model' },
+    })
+    expect(await test.run()).toMatchObject({ code: 0, out: 'answered\n' })
+    expect(test.requested()).toMatchObject({ provider: 'mock-b', model: 'some-model' })
+    await test.ctx.fiber.dispose()
+  })
+
+  it('acceptance[0]: the SAME task on a different --model differs only in the route it ran on', async () => {
+    const first = await bench(answer, { routes: ['mock-a', 'mock-b'], config: { model: 'mock-a:m' } })
+    expect(await first.run()).toMatchObject({ code: 0, out: 'answered\n' })
+    const second = await bench(answer, { routes: ['mock-a', 'mock-b'], config: { model: 'mock-b:m' } })
+    expect(await second.run()).toMatchObject({ code: 0, out: 'answered\n' })
+    expect(first.requested()?.provider).toBe('mock-a')
+    expect(second.requested()?.provider).toBe('mock-b')
+    await first.ctx.fiber.dispose()
+    await second.ctx.fiber.dispose()
+  })
+
+  it('acceptance[1]: an unregistered route exits non-zero and names the routes that exist', async () => {
+    const test = await bench(answer, { routes: ['mock-a'], config: { model: 'nope:m' } })
+    const result = await test.run()
+    expect(result.code).toBe(1)
+    expect(result.err).toContain('unregistered route "nope"')
+    expect(result.err).toContain('available routes: mock-a')
+    // Fail CLOSED: no agent was created, so the task never ran on the default
+    // route while the user believed it ran on the one they named.
+    expect(test.requested()).toBeUndefined()
+    expect(result.out).toBe('')
+    await test.ctx.fiber.dispose()
+  })
+
+  it('acceptance[1]: a malformed argument fails the same way, rather than being read as a bare model', async () => {
+    const test = await bench(answer, { routes: ['mock-a'], config: { model: 'just-a-model' } })
+    const result = await test.run()
+    expect(result.code).toBe(1)
+    expect(result.err).toContain('must name a route and a model as "<provider>:<model>"')
+    expect(test.requested()).toBeUndefined()
+    await test.ctx.fiber.dispose()
+  })
+
+  it('without --model the configured default is used and nothing about the run changes', async () => {
+    const test = await bench(answer, { routes: ['mock-a'] })
+    expect(await test.run()).toMatchObject({ code: 0, out: 'answered\n' })
+    expect(test.requested()).toMatchObject({ provider: 'test-provider', model: 'test-model' })
+    await test.ctx.fiber.dispose()
   })
 })
