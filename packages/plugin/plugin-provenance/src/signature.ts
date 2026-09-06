@@ -24,11 +24,16 @@
  * **No function in this module verifies a signature.**
  * {@link verifyPackageSignature} compares claimed facts against observed ones
  * and then checks only that the evidence's fields are non-empty;
- * `OfflineSignedProvenanceEvidence.signature` is never checked against a key,
- * and an issuer or fingerprint no {@link registerTrustAnchor} call ever
- * admitted is trusted on first sight. {@link computePackageDigest} is the one
- * real cryptographic operation here, and it binds an artifact to a claim, not
- * a claim to an authority. See the package README's Known Limitations.
+ * `OfflineSignedProvenanceEvidence.signature` is never checked against a key.
+ * {@link computePackageDigest} is the one real cryptographic operation here,
+ * and it binds an artifact to a claim, not a claim to an authority.
+ *
+ * What DID change (2026-09-05, P1-02 lock steps ① and ④): evidence naming an
+ * issuer or fingerprint no {@link registerTrustAnchor} call admitted is now
+ * refused, and {@link revokeTrustAnchor} can withdraw one. So an attacker must
+ * now name an admitted anchor rather than any well-formed issuer — but an
+ * attacker who names one still passes, because the signature itself is still
+ * unchecked. See the package README's Known Limitations.
  *
  * **Grounding.** {@link PackageDigest}, {@link SourceCommitHash},
  * {@link BuilderIdentity}, and {@link TrustAnchorId} have no branded-type
@@ -190,6 +195,16 @@ export type SignatureRejectionReason =
   | 'source-commit-mismatch'
   | 'builder-identity-mismatch'
   | 'evidence-invalid'
+  /**
+   * The evidence is well-formed but names an issuer or key that no
+   * {@link registerTrustAnchor} call admitted under this trust root.
+   *
+   * Added 2026-09-05 (P1-02 lock, step ①). Before it, well-formed evidence
+   * verified against a first-seen issuer, which made revocation meaningless:
+   * "no longer registered" cannot mean anything while "never registered"
+   * verifies.
+   */
+  | 'trust-anchor-unregistered'
 
 /**
  * The outcome of {@link verifyPackageSignature}: either every must[1] fact
@@ -226,10 +241,10 @@ export type TrustAnchorDeclaration = OfflineTrustAnchorDeclaration | SigstoreTru
  * `@deepseek-ai/dsh-trust-kernel`'s `createTrustKernel()` is the only exported
  * value in this repo that produces one, and the handle it returns is
  * deep-frozen — so no ordinary plugin can construct, mutate, or substitute a
- * trust root. Registration decides which anchor id a verdict NAMES; it does
- * not decide whether a claim verifies at all, because
- * {@link verifyPackageSignature} also trusts an unregistered issuer or key on
- * first sight (see this module's own doc comment).
+ * trust root. Registration now decides WHETHER a claim verifies, not merely
+ * which anchor id the verdict names: {@link verifyPackageSignature} refuses
+ * evidence naming an anchor this root never admitted, and
+ * {@link revokeTrustAnchor} withdraws one.
  * @param trustRoot - the real `TrustKernelSignatureRoots` handle from `createTrustKernel()`.
  * @param declaration - the offline key or Sigstore issuer to trust.
  * @returns a fresh {@link TrustAnchorId} referencing the admitted anchor.
@@ -282,6 +297,24 @@ export function registerTrustAnchor(
 }
 
 /**
+ * Withdraw a previously registered anchor, so evidence naming it stops
+ * verifying (P1-02 lock, step ④; validation[3]'s revoked-signing-identity
+ * case).
+ *
+ * Revocation is only meaningful because {@link verifyPackageSignature} now
+ * refuses an unregistered anchor: while a first-seen issuer verified, removing
+ * a registration changed nothing at all, since the next claim from that same
+ * issuer was trusted on sight anyway. The two changes are one mechanism, and
+ * this one is worthless without that one.
+ * @param trustRoot - the trust root the anchor was registered under.
+ * @param anchorId - the anchor to withdraw.
+ * @returns whether an anchor was actually removed; `false` for an id this root never held.
+ */
+export function revokeTrustAnchor(trustRoot: TrustKernelSignatureRoots, anchorId: TrustAnchorId): boolean {
+  return anchorsFor(trustRoot).delete(anchorId)
+}
+
+/**
  * must[0]/must[1]'s core check: verify `claim`'s package digest, source
  * commit, and builder identity against `observed`, and verify `claim.evidence`
  * against a real trust anchor reachable from `trustRoot` (`./sbom.ts`'s
@@ -291,13 +324,15 @@ export function registerTrustAnchor(
  * {@link SignatureRejectionReason} the mismatch names; a claim differing
  * from `observed` in more than one fact still refuses, never partially
  * passes. Evidence resolves against an anchor already
- * {@link registerTrustAnchor}-admitted under `trustRoot` when one matches
- * (same issuer for `'sigstore'`, same fingerprint for `'offline-signed'`);
- * otherwise a structurally well-formed evidence value still verifies,
- * naming an anchor id derived from that same issuer or fingerprint —
- * pre-registration is not required to trust a first-seen issuer or key, only
- * well-formed evidence is (`'evidence-invalid'` on an empty issuer, subject,
- * signature, or fingerprint).
+ * {@link registerTrustAnchor}-admitted under `trustRoot` (same issuer for
+ * `'sigstore'`, same fingerprint for `'offline-signed'`). **Evidence naming
+ * no registered anchor is refused** with `'trust-anchor-unregistered'`, and
+ * well-formedness alone earns nothing: an issuer nobody admitted is not an
+ * authority, and while a first-seen issuer verified, revoking one could never
+ * mean anything — "no longer registered" is empty while "never registered"
+ * passes. `'evidence-invalid'` still covers an empty issuer, subject,
+ * signature, or fingerprint, which is a malformed value rather than an
+ * unadmitted one.
  * @param claim - the package's signed provenance claim.
  * @param observed - the independently observed facts to check `claim` against.
  * @param trustRoot - the real `TrustKernelSignatureRoots` handle every trust anchor is registered under.
@@ -327,14 +362,16 @@ export function verifyPackageSignature(
       if (evidence.issuer.length === 0 || evidence.subject.length === 0 || !validLogIndex) {
         return { verified: false, reason: 'evidence-invalid' }
       }
-      const trustAnchorId = findRegisteredAnchor(trustRoot, evidence) ?? brandString<TrustAnchorId>(`sigstore:${evidence.issuer}`)
+      const trustAnchorId = findRegisteredAnchor(trustRoot, evidence)
+      if (trustAnchorId === undefined) return { verified: false, reason: 'trust-anchor-unregistered' }
       return { verified: true, trustAnchorId }
     }
     case 'offline-signed': {
       if (evidence.signature.length === 0 || evidence.publicKeyFingerprint.length === 0) {
         return { verified: false, reason: 'evidence-invalid' }
       }
-      const trustAnchorId = findRegisteredAnchor(trustRoot, evidence) ?? brandString<TrustAnchorId>(`offline:${evidence.publicKeyFingerprint}`)
+      const trustAnchorId = findRegisteredAnchor(trustRoot, evidence)
+      if (trustAnchorId === undefined) return { verified: false, reason: 'trust-anchor-unregistered' }
       return { verified: true, trustAnchorId }
     }
   }

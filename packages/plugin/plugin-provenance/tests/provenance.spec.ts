@@ -18,6 +18,7 @@ import {
   admitUnsignedDevMode,
   recordProvenanceAudit,
   registerTrustAnchor,
+  revokeTrustAnchor,
   verifyLockedPackageOffline,
   verifyPluginProvenance,
 } from '../src/index.ts'
@@ -62,6 +63,9 @@ const sigstoreEvidence: SigstoreProvenanceEvidence = {
   transparencyLogIndex: 918273,
 }
 
+/** The fixtures' offline key fingerprint, registered by {@link kernelWithFixtureAnchors}. */
+const offlineFingerprint = brandString<PublicKeyFingerprint>('sha256:acme-offline-key-fingerprint')
+
 function offlineEvidence(fingerprint: PublicKeyFingerprint): OfflineSignedProvenanceEvidence {
   return {
     mode: 'offline-signed',
@@ -103,25 +107,47 @@ function buildInput(overrides: Partial<PluginProvenanceInput> = {}): PluginProve
   }
 }
 
+/**
+ * A kernel whose trust root has ADMITTED the fixtures' issuer and key.
+ *
+ * Since the P1-02 lock's step ①, well-formed evidence naming an unregistered
+ * issuer is refused (`trust-anchor-unregistered`): an issuer nobody admitted is
+ * not an authority. Every case whose subject is a TRUSTED verdict therefore has
+ * to register first, which is what a real deployment does at boot. The cases
+ * that assert a refusal deliberately keep using a bare `createTrustKernel()`.
+ * @returns the kernel, with both fixture anchors registered.
+ */
+function kernelWithFixtureAnchors(): ReturnType<typeof createTrustKernel> {
+  const kernel = createTrustKernel()
+  registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+  registerTrustAnchor(kernel.signatureRoots, {
+    mode: 'offline-signed',
+    publicKeyFingerprint: offlineFingerprint,
+    owner: 'acme release engineering',
+  })
+  return kernel
+}
+
 describe('P1-02 Contract — must clauses', () => {
   it('must[0]: a claim backed by Sigstore-style identity/provenance evidence verifies as trusted', () => {
-    const kernel = createTrustKernel()
+    const kernel = kernelWithFixtureAnchors()
     const result = verifyPluginProvenance(buildInput(), kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
     if (result.trust === 'trusted') expect(typeof result.trustAnchorId).toBe('string')
   })
 
   it('must[0]: a claim backed by an organization offline-signing key verifies as trusted', () => {
-    const kernel = createTrustKernel()
-    const fingerprint = brandString<PublicKeyFingerprint>('sha256:acme-offline-key-fingerprint')
-    const input = buildInput({ claim: buildClaim(offlineEvidence(fingerprint)) })
+    const kernel = kernelWithFixtureAnchors()
+    const input = buildInput({ claim: buildClaim(offlineEvidence(offlineFingerprint)) })
     const result = verifyPluginProvenance(input, kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
     if (result.trust === 'trusted') expect(typeof result.trustAnchorId).toBe('string')
   })
 
   it('must[1]: a package whose SBOM omits an actually-installed runtime dependency is rejected for SBOM-coverage mismatch', () => {
-    const kernel = createTrustKernel()
+    // Anchored: the case names the SBOM reason, and an unanchored root would
+    // refuse earlier for an unregistered anchor — right verdict, wrong cause.
+    const kernel = kernelWithFixtureAnchors()
     const input = buildInput({ installedDependencyNames: new Set(['left-pad', 'undeclared-runtime-dep']) })
     const result = verifyPluginProvenance(input, kernel.signatureRoots)
     expect(result.trust).toBe('rejected')
@@ -129,7 +155,7 @@ describe('P1-02 Contract — must clauses', () => {
   })
 
   it('must[2]: the trust root a verification checks evidence against is literally TrustKernel\'s own signatureRoots handle', () => {
-    const kernel = createTrustKernel()
+    const kernel = kernelWithFixtureAnchors()
     const result = verifyPluginProvenance(buildInput(), kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
   })
@@ -200,7 +226,7 @@ describe('P1-02 Contract — acceptance[0]: 篡改一个字节、替换 source r
 
 describe('P1-02 Contract — acceptance[1]: 同一锁定包在离线模式可验证', () => {
   it('the identical locked package input verifies as trusted through the offline entrypoint, with no network-shaped parameter', () => {
-    const kernel = createTrustKernel()
+    const kernel = kernelWithFixtureAnchors()
     const locked = buildInput()
     const result = verifyLockedPackageOffline(locked, kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
@@ -249,9 +275,17 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
     readonly run: () => void
   }
 
-  /** Verify one input against a real kernel-issued trust root. */
+  /**
+   * Verify one input against a real kernel-issued trust root that has ADMITTED
+   * the fixtures' anchors.
+   *
+   * Anchored deliberately: each boundary below names the ONE reason it expects,
+   * and against a bare root every one of them would be refused earlier for
+   * `trust-anchor-unregistered` instead — passing the `rejected` half while
+   * testing nothing about the boundary it is named for.
+   */
   function verify(overrides: Partial<PluginProvenanceInput>): PluginProvenanceVerification {
-    return verifyPluginProvenance(buildInput(overrides), createTrustKernel().signatureRoots)
+    return verifyPluginProvenance(buildInput(overrides), kernelWithFixtureAnchors().signatureRoots)
   }
 
   const FAULTS: readonly ProvenanceFault[] = [
@@ -393,24 +427,44 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
     it(`fault boundary ${fault.boundary}`, () => { fault.run() })
   }
 
-  it('KNOWN GAP (P1-02 lock, validation[3]): an UNREGISTERED signing identity is trusted on sight', () => {
-    // This is the honest statement of why a revocation test cannot exist.
-    // Nothing registers this fingerprint, and verification still returns
-    // trusted, naming an anchor id derived from the fingerprint itself. While
-    // "never registered" verifies, "no longer registered" cannot mean
-    // anything, so revocation is unreachable rather than merely unimplemented.
-    //
-    // When the trust root stops trusting first-seen identities this case will
-    // start FAILING. That is the unlock signal, not a regression: delete it
-    // together with the lock and write the real revocation test.
+  it('validation[3]: an identity nobody registered is REFUSED, so revocation can mean something', () => {
+    // Replaces the KNOWN GAP case this lock's unlock signal named. While a
+    // first-seen identity verified, "no longer registered" was empty language:
+    // the next claim from the same key was trusted anyway. Refusing the
+    // unregistered case is what gives the revoked case a subject.
     const neverRegistered = brandString<PublicKeyFingerprint>('SHA256:attacker-key-nobody-declared')
     const result = verify({ claim: buildClaim(offlineEvidence(neverRegistered)) })
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('trust-anchor-unregistered')
+  })
 
-    // Narrowed rather than cast: if this build ever starts REJECTING an
-    // unregistered identity, the assertion below fails outright instead of
-    // reading a property off the refusal branch.
-    expect(result.trust).toBe('trusted')
-    if (result.trust !== 'trusted') throw new Error('unreachable: asserted trusted above')
-    expect(result.trustAnchorId).toBe(`offline:${neverRegistered}`)
+  it('validation[3]: a REVOKED anchor stops verifying, while the untouched one keeps working', () => {
+    // The test the lock said could not be written. Both halves matter: without
+    // the second, an implementation that revoked everything would pass.
+    const kernel = createTrustKernel()
+    const revoked = registerTrustAnchor(kernel.signatureRoots, {
+      mode: 'offline-signed',
+      publicKeyFingerprint: offlineFingerprint,
+      owner: 'acme release engineering',
+    })
+    registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+    const offlineInput = buildInput({ claim: buildClaim(offlineEvidence(offlineFingerprint)) })
+    expect(verifyPluginProvenance(offlineInput, kernel.signatureRoots).trust).toBe('trusted')
+
+    expect(revokeTrustAnchor(kernel.signatureRoots, revoked)).toBe(true)
+    const after = verifyPluginProvenance(offlineInput, kernel.signatureRoots)
+    expect(after.trust).toBe('rejected')
+    if (after.trust === 'rejected') expect(after.reason).toBe('trust-anchor-unregistered')
+    // The sigstore anchor was never revoked and still verifies.
+    expect(verifyPluginProvenance(buildInput(), kernel.signatureRoots).trust).toBe('trusted')
+  })
+
+  it('revoking an id this root never held reports false rather than pretending', () => {
+    const kernel = createTrustKernel()
+    const foreign = registerTrustAnchor(createTrustKernel().signatureRoots, {
+      mode: 'sigstore',
+      trustedIssuer: sigstoreEvidence.issuer,
+    })
+    expect(revokeTrustAnchor(kernel.signatureRoots, foreign)).toBe(false)
   })
 })

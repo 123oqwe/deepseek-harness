@@ -35,6 +35,7 @@
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { registerTrustAnchor } from '../src/signature.ts'
 import { describe, expect, it, vi } from 'vitest'
 import { verifyLockedPackageOffline, verifyPluginProvenance } from '../src/index.ts'
 import type { PluginProvenanceInput } from '../src/index.ts'
@@ -148,9 +149,25 @@ describe('P1-02 Provider — computePackageDigest over real bytes', () => {
   })
 })
 
+/**
+ * A kernel whose root has ADMITTED the fixture issuer.
+ *
+ * Since the P1-02 lock's step ①, evidence naming an unregistered issuer is
+ * refused. The digest cases below are about TAMPERED BYTES, so they anchor
+ * first: against a bare root every one of them would be refused for an
+ * unregistered anchor instead, reporting the right verdict for the wrong
+ * reason and saying nothing about the digest at all.
+ * @returns the kernel, with the fixture's sigstore issuer registered.
+ */
+function anchoredKernel(): ReturnType<typeof createTrustKernel> {
+  const kernel = createTrustKernel()
+  registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+  return kernel
+}
+
 describe('P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes', () => {
   it('verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture', () => {
-    const kernel = createTrustKernel()
+    const kernel = anchoredKernel()
     const result = verifyPluginProvenance(buildInput(genuinePackageBytes, genuinePackageBytes), kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
   })
@@ -176,11 +193,18 @@ describe('P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against 
 
 describe('P1-02 Provider — acceptance[1]: the same locked package verifies offline', () => {
   it('reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance', async () => {
-    const online = verifyPluginProvenance(buildInput(genuinePackageBytes, genuinePackageBytes), createTrustKernel().signatureRoots)
+    const online = verifyPluginProvenance(buildInput(genuinePackageBytes, genuinePackageBytes), anchoredKernel().signatureRoots)
     vi.resetModules()
     const offlineModule = await import('../src/index.ts')
     const offlineSignature = await import('../src/signature.ts')
     const offlineKernel = (await import('@deepseek-ai/dsh-trust-kernel')).createTrustKernel()
+    // The reloaded module has its own anchor registry, so the offline half
+    // registers its own: the point of the case is that the same bytes reach the
+    // same verdict, not that two module instances share state.
+    offlineSignature.registerTrustAnchor(offlineKernel.signatureRoots, {
+      mode: 'sigstore',
+      trustedIssuer: sigstoreEvidence.issuer,
+    })
     const claimedDigest = offlineSignature.computePackageDigest(genuinePackageBytes)
     const locked: PluginProvenanceInput = {
       claim: {
@@ -215,18 +239,28 @@ describe('P1-02 Provider — acceptance[1]: the same locked package verifies off
   })
 })
 
-describe('P1-02 Provider — the limit of a digest without a trust root (BLOCKED-050)', () => {
-  it('KNOWN GAP (BLOCKED-050 hollow signature root): a tamper-and-rewrite attacker still verifies -- asserts CURRENT behavior, NOT desired behavior; giving the kernel real key material MUST break this test', () => {
+describe('P1-02 Provider — a tamper-and-rewrite attacker is refused by the trust root', () => {
+  it('acceptance[0] vector 2: recomputing BOTH digests from tampered bytes no longer verifies', () => {
+    // This replaces the KNOWN GAP case whose failure was this lock's unlock
+    // signal. The attacker controls the claim as well as the artifact, so both
+    // digests are recomputed from the tampered bytes and agree — a digest binds
+    // an artifact to a claim, never a claim to an authority. What refuses it is
+    // the trust root: the attacker's evidence names an issuer nobody admitted.
     const kernel = createTrustKernel()
     const tampered = flipOneByte(genuinePackageBytes, 9)
-    // The attacker controls the claim as well as the artifact, so both
-    // digests are recomputed from the tampered bytes and agree. A digest
-    // binds an artifact to a claim; only a signature over the claim, against
-    // a root holding real key material, binds the claim to an authority.
-    // When `createTrustKernel()` stops minting `signatureRoots` as
-    // `Object.freeze({})`, this expectation is meant to fail: that failure is
-    // Epic P1-02's unlock signal, never a regression to restore to green.
     const result = verifyPluginProvenance(buildInput(tampered, tampered), kernel.signatureRoots)
-    expect(result.trust).toBe('trusted')
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('trust-anchor-unregistered')
+  })
+
+  it('the same tamper-and-rewrite is still refused when OTHER anchors are registered', () => {
+    // The narrower claim: it is refused because THIS issuer is unadmitted, not
+    // because the root happens to be empty. A root with anchors in it, none of
+    // them the attacker's, refuses exactly the same way.
+    const kernel = createTrustKernel()
+    registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: 'https://some.other.issuer.example' })
+    const tampered = flipOneByte(genuinePackageBytes, 9)
+    const result = verifyPluginProvenance(buildInput(tampered, tampered), kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
   })
 })
