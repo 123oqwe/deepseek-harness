@@ -353,6 +353,28 @@
       "whyNotRegistered": "One occurrence. The program's own rule is that a single failure never registers a flake, and both existing entries carry many. Recorded here so the observation is not lost, and so a second occurrence is recognized as a second rather than a first.",
       "evidenceItAlreadyHas": "Unusually strong for a first sighting, and worth stating because it is the pattern that settled the webworker-packer case: the commit it failed on, b154f4f086, changed ONLY spec/first100/exec/BLOCKED-QUEUE.md and ledger.json -- documentation and bookkeeping, no code that could reach a session-snapshot harness. It also passes 3 of 3 locally. A docs-only commit failing a test is evidence of instability rather than of a regression, since nothing in that commit could have caused it.",
       "whatWouldSettleIt": "A second occurrence on any run. If it instead stays green across the next several runs, this candidate should be dropped rather than left standing -- a candidates list that only ever grows becomes a list of things nobody will ever conclude anything about."
+    },
+    {
+      "testFullName": "tests/release/{baseline-fingerprint,evidence-package}.spec.ts — multiple cases, load-dependent 5000ms timeouts",
+      "testFile": "tests/release/evidence-package.spec.ts and tests/release/baseline-fingerprint.spec.ts",
+      "status": "CANDIDATE — NOT REGISTERED",
+      "occurrences": [
+        {
+          "ciRunUrl": "local full-suite run, no CI run",
+          "candidateSha": "7d719cd80d",
+          "observedAtUtc": "2026-09-06T22:10:00.000Z",
+          "outcome": "failed"
+        },
+        {
+          "ciRunUrl": "local full-suite run, no CI run",
+          "candidateSha": "7d719cd80d",
+          "observedAtUtc": "2026-09-06T22:35:00.000Z",
+          "outcome": "failed"
+        }
+      ],
+      "whyNotRegistered": "Observed only LOCALLY, in `pnpm run test`, never in a CI run — and the flake registry exists to absorb failures from CI observations that green a cell. Registering a locally-seen failure would let a future observation absorb a CI failure this has never been seen to produce.",
+      "diagnosis": "NOT assertion failures: every one reports `Test timed out in 5000ms`, with measured durations of 5089-6488ms — at and just past the boundary. Both specs run REAL gates and real collect/verify passes in subprocesses, so their wall time scales with machine load. They pass alone (60/60), pass when run as a pair (60/60), and fail in varying subsets under the full suite: 7 failures in one run, a different 7 in the next. That variance is the signature of contention, not of a defect. Adding packages/policy/risk-taxonomy plausibly pushed them over, since baseline-fingerprint hashes the workspace and the suite got longer, but the sensitivity is theirs and predates it.",
+      "notFixedBecause": "The fix is a per-case timeout in tests/release/*.spec.ts, which belong to P0-01 and P0-07 — both ACCEPTED. Raising a timeout on an accepted epic's frozen cases to make an unrelated change's full-suite run go green is how a real regression gets hidden later. Owner decision required; recorded with the measurement so whoever takes it does not have to re-derive it."
     }
   ]
 }
