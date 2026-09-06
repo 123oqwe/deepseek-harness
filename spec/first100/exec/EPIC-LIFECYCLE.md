@@ -26,7 +26,7 @@
 | 1.2 | **三问**:主体在不在执行路径上 / 冻结挂哪个 stage / 每条子句的主体是什么(文件:行) | BLOCKED-101;记 `clause-subject-audit.json` → `preFlight[epic]` |
 | 1.3 | **第四问**:读执行卡整张(主+副判定 / adapt 每条的 note / 标准 / risk / residual / 社区缺口 / 裁决叠加) | 整改令 §4.1;卡 = `make-vs-use-plan.md#### <id>` |
 | 1.4 | 若卡上有 adapt 级库 → 走 **§8 九步 SOP**(供应链核 → **本树复验** → 接法定形 runtime/oracle/optional/vendored → 落座三角色 → 三类冻结用例) | 整改令 §8;oracle 形态 §7.8;模板 P1-02 / P2-03 |
-| 1.5 | **标准词汇**:卡上每个标准,查自己是不是首个采用者——是则定形状并冻结 schema 用例;不是则 import 首个采用者的定义,不再声明一份 | 整改令 §7.3 表 + R3;卡上"标准"行已标 |
+| 1.5 | **标准词汇**:卡上每个标准,查自己是不是形状所有者——是则定形状并冻结 schema 用例;不是则 import 所有者的定义,不再声明一份;所有者 wave 晚于自己时用内部名、由所有者日后映射 | **执行卡 §1 表(唯一所有权表)**;规则 R3 + §7.11;卡上"标准"行已按 wave 标出 |
 | 1.6 | **缺口核对**:卡上每条社区「缺口:」逐项对到子句;对不上写"超出本 epic(归 X)"或报子句缺口 → BLOCKED | 整改令 §9.2;自 P2-04 起 |
 | 1.7 | 若是 seam 类 epic(P6-01 / P8-06 / P2-05 / P3-11 / P1-10 / P7-07 / P1-02·04·06):冻结"现有形态插件不改代码可作 provider"用例 + 一条负用例 | 整改令 §9.2 表 |
 | 1.8 | 若 epic 在共用引擎的消费者列表里(Cedar / sandbox-srt / OTel / attestation envelope):**引擎 slice 必须已落地**,消费者不重验引擎 | 整改令 §3.1–3.4 |
@@ -39,7 +39,7 @@
 | 步 | 动作 | 出处 |
 |---|---|---|
 | 2.1 | 冻结:加用例 → `supplements`;替换/删除 → `supersedes`;每条冻结带 `sensitivityProof {mutationDescription, failureSummary}`,failureSummary 写"哪些用例仍绿、为什么" | BLOCKED-103;`command-freeze.schema.json` |
-| 2.2 | 变异存活的诊断顺序 **③→②→①**(变异没改行为 → 真等价 → 套件弱),按代价不按可能性;替换断言时新旧都变异 | 整改令附带记录;BLOCKED-066 |
+| 2.2 | 变异存活的诊断顺序 **③→②→①**(变异没改行为 → 真等价 → 套件弱),按代价不按可能性;替换断言时新旧都变异 | **尚未成文**(执行者 2026-09-05 提出、gq-92 采纳,只在会话消息里)→ 执行者记入 BLOCKED `## Standing` 并编号后,此处补号。在此之前本行是唯一记录,这违反本文件"不含新规则"的原则,故标出 |
 | 2.3 | 测试替身不许 `as unknown as X`;类型级构造要过 typecheck | BLOCKED-126 / BLOCKED-029 |
 | 2.4 | "变异证明只证明套件对要求敏感,不证明要求对"——要求的对错看 registry 措辞 + 账本 risk + 安全后果 | 整改令 §7.5 |
 | 2.5 | 跑套件看**退出码**,不只 grep 计数;unhandled rejection 是 error 不是 fail | 执行者自查 2026-09-06;BLOCKED-078 |
@@ -68,7 +68,7 @@
 
 ## 5. 跨 epic 的固定顺序(现行)
 
-见整改令 §4 的 **14:15 EDT 增补块**:②′ P2-03 → ②″ verify-make-vs-use 门 → ③ Cedar slice → ④ W5–W7 → ⑤ sandbox-srt → ⑤′ attestation envelope(P4-04 前)→ ⑥ OTel。
+见整改令 §4 的 **14:15 EDT 增补块**:②′ P2-03 → ②″ verify-make-vs-use 门 → ③ Cedar slice → ④ W5–W7 → ⑤ sandbox-srt(W7 前)→ ⑤′ attestation envelope(P4-04 W9 前)→ ⑥ OTel(**W11 前**,§7.11 修订)。标准形状所有者以执行卡 §1 表为准。
 
 ## 6. 谁决定什么
 
