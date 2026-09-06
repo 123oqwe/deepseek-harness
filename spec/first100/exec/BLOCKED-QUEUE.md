@@ -252,6 +252,26 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-132 — BLOCKED-095's repair cannot be mechanized, because `capturedAtUtc` records when the LEDGER was written, not when the observation happened
+
+**State: OPEN, and the useful part is why the obvious check is unbuildable rather than merely unbuilt.**
+
+BLOCKED-095 asked for the freeze-target listing to be mechanical instead of remembered, arguing that "a check written for a different defect found this one" beats remembering. The natural mechanical form is: **a stage frozen AFTER its own observation was not frozen in advance.** Every input for it appears to exist — `command-freeze.json` carries `frozenAtUtc`, the ledger's green cells carry `capturedAtUtc`. It does not work, and the reason is a field that says one thing and means another.
+
+**Three attempts, each measured.**
+
+1. *Live freeze entry newer than the observation* — **47 hits.** Wrong by construction: a supersession legitimately re-freezes a stage long after it greened. It flagged P0-02.F, which was superseded earlier today deliberately and correctly.
+2. *EARLIEST freeze for that stage, superseded entries included, newer than the observation* — **39 hits across 10 epics, seven of them ACCEPTED** (P1-01, P2-01, P4-07, P4-08, P4-09, P6-02, P8-01). A rate that high is not a defect signal; it is a broken predicate.
+3. *Reading what `capturedAtUtc` actually is* — `generate-ledger.mjs:672` and `:774` set it to `nowIso()` **at the moment the cell is written**, not from the observation. Confirmed against the data: **23 cells share the timestamp `2026-09-05T18:08`**, differing only in milliseconds, across P1-03, P4-06 and others — the signature of one bulk regeneration, not of 23 CI runs.
+
+**So the ledger records when a row was last regenerated under a name that reads as when the evidence was captured.** Any check comparing freeze time to observation time is measuring freeze-versus-bookkeeping, which is why attempts 1 and 2 produced confident, wrong answers.
+
+**What would make it buildable:** the greening path recording the observation's own time — the CI run's `created_at`/`updated_at`, available from the run the cell already cites in `ciRunUrl` — as a field distinct from the row's write time. That is a change to `generate-ledger.mjs`'s green path and to every existing green cell's record, so it is not a side effect of this finding.
+
+**Not attempted as a workaround:** fetching each cell's run timestamp from the API at check time. A gate that needs the network to decide cannot run on a clean offline tree, which this repository's own source-plane rule forbids.
+
+**The narrower check that IS buildable today, and was measured as already passing:** every GREEN cell has at least one live freeze entry — **0 violations**. It is weaker than what BLOCKED-095 asked for, and stating that plainly matters: it would not have caught P1-03's C stage, which HAD a freeze entry, just one written three stages late.
+
 ### BLOCKED-130 — the fiber-store pin is a vendored patch, and a re-vendor removes it with nothing going red
 
 **State: OPEN, durable pointer. Not schedulable work — a standing condition on the vendor sync procedure.**
