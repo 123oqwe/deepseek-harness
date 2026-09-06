@@ -239,6 +239,12 @@ describe('P2-03 Contract — acceptance[2]: 无法分类副作用的动作默认
  * as the one that was authorised, which is the attack the hash exists to stop.
  * A canonicalizer that returned a constant satisfies the first alone; one that
  * hashed raw bytes satisfies the second alone.
+ *
+ * **Effective samples, measured 2026-09-06:** key-order 500/500, Unicode
+ * 200/200, no-collision 500/500, separator 300/300 — every property runs its
+ * whole budget with no precondition rejections. That is the number a starving
+ * generator destroys while the suite stays green, so check a generator change
+ * against these counts rather than against the colour.
  */
 describe('P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion', () => {
   /** A JSON value generator, kept shallow enough that shrinking reports something readable. */
