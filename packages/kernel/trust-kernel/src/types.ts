@@ -65,6 +65,16 @@ export type TrustKernelTrustAnchor =
     readonly mode: 'sigstore'
     /** OIDC issuer URL whose identities this deployment admits. */
     readonly trustedIssuer: string
+    /**
+     * Sigstore's public trusted-root document — Fulcio's CA chain and Rekor's
+     * log keys.
+     *
+     * Public by construction, like everything else here: a verifier needs no
+     * private key, so this document can be committed and read in CI. Absent, the
+     * anchor still says which issuer is admitted and can verify nothing, and a
+     * claim against it is refused rather than believed.
+     */
+    readonly trustedRoot?: unknown
   }
   | {
     readonly mode: 'offline-signed'

@@ -35,7 +35,14 @@
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
-import { registerTrustAnchor } from '../src/signature.ts'
+import { registerTrustAnchor, signedClaimBytes } from '../src/signature.ts'
+import { CHAIN_ISSUER, CHAIN_SUBJECT, createLocalSigstoreChain } from './fixtures/sigstore-chain.ts'
+
+// One local chain for this file: the two cases that expect a TRUSTED verdict
+// now present a real bundle, because the Sigstore path stopped believing
+// identity fields on their own. The refusal cases are unaffected — a digest
+// mismatch is decided before any signature is checked.
+const chain = await createLocalSigstoreChain()
 import { describe, expect, it, vi } from 'vitest'
 import { verifyLockedPackageOffline, verifyPluginProvenance } from '../src/index.ts'
 import type { PluginProvenanceInput } from '../src/index.ts'
@@ -73,9 +80,21 @@ const genuineBuilderIdentity = brandString<BuilderIdentity>('github-actions:acme
 const sbomDigest = brandString<SbomDigest>('sha256:sbom-of-plugin-a')
 const sigstoreEvidence: SigstoreProvenanceEvidence = {
   mode: 'sigstore',
-  issuer: 'https://token.actions.githubusercontent.com',
-  subject: 'repo:acme/plugin-a:ref:refs/heads/main',
+  issuer: CHAIN_ISSUER,
+  subject: CHAIN_SUBJECT,
   transparencyLogIndex: 918273,
+}
+
+/**
+ * The same input with evidence whose bundle really signs the claim.
+ * @param claimedBytes - bytes the claim's digest is taken over.
+ * @param installedBytes - bytes actually installed.
+ * @returns the input, signed.
+ */
+async function buildSignedInput(claimedBytes: Uint8Array, installedBytes: Uint8Array): Promise<PluginProvenanceInput> {
+  const input = buildInput(claimedBytes, installedBytes)
+  const bundle = await chain.sign(signedClaimBytes(input.claim))
+  return { ...input, claim: { ...input.claim, evidence: { ...sigstoreEvidence, bundle } } }
 }
 const installedDependencyNames = new Set(['left-pad'])
 
@@ -161,14 +180,19 @@ describe('P1-02 Provider — computePackageDigest over real bytes', () => {
  */
 function anchoredKernel(): ReturnType<typeof createTrustKernel> {
   const kernel = createTrustKernel()
-  registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+  registerTrustAnchor(kernel.signatureRoots, {
+    mode: 'sigstore',
+    trustedIssuer: sigstoreEvidence.issuer,
+    trustedRoot: chain.trustedRoot,
+  })
   return kernel
 }
 
 describe('P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against real bytes', () => {
-  it('verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture', () => {
+  it('verifies the untampered package, so the rejections below are caused by the tampering and not by the fixture', async () => {
     const kernel = anchoredKernel()
-    const result = verifyPluginProvenance(buildInput(genuinePackageBytes, genuinePackageBytes), kernel.signatureRoots)
+    const signed = await buildSignedInput(genuinePackageBytes, genuinePackageBytes)
+    const result = verifyPluginProvenance(signed, kernel.signatureRoots)
     expect(result.trust).toBe('trusted')
   })
 
@@ -193,7 +217,8 @@ describe('P1-02 Provider — acceptance[0]: 篡改一个字节 rejected against 
 
 describe('P1-02 Provider — acceptance[1]: the same locked package verifies offline', () => {
   it('reaches the identical trusted verdict for the same locked bytes through a separately loaded module instance', async () => {
-    const online = verifyPluginProvenance(buildInput(genuinePackageBytes, genuinePackageBytes), anchoredKernel().signatureRoots)
+    const signed = await buildSignedInput(genuinePackageBytes, genuinePackageBytes)
+    const online = verifyPluginProvenance(signed, anchoredKernel().signatureRoots)
     vi.resetModules()
     const offlineModule = await import('../src/index.ts')
     const offlineSignature = await import('../src/signature.ts')
@@ -204,6 +229,7 @@ describe('P1-02 Provider — acceptance[1]: the same locked package verifies off
     offlineSignature.registerTrustAnchor(offlineKernel.signatureRoots, {
       mode: 'sigstore',
       trustedIssuer: sigstoreEvidence.issuer,
+      trustedRoot: chain.trustedRoot,
     })
     const claimedDigest = offlineSignature.computePackageDigest(genuinePackageBytes)
     const locked: PluginProvenanceInput = {
@@ -212,7 +238,7 @@ describe('P1-02 Provider — acceptance[1]: the same locked package verifies off
         sourceCommit: genuineSourceCommit,
         builderIdentity: genuineBuilderIdentity,
         sbomDigest,
-        evidence: sigstoreEvidence,
+        evidence: signed.claim.evidence,
       },
       observed: {
         observedDigest: offlineSignature.computePackageDigest(genuinePackageBytes),

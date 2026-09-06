@@ -49,6 +49,7 @@ import type { Branded } from '@deepseek-ai/dsh-brand'
 import { configuredTrustAnchors } from '@deepseek-ai/dsh-trust-kernel'
 import type { TrustKernelSignatureRoots, TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel/types'
 import type { SbomDigest } from './sbom.ts'
+import { toSignedEntity, toTrustMaterial, Verifier } from '@sigstore/verify'
 
 /** Content digest of an installed package tarball (must[1]'s "package digest"). */
 export type PackageDigest = Branded<'PackageDigest'>
@@ -118,6 +119,17 @@ export interface SigstoreProvenanceEvidence {
   readonly subject: string
   /** Index of this signature's entry in the Sigstore transparency log (Rekor-style), proving public logging. */
   readonly transparencyLogIndex: number
+  /**
+   * The Sigstore bundle: the certificate chain and the transparency-log entry
+   * that make this claim checkable (P1-02 must[0], the Sigstore half).
+   *
+   * Optional only because a deployment may hold claims recorded before this
+   * field existed. **A claim without one cannot be verified**, and
+   * {@link verifyPackageSignature} refuses it rather than falling back to the
+   * fields above — `issuer` and `subject` are what the claim SAYS about itself,
+   * and the bundle is what a verifier can check them against.
+   */
+  readonly bundle?: unknown
 }
 
 /** Organization offline-signing evidence (must[0]). */
@@ -252,10 +264,21 @@ export interface OfflineTrustAnchorDeclaration {
   readonly publicKeyPem?: string
 }
 
-/** A trusted Sigstore OIDC issuer, declared by issuer URL only. */
+/**
+ * A trusted Sigstore OIDC issuer.
+ *
+ * `trustedRoot` is the Sigstore trusted-root document — Fulcio's CA chain and
+ * Rekor's log keys. It is PUBLIC material by construction: a verifier needs no
+ * private key, so a deployment configuring this holds nothing secret, and the
+ * document can be committed and read in CI. Without it an anchor still says
+ * which issuer is admitted and nothing more, so a claim against it is refused
+ * as unverifiable rather than accepted.
+ */
 export interface SigstoreTrustAnchorDeclaration {
   readonly mode: 'sigstore'
   readonly trustedIssuer: string
+  /** Sigstore's public trusted-root document; absent means this anchor admits an issuer but can verify nothing. */
+  readonly trustedRoot?: unknown
 }
 
 /** must[0]'s two declarable trust-anchor shapes, mirroring {@link ProvenanceEvidence}'s two evidence shapes. */
@@ -318,7 +341,11 @@ function anchorSelector(anchor: TrustKernelTrustAnchor): string {
  */
 function toDeclaration(anchor: TrustKernelTrustAnchor): TrustAnchorDeclaration {
   return anchor.mode === 'sigstore'
-    ? { mode: 'sigstore', trustedIssuer: anchor.trustedIssuer }
+    ? {
+      mode: 'sigstore',
+      trustedIssuer: anchor.trustedIssuer,
+      ...anchor.trustedRoot === undefined ? {} : { trustedRoot: anchor.trustedRoot },
+    }
     : {
       mode: 'offline-signed',
       publicKeyFingerprint: brandString<PublicKeyFingerprint>(anchor.publicKeyFingerprint),
@@ -372,6 +399,51 @@ function checkOfflineSignature(
   } catch {
     // An unreadable key or a malformed signature is a failed verification, not
     // a crash: the caller asked whether this claim verifies, and it does not.
+    return 'signature-invalid'
+  }
+}
+
+/**
+ * Verify a Sigstore bundle against an admitted anchor's trusted root
+ * (P1-02 must[0], the Sigstore half).
+ *
+ * The artifact the bundle signs is {@link signedClaimBytes} of the claim, the
+ * same bytes the offline branch signs — so a bundle made for a different claim
+ * fails on the artifact rather than on anything about identities.
+ *
+ * The certificate's identity is then compared with what the claim asserts about
+ * itself. Verifying the bundle alone would prove only that SOMEONE with a
+ * Fulcio certificate signed these bytes; comparing the identity is what makes
+ * the claim's own `issuer` and `subject` mean anything.
+ * @param declaration - the admitted anchor, carrying the trusted root.
+ * @param claim - the claim whose canonical bytes the bundle signs.
+ * @param evidence - the Sigstore evidence carrying the bundle.
+ * @returns `undefined` when it verifies, or the reason it did not.
+ */
+function checkSigstoreBundle(
+  declaration: SigstoreTrustAnchorDeclaration,
+  claim: PackageProvenanceClaim,
+  evidence: SigstoreProvenanceEvidence,
+): SignatureRejectionReason | undefined {
+  const { trustedRoot } = declaration
+  if (trustedRoot === undefined) return 'anchor-has-no-key'
+  if (evidence.bundle === undefined) return 'evidence-invalid'
+  try {
+    const material = toTrustMaterial(trustedRoot as never)
+    const entity = toSignedEntity(evidence.bundle as never, Buffer.from(signedClaimBytes(claim)))
+    // The identity is enforced by the verifier's own policy rather than
+    // compared afterwards: a post-hoc comparison is a second implementation of
+    // a rule the library already has, and the two would diverge the first time
+    // either changed. A bundle that verifies against a DIFFERENT identity is
+    // refused here, not reported as a pass with a mismatched name.
+    new Verifier(material).verify(entity, {
+      subjectAlternativeName: evidence.subject,
+      extensions: { issuer: evidence.issuer },
+    })
+    return undefined
+  } catch {
+    // A malformed bundle, an unreadable trusted root, or a failed verification
+    // are one answer to the caller's question: this claim does not verify.
     return 'signature-invalid'
   }
 }
@@ -481,6 +553,12 @@ export function verifyPackageSignature(
       }
       const trustAnchorId = findRegisteredAnchor(trustRoot, evidence)
       if (trustAnchorId === undefined) return { verified: false, reason: 'trust-anchor-unregistered' }
+      const declaration = anchorsFor(trustRoot).get(trustAnchorId)
+      if (declaration === undefined || declaration.mode !== 'sigstore') {
+        return { verified: false, reason: 'trust-anchor-unregistered' }
+      }
+      const failure = checkSigstoreBundle(declaration, claim, evidence)
+      if (failure !== undefined) return { verified: false, reason: failure }
       return { verified: true, trustAnchorId }
     }
     case 'offline-signed': {

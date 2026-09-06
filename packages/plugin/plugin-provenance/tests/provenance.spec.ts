@@ -13,6 +13,7 @@
 
 import { generateKeyPairSync, sign as signBytes } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
+import { CHAIN_ISSUER, CHAIN_SUBJECT, createLocalSigstoreChain } from './fixtures/sigstore-chain.ts'
 import { configuredTrustAnchors, createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
 import type { TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel/types'
 import { describe, expect, it } from 'vitest'
@@ -59,12 +60,40 @@ const sbom: SbomDocument = {
   ],
 }
 
-const sigstoreEvidence: SigstoreProvenanceEvidence = {
+// One local chain, built when this file loads: the sigstore cases below verify
+// a REAL bundle rather than a well-formed-looking record. Top-level await
+// because the chain issues certificates and logs entries asynchronously, and a
+// per-case chain would pay that cost dozens of times over.
+const chain = await createLocalSigstoreChain()
+
+/** Sigstore evidence whose bundle really signs `claim`'s canonical bytes. */
+async function signedSigstoreEvidence(
+  claim: Omit<PackageProvenanceClaim, 'evidence'>,
+  identity?: { issuer?: string; subject?: string },
+): Promise<SigstoreProvenanceEvidence> {
+  const bytes = signedClaimBytes({ ...claim, evidence: unsignedSigstoreEvidence })
+  return {
+    ...unsignedSigstoreEvidence,
+    ...identity?.issuer === undefined ? {} : { issuer: identity.issuer },
+    ...identity?.subject === undefined ? {} : { subject: identity.subject },
+    bundle: await chain.sign(bytes, identity),
+  }
+}
+
+/** The identity fields alone, with no bundle: what a claim ASSERTS about itself. */
+const unsignedSigstoreEvidence: SigstoreProvenanceEvidence = {
   mode: 'sigstore',
-  issuer: 'https://token.actions.githubusercontent.com',
-  subject: 'repo:acme/plugin-a:ref:refs/heads/main',
+  issuer: CHAIN_ISSUER,
+  subject: CHAIN_SUBJECT,
   transparencyLogIndex: 918273,
 }
+
+const sigstoreEvidence: SigstoreProvenanceEvidence = await signedSigstoreEvidence({
+  packageDigest: subjectDigest,
+  sourceCommit: realSourceCommit,
+  builderIdentity: realBuilderIdentity,
+  sbomDigest,
+})
 
 /**
  * A real signing key pair, generated when this file loads (P1-02 lock, step ③).
@@ -150,7 +179,11 @@ function buildInput(overrides: Partial<PluginProvenanceInput> = {}): PluginProve
  */
 function kernelWithFixtureAnchors(): ReturnType<typeof createTrustKernel> {
   const kernel = createTrustKernel()
-  registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+  registerTrustAnchor(kernel.signatureRoots, {
+    mode: 'sigstore',
+    trustedIssuer: sigstoreEvidence.issuer,
+    trustedRoot: chain.trustedRoot,
+  })
   registerTrustAnchor(kernel.signatureRoots, {
     mode: 'offline-signed',
     publicKeyFingerprint: offlineFingerprint,
@@ -484,7 +517,11 @@ describe('P1-02 Fault — rejection-boundary matrix', () => {
       owner: 'acme release engineering',
       publicKeyPem: offlinePublicKeyPem,
     })
-    registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+    registerTrustAnchor(kernel.signatureRoots, {
+      mode: 'sigstore',
+      trustedIssuer: sigstoreEvidence.issuer,
+      trustedRoot: chain.trustedRoot,
+    })
     const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
     const offlineInput = buildInput({ claim: { ...unsigned, evidence: signedOfflineEvidence(unsigned) } })
     expect(verifyPluginProvenance(offlineInput, kernel.signatureRoots).trust).toBe('trusted')
@@ -670,7 +707,7 @@ describe('P1-02 must[2] — a kernel configured with anchors holds them', () => 
 
   it('a configured anchor can be revoked at runtime, so configuration is not a second, unwithdrawable channel', () => {
     const kernel = createTrustKernel({
-      trustAnchors: [{ mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer }],
+      trustAnchors: [{ mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer, trustedRoot: chain.trustedRoot }],
     })
     expect(verifyPluginProvenance(buildInput(), kernel.signatureRoots).trust).toBe('trusted')
     const configured = listTrustAnchorIds(kernel.signatureRoots)
@@ -699,46 +736,69 @@ describe('P1-02 must[2] — a kernel configured with anchors holds them', () => 
  * the deployment chose (C10) — so the lock narrows rather than lifts, and this
  * case is its new criterion.
  */
-describe('P1-02 KNOWN GAP (Sigstore path) — an ADMITTED issuer is believed without proof', () => {
-  it('KNOWN GAP: a claim naming an admitted Sigstore issuer verifies with no certificate and no inclusion proof -- asserts CURRENT behavior; wiring @sigstore/verify MUST break this test', () => {
-    // The attacker does not need a key here. They need the issuer URL of an
-    // anchor the deployment admitted, which is public by construction, plus
-    // any non-negative transparency-log index. No Fulcio certificate binds the
-    // identity and no Rekor inclusion proof is checked, so "signed by GitHub
-    // Actions" is currently a string the claim asserts about itself.
+describe('P1-02 — the Sigstore path is verified, not believed', () => {
+  it('acceptance[0]: a claim naming an admitted issuer with NO bundle is refused', () => {
+    // This replaces the KNOWN GAP case that asserted the opposite. The attacker
+    // needed only a public issuer URL and any log index; the identity fields
+    // are what a claim SAYS about itself, and nothing checked them.
     const kernel = kernelWithFixtureAnchors()
-    const forged = buildInput({
-      claim: buildClaim({
-        mode: 'sigstore',
-        issuer: sigstoreEvidence.issuer,
-        subject: 'repo:attacker/not-the-real-repo:ref:refs/heads/main',
-        transparencyLogIndex: 1,
-      }),
-    })
-    const result = verifyPluginProvenance(forged, kernel.signatureRoots)
-
-    // Narrowed rather than cast: when this build starts REJECTING an unproved
-    // Sigstore claim, the assertion fails outright instead of reading a
-    // property off the refusal branch.
-    expect(result.trust).toBe('trusted')
-    if (result.trust !== 'trusted') throw new Error('unreachable: asserted trusted above')
-    // The subject is the attacker's own repository, and nothing checked it.
-    expect(JSON.stringify(forged.claim.evidence)).toContain('attacker/not-the-real-repo')
-  })
-
-  it('the same forgery on the OFFLINE path is already refused, so this gap is one branch and not both', () => {
-    // The control that keeps the case above honest: it is not saying "this
-    // package verifies nothing", it is saying which branch still does not.
-    const kernel = kernelWithFixtureAnchors()
-    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
-    const forged = buildInput({
-      claim: {
-        ...unsigned,
-        evidence: { ...signedOfflineEvidence(unsigned), signature: new Uint8Array([1, 2, 3, 4]) },
-      },
-    })
+    const forged = buildInput({ claim: buildClaim(unsignedSigstoreEvidence) })
     const result = verifyPluginProvenance(forged, kernel.signatureRoots)
     expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('evidence-invalid')
+  })
+
+  it('a bundle issued to a DIFFERENT identity is refused, even though it verifies cryptographically', async () => {
+    // The bundle is genuine and its chain is trusted; only the identity differs.
+    // Verifying the bundle alone would prove someone with a certificate signed
+    // these bytes — the identity check is what ties it to this claim.
+    const kernel = kernelWithFixtureAnchors()
+    const base = {
+      packageDigest: subjectDigest,
+      sourceCommit: realSourceCommit,
+      builderIdentity: realBuilderIdentity,
+      sbomDigest,
+    }
+    // The CERTIFICATE is issued to the attacker's repository while the claim
+    // keeps asserting the real one, which is the shape of a real forgery: a
+    // genuine certificate presented under someone else's name.
+    const attackerBundle = await chain.sign(
+      signedClaimBytes({ ...base, evidence: unsignedSigstoreEvidence }),
+      { subject: 'repo:attacker/not-the-real-repo:ref:refs/heads/main' },
+    )
+    const evidence: SigstoreProvenanceEvidence = { ...unsignedSigstoreEvidence, bundle: attackerBundle }
+    const result = verifyPluginProvenance(buildInput({ claim: { ...base, evidence } }), kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
     if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
+  })
+
+  it('a bundle signing DIFFERENT claim bytes is refused, so a bundle cannot be moved between claims', async () => {
+    const kernel = kernelWithFixtureAnchors()
+    const other = {
+      packageDigest: brandString<PackageDigest>('sha256:some-other-package'),
+      sourceCommit: realSourceCommit,
+      builderIdentity: realBuilderIdentity,
+      sbomDigest,
+    }
+    const evidence = await signedSigstoreEvidence(other)
+    // The evidence is valid for `other`, and is presented for the real claim.
+    const result = verifyPluginProvenance(buildInput({ claim: buildClaim(evidence) }), kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
+  })
+
+  it('an admitted issuer whose anchor carries NO trusted root cannot verify, and refuses', () => {
+    // An anchor that cannot verify is not an anchor that verifies everything —
+    // the same rule the offline branch applies to a missing public key.
+    const kernel = createTrustKernel()
+    registerTrustAnchor(kernel.signatureRoots, { mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer })
+    const result = verifyPluginProvenance(buildInput(), kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('anchor-has-no-key')
+  })
+
+  it('the genuine bundle for the genuine claim verifies, so the refusals above are selective', () => {
+    const kernel = kernelWithFixtureAnchors()
+    expect(verifyPluginProvenance(buildInput(), kernel.signatureRoots).trust).toBe('trusted')
   })
 })
