@@ -994,11 +994,16 @@ describe('runScenario', () => {
         steps: [
           ...boot,
           { op: 'promptAndCancel', text: 'hang' },
-          { op: 'waitForSubagentTurnEnd', minimumTurn: 2, timeoutMs: 20 },
+          // 1ms, not 20: no harvest attempt can finish inside it on any
+          // machine, so this drives the path where `vi.waitFor` gives up before
+          // the harness's own check has completed once. At 20ms a fast machine
+          // took the other path, and CI took this one — the case passed or
+          // failed on scheduling.
+          { op: 'waitForSubagentTurnEnd', minimumTurn: 2, timeoutMs: 1 },
         ],
       },
       { agent: AGENT, mode: 'replay', fixtureFile: closed.fixtureFile },
-    )).rejects.toThrow(/subagent child #1 did not persist closed turn 2 within 20ms/)
+    )).rejects.toThrow(/subagent child #1 did not persist closed turn 2 within 1ms/)
 
     const seedOnly = await scenario({
       prompt: 'hang-until-cancel',

@@ -598,16 +598,29 @@ async function waitForPersistedChildTurnEnd(
   timeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
   minimumTurn = 1,
 ): Promise<void> {
-  await vi.waitFor(async () => {
-    const log = (await harvestSessionLogs(root))[child]
-    if (log === undefined || !latestTurnIsClosed(log.content)
-      || !hasRequestHeaderAfterDescriptor(log.content)
-      || !hasClosedTurn(log.content, minimumTurn)) {
-      throw new Error(
-        `snapshot-harness: subagent child #${child} did not persist closed turn ${minimumTurn} within ${timeoutMs}ms`,
-      )
-    }
-  }, { interval: WAIT_POLL_INTERVAL_MS, timeout: timeoutMs })
+  const failure = new Error(
+    `snapshot-harness: subagent child #${child} did not persist closed turn ${minimumTurn} within ${timeoutMs}ms`,
+  )
+  try {
+    await vi.waitFor(async () => {
+      const log = (await harvestSessionLogs(root))[child]
+      if (log === undefined || !latestTurnIsClosed(log.content)
+        || !hasRequestHeaderAfterDescriptor(log.content)
+        || !hasClosedTurn(log.content, minimumTurn)) {
+        throw failure
+      }
+    }, { interval: WAIT_POLL_INTERVAL_MS, timeout: timeoutMs })
+  } catch {
+    // `vi.waitFor` surfaces the callback's error only when the callback
+    // finished at least once inside the budget; otherwise it rejects with its
+    // own `Timed out in waitFor!`. Harvesting reads real files, so on a slow
+    // machine a short budget can elapse with no completed attempt, and the
+    // caller would be told the wait timed out without being told WHAT never
+    // arrived. Rethrowing this failure makes the diagnostic a property of the
+    // harness rather than of machine speed — the two rejections mean the same
+    // thing and must read the same.
+    throw failure
+  }
 }
 
 /** Whether a raw session log contains the requested closed turn. */
