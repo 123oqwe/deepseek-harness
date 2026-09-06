@@ -35,6 +35,8 @@ Choose this adapter when the same composition serves several providers, when a r
 
 Each profile may set a `retryPolicy`; omission uses normal mode with five retries. `apiKeyEnv` is a credential reference resolved per request through the harness credential seam, so no secret enters the configuration file; a reference that resolves to nothing fails the request with `MISSING_CREDENTIAL`. Omitting it leaves the route configured-but-keyless, which for an installed catalog route defers to pi-ai's provider-native ambient discovery.
 
+`src/templates.ts` builds a starting profile for a route the catalog does not ship: `instantiateTemplate('openai-completions', { baseURL, model, apiKeyEnv, timeoutMs })` returns exactly the fields a custom route requires — protocol, endpoint, model, credential reference, timeout — and leaves every other field on the behavior it already has. It exists because the schema can only report a missing required field after a user has guessed which fields those are. A template never carries a key: a value that cannot be an environment-variable name is refused, and the refusal does not echo it back, since repeating a real key puts it in a terminal and a bug report. A template also ranks nothing and defaults nothing — which route serves a request is the Model Router's decision, and a template that carried a priority would be making it early and invisibly.
+
 ```yaml
 - name: '@deepseek-ai/dsh-llm-pi-ai'
   config:
@@ -140,6 +142,7 @@ The adapter is built on immutable snapshots and per-operation resolution. Each o
 | [`src/stream.ts`](src/stream.ts) | pi-ai event conversion into harness `StreamChunk` values |
 | [`src/replay.ts`](src/replay.ts) | Versioned `ReplayEnvelope` storage and validation |
 | [`src/discovery.ts`](src/discovery.ts) | Endpoint interrogation for configuration surfaces |
+| [`src/templates.ts`](src/templates.ts) | Starting-point route skeletons, one per wire protocol |
 
 ### Registration and directory
 

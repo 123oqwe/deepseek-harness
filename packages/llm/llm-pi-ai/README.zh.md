@@ -35,6 +35,8 @@ kind: "package-reference"
 
 每个 profile 都可以设置 `retryPolicy`；省略时使用 normal mode、最多重试五次。`apiKeyEnv` 是按请求经 harness 凭据 seam 解析的凭据引用，因此配置文件绝不包含密钥；解析为空的引用会让请求以 `MISSING_CREDENTIAL` 失败。省略它会让路由保持已配置但无密钥（configured-but-keyless）状态，对已安装目录路由而言即交由 pi-ai 提供方原生的环境发现。
 
+`src/templates.ts` 为目录未收录的路由构造一份起步 profile：`instantiateTemplate('openai-completions', { baseURL, model, apiKeyEnv, timeoutMs })` 恰好返回自定义路由必需的那些字段——协议、端点、模型、凭据引用、超时——其余字段一律保持它们已有的行为。它之所以存在，是因为 schema 只能在用户已经猜过哪些字段是必需之后，才告诉他缺了哪一个。模板绝不携带 key：一个不可能是环境变量名的值会被拒绝，而且拒绝信息不会把它回显出来，因为复述一个真 key 会把它送进终端和 bug 报告。模板同样不排序、不设默认——哪条路由服务某个请求是 Model Router 的决定，而携带优先级的模板等于提前且不可见地替它做了这个决定。
+
 ```yaml
 - name: '@deepseek-ai/dsh-llm-pi-ai'
   config:
@@ -140,6 +142,7 @@ pi-ai 不提供的路由需要 `api`、`baseURL` 与非空 `models` 列表；无
 | [`src/stream.ts`](src/stream.ts) | 把 pi-ai 事件转换为 harness `StreamChunk` 值 |
 | [`src/replay.ts`](src/replay.ts) | 带版本的 `ReplayEnvelope` 存储与校验 |
 | [`src/discovery.ts`](src/discovery.ts) | 面向配置界面的端点询问 |
+| [`src/templates.ts`](src/templates.ts) | 每种 wire protocol 一个的起步路由骨架 |
 
 ### 注册与目录
 

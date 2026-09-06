@@ -6623,7 +6623,11 @@
         "treeSha": "bdc6a695bf31ba235ae6f4c26a65234606dc612b",
         "testsDiscovered": 7
       },
-      "note": "U (Usage) for P9-07 must[2]: the profile-override half of \"conservative default, profile-overridable\". Recorded AFTER the tests were written rather than before them, which is out of the usual SPEC-FREEZE -> RED order; the reason it could not be frozen first is that the freeze would have pinned a hypothesis that observation disproved. The predicted defect was that schemastery drops a key the Config schema does not declare, so a cordis.yml budget would never reach the agent. It does reach it: undeclared keys pass through untouched. The real gap is the opposite one — the value arrives entirely UNCHECKED, so a negative or fractional ceiling reaches the loop just as far. expectCases below are the observed titles, and the three admission cases pass against the pre-change tree as well; only the four rejection cases were RED."
+      "note": "U (Usage) for P9-07 must[2]: the profile-override half of \"conservative default, profile-overridable\". Recorded AFTER the tests were written rather than before them, which is out of the usual SPEC-FREEZE -> RED order; the reason it could not be frozen first is that the freeze would have pinned a hypothesis that observation disproved. The predicted defect was that schemastery drops a key the Config schema does not declare, so a cordis.yml budget would never reach the agent. It does reach it: undeclared keys pass through untouched. The real gap is the opposite one — the value arrives entirely UNCHECKED, so a negative or fractional ceiling reaches the loop just as far. expectCases below are the observed titles, and the three admission cases pass against the pre-change tree as well; only the four rejection cases were RED.",
+      "sensitivityProof": {
+        "mutationDescription": "Two targeted mutations of packages/core/agent-loop/src/index.ts, each restored byte-identical: (M1) the load-time assertBudget call is removed from validateConfiguredAgents; (M2) the negative bound widens from `maxTurns < 0` to `< -1`.",
+        "failureSummary": "Reddened 2 and 1 of 23. M1 reddens only two because the create-time assertAgentOptions path still refuses the fractional and NaN rows -- two enforcement points, and the cases that stay green under M1 are the ones the other point holds. M2 reddens the single case that pins -1 as the first refused value."
+      }
     },
     {
       "epic": "P9-07",
@@ -6657,7 +6661,11 @@
         "treeSha": "2dd8169480e014dd895373e4685312bc88b147dd",
         "testsDiscovered": 4
       },
-      "note": "F (Fault) for P9-07 acceptance[0]: what a budget stop leaves behind. Two findings. (1) A session stopped by its budget could not be resumed AT ALL: budget/exceeded was added to SessionEventMap at the Provider stage without regenerating known-event-types.ts, so the persistence read path refused the log as written by a newer harness — the exact silent truncation must[1] forbids, produced by the mechanism meant to prevent it. Fixed by regenerating the catalog, which first required removing an @mode tag a log event may not carry. (2) acceptance[1] (spend cap) is UNMET and unmeetable: nothing converts tokens to money, so spentUsd is always 0. Recorded as BLOCKED-114 and routed to the maintainer; the fourth case pins the vacuity and is written to FAIL when a cost source lands."
+      "note": "F (Fault) for P9-07 acceptance[0]: what a budget stop leaves behind. Two findings. (1) A session stopped by its budget could not be resumed AT ALL: budget/exceeded was added to SessionEventMap at the Provider stage without regenerating known-event-types.ts, so the persistence read path refused the log as written by a newer harness — the exact silent truncation must[1] forbids, produced by the mechanism meant to prevent it. Fixed by regenerating the catalog, which first required removing an @mode tag a log event may not carry. (2) acceptance[1] (spend cap) is UNMET and unmeetable: nothing converts tokens to money, so spentUsd is always 0. Recorded as BLOCKED-114 and routed to the maintainer; the fourth case pins the vacuity and is written to FAIL when a cost source lands.",
+      "sensitivityProof": {
+        "mutationDescription": "One targeted mutation, restored byte-identical: 'budget/exceeded' is deleted from the GENERATED packages/core/session/src/known-event-types.ts, reproducing the state this stage found.",
+        "failureSummary": "Reddened 1 of 32: the durable case, with SessionFormatUnsupportedError -- a session the budget stopped cannot be read back at all. The three other Fault cases stay green under it, which is the point: they assert what happens AFTER a successful reload, so only the case that reads the persisted log can see the log being unreadable."
+      }
     },
     {
       "epic": "P9-03",
@@ -6691,7 +6699,11 @@
         "treeSha": "06ad5fd1e4b4dc8f8e139a5d46cc5fdbab5b822e",
         "testsDiscovered": 9
       },
-      "note": "C (Contract) for P9-03 must[0]: parse, check the route exists, list what exists, fail closed. The argument names a ROUTE and a model together because a model id alone identifies no adapter, and the available routes travel WITH the failure so a caller cannot print a list different from the one checked."
+      "note": "C (Contract) for P9-03 must[0]: parse, check the route exists, list what exists, fail closed. The argument names a ROUTE and a model together because a model id alone identifies no adapter, and the available routes travel WITH the failure so a caller cannot print a list different from the one checked.",
+      "sensitivityProof": {
+        "mutationDescription": "Two targeted mutations of packages/bundle/headless/src/model-selection.ts, each restored byte-identical: (M1) the route-existence check is disabled; (M2) the separator is taken from the LAST colon instead of the first.",
+        "failureSummary": "Reddened 3 and 1 of 9. M1 reddens the unregistered-route case, the routeless-profile case, and the carried-list case -- every case that depends on a refusal happening at all. M2 reddens only the namespaced-model-id case, which exists for exactly that mistake."
+      }
     },
     {
       "epic": "P9-03",
@@ -6727,7 +6739,11 @@
         "treeSha": "06ad5fd1e4b4dc8f8e139a5d46cc5fdbab5b822e",
         "testsDiscovered": 5
       },
-      "note": "P (Provider) for P9-03: the flag exists and the runner CALLS the resolver, with the routes that really have an adapter. Resolution happens after loader settlement because no adapter is registered while the command line is parsed. Mutations: forcing the default branch reddens 4; disabling the route-existence check reddens 4. must[2] (auditable selection) is met by the existing request/header event, which already carries the effective provider and model — a second event would give one fact two homes."
+      "note": "P (Provider) for P9-03: the flag exists and the runner CALLS the resolver, with the routes that really have an adapter. Resolution happens after loader settlement because no adapter is registered while the command line is parsed. Mutations: forcing the default branch reddens 4; disabling the route-existence check reddens 4. must[2] (auditable selection) is met by the existing request/header event, which already carries the effective provider and model — a second event would give one fact two homes.",
+      "sensitivityProof": {
+        "mutationDescription": "One targeted mutation of packages/bundle/headless/src/index.ts, restored byte-identical: the runner always takes the configured default and never calls resolveModelSelection.",
+        "failureSummary": "Reddened 4 of 24. The four are both route cases, both refusal cases; the fifth P9-03 case in this file -- the one asserting the default is used when no --model is given -- stays green under it, correctly, since that is the behaviour the mutation forces."
+      }
     },
     {
       "epic": "P9-03",
@@ -6755,7 +6771,11 @@
         "treeSha": "e2039b43f9187ede3e84408f414d93d5d677e850",
         "testsDiscovered": 2
       },
-      "note": "U (Usage) for P9-03 on the REAL product path: the flag must survive the launcher argument parser, the profile cordis.patch.yml !!js expression, and schemastery config validation before it means anything, and any one of those dropping it yields a run that quietly uses the default. Spawns the real dsh --profile headless bin against an isolated DSH_HOME with TWO keyless routes — two because the property is a CHOICE, and with one route the run reaches it however the flag behaves. Mutation: deleting the model field from the startup provider reddens both cases (exit 4, no route reachable)."
+      "note": "U (Usage) for P9-03 on the REAL product path: the flag must survive the launcher argument parser, the profile cordis.patch.yml !!js expression, and schemastery config validation before it means anything, and any one of those dropping it yields a run that quietly uses the default. Spawns the real dsh --profile headless bin against an isolated DSH_HOME with TWO keyless routes — two because the property is a CHOICE, and with one route the run reaches it however the flag behaves. Mutation: deleting the model field from the startup provider reddens both cases (exit 4, no route reachable).",
+      "sensitivityProof": {
+        "mutationDescription": "One targeted mutation of packages/bundle/headless/src/startup.ts, restored byte-identical: the provider stops publishing the model field, so the flag is parsed and dropped.",
+        "failureSummary": "Reddened 3 of 3 in the file (the U cells' two cases and the F cell's one), each with exit 4: with llm-deepseek disabled and the flag dropped, no route is reachable at all. That is the failure this stage exists to catch -- the flag surviving the parser but not the wiring."
+      }
     },
     {
       "epic": "P9-03",
@@ -6782,7 +6802,11 @@
         "treeSha": "e2039b43f9187ede3e84408f414d93d5d677e850",
         "testsDiscovered": 1
       },
-      "note": "F (Fault) for P9-03: a profile with NO registered route. The refusal message is built from the routes that exist, so this is the case where a naive implementation prints \"available routes:\" followed by nothing — a message that reads like a truncated bug rather than a statement about the profile. It is also the one refusal a user cannot fix by correcting the argument. Shares its argv with the U cell (same file), the way P9-06 P and F already do."
+      "note": "F (Fault) for P9-03: a profile with NO registered route. The refusal message is built from the routes that exist, so this is the case where a naive implementation prints \"available routes:\" followed by nothing — a message that reads like a truncated bug rather than a statement about the profile. It is also the one refusal a user cannot fix by correcting the argument. Shares its argv with the U cell (same file), the way P9-06 P and F already do.",
+      "sensitivityProof": {
+        "mutationDescription": "The same startup mutation as the U cell, restored byte-identical: the model field is never published.",
+        "failureSummary": "Reddened 3 of 3, this cell's case included. It cannot be reddened by a mutation that leaves routes reachable, because its subject is a profile with no route: the case is about which MESSAGE a refusal carries, so its sensitivity is to the message-construction path rather than to route selection."
+      }
     },
     {
       "epic": "P9-06",
@@ -6818,7 +6842,90 @@
         "treeSha": "9f579e32dbd9c031727bc76cb5837bc71b6da1d1",
         "testsDiscovered": 3
       },
-      "note": "U (Usage) for P9-06 must[1]: stream-json now has a SHIPPED PRODUCER. The recorded format at apps/cli/tests/profiles/headless/tests/expected/*/stream-json.expected.jsonl was written only by a test driver, so it described test output rather than anything a user could run. The second case compares the product against that RECORDED FILE rather than against a shape restated in the test, which keeps the fixture the authority and makes drift in either direction visible. Mutation: dropping sessionId from the event envelope reddens the key-set case."
+      "note": "U (Usage) for P9-06 must[1]: stream-json now has a SHIPPED PRODUCER. The recorded format at apps/cli/tests/profiles/headless/tests/expected/*/stream-json.expected.jsonl was written only by a test driver, so it described test output rather than anything a user could run. The second case compares the product against that RECORDED FILE rather than against a shape restated in the test, which keeps the fixture the authority and makes drift in either direction visible. Mutation: dropping sessionId from the event envelope reddens the key-set case.",
+      "sensitivityProof": {
+        "mutationDescription": "Two targeted mutations of packages/bundle/headless/src/index.ts, each restored byte-identical: (M1) sessionId is dropped from the session_event envelope; (M2) the event subscription is disabled, so only the result line is written.",
+        "failureSummary": "Reddened 1 and 2 of 3. M1 reddens only the fixture-conformance case, which is what that case is for -- a dropped field is invisible to a test that merely parses lines. M2 reddens both stream cases and leaves the bad-format case green, since that one never reaches the stream."
+      }
+    },
+    {
+      "epic": "P9-02",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm-pi-ai/tests/route-templates.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-02 Contract — route templates must[0]: each protocol template carries protocol, endpoint, model, credential ref, and timeout",
+        "P9-02 Contract — route templates must[0]: all three protocol families have a template, and they are distinct",
+        "P9-02 Contract — route templates must[2]: a key pasted where the variable NAME goes is refused",
+        "P9-02 Contract — route templates must[2]: the refusal does NOT echo the suspected key back into a log or a bug report",
+        "P9-02 Contract — route templates must[2]: a template never carries an inline key field of any kind",
+        "P9-02 Contract — route templates must[1]: a missing endpoint names baseURL rather than failing later on a request",
+        "P9-02 Contract — route templates must[1]: a malformed URL is refused, and so is one with a protocol nothing can call",
+        "P9-02 Contract — route templates must[1]: an empty model and a non-positive timeout each name their own field",
+        "P9-02 Contract — route templates an explicit timeout overrides the default rather than being ignored",
+        "P9-02 Contract — route templates must[5]: a template ranks nothing and defaults no route — selection stays the router's",
+        "P9-02 Contract — route templates an unknown template name is not a template name"
+      ],
+      "files": [
+        "packages/llm/llm-pi-ai/src/templates.ts",
+        "packages/llm/llm-pi-ai/tests/route-templates.spec.ts",
+        "packages/llm/llm-pi-ai/README.md",
+        "packages/llm/llm-pi-ai/README.zh.md",
+        "packages/llm/llm-pi-ai/README.i18n.yaml"
+      ],
+      "frozenAtUtc": "2026-09-05T20:24:00.000Z",
+      "dryRunProof": {
+        "treeSha": "07e52bee993b863ce3aff9cc85caff3f38b8a4d8",
+        "testsDiscovered": 11
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/llm/llm-pi-ai/src/templates.ts, each restored byte-identical: (M1) the literal-key refusal is disabled; (M2) every template claims 'openai-completions' regardless of the name asked for; (M3) the empty-model check is deleted.",
+        "failureSummary": "Reddened 2, 2 and 1 of 15. M1 reddens both must[2] key cases together, which is why the second one was rewritten: its first version captured the failure inside its own try/catch, so `expect.unreachable()` was swallowed and the case could not fail when nothing threw. M2 reddens the two must[0] cases that read the protocol back. M3 reddens only the field-naming case, the one written for it."
+      },
+      "note": "C (Contract) for P9-02, scoped by the delegate's triage: the pi-ai route ENGINE already ships, so this is the thin starting point it lacks -- named skeletons carrying exactly must[0]'s fields and nothing else. A template never holds a key (must[2]) and never ranks or defaults a route (must[5]), since selection is the Model Router's decision."
+    },
+    {
+      "epic": "P9-02",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/llm-pi-ai/tests/route-templates.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-02 Provider — templates resolve through the real config layer acceptance[0]: a settings fragment built from a template resolves to a usable route",
+        "P9-02 Provider — templates resolve through the real config layer acceptance[2]: no configured route at all is the dormant posture, not an error",
+        "P9-02 Provider — templates resolve through the real config layer acceptance[2]: a template route resolves alongside a hand-written route without disturbing it",
+        "P9-02 Provider — templates resolve through the real config layer the credential stays a REFERENCE through resolution, never a materialized value"
+      ],
+      "files": [
+        "packages/llm/llm-pi-ai/src/templates.ts",
+        "packages/llm/llm-pi-ai/tests/route-templates.spec.ts",
+        "packages/llm/llm-pi-ai/README.md",
+        "packages/llm/llm-pi-ai/README.zh.md",
+        "packages/llm/llm-pi-ai/README.i18n.yaml"
+      ],
+      "frozenAtUtc": "2026-09-05T20:25:00.000Z",
+      "dryRunProof": {
+        "treeSha": "07e52bee993b863ce3aff9cc85caff3f38b8a4d8",
+        "testsDiscovered": 4
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/llm/llm-pi-ai/src/templates.ts, each restored byte-identical: (M1) the literal-key refusal is disabled; (M2) every template claims 'openai-completions' regardless of the name asked for; (M3) the empty-model check is deleted.",
+        "failureSummary": "Reddened 2, 2 and 1 of 15. M1 reddens both must[2] key cases together, which is why the second one was rewritten: its first version captured the failure inside its own try/catch, so `expect.unreachable()` was swallowed and the case could not fail when nothing threw. M2 reddens the two must[0] cases that read the protocol back. M3 reddens only the field-naming case, the one written for it."
+      },
+      "note": "P (Provider) for P9-02: the template's output goes through resolveProfiles, the product's own explicit resolve step, so 'the template works' means the real validator accepted it rather than that two of my own functions agreed. The first version of the coexistence case used a hand-written 'deepseek-official' neighbour that the resolver REJECTED (the installed catalog does not describe it here), which is why the neighbour is now a route that resolves on its own terms."
     }
   ]
 }
