@@ -6988,6 +6988,46 @@
         "failureSummary": "Reddened 2 of 2 and 2 of 2. M2 reddened NOTHING on its first attempt, and that was a defect in the test rather than an equivalent mutant: the settings fragment transcribed the model list by hand, so the fixture was supplying what the template was supposed to supply. The fragment is now serialized from the profile object whole, and M2 reddens."
       },
       "note": "F (Fault) for P9-02: what a user can still write by hand into the settings document after a template built a valid profile -- the path a template cannot guard, because the file is theirs to edit. An unimplemented protocol name is refused before any endpoint is reached (the gateway records zero requests), and an unset credential variable ends the run with the typed error exit rather than sending an unauthenticated request. That exit is 4, not 1: the route mounts and the run STARTS, so the failure is classified as an error by P9-06's exit map; 1 is the unknown-outcome code, and expecting it would have been expecting the run to fail in a way it explicitly classifies."
+    },
+    {
+      "epic": "P9-08",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "tests/benchmark/task-verdict.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-08 Contract — task scoring is mechanical must[0]: a task passes only when every declared check was satisfied",
+        "P9-08 Contract — task scoring is mechanical must[0]: one unsatisfied check fails the task, and the verdict names which",
+        "P9-08 Contract — task scoring is mechanical a check with NO observation is unobserved, not passed",
+        "P9-08 Contract — task scoring is mechanical acceptance[1]: an observation for a check the task never declared adds no credit",
+        "P9-08 Contract — task scoring is mechanical a task declaring no checks fails: an empty task list is the cheapest way to raise a score",
+        "P9-08 Contract — the judge cannot be edited by the run it scores acceptance[1]: a changed judge digest fails the task",
+        "P9-08 Contract — the judge cannot be edited by the run it scores tampering is reported AHEAD of the checks, even when every check reports satisfied",
+        "P9-08 Contract — the judge cannot be edited by the run it scores an unchanged digest scores the task normally",
+        "P9-08 Contract — a keyless suite reports BLOCKED, never a rate must[3]: no credential blocks the suite instead of scoring it",
+        "P9-08 Contract — a keyless suite reports BLOCKED, never a rate must[3]: an empty suite has NO success rate rather than 0%",
+        "P9-08 Contract — a keyless suite reports BLOCKED, never a rate a suite that ran reports the ratio of the tasks that actually ran"
+      ],
+      "files": [
+        "benchmarks/judge/verdict.ts",
+        "tests/benchmark/task-verdict.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:43:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e07d1094fb6aaeecb61c49619133962f97044dbf",
+        "testsDiscovered": 11
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of benchmarks/judge/verdict.ts, each restored byte-identical: (M1) an unobserved check no longer fails the task; (M2) the judge-tamper comparison is removed; (M3) an empty suite scores 0% instead of no rate.",
+        "failureSummary": "Reddened 2, 2 and 1 of 11. M1 reddens the unobserved case AND the fabricated-observation case, which is the point of writing both: a fabricated observation only fails because the check it displaced went unobserved, so the two share one mechanism and a mutation that breaks it must break both. M3 reddens only the empty-suite case; the ratio case stays green because a suite that ran is unaffected, which is what makes the null a statement about emptiness rather than a changed formula."
+      },
+      "note": "C (Contract) for P9-08: scoring is mechanical and a model never judges (must[0]) -- an LLM judge would make the metric depend on a second model, and a regression would be indistinguishable from judge drift. Fails closed three separate ways because each is a different mistake: an unobserved check is not a pass, a task with no checks is not a pass, and an observation for an undeclared check adds no credit. acceptance[1]'s two cheats are both things the executor can really do, since it works in the workspace the checks describe. The spec lives in tests/benchmark/ following the existing harness-capability precedent: vitest's include list does not cover benchmarks/**, and a cell whose test the suite never runs could not be greened by any observation."
     }
   ]
 }
