@@ -2888,7 +2888,7 @@ The normalization landed and `bash-tool` stayed red. Reading the actual diff —
 
 **Still the maintainer's call**, and now a narrower one: install a sandbox backend on the runner (which also makes the P3 sandbox epics testable on CI), or declare a `sandbox` platform requirement for these scenarios the way `pwsh` is declared.
 
-## BLOCKED-113 — a 5s timeout in `check-capability-seams.spec.ts`, seen once, not yet registrable
+### BLOCKED-113 — a 5s timeout in `check-capability-seams.spec.ts`, seen once, not yet registrable
 
 **Status:** RESOLVED, and the whole investigation was UNNECESSARY — the test was already a registered flake.
 
@@ -2915,7 +2915,7 @@ The case spawns the real CLI script; its two siblings that do the same finished 
 
 The failed job has been re-run at the identical SHA. A `passed` there is standard (b) satisfied by direct proof, and the entry then goes to the delegate — flake classification is C7 scope and is never self-classified here. A second `failed` at the same SHA is the opposite finding: a deterministic timeout that must be fixed rather than registered, because the registry never accepts all-failed same-SHA occurrences.
 
-## BLOCKED-114 — `budget.maxSpendUsd` is a ceiling with nothing behind it
+### BLOCKED-114 — `budget.maxSpendUsd` is a ceiling with nothing behind it
 
 **Status:** OPEN — routed to the maintainer, because the fix is a product decision rather than a repair.
 
@@ -2930,7 +2930,7 @@ P9-07 acceptance[1] asks for a spend-cap fixture "the same way" as the turn fixt
 
 Until then P9-07 acceptance[1] is UNMET and recorded as unmet; must[0]/[1]/[3] and acceptance[0]/[2] are met by `maxTurns`.
 
-## BLOCKED-115 — P9-08 and P9-09 were opened before their wave released them
+### BLOCKED-115 — P9-08 and P9-09 were opened before their wave released them
 
 **Status:** CONTAINED — the code stays, the credit does not, and a gate now reads the field that says so.
 
@@ -2949,7 +2949,7 @@ Maintainer decision C3 released **P9-01…07** to run in parallel with R10. P9-0
 
 **What this shows.** The same shape as every other finding in this queue: a rule existed, a field recorded it, and nothing read the field. Memory held for seven items and failed on the eighth. The repair is not more care, it is the gate — the field was already there to be read.
 
-## BLOCKED-116 — P5-10 must[3] names two things this repository does not have yet
+### BLOCKED-116 — P5-10 must[3] names two things this repository does not have yet
 
 **Status:** SCHEDULED-BLOCKED, suppliers named, P5-10 locked from acceptance.
 
@@ -2969,7 +2969,7 @@ must[3]: 「取消进入 convergence barrier，确认 child/world/actions 停止
 
 **Unlock signal.** P3-01's `ExecutionWorld` runtime exists with a terminate path, and the `actions` supplier is identified by clause. P5-10 must then write cases observing a world and in-flight actions actually stopping before terminal state — observations with no subject today, which is why the clause is recorded rather than asserted.
 
-## BLOCKED-117 — who owns `trust-kernel/src/index.ts`, and why P0-02's acceptance did not catch the empty root
+### BLOCKED-117 — who owns `trust-kernel/src/index.ts`, and why P0-02's acceptance did not catch the empty root
 
 **Status:** INVESTIGATED, not acted on. Recorded before any edit, at the delegate's instruction.
 
@@ -2995,7 +2995,7 @@ So `index.ts` is owned by an ACCEPTED epic and claimed by two that have not begu
 
 That is worth recording anyway, because it is the general shape: **an epic can be correctly accepted and still leave the thing a later epic assumed it delivered.** The register catches it here only because P1-02's lock names the file. Nothing systematic would have.
 
-## BLOCKED-118 — `--green` never read `openFindings`, so a withheld row could be re-greened by anyone
+### BLOCKED-118 — `--green` never read `openFindings`, so a withheld row could be re-greened by anyone
 
 **Status:** CLOSED by a fail-closed check in the same change that found it.
 
@@ -3017,7 +3017,7 @@ Its cells had been green before, and were withdrawn precisely because that green
 
 **What it does not do.** It does not decide whether a finding is still live; it only refuses to act as if none existed. Retiring a finding stays a judgement, and the override is where that judgement is recorded.
 
-## BLOCKED-119 — a computed list of fields this program writes and never reads
+### BLOCKED-119 — a computed list of fields this program writes and never reads
 
 **Status:** SCAN BUILT, three real findings from its first run, none of them fixed yet.
 
@@ -3039,7 +3039,7 @@ The rest are mostly evidence written for review, which is legitimate. The scan's
 
 **Not fixed here.** Making `treeSha` verifiable means deciding what it should be checked against — the tree at freeze time no longer exists on a later checkout — and that is a design question, not a repair.
 
-## BLOCKED-120 — P9-05's Provider stage is bigger than "apply the factor to the estimate", and an existing test says so
+### BLOCKED-120 — P9-05's Provider stage is bigger than "apply the factor to the estimate", and an existing test says so
 
 **Status:** OPEN, needs a decision about the anchored branch. The attempted wiring was reverted, not shipped.
 
@@ -3064,7 +3064,7 @@ Option 2 looks most consistent from here and is NOT being taken on that basis: t
 
 **What this does not change.** The Contract stage stands: the calibration decisions are pinned, mutation-tested, and honest about what one scalar cannot do. The blocked half of P9-05 (must[0], must[2]) is untouched and still needs the tokenizer-source decision (BLOCKED-107).
 
-## BLOCKED-121 — Sigstore verification: feasibility established with evidence, build not started
+### BLOCKED-121 — Sigstore verification: feasibility established with evidence, build not started
 
 **Status:** DEPENDENCIES LANDED, feasibility proven by a real probe. The verification path itself is the next slice and is not written yet.
 
@@ -3121,7 +3121,7 @@ Three findings cost a round each and are recorded in the file so the next attemp
 
 **What remains is the wiring, and it is now fully specified:** `SigstoreProvenanceEvidence` gains the bundle, `TrustKernelTrustAnchor`'s sigstore variant gains the trusted root (the public TUF document, so nothing secret enters), and `verifyPackageSignature`'s sigstore branch builds trust material from kernel-private anchors and verifies. The unlock criterion is unchanged: the pinned `KNOWN GAP (Sigstore path)` case starts failing.
 
-## BLOCKED-122 — the ledger cannot pass 18 without decisions nobody in this session may take
+### BLOCKED-122 — the ledger cannot pass 18 without decisions nobody in this session may take
 
 **Status:** ANALYSIS, for the maintainer. Nothing here is a request to change a decision; it is what the numbers mean.
 
@@ -3147,7 +3147,7 @@ Three findings cost a round each and are recorded in the file so the next attemp
 
 **One thing the maintainer may want to know first.** P4-07 and P8-01 are the two largest dependency holders that are NOT lock-listed. They are stuck on a question of what their own clauses mean, not on missing infrastructure — which makes them the cheapest of the seven to unstick, and the only two whose unsticking needs no engineering at all.
 
-## BLOCKED-123 — a deleted frozen case now has a reader, and it found a third one
+### BLOCKED-123 — a deleted frozen case now has a reader, and it found a third one
 
 **Status:** GATE ADDED, P1-02 superseded, one pre-existing orphan surfaced for the delegate.
 

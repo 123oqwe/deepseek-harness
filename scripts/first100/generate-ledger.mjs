@@ -131,6 +131,24 @@ function emptyCell() {
   return { status: 'NOT_RUN' }
 }
 
+/**
+ * The starting state for one stage cell.
+ *
+ * A stage the registry marks `nOf: 'N/A'` has no work to do, and showing it as
+ * `NOT_RUN` says the opposite — that something is outstanding. The acceptance
+ * predicates already read the registry, so this was never a correctness bug;
+ * it was a reader telling twelve epics' worth of people that a finished epic
+ * still owed a stage. P2-03 is the live example: its Provider stage is N/A
+ * because the epic delivers an immutable definition and a canonicalizer, not an
+ * I/O provider.
+ * @param epic - the registry row this cell belongs to.
+ * @param stage - the stage letter.
+ * @returns the cell's initial state.
+ */
+function initialCell(epic, stage) {
+  return epic.stages?.[stage]?.nOf === 'N/A' ? { status: 'N/A' } : emptyCell()
+}
+
 /** Build (or refresh) the 100-row skeleton from the registry, preserving any already-recorded cells. */
 function buildSkeleton(existing) {
   const registry = loadJson(REGISTRY_PATH)
@@ -138,7 +156,17 @@ function buildSkeleton(existing) {
   for (const epic of registry.epics) {
     const prior = existing?.rows?.[epic.id]
     const cells = {}
-    for (const stage of STAGES) cells[stage] = prior?.cells?.[stage] ?? emptyCell()
+    for (const stage of STAGES) {
+      const carried = prior?.cells?.[stage]
+      // An untouched NOT_RUN on a stage the registry marks N/A is corrected
+      // rather than carried: it holds no evidence to preserve, and eleven of
+      // them were telling readers that finished epics still owed a stage.
+      // Anything that has left NOT_RUN carries an observation and is never
+      // rewritten here.
+      cells[stage] = carried === undefined || (carried.status === 'NOT_RUN' && epic.stages?.[stage]?.nOf === 'N/A')
+        ? initialCell(epic, stage)
+        : carried
+    }
     rows[epic.id] = {
       id: epic.id,
       title: epic.title,

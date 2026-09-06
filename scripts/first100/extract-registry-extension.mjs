@@ -197,8 +197,13 @@ function build() {
       files: parseFiles(fields.files ?? ''),
       must: splitClauses(fields.must),
       acceptance: splitClauses(fields.acceptance),
-      nonGoal: fields.nonGoal ?? '',
-      validation: fields.validation ?? '',
+      // Arrays, matching `registry.json`'s shape for the same fields. They were
+      // bare strings until 2026-09-06, and a consumer iterating them as arrays
+      // walked one CHARACTER at a time — the delegate's card generator broke on
+      // exactly that. Two files describing the same kind of thing in two shapes
+      // is a defect in the pair, not in whichever reader met it second.
+      nonGoals: splitClauses(fields.nonGoal ?? ''),
+      validation: splitClauses(fields.validation ?? ''),
       verifyCommand: fields.verifyCommand ?? '',
       // C3 approved the W20-W22 ordering for all nine, and SEPARATELY cleared
       // P9-01..07 to run in parallel with R10. P9-08 and P9-09 are not cleared

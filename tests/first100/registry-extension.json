@@ -78,8 +78,15 @@
         "对六类行为各注入一处夹具偏差（含 SSE 单字节切分/合并帧边界），kit 逐一红",
         "进入 CI：任何 `packages/llm/**` 改动触发"
       ],
-      "nonGoal": "不新写任何 wire-protocol 实现（pi-ai 已有）；不测模型输出质量，只测协议行为。",
-      "validation": "全量 kit 运行；分帧边界注入；abort 时序（首 token 前/工具增量中/收尾）三点验证。",
+      "nonGoals": [
+        "不新写任何 wire-protocol 实现（pi-ai 已有）",
+        "不测模型输出质量，只测协议行为"
+      ],
+      "validation": [
+        "全量 kit 运行",
+        "分帧边界注入",
+        "abort 时序（首 token 前/工具增量中/收尾）三点验证"
+      ],
       "verifyCommand": "实施前按决策 B4 规则冻结（预期 `pnpm vitest run packages/llm/llm-conformance`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -133,8 +140,14 @@
         "三类协议模板 conformance 全绿",
         "无 key 时该路由状态为显式 dormant，`deepseek-official` 不受影响"
       ],
-      "nonGoal": "不写新 wire protocol；不做 per-vendor 深度特化（能力差异走 P5-03 协商声明）；不动上游 `llm` 核心抽象（上游 llm 月 206 commits，避撞）。",
-      "validation": "mock 服务 headless E2E + 配置负例 5 类（缺字段/坏 URL/坏协议名/重复路由/key env 缺失）全部 fail closed + conformance 全量。",
+      "nonGoals": [
+        "不写新 wire protocol",
+        "不做 per-vendor 深度特化（能力差异走 P5-03 协商声明）",
+        "不动上游 `llm` 核心抽象（上游 llm 月 206 commits，避撞）"
+      ],
+      "validation": [
+        "mock 服务 headless E2E + 配置负例 5 类（缺字段/坏 URL/坏协议名/重复路由/key env 缺失）全部 fail closed + conformance 全量"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/llm/llm-pi-ai`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -180,8 +193,14 @@
         "同一 headless 任务，仅换 `--model` 参数分别经 2 条不同路由（mock）跑通，session 事件记录正确路由",
         "错误 model 参数 fail closed 且提示可用列表"
       ],
-      "nonGoal": "不做自动选型（P5-02）；不做图形配置 UI；不改上游 args 框架结构。",
-      "validation": "e2e 切换 + 负例 + `--help` 文本与实际行为一致性检查（现有 `--help` 仍宣传已删除的 tui profile，顺带修正）。",
+      "nonGoals": [
+        "不做自动选型（P5-02）",
+        "不做图形配置 UI",
+        "不改上游 args 框架结构"
+      ],
+      "validation": [
+        "e2e 切换 + 负例 + `--help` 文本与实际行为一致性检查（现有 `--help` 仍宣传已删除的 tui profile，顺带修正）"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run tests/e2e/model-switch.e2e.ts`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -219,8 +238,14 @@
         "歧义夹具（两处近似）仍 fail closed",
         "现有全部 fs 测试不回归"
       ],
-      "nonGoal": "不引入模糊语义匹配/AST 匹配；不改 str_replace_editor 的对外 schema；不做 patch/hunk 新格式（避免与上游工具面撞车）。",
-      "validation": "夹具全量 + fs 包回归 + 一次 headless 真实编辑任务对比（改动前后各跑同一任务记录重试次数）。",
+      "nonGoals": [
+        "不引入模糊语义匹配/AST 匹配",
+        "不改 str_replace_editor 的对外 schema",
+        "不做 patch/hunk 新格式（避免与上游工具面撞车）"
+      ],
+      "validation": [
+        "夹具全量 + fs 包回归 + 一次 headless 真实编辑任务对比（改动前后各跑同一任务记录重试次数）"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/fs/fs-local`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -267,8 +292,13 @@
         "校准闭环在含 3 次真实（mock usage）响应的会话内把误差单调收窄",
         "compaction-basic 现有测试不回归"
       ],
-      "nonGoal": "不为每家第三方模型 vendor 打包 tokenizer；不改 compaction 策略本身（P6-06 域）。",
-      "validation": "语料夹具 + 校准收敛测试 + compaction 触发点前后对比。",
+      "nonGoals": [
+        "不为每家第三方模型 vendor 打包 tokenizer",
+        "不改 compaction 策略本身（P6-06 域）"
+      ],
+      "validation": [
+        "语料夹具 + 校准收敛测试 + compaction 触发点前后对比"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/llm/token-meter`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -314,8 +344,14 @@
         "`echo task | dsh --profile headless --output-format json` 输出可 parse 且含最终消息与 usage",
         "退出码矩阵 4 类夹具全对"
       ],
-      "nonGoal": "不做 TUI；不改 session 存储格式；不做多任务队列（P4 域）。",
-      "validation": "e2e 三件套 + 与 SDK expected.jsonl 口径 diff + 崩溃中断恢复夹具。",
+      "nonGoals": [
+        "不做 TUI",
+        "不改 session 存储格式",
+        "不做多任务队列（P4 域）"
+      ],
+      "validation": [
+        "e2e 三件套 + 与 SDK expected.jsonl 口径 diff + 崩溃中断恢复夹具"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/bundle/headless`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -358,8 +394,13 @@
         "花费上限夹具同理",
         "不设预算时行为与现状 bit-for-bit 一致（回归）"
       ],
-      "nonGoal": "不做多 agent 全局调度预算（P4-10）；不做计费系统（P3-10 资源配额域）。",
-      "validation": "预算夹具 + 恢复续跑 + 无预算回归对照。",
+      "nonGoals": [
+        "不做多 agent 全局调度预算（P4-10）",
+        "不做计费系统（P3-10 资源配额域）"
+      ],
+      "validation": [
+        "预算夹具 + 恢复续跑 + 无预算回归对照"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run packages/core/agent-loop`）。",
       "parallelWithR10": true,
       "terminalState": "NOT_STARTED",
@@ -419,8 +460,14 @@
         "判分器负例（伪造输出/改判分文件）必须判 FAIL",
         "nightly 在 fork 真实跑通一次（成功或显式 BLOCKED-无 key，均为合法结果）"
       ],
-      "nonGoal": "不追公开榜单可比口径；不在本项内做提升（P9-09）；不测安全/混沌（P7-10 已有）。",
-      "validation": "双跑对比 + 判分负例 + 成本与 token-meter 核对。",
+      "nonGoals": [
+        "不追公开榜单可比口径",
+        "不在本项内做提升（P9-09）",
+        "不测安全/混沌（P7-10 已有）"
+      ],
+      "validation": [
+        "双跑对比 + 判分负例 + 成本与 token-meter 核对"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `node scripts/benchmark/run.mjs --suite v1`）。",
       "parallelWithR10": false,
       "terminalState": "NOT_STARTED",
@@ -483,8 +530,14 @@
         "完成至少一轮真实 champion–challenger：变体/双方分数/显著性/决定记录齐全",
         "注入已知更差变体，门必须拒绝晋级"
       ],
-      "nonGoal": "不做在线自动 prompt 演化（每次晋级人批）；不动模型参数策略（P5-02/04）；不做 per-vendor prompt 编译管道（P5-03 已有，本项产出作为其输入内容）。",
-      "validation": "`ab-gate.spec.ts` 以 vitest 覆盖晋级门负例（更差变体拒晋、显著性不足拒晋、报告篡改检出），使本项具备标准 RED→GREEN 落点。",
+      "nonGoals": [
+        "不做在线自动 prompt 演化（每次晋级人批）",
+        "不动模型参数策略（P5-02/04）",
+        "不做 per-vendor prompt 编译管道（P5-03 已有，本项产出作为其输入内容）"
+      ],
+      "validation": [
+        "`ab-gate.spec.ts` 以 vitest 覆盖晋级门负例（更差变体拒晋、显著性不足拒晋、报告篡改检出），使本项具备标准 RED→GREEN 落点"
+      ],
       "verifyCommand": "实施前按 B4 冻结（预期 `pnpm vitest run benchmarks/ab/tests/ab-gate.spec.ts` + `node scripts/benchmark/ab-compare.mjs`）。",
       "parallelWithR10": false,
       "terminalState": "NOT_STARTED",

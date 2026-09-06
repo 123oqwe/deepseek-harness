@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-06T08:19:17.564Z",
-  "inputDigest": "bde865009688ca3e771af72b3367d065de500e4a945a76dfde1973eb50a40a79",
+  "lastUpdatedUtc": "2026-09-06T18:56:34.658Z",
+  "inputDigest": "00a1dc52eed33613847022c13e34157f42caea7354ff5132a19b1d4fd2ee9b2e",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -184,7 +184,7 @@
           "capturedAtUtc": "2026-09-05T18:10:24.847Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "GREEN",
@@ -306,7 +306,7 @@
           "capturedAtUtc": "2026-09-01T21:32:14.705Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "GREEN",
@@ -442,7 +442,7 @@
           "capturedAtUtc": "2026-09-03T16:27:55.893Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "GREEN",
@@ -1050,7 +1050,7 @@
           "capturedAtUtc": "2026-09-03T18:39:50.489Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "GREEN",
@@ -1683,17 +1683,7 @@
         "BLOCKED-095 (C freeze is post-hoc, self-declared)"
       ],
       "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null,
-      "selfAudit": {
-        "performedAtUtc": "2026-09-06T05:00:00.000Z",
-        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
-        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P1-03', cross-checked against spec/first100/exec/command-freeze.json's non-superseded P1-03 entries. RESULT: 3 entries covering acceptanceIndex 0, 1, 2; 12 cited references; 12 verified to belong to the frozen set of the stage each names; 0 mismatches. This same check is what revealed the C stage had never been frozen (BLOCKED-095) -- an earlier run reported 4 mismatches, all C, because no C freeze existed.",
-        "ii_candidateChainConsistency": "PASS, trivially. RAN: read every cell's candidateSha from this row. RESULT: all four are f5fb9f9016, one commit, on fork/first100-exec. No ancestry comparison was needed and none is claimed.",
-        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four non-superseded freeze entries' argv and expectCases sets pairwise, and matched each set against the cited vitest-report.json. RESULT: four cells share run 33961861988; argv differ across all four; C and F share lock.spec.ts but their title sets are disjoint (16 + 18 = 34, the file's full discovery count); 16/16, 21/21, 5/5, 18/18 present-and-passing. The forbidden case -- identical frozen commands greened from one observation -- does not apply.",
-        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row; the two open findings are recorded as findings, not locks.",
-        "auditFormatNote": "Each field above states the command run and the file read, per BLOCKED-093. That requirement exists because P4-07's audit reported PASS for predicate (i) on the strength of a different check entirely, and a field containing only a verdict cannot be told apart from one that evaluated the wrong object.",
-        "lockCheck": "RAN: grep for gateProductionBoot across apps/ and packages/ excluding node_modules and the owning package. RESULT: zero call sites, so must[2] and acceptance[0] are proven at the decision level and not at the product level. Registered as a live acceptance lock BEFORE requesting sign-off rather than leaving the delegate to find it -- registering now costs a line, discovering it at sign-off costs a round trip."
-      }
+      "acceptedEvidence": null
     },
     "P1-04": {
       "id": "P1-04",
@@ -2107,7 +2097,7 @@
           "capturedAtUtc": "2026-09-03T16:27:56.855Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "GREEN",
@@ -2681,7 +2671,7 @@
           "capturedAtUtc": "2026-09-03T18:04:27.148Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "NOT_RUN"
@@ -3054,7 +3044,7 @@
           "status": "NOT_RUN"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "NOT_RUN"
@@ -3759,7 +3749,7 @@
           "capturedAtUtc": "2026-09-05T05:16:54.645Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "GREEN",
@@ -3828,7 +3818,7 @@
     },
     "P4-06": {
       "id": "P4-06",
-      "title": "Durable Inbox / Outbox 与 Exactly-Once Effect Handoff",
+      "title": "Durable Inbox / Outbox 与 At-Least-Once 投递 + 幂等消费",
       "layer": "L2_PROVIDER",
       "canonicalOwner": "UNASSIGNED_UNTIL_APPROVAL",
       "predecessors": [
@@ -3952,16 +3942,7 @@
         "BLOCKED-091"
       ],
       "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null,
-      "selfAudit": {
-        "performedAtUtc": "2026-09-05T18:30:00.000Z",
-        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's and is deliberately withheld — this row carries two live acceptance locks.",
-        "i_coverageClosure": "PASS. All four cells' expectCasesMatched are byte-identical to their live freeze entry's expectCases (14/17/6/22), and every live entry carries a sensitivityProof.",
-        "ii_candidateChainConsistency": "PASS. fc53394dc6 (C) is an ancestor of a7ed2e4f25 (P), which is an ancestor of 4ce759848c (U and F); all three are on fork/first100-exec. Verified with git merge-base --is-ancestor, not by commit date.",
-        "iii_observationDistinctness": "PASS under BLOCKED-018's approved redefinition. C, P and U/F rest on three distinct artifacts. U and F share run 33955647211, which is permitted iff (a) their frozen commands genuinely differ and (b) each cell's titles are independently confirmed in the shared observation. Both hold: different argv (dispatcher.spec.ts vs fault-matrix.spec.ts), ZERO overlap between the 6- and 22-title sets, and each set verified present-and-passing (6/6, 22/22). The forbidden case -- two cells with an IDENTICAL frozen command greened from one observation -- does not apply.",
-        "iv_delegateSignOff": "WITHHELD. The delegate will not sign a row carrying live locks; same precedent as P4-05. Recorded rather than pending, so nobody reads its absence as an oversight.",
-        "note": "Recorded now so it stays valid on unlock day and only the increment needs re-checking. --accept was NOT run and must not be: it would pass these three predicates and the row would be marked ACCEPTED while both locked clauses remain unproven."
-      }
+      "acceptedEvidence": null
     },
     "P4-07": {
       "id": "P4-07",
@@ -4102,16 +4083,6 @@
           "signedAtUtc": "2026-09-06T06:08:25.438Z",
           "userConfirmationRef": null
         }
-      },
-      "selfAudit": {
-        "performedAtUtc": "2026-09-06T00:30:00.000Z",
-        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
-        "i_coverageClosure": "PASS, after a correction. The first claim here was WRONG: it reported freeze-to-ledger consistency (expectCasesMatched byte-identical to expectCases, sensitivityProof present) and LABELLED that predicate (i). Predicate (i) is coverage closure, whose carrier is acceptance-coverage.json, and P4-07 had ZERO entries there -- verified two ways after the delegate flagged it: no entry with epic === 'P4-07', and the single textual match sits inside P4-05's note. Three entries now map acceptance[0], [1] and [2] to frozen cases, and every cited title was checked to be an actually-frozen case of the stage it names rather than a title written from memory. The consistency check above still holds and is still worth having; it is simply not (i).",
-        "ii_candidateChainConsistency": "PASS, trivially: all four cells rest on one candidate SHA, 82d5e81122, which is on fork/first100-exec.",
-        "iii_observationDistinctness": "PASS under BLOCKED-018's approved redefinition. All four cells share run 33959624760, permitted iff (a) the frozen commands genuinely differ and (b) each cell's titles are independently confirmed in the shared observation. Both hold: four different argv (fencing.e2e / store / fenced-dispatch / fault-matrix), pairwise-disjoint title sets, and 10/10, 12/12, 7/7, 22/22 verified present-and-passing. The forbidden case -- identical frozen commands greened from one observation -- does not apply.",
-        "iv_delegateSignOff": "PENDING. Unlike P4-05/P4-06, this row carries NO live acceptance lock, so the delegate is not refusing on that ground. The residual below is recorded as a finding pinned by a passing characterization case, not as a lock; whether it warrants one is the delegate's call.",
-        "residual": "advanceAgentLifecycle remains a public export of dsh-agent and adopts a proposal's epoch, so the unfenced path is reachable by any consumer. Withdrawing or gating it is a P4-05 supersession, outside every P4-07 stage's scope.",
-        "auditDefect": "The mislabelling is the finding, not the missing entries. Two different checks were run and one was reported under the other's name, so the self-audit reported PASS for a predicate it had never evaluated -- the same 'verdict divorced from its subject' shape this program has caught repeatedly, this time inside the instrument meant to catch it. Second occurrence (P1-07 was the first), and the repair is structural rather than more care: creating an epic's coverage entries and greening its LAST cell must be one action, because two things that must both happen, done as two steps, leave the second reliably behind -- the same mechanism recorded for flake occurrences in BLOCKED-080."
       }
     },
     "P4-08": {
@@ -4261,14 +4232,6 @@
           "signedAtUtc": "2026-09-05T12:35:34.146Z",
           "userConfirmationRef": null
         }
-      },
-      "selfAudit": {
-        "performedAtUtc": "2026-09-06T10:20:00.000Z",
-        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
-        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P4-08', cross-checked against the non-superseded P4-08 entries in spec/first100/exec/command-freeze.json, with a count against tests/first100/registry.json's acceptance array. RESULT: 3 clauses, 3 entries covering indices 0/1/2, 17 references, all 17 belonging to the frozen set of the stage each names, 0 mismatches. Written in the same pass as the F freeze.",
-        "ii_candidateChainConsistency": "PASS. RAN: read each cell's candidateSha, then `git merge-base --is-ancestor` for that SHA against the pushed branch. RESULT: all four cells rest on one commit, 8486e52a6a, so there is no chain to compare between cells and none is claimed -- but that single SHA was itself confirmed to be an ancestor of fork/first100-exec, which is the check a same-SHA row still owes (BLOCKED-084).",
-        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four freeze entries' argv and expectCases sets pairwise and matched each against the cited vitest-report.json. RESULT: four cells share run 33965511238; argv differ across all four; C and F share resume.e2e.spec.ts with disjoint title sets (19 + 19 = 38, the file's full discovery count); P and U have their own files, U's in a different PACKAGE. 19/19, 13/13, 8/8, 19/19 present-and-passing.",
-        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row and no open findings recorded against it."
       }
     },
     "P4-09": {
@@ -4696,7 +4659,7 @@
           "status": "NOT_RUN"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "NOT_RUN"
@@ -4727,7 +4690,7 @@
           "status": "NOT_RUN"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "NOT_RUN"
@@ -5094,15 +5057,6 @@
           "signedAtUtc": "2026-09-06T00:01:42.984Z",
           "userConfirmationRef": null
         }
-      },
-      "selfAudit": {
-        "performedAtUtc": "2026-09-06T18:40:00.000Z",
-        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
-        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P5-11', cross-checked against the non-superseded P5-11 entries in spec/first100/exec/command-freeze.json, plus a count against tests/first100/registry.json's acceptance array. RESULT: 3 clauses, 3 entries covering indices 0/1/2, 18 references, all 18 in the frozen set of the stage each names, 0 mismatches. Written in the same pass as the F freeze.",
-        "ii_candidateChainConsistency": "PASS. RAN: read each cell's candidateSha, then `git merge-base --is-ancestor` for it against the pushed branch. RESULT: all four rest on 4c9d4356d0, so there is no chain to compare BETWEEN cells and none is claimed; that single SHA was separately confirmed an ancestor of fork/first100-exec, which is the check a same-SHA row still owes (BLOCKED-084).",
-        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the four entries' argv and expectCases pairwise and matched each against the cited vitest-report.json. RESULT: four cells share run 33971207960; C and F share claims.e2e.spec.ts with disjoint title sets (20 + 20 = 40, the file's full discovery count); P and U have their own files, U's spanning three packages. 20/20, 10/10, 14/14, 20/20 present-and-passing.",
-        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row.",
-        "freezeCorrection": "The C freeze was SUPERSEDED after CI, not before: verification reported 2 of 20 missing because the must[2] replacements had deleted two titles the frozen list still named. A supplement can only grow the frozen set, so replacement required a supersession. Recorded because the cell would otherwise have been greened against a list naming cases that do not exist."
       }
     },
     "P5-12": {
@@ -5398,15 +5352,6 @@
           "signedAtUtc": "2026-09-05T11:56:00.020Z",
           "userConfirmationRef": null
         }
-      },
-      "selfAudit": {
-        "performedAtUtc": "2026-09-06T07:10:00.000Z",
-        "performedBy": "Supervisor; NOT a sign-off. Predicate (iv) is the delegate's.",
-        "i_coverageClosure": "PASS. RAN: a script over spec/first100/exec/acceptance-coverage.json filtering epic === 'P6-02', cross-checked against the non-superseded P6-02 entries in spec/first100/exec/command-freeze.json, plus a count against tests/first100/registry.json's acceptance array. RESULT: 3 clauses, 3 entries covering indices 0/1/2, 17 references, 17 belonging to the frozen set of the stage each names, 0 mismatches. Built alongside the final freeze rather than after it.",
-        "ii_candidateChainConsistency": "PASS, trivially, and stated as such rather than as a comparison. RAN: read each cell's candidateSha. RESULT: all three rest on one commit, so there is no chain to compare and none is claimed.",
-        "iii_observationDistinctness": "PASS under BLOCKED-018. RAN: compared the three freeze entries' argv and expectCases sets pairwise and matched each against the cited vitest-report.json. RESULT: C and F share record.spec.ts with disjoint title sets (20 + 19 = 39, the file's full discovery count); U has its own scope.spec.ts and its own argv; 20/20, 8/8, 19/19 present-and-passing. That C and F would share a file with disjoint sets, and U would not, was decided in this epic's pre-flight freeze-target list before either was written.",
-        "iv_delegateSignOff": "PENDING. No live acceptance lock on this row.",
-        "pStageNote": "P is N/A by the registry ('record/codec only; P6-01 supplies providers'), so there is no P cell and none is claimed."
       }
     },
     "P6-03": {
@@ -6544,7 +6489,7 @@
           "status": "NOT_RUN"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "N/A"
         },
         "U": {
           "status": "NOT_RUN"
