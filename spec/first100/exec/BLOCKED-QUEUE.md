@@ -2970,6 +2970,21 @@ Both take a `KeyPairKeyObjectResult` — `initializeCA(keyPair, ctLog?, clock?)`
 
 **Why it was not half-built.** A verification path proven only by refusals is indistinguishable from one that refuses everything; the positive control — a genuinely valid bundle verifying — is the case that makes the rest mean anything, and it is the step whose convergence is least certain. Landing the plumbing without it would produce exactly the shape this program has refused five times today.
 
+### The positive control now exists (2026-09-06)
+
+`packages/plugin/plugin-provenance/tests/fixtures/sigstore-local-chain.spec.ts` produces a bundle from a LOCAL certificate authority and a LOCAL transparency log and verifies it with the REAL `@sigstore/verify`. **The uncertain step converged**, so the product wiring is now ordinary work rather than a gamble. No network is touched.
+
+Three findings cost a round each and are recorded in the file so the next attempt does not pay for them again:
+
+| symptom | cause |
+|---|---|
+| `TypeError: Cannot read properties of undefined (reading 'clone')` in `verifySCTs` | the CA had no CT log, so the certificate carried no SCT |
+| the same error, with a CT log present | thresholds of `0` collect NO timestamps, which leaves the certificate path empty — the error surfaces far from its cause |
+| `VerificationError: expected 1 timestamps, got 0` | an entry logged through `logV2` has no `inclusionPromise`, and `@sigstore/verify` counts a timestamp only for entries that carry one |
+| `VerificationError: invalid index` | a v2 entry merged with v1 fields — the index, the body and the promise must describe ONE entry |
+
+**What remains is the wiring, and it is now fully specified:** `SigstoreProvenanceEvidence` gains the bundle, `TrustKernelTrustAnchor`'s sigstore variant gains the trusted root (the public TUF document, so nothing secret enters), and `verifyPackageSignature`'s sigstore branch builds trust material from kernel-private anchors and verifies. The unlock criterion is unchanged: the pinned `KNOWN GAP (Sigstore path)` case starts failing.
+
 ## BLOCKED-122 — the ledger cannot pass 18 without decisions nobody in this session may take
 
 **Status:** ANALYSIS, for the maintainer. Nothing here is a request to change a decision; it is what the numbers mean.
