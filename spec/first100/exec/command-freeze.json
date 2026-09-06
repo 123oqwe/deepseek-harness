@@ -7075,6 +7075,45 @@
         "failureSummary": "Reddened 1, 1, 2 and 1 of 18. M3 reddens two because acceptance[2]'s redelivery case and the ordering case that pins redelivery ahead of the phase check both rest on it. The other three redden exactly one case each, which is the intent: each clause has its own case, and a mutation that broke two would mean two clauses were sharing one assertion."
       },
       "note": "C (Contract) for P5-10 under the delegate's ruling of 2026-09-05, scoped to the clauses that have subjects. must[0]/[1]/[2] and acceptance[0]/[1]/[2] are built; must[3]'s barrier is built over `child` alone. TWO PRE-FLIGHT FINDINGS, both from reading before writing. (1) The epic TITLE names four things and must[0] names five — `inject` is absent from the title; the frozen cases follow the must, not the title. (2) `epoch` already exists in continuation.ts as a residency counter, which is NOT must[2]'s per-message idempotency epoch: same word, different thing, and a grep for `epoch` would have reported the clause already satisfied. The field is therefore named `controlEpoch` and the module says why. must[3]'s `world` and `actions` have no runtime subject (BLOCKED-116); the barrier takes a SET of participants with one member today and deliberately defines NO interface for the absent suppliers to implement, since fixing that shape before P3-01 designs ExecutionWorld would create exactly the unread hook this program has recorded several times."
+    },
+    {
+      "epic": "P9-05",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/llm/token-meter/tests/usage-calibration.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-05 Contract — must[1]: each response narrows the estimate an uncalibrated session changes nothing, so the first request is priced exactly as before",
+        "P9-05 Contract — must[1]: each response narrows the estimate acceptance[2]: three real responses narrow the error MONOTONICALLY",
+        "P9-05 Contract — must[1]: each response narrows the estimate the factor converges toward the real density rather than overshooting past it",
+        "P9-05 Contract — must[1]: each response narrows the estimate one outlier cannot swing the next estimate by its whole error",
+        "P9-05 Contract — must[1]: each response narrows the estimate no sequence of observations can invert the estimator",
+        "P9-05 Contract — must[1]: each response narrows the estimate an observation it can learn nothing from is IGNORED, not folded",
+        "P9-05 Contract — must[3]: the estimate path stays synchronous and pure calibrating returns a NEW state and leaves the previous one untouched",
+        "P9-05 Contract — must[3]: the estimate path stays synchronous and pure neither function returns a promise, because both run while a request is being assembled",
+        "P9-05 Contract — must[3]: the estimate path stays synchronous and pure a corrected estimate is a whole number of tokens",
+        "P9-05 Contract — what calibration is NOT (BLOCKED-107) one scalar factor cannot be right for content whose density VARIES"
+      ],
+      "files": [
+        "packages/llm/token-meter/src/usage-calibration.ts",
+        "packages/llm/token-meter/tests/usage-calibration.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T21:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "c64078fffd315250845e70a78c1e10a79a31fbbb",
+        "testsDiscovered": 10
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Three targeted mutations of packages/llm/token-meter/src/usage-calibration.ts, each restored byte-identical: (M1) the per-observation step bound is removed; (M2) the useless-observation guard is deleted; (M3) the residual is taken against the RAW estimate instead of the corrected one.",
+        "failureSummary": "Reddened 1, 1 and 2 of 10. M3 reddens two because taking the residual against the raw estimate makes the factor re-apply its own correction each round, so both the convergence case and the monotonic-narrowing case see it overshoot. M1 and M2 each redden exactly the case written for them; the remaining seven stay green under all three, which is what says the purity and boundary cases are not accidentally sensitive to the arithmetic."
+      },
+      "note": "C (Contract) for P9-05, DELIBERATELY HALF THE EPIC. BLOCKED-107 established that must[0] (exact DeepSeek counting) and must[2] (p95 error against four corpora) both need a tokenizer whose source is a maintainer's decision, and that must[1] and must[3] are reachable today. This is must[1] and must[3] only; the other two are untouched and remain blocked. TWO OF MY OWN ASSERTIONS WERE FALSE AND WERE CORRECTED BY RUNNING THEM. (1) I asserted the error narrows strictly every round; on constant-density content the factor reaches the truth in two rounds, so the third comparison demanded better than exact. (2) I asserted a converged estimate is never exact — false for uniform content, where it can be. The real limitation is different and is now the case that states it: on content whose density VARIES the single factor oscillates, tracking whichever content came last, and twenty observations buy nothing the first two did not. That is the honest form of why must[0] needs a tokenizer."
     }
   ]
 }
