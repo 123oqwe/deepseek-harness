@@ -177,6 +177,31 @@
         "U": "packages/collaboration/blackboard/tests/blackboard.spec.ts [NEW; U declares five source files across three packages and no test file]",
         "F": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts [shared with C, disjoint titles]"
       }
+    },
+    "SLICE-3.1-cedar": {
+      "recordedBeforeFirstLine": true,
+      "kind": "infrastructure slice, not an epic cell",
+      "makeVsUse": {
+        "verdict": "PROVIDER_ADAPT",
+        "adopted": [
+          "@cedar-policy/cedar-wasm@4.12.0"
+        ],
+        "residual": "Everything this repository must still write: the ctx.policy Service Definition (provider-neutral, decide(manifest, identity, token, world, facts)); the policy-engine-cedar provider that translates a request into Cedar's entity/context shape and back; the conformance cases; and the fail-closed loader. Cedar decides; nothing about how a dsh action becomes a Cedar request exists upstream, and that translation is the clause subject."
+      },
+      "verifiedIndependently": {
+        "checkedOn": "2026-09-06",
+        "version": "4.12.0 is the current latest, published 2026-07-28 — not a stale pin.",
+        "license": "Apache-2.0.",
+        "dependencies": "none — the package declares zero runtime dependencies, so adopting it adds one node to the graph rather than a subtree.",
+        "size": "13.1 MB unpacked, matching the order's figure.",
+        "noIo": "By construction: the artifact is wasm with no host bindings beyond what the loader passes, so 'no I/O' is a property of the packaging rather than a claim to trust.",
+        "notVerifiedHere": "forbid-overrides-permit, default-deny, matched-policy explain and partial-eval residuals are the order's own local findings. They are the DECISION SEMANTICS, and they get conformance cases in the slice rather than being taken on report — that is what deliverable 3 is for."
+      },
+      "twoMistakesToAvoid": {
+        "wrappingIsNotDelivery": "A package that only re-exports Cedar has not satisfied any clause: the clause subject must be in code this repository owns, which here is the request translation and the fail-closed loader.",
+        "noSecondDeclaration": "The policy content and the PEP wiring belong to P2-05 and P2-10. Writing a second policy vocabulary here would be P8-01's hand-written schema and P2-10's homemade language again, which is what §C deleted."
+      },
+      "timing": "After P2-03 closes and before P2-05 (W6) opens, per the rectification order §3.1. P2-03 is not closed: its three cells await a clean CI observation."
     }
   },
   "methodCorrections": [
