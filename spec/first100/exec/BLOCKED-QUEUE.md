@@ -248,6 +248,8 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **One design finding is worth keeping regardless of how the split is resolved.** The first version of the acceptance[2] check refused any policy whose hard-deny list omitted a kernel class — which would have rejected an organisation merely *adding* one, and left "switching a hard deny off" unexpressible and therefore unrefusable. The policy type now separates `addedHardDenyClasses` from `removedHardDenyClasses` so the refusal has a real subject. A single list would have passed its own test by never being reachable, which is this queue's most-recorded shape.
 
+**The correct pattern exists in the same registry, which is why this reads as a mistake rather than a convention.** P4-12 also creates a new package (`packages/action/action-ledger`) and its **C** stage declares `src/index.ts` alongside `src/types.ts` and its spec — so that epic can be built as split, and this one cannot. Whatever is decided, the two should not disagree.
+
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
 ### BLOCKED-130 — the fiber-store pin is a vendored patch, and a re-vendor removes it with nothing going red
