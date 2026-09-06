@@ -225,6 +225,31 @@ const FILES_REDUCED = {
  * check whether it still holds. If the convention goes, the file's admission
  * goes with it.
  */
+/**
+ * Test files ADDED to an epic because its unlock signal names an observation
+ * none of its declared files could make.
+ *
+ * Distinct from {@link SCAFFOLD_FILES}, and the difference decides who pays.
+ * A scaffold file is forced by a repository-wide convention the epic did not
+ * choose, so B4(f) admits it without counting against the stage. A test file
+ * is the epic's OWN work: it is added here because the registry's file list
+ * was wrong about what proving the clause requires, not because a convention
+ * demands it.
+ *
+ * Recorded rather than written silently, because a lock whose unlock signal
+ * cannot be observed by any declared file is a defect in the file list, and
+ * the next reader needs to see that it was found and decided rather than
+ * quietly patched.
+ */
+const TEST_FILES_ADDED = {
+  'P1-03': {
+    added: [{ path: 'apps/cli/tests/plugin-lock.spec.ts', kind: 'N', stage: 'U' }],
+    reason: "P1-03's lock unlocks on a case proving that a profile whose lock was written by `dsh plugin` is refused at boot when a digest drifts. must[1] already produces such a lock (`apps/cli/src/plugin.ts` calls `commitProfileLock` on every successful pnpm run), but NOTHING tests it -- `commitProfileLock` and `plugins.lock.json` appear zero times under `apps/cli/tests/`. The epic's only declared test file is `plugin-lock/tests/lock.spec.ts`, a unit spec for the library, and its U stage declared no test file at all. The unlock signal therefore named an outcome no declared file could observe (BLOCKED-133).",
+    authorization: 'delegate ruling, 2026-09-06 (BLOCKED-133): keep the signal end-to-end and add the file, rather than restate the signal against what a unit spec can reach.',
+    filenameDeviation: "The ruling named `apps/cli/tests/profiles/plugin-lock.e2e.ts`; the file is `apps/cli/tests/plugin-lock.spec.ts` instead, and the reason is mechanical rather than preference. `vitest.config.ts`'s `testIncludes` collects only `*.spec.ts`; `*.e2e.ts` runs solely under `vitest.e2e.config.ts` via `pnpm run test:e2e`, which is a separate run and, per docs/testing.md, the real-API lane. The greening observation IS `pnpm run test`'s JSON report, so a frozen title living in an `.e2e.ts` file could never be found in any observation and the cell could never green. This test needs no API key -- only a temporary profile directory -- so it is not a real-API test in the first place.",
+  },
+}
+
 const SCAFFOLD_FILES = {
   'P2-04': {
     added: [{ path: 'packages/policy/risk-taxonomy/src/index.ts', stage: 'C' }],
@@ -665,7 +690,7 @@ for (const id of ids) {
     layerSource: isNewGap ? 'base-align-v2/new-gap-matrix.md (delegate-confirmed)' : 'r0-decision-package.md §2 full mapping (Agent A)',
     layerStatus: isNewGap ? 'DELEGATE_CONFIRMED' : ambiguous.has(id) ? 'PENDING_MAINTAINER_ADJUDICATION' : 'AGENT_A_PROPOSED',
     canonicalOwner: specOwnerEpics.has(id) ? id : 'UNASSIGNED_UNTIL_APPROVAL',
-    files: parseFiles(fields.files || ''),
+    files: [...parseFiles(fields.files || ''), ...(TEST_FILES_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind }))],
     must,
     acceptance,
     nonGoals,
@@ -700,6 +725,14 @@ for (const id of ids) {
         }
       : {}),
     ...(clauseProvenanceFor(id).length > 0 ? { clauseProvenance: clauseProvenanceFor(id) } : {}),
+  }
+  for (const addition of TEST_FILES_ADDED[id]?.added ?? []) {
+    const stage = epic.stages[addition.stage]
+    if (stage === undefined || stage.files === undefined) {
+      throw new Error(`${id}: added test file names stage ${addition.stage}, which this epic does not have`)
+    }
+    stage.files = [...stage.files, addition.path]
+    stage.count = stage.files.length
   }
   for (const scaffold of SCAFFOLD_FILES[id]?.added ?? []) {
     // Epic-level `files` already declares the path -- the registry named it,
@@ -866,6 +899,11 @@ const registry = {
             epicIds: Object.keys(FILES_REDUCED).sort(),
             order: 'spec/first100/exec/plan-rectification-2026-09-06.md §C',
             entries: FILES_REDUCED,
+          },
+          testFilesAdded: {
+            epicIds: Object.keys(TEST_FILES_ADDED).sort(),
+            note: "Test files added because an epic's unlock signal named an observation none of its declared files could make. The epic's own work, not convention-forced scaffolding, so unlike scaffoldFiles these count against the stage.",
+            entries: TEST_FILES_ADDED,
           },
           scaffoldFiles: {
             epicIds: Object.keys(SCAFFOLD_FILES).sort(),

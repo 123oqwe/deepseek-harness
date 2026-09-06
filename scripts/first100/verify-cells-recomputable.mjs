@@ -64,6 +64,7 @@
  *     [--report <path>]     write full JSON findings to this path
  *     [--require-all]       exit non-zero when any cell is UNAVAILABLE
  */
+import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -136,9 +137,14 @@ function passingNames(report) {
  * @param passing - names the observation shows passing.
  * @returns the frozen strings the observation confirms, and any it does not.
  */
-export function recomputeMatchedCases(expectCases, passing) {
-  const matched = expectCases.filter(title => passing.has(title))
-  const unmatched = expectCases.filter(title => !passing.has(title))
+export function recomputeMatchedCases(expectCases, passing, epic, stage) {
+  // Resolves a registered rename, like every other tool that reads a frozen
+  // title: a case renamed by later work is not an unmatched one, and reporting
+  // it as MISMATCHED accuses the ledger of a defect the register already
+  // explains (see ./frozen-title-renames.mjs).
+  const renames = registeredRenames()
+  const matched = expectCases.filter(title => frozenTitlePresent(title, passing, renames, epic, stage))
+  const unmatched = expectCases.filter(title => !frozenTitlePresent(title, passing, renames, epic, stage))
   return { matched, unmatched }
 }
 
@@ -159,7 +165,12 @@ export function checkCellAgainstObservation(cell, frozen, report) {
   // the cell names. Compared against the observation directly, never against
   // the current freeze -- a cell is evidence about the run it cites, and a
   // freeze edited afterwards cannot make a case stop having passed.
-  const claimedNotObserved = recorded.filter(title => !passing.has(title))
+  // A registered rename is resolved here too: the cell records the title it
+  // FROZE, and greening copies the frozen titles verbatim, so a case renamed
+  // by later work leaves the cell holding the old name while the observation
+  // carries the new one. That is the register's case, not a false claim.
+  const renames = registeredRenames()
+  const claimedNotObserved = recorded.filter(title => !frozenTitlePresent(title, passing, renames, frozen.epic, frozen.stage))
   if (claimedNotObserved.length > 0) {
     findings.push({
       field: 'expectCasesMatched',
@@ -171,7 +182,7 @@ export function checkCellAgainstObservation(cell, frozen, report) {
   // Separately: the live freeze may have moved since the cell was greened.
   // That is drift, not a false claim, so it is reported under its own field --
   // conflating the two would let a supersession read as evidence tampering.
-  const { unmatched } = recomputeMatchedCases(frozen.expectCases, passing)
+  const { unmatched } = recomputeMatchedCases(frozen.expectCases, passing, frozen.epic, frozen.stage)
   if (unmatched.length > 0) {
     findings.push({
       field: 'frozenCasesNotInObservation',

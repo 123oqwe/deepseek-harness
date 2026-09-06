@@ -2052,6 +2052,130 @@
           "title": "P1-02 Contract — acceptance[2]: Inventory 和审计事件记录验证结果而不记录密钥 recordProvenanceAudit produces a record naming the verdict and trust anchor id, with no field capable of holding key or signature material"
         }
       ]
+    },
+    {
+      "epic": "P2-03",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[0]: 任何外部写操作在事件日志中都存在先于执行的 ActionManifest a manifest generated and durably appended before execution admits that exact execution attempt"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[0]: 任何外部写操作在事件日志中都存在先于执行的 ActionManifest an external write whose actionId has no preceding manifest is blocked, even when unrelated manifests already exist in the log"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[0]: 任何外部写操作在事件日志中都存在先于执行的 ActionManifest a manifest appended for the right actionId but the wrong arguments hash does not admit execution (tamper/substitution is not a preceding manifest)"
+        },
+        {
+          "stage": "U",
+          "title": "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[0]: three calls in one turn produce three manifest-then-call pairs, not one manifest and three calls"
+        },
+        {
+          "stage": "U",
+          "title": "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[0]: each manifest names the actionId of the call that follows it, so the pairing is by identity and not by adjacency"
+        },
+        {
+          "stage": "U",
+          "title": "P2-03 Usage — every dispatched call is preceded by its own manifest validation[0]: a deliberately created bypass — a tool/call with no manifest — is DETECTED by the same reading"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a manifest precedes each dispatch-start, and each names the sub-call that follows it"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest a dispatch abandoned before it starts writes NO manifest, so the log records no action that never happened"
+        }
+      ],
+      "note": "The Contract cases decide admission; the Usage cases observe it on the real dispatch path, where the third proves a deliberately created bypass is detected rather than merely absent. The supplement covers the code-mode origin, the second of the clause's three paths. The plugin-RPC path is NOT claimed here: C12 re-anchored it to P1-06 must[4], and this repository has no plugin-RPC dispatch point for it to reach."
+    },
+    {
+      "epic": "P2-03",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash objects with the same keys in a different order hash identically"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash the SAME JSON value spelled with an escape or a literal character hashes identically"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash numbers in different literal representations of the same value hash identically"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash arguments that differ semantically hash to different values (canonicalization is not a constant function)"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash SECURITY: NFC and NFD are DIFFERENT values and MUST NOT share a hash"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash SECURITY: a manifest REFUSES a non-finite number, which would otherwise share a hash with a real null"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同对象得到相同 hash a non-finite number canonicalizes to null, exactly as JSON.stringify defines it"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 — differential conformance against the RFC 8785 reference implementation produces byte-identical output to `canonicalize` for every generated JSON value"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 — differential conformance against the RFC 8785 reference implementation canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written"
+        },
+        {
+          "stage": "F",
+          "title": "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion key order never changes the hash, over generated values rather than one example"
+        },
+        {
+          "stage": "F",
+          "title": "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion two values that differ do NOT collide, which is the half a constant hash would satisfy"
+        },
+        {
+          "stage": "F",
+          "title": "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion SECURITY: NFD and NFC never share a hash, over generated strings that have two forms"
+        },
+        {
+          "stage": "F",
+          "title": "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion a key containing the separator does not collide with a value spelled to look like one"
+        }
+      ],
+      "note": "'Semantically identical' is bounded deliberately: key order, escape spelling and number spelling are the same value and share a hash, while NFC and NFD are DIFFERENT values and must not — the clause's 语义相同 does not extend to Unicode normalization, and treating it as if it did was a security defect this epic corrected. The differential case against the RFC 8785 reference is what makes the list a conformance claim rather than four hand-picked properties; the Fault cases re-establish the same properties over generated input, and the non-collision case is the half a constant hash would otherwise satisfy."
+    },
+    {
+      "epic": "P2-03",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[2]: 无法分类副作用的动作默认高风险并要求审批 an action whose side effect cannot be classified defaults to the highest-risk class and requires approval"
+        },
+        {
+          "stage": "C",
+          "title": "P2-03 Contract — acceptance[2]: 无法分类副作用的动作默认高风险并要求审批 an action with a declared, classifiable side effect is classified as declared, not defaulted to the unclassifiable high-risk fallback"
+        },
+        {
+          "stage": "U",
+          "title": "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[2]: an unclassifiable action reaches the LOG as highest-risk and approval-requiring, not merely as a return value"
+        },
+        {
+          "stage": "U",
+          "supplementSeq": 1,
+          "title": "the sub-dispatch scheduler (native concurrency contract) P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest the manifest records the code-mode origin and the highest-risk default, so the log says which path ran"
+        }
+      ],
+      "note": "The second Contract case is the control: without it, a classifier that returned the high-risk default for EVERY action would satisfy the first. The Usage case moves the claim from a return value to the durable log, which is where acceptance[0]'s reader looks."
     }
   ]
 }

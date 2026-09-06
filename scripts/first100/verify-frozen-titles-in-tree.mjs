@@ -29,6 +29,7 @@
  *
  * @module scripts/first100/verify-frozen-titles-in-tree
  */
+import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -37,22 +38,7 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = resolve(here, '..', '..')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
-const RENAMES_PATH = join(REPO_ROOT, 'spec/first100/exec/frozen-title-renames.json')
 
-/**
- * The registered rename for each frozen title, old name to new.
- *
- * A renamed case is not a deleted one, and the register already exists to say
- * so — `verify-frozen-titles-resolvable.mjs` has consulted it since BLOCKED-040.
- * Omitting it here made this gate report P0-05.C's renamed case as an orphan
- * whose replacement was sitting in the register the whole time: a gate that
- * reports a recorded fact as a finding trains its reader to ignore it.
- * @returns the mapping, keyed by the old title.
- */
-function registeredRenames() {
-  const register = JSON.parse(readFileSync(RENAMES_PATH, 'utf8'))
-  return new Map(register.entries.map(entry => [entry.oldTitle, entry.newTitle]))
-}
 
 /**
  * Every test name the suite can produce, as vitest reports them.
@@ -98,10 +84,8 @@ function main() {
   const orphans = []
   for (const [key, entry] of live) {
     for (const title of entry.expectCases) {
-      if (producible.has(title)) continue
-      const renamed = renames.get(title)
-      if (renamed !== undefined && producible.has(renamed)) continue
-      orphans.push({ key, title, ...renamed === undefined ? {} : { renamed } })
+      if (frozenTitlePresent(title, producible, renames, entry.epic, entry.stage)) continue
+      orphans.push({ key, title })
     }
   }
 
