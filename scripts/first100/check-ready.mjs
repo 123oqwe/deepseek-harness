@@ -162,6 +162,22 @@ if (ledgerRows === undefined) fail(`${LEDGER_PATH} has no "rows" — regenerate 
 const byId = new Map(registryRows.map(epic => [epic.id, epic]))
 const stagesById = new Map(registryRows.map(epic => [epic.id, epic.stages ?? {}]))
 
+const freeze = readJson(resolve(REPO, 'spec/first100/exec/command-freeze.json'))
+
+/**
+ * The stages of one epic that carry a live freeze entry.
+ *
+ * Superseded entries are excluded: being replaced is what supersession means,
+ * and a stage whose only entry is superseded has no current pinned command.
+ * @param id - the epic to look up.
+ * @returns its live frozen stage letters.
+ */
+function liveFrozenStages(id) {
+  return (freeze.entries ?? [])
+    .filter(entry => entry.epic === id && entry.supersededBy === undefined)
+    .map(entry => entry.stage)
+}
+
 /**
  * Decide both start conditions for one epic against the current ledger.
  * @param id - the registry id of the epic to gate.
@@ -234,6 +250,7 @@ const inFlight = []
 const blockedByPredecessor = []
 const blockedByOverlap = []
 const awaitingAcceptance = []
+const builtAwaitingObservation = []
 for (const epic of registryRows) {
   const row = ledgerRows[epic.id]
   if (row === undefined) fail(`epic ${epic.id} has no ledger row`)
@@ -248,6 +265,21 @@ for (const epic of registryRows) {
   // an epic with nothing to do.
   if (hasStarted(row)) {
     awaitingAcceptance.push(epic.id)
+    continue
+  }
+  // Built, and waiting only for a run. An epic whose stages are frozen has had
+  // its work done and its commands pinned; every cell still reads NOT_RUN
+  // because no observation has been recorded against them yet. Listing it as
+  // startable sends someone to write code that already exists — P4-09 was
+  // reported "ready to start" with its whole implementation on disk and 54 of
+  // its own tests passing.
+  //
+  // Freeze entries are the signal because they are what a finished stage
+  // produces. Whether each frozen title still exists in the tree is a separate
+  // question, answered by verify-frozen-titles-in-tree; asking it here would
+  // put a `vitest list` collection inside a check meant to be instant.
+  if (liveFrozenStages(epic.id).length > 0) {
+    builtAwaitingObservation.push(epic.id)
     continue
   }
   const verdict = decide(epic.id)
@@ -277,7 +309,10 @@ console.log(`  in flight: ${inFlight.length}${inFlight.length > 0 ? ` — ${inFl
 console.log(`  blocked by predecessors: ${blockedByPredecessor.length}${blockedByPredecessor.length > 0 ? ` — ${blockedByPredecessor.join(' ')}` : ''}`)
 console.log(`  blocked by file overlap: ${blockedByOverlap.length}${blockedByOverlap.length > 0 ? ` — ${blockedByOverlap.join(' ')}` : ''}`)
 console.log(`  awaiting acceptance: ${awaitingAcceptance.length}${awaitingAcceptance.length > 0 ? ` — ${awaitingAcceptance.join(' ')}` : ''}`)
-// The five buckets partition every non-ACCEPTED epic. Printing the total lets
+// Built and pinned, waiting only for a run to record. Distinct from "ready to
+// start", which means the code does not exist yet — the two need opposite work.
+console.log(`  built, awaiting observation: ${builtAwaitingObservation.length}${builtAwaitingObservation.length > 0 ? ` — ${builtAwaitingObservation.join(' ')}` : ''}`)
+// The six buckets partition every non-ACCEPTED epic. Printing the total lets
 // a reader confirm that: counts that fail to reconcile mean this listing is
 // hiding a state, which is the failure mode the whole block exists to prevent.
 //
@@ -287,7 +322,7 @@ console.log(`  awaiting acceptance: ${awaitingAcceptance.length}${awaitingAccept
 // that assert them. It is here for the next edit that adds a sixth state and
 // forgets to print it — the same omission that made BLOCKED-087 invisible.
 const accounted = ready.length + inFlight.length + blockedByPredecessor.length
-  + blockedByOverlap.length + awaitingAcceptance.length
+  + blockedByOverlap.length + awaitingAcceptance.length + builtAwaitingObservation.length
 const outstanding = Object.values(ledgerRows).filter(row => row.status !== 'ACCEPTED').length
 if (accounted !== outstanding) {
   fail(`listing accounts for ${accounted} epic(s) but ${outstanding} are not ACCEPTED — a state is unaccounted for`)

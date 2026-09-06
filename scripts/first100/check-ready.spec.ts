@@ -29,9 +29,10 @@ afterEach(() => {
  * so a case can state exactly the registry and ledger it is about.
  * @param registry - the epic rows to write to `tests/first100/registry.json`.
  * @param ledgerRows - the ledger rows to write to `spec/first100/exec/ledger.json`.
+ * @param freezeEntries - command-freeze entries; an epic with one has had its work done and pinned.
  * @returns the absolute path of the prepared root.
  */
-function fixture(registry: unknown[], ledgerRows: Record<string, unknown>): string {
+function fixture(registry: unknown[], ledgerRows: Record<string, unknown>, freezeEntries: unknown[] = []): string {
   const root = mkdtempSync(join(tmpdir(), 'first100-ready-'))
   temporaryRoots.push(root)
   mkdirSync(join(root, 'tests/first100'), { recursive: true })
@@ -39,6 +40,7 @@ function fixture(registry: unknown[], ledgerRows: Record<string, unknown>): stri
   mkdirSync(join(root, 'scripts/first100'), { recursive: true })
   writeFileSync(join(root, 'tests/first100/registry.json'), JSON.stringify(registry))
   writeFileSync(join(root, 'spec/first100/exec/ledger.json'), JSON.stringify({ rows: ledgerRows }))
+  writeFileSync(join(root, 'spec/first100/exec/command-freeze.json'), JSON.stringify({ entries: freezeEntries }))
   cpSync(join(REPO, SCRIPT), join(root, SCRIPT))
   return root
 }
@@ -342,6 +344,47 @@ describe('first100 readiness gate', () => {
     expect(code).toBe(0)
     expect(output).toContain('awaiting acceptance: 1 — DONE')
     expect(output).toContain('(2 of 2 non-ACCEPTED epics accounted for)')
+  })
+
+  it('an epic whose stages are FROZEN is built-awaiting-observation, not ready to start', () => {
+    // The distinction is the point: both epics have every cell at NOT_RUN and
+    // both pass the two start conditions, so the gate cannot tell them apart
+    // from the ledger alone. BUILT has its commands pinned in the freeze, which
+    // is what a finished stage produces — P4-09 was reported startable with its
+    // whole implementation on disk and 54 of its own tests passing.
+    const root = fixture(
+      [
+        { id: 'BUILT', wave: 1, predecessors: [], files: ['b.ts'], stages: {} },
+        { id: 'FRESH', wave: 1, predecessors: [], files: ['f.ts'], stages: {} },
+      ],
+      { BUILT: notStarted, FRESH: notStarted },
+      [{ epic: 'BUILT', stage: 'C', expectCases: ['a case'] }],
+    )
+    const { code, output } = run(root)
+
+    expect(code).toBe(0)
+    expect(output).toContain('built, awaiting observation: 1 — BUILT')
+    // FRESH stays startable, so the new bucket does not swallow the old one.
+    expect(output).toContain('ready to start')
+    expect(output).toContain('  FRESH  (wave 1)')
+    expect(output).toContain('(2 of 2 non-ACCEPTED epics accounted for)')
+  })
+
+  it('a SUPERSEDED freeze entry does not make an epic look built', () => {
+    // Being replaced is what supersession means, so an epic whose only entry is
+    // superseded has no current pinned command and is genuinely startable.
+    // Without this, retiring a stage's freeze would strand its epic in a bucket
+    // that tells nobody to work on it.
+    const root = fixture(
+      [{ id: 'RETIRED', wave: 1, predecessors: [], files: ['r.ts'], stages: {} }],
+      { RETIRED: notStarted },
+      [{ epic: 'RETIRED', stage: 'C', expectCases: ['a case'], supersededBy: 'RETIRED.C v2' }],
+    )
+    const { code, output } = run(root)
+
+    expect(code).toBe(0)
+    expect(output).toContain('built, awaiting observation: 0')
+    expect(output).toContain('  RETIRED  (wave 1)')
   })
 
   it('lists only the epics that pass both conditions when given no epic id', () => {
