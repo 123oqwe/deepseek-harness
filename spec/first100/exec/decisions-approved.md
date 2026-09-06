@@ -189,3 +189,19 @@
 **One unrelated defect fixed on the way.** `EXEC-STATE.registryDigest` was written on every ledger write and **read by nothing** — the seventh instance of this program's most common defect shape. A registry edit that touches no ledger row (exactly this one) left the digest naming a registry that no longer existed, and said so to nobody. `generate-ledger.mjs --check` now compares both `ledgerDigest` and `registryDigest` against the files and fails closed; it failed on the real stale value here before being refreshed, while `ledgerDigest` matched, so the check is known to discriminate. `--sync-exec-state` recomputes the digests without inventing a ledger row.
 
 **What this does NOT do.** It does not accept P4-07 or P4-12, and it does not touch either epic's frozen cases — no frozen case referenced must[3]. P4-07 now faces the four acceptance predicates on its remaining three clauses; the delegate's sign-off is still required.
+
+## C12 (2026-09-06) — P2-03 must[2] split: the plugin-RPC half re-anchored to P1-06 (delegate ruling, C11 delegation re-confirmed)
+
+**Recorded as a delegate ruling, executed after the user confirmed the C11 delegation is still live.** C11 established the standard: a registry change is the delegate's to decide, and the Supervisor asks once, directly, before each edit whether the delegation still holds. That question was asked and answered **"Yes — delegate decides, I execute"** before a byte was touched.
+
+**What changed.** P2-03's `must[2]` read 「code-mode 内嵌工具和插件 RPC 不能绕过。」 — one sentence naming two mechanisms. It is now two clauses: P2-03 keeps 「code-mode 内嵌工具不能绕过。」 and P1-06 gains 「插件 RPC 不能绕过 ActionManifest。」
+
+**Why.** The plugin-RPC half has no subject anywhere in the repository, and the epic that would create one is P1-06 (不可信插件 Out-of-Process Host), whose own `must[0]` is that third-party plugins register tools only through capability-scoped RPC. Until that host exists there is no dispatch point to gate, so an assertion about it would pass with the gate deleted. Leaving both halves on P2-03 made a **wave-4 epic unacceptable until a wave-8 epic landed**, with P2-04, P2-05 and P4-02 queued behind it — a scheduling inversion in the registry rather than a real dependency.
+
+**This is a SPLIT, not a MOVEMENT, and the difference is mechanical.** C11's re-anchoring moved a clause whose wording survived intact, so the coverage report matches it verbatim against the pinned YAML under its former owner. A split has no verbatim survivor: each half is reworded. Pushing it through the movement mechanism produced exactly the reading a split must not produce — one unmatched source clause and two invented ones, three findings for one approved edit. `CLAUSE_SPLITS` records it as what it is, and the coverage report resolves both parts to the compound clause's own YAML span. Coverage stays 100/100 epics, 300/300 channels, unmatched 0, undocumented 0.
+
+**What is checked, and what is not.** Extraction fails if any declared part is missing from its epic's MUST text, and the report fails if the named source clause is not in the origin epic's YAML — so a split cannot quietly drop half of what the source said, nor launder two invented clauses by naming a source nobody wrote. Three cases pin this, one of them a losslessness control that deletes each part's record in turn and asserts the report stops being green either way — without it, the green would only prove that whichever epic happened to be checked first was recorded.
+
+**What no check can decide is whether the two halves MEAN what the whole meant.** That is the reviewing judgement this ruling records, and it is deliberately not claimed as a mechanical result.
+
+**Not affected.** P2-03's code-mode half stays with P2-03 and remains blocked on BLOCKED-077; its lock is rewritten rather than lifted. No cell is greened or accepted by this entry.

@@ -832,3 +832,126 @@ describe('P2-03 — every appended manifest carries its own position', () => {
     expect(ordered[1]).toBe('tool/call')
   })
 })
+
+/**
+ * P2-03 Usage — acceptance[0] and validation[0] on the real dispatch path.
+ *
+ * The Contract stage proved the manifest TYPE and the gate function in
+ * isolation. What only exists once the loop runs is whether every call the
+ * agent actually dispatches is preceded by its own manifest — a property of
+ * `appendToolCall`'s placement, not of the manifest type.
+ *
+ * validation[0] asks for a deliberately created bypass to make a test FAIL.
+ * The bypass here is a `tool/call` appended straight to the log with no
+ * manifest, which is exactly what a future dispatch path that forgot to route
+ * through `appendToolCall` would produce. Without that case, the pairing
+ * assertions would be satisfied by a reader that simply never looked.
+ */
+describe('P2-03 Usage — every dispatched call is preceded by its own manifest', () => {
+  /** The manifest/call pairs a session's log carries, in log order. */
+  const manifestCallPairs = (agent: Parameters<typeof events>[0]): string[] =>
+    events(agent)
+      .filter(event => event.type === 'action/manifest-appended' || event.type === 'tool/call')
+      .map(event => event.type)
+
+  it('acceptance[0]: three calls in one turn produce three manifest-then-call pairs, not one manifest and three calls', async () => {
+    // A single manifest ahead of a batch would satisfy "a manifest precedes the
+    // first call" while leaving two executions unmanifested, which is the
+    // failure acceptance[0] names.
+    const adapter = new MockAdapter([
+      multiCall([
+        { id: 'c1', name: 'noop', args: {} },
+        { id: 'c2', name: 'noop', args: { a: 1 } },
+        { id: 'c3', name: 'noop', args: { b: 2 } },
+      ]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-batch'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(manifestCallPairs(agent)).toStrictEqual([
+      'action/manifest-appended', 'tool/call',
+      'action/manifest-appended', 'tool/call',
+      'action/manifest-appended', 'tool/call',
+    ])
+  })
+
+  it('acceptance[0]: each manifest names the actionId of the call that follows it, so the pairing is by identity and not by adjacency', async () => {
+    // Order alone would be satisfied by three manifests for one action. The
+    // actionId is what ties a manifest to the execution it authorises.
+    const adapter = new MockAdapter([
+      multiCall([
+        { id: 'c1', name: 'noop', args: {} },
+        { id: 'c2', name: 'noop', args: { a: 1 } },
+      ]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-identity'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const pairs: { manifest?: string; call?: string }[] = []
+    for (const event of events(agent)) {
+      if (event.type === 'action/manifest-appended') pairs.push({ manifest: event.data.actionId })
+      else if (event.type === 'tool/call') {
+        const open = pairs[pairs.length - 1]
+        if (open !== undefined) open.call = event.data.callId
+      }
+    }
+    expect(pairs).toStrictEqual([
+      { manifest: 'c1', call: 'c1' },
+      { manifest: 'c2', call: 'c2' },
+    ])
+  })
+
+  it('acceptance[2]: an unclassifiable action reaches the LOG as highest-risk and approval-requiring, not merely as a return value', async () => {
+    // The Contract stage proved the classifier. This proves the verdict is what
+    // the durable record carries — a classification that never reaches the log
+    // cannot be audited afterwards, which is the whole point of the manifest.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: {} }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-classification'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
+    expect(manifest?.data.classified).toBe(false)
+    expect(manifest?.data.requiresApproval).toBe(true)
+  })
+
+  it('validation[0]: a deliberately created bypass — a tool/call with no manifest — is DETECTED by the same reading', async () => {
+    // The control that makes the three cases above mean something. It appends a
+    // call the way a dispatch path that skipped `appendToolCall` would, and
+    // asserts the pairing reader notices. Without it, a reader that returned
+    // "paired" unconditionally would satisfy every assertion here.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: {} }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-bypass'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    agent.session.append('tool/call', {
+      turn: 1, step: 99, callId: ToolCallId('bypass'), name: 'noop', arguments: JSON.stringify({}),
+    })
+
+    const ordered = manifestCallPairs(agent)
+    // The genuine pair is still there, and the bypass shows as a call with no
+    // manifest before it: two calls, one manifest.
+    expect(ordered.filter(type => type === 'tool/call')).toHaveLength(2)
+    expect(ordered.filter(type => type === 'action/manifest-appended')).toHaveLength(1)
+    expect(ordered[ordered.length - 1]).toBe('tool/call')
+  })
+})

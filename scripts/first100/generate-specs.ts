@@ -143,7 +143,19 @@ interface Epic {
    * keep the report green would be to declare both epics rescoped — which
    * would hide the movement instead of recording it.
    */
-  clauseProvenance?: { clause: string; movedFrom: string; movedAtUtc: string; basis: string; reason: string }[]
+  clauseProvenance?: {
+    clause: string
+    /** Present on a MOVEMENT: the clause survives verbatim under a new owner. */
+    movedFrom?: string
+    movedAtUtc?: string
+    /** Present on a SPLIT: a compound source clause divided between owners, with no verbatim survivor. */
+    splitFrom?: string
+    sourceClause?: string
+    siblingClauses?: string[]
+    splitAtUtc?: string
+    basis: string
+    reason: string
+  }[]
 }
 export interface Registry {
   frozenBaseline: { sha: string; shortSha: string; label: string }
@@ -1785,6 +1797,8 @@ interface RelocatedClause {
   readonly from: string
   /** The epic that carries it now. */
   readonly to: string
+  /** For a split, the compound source clause this part came from. */
+  readonly sourceClause?: string
 }
 
 /**
@@ -1802,11 +1816,26 @@ function collectRelocatedClauses(reg: Registry): Map<string, RelocatedClause> {
   const moves = new Map<string, RelocatedClause>()
   for (const epic of reg.epics) {
     for (const entry of epic.clauseProvenance ?? []) {
-      const parsed = /^(P\d-\d\d) (must|acceptance|nonGoals)\[\d+\]$/.exec(entry.movedFrom)
-      if (!parsed) {
-        throw new Error(`clause-coverage: ${epic.id} clauseProvenance.movedFrom "${entry.movedFrom}" does not name an epic and channel`)
+      const origin = entry.movedFrom ?? entry.splitFrom
+      if (origin === undefined) {
+        throw new Error(`clause-coverage: ${epic.id} clauseProvenance entry names neither movedFrom nor splitFrom`)
       }
-      moves.set(`${parsed[2]}:${canonicalClause(entry.clause)}`, { from: parsed[1] as string, to: epic.id })
+      const parsed = /^(P\d-\d\d) (must|acceptance|nonGoals)\[\d+\]$/.exec(origin)
+      if (!parsed) {
+        throw new Error(`clause-coverage: ${epic.id} clauseProvenance origin "${origin}" does not name an epic and channel`)
+      }
+      const channel = parsed[2] as string
+      const from = parsed[1] as string
+      // A MOVEMENT matches the clause itself under its former owner. A SPLIT has
+      // no verbatim survivor, so the key is the SOURCE clause: every part of one
+      // split resolves to the same source, which is what makes the source
+      // matched exactly when its parts are registered.
+      const key = entry.splitFrom === undefined ? entry.clause : entry.sourceClause
+      if (key === undefined) {
+        throw new Error(`clause-coverage: ${epic.id} declares a split from ${origin} without naming the source clause it divides`)
+      }
+      moves.set(`${channel}:${canonicalClause(entry.clause)}`, { from, to: epic.id, sourceClause: key })
+      moves.set(`${channel}:${canonicalClause(key)}`, { from, to: epic.id, sourceClause: key })
     }
   }
   return moves
@@ -1917,15 +1946,19 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
           // Sourced, but from the span the YAML filed under the epic it was
           // moved off: the clause traces to the pinned document either way.
           const move = relocated.get(`${channel}:${canon}`) as RelocatedClause
+          // A split part does not appear in the YAML under any name: what appears
+          // is the compound clause it was divided from, so that is what the span
+          // is looked up by.
+          const sourceCanon = move.sourceClause === undefined ? canon : canonicalClause(move.sourceClause)
           let span: ClauseSpan | null = null
           for (const item of scanned.get(move.from)?.[channel] ?? []) {
-            if (splitClauses(item.text).some(c => canonicalClause(c) === canon)) {
+            if (splitClauses(item.text).some(c => canonicalClause(c) === sourceCanon)) {
               span = item.span
               break
             }
           }
           if (span === null) {
-            throw new Error(`clause-coverage: ${e.id} claims ${channel} clause moved from ${move.from}, but that epic's YAML has no such clause`)
+            throw new Error(`clause-coverage: ${e.id} claims a ${channel} clause from ${move.from}, but that epic's YAML has no such clause`)
           }
           clauses.push({ text: clause, digest: sha256(clause), span })
         } else if (isDocumentedBoundary) {

@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-06T08:14:35.480Z",
-  "inputDigest": "82e6ecea9abf9ce5a232150553d5dd2716aa69702332a1165d43701d8c333e44",
+  "lastUpdatedUtc": "2026-09-06T08:19:17.564Z",
+  "inputDigest": "bde865009688ca3e771af72b3367d065de500e4a945a76dfde1973eb50a40a79",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -6295,11 +6295,11 @@
         }
       },
       "candidateSha": "637a2b944898b2970f7ba87cf0469418492ac3a8",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "BLOCKED_ON_ACCEPTANCE",
+      "status": "ACCEPTED",
       "acceptedEvidence": {
-        "acceptedAtUtc": "2026-09-05T06:35:53.068Z",
+        "acceptedAtUtc": "2026-09-06T08:19:17.563Z",
         "cells": {
           "C": {
             "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33947070508",
@@ -6325,7 +6325,7 @@
         },
         "delegateSignoff": {
           "delegateSession": "guanjieqiao-92",
-          "signedAtUtc": "2026-09-05T06:34:49.044Z",
+          "signedAtUtc": "2026-09-06T08:16:19.910Z",
           "userConfirmationRef": null
         }
       }

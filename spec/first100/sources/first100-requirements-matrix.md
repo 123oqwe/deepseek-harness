@@ -225,7 +225,7 @@
 - **Priority / Wave / 依赖：** P0 / W8 / `P1-01`、`P2-02`、`P3-01`。
 - **问题 → 目标：** 社区文档明确第三方插件当前以用户权限运行，工具审批不沙箱插件代码；这意味着一个 UI 或 provider 插件可绕过工具管线直接读文件/网络。 → 把第三方插件从用户进程权限中移出，令工具审批与 capability policy 真正覆盖插件行为。
 - **Files：** target `packages/boot/app-boot/src/index.ts` [B]；`packages/boot/app-boot/src/profile.ts` [B]；`packages/host/plugin-inventory/src/index.ts` [B]；`packages/core/tools/src/index.ts` [B]；new `packages/plugin/plugin-host-protocol/src/types.ts` [N]；`packages/plugin/plugin-host/src/index.ts` [N]；`packages/plugin/plugin-host/src/supervisor.ts` [N]；`packages/plugin/plugin-host/src/rpc.ts` [N]；`packages/plugin/plugin-host/tests/isolation.e2e.ts` [N]。
-- **MUST：** 默认第三方插件在独立进程或 microVM 中运行；只通过 capability-scoped RPC 注册工具、事件和 UI 描述。；禁止传递宿主 Context、raw credentials、任意函数或可变对象引用。；host 崩溃可重启，注册 effects 自动撤销。
+- **MUST：** 默认第三方插件在独立进程或 microVM 中运行；只通过 capability-scoped RPC 注册工具、事件和 UI 描述。；禁止传递宿主 Context、raw credentials、任意函数或可变对象引用。；host 崩溃可重启，注册 effects 自动撤销。；插件 RPC 不能绕过 ActionManifest。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 插件尝试直接读取宿主 home、process.env、socket、其他插件内存均失败。；插件 host 被 kill 后主 Harness 保持健康，相关工具变为明确 unavailable。；每个 RPC 调用具有 principal、capability token、deadline、trace id。
@@ -356,7 +356,7 @@
 - **Priority / Wave / 依赖：** P0 / W4 / `P2-01`、`P0-06`。
 - **问题 → 目标：** Tool call 只表达函数名和参数，无法统一覆盖 API、浏览器、shell、嵌套 code-mode、子 Agent 代执行和非工具型插件动作。 → 在任何有副作用的执行前，以规范化对象描述动作、目标、参数、预期状态变化、幂等与补偿。
 - **Files：** target `packages/core/tools/src/types.ts` [B]；`packages/core/tools/src/index.ts` [B]；`packages/core/tools/src/ptc.ts` [B]；`packages/core/agent-loop/src/tool-calls.ts` [B]；`packages/core/session/src/known-event-types.ts` [B]；new `packages/action/action-manifest/src/index.ts` [N]；`packages/action/action-manifest/src/types.ts` [N]；`packages/action/action-manifest/src/canonicalize.ts` [N]；`packages/action/action-manifest/tests/manifest.spec.ts` [N]。
-- **MUST：** 字段包含 actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements。；所有执行路径先生成并 durable append manifest，再做 policy/approval。；code-mode 内嵌工具和插件 RPC 不能绕过。
+- **MUST：** 字段包含 actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements。；所有执行路径先生成并 durable append manifest，再做 policy/approval。；code-mode 内嵌工具不能绕过。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 任何外部写操作在事件日志中都存在先于执行的 ActionManifest。；参数规范化稳定，语义相同对象得到相同 hash。；无法分类副作用的动作默认高风险并要求审批。

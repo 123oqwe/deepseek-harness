@@ -52,7 +52,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = '67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd'
+const MATRIX_SHA = 'dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -122,6 +122,35 @@ for (const cited of CITED_SOURCE_SHAS) {
  * archaeology. Grows as epics are rescoped; membership here is what has
  * ACTUALLY been edited, not the full 23-item authorization ceiling.
  */
+/**
+ * Every clause-provenance entry one epic carries, from movements and splits alike.
+ *
+ * Both end up in the same registry field because a reader asking "where did
+ * this clause come from" wants one answer, not two lists to join. They stay
+ * separate constants because the two operations differ in what the coverage
+ * report can check: a movement matches verbatim, a split cannot.
+ * @param id - the epic to collect for.
+ * @returns its provenance entries, movements first.
+ */
+function clauseProvenanceFor(id) {
+  const entries = [...(CLAUSE_MOVEMENTS[id] ?? [])]
+  for (const split of CLAUSE_SPLITS) {
+    for (const part of split.parts) {
+      if (part.epic !== id) continue
+      entries.push({
+        clause: part.clause,
+        splitFrom: split.source,
+        sourceClause: split.sourceClause,
+        siblingClauses: split.parts.filter(other => other !== part).map(other => `${other.epic}: ${other.clause}`),
+        splitAtUtc: split.splitAtUtc,
+        basis: split.basis,
+        reason: split.reason,
+      })
+    }
+  }
+  return entries
+}
+
 const RESCOPE23_PRIOR_MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa'
 // Only epics whose `must` text was ACTUALLY narrowed belong here -- of the
 // 23 authorized-for-review epics, 13 were independently re-reviewed against
@@ -149,6 +178,39 @@ const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11'
  * Every entry is checked against the extracted MUST text below: a record whose
  * clause the matrix does not actually give that epic fails the extraction.
  */
+
+/**
+ * Compound source clauses split between the epics that own each mechanism.
+ *
+ * A SPLIT is not a MOVEMENT. `CLAUSE_MOVEMENTS` above relocates a clause whose
+ * wording survives intact, so the coverage report can match it verbatim against
+ * the pinned YAML under its former owner. A split has no verbatim survivor: the
+ * source clause named two mechanisms in one sentence, and each half is reworded
+ * as its own clause under the epic that owns it. Forcing that through the
+ * movement mechanism would silently produce one unmatched source clause and two
+ * invented ones, which is exactly the reading a split must not produce.
+ *
+ * **The invariant a split must not break is losslessness.** Every part is
+ * declared here, and extraction fails if any declared part is missing from its
+ * epic's MUST text or if a part names an epic that has no such clause — so a
+ * split cannot quietly drop half of what the source said. What no check can
+ * decide is whether the parts MEAN what the whole meant; that is the reviewing
+ * judgement the ruling records, not something this file can assert.
+ */
+const CLAUSE_SPLITS = [
+  {
+    source: 'P2-03 must[2]',
+    sourceClause: 'code-mode 内嵌工具和插件 RPC 不能绕过。',
+    splitAtUtc: '2026-09-06T09:00:00.000Z',
+    basis: 'Delegate ruling of 2026-09-06, executed under the C11 delegation re-confirmed with the user immediately before this edit.',
+    reason: 'The clause named two mechanisms in one sentence and P2-03 owns only one of them. The plugin-RPC half has no subject anywhere in the repository: the out-of-process plugin host that would create a dispatch point is P1-06\'s own must[0], four waves later. Leaving both halves on P2-03 made a wave-4 epic unacceptable until a wave-8 epic landed, with P2-04, P2-05 and P4-02 queued behind it — a scheduling inversion in the registry rather than a real dependency.',
+    parts: [
+      { epic: 'P2-03', clause: 'code-mode 内嵌工具不能绕过。' },
+      { epic: 'P1-06', clause: '插件 RPC 不能绕过 ActionManifest。' },
+    ],
+  },
+]
+
 const CLAUSE_MOVEMENTS = {
   'P4-12': [
     {
@@ -524,9 +586,9 @@ for (const id of ids) {
           },
         }
       : {}),
-    ...(CLAUSE_MOVEMENTS[id] ? { clauseProvenance: CLAUSE_MOVEMENTS[id] } : {}),
+    ...(clauseProvenanceFor(id).length > 0 ? { clauseProvenance: clauseProvenanceFor(id) } : {}),
   }
-  for (const entry of CLAUSE_MOVEMENTS[id] ?? []) {
+  for (const entry of clauseProvenanceFor(id)) {
     if (!epic.must.includes(entry.clause)) {
       throw new Error(`${id}: clause movement records "${entry.clause}" but the matrix does not give ${id} that MUST clause -- the doc edit and this record disagree`)
     }

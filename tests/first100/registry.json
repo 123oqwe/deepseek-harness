@@ -48,7 +48,7 @@
   },
   "sourcePins": {
     "first100-requirements-matrix.md": {
-      "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+      "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
       "role": "verbatim acceptance/nonGoals/files/must/validation/command source"
     },
     "implementation-wave-map.md": {
@@ -302,7 +302,7 @@
     "extractor": "scripts/first100/extract-registry.mjs",
     "vendoredSources": "spec/first100/sources/",
     "sourceShas": {
-      "spec/first100/sources/first100-requirements-matrix.md": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+      "spec/first100/sources/first100-requirements-matrix.md": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
       "spec/first100/sources/implementation-wave-map.md": "8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41",
       "spec/first100/sources/r0-decision-package.md": "6e119b61957c73f64c54c674b3b8439a8d430bfc1262a4272ce0dcf260650d32"
     },
@@ -408,7 +408,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 36
       },
       "validation": [
@@ -548,7 +548,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 50
       },
       "validation": [
@@ -677,7 +677,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 64
       },
       "validation": [
@@ -793,7 +793,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 78
       },
       "validation": [
@@ -915,7 +915,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 92
       },
       "validation": [
@@ -1043,7 +1043,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 106
       },
       "validation": [
@@ -1167,7 +1167,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 120
       },
       "validation": [
@@ -1295,7 +1295,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 134
       },
       "validation": [
@@ -1434,7 +1434,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 153
       },
       "validation": [
@@ -1562,7 +1562,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 167
       },
       "validation": [
@@ -1684,7 +1684,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 181
       },
       "validation": [
@@ -1804,7 +1804,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 195
       },
       "validation": [
@@ -1924,7 +1924,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 209
       },
       "validation": [
@@ -2041,7 +2041,8 @@
         "默认第三方插件在独立进程或 microVM 中运行",
         "只通过 capability-scoped RPC 注册工具、事件和 UI 描述。",
         "禁止传递宿主 Context、raw credentials、任意函数或可变对象引用。",
-        "host 崩溃可重启，注册 effects 自动撤销。"
+        "host 崩溃可重启，注册 effects 自动撤销。",
+        "插件 RPC 不能绕过 ActionManifest。"
       ],
       "acceptance": [
         "插件尝试直接读取宿主 home、process.env、socket、其他插件内存均失败。",
@@ -2054,7 +2055,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 223
       },
       "validation": [
@@ -2114,7 +2115,20 @@
         "fault": "tests/first100/fixtures/P1-06.fault.spec.ts"
       },
       "gate": "Real OS process and authenticated RPC are independently observed; unload handles/processes = 0; S10.",
-      "rollback": "K/X — revoke token, kill process tree, unload registrations; never fall back in-process."
+      "rollback": "K/X — revoke token, kill process tree, unload registrations; never fall back in-process.",
+      "clauseProvenance": [
+        {
+          "clause": "插件 RPC 不能绕过 ActionManifest。",
+          "splitFrom": "P2-03 must[2]",
+          "sourceClause": "code-mode 内嵌工具和插件 RPC 不能绕过。",
+          "siblingClauses": [
+            "P2-03: code-mode 内嵌工具不能绕过。"
+          ],
+          "splitAtUtc": "2026-09-06T09:00:00.000Z",
+          "basis": "Delegate ruling of 2026-09-06, executed under the C11 delegation re-confirmed with the user immediately before this edit.",
+          "reason": "The clause named two mechanisms in one sentence and P2-03 owns only one of them. The plugin-RPC half has no subject anywhere in the repository: the out-of-process plugin host that would create a dispatch point is P1-06's own must[0], four waves later. Leaving both halves on P2-03 made a wave-4 epic unacceptable until a wave-8 epic landed, with P2-04, P2-05 and P4-02 queued behind it — a scheduling inversion in the registry rather than a real dependency."
+        }
+      ]
     },
     {
       "id": "P1-07",
@@ -2184,7 +2198,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 237
       },
       "validation": [
@@ -2304,7 +2318,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 251
       },
       "validation": [
@@ -2424,7 +2438,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 265
       },
       "validation": [
@@ -2547,7 +2561,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 279
       },
       "validation": [
@@ -2688,7 +2702,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 293
       },
       "validation": [
@@ -2819,7 +2833,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 307
       },
       "validation": [
@@ -2947,7 +2961,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 326
       },
       "validation": [
@@ -3078,7 +3092,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 340
       },
       "validation": [
@@ -3197,7 +3211,7 @@
       "must": [
         "字段包含 actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements。",
         "所有执行路径先生成并 durable append manifest，再做 policy/approval。",
-        "code-mode 内嵌工具和插件 RPC 不能绕过。"
+        "code-mode 内嵌工具不能绕过。"
       ],
       "acceptance": [
         "任何外部写操作在事件日志中都存在先于执行的 ActionManifest。",
@@ -3210,7 +3224,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 354
       },
       "validation": [
@@ -3272,7 +3286,20 @@
         "fault": "tests/first100/fixtures/P2-03.fault.spec.ts"
       },
       "gate": "Every tool/process/network/secret/activation call carries the same digest through later PEPs; S03/S11.",
-      "rollback": "K/A — disable new consumers, retain manifest codec/events for replay."
+      "rollback": "K/A — disable new consumers, retain manifest codec/events for replay.",
+      "clauseProvenance": [
+        {
+          "clause": "code-mode 内嵌工具不能绕过。",
+          "splitFrom": "P2-03 must[2]",
+          "sourceClause": "code-mode 内嵌工具和插件 RPC 不能绕过。",
+          "siblingClauses": [
+            "P1-06: 插件 RPC 不能绕过 ActionManifest。"
+          ],
+          "splitAtUtc": "2026-09-06T09:00:00.000Z",
+          "basis": "Delegate ruling of 2026-09-06, executed under the C11 delegation re-confirmed with the user immediately before this edit.",
+          "reason": "The clause named two mechanisms in one sentence and P2-03 owns only one of them. The plugin-RPC half has no subject anywhere in the repository: the out-of-process plugin host that would create a dispatch point is P1-06's own must[0], four waves later. Leaving both halves on P2-03 made a wave-4 epic unacceptable until a wave-8 epic landed, with P2-04, P2-05 and P4-02 queued behind it — a scheduling inversion in the registry rather than a real dependency."
+        }
+      ]
     },
     {
       "id": "P2-04",
@@ -3334,7 +3361,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 368
       },
       "validation": [
@@ -3467,7 +3494,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 382
       },
       "validation": [
@@ -3593,7 +3620,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 396
       },
       "validation": [
@@ -3722,7 +3749,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 410
       },
       "validation": [
@@ -3845,7 +3872,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 424
       },
       "validation": [
@@ -3963,7 +3990,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 438
       },
       "validation": [
@@ -4089,7 +4116,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 452
       },
       "validation": [
@@ -4210,7 +4237,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 466
       },
       "validation": [
@@ -4341,7 +4368,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 480
       },
       "validation": [
@@ -4478,7 +4505,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 499
       },
       "validation": [
@@ -4611,7 +4638,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 513
       },
       "validation": [
@@ -4738,7 +4765,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 527
       },
       "validation": [
@@ -4867,7 +4894,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 541
       },
       "validation": [
@@ -4990,7 +5017,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 555
       },
       "validation": [
@@ -5120,7 +5147,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 569
       },
       "validation": [
@@ -5235,7 +5262,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 583
       },
       "validation": [
@@ -5353,7 +5380,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 597
       },
       "validation": [
@@ -5476,7 +5503,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 611
       },
       "validation": [
@@ -5604,7 +5631,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 625
       },
       "validation": [
@@ -5727,7 +5754,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 639
       },
       "validation": [
@@ -5861,7 +5888,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 653
       },
       "validation": [
@@ -6150,7 +6177,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 672
       },
       "validation": [
@@ -6274,7 +6301,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 686
       },
       "validation": [
@@ -6397,7 +6424,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 700
       },
       "validation": [
@@ -6515,7 +6542,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 714
       },
       "validation": [
@@ -6633,7 +6660,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 728
       },
       "validation": [
@@ -6759,7 +6786,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 742
       },
       "validation": [
@@ -6885,7 +6912,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 756
       },
       "validation": [
@@ -7023,7 +7050,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 770
       },
       "validation": [
@@ -7154,7 +7181,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 784
       },
       "validation": [
@@ -7285,7 +7312,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 798
       },
       "validation": [
@@ -7421,7 +7448,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 812
       },
       "validation": [
@@ -7552,7 +7579,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 826
       },
       "validation": [
@@ -7690,7 +7717,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 840
       },
       "validation": [
@@ -7826,7 +7853,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 854
       },
       "validation": [
@@ -7962,7 +7989,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 873
       },
       "validation": [
@@ -8093,7 +8120,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 887
       },
       "validation": [
@@ -8224,7 +8251,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 901
       },
       "validation": [
@@ -8353,7 +8380,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 915
       },
       "validation": [
@@ -8476,7 +8503,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 929
       },
       "validation": [
@@ -8596,7 +8623,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 943
       },
       "validation": [
@@ -8721,7 +8748,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 957
       },
       "validation": [
@@ -8851,7 +8878,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 971
       },
       "validation": [
@@ -8976,7 +9003,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 985
       },
       "validation": [
@@ -9099,7 +9126,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 999
       },
       "validation": [
@@ -9234,7 +9261,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1013
       },
       "validation": [
@@ -9368,7 +9395,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1027
       },
       "validation": [
@@ -9499,7 +9526,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1046
       },
       "validation": [
@@ -9619,7 +9646,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1060
       },
       "validation": [
@@ -9741,7 +9768,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1074
       },
       "validation": [
@@ -9878,7 +9905,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1088
       },
       "validation": [
@@ -10003,7 +10030,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1102
       },
       "validation": [
@@ -10129,7 +10156,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1116
       },
       "validation": [
@@ -10264,7 +10291,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1130
       },
       "validation": [
@@ -10408,7 +10435,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1144
       },
       "validation": [
@@ -10543,7 +10570,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1158
       },
       "validation": [
@@ -10680,7 +10707,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1172
       },
       "validation": [
@@ -10817,7 +10844,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1191
       },
       "validation": [
@@ -10966,7 +10993,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1205
       },
       "validation": [
@@ -11115,7 +11142,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1219
       },
       "validation": [
@@ -11254,7 +11281,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1233
       },
       "validation": [
@@ -11401,7 +11428,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1247
       },
       "validation": [
@@ -11549,7 +11576,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1261
       },
       "validation": [
@@ -11696,7 +11723,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1275
       },
       "validation": [
@@ -11843,7 +11870,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1289
       },
       "validation": [
@@ -12004,7 +12031,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1303
       },
       "validation": [
@@ -12174,7 +12201,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1317
       },
       "validation": [
@@ -12321,7 +12348,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1336
       },
       "validation": [
@@ -12475,7 +12502,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1350
       },
       "validation": [
@@ -12618,7 +12645,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1364
       },
       "validation": [
@@ -12765,7 +12792,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1378
       },
       "validation": [
@@ -12903,7 +12930,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1392
       },
       "validation": [
@@ -13051,7 +13078,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1406
       },
       "validation": [
@@ -13201,7 +13228,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1420
       },
       "validation": [
@@ -13347,7 +13374,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1434
       },
       "validation": [
@@ -13498,7 +13525,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1448
       },
       "validation": [
@@ -13672,7 +13699,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
+        "sha256": "dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf",
         "line": 1462
       },
       "validation": [

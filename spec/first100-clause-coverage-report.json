@@ -1366,7 +1366,7 @@
     "P1-06": {
       "must": {
         "sourceCount": 4,
-        "projectedCount": 4,
+        "projectedCount": 5,
         "unmatchedSource": [],
         "invented": [],
         "clauses": [
@@ -1400,6 +1400,14 @@
             "span": {
               "startLine": 2320,
               "endLine": 2320
+            }
+          },
+          {
+            "text": "插件 RPC 不能绕过 ActionManifest。",
+            "digest": "5f4ba5202ce5e326f9e6697500420fd42178ccab85584331ec0762c4f0f704a9",
+            "span": {
+              "startLine": 3643,
+              "endLine": 3643
             }
           }
         ]
@@ -2290,8 +2298,8 @@
             }
           },
           {
-            "text": "code-mode 内嵌工具和插件 RPC 不能绕过。",
-            "digest": "3c3dbc3e5cda032a80229c079aff3c5bcf85fda9871521ee0dffb1db0de02c60",
+            "text": "code-mode 内嵌工具不能绕过。",
+            "digest": "40c82f6f6e4a9b580e5a084de2d48ced44677bd2079a695fb9f72ab7356a9c1a",
             "span": {
               "startLine": 3643,
               "endLine": 3643

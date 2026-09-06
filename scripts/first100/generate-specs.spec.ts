@@ -1123,10 +1123,10 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     // clause that happened to appear under both epics in the YAML.
     const { reg } = readRegistry()
     const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
-    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).some(entry => entry.movedFrom !== undefined))
     if (destination === undefined) throw new Error('registry records no clause movement')
-    const [moved] = destination.clauseProvenance as NonNullable<Registry['epics'][number]['clauseProvenance']>
-    if (moved === undefined) throw new Error('movement record is empty')
+    const moved = (destination.clauseProvenance ?? []).find(entry => entry.movedFrom !== undefined)
+    if (moved?.movedFrom === undefined) throw new Error('movement record is empty')
     const sourceId = moved.movedFrom.split(' ')[0] as string
     delete destination.clauseProvenance
     const report = parseReport(renderClauseCoverageReport(mutated, readYaml()))
@@ -1140,28 +1140,80 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
   it('red: a movement naming a clause the source epic never had fails closed', () => {
     const { reg } = readRegistry()
     const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
-    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).some(x => x.movedFrom !== undefined))
     if (destination === undefined) throw new Error('registry records no clause movement')
-    const entry = (destination.clauseProvenance as NonNullable<Registry['epics'][number]['clauseProvenance']>)[0]
+    const entry = (destination.clauseProvenance ?? []).find(x => x.movedFrom !== undefined)
     if (entry === undefined) throw new Error('movement record is empty')
     // The clause text stays exactly what the destination projects, so only the
     // named origin is wrong: a movement is not allowed to launder an invented
     // clause by pointing at an epic that never carried it.
     entry.movedFrom = 'P0-01 must[0]'
     expect(() => renderClauseCoverageReport(mutated, readYaml()))
-      .toThrow(/moved from P0-01, but that epic's YAML has no such clause/)
+      .toThrow(/claims a must clause from P0-01, but that epic's YAML has no such clause/)
   })
 
   it('red: a movement whose origin is not a parsable epic and channel fails closed', () => {
     const { reg } = readRegistry()
     const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
-    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).some(x => x.movedFrom !== undefined))
     if (destination === undefined) throw new Error('registry records no clause movement')
-    const entry = (destination.clauseProvenance as NonNullable<Registry['epics'][number]['clauseProvenance']>)[0]
+    const entry = (destination.clauseProvenance ?? []).find(x => x.movedFrom !== undefined)
     if (entry === undefined) throw new Error('movement record is empty')
     entry.movedFrom = 'moved from the scheduling epic'
     expect(() => renderClauseCoverageReport(mutated, readYaml()))
       .toThrow(/does not name an epic and channel/)
+  })
+
+  it('green: the P2-03 -> P1-06 clause SPLIT keeps both epics mapped, and dropping either part breaks it', () => {
+    // A split has no verbatim survivor: the compound source clause named two
+    // mechanisms and each half was reworded under its owner. Without the split
+    // record the report shows the source clause unmatched at one epic and an
+    // invented clause at each — three findings for one approved edit.
+    const { reg } = readRegistry()
+    const parts = reg.epics.flatMap(epic =>
+      (epic.clauseProvenance ?? []).filter(entry => entry.splitFrom !== undefined).map(entry => ({ epic, entry })))
+    if (parts.length < 2) throw new Error('registry records no clause split')
+
+    for (const { epic } of parts) {
+      const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+      const target = mutated.epics.find(e => e.id === epic.id)
+      if (target === undefined) throw new Error(`epic ${epic.id} vanished`)
+      target.clauseProvenance = (target.clauseProvenance ?? []).filter(entry => entry.splitFrom === undefined)
+      if (target.clauseProvenance.length === 0) delete target.clauseProvenance
+      const report = parseReport(renderClauseCoverageReport(mutated, readYaml()))
+      // Every part carries the record: drop ONE and the report is no longer
+      // green, which is what says the split is doing the work rather than
+      // coincidence at whichever epic happens to be checked first.
+      expect(report.totals.epicsMapped, `dropping ${epic.id}'s split record`).toBeLessThan(100)
+    }
+  })
+
+  it('red: a split whose source clause the origin epic never had fails closed', () => {
+    const { reg } = readRegistry()
+    const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+    const holder = mutated.epics.find(e => (e.clauseProvenance ?? []).some(x => x.splitFrom !== undefined))
+    if (holder === undefined) throw new Error('registry records no clause split')
+    const entry = (holder.clauseProvenance ?? []).find(x => x.splitFrom !== undefined)
+    if (entry === undefined) throw new Error('split record is empty')
+    // The parts stay exactly what the epics project; only the compound clause
+    // they claim to divide is wrong. A split must not be able to launder two
+    // invented clauses by naming a source nobody wrote.
+    entry.sourceClause = '一条没有任何来源文档写过的复合条款。'
+    expect(() => renderClauseCoverageReport(mutated, readYaml()))
+      .toThrow(/but that epic's YAML has no such clause/)
+  })
+
+  it('red: a provenance entry naming neither a movement nor a split fails closed', () => {
+    const { reg } = readRegistry()
+    const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+    const holder = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    if (holder === undefined) throw new Error('registry records no clause provenance')
+    const entry = (holder.clauseProvenance ?? [])[0]
+    if (entry === undefined) throw new Error('provenance record is empty')
+    delete entry.movedFrom
+    delete entry.splitFrom
+    expect(() => renderClauseCoverageReport(mutated, readYaml()))
+      .toThrow(/names neither movedFrom nor splitFrom/)
   })
 
   it('red: a registry epic absent from the YAML fails closed', () => {
