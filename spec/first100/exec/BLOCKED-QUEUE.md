@@ -260,7 +260,9 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Why it needs an entry rather than only the vendor log.** Re-vendoring restores upstream `fiber.ts`. The pin then silently returns to protecting the root fiber alone, `pinTrustKernel` still runs, `ctx.get` still resolves correctly, and **no test fails** — the cases that would have caught it are P0-02's three `residual vector` characterizations, which this patch makes red and which are superseded in the same change. That is the exact shape this queue has recorded repeatedly: a fact recorded and nothing reading it. The reader is this entry plus the vendor log; the *test* reader arrives only when the superseding cases land, and until then a re-vendor is silent.
 
-**Reinstatement condition.** The sync procedure re-applies modification 20, and `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts`'s replacement cases — asserting the forgery is REFUSED on a non-root fiber — pass against the re-vendored tree.
+**Reinstatement condition.** The sync procedure re-applies modification 20, and `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts`'s three `SLICE-fiber-A` cases — asserting the forgery is REFUSED on a non-root fiber — pass against the re-vendored tree.
+
+**Update 2026-09-06: the test reader now exists.** The three replacement cases are written, frozen (`P0-02.F`, superseding the residual-vector characterizations, delegate-approved), and measured in both directions: reverting the vendored patch fails exactly those three and no others. A re-vendor that drops modification 20 is therefore **no longer silent** — it turns those three red. This entry stays open only as the pointer that says which patch to re-apply and why, not because the loss would go unnoticed.
 
 ### BLOCKED-127 — RESOLVED 2026-09-06: `test:snapshot:record` overwrote real expectations with the output of an unreachable provider
 

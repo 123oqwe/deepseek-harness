@@ -33,7 +33,19 @@ A later slice constructs the one `TrustKernel` value before the Cordis `Context`
 
 A later review found that freeze alone left three further live bypasses open, all closed in the same `pinTrustKernel` call: the frozen slot's `Impl` record was itself a mutable object (`impl.value = forged` forged `ctx.get('trustKernel')` too, without touching the slot); `ctx.trustKernel` PROPERTY access resolves through the ROOT fiber's own separately mutable `store`, never through `ctx.reflect.store`, and was globally poisonable from any plugin; and `ctx.reflect.props['trustKernel']` could be overwritten with a substitute accessor intercepting that same property access ahead of everything else. `pinTrustKernel` now also freezes the `Impl` record, locks the root fiber's store entry, and locks the `reflect.props` registration — see `packages/kernel/trust-kernel/src/index.ts`'s `pinTrustKernel` doc comment for each fix's vendored-Cordis citation, and `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts` for the runtime proof.
 
+### Closed 2026-09-06: cross-plugin property-access poisoning (SLICE-fiber-A)
+
+**All three vectors below are closed.** `Fiber.store` is now an accessor whose setter routes every assignment through a per-tree pin table, and `Fiber.pinStoreName` fixes a pinned name in every fiber of the tree as a non-writable, non-configurable own property (`vendor/README.md` local modification 20; re-vendor condition in BLOCKED-130). `pinTrustKernel` calls it immediately after the legitimate `ctx.provide`, which is safe exactly there because the pin runs before any entry mounts, so no child fiber yet exists with an unguarded store.
+
+The setter, rather than the two store-creation sites, is the seam: a plugin assigning `ctx.fiber.store = {...}` replaces the sealed object wholesale instead of writing into it, so sealing only the objects the class creates would have left the second vector open. The pin table is keyed by root fiber and never module-globally — a process-level table seals a second `Context`'s root store against the first context's implementation, and that context's own legitimate `ctx.provide` then throws.
+
+`pin-hardening.spec.ts`'s three `SLICE-fiber-A` cases assert the refusals and supersede the three `residual vector` characterizations that asserted the poisoning worked. Reverting the vendored patch fails exactly those three and no others.
+
+The description below is retained as the record of what was open and why, because the gate in the last paragraph — which remains in force — was built for it.
+
 ### Known residual: cross-plugin property-access poisoning
+
+**Closed as of 2026-09-06 — see the section above.** The description below is the record of what was open, why it could not be closed from this repository's own code, and what the still-in-force `verify-trust-kernel-property-access` gate was built for. The heading is kept so existing links resolve.
 
 `pinTrustKernel` protects `ctx.get('trustKernel')` fully in every case tested, including every vector below. `ctx.trustKernel` (property access, not `ctx.get`) carries a residual that is reachable much more broadly than an earlier slice of this same review documented: **not** self-subtree only. Cordis's proxy `get` trap resolves `ctx.trustKernel` by walking each fiber's own `store` cache up the parent-fiber chain (`vendor/cordis/src/reflect.ts:150-167`); `pinTrustKernel` locks only the `trustKernel` key inside the ROOT fiber's `store` object (`vendor/cordis/src/fiber.ts:198,324`). Three vectors reach past that lock:
 

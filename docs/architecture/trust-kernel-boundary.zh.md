@@ -33,7 +33,19 @@ dsh 中其余一切都是插件：通过 `ctx.plugin(...)` 贡献、由 Loader �
 
 后续一次评审发现，仅有这一处冻结还留下三个进一步的可实际利用的绕过：被冻结条目上的 `Impl` 记录本身仍是可变对象（`impl.value = forged` 无需触碰该条目本身，就能一并伪造 `ctx.get('trustKernel')`）；`ctx.trustKernel` 的**属性**访问是通过 root fiber 自身可独立修改的 `store` 来解析的，从不经过 `ctx.reflect.store`，因此任何插件都能全局污染它；而 `ctx.reflect.props['trustKernel']` 可以被替换成一个伪造的 accessor，其优先级还在前述所有防护之前。`pinTrustKernel` 现在同时冻结该 `Impl` 记录、锁定 root fiber 的 store 条目、并锁定 `reflect.props` 的注册——每处修复对应的 vendored Cordis 依据，见 `packages/kernel/trust-kernel/src/index.ts` 中 `pinTrustKernel` 自身的文档注释；运行期证明见 `packages/kernel/trust-kernel/tests/pin-hardening.spec.ts`。
 
+### 2026-09-06 已关闭：跨插件的属性访问污染(SLICE-fiber-A)
+
+**下述三个向量全部已关闭。** `Fiber.store` 现为访问器，其 setter 会把每一次赋值都过一遍按树维护的 pin 表；`Fiber.pinStoreName` 把被 pin 的名字在该树的每个 fiber 上定为不可写、不可配置的自有属性(`vendor/README.md` 本地修改 20；re-vendor 条件见 BLOCKED-130)。`pinTrustKernel` 在合法的 `ctx.provide` 之后立即调用它——恰好在此处是安全的，因为 pin 运行在任何 entry 挂载之前，此时还不存在带着未加固 store 的子 fiber。
+
+接缝是 setter，而不是那两处创建 store 的地方：插件写 `ctx.fiber.store = {...}` 是整体替换被封的对象、而非往里写，所以只封住类自己创建的对象会让第二个向量仍然敞开。pin 表按 root fiber 索引，绝不用模块级表——进程级的表会让同进程第二个 `Context` 的 root store 被第一个 context 的实现封死，届时那个 context 自己合法的 `ctx.provide` 会抛错。
+
+`pin-hardening.spec.ts` 中三条 `SLICE-fiber-A` 用例断言这些拒绝，并 supersede 了原先断言"污染成功"的三条 `residual vector` 特征用例。回退该 vendored 补丁恰好挂掉这三条，不多不少。
+
+保留下文，是因为最后一段所述、至今仍在生效的那道门正是为它而建。
+
 ### 已知遗留缺口：跨插件的属性访问污染
+
+**截至 2026-09-06 已关闭——见上一节。** 下文是当时开放状态的记录：它当时为何无法仅靠本仓库自身代码关闭，以及仍在生效的 `verify-trust-kernel-property-access` 门是为什么而建。保留此标题以便既有链接仍可解析。
 
 `pinTrustKernel` 在所有已测试场景（包括下述每个向量）中都完整保护 `ctx.get('trustKernel')`。`ctx.trustKernel`（属性访问，而非 `ctx.get`）仍带有一个遗留缺口，其可达范围比本评审早前一份切片所记载的要宽得多——**并非**仅限自身子树。Cordis 的代理 `get` trap 通过沿父 fiber 链向上遍历每个 fiber 自身的 `store` 缓存来解析 `ctx.trustKernel`（`vendor/cordis/src/reflect.ts:150-167`）；`pinTrustKernel` 只锁定了 ROOT fiber 的 `store` 对象（`vendor/cordis/src/fiber.ts:198,324`）内部的 `trustKernel` 键。以下三个向量都能绕过这一锁定：
 

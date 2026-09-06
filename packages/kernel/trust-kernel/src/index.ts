@@ -209,6 +209,13 @@ export function pinTrustKernel(ctx: Context, kernel: TrustKernel): void {
     configurable: false,
     enumerable: true,
   })
+  // Closes vectors (a), (b) and (c) below, which locking the root key cannot
+  // reach: `pinFiberStoreName` fixes `trustKernel` in EVERY fiber's store, not
+  // just the root's, and `Fiber.store` is an accessor there so replacing the
+  // object wholesale re-seals it. Safe to call exactly here because the pin
+  // runs before any entry mounts, so no child fiber yet exists to have been
+  // created with an unguarded store.
+  ctx.root.fiber.pinStoreName('trustKernel', impl)
   // `ctx.trustKernel` (property access, not `ctx.get`) never consults
   // `ctx.reflect.store` above -- the proxy `get` trap
   // (`vendor/cordis/src/reflect.ts:150-167`) instead walks `fiber.store?.[prop]`

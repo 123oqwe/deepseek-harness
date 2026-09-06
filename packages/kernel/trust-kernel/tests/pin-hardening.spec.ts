@@ -147,8 +147,8 @@ describe('vector 3: a plugin cannot substitute an accessor for trustKernel in ct
   })
 })
 
-describe('residual vector: a plugin poisoning its OWN fiber\'s store (narrowest of the residual\'s vectors -- see vectors G and H below for the wider, cross-plugin reach)', () => {
-  it('durably poisons ctx.trustKernel property access for the attacking plugin itself, while ctx.get(\'trustKernel\') and an unrelated top-level sibling stay correct -- this is the known, accepted gap, not a bug in pinTrustKernel', async () => {
+describe('SLICE-fiber-A: a plugin poisoning its OWN fiber\'s store is REFUSED (supersedes the residual-vector characterization)', () => {
+  it('refuses a write to the attacking plugin\'s own fiber store, and leaves ctx.trustKernel property access unforged for itself and an unrelated sibling', async () => {
     const dir = tmp()
     writeFileSync(join(dir, 'cordis.yml'), [
       '- id: sibling',
@@ -168,10 +168,13 @@ describe('residual vector: a plugin poisoning its OWN fiber\'s store (narrowest 
       'export const name = "self-fiber-store-poison"',
       'export function apply(ctx) {',
       '  const forged = { name: "trustKernel", value: { forged: true }, fiber: ctx.fiber }',
-      // Poisoning THIS plugin's own fiber.store cache is not routed through
-      // ReflectService.provide() at all, and pinTrustKernel locks only the
-      // ROOT fiber's store -- this assignment is a plain, unprotected write.
-      '  ctx.fiber.store["trustKernel"] = forged',
+      // The write is caught here rather than left to escape, so the case can
+      // assert BOTH that it was refused and that the resolved value is still
+      // the real kernel. A plugin whose apply threw would prove only that
+      // boot failed, which a dozen unrelated defects also produce.
+      '  let refusal = "not refused"',
+      '  try { ctx.fiber.store["trustKernel"] = forged } catch (error) { refusal = String(error && error.message) }',
+      '  ctx.provide("attackerRefusal", refusal)',
       '  ctx.provide("attackerPropertyView", ctx.trustKernel)',
       '  ctx.provide("attackerGetView", ctx.get("trustKernel"))',
       '}',
@@ -182,21 +185,12 @@ describe('residual vector: a plugin poisoning its OWN fiber\'s store (narrowest 
       pinTrustKernel(hostCtx, kernel)
     })
     try {
-      // The attack succeeded: this plugin's own `ctx.trustKernel` property
-      // access resolved to the forged value, not the real kernel.
-      expect(ctx.get('attackerPropertyView')).toEqual({ forged: true })
-      // But `ctx.get('trustKernel')`, even called from inside the same
-      // attacking plugin, was never poisoned -- it does not consult
-      // Fiber.store at all.
+      expect(ctx.get('attackerRefusal')).toMatch(/read only property/u)
+      // The vector this replaces asserted `{ forged: true }` here.
+      expect(ctx.get('attackerPropertyView')).toBe(kernel)
       expect(ctx.get('attackerGetView')).toBe(kernel)
-      // And the root-level view stays correct, too.
       expect(ctx.get('trustKernel')).toBe(kernel)
       expect(ctx.trustKernel).toBe(kernel)
-      // For THIS narrow vector (poisoning the attacker's own fiber, a leaf
-      // with no children), the poisoning never reached an unrelated
-      // top-level sibling. Vector G below shows this does NOT generalize: an
-      // ancestor (non-leaf, non-root) fiber's store poisons every plugin
-      // nested under it, siblings included.
       expect(ctx.get('siblingTrustKernelView')).toBe(kernel)
     } finally {
       await ctx.fiber.dispose()
@@ -204,34 +198,26 @@ describe('residual vector: a plugin poisoning its OWN fiber\'s store (narrowest 
   })
 })
 
-describe('residual vector G: poisoning an ANCESTOR (non-root) fiber\'s store reaches an unrelated sibling nested under that same ancestor', () => {
-  it('poisons ctx.trustKernel property access for a sibling plugin mounted under the same ancestor, while ctx.get(\'trustKernel\') and the root stay correct', async () => {
+describe('SLICE-fiber-A: poisoning an ANCESTOR (non-root) fiber\'s store is REFUSED, so it reaches no plugin nested under it', () => {
+  it('refuses the ancestor-store write and leaves a sibling mounted under that same ancestor unforged', async () => {
     const dir = tmp()
     writeFileSync(join(dir, 'cordis.yml'), '- id: ancestor\n  name: ./ancestor.mjs\n')
     writeFileSync(join(dir, 'ancestor.mjs'), [
       'export const name = "ancestor"',
       'export function apply(ctx) {',
-      // Mounted first: poisons its OWN PARENT fiber's store -- the ancestor
-      // fiber, not the root, and not its own leaf fiber (vector 3 above).
-      // `ctx.fiber.parent` is the context this plugin was mounted from;
-      // `.fiber` is that context\'s own Fiber -- the ancestor, shared by
-      // every plugin `ancestor.mjs` itself mounts as a child.
       '  ctx.plugin({',
       '    name: "attacker-under-ancestor",',
-      '    apply(ctx2) {',
-      '      const forged = { name: "trustKernel", value: { forged: true }, fiber: ctx2.fiber }',
-      '      ctx2.fiber.parent.fiber.store["trustKernel"] = forged',
+      '    apply(child) {',
+      '      const forged = { name: "trustKernel", value: { forged: true }, fiber: child.fiber }',
+      '      let refusal = "not refused"',
+      '      try { child.fiber.parent.fiber.store["trustKernel"] = forged } catch (error) { refusal = String(error && error.message) }',
+      '      child.provide("ancestorRefusal", refusal)',
       '    },',
       '  })',
-      // Mounted second, as a SIBLING under the same ancestor -- never the
-      // attacker\'s own descendant. Its parent-chain walk finds the
-      // ancestor\'s (now-poisoned) store entry before ever reaching the
-      // locked root fiber.
       '  ctx.plugin({',
-      '    name: "sibling-under-ancestor",',
-      '    apply(ctx3) {',
-      '      ctx3.provide("siblingUnderAncestorPropertyView", ctx3.trustKernel)',
-      '      ctx3.provide("siblingUnderAncestorGetView", ctx3.get("trustKernel"))',
+      '    name: "victim-under-ancestor",',
+      '    apply(child) {',
+      '      child.provide("victimPropertyView", child.trustKernel)',
       '    },',
       '  })',
       '}',
@@ -242,41 +228,39 @@ describe('residual vector G: poisoning an ANCESTOR (non-root) fiber\'s store rea
       pinTrustKernel(hostCtx, kernel)
     })
     try {
-      // The unrelated sibling -- never the attacker's own descendant -- saw
-      // the forged kernel via property access.
-      expect(ctx.get('siblingUnderAncestorPropertyView')).toEqual({ forged: true })
-      // ctx.get stays correct even for that same sibling.
-      expect(ctx.get('siblingUnderAncestorGetView')).toBe(kernel)
-      // The root stays correct too.
+      expect(ctx.get('ancestorRefusal')).toMatch(/read only property/u)
+      // This is the vector the probe measured and the one the old case
+      // pinned as accepted: an ancestor's store reaches every plugin nested
+      // under it, not merely the attacker's own leaf.
+      expect(ctx.get('victimPropertyView')).toBe(kernel)
       expect(ctx.get('trustKernel')).toBe(kernel)
-      expect(ctx.trustKernel).toBe(kernel)
     } finally {
       await ctx.fiber.dispose()
     }
   })
 })
 
-describe('residual vector H: wholesale replacement of the ROOT fiber\'s store object bypasses pinTrustKernel\'s key-lock entirely, no throw', () => {
-  it('poisons ctx.trustKernel property access for every non-root context (siblings and later-mounted plugins alike), silently, while ctx.get(\'trustKernel\') and the root\'s own direct property read stay correct', async () => {
+describe('SLICE-fiber-A: replacing the ROOT fiber\'s store OBJECT wholesale no longer bypasses the pin', () => {
+  it('re-seals the pinned name when the store field is reassigned, so a later-mounted plugin still reads the real kernel', async () => {
     const dir = tmp()
     writeFileSync(join(dir, 'cordis.yml'), '- id: malicious-store-replace\n  name: ./malicious-store-replace.mjs\n')
     writeFileSync(join(dir, 'malicious-store-replace.mjs'), [
       'export const name = "malicious-store-replace"',
       'export function apply(ctx) {',
-      // pinTrustKernel locks the `trustKernel` KEY inside the root fiber's
-      // store OBJECT (Object.defineProperty on that object) -- but never
-      // locks the `store` FIELD itself. Assigning a brand-new object
-      // wholesale replaces what every future parent-chain walk finds when it
-      // reaches the root fiber, with no throw at all.
+      // The assignment itself is permitted -- `store` is a real field with a
+      // real setter -- and that is the point: the guard is applied BY the
+      // setter, so a wholesale replacement is re-sealed rather than refused.
+      // Sealing only the objects the class creates would leave this vector
+      // open, which is why the seam is the setter and not the two creation
+      // sites.
       '  const forged = { name: "trustKernel", value: { forged: true }, fiber: ctx.fiber }',
-      '  ctx.root.fiber.store = { ...ctx.root.fiber.store, trustKernel: forged }',
-      // Mounted after the replacement: a later plugin, never the attacker's
-      // own descendant, still walks up to the (now-replaced) root fiber.
+      '  let outcome = "replaced"',
+      '  try { ctx.root.fiber.store = { ...ctx.root.fiber.store, trustKernel: forged } } catch (error) { outcome = String(error && error.message) }',
+      '  ctx.provide("replaceOutcome", outcome)',
       '  ctx.plugin({',
-      '    name: "later-mounted-after-store-replace",',
-      '    apply(ctx2) {',
-      '      ctx2.provide("laterMountedPropertyView", ctx2.trustKernel)',
-      '      ctx2.provide("laterMountedGetView", ctx2.get("trustKernel"))',
+      '    name: "later-mounted",',
+      '    apply(child) {',
+      '      child.provide("laterMountedPropertyView", child.trustKernel)',
       '    },',
       '  })',
       '}',
@@ -287,21 +271,10 @@ describe('residual vector H: wholesale replacement of the ROOT fiber\'s store ob
       pinTrustKernel(hostCtx, kernel)
     })
     try {
-      // A plugin mounted AFTER the wholesale replacement -- never the
-      // attacker's own descendant -- saw the forged kernel via property
-      // access.
-      expect(ctx.get('laterMountedPropertyView')).toEqual({ forged: true })
-      // ctx.get stays correct even for that same later-mounted plugin: it
-      // reads ReflectService.store, an entirely different, still-locked
-      // object.
-      expect(ctx.get('laterMountedGetView')).toBe(kernel)
-      // ctx.get('trustKernel') from the root stays correct too.
+      // The old case asserted `{ forged: true }` here, silently and with no
+      // throw. The replacement now carries the pin.
+      expect(ctx.get('laterMountedPropertyView')).toBe(kernel)
       expect(ctx.get('trustKernel')).toBe(kernel)
-      // The root Context's own DIRECT property read stays correct: Cordis's
-      // proxy `get` trap short-circuits to ReflectService.get for the root
-      // fiber specifically (`!ctx.fiber.runtime`, true only at the root,
-      // `vendor/cordis/src/reflect.ts`), never walking the (now-replaced)
-      // fiber.store chain that poisoned every OTHER context's read.
       expect(ctx.trustKernel).toBe(kernel)
     } finally {
       await ctx.fiber.dispose()

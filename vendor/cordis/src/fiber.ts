@@ -176,6 +176,40 @@ export namespace CordisError {
 const INACTIVE = '__INACTIVE__'
 
 /**
+ * Service names whose entry in EVERY fiber's `store` is fixed to one
+ * implementation, keyed by name to the record `ctx.provide` produced.
+ *
+ * LOCAL MODIFICATION (dsh) — logged in `vendor/README.md`. `ctx.<name>`
+ * property access does not read `Reflect.store`: the proxy `get` trap in
+ * `reflect.ts` walks `fiber.store?.[prop]` by NAME up the parent chain and
+ * returns the first hit. `store` is a plain writable field holding a plain
+ * object, so a plugin on ANY fiber could write its own fiber's store and have
+ * `ctx.<name>` return the forgery for itself and its whole subtree — measured,
+ * not argued: with this guard removed a plugin doing
+ * `ctx.fiber.store['trustKernel'] = forged` reads that forgery straight back.
+ * Locking the key inside the ROOT store, which is all a consumer can do from
+ * outside this file, does not reach it; the walk finds the nearer fiber first.
+ */
+const pinnedStoreImpls = new WeakMap<object, Map<string, any>>()
+
+
+/**
+ * Redefine every name pinned for `fiber`'s root as a non-writable,
+ * non-configurable own property of `store`.
+ * @param fiber - the fiber the store belongs to.
+ * @param store - the freshly assigned fiber store to seal.
+ * @returns the same object, sealed.
+ */
+function applyStoreGuard<T extends Dict<any>>(fiber: Fiber, store: T): T {
+  const pins = pinnedStoreImpls.get(fiber._pinScope)
+  if (pins === undefined) return store
+  for (const [name, impl] of pins) {
+    Object.defineProperty(store, name, { value: impl, writable: false, configurable: false, enumerable: true })
+  }
+  return store
+}
+
+/**
  * Runtime instance of one plugin application.
  *
  * A fiber tracks dependency state, validated config, lifecycle effects, and
@@ -194,8 +228,68 @@ export class Fiber {
   public state = FiberState.PENDING
   /** Dispose this fiber: unload the plugin, then settle once cleanup finished. */
   public readonly dispose: () => Promise<void>
-  /** Snapshot of required service implementations while loaded; `undefined` otherwise. */
-  public store: Dict<Impl> | undefined
+  /**
+   * Snapshot of required service implementations while loaded; `undefined`
+   * otherwise.
+   *
+   * LOCAL MODIFICATION (dsh): an accessor rather than a plain field, so that
+   * every assignment — the two internal ones and any a plugin makes — passes
+   * through `applyStoreGuard`. Sealing only the objects this class creates
+   * would leave `ctx.fiber.store = { trustKernel: forged }` working, which
+   * replaces the guarded object wholesale instead of writing into it.
+   */
+  public get store(): Dict<Impl> | undefined {
+    return this._storeSnapshot
+  }
+
+  public set store(value: Dict<Impl> | undefined) {
+    this._storeSnapshot = value === undefined ? undefined : applyStoreGuard(this, value)
+  }
+
+  /**
+   * Fix `name`'s store entry, in this fiber's whole tree, to `impl`.
+   *
+   * LOCAL MODIFICATION (dsh). Intended for kernel handles pinned before any
+   * plugin mounts. Call it AFTER `ctx.provide(name, ...)`: it reads no
+   * registry itself, so the caller passes the `Impl` record `provide` wrote.
+   * Every fiber created afterwards receives the entry as non-writable and
+   * non-configurable, so a plugin assigning over it throws instead of
+   * succeeding silently, and this fiber's existing store is sealed in the
+   * same call.
+   *
+   * A METHOD, not a module export, because the repository's rule 4
+   * (`kernel-forbidden-cordis-binding`, checked by
+   * `tests/architecture/check-layer-deps.spec.ts`) permits the trust kernel to
+   * import exactly `Context` from Cordis and nothing else. The kernel already
+   * reaches `ctx.reflect.store` and `ctx.reflect.props` through that one
+   * binding; reaching the pin the same way keeps the coupling where the rule
+   * already tolerates it instead of widening the rule to fit this change.
+   * @param name - the service name to pin.
+   * @param impl - the implementation record every fiber in this tree must resolve `name` to.
+   */
+  public pinStoreName(name: string, impl: any): void {
+    const pins = pinnedStoreImpls.get(this._pinScope) ?? new Map<string, any>()
+    pins.set(name, impl)
+    pinnedStoreImpls.set(this._pinScope, pins)
+    if (this.store !== undefined) applyStoreGuard(this, this.store)
+  }
+
+  /**
+   * The object this fiber's store pins are keyed under — the ROOT fiber of
+   * its tree, resolved from the parent at construction rather than through
+   * `this.ctx.root`, which is a proxy that throws while the root fiber is
+   * still being built.
+   *
+   * LOCAL MODIFICATION (dsh). Pins are per-tree, never per-process: a
+   * module-level map would seal a SECOND `Context`'s root store against the
+   * FIRST context's implementation, and that context's own legitimate
+   * `ctx.provide` would throw `Cannot assign to read only property`. That is
+   * measured, not hypothetical — it is what the first version of this
+   * modification did to five passing cases.
+   */
+  public _pinScope: object = this
+
+  private _storeSnapshot: Dict<Impl> | undefined
   /** The in-flight load/unload transition, if one is currently running. */
   public inertia: Promise<void> | undefined
 
@@ -232,6 +326,9 @@ export class Fiber {
     }
 
     if (runtime) {
+      // LOCAL MODIFICATION (dsh): inherit the tree's pin scope from the parent
+      // fiber, so every descendant store is sealed against the same pins.
+      this._pinScope = parent.fiber._pinScope
       this.uid = parent.registry.counter
       this.ctx = this.context = parent.extend({ fiber: this })
 
