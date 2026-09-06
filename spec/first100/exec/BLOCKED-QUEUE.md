@@ -9,6 +9,32 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-128 — every JavaScript RFC 8785 implementation is recursive, and this program's own dispatch path produces inputs that overflow them (measured 2026-09-06, awaiting a delegate ruling)
+
+**The rectification order's §7.4 says to replace the hand-written canonicalizer with a standard JCS library. Doing that reintroduces BLOCKED-077's symptom**, by a different mechanism: last time a stale build artifact shadowed the iterative source, this time **the library itself recurses**.
+
+Measured, all three candidates, same probe:
+
+| package | depth 1000 | depth 5000 | depth 20000 |
+|---|---|---|---|
+| `canonicalize@2.1.0` (the ruled choice) | ok | **overflow** | overflow |
+| `canonicalize@4.0.0` | — | **overflow** | overflow |
+| `json-canonicalize@3.0.0` | — | **overflow** | overflow |
+
+`packages/core/tools/tests/ptc.spec.ts:1551` dispatches arguments at **depth 5000** precisely to pin that boundary, and the code-mode path genuinely produces them. Swapping the library turns that case red.
+
+**The two ways out, both measured rather than argued.**
+
+**(A) Keep the library and bound the depth.** A manifest refuses arguments deeper than some N. This is a change to what the product accepts, not an implementation choice: it needs a clause, a refusal case, and a supersession of the deep-arguments test.
+
+**(B) Keep the existing iterative implementation and delete only the NFC normalization.** Verified by stripping the two `.normalize('NFC')` calls from the committed version: NFC and NFD hash differently, key order and number spelling collapse, escape spelling collapses, and depth 20000 still canonicalizes.
+
+**The distinction that decides it: the defect was the NORMALIZATION, not the hand-rolling.** The make-vs-use ledger's risk note for this epic — "do not write a second canonicalizer" — is about duplication. It is a good rule, and it is aimed at implementations that exist because nobody checked for a library. This one would exist because **no available library can do what the dispatch path requires**, which is a reason that can be written down and checked later rather than a habit.
+
+**Recommendation: (B)**, with the reason recorded at the code so the exception is auditable. **(A) is not wrong**, but its blast radius is a product-behaviour change and three more freeze entries, for a capability the alternative keeps for free.
+
+**Standing regardless of the ruling:** JS JCS libraries are recursive, so any future consumer of RFC 8785 in this repository inherits this constraint. P8-07's Python side does not — standard JCS libraries there are also recursive, but Python's recursion limit is configurable where V8's is not.
+
 ### BLOCKED-127 — RESOLVED 2026-09-06: `test:snapshot:record` overwrote real expectations with the output of an unreachable provider
 
 **What it did.** Run without `DEEPSEEK_API_KEY`, `record` did not stop. Every scenario executed, every turn ended with `MISSING_CREDENTIAL`, and the write-back replaced committed expectations with what an unreachable provider produced: **22 files, 81 insertions against 874 deletions.** Caught on `git diff --stat` before anything was committed, and reverted.
