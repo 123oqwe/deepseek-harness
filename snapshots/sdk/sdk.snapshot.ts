@@ -767,6 +767,23 @@ describe('TypeScript SDK snapshots over the jsonrpc runtime', () => {
         expectedContents = redactSessionSnapshotIds(stabilizeFixtureMessageIds(refreshed, expectedContents))
       }
 
+      if (recording) {
+        // BLOCKED-127, the same guard as headless.snapshot.ts and for the same
+        // reason. This path was the one still unguarded on 2026-09-06: with the
+        // session path fixed, `record` without a credential still rewrote 22
+        // files under snapshots/sdk.
+        for (const [index, log] of ordered.entries()) {
+          if (/"reason":\{"kind":"error"/u.test(log.content)) {
+            throw new Error(
+              `${scenario.name}: session ${String(index)} ended with an error turn, so this run recorded a FAILURE rather than a session. `
+              + 'Refusing to write it over the committed expectation (BLOCKED-127). `record` needs a reachable provider; '
+              + '`pnpm run test:snapshot:refresh` needs none and is the right command when the change is to harness output '
+              + 'rather than to model responses.',
+            )
+          }
+        }
+      }
+
       if (recording || refreshing) {
         const outputFiles = [
           join(scenarioDir, 'session.jsonl'),

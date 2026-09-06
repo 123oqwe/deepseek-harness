@@ -9,6 +9,18 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-127 — RESOLVED 2026-09-06: `test:snapshot:record` overwrote real expectations with the output of an unreachable provider
+
+**What it did.** Run without `DEEPSEEK_API_KEY`, `record` did not stop. Every scenario executed, every turn ended with `MISSING_CREDENTIAL`, and the write-back replaced committed expectations with what an unreachable provider produced: **22 files, 81 insertions against 874 deletions.** Caught on `git diff --stat` before anything was committed, and reverted.
+
+**Why a pre-flight probe is the wrong fix**, and this is the delegate-accepted wording: the problem is not that it failed to probe, it is that **it wrote anyway**. A probe answers "was there a credential when the run started". It cannot answer "did THIS scenario produce a usable turn", and a provider that dies halfway writes a **partially correct** expectation — harder to notice than an empty one by an order of magnitude, because an empty file is obvious and a plausible-but-wrong one has to be read line by line.
+
+**The fix.** In `record` mode, both write paths refuse to write a scenario whose session ended with an error turn, and say which command to use instead. Two paths, because there are two: `snapshots/session/headless.snapshot.ts` and `snapshots/sdk/sdk.snapshot.ts`.
+
+**A measurement error of my own, recorded because it wasted three runs.** Both guards live under `snapshots/`, and after each test I ran `git checkout -- snapshots/` to undo the damaged data — **which reverted the guard I was testing along with it**. Three consecutive runs reported "still 22 files" and I read that as the guard not working, when the guard was not present. The instrument again, and this time I was the one destroying it. Reverting test data with a path that also contains the code under test needs the code excluded, or the measurement means nothing.
+
+**Verified both directions:** without the guards a keyless `record` rewrites 22 files; with them it rewrites zero, and the ordinary `test:snapshot` run stays 113 passed / 3 skipped.
+
 ### BLOCKED-126 — `as unknown as X` in a test double turns off the one check that would have caught it (delegate rule, from the P2-03 code-mode round, 2026-09-06)
 
 **What happened.** `packages/core/tools/tests/ptc.spec.ts`'s `fakeAgent` is

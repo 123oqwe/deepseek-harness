@@ -773,6 +773,27 @@ describe('headless recorded-session snapshots', () => {
       const expectedStderr = stderrFromSession(stderrLog)
 
       if (mode !== 'replay') {
+        // BLOCKED-127: a recording that FAILED must not overwrite the
+        // expectation it was meant to refresh. `record` without a reachable
+        // provider does not stop here — every scenario runs, every turn ends in
+        // an error, and the write-back replaces real expectations with what an
+        // unreachable provider produced (22 files, 874 deletions, 2026-09-06).
+        //
+        // Checked on the OUTCOME, not a pre-flight probe: a probe answers "was
+        // there a credential at the start", and what matters is whether THIS
+        // scenario produced a usable turn. A provider dying halfway writes a
+        // partially correct expectation, which is harder to spot than an empty
+        // one.
+        for (const [index, log] of actualLogs.entries()) {
+          if (turnReasonFromSession(log.content)?.kind === 'error') {
+            throw new Error(
+              `${scenario.name}: session ${String(index)} ended with an error turn, so this run recorded a FAILURE rather than a session. `
+              + 'Refusing to write it over the committed expectation (BLOCKED-127). `record` needs a reachable provider; '
+              + '`pnpm run test:snapshot:refresh` needs none and is the right command when the change is to harness output '
+              + 'rather than to model responses.',
+            )
+          }
+        }
         fixtures = await writeSessionFixtures(scenario, actualLogs, fixtures, contextOf(actualLogs.map(log => log.content)))
       }
 

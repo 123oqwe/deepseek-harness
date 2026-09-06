@@ -406,14 +406,14 @@
             "sandbox/sandbox-local/src/index.ts",
             "sandbox/sandbox-local/src/profiles.ts"
           ],
-          "reason": "A new sandbox-srt rung over @anthropic-ai/sandbox-runtime carries the per-platform mapping. NOTE: this leaves P3-05 with no [B] file at all, so its rung must be MOUNTED by contribution rather than by editing a hot file -- stated because zero hot files is the intended outcome here, not an omission."
+          "reason": "A new sandbox-srt rung over @anthropic-ai/sandbox-runtime carries the per-platform mapping. THIS LEAVES P3-05 WITH NO [B] FILE AT ALL, which is intended and is CONDITIONAL: sandbox-local today selects its runner from a hardcoded table (`PLATFORM_CHAINS` at src/index.ts:159, `linux: [bwrap, landlock]`), so there is no contribution point to mount a rung on. Converting that table into one is the §3.2 sandbox-srt slice's own deliverable, landing before W7 while P3-05 is W9. If §3.2 finds the table cannot become a contribution point -- runner selection may have a reason it cannot move -- P3-05 takes back one [B] line then, as that slice's finding rather than as a guess made here."
         },
         "P3-07": {
           "removed": [
             "sandbox/sandbox-local/src/index.ts",
             "sandbox/sandbox-local/src/profiles.ts"
           ],
-          "reason": "Same rung as P3-05. Its own additions -- the attestation predicate schema and the requested-subset-of-supported check -- are new files inside sandbox-local, which is adding to the package without editing its hot path."
+          "reason": "Same rung and the same §3.2 precondition as P3-05 (W10, so the ordering holds). Its own additions -- the attestation predicate schema and the requested-subset-of-supported check -- are new files inside sandbox-local, which adds to the package without editing its hot path."
         },
         "P5-05": {
           "removed": [
