@@ -156,6 +156,46 @@ export function classifySideEffect(declared: ActionSideEffectClass | undefined):
 }
 
 /**
+ * Refuse arguments carrying values JSON cannot hold, before a manifest exists.
+ *
+ * The manifest's value domain is JSON — that is the contract, and it belongs
+ * here rather than in the canonicalizer. `canonicalizeArguments` agrees with
+ * RFC 8785, which builds on JSON, and JSON renders `Infinity` and `NaN` as
+ * `null`; making the canonicalizer throw instead would put it out of step with
+ * the reference implementation, which the differential case would catch.
+ *
+ * But `null` is a real value a caller might mean. `{amount: Infinity}` and
+ * `{amount: null}` canonicalize identically, so they share an
+ * `argumentsHash` — and P2-06 binds approvals to that hash, which makes
+ * approving one of them approve the other. The same confusion the NFC
+ * normalization caused, reached from the value domain instead of from the
+ * encoding.
+ *
+ * A `bigint` is refused for the same reason from the other direction: it has no
+ * JSON form at all, and `JSON.stringify` throws on it rather than choosing one.
+ * @param args - the arguments value about to be hashed into a manifest.
+ * @throws TypeError naming the offending path when a value has no JSON form.
+ */
+function assertJsonArguments(args: JsonValue): void {
+  const walk = (value: unknown, path: string): void => {
+    if (typeof value === 'bigint') {
+      throw new TypeError(`createActionManifest: ${path} is a bigint, which has no JSON form`)
+    }
+    if (typeof value === 'number' && !Number.isFinite(value)) {
+      throw new TypeError(`createActionManifest: ${path} is ${String(value)}, which JSON renders as null and would share a hash with a real null`)
+    }
+    if (Array.isArray(value)) {
+      value.forEach((item, index) => { walk(item, `${path}[${String(index)}]`) })
+      return
+    }
+    if (value !== null && typeof value === 'object') {
+      for (const [key, nested] of Object.entries(value)) walk(nested, `${path}.${key}`)
+    }
+  }
+  walk(args, 'args')
+}
+
+/**
  * must[0]/must[1]'s manifest-construction entry point: build a complete
  * {@link ActionManifest} from `request`, deriving
  * {@link ActionManifest.argumentsHash} via `computeArgumentsHash(request.args)`
@@ -169,6 +209,7 @@ export function classifySideEffect(declared: ActionSideEffectClass | undefined):
  * @returns a complete {@link ActionManifest}.
  */
 export function createActionManifest(request: CreateActionManifestRequest): ActionManifest {
+  assertJsonArguments(request.args)
   const classification = classifySideEffect(request.declaredSideEffectClass)
   return {
     actionId: request.actionId,

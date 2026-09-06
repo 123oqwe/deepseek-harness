@@ -13,7 +13,7 @@
   },
   "source": {
     "path": "spec/first100/sources/first100-requirements-matrix-extension-101plus.md",
-    "sha256": "e6e327fa58b01bc0fef1d99d4b4105d29bcfa10a69cd453989c99b11e572f1fb"
+    "sha256": "6332af54d3aad77c947f92d75fc173a7aec53787e4956a12d04af10aab7692ad"
   },
   "triageSource": {
     "path": "spec/first100/sources/base-align-v2/upstream-status-COMPLETE.md",
@@ -382,7 +382,7 @@
           "kind": "P"
         },
         {
-          "path": "examples/headless-agent/tests/coding-task.e2e.ts",
+          "path": "apps/cli/tests/profiles/headless/tests/coding-task.e2e.ts",
           "kind": "B"
         },
         {

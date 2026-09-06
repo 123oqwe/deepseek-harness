@@ -53,7 +53,20 @@ const OUT_PATH = join(REPO_ROOT, 'tests/first100/registry-extension.json')
  * Fail-closed exactly like the three canonical sources: a source that decides
  * nine epic definitions must not be editable without a gate reporting it.
  */
-const SOURCE_SHA256 = 'e6e327fa58b01bc0fef1d99d4b4105d29bcfa10a69cd453989c99b11e572f1fb'
+/**
+ * PATH CORRECTION 2026-09-06 (rectification order §7, delegate-ruled): P9-08's
+ * files[] named `examples/headless-agent/tests/coding-task.e2e.ts`, which does
+ * not exist. The anti-cheat e2e it points at is real and lives at
+ * `apps/cli/tests/profiles/headless/tests/coding-task.e2e.ts`; the pinned
+ * source was edited and re-extracted, so this SHA moved with it.
+ *
+ * A path correction, not a clause change: P9-08 still owes exactly what it
+ * owed, and the file it must use as a template is now findable. Recorded here
+ * because a stale path in a `files[]` is invisible until someone tries to open
+ * it, and P9-08 is PREMATURE until R10 releases it — nobody would have tried
+ * for weeks.
+ */
+const SOURCE_SHA256 = '6332af54d3aad77c947f92d75fc173a7aec53787e4956a12d04af10aab7692ad'
 
 /**
  * The upstream-coverage triage, and its pin.

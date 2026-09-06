@@ -211,6 +211,28 @@ describe('P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同
     expect(computeArgumentsHash({ path: nfc })).not.toBe(computeArgumentsHash({ path: nfd }))
   })
 
+  it('SECURITY: a manifest REFUSES a non-finite number, which would otherwise share a hash with a real null', () => {
+    // The value-domain half of the same confusion the NFC normalization caused,
+    // reached from the other side. `{amount: Infinity}` canonicalizes to
+    // `{"amount":null}` — correct per RFC 8785, which builds on JSON — so it
+    // shares an argumentsHash with an action whose amount really is null. P2-06
+    // binds approvals to that hash, so approving one would approve the other.
+    //
+    // The refusal belongs HERE and not in the canonicalizer: making the
+    // canonicalizer throw would put it out of step with the reference
+    // implementation, and the differential case would catch that immediately.
+    // The value domain is the manifest's contract; the encoding is JCS's.
+    expect(() => createActionManifest({ ...fixtureRequest(), args: { amount: Number.POSITIVE_INFINITY } as never }))
+      .toThrow(/Infinity, which JSON renders as null/)
+    expect(() => createActionManifest({ ...fixtureRequest(), args: { nested: [{ n: Number.NaN }] } as never }))
+      .toThrow(/args\.nested\[0\]\.n is NaN/)
+    expect(() => createActionManifest({ ...fixtureRequest(), args: { big: 1n } as never }))
+      .toThrow(/is a bigint, which has no JSON form/)
+    // A real null is still a legal value, which is what makes the refusal mean
+    // something rather than being a blanket ban on the shape.
+    expect(() => createActionManifest({ ...fixtureRequest(), args: { amount: null } })).not.toThrow()
+  })
+
   it('a non-finite number canonicalizes to null, exactly as JSON.stringify defines it', () => {
     // Not a refusal: RFC 8785 builds on JSON, and JSON has no Infinity or NaN —
     // `JSON.stringify` renders both as `null`, and the reference implementation

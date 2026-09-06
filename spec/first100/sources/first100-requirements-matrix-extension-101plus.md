@@ -125,8 +125,8 @@
 ### P9-08 — 任务成功率基准 v1：给"厉害"一个可回归的数字
 
 - **Priority / Wave / 依赖：** P9 / W21 / P0-08、P7-09、P9-06（复用其 stream-json/退出码）。
-- **问题 → 目标：** `BENCHMARK.md` 为 3 行占位；全仓无 pass-rate 基础设施（仅 1 个精心设计的反作弊单任务 e2e：`examples/headless-agent/tests/coding-task.e2e.ts`）。"像 Codex 一样厉害"当前不可证明、不可回归。 → 在 headless/SDK 之上建 20–50 个自动判分任务（真实 repo 修复/测试驱动/终端操作；可抽样 SWE-bench-lite、terminal-bench + 自建，以现有 coding-task e2e 的反作弊设计为模板），产出成功率/成本/时长基线报告并入 nightly。
-- **Files：** target `BENCHMARK.md` [P]；`examples/headless-agent/tests/coding-task.e2e.ts` [B]；new `benchmarks/tasks/` [N]；`benchmarks/judge/` [N]；`scripts/benchmark/run.mjs` [N]；`scripts/benchmark/report.mjs` [N]；`.github/workflows/benchmark-nightly.yml` [N]。
+- **问题 → 目标：** `BENCHMARK.md` 为 3 行占位；全仓无 pass-rate 基础设施（仅 1 个精心设计的反作弊单任务 e2e：`apps/cli/tests/profiles/headless/tests/coding-task.e2e.ts`）。"像 Codex 一样厉害"当前不可证明、不可回归。 → 在 headless/SDK 之上建 20–50 个自动判分任务（真实 repo 修复/测试驱动/终端操作；可抽样 SWE-bench-lite、terminal-bench + 自建，以现有 coding-task e2e 的反作弊设计为模板），产出成功率/成本/时长基线报告并入 nightly。
+- **Files：** target `BENCHMARK.md` [P]；`apps/cli/tests/profiles/headless/tests/coding-task.e2e.ts` [B]；new `benchmarks/tasks/` [N]；`benchmarks/judge/` [N]；`scripts/benchmark/run.mjs` [N]；`scripts/benchmark/report.mjs` [N]；`.github/workflows/benchmark-nightly.yml` [N]。
 - **MUST：** 判分确定性（测试通过/文件断言/exit code），禁 LLM-as-judge 做主判。；报告含 per-task 原始输出+判分依据+成本（token-meter）。；同一 SHA 双跑成功率方差 ≤ 冻结阈值。；无 key 时全套件显式 `BLOCKED` 不伪造；预算上限走决策 A5。；沿用 coding-task e2e 的反作弊要点（判分器对执行者不可见、防直接改判分文件）。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** 不追公开榜单可比口径；不在本项内做提升（P9-09）；不测安全/混沌（P7-10 已有）。
