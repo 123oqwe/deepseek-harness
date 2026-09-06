@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `8db88ae42d`);**生成时间** 2026-09-06T15:13-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `bd6de9fb8e`);**生成时间** 2026-09-06T15:14-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -1458,6 +1458,7 @@
 **裁决叠加(整改令)**:
 - §9:第一条按 §9 走的 epic——preFlight 含全部 community 缺口逐项对子句;§9.1 的 verify-make-vs-use 门在其 preFlight 前建好
 - §7.11:MCP ToolAnnotations 形状所有者(P2-03 未采用,顺延)
+- §10.5:(丙)两套并存——manifest.sideEffectClass 是声明输入不扩枚举;taxonomy 输出 {class(8), confidence, evidence} 以 actionId 为键作独立记录,是唯一权威;单调性冻结(声明类是下限、未知默认非声明、org 只上调、kernel hard-deny 地板);@modelcontextprotocol/sdk type-only runtime 不 vendor 类型
 
 #### P2-05 · Policy Decision Service 与单调拒绝
 
@@ -1550,6 +1551,8 @@
 - dsh-auto-mode 146★ 覆盖≈25% [topic-sweep] — cordis-plugin·进程内·无 key \| 缺口：No ActionManifest digest or canonicalized-argument hash; binding is by string equality of reason/justification, not by hash over canonical args. Preconditions/inode identity are re-validated
 - dsh-auto-review 129★ 覆盖≈10% — Caches verdicts by tool+arguments fingerprint, redacts args for reviewer — lives in the answerer, no pre-dispatch re-validation
 - dsh-permission-rules 102★ 覆盖≈10% — Call-id binding in the answerer
+**裁决叠加(整改令)**:
+- §10.5 pointer:审批必须同时绑 manifest digest 与 risk assessment digest(P2-04 的分类记录),否则分类在批准与执行之间可变
 
 #### P2-07 · 持久化、可跨 Turn/进程的 Approval Queue
 
@@ -5814,6 +5817,8 @@ add('P4-06', '§10 L3 + §10.3-2(15:50 修订):(a)(b) 合一——durable inbox 
 add('P4-05', '§10 L3:供给方 P4-07 已验收 → 按 BLOCKED-092 第二步写 acceptance[2] 的 supersession 用例(重启后孤儿 agent 经 lease store 回收/安全失败)→ 验收;排在 P4-06 之后(共 dispatch.ts/inbox.ts)')
 add('P5-10', '§10.3-4:actions 半供给方钉为 P2-03(in-flight = 已 append manifest 无配对终态记录);P2-03 验收后写该用例;world 半等 P3-01')
 add('P2-05', '§10:开工前置 = §3.1 Cedar slice + §3.5(内核解析不经 fiber store,§10.4 修订);不等 P2-02 验收(predecessors 非机械门)')
+add('P2-04', '§10.5:(丙)两套并存——manifest.sideEffectClass 是声明输入不扩枚举;taxonomy 输出 {class(8), confidence, evidence} 以 actionId 为键作独立记录,是唯一权威;单调性冻结(声明类是下限、未知默认非声明、org 只上调、kernel hard-deny 地板);@modelcontextprotocol/sdk type-only runtime 不 vendor 类型')
+add('P2-06', '§10.5 pointer:审批必须同时绑 manifest digest 与 risk assessment digest(P2-04 的分类记录),否则分类在批准与执行之间可变')
 add('P3-13', '§6:不在账本内(09-02 同日收录);开工时补单条 make-vs-use 判断,预期 CONSUMER_WRITE,依赖 §3.2 rung')
 
 # ledger oss notes overridden by a ruling: (epic, oss name) -> what stands now

@@ -606,3 +606,15 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 4. **P2-02 端到端**:key material(§10.3-3)+ 本 slice → must[1] 一条真走内核签发/验证的用例(伪造 token 被拒;非 root fiber 中毒后验证仍走真内核),不是两个半边各自绿。
 
 **§10.3-3 与 P0-02 冻结「signatureRoots 恰好一个成员」不冲突**:密钥材料进**内核私有状态**,句柄的单成员接口不变——P1-02 的 anchors 就是这么落的(registered/revocable in kernel private state)。执行者仍需核该冻结用例的标题原文与之一致。
+
+### 10.5 P2-04 preFlight 裁决(2026-09-06 16:15 EDT)
+
+**事实**(执行者三问):三套副作用枚举互不相同——P1-01 `SideEffectClass` 6 类(声明)、P2-03 `ActionSideEffectClass` 5 类(manifest 记录,`classifySideEffect(undefined)` 硬编码 `destructive`+requiresApproval)、P2-04 must[0] 8 类;P2-04 的 `[P]` 文件 `action-manifest/src/types.ts` 与 P2-03 共用,P2-03 未签。
+
+**裁决:(丙)两套并存,权威在 taxonomy,加单调性。**
+- **manifest 的 `sideEffectClass` 是声明输入**(来自 P1-01 声明经 P2-03 记录),不是分类结果;**不扩枚举、不动 P2-03 的文件与冻结**。
+- **P2-04 risk-taxonomy 的输出 `{class(8), confidence, evidence[]}` 是唯一权威分类**,以 `actionId` 为键作为独立记录(risk assessment)附在 manifest 之后,不改 manifest schema;P2-05 `decide()` 读它,CLI/Web/SDK 都经同一纯函数 `classify(manifest, declaredDomain, orgOverrides)` → acceptance[0] 的一致性由构造保证(同输入同输出,冻结一条跨三个 surface 的用例)。
+- **单调性(必须冻结)**:(i) 声明类映射到 8 类后是**下限**——插件声明 `destructive`,分类结果不得低于 destructive;(ii) 由 P2-03 未知默认而来的 `destructive` **不是声明**,分类器有 `confidence ≥ 阈值` 的证据可给出自己的类,证据不足则保持最高类(must「未知→更高类」);(iii) org override 只能上调,kernel hard-deny 是地板。
+- **给 P2-06 的 pointer**:审批必须同时绑 manifest digest **和** assessment digest,否则分类在批准与执行之间可变。写进 P2-06 卡片。
+- **`@modelcontextprotocol/sdk` 的接法**:`form: runtime`,注明 **type-only import**、包已是 workspace 依赖(mcp-client)、零新增图节点;**不 vendor 一份类型定义**——那是 MCP 形状的第二份声明(§7.3)。四个 hint 永远只作输入(账本 risk 原话)。
+- 其余 preFlight 字段按执行者所写;`[P]` 文件在 P2-03 签后再动;probes 在本树复验 hint 名与语义后填。
