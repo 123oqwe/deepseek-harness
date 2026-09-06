@@ -1088,7 +1088,31 @@ Recorded because the earlier framing ("creating a package stales the artifact") 
 
 **The log fix is CALIBRATED, NOT VERIFIED — do not record it as fixed.** The first run carrying it (`cc2511aadb`) produced 1641 lines of human-readable output where there had been none, and named its failing file consistently with the JSON report. That proves the reporter emits output **on a known positive** — a visible failure, `success: false`. It does **not** prove the reporter prints a cause when the report says `success: true` and the job fails, which is the entire reason it was added. By this queue's own three-step rule that is step 0, calibration, and step 1 has not happened: it requires the blind-spot class to recur. **Until then the accurate status is "calibrated, awaiting verification."** A fix that produces output and a fix that solves the problem it was written for are different claims, and this one currently supports only the first.
 
-### BLOCKED-077 — P2-03 must[2]: the code-mode manifest is blocked by a stack overflow localized to the ptc call site but NOT explained; plugin-rpc has no invocation surface to gate at all (Supervisor, delegate-scoped to one round, 2026-09-05)
+### BLOCKED-077 — SOLVED 2026-09-06: the stack overflow was a stale `canonicalize.js` beside its `.ts`, shadowing the iterative rewrite. Original title: the code-mode manifest is blocked by a stack overflow localized to the ptc call site but NOT explained; plugin-rpc has no invocation surface to gate at all (Supervisor, delegate-scoped to one round, 2026-09-05)
+
+**THE CAUSE, with the stack that names it.** A probe hashing a depth-5000 value threw, and the frames read:
+
+```
+RangeError: Maximum call stack size exceeded
+    at canonicalizeArguments (packages/action/action-manifest/src/canonicalize.js:13:17)
+    at <anonymous>            (packages/action/action-manifest/src/canonicalize.js:27:72)
+    at Array.map (<anonymous>)
+    at canonicalizeArguments (packages/action/action-manifest/src/canonicalize.js:27:24)
+```
+
+**`canonicalize.js`, not `canonicalize.ts`.** `packages/action/action-manifest/src/` held twelve tracked build artifacts — `.js`, `.d.ts` and their maps — sitting beside the sources they were emitted from, and `canonicalize.js` carried the SUPERSEDED recursive implementation (`entries.map(([key, value]) => … canonicalizeArguments(value))`). The module resolver ran the artifact. The iterative rewrite in the `.ts` was never executing.
+
+**Why the earlier round's exclusion was right about the files it read and wrong about the file that ran.** It verified that `src/` and the built `lib/` were both iterative, and both hashed depth 20000 standalone — true, and irrelevant, because the code on the dispatch path was a third copy neither statement covered. This is the instrument-versus-subject error a third time in one blocker: `console.error` in a worker was a silent channel read as a silent subject, and here two correct measurements were taken of the wrong artifact.
+
+**The same defect class had already been found and fixed hours earlier**, in `packages/policy/capability-token/src/`, when the registry gate set ran in CI for the first time. Nothing connected the two, because the repository had no check for it. A sweep now finds **36 tracked artifacts across four packages** — `action-manifest` (12), `plugin-lock` (16), `trust-kernel` (4), `util/values` (4) — all removed. Hand-written ambient declarations (`ripgrep.d.ts`, `turndown-plugin-gfm.d.ts`, `css-modules.d.ts`) are NOT artifacts and stay; the sweep distinguishes them by whether a `.ts`/`.tsx` sibling exists.
+
+**After removal, hashing succeeds at depth 1000, 5000 and 20000**, on a plain value, on one `snapshotJsonValue` pass, and on the double pass the ptc path actually logs.
+
+**The code-mode manifest is now writable, and one obstacle remains, stated as unknown rather than guessed.** Appending the manifest inside the PTC dispatch path works — `ptc.spec.ts` stays 91/91 — as long as the manifest's `sequence` is a constant. Computing it by scanning the session log breaks the suite: inside the driver lane's `start()`, ten cases time out; seeded once at run entry, eighteen fail, including schema cases that execute no run at all. **The cause is not known.** Two hypotheses were formed and both refuted by reading the code: `snapshotEvents()` is a cached read, not a mutation, and events are already deep-frozen at append (`packages/core/session/src/index.ts:552`), so a freeze side effect is excluded. **No cause is claimed.** Note that the NATIVE path counts the same way (`countAppendedManifests`), which is why the field is not simply a constant there.
+
+**Remaining for P2-03's code-mode half:** a `sequence` that is correct without a per-dispatch log scan. That is a question about who owns the manifest counter — plausibly the session, not each call site — and it is the next thing to decide, not to guess.
+
+
 
 **must[2] names three execution paths. Their real status differs, and only one is delivered.**
 
