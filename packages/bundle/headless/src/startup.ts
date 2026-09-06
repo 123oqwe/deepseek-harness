@@ -8,6 +8,8 @@
 import { Command } from 'commander'
 import type { Context } from '@deepseek-ai/cordis'
 import { parseCmdline } from '@deepseek-ai/dsh-cmdline'
+import { isOutputFormat, OUTPUT_FORMATS } from './stream-json.ts'
+import type { OutputFormat } from './stream-json.ts'
 
 /** Stable Cordis plugin name. */
 export const name = 'headless-startup'
@@ -30,6 +32,15 @@ export interface HeadlessStartupValues {
    * resolves it after the application settles, where the route list is real.
    */
   model?: string
+  /**
+   * How the run writes stdout (Epic P9-06 must[1]); absent means `text`.
+   *
+   * Unlike `--model`, this IS validated here: the accepted values are a fixed
+   * list this build owns, so nothing about the composed application can change
+   * the answer, and rejecting at parse time gives the user the usage error
+   * before a run starts.
+   */
+  outputFormat?: OutputFormat
 }
 
 /**
@@ -43,11 +54,14 @@ function headlessCommand(): Command {
     .helpOption('-h, --help', 'show this help')
     .argument('[task...]', 'the task text; multiple words are joined by spaces')
     .option('--model <provider:model>', 'run on a specific registered route and model instead of the configured default')
+    .option('--output-format <format>', `stdout format: ${OUTPUT_FORMATS.join(', ')}`, 'text')
     .addHelpText('after', `
 Examples:
   dsh --profile headless "run the tests"     answer one task and exit
   dsh --profile headless --model deepseek:deepseek-chat "run the tests"
                                              answer it on a specific route and model
+  dsh --profile headless --output-format stream-json "run the tests"
+                                             one JSON line per session event, then a result line
 `)
 }
 
@@ -62,9 +76,16 @@ export function apply(ctx: Context): void {
   program.action(() => {
     const task = program.args.join(' ')
     if (task.trim() === '') program.error('error: a task is required, for example: dsh --profile headless "run the tests"')
-    const { model } = program.opts<{ model?: string }>()
+    const { model, outputFormat } = program.opts<{ model?: string; outputFormat: string }>()
+    // `program.error` exits, but its return type does not say so, so the
+    // narrowing has to be written rather than inferred.
+    if (!isOutputFormat(outputFormat)) {
+      program.error(`error: --output-format must be one of ${OUTPUT_FORMATS.join(', ')}, got "${outputFormat}"`)
+      return
+    }
     ctx.provide(HEADLESS_STARTUP_SERVICE, {
       task,
+      outputFormat,
       ...model === undefined ? {} : { model },
     } satisfies HeadlessStartupValues)
   })

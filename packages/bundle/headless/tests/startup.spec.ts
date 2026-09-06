@@ -52,7 +52,12 @@ export const apply = ctx => globalThis.__headlessStartupApply(ctx)
     `  name: ${rowUrl}`,
     `  inject: [${HEADLESS_STARTUP_SERVICE}]`,
     '  config:',
+    // Mirrors the shipped `cordis.patch.yml` row: this fixture exists to prove
+    // the `!!js` wiring, so a field the real patch forwards and this one does
+    // not would leave that field's wiring unproven here.
     '    task: !!js ctx.headlessStartup.task',
+    '    model: !!js ctx.headlessStartup.model',
+    '    outputFormat: !!js ctx.headlessStartup.outputFormat',
     '- id: headless-startup',
     `  name: ${pathToFileURL(join(dir, 'startup.mjs')).href}`,
     '',
@@ -83,8 +88,11 @@ export const apply = ctx => globalThis.__headlessStartupApply(ctx)
 describe('headless command-line provider', () => {
   it('joins the task positional into the runner config', async () => {
     const { task, observed } = await bootStartup(['run', 'the', 'tests'])
-    expect(task).toEqual({ task: 'run the tests' })
-    expect(observed.runnerConfig).toEqual({ task: 'run the tests' })
+    // `outputFormat` is always present, even unspecified: `text` is the format
+    // an omitted flag SELECTS rather than a value the runner falls back to, so
+    // the provided service says which format the run will use (Epic P9-06).
+    expect(task).toEqual({ task: 'run the tests', outputFormat: 'text' })
+    expect(observed.runnerConfig).toEqual({ task: 'run the tests', outputFormat: 'text' })
     expect(observed.exits).toEqual([])
   })
 

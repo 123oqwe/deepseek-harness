@@ -29,3 +29,4 @@
       config:
         task: !!js ctx.headlessStartup.task
         model: !!js ctx.headlessStartup.model
+        outputFormat: !!js ctx.headlessStartup.outputFormat

@@ -14,10 +14,13 @@ import z from '@deepseek-ai/schemastery'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { exitStatusFor } from './scriptability.ts'
 import { resolveModelSelection } from './model-selection.ts'
+import { OUTPUT_FORMATS, renderLine } from './stream-json.ts'
+import type { OutputFormat } from './stream-json.ts'
 import { installModelSelection } from '@deepseek-ai/dsh-agent'
 import type { Agent, ModelSelectionRef } from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-agent-default-model'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
+import type { TokenUsage } from '@deepseek-ai/dsh-llm'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { SessionSeq } from '@deepseek-ai/dsh-session'
 import type { Session, SessionEvent, SessionId, SessionLogOffset } from '@deepseek-ai/dsh-session'
@@ -54,18 +57,35 @@ export interface Config {
    * the routes it is checked against exist only after the application settles.
    */
   model?: string
+  /**
+   * How stdout is written (Epic P9-06 must[1]); `text` when absent.
+   *
+   * Validated here rather than defaulted: an unknown value must fail rather
+   * than fall back, because a script that asked for JSON and silently received
+   * prose parses the wrong thing without noticing.
+   */
+  outputFormat?: OutputFormat
 }
 
 export const Config: z<Config> = z.object({
   task: z.string().required(),
   resumeSessionId: z.string(),
   model: z.string(),
+  outputFormat: z.union(OUTPUT_FORMATS.map(format => z.const(format))),
 })
 
 /** Outcome of one owned run interval. */
 interface RunOutcome {
   text: string
   reason: SessionEvent<'turn/end'>['data']['reason'] | undefined
+  /**
+   * Model usage summed over the interval, absent when none was recorded.
+   *
+   * Summed per (turn, step) rather than per usage chunk: a step may report
+   * usage more than once as a request is retried, and the last report for a
+   * step is that step's total rather than an increment to add.
+   */
+  usage: TokenUsage | undefined
 }
 
 /** Process-facing effects of one run: output streams plus the launcher's bounded exit request. */
@@ -87,6 +107,7 @@ function summarize(session: Session, firstSeq: SessionLogOffset): RunOutcome {
   let started = false
   let text = ''
   let reason: SessionEvent<'turn/end'>['data']['reason'] | undefined
+  const usageByStep = new Map<string, TokenUsage>()
   const length = session.seq
   for (let seq = firstSeq; seq < length; seq++) {
     const event = session.eventAt(SessionSeq(seq))
@@ -105,9 +126,34 @@ function summarize(session: Session, firstSeq: SessionLogOffset): RunOutcome {
         .join('')
       if (joined !== '') text = joined
     }
+    if (event.type === 'assistant/chunk' && event.data.chunk.type === 'usage') {
+      usageByStep.set(`${String(event.data.turn)}/${String(event.data.step)}`, event.data.chunk.usage)
+    }
     if (event.type === 'turn/end') reason = event.data.reason
   }
-  return { text, reason }
+  return { text, reason, usage: totalUsage([...usageByStep.values()]) }
+}
+
+/**
+ * Sum per-step usage into one run total.
+ * @param steps - the last usage report from each step of the interval.
+ * @returns the total, or `undefined` when no step reported any.
+ */
+function totalUsage(steps: readonly TokenUsage[]): TokenUsage | undefined {
+  const first = steps[0]
+  if (first === undefined) return undefined
+  const total: TokenUsage = { inputTokens: 0, outputTokens: 0 }
+  for (const step of steps) {
+    total.inputTokens += step.inputTokens
+    total.outputTokens += step.outputTokens
+    // Optional counters stay absent unless some step reported them, so a run
+    // on a provider that reports none does not gain three zeros that read as
+    // "measured, and zero".
+    for (const key of ['cacheReadTokens', 'cacheWriteTokens', 'reasoningTokens'] as const) {
+      if (step[key] !== undefined) total[key] = (total[key] ?? 0) + step[key]
+    }
+  }
+  return total
 }
 
 /**
@@ -187,7 +233,14 @@ function fail(io: HeadlessIo, error: unknown): void {
  * @param task - one-shot task text.
  * @param io - process-facing effects.
  */
-async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?: string, model?: string): Promise<void> {
+async function run(
+  ctx: Context,
+  task: string,
+  io: HeadlessIo,
+  resumeSessionId?: string,
+  model?: string,
+  outputFormat: OutputFormat = 'text',
+): Promise<void> {
   // Loader siblings mount concurrently. Await the complete application before
   // creating an Agent so its scoped tools and adapters are not half-composed.
   await ctx.get('loader')?.await()
@@ -234,6 +287,19 @@ async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?:
     })
   await agent.whenIdle()
   const firstSeq = agent.session.seq
+  // Subscribed BEFORE the prompt is submitted, so a long run's consumer reads
+  // events as they happen instead of receiving the whole log at exit. Replaying
+  // the log afterwards would produce the same bytes for a short run and would
+  // silently stop being a stream for the runs that need one.
+  const stopStream = outputFormat === 'stream-json'
+    ? ctx.on('session/event', (session, event) => {
+      if (session === agent.session && event.seq >= firstSeq) {
+        io.stdout.write(renderLine({ type: 'session_event', sessionId: session.id, event }))
+      }
+    })
+    : undefined
+  // Reasoning goes to stderr in every format: in a machine-readable run it must
+  // not interleave with the lines a consumer is parsing on stdout.
   const stopReasoning = streamReasoning(ctx, agent, io.stderr)
   try {
     agent.followup(createUserMessage({
@@ -246,7 +312,17 @@ async function run(ctx: Context, task: string, io: HeadlessIo, resumeSessionId?:
   }
   await sessions.flush(agent.session)
   const outcome = summarize(agent.session, firstSeq)
-  io.stdout.write(outcome.text + '\n')
+  stopStream?.()
+  if (outputFormat === 'text') {
+    io.stdout.write(outcome.text + '\n')
+  } else {
+    io.stdout.write(renderLine({
+      type: 'result',
+      sessionId: agent.session.id,
+      output: outcome.text,
+      ...outcome.usage === undefined ? {} : { usage: outcome.usage },
+    }))
+  }
   if (outcome.reason?.kind === 'error') {
     io.stderr.write(`dsh: ${outcome.reason.error.code}: ${outcome.reason.error.message}\n`)
   }
@@ -272,5 +348,5 @@ export function apply(ctx: Context, config: Config): void {
     throw new Error('headless-runner: the launcher must provide ctx.appExit before the tree mounts')
   }
   const io: HeadlessIo = { stdout: internals.stdout, stderr: internals.stderr, exit }
-  void run(ctx, config.task, io, config.resumeSessionId, config.model).catch((error: unknown) => { fail(io, error) })
+  void run(ctx, config.task, io, config.resumeSessionId, config.model, config.outputFormat).catch((error: unknown) => { fail(io, error) })
 }

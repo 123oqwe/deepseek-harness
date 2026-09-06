@@ -13,93 +13,10 @@
  * ANSWER. must[2] asks for the selection to be auditable rather than hardcoded,
  * and the reply text is downstream of the request that was actually dispatched.
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { LOADER_SMOKE_TEST_TIMEOUT_MS, runLoaderSmoke } from '@deepseek-ai/dsh-loader-smoke'
+import { LOADER_SMOKE_TEST_TIMEOUT_MS } from '@deepseek-ai/dsh-loader-smoke'
 
-const REPOSITORY_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
-const BIN_SCRIPT = join(REPOSITORY_ROOT, 'apps/cli/src/bin.ts')
-const TSCONFIG = join(REPOSITORY_ROOT, 'tsconfig.json')
-const TWO_ROUTE_PLUGIN = join(REPOSITORY_ROOT, 'apps/cli/tests/fixtures/two-route-llm.ts')
-
-/**
- * Materialize a headless profile whose only model routes are the fixture's.
- *
- * `llm-deepseek` is disabled so no real provider is reachable: a run that
- * somehow bypassed `--model` would fail rather than quietly answer, which is
- * what keeps a passing assertion here meaningful.
- * @param cwd - the smoke's isolated temporary working directory.
- */
-function stageProfile(cwd: string): void {
-  const profileDir = join(cwd, '.dsh', 'profiles', 'headless')
-  mkdirSync(profileDir, { recursive: true })
-  writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
-    name: 'dsh-profile-headless',
-    private: true,
-    dependencies: {},
-    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'], patchReload: 'startup' } },
-  }, undefined, 2)}\n`)
-  writeFileSync(join(profileDir, 'cordis.patch.yml'), [
-    '- id: llm-deepseek',
-    '  disabled: true',
-    '',
-    '- id: session-persistence-jsonl',
-    '  config:',
-    "    root: './.sessions'",
-    '',
-    '- insert:',
-    '    - id: p9-03-two-route-llm',
-    `      name: '${TWO_ROUTE_PLUGIN}'`,
-    '',
-  ].join('\n'))
-}
-
-/**
- * Materialize the same profile with NO adapter at all.
- *
- * Not a hypothetical: `llm-deepseek` is the only shipped route in this bundle,
- * and a deployment that disables it without adding one lands here.
- * @param cwd - the smoke's isolated temporary working directory.
- */
-function stageRouteless(cwd: string): void {
-  const profileDir = join(cwd, '.dsh', 'profiles', 'headless')
-  mkdirSync(profileDir, { recursive: true })
-  writeFileSync(join(profileDir, 'package.json'), `${JSON.stringify({
-    name: 'dsh-profile-headless',
-    private: true,
-    dependencies: {},
-    dsh: { profile: { bundles: ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-headless'], patchReload: 'startup' } },
-  }, undefined, 2)}\n`)
-  writeFileSync(join(profileDir, 'cordis.patch.yml'), '- id: llm-deepseek\n  disabled: true\n')
-}
-
-/**
- * Run the real bin once with the given launcher arguments.
- * @param label - smoke label, distinct per case so temporary paths never collide.
- * @param binArgs - arguments after the bin, exactly as a user would type them.
- * @param expectedExitCode - the exit this case pins; the smoke fails on any other, including success.
- * @returns the captured streams.
- */
-async function runDsh(
-  label: string,
-  binArgs: readonly string[],
-  expectedExitCode = 0,
-  prepare: (cwd: string) => void = stageProfile,
-): Promise<{ stdout: string; stderr: string }> {
-  return runLoaderSmoke({
-    label,
-    tempDirPrefix: `dsh-${label}-`,
-    binScript: BIN_SCRIPT,
-    configPath: '',
-    binArgs: [...binArgs],
-    tsconfigPath: TSCONFIG,
-    env: { DSH_TRUST_KERNEL_INSECURE: '1', DSH_TELEMETRY_DISABLED: '1' },
-    prepare,
-    expectedExitCode,
-  })
-}
+import { runDsh, stageRouteless } from './fixtures/headless-smoke.ts'
 
 describe('P9-03 Usage — --model reaches a real dsh --profile headless run', () => {
   it('acceptance[0]: the same task on two --model values is answered by two different routes', async () => {

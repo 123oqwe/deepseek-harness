@@ -63,6 +63,10 @@ runner 是核心 API 载体之上的直接驱动器：它通过注册表创建�
 
 runner 等待整个应用结算（`ctx.get('loader')?.await()`），确保已组合的工具与适配器不会半挂载，解析本次运行使用的路由——给了 `--model <provider:model>` 就用它，否则用共享的 [`agentDefaultModel`](../../core/agent-default-model/README.zh.md) 选择——用该 provider 与模型创建一个全新的持久化 Agent（智能体），并把任务作为普通用户消息提交。它把该 Agent 的非空推理增量流式写入 stderr、等待完全停稳，然后 flush Session，并把所属区间（从 `firstSeq` 起）折叠为最后一条非空 `assistant/message` 文本与最终 `turn/end` 原因。最后，它把最终文本写入 stdout 并请求退出。
 
+`--output-format` 决定 stdout 承载什么：`text`（只有最终答案，默认）、`stream-json`（每个 session 事件一个 JSON 对象，按日志顺序，最后恰好一行 `result`）、或 `json`（只有那一行 `result`）。事件流在提交提示词之前就已订阅，因此消费者能在长时间运行过程中随时读到，而不是在退出时才收到整份日志。推理在所有格式下都留在 stderr，因此绝不会与脚本正在解析的那些行交错。无法识别的值是用法错误，而不是回退到 `text`：一个要求 JSON 却悄悄收到散文的脚本，会在毫无察觉的情况下解析错东西。
+
+行格式就是 `apps/cli/tests/profiles/headless/tests/expected/*/stream-json.expected.jsonl` 里已经记录的那个。在这个 runner 开始发出它之前，只有测试驱动会写这些行——那个格式描述的是测试输出，而不是用户能运行出来的任何东西。
+
 `--model` 在这里解析，而不是在解析命令行时解析：它要比对的那些路由，要到应用结算之后才存在。它同时指定路由和模型（`deepseek:deepseek-chat`），因为单独一个模型 id 指认不了任何适配器；只有第一个冒号用于分隔，所以带命名空间的模型 id 能完整保留。无法解析的参数或未注册的路由，会把原因和已注册路由写入 stderr 并以 1 退出——绝不回退到默认路由，因为「由调用方没有要求的模型回答的任务」看起来与「由它要求的模型回答的任务」完全一样。
 
 ### 叠加在 base 之上的 patch 表层
