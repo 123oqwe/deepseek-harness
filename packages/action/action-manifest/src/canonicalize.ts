@@ -33,31 +33,51 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 
 /**
- * Canonicalize an arguments value into a stable, deterministic string form:
- * object keys sorted, strings Unicode-normalized, numbers rendered in one
- * canonical representation — so two semantically identical `args` values
- * always canonicalize identically regardless of source key order, Unicode
- * form, or number literal spelling (acceptance[1], validation[2]).
- * `computeArgumentsHash` is expected to call this before hashing.
+ * Canonicalize an arguments value per **RFC 8785 (JCS)**: sorted keys, one
+ * number spelling, one string-escape spelling — and **Unicode normalization
+ * form PRESERVED**.
+ *
+ * **The NFC normalization this used to do was a security defect** (corrected
+ * 2026-09-06). JCS deliberately does not normalize, because two code point
+ * sequences are two values. Folding them meant precomposed and decomposed
+ * spellings of the same character produced one `argumentsHash`, so where they
+ * name two different files, an approval bound to that hash for one action would
+ * authorise the other — and P2-06 binds approvals to exactly this hash. It also
+ * broke cross-language agreement by construction: P8-07's Python side uses a
+ * standard JCS library, which does not normalize either.
+ *
+ * **Why this is hand-written when a library exists, which is a question this
+ * repository is right to ask.** Every JavaScript RFC 8785 implementation is
+ * recursive, and measured on 2026-09-06: `canonicalize` 2.1.0 handles depth
+ * 1000 and overflows the stack at 5000; `canonicalize` 4.0.0 and
+ * `json-canonicalize` 3.0.0 overflow at 5000 too. The code-mode dispatch path
+ * genuinely produces arguments that deep — `packages/core/tools/tests/ptc.spec.ts`
+ * dispatches at depth 5000 to pin that boundary — so no available library can
+ * do what this call site requires. The exception is not "nobody looked for a
+ * library"; it is a constraint that can be re-tested when one of them stops
+ * recursing.
+ *
+ * **What keeps that exception honest is a differential test, not this comment.**
+ * `canonicalize@2.1.0` is a devDependency purely as an oracle: a property case
+ * asserts this function agrees with the reference implementation over generated
+ * JSON, so conformance is checked against the standard rather than against four
+ * properties someone chose to name. Agreeing with a list is weaker than
+ * agreeing with the reference — the list cannot know about UTF-16 code unit key
+ * ordering, `-0`, or ES6 number formatting until someone thinks of them.
  * @param args - the action's raw arguments value.
- * @returns the canonical string form of `args`.
+ * @returns the RFC 8785 canonical string form of `args`.
  */
 export function canonicalizeArguments(args: JsonValue): string {
-  // Iterative, not recursive. The recursive form produced identical output for
-  // every input this package's own suite exercises, and threw
-  // `Maximum call stack size exceeded` on inputs the code-mode dispatch path
-  // genuinely produces: `packages/core/tools/tests/ptc.spec.ts` dispatches
-  // "binding arguments deeper than the structured-clone call stack", and depth
-  // 20000 overflows while depth 1000 hashes in 2ms. Because this function
-  // feeds `computeArgumentsHash`, a stack overflow here is not a slow path —
-  // it makes the manifest for that call impossible to produce at all, so
-  // P2-03 must[2]'s code-mode gate could not be wired while it stood.
+  // An explicit work stack replaces the call stack, which is what lets this
+  // canonicalize at depths every JS JCS library overflows on. A stack overflow
+  // here would not be a slow path: it makes the manifest for that call
+  // impossible to produce at all, so P2-03 must[2]'s code-mode gate could not
+  // be wired while the recursive form stood.
   //
-  // An explicit work stack replaces the call stack; nothing else changes. Key
-  // ordering, NFC normalization, number spelling and the emitted punctuation
-  // are the same operations in the same order, so every already-computed hash
-  // stays valid — the equivalence is asserted case-by-case against a retained
-  // copy of the recursive form in this package's own tests.
+  // Correctness is established against the REFERENCE implementation, not
+  // against the recursive predecessor this replaced. Equivalence to the old
+  // code would only have proved the two agree; the differential property case
+  // proves this agrees with RFC 8785 as `canonicalize` implements it.
   const out: string[] = []
   // A frame is either a value still to be written, or a literal separator to
   // emit once the values before it are done.
@@ -73,7 +93,7 @@ export function canonicalizeArguments(args: JsonValue): string {
     if (value === null) { out.push('null'); continue }
     if (typeof value === 'boolean') { out.push(value ? 'true' : 'false'); continue }
     if (typeof value === 'number') { out.push(JSON.stringify(value)); continue }
-    if (typeof value === 'string') { out.push(JSON.stringify(value.normalize('NFC'))); continue }
+    if (typeof value === 'string') { out.push(JSON.stringify(value)); continue }
     if (Array.isArray(value)) {
       // Pushed in reverse so the stack pops them left to right.
       stack.push({ literal: ']' })
@@ -86,7 +106,6 @@ export function canonicalizeArguments(args: JsonValue): string {
       continue
     }
     const entries = Object.entries(value)
-      .map(([key, entryValue]): [string, JsonValue] => [key.normalize('NFC'), entryValue])
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     stack.push({ literal: '}' })
     for (let index = entries.length - 1; index >= 0; index -= 1) {

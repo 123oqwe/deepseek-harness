@@ -166,6 +166,7 @@ External packages **directly declared** only by repository tooling, test infrast
 | [`@vitest/coverage-v8`](https://github.com/vitest-dev/vitest) | MIT |
 | [`@yarnpkg/cli-dist`](https://github.com/yarnpkg/berry) | BSD-2-Clause |
 | [`ajv`](https://github.com/ajv-validator/ajv) | MIT |
+| [`canonicalize`](https://github.com/erdtman/canonicalize) | Apache-2.0 |
 | [`cytoscape`](https://github.com/cytoscape/cytoscape.js) | MIT |
 | [`cytoscape-cose-bilkent`](https://github.com/cytoscape/cytoscape.js-cose-bilkent) | MIT |
 | [`dayjs`](https://github.com/iamkun/dayjs) | MIT |

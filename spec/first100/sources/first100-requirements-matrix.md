@@ -360,7 +360,7 @@
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 任何外部写操作在事件日志中都存在先于执行的 ActionManifest。；参数规范化稳定，语义相同对象得到相同 hash。；无法分类副作用的动作默认高风险并要求审批。
-- **Validation：** instrument 所有 tool providers，故意创建 bypass path，测试必须失败。；重放日志验证 manifest→decision→execution→result 完整配对。；fuzz canonicalizer，禁止 key order/Unicode/number 表示导致 hash 混淆。
+- **Validation：** instrument 所有 tool providers，故意创建 bypass path，测试必须失败。；重放日志验证 manifest→decision→execution→result 完整配对。；canonicalizer 遵循 RFC 8785（JCS）——key 顺序、数字拼写、JSON 转义拼写不同的同一 JSON 值得到相同 hash，而不同 code point 序列（含 NFC 与 NFD）是不同值必须得到不同 hash，fuzz 覆盖以上四类。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E2；场景 S03、S11；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。
 - **规格缺口 / Task 化：** Epic 声明 9 个文件（>5）；实施前必须拆成 1–5 文件的 contract/provider/consumer/migration/assurance 子任务。 YAML non_goals 为空，当前边界来自 Markdown 默认值。 缺项级可执行验证命令。 最终 spec/action-manifest.schema.json 无文件 owner。

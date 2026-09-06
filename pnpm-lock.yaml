@@ -657,6 +657,9 @@ importers:
       '@deepseek-ai/dsh-util-values':
         specifier: workspace:^
         version: link:../../util/values
+      canonicalize:
+        specifier: 2.1.0
+        version: 2.1.0
 
   packages/api/gateway:
     dependencies:

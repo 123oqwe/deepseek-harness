@@ -1887,6 +1887,13 @@ function collectPlanCorrections(reg: Registry): { readonly corrected: Set<string
     for (const entry of epic.clauseProvenance ?? []) {
       if (entry.rewordedFrom === undefined) continue
       const channel = entry.channel ?? 'must'
+      // Only the channels this report covers. A `validation` reword is recorded
+      // in the registry like any other, but this report reads must/acceptance/
+      // nonGoals — counting its superseded source here would make
+      // `supersededSourceClauses` exceed `planCorrectedClauses`, two numbers
+      // that are equal by construction and whose disagreement would be the
+      // first thing a reader distrusts.
+      if (!CHANNEL_YAML_KEYS.some(([name]) => name === channel)) continue
       corrected.add(`${epic.id}:${channel}:${canonicalClause(entry.clause)}`)
       superseded.add(`${epic.id}:${channel}:${canonicalClause(entry.rewordedFrom)}`)
     }

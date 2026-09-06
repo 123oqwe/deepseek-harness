@@ -8,6 +8,7 @@
 
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createUserPrincipal, PrincipalId, RunId, TenantId, type Principal } from '@deepseek-ai/dsh-principal'
+import canonicalize from 'canonicalize'
 import fc from 'fast-check'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { describe, expect, it } from 'vitest'
@@ -185,12 +186,40 @@ describe('P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同
     expect(hashA).toBe(hashB)
   })
 
-  it('strings in different Unicode normalization forms (NFC vs NFD) hash identically', () => {
-    const nfc = 'é' // 'é' as a single precomposed code point
-    const nfd = 'é' // 'e' + combining acute accent, same rendered character
-    const hashA = computeArgumentsHash({ path: nfc })
-    const hashB = computeArgumentsHash({ path: nfd })
-    expect(hashA).toBe(hashB)
+  it('the SAME JSON value spelled with an escape or a literal character hashes identically', () => {
+    // RFC 8785 conformance: `\\u00e9` and the literal character are one value
+    // with two source spellings, and JSON parsing collapses them before a
+    // manifest is ever built. This is the escape-spelling half of the clause.
+    const escaped = JSON.parse('{"path":"\\u00e9"}') as { path: string }
+    expect(computeArgumentsHash(escaped)).toBe(computeArgumentsHash({ path: '\u00e9' }))
+  })
+
+  it('SECURITY: NFC and NFD are DIFFERENT values and MUST NOT share a hash', () => {
+    // The correction of 2026-09-06, and the reason this file changed. RFC 8785
+    // does not normalize Unicode and neither may this: precomposed and
+    // decomposed are different code point sequences, so where they name two
+    // different files, one approval bound to `argumentsHash` would authorise
+    // the other action. P2-06 binds approvals to this hash.
+    //
+    // Both forms are CONSTRUCTED from code points, never written as literals: a
+    // shell or an editor may normalize a source file, and the case would then
+    // compare a string with itself and pass while testing nothing. That is
+    // exactly what happened while verifying the replacement library.
+    const nfc = '\u00e9'
+    const nfd = 'e\u0301'
+    expect(nfc).not.toBe(nfd)
+    expect(computeArgumentsHash({ path: nfc })).not.toBe(computeArgumentsHash({ path: nfd }))
+  })
+
+  it('a non-finite number canonicalizes to null, exactly as JSON.stringify defines it', () => {
+    // Not a refusal: RFC 8785 builds on JSON, and JSON has no Infinity or NaN —
+    // `JSON.stringify` renders both as `null`, and the reference implementation
+    // does the same. Pinned because "what happens to a value JSON cannot hold"
+    // is the kind of edge a hand-written canonicalizer gets wrong silently.
+    expect(canonicalizeArguments({ n: Number.POSITIVE_INFINITY } as never))
+      .toBe(canonicalizeArguments({ n: null } as never))
+    expect(canonicalizeArguments({ n: Number.NaN } as never))
+      .toBe(canonicalizeArguments({ n: null } as never))
   })
 
   it('numbers in different literal representations of the same value hash identically', () => {
@@ -246,6 +275,58 @@ describe('P2-03 Contract — acceptance[2]: 无法分类副作用的动作默认
  * generator destroys while the suite stays green, so check a generator change
  * against these counts rather than against the colour.
  */
+/**
+ * P2-03 — the hand-written canonicalizer agrees with the RFC 8785 reference.
+ *
+ * The four named properties (key order, number spelling, escape spelling, and
+ * NFC-versus-NFD) are the ones someone thought to name. JCS has more: keys sort
+ * by UTF-16 code unit, numbers render by ES6 `Number::toString`, `-0`
+ * serializes as `0`, strings escape as `JSON.stringify` does. **Agreeing with a
+ * list is weaker than agreeing with the reference**, and this is the case that
+ * makes the hand-written implementation's exception auditable rather than
+ * asserted — it exists only because every JS JCS library recurses and overflows
+ * on the depths the code-mode path produces.
+ */
+describe('P2-03 — differential conformance against the RFC 8785 reference implementation', () => {
+  /** JSON values reaching the edges JCS actually specifies, not just the ones already named. */
+  const jcsValue = fc.letrec<{ value: JsonValue }>(tie => ({
+    value: fc.oneof(
+      { depthSize: 'small', maxDepth: 6 },
+      fc.constant(null),
+      fc.boolean(),
+      // -0, exponent forms either side of the ES6 fixed/exponential switch, and
+      // an integer past 2^53 — the number cases a hand-written renderer misses.
+      fc.constantFrom(0, -0, 1, -1, 1e21, 1e-7, 1.5e300, 9007199254740993, 0.1, -0.0001),
+      fc.integer({ min: -1_000_000, max: 1_000_000 }),
+      // Strings spanning both normalization forms, escapes, and a surrogate
+      // pair. The decomposed form is BUILT from code points: a literal in this
+      // file could be normalized by an editor, and the case would then compare
+      // a string with itself.
+      fc.constantFrom('', 'a', '\u00e9', 'e\u0301', '"', '\\', '\n', '\u0000', '\u007f', '\ud83d\ude00', 'ß', 'A'),
+      fc.string({ maxLength: 8 }),
+      fc.array(tie('value'), { maxLength: 4 }),
+      fc.dictionary(fc.oneof(fc.string({ minLength: 1, maxLength: 5 }), fc.constantFrom('a', 'A', 'á', 'Z', '0')), tie('value'), { maxKeys: 5 }),
+    ),
+  })).value
+
+  it('produces byte-identical output to `canonicalize` for every generated JSON value', () => {
+    fc.assert(fc.property(jcsValue, (value) => {
+      expect(canonicalizeArguments(value)).toBe(canonicalize(value))
+    }), { numRuns: 1000 })
+  })
+
+  it('canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written', () => {
+    // The measured constraint, reproducible rather than asserted in a comment:
+    // canonicalize 2.1.0 handles 1000 and throws at 5000; 4.0.0 and
+    // json-canonicalize 3.0.0 throw at 5000 too. This is the same depth
+    // `packages/core/tools/tests/ptc.spec.ts` dispatches at.
+    let deep: JsonValue = { leaf: true }
+    for (let index = 0; index < 5_000; index += 1) deep = { next: deep }
+    expect(() => canonicalizeArguments(deep)).not.toThrow()
+    expect(() => canonicalize(deep)).toThrow(/call stack/)
+  })
+})
+
 describe('P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion', () => {
   /** A JSON value generator, kept shallow enough that shrinking reports something readable. */
   const jsonValue = fc.letrec<{ value: JsonValue }>(tie => ({
@@ -276,18 +357,26 @@ describe('P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash conf
     }), { numRuns: 500 })
   })
 
-  it('a Unicode form change never changes the hash, over generated strings that HAVE two forms', () => {
-    // Built from characters that decompose, not filtered from arbitrary strings.
-    // A filter looked right and starved: `fc.string()` almost never produces a
-    // value whose NFD differs from its NFC, so the generator spends its budget
-    // rejecting and the case hangs rather than failing — a property that cannot
-    // find an input to test is not a passing property.
+  it('SECURITY: NFD and NFC never share a hash, over generated strings that have two forms', () => {
+    // REVERSED on 2026-09-06. This case used to assert that a Unicode form
+    // change never changes the hash — the exact confusion RFC 8785 forbids —
+    // and it carried a mutation proof, so the defect was pinned as a
+    // requirement. **A mutation proof shows a suite is sensitive to what it
+    // asserts; it says nothing about whether the assertion is right.** What
+    // decides that is the clause wording, the make-vs-use ledger's risk note
+    // for this epic, and the security consequence — and all three pointed the
+    // other way while this case was frozen.
+    //
+    // Built from characters that decompose, not filtered from arbitrary
+    // strings: a filter looked right and starved, because `fc.string()` almost
+    // never produces a value whose NFD differs from its NFC, so the run spent
+    // its whole budget rejecting inputs and hung rather than failing.
     const composed = fc.stringMatching(/^[\u00e0-\u00ff\u0100-\u017f]{1,8}$/)
     fc.assert(fc.property(composed, (text) => {
       const nfd = text.normalize('NFD')
       const nfc = text.normalize('NFC')
       fc.pre(nfd !== nfc)
-      expect(computeArgumentsHash({ text: nfd })).toBe(computeArgumentsHash({ text: nfc }))
+      expect(computeArgumentsHash({ text: nfd })).not.toBe(computeArgumentsHash({ text: nfc }))
     }), { numRuns: 200 })
   })
 

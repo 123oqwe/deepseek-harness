@@ -1251,9 +1251,15 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     // its source, so it must be the record that earns it.
     const { reg } = readRegistry()
     const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
-    const holder = mutated.epics.find(e => (e.clauseProvenance ?? []).some(x => x.rewordedFrom !== undefined))
-    if (holder === undefined) throw new Error('registry records no reword')
-    holder.clauseProvenance = (holder.clauseProvenance ?? []).filter(x => x.rewordedFrom === undefined)
+    // A reword in a channel this report COVERS. Rewords also happen in
+    // `validation`, which the report does not read — dropping one of those
+    // changes nothing here, and a control that picked one would pass while
+    // proving nothing.
+    const covered = (entry: { rewordedFrom?: string; channel?: string }): boolean =>
+      entry.rewordedFrom !== undefined && ['must', 'acceptance', 'nonGoals'].includes(entry.channel ?? 'must')
+    const holder = mutated.epics.find(e => (e.clauseProvenance ?? []).some(covered))
+    if (holder === undefined) throw new Error('registry records no reword in a covered channel')
+    holder.clauseProvenance = (holder.clauseProvenance ?? []).filter(x => !covered(x))
     if (holder.clauseProvenance.length === 0) delete holder.clauseProvenance
     const report = parseReport(renderClauseCoverageReport(mutated, readYaml()))
     expect(report.totals.unmatchedSourceClauses).toBeGreaterThan(0)

@@ -52,7 +52,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = '2db3d81912478fd5af317e23b09037288246e5969988be1ee11fee38a81e753b'
+const MATRIX_SHA = '12fd5550908c0c47838a91f1d6a72cedba29c2d9834b43540926c714238c3b7d'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -235,6 +235,16 @@ const HOT_ZONE_RELOCATED = {
  * observation behind it is an opinion overwriting a pinned document.
  */
 const CLAUSE_REWORDS = {
+  'P2-03': [
+    {
+      clause: 'canonicalizer 遵循 RFC 8785（JCS）——key 顺序、数字拼写、JSON 转义拼写不同的同一 JSON 值得到相同 hash，而不同 code point 序列（含 NFC 与 NFD）是不同值必须得到不同 hash，fuzz 覆盖以上四类。',
+      rewordedFrom: 'fuzz canonicalizer，禁止 key order/Unicode/number 表示导致 hash 混淆。',
+      channel: 'validation',
+      rewordedAtUtc: '2026-09-06T14:00:00.000Z',
+      basis: 'Rectification order §7.4 item 4 and §7.8, delegate ruling of 2026-09-06 under the C11 delegation.',
+      evidence: 'The old wording put Unicode normalization form in the same list as key order and number spelling, as though all three were spellings of one value. RFC 8785 does not normalize: two code point sequences are two values. The implementation followed the clause and normalized to NFC, which meant a precomposed and a decomposed spelling of the same character produced one argumentsHash -- and P2-06 binds approvals to that hash, so on a filesystem where those name two files, approving one action authorised the other. The clause named hash confusion and the code committed it, in the direction the clause had not considered. Verified against the reference implementation: canonicalize@2.1.0 distinguishes the two forms and collapses the other three.',
+    },
+  ],
   'P4-06': [
     {
       clause: 'domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam',

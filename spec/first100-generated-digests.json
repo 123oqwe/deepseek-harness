@@ -9,6 +9,6 @@
     "spec/first100-evidence.schema.json": "23b017be8f409f9f727749f37a3706795ba8b35a23798380aea7fc387035cb72",
     "spec/first100-owner-map.json": "3d4d8ada318979cade0d8dbed796f77405514022fb3ca240e9bc86252b3ee1b2",
     "spec/first100-thresholds.yaml": "d241956d7a0381f96ee23e80e876aa918006d15c9e17d44dc3cd2ad934ed05c9",
-    "tests/first100/registry.json": "dc1da702aa2f45142ebf6d0909c1299b9abf41375d432cc0d6e80f065041971e"
+    "tests/first100/registry.json": "017c58778b7401619d6e7225cec384d33aefd467f0918edc56a8bc94e2b9c413"
   }
 }
