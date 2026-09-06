@@ -474,3 +474,40 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 **共用引擎 slice 的额外两条**:(i) slice 自己的 conformance 套件是消费者 epic 的前置,消费者不重验引擎;(ii) 第一个消费者必须在 slice 内端到端接通一次(Cedar → P2-05 的 `decide()`;sandbox-srt → P3-04 的 egress;envelope → P0-07 的 attest.ts;OTel → P7-07 的一个 span),证明 seam 真能坐人。
 
 **接 OSS 不降验收**(§4.1 原话):四谓词 + 双向变异验的是我们的接线。**P1-02 是模板,P2-03 R2 是 oracle 形态的模板。**
+
+## 9. 「可省代码」与「社区插件最高覆盖」两列怎么变成动作(2026-09-06 深夜,用户指出这两列的细节没用上)
+
+账本表头六列里,我把「判决」「用什么」用足了,**「可省代码」「社区插件最高覆盖」只当展示**。它们各自是一个动作。
+
+### 9.1 可省代码 → 验收时记"实现的复用",并机械化
+
+账本的 `deletedPct` 是**预期**。已验收行里 ≥20% 的 8 条,实现值:P0-03 / P0-04 **0**(§7.9)、P0-06 / P0-07 **0**(自造 schema / 信封)、P1-02 部分(sigstore ✓,SBOM/SLSA ✗)、P0-08 半(fast-check ✓,harbor ✗)、P1-08 0(自定整数 range)、P5-11 不适用(非重复)。**没有任何字段记实现值,所以差距三天后才被人工核出来。**
+
+- **记录**:F 阶段 `preFlight.makeVsUse.realized = { adoptedOnPath: [{ name, form, importedIn: [files] }], rejectedAbsent: true|false, expectedDeletedPct, note }`。
+- **机械门 `verify-make-vs-use.mjs`**(执行者建,**P2-04 preFlight 之前**;与 `verify-cells-recomputable` 同族,状态三值 **VERIFIED / MISMATCHED / UNRECORDED**,UNRECORDED 不通过):对每条有 `preFlight.makeVsUse` 的 epic——
+  (a) `adopted[].form = runtime` 的包,在该 epic registry `files[]` 的 `[N]/[B]/[P]` 文件里至少一处 `import`(阳性:P1-02 的 `@sigstore/verify` 必须 VERIFIED);
+  (b) 该 epic 账本 `oss[role=reject]` 的 npm 名在其 `files[]` 里 **0** import(阴性;阳性对照用一个已知 import 的包);
+  (c) `form = oracle` 的包只在 `devDependencies`,不在 `dependencies`(P2-03 的 `canonicalize` 必须以此形态 VERIFIED);
+  (d) `standardsOwned` 非空时,冻结表里该 epic 至少一条用例标题含该标准名。
+- **不做**:不按行数算"省了多少"。行数不是目标;**复用在执行路径上**才是——这正是 §4.1"包一层就叫做完"错误的机械版。
+
+### 9.2 社区插件最高覆盖 → 四种用法
+
+314 条社区条目里 **81 条带「缺口:」清单**,每条带 hook 形态标签(`cordis-plugin·进程内·无 key` 44 条 / `bundle` 9 / `外部产品` 9 / `需 key` 9 …)。它们不是"参考",是四种动作:
+
+1. **缺口清单 = 必备项核对**。preFlight 把该 epic 全部 `community[].note` 的「缺口:」逐项对到 must / acceptance 子句;对不上的,要么写"超出本 epic(归 X)",要么就是子句缺口 → BLOCKED。缺口是社区试过、失败的地方,是最便宜的需求核对。
+2. **hook 形态 = wire-compat 要求**。META.answer 第二张卡:29 个 seam 里 15 个单 provider、2 个零 provider——"很多地方只是理论上可插拔"。`handRolled` 七组是社区已经在手搓的位置,目标 epic 的 Service Definition **必须能接住社区现在挂的形态**,冻结一条"现有形态插件不改代码可作 provider 挂入 / 迁移只需 X"的用例:
+
+| 组 | 社区现状(账本 handRolled) | 目标 epic | 必须接住的形态 |
+|---|---|---|---|
+| 记忆 | 136 个 memory 插件各自手搓 store;注入挂 `agent/pre-step` waterfall 或塞 `ctx.systemPrompt` 段;只有 dsh-memento 定义了 `ctx.memory` seam | P6-01 | 两种注入形态 wire-compatible;memento 的 provider 形态直接可挂;borrow 其 conformance suite + JSON schema + golden 模式 |
+| 登录门 | ≥7 套各写 cookie/TOTP/RBAC,各自 wrap http server | P8-06 | AuthProvider seam 在 http server 之前;**provider 拿不到 core session secret**(@xgone/dsh-remote 的 seam 违规作负用例) |
+| 权限规则 | 5 个挂 `tools/pre-execute` + approval answerer 链 | P2-05 | PEP 坐在 `tools/pre-execute` 位置;现有 YAML 规则可作 policy source 导入;**first-match 非单调语义转换为 forbid > permit**(dsh-permission-rules 作负用例) |
+| 快照/回滚 | ≥5 个互相竞争,各定粒度与恢复语义 | P3-11 / P1-10 | 区分工作区检查点与执行世界快照,P3-11 只做后者,说清楚 |
+| OTel/审计 | 4 个各接一遍 OTel 或自签 HMAC 链 | P7-07 | `session-telemetry-otel` 唯一 backend;插件只加 processor / exporter |
+| 市场/安装器 | ~70 个 market 类走裸 `pnpm add`;一个自动批 build scripts;一个扫描器把 profile boot 搞崩 | P1-02 / P1-04 / P1-06 | 安装必须经 harness 的 lockfile / `--ignore-scripts` / 隔离;市场插件降为目录 provider;"自动批 build scripts"作 P1-04 负用例 |
+
+3. **borrow 提示 = 复用测试资产**(QUALIFICATION_REUSE 的社区版):dsh-memento 的 suite/golden → P6-01;dsh-eval-harness 的 YAML case → headless overlay → session.jsonl 断言模式 → P0-08 / P7-09;P2-10 / P3-07 / P5-08 卡片各有一条。
+4. **反模式 = 负用例**:社区已犯的错冻结成"必须拒绝"的用例(上表已列三条)。
+
+**执行卡改动**:community 全列(不止 top-1),缺口不截断;上表目标 epic 加「生态迁移目标」叠加。**P2-04 是第一条按 §9 走的 epic**:preFlight 含缺口核对;§9.1 的门在其 preFlight 前建好。
