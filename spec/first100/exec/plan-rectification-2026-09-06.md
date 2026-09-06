@@ -424,3 +424,53 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 **给 P3-12 的 pointer**:参数深度上限(拒绝而非溢出)是它的主体,preFlight 时读本节。
 
 其余不变:C 新增 (a)(b)(c)(d) + 非 JSON 值拒绝 + 差分 conformance;F 那条反转;validation[2] 措辞照 §7.4 ④(「遵循 RFC 8785」由差分用例担保);supersede 照 §7.4 ⑤。
+
+### 7.9 R6 复审:账本 `leverage2` 明确建议退掉 P0-03 手写扫描器,推翻的判据
+
+账本 META.leverage2 原文:"dependency-cruiser(MIT)做 P0-04 分层依赖/禁环,顺手可退掉 P0-03 里已写的约 700 行自造扫描器。删 60–70%"。R6 说不重写,**推翻账本要写判据**,不能只说"在跑":
+
+1. **两个扫描器都是 TS 编译器 API 的 AST 实现**(`import ts from 'typescript'`),不是正则:`check-layer-deps.mjs`(954 行)按 must[2] 三通道找边——声明 `dependencies/peerDependencies` 图、TS path alias、动态 `import()`/`require()`;`check-capability-seams.mjs`(332 行)认 `isImportDeclaration / isExportDeclaration / import() / import = / require() / isImportTypeNode`。**架构门静默放行的风险(认不得某种 import 形态)不存在**——这是唯一能翻转 R6 的判据,核过为否。
+2. 规则逻辑是 dsh 特有的,dependency-cruiser 不提供:dated allowlist(owner + removalDate)、ADR-required 豁免格式、kernel 对 vendored Cordis 只许 `Context` 一个绑定(layering.md 规则 4)、family roles 作规则生成输入、10 s 预算。换库后这些仍要写,可删的只是图遍历部分(估 ≤300 行),代价是两条已验收 epic 重观测。
+3. 无下游传播:没有别的 epic import 这两个脚本的输出形状。
+4. **不为行数重写在跑的门**——和 R2 的逻辑一致:缺陷才整改,重复只收敛,沉没成本不追。
+
+若日后 P0-04 的规则要扩到 dependency-cruiser 已有的能力(orphans、circular 到文件级、`.d.ts` 边界),届时以 oracle 形式(§7.8 规则)引入比较两者的图,再决定替换。
+
+### 7.10 planError 补漏:账本是 40 条,§1 只算了 29
+
+§1 说"账本标了 29 条"——那是**未验收、非 P9** 的行数。账本 `planError` 非空共 **40** 条;漏的 10 条(7 条已验收行 + 3 条 P9)处置如下,同时写进执行表各 epic 的"裁决叠加":
+
+| epic | planError 摘要 | 处置 |
+|---|---|---|
+| P0-02 | validation[1]「kernel 不依赖 Cordis 产品包」应由 P0-04 层规则机械强制 | **已解决**:`check-layer-deps.mjs` `KERNEL_PERMITTED_CORDIS_BINDINGS = {Context}` + `collectKernelVendorEdges` |
+| P0-03 | 应为 PROVIDER_ADAPT(dependency-cruiser),实际手写 | §7.9 推翻,判据在上 |
+| P0-06 | registry 只是 TS 类型(524 行),无机器可读 schema,golden 与 additive/breaking 检查手断言 | **未解决**。§7.1 给的 `toJSONSchema ✓(5)` 是误归——5 处命中在 `typert/registry` 与 `plugin-manifest`,不在 `schema-registry`。不重开格子;**P8-07 开工前 schema-registry 必须能发 JSON Schema 2020-12**(否则 SDK 无源可生成),写进 P8-07 preFlight 硬前置;P2-11 `--dump` 同源 |
+| P0-07 | 自造信封 | R1 |
+| P0-08 | 上游已有确定性 lane,勿重建 | `runner.ts:105` 接受外部 scenarios,框架未重建;13 个上游 golden 是否接入由 P7-09 接线时核 |
+| P2-01 | files 已存在,缩到接线缺口 | 已按缺口验收;IdentityContext 的接线归 P2-05 PEP / P5-05 |
+| P5-11 | 应提升 agent-team 的 DAG/mailbox,不该新建 collaboration/* | 核实 agent-team 2452 行 claim/lease/mailbox/DAG **0 提及**,前提不成立;taskboard 自带 `dependsOn`。不是重复 |
+| P9-05 | V4 tokenizer 与公开 V3 资产 parity 待验 | must[0]「官方精确计数」尚未做(现仍 `estimate.ts` fixed-density heuristic,U/F SCHEDULED_BLOCKED);U 开工先验 parity 写 preFlight,不一致则 must[0] 限 V3 并记 known-limitation |
+| P9-08 | `registry-extension.json:385` 路径失效,实际在 `apps/cli/tests/profiles/headless/tests/coding-task.e2e.ts` | **现在就改路径**(files[] 修正,provenance `pathCorrected`),不等 R10;不当缺失重建 |
+| P9-09 | promptfoo 无显著性检验,Wilson 门是 dsh 代码 | 写进 preFlight;与 R10 Q3 Wilson 下界门同一实现 |
+
+**教训**:我"验证所有 planError 都写了"时数的是我自己分类后的 29,不是账本的 40。**核"全覆盖"要拿源的计数对,不拿自己中间产物的计数对。**
+
+## 8. OSS 接入标准作业程序(SOP)——每接一个 adapt 级库都走一遍
+
+**触发**:第四问(§4.1)答 `adapt`(含 §7.8 的 oracle 形态)时;共用引擎 slice(§3.1–3.4)同样适用,外加 slice 自己的 conformance 套件和一个端到端接通的消费者作证明。**产物**:`clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse`。
+
+| 步 | 动作 | 产物 / 判据 |
+|---|---|---|
+| 1 读账本行 | 执行表该 epic 卡:`oss[adapt].note`(版本 / 体积 / 本地验过的行为 / 坑)、`standards`、`risk`、`residual` | preFlight 引 `rows[].id` + `oss[].name` |
+| 2 供应链核 | 许可(准:MIT / Apache-2.0 / ISC / BSD / BlueOak;**拒:GPL / AGPL / BSL / SSPL / ELv2**,账本 notUse 列)、维护状态(最近发布 ≤12 月且未 archived)、体积、ESM/CJS、Node 版本、传递依赖数、是否已在 lock | 任一不过 → 回到第四问改判 optional/reject,记 BLOCKED |
+| 3 本树复验 | note 里"verified locally"的每一条**在本仓库 + 本 Node 版本上再跑一次**;用本程序真实产生的输入(不是玩具输入)——canonicalize 的递归就是这一步在 depth-5000 输入上抓到的 | 一个可重复的探针用例;硬约束 → BLOCKED + 裁决(oracle / optional / reject) |
+| 4 接法定形 | 四种之一:**runtime dep**(默认)/ **devDep oracle**(有记录的硬约束,§7.8)/ **optional provider**(不进默认、不进 CI)/ **vendored**(只在必须 patch 时,过 vendor manifest guard)。版本:preview(0.0.x)一律 exact pin(账本对 sandbox-runtime 的要求);其余按仓库约定 | preFlight 写选哪种、为什么 |
+| 5 落座 | 三角色:**Service Definition 自写、采标准词汇**(§7.3 所有权:自己是首个采用者定形状,否则 import)· **库只在 Provider** · Consumer 接线。库的类型**不得泄漏进 definition 接口**(用自有/branded 类型);fail-closed 默认;配置来源明确;降级路径明确;错误映射到 typed error(对外 RFC 9457) | 子句主体在我们的代码里,能指出文件:行 |
+| 6 冻结用例三类 | (a) **conformance**:我们对库的用法在**我们的输入域**上成立(差分/性质用例);(b) **接线**:fail-closed / 配置来源 / 降级 / 错误映射;(c) **安全边界**:注入 / 绕过 / 混淆。变异只打我们的代码;**库内部不变异、不重验**(库的套件验它) | 每类至少一条;(c) 必带反向变异 |
+| 7 供应链落地 | lock 更新、`third-party notices` hook 过、`vendor manifest guard` 过、P1-02 后 SBOM 自动 | pre-commit 全绿 |
+| 8 记录 | `preFlight.makeVsUse = { verdict, adopted:[{name, version, form, reason}], standardsOwned:[...], residual, probes:[...] }`;硬约束进 BLOCKED-QUEUE | 缺任一字段 = preFlight 不完整 |
+| 9 Reviewer 两问 | 「包一层就算做完?」——子句主体在不在我们代码里;「第二份声明?」——**按行为扫全树**(§7.6 方法),不按名字 | 任一答错 → 不冻结 |
+
+**共用引擎 slice 的额外两条**:(i) slice 自己的 conformance 套件是消费者 epic 的前置,消费者不重验引擎;(ii) 第一个消费者必须在 slice 内端到端接通一次(Cedar → P2-05 的 `decide()`;sandbox-srt → P3-04 的 egress;envelope → P0-07 的 attest.ts;OTel → P7-07 的一个 span),证明 seam 真能坐人。
+
+**接 OSS 不降验收**(§4.1 原话):四谓词 + 双向变异验的是我们的接线。**P1-02 是模板,P2-03 R2 是 oracle 形态的模板。**
