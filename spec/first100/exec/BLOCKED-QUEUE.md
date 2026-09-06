@@ -2926,3 +2926,31 @@ AssertionError: expected 18 to be 14
 Option 2 looks most consistent from here and is NOT being taken on that basis: the note exists to hand the choice over, not to pre-decide it.
 
 **What this does not change.** The Contract stage stands: the calibration decisions are pinned, mutation-tested, and honest about what one scalar cannot do. The blocked half of P9-05 (must[0], must[2]) is untouched and still needs the tokenizer-source decision (BLOCKED-107).
+
+## BLOCKED-121 — Sigstore verification: feasibility established with evidence, build not started
+
+**Status:** DEPENDENCIES LANDED, feasibility proven by a real probe. The verification path itself is the next slice and is not written yet.
+
+The delegate approved `@sigstore/verify` over hand-rolling on the argument that carries the most weight: **a mistake in a TUF client, a Fulcio chain check, or a Rekor inclusion proof fails by silently accepting a forgery**, and each of those three is larger than P1-02 entire.
+
+**What is installed** — `@sigstore/verify@4.1.2` and `@sigstore/bundle@5.0.0` as dependencies, `@sigstore/mock@0.13.0` as a dev dependency. `@sigstore/verify` pulls three small first-party packages (`@sigstore/core`, `@sigstore/bundle`, `@sigstore/protobuf-specs`) and nothing else.
+
+**The API, read rather than assumed:**
+
+```
+toTrustMaterial(trustedRoot)   builds trusted material — where kernel-private anchors feed in
+toSignedEntity(bundle, blob)   builds the entity to check
+new Verifier(material).verify(entity, policy)
+```
+
+**The test-infrastructure question is answered, and better than expected.** `@sigstore/mock` is published by the Sigstore project itself and provides `initializeCA`, `initializeCTLog`, `initializeTLog`, `initializeTSA` — a local certificate authority and a local transparency log. That is exactly the shape agreed for the sandbox probe: **local fake infrastructure, real verification logic**, testing this product's path rather than Sigstore's availability.
+
+A probe confirmed it runs here rather than merely existing on npm:
+
+```
+PROBE ok: rootCert=429B tlogKey=91B
+```
+
+Both take a `KeyPairKeyObjectResult` — `initializeCA(keyPair, ctLog?, clock?)`, `initializeTLog(url, keyPair, clock?)` — which the first attempt got wrong by calling them with no arguments. Recorded so the next attempt does not rediscover it.
+
+**What remains, and why it is a slice rather than a step.** A valid bundle has to be assembled from the mock CA's certificate and the mock log's entry, trusted material has to be built from kernel-private anchors instead of read off the branded handle (P0-02 pins that its one member is the brand), and the offline path must verify the bundle's own inclusion proof rather than degrading to unverified. The unlock criterion is already pinned as a failing-when-fixed case: `KNOWN GAP (Sigstore path): a claim naming an admitted Sigstore issuer verifies with no certificate and no inclusion proof`.

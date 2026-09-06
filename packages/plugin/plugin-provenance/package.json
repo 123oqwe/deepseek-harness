@@ -43,6 +43,11 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-trust-kernel": "workspace:^"
+    "@deepseek-ai/dsh-trust-kernel": "workspace:^",
+    "@sigstore/mock": "^0.13.0"
+  },
+  "dependencies": {
+    "@sigstore/bundle": "^5.0.0",
+    "@sigstore/verify": "^4.1.2"
   }
 }
