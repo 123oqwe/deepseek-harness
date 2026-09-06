@@ -190,6 +190,32 @@ export function foldEpics(cells, p9Ids) {
   })
 }
 
+/**
+ * The one line a reader takes the program's P9 answer from.
+ *
+ * The goal is "every P9 item VERIFIED **or** scheduled-BLOCKED on record", so
+ * that is what this counts. Counting only `VERIFIED` under-reports an item that
+ * has genuinely settled — every stage either verified or blocked on a recorded,
+ * still-open blocker — and the summary would say the program is further from
+ * its terminal state than it is. The two are still printed apart, because
+ * "proved" and "proved unbuildable and parked" are different facts and a reader
+ * deciding what to work on needs to tell them apart.
+ * @param epics - the per-epic terminal states.
+ * @param total - how many P9 items the program has.
+ * @param candidateSha - the observation these states were computed from.
+ * @param provenance - how the caller obtained them, for the sentence.
+ * @returns the summary line.
+ */
+export function summaryLine(epics, total, candidateSha, provenance) {
+  const verified = epics.filter(epic => epic.terminalState === 'VERIFIED').length
+  const settledWithBlockers = epics.filter(epic => epic.terminalState === 'VERIFIED_OR_BLOCKED').length
+  const settled = verified + settledWithBlockers
+  const blockedNote = settledWithBlockers > 0
+    ? ` (${String(verified)} fully verified, ${String(settledWithBlockers)} verified-or-scheduled-BLOCKED)`
+    : ''
+  return `verify-p9-cells: ${String(settled)}/${String(total)} P9 items settled${blockedNote} ${provenance} ${candidateSha}`
+}
+
 function main() {
   const argv = process.argv.slice(2)
   const registry = loadJson(REGISTRY_EXTENSION_PATH)
@@ -206,8 +232,7 @@ function main() {
       process.exit(1)
     }
     const record = loadJson(OUTPUT_PATH)
-    const verified = record.epics.filter(epic => epic.terminalState === 'VERIFIED')
-    console.log(`verify-p9-cells: ${verified.length}/${p9Ids.length} P9 epics VERIFIED on record (observation ${record.candidateSha})`)
+    console.log(summaryLine(record.epics, p9Ids.length, record.candidateSha, 'on record,'))
     for (const epic of record.epics) {
       console.log(`  ${epic.epic}: ${epic.terminalState} [${epic.verifiedStages.join('') || '-'}]`)
     }
@@ -258,9 +283,8 @@ function main() {
     cells,
   }
   writeFileSync(OUTPUT_PATH, `${JSON.stringify(record, null, 2)}\n`)
-  const verified = epics.filter(epic => epic.terminalState === 'VERIFIED')
   console.log(`verify-p9-cells: wrote ${OUTPUT_PATH}`)
-  console.log(`verify-p9-cells: ${verified.length}/${p9Ids.length} P9 epics VERIFIED, from observation ${candidateSha}`)
+  console.log(summaryLine(epics, p9Ids.length, candidateSha, 'from observation'))
   for (const cell of cells) {
     if (cell.status === 'INCOMPLETE') {
       console.log(`  INCOMPLETE ${cell.epic}.${cell.stage}: ${cell.matchedCases}/${cell.frozenCases} cases passing here`)
