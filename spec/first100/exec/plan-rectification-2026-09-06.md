@@ -290,7 +290,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 ### 4.1 开工第四问:这条 epic 账本判的是造还是用?(自 P2-04 起为标准动作)
 
-前三问(BLOCKED-101):主体在不在执行路径上 / 冻结挂哪 / 每条子句的主体是什么。**第四问在三问之后、第一行代码之前**,答案写进 `clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse` 字段:`{ verdict, adopted: [...], residual }`。
+前三问(BLOCKED-101):主体在不在执行路径上 / 冻结挂哪 / 每条子句的主体是什么。**第四问在三问之后、第一行代码之前**,答案写进 `clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse` 字段:`{ verdict, adopted: [...], residual }`【字段规范已扩,**唯一规范在执行卡 §0**,此处只是最初三字段】。
 
 **来源**:造用账本(artifact `2e874903`;**仓库副本 `spec/first100/exec/make-vs-use-ledger.json`,`rows[].id` 索引,2026-09-06 13:40 EDT 落盘,此前只在 artifact 和 /tmp**)该 epic **整行 16 个字段**,不是两列。开工时必读并逐项回答的七个:`verdict` **和 `verdictSecondary`**(80/109 行有第二判定——"CONTRACT_WRITE + PROVIDER_ADAPT" 意思是契约自己写、provider 接开源,两半分开答)/ `oss[]` 里 `role: adapt` 的每一条**及其 `note`**(note 是接法,不是介绍)/ **`standards[]`**(71/109 行有;是绑定词汇,见 §7.3)/ **`risk`**(109/109 行有;里面有具体禁令,例:P2-03 "do not write a second canonicalizer")/ `residual`(接完还要自己写什么)/ `deletedPct` / `community`(只作设计参考,不接——CATALOG_ADOPT 为 0 已对抗复核)。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**(2026-09-06 13:10 EDT 修订:本段原只列四个字段,§7 记录了只读四字段造成的漏检。)
 
@@ -387,7 +387,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 - **R6 · P0-03/P0-04 不重写。** 手写检查器在跑、有变异证明、无下游传播;为 deletedPct 重写等于拿工作的东西换风险。记录为"账本判 adapt 未采用"的两条,**不算整改项**。
 - **R7 · P1-08 整数 API level、P8-01 手排 fingerprint:记录不改。** 前者是自洽的另一种版本语义(账本推荐 semver 是默认不是必须);后者只 hash 自家 surface 且不外发比对。若 P8-07 Python 端需要复算 fingerprint,届时换 JCS(R3 规则自动触发)。
 
-### 7.3 标准词汇传播链(从账本算的,不是记忆)
+### 7.3 标准词汇传播链(从账本算的,不是记忆)【历史:所有权列按 registry 顺序取,已被 §7.11 修订;**现行唯一所有权表是执行卡 §1**(数据驱动)】
 
 "首个采用者"按 registry 顺序;**已验收采用者**列里的行是 §7.1 核过的:
 
@@ -506,7 +506,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 | 5 落座 | 三角色:**Service Definition 自写、采标准词汇**(§7.3 所有权:自己是首个采用者定形状,否则 import)· **库只在 Provider** · Consumer 接线。库的类型**不得泄漏进 definition 接口**(用自有/branded 类型);fail-closed 默认;配置来源明确;降级路径明确;错误映射到 typed error(对外 RFC 9457) | 子句主体在我们的代码里,能指出文件:行 |
 | 6 冻结用例三类 | (a) **conformance**:我们对库的用法在**我们的输入域**上成立(差分/性质用例);(b) **接线**:fail-closed / 配置来源 / 降级 / 错误映射;(c) **安全边界**:注入 / 绕过 / 混淆。变异只打我们的代码;**库内部不变异、不重验**(库的套件验它) | 每类至少一条;(c) 必带反向变异 |
 | 7 供应链落地 | lock 更新、`third-party notices` hook 过、`vendor manifest guard` 过、P1-02 后 SBOM 自动 | pre-commit 全绿 |
-| 8 记录 | `preFlight.makeVsUse = { verdict, adopted:[{name, version, form, reason}], standardsOwned:[...], residual, probes:[...] }`;硬约束进 BLOCKED-QUEUE | 缺任一字段 = preFlight 不完整 |
+| 8 记录 | `preFlight.makeVsUse`——**字段以执行卡 §0 的 jsonc 规范为准**(ledgerRow / card / verdict(+Secondary)/ adopted[] / rejectedAbsent / standardsOwned / standardsImported / residual / probes / gapCheck / expectedDeletedPct / recordedBeforeFirstLine / realized);硬约束进 BLOCKED-QUEUE | 缺任一字段 = UNRECORDED(§9.1 门) |
 | 9 Reviewer 两问 | 「包一层就算做完?」——子句主体在不在我们代码里;「第二份声明?」——**按行为扫全树**(§7.6 方法),不按名字 | 任一答错 → 不冻结 |
 
 **共用引擎 slice 的额外两条**:(i) slice 自己的 conformance 套件是消费者 epic 的前置,消费者不重验引擎;(ii) 第一个消费者必须在 slice 内端到端接通一次(Cedar → P2-05 的 `decide()`;sandbox-srt → P3-04 的 egress;envelope → P0-07 的 attest.ts;OTel → P7-07 的一个 span),证明 seam 真能坐人。

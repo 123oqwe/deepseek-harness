@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `d477505079`);**生成时间** 2026-09-06T14:51-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `d477505079`);**生成时间** 2026-09-06T14:54-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -1538,7 +1538,7 @@
 - F:未冻结(格子 NOT_RUN)
   (本 epic 尚无任何冻结条目——TDD 目前只有计划层:validation 子句 + stages 文件 + realTask 场景)
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — Digest = JCS(manifest) from P2-03 **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — Digest = JCS(manifest) from P2-03 **⟶ 裁决取代:§1/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 - **@agentclientprotocol/sdk**(npm `@agentclientprotocol/sdk`) — 1.4.0 already installed; RequestPermissionRequest {sessionId, toolCall, options[]}
 **标准(绑定词汇)**:ACP RequestPermissionRequest.toolCall as the wire projection (**本 epic 是形状所有者**)
 **自己写(residual)**:Extend ApprovalRequest with manifest digest + redacted view + riskClass + expectedDiff + expiresAt, preconditions.ts (inode/mtime/etag/remote version capture and re-check), re-validate digest+token+policy version before dispatch, invalidate-on-change, one-to-one approval↔action audit link.
@@ -2517,7 +2517,7 @@
 - F:未冻结(格子 NOT_RUN)
   (本 epic 尚无任何冻结条目——TDD 目前只有计划层:validation 子句 + stages 文件 + realTask 场景)
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; JCS + sha256 via existing @noble/hashes → byte-stable plan ids **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; JCS + sha256 via existing @noble/hashes → byte-stable plan ids **⟶ 裁决取代:§1/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 **不用(reject,理由)**:
 - serverlessworkflow/specification — Control-flow DSL; RunPlan is a resource/topology/budget/gate plan (sdk-typescript 88★)
 - ChristopheBougere/asl-validator — AWS ASL control-flow DSL — no fit
@@ -2528,7 +2528,7 @@
 **社区(不采用;缺口 = 我们的必备项,形态 = 要接住的 hook,§9.2)**:
 - dsh_workflow 113★ 覆盖≈20% [topic-sweep] — cordis-plugin·进程内·无 key·一次性提交 \| 缺口：The plan is not data: the executable part is arbitrary JavaScript run in QuickJS, directly contrary to 'Plan 是数据，不包含任意可执行代码'. No TaskProfile input or requirement traceability, no determinist
 **裁决叠加(整改令)**:
-- §7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
+- 执行卡 §1(JCS 所有者 P2-03):argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
 
 #### P4-04 · RunPlan Freeze、签名与 Amendment Protocol
 
@@ -2559,7 +2559,7 @@
 - F:未冻结(格子 NOT_RUN)
   (本 epic 尚无任何冻结条目——TDD 目前只有计划层:validation 子句 + stages 文件 + realTask 场景)
 **用(adapt)**:
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0 (alt snowyu/json-canonicalize 9★ MIT 3.0.0) **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库**
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0 (alt snowyu/json-canonicalize 9★ MIT 3.0.0) **⟶ 裁决取代:§1/§7.8:import P2-03 的 canonicalizeArguments,不接库**
 - **secure-systems-lab/dsse**(Apache-2.0 · 110★) — Envelope; payloadType application/vnd.dsh.runplan+json
 - **in-toto/attestation**(371★) — Later supply-chain alignment
 - **node:crypto Ed25519** — Zero new crypto dep rather than @noble/curves
@@ -2570,7 +2570,7 @@
 - allinluna 51★ 覆盖≈20% [topic-sweep] — cordis-plugin·进程内·无 key \| 缺口：Hash is not a signature (any party can recompute); no kernel signing, no PlanAmendment protocol, no declared-mutable fields, no re-policy/re-budget on structural change. Only actions are fro
 **裁决叠加(整改令)**:
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
-- §7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
+- 执行卡 §1(JCS 所有者 P2-03):argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
 
 #### P4-05 · 扩展 Agent Lifecycle 状态机
 
@@ -4213,7 +4213,7 @@
 **用(adapt)**:
 - **in-toto/attestation**(Apache-2.0 · 371★) — Statement v1 envelope
 - **in-toto/in-toto**(Apache-2.0 · 1,036★) — Layout spec only (functionaries = VerifierIndependence, threshold = quorum); not the Python verifier or Link metadata
-- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; or reuse scripts/first100/attest.ts canonicalJson — pick one **⟶ 裁决取代:§7.3/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛**
+- **erdtman/canonicalize**(npm `canonicalize` · Apache-2.0 · 61★) — 4.0.0; or reuse scripts/first100/attest.ts canonicalJson — pick one **⟶ 裁决取代:§1/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛**
 - **colinhacks/zod**(npm `zod` · MIT) — 4.4.3 in 38 pkgs; native toJSONSchema for TS↔Python codec contract
 **标准(绑定词汇)**:in-toto Statement v1 + in-toto layout semantics (steps/inspections/functionaries/threshold) (所有者 SLICE-3.4:R1:envelope slice 在 P4-04(W9)前落地) · JSON Schema 2020-12 via zod4 toJSONSchema (所有者 P0-06,import 其定义) · RFC 8785 JCS canonical hash (所有者 P2-03,import 其定义)
 **自己写(residual)**:Claim/CheckSpec/EvidenceRequirement/AcceptanceRule/confidence policy types, freeze semantics inside RunPlan, PlanAmendment re-approval path, ledger events with schemaVersion.
@@ -4225,7 +4225,7 @@
 - odai-dsh-plugin 107★ 覆盖≈10% — 'Verified completion' = governance/routing bundle (<10%)
 **裁决叠加(整改令)**:
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
-- §7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
+- 执行卡 §1(JCS 所有者 P2-03):argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
 
 #### P7-02 · EvidenceCollector：内容寻址、可追溯、不可伪造的证据层
 
@@ -4416,7 +4416,7 @@
 - dsh-nuke-plugin 覆盖≈0% — Hash-chain audit — unrelated
 **裁决叠加(整改令)**:
 - §3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份
-- §7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
+- 执行卡 §1(JCS 所有者 P2-03):argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
 
 #### P7-06 · Bounded Repair/Replan Loop：验证失败后的有限修复与计划修订
 
@@ -5180,7 +5180,7 @@
 **裁决叠加(整改令)**:
 - §2.F planError 已解决,记录即可
 - §3.1 共用引擎 Cedar(@cedar-policy/cedar-wasm 4.12.0)在 P2-05 开工前作为 infra slice 接入;本 epic 只写 adapter/PEP/explain
-- §7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
+- 执行卡 §1(JCS 所有者 P2-03):argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份
 
 #### P8-10 · Config Provenance、Typed Dry-Run、迁移/回滚、ABI Compatibility 与 Disaster-Recovery Release Gate
 
@@ -5756,7 +5756,7 @@ add('P2-02', '§3 账本判定已被事实超越:Biscuit 的 attenuation 在 Fib
 add('P0-01 P0-07 P1-02', '§7.2 R1:in-toto Statement v1 + DSSE 信封由 §3.4 attestation-envelope slice(P4-04 开工前)统一;P0-07 attest.ts 改发 Statement+DSSE;不重开格子')
 add('P1-11 P1-12 P2-03 P3-07 P3-09 P4-04 P4-09 P6-08 P6-09 P7-01 P7-02 P7-04 P7-05 P7-10 P8-10',
     '§3.4/R1 消费者:in-toto/DSSE 信封 import `packages/attestation/envelope`,不再声明一份')
-add('P4-03 P4-04 P7-01 P7-05 P8-09', '§7.3 JCS 消费者:argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份')
+add('P4-03 P4-04 P7-01 P7-05 P8-09', '执行卡 §1(JCS 所有者 P2-03):argumentsHash/plan id/contract hash 复用 P2-03 的 canonicalizer(差分 oracle 已证),不再写一份')
 add('P1-03', '§7.2 R4:P1-01 `dshVersionRange` 只查是字符串(validate.ts:393)→ 本 epic 加 semver.validRange + 拒绝用例;R5:P1-02 的 SBOM(CycloneDX)与 lockfile 同源,在本 epic 建')
 add('P1-12', '§7.2 R5:P1-02 未建的 SLSA provenance / 信任等级在本 epic 接(slsa-framework)')
 add('P8-06', '§7.11(修订 R3):SPIFFE ID 形状所有者是 P3-09(W8),本 epic import;本 epic 拥有 P0-02/P2-01 内部 id → SPIFFE 的单向映射(ServiceAccount)+ 冻结用例')
@@ -5796,10 +5796,10 @@ add('P3-13', '§6:不在账本内(09-02 同日收录);开工时补单条 make-vs
 # ledger oss notes overridden by a ruling: (epic, oss name) -> what stands now
 SUP = {
  ('P2-03','erdtman/canonicalize'): '§7.8:不换库、不删 canonicalize.ts;保留迭代实现(库全递归,depth 5000 溢出)、删 NFC;canonicalize@2.1.0 进 devDependencies 作差分 oracle',
- ('P2-06','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库',
- ('P4-03','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库',
- ('P4-04','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments,不接库',
- ('P7-01','erdtman/canonicalize'): '§7.3/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛',
+ ('P2-06','erdtman/canonicalize'): '§1/§7.8:import P2-03 的 canonicalizeArguments,不接库',
+ ('P4-03','erdtman/canonicalize'): '§1/§7.8:import P2-03 的 canonicalizeArguments,不接库',
+ ('P4-04','erdtman/canonicalize'): '§1/§7.8:import P2-03 的 canonicalizeArguments,不接库',
+ ('P7-01','erdtman/canonicalize'): '§1/§7.8:import P2-03 的 canonicalizeArguments;attest.ts 的 canonicalJson 随 R1 收敛',
  ('P8-01','erdtman/canonicalize'): '§7.2 R7:已验收,手排 fingerprint 记录不改;P8-07 若需 Python 复算再换',
  ('P2-02','eclipse-biscuit/biscuit'): '§3:Biscuit 降为 optional;attenuation 在 Fiber Option A 后由 kernel 签名 capability token 自写',
  ('P2-02','eclipse-biscuit/biscuit-rust'): '§3:同上',
@@ -5834,7 +5834,7 @@ AUD = {
  'P8-01':'设计偏离记录(R7):手排 fingerprint,不外发',
 }
 
-# standards families (same map as §7.3)
+# standards families (finer than rectification §7.3, which is now historical; this table is the only ownership table)
 FAM = [
  ('in-toto / DSSE / SLSA', r'in-toto|DSSE|SLSA'), ('RFC 8785 JCS', r'8785|JCS'), ('CloudEvents', r'CloudEvents'),
  ('SPIFFE ID format', r'SPIFFE(-style| ID)'), ('SPIFFE SVID lifetime rules', r'SPIFFE SVID'), ('W3C PROV-DM', r'PROV'),
