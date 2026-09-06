@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-06T00:04:00.047Z",
-  "inputDigest": "befe4a03e85e2e65090f7e91a2100fdd799bf9bfd8e66bff082ca5abd6dc732a",
+  "lastUpdatedUtc": "2026-09-06T00:52:14.390Z",
+  "inputDigest": "6269961058729f9772522fb3ccbb8b2ffcd5d8e73b716c5020882de5500e7bb7",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2543,11 +2543,37 @@
           "capturedAtUtc": "2026-09-05T03:28:32.424Z"
         },
         "F": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "8a640f1aca27af8c938daac7c9664fa9b57dd640",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34001537762",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs2/first100-vitest-report-8a640f1aca27af8c938daac7c9664fa9b57dd640/vitest-report.json",
+          "observationSha256": "ee44eb883adb59a7b6e802c702a1e22fc11175d07ae2649f5dd628a28c49d13f",
+          "expectCasesMatched": [
+            "P2-02 Fault — attenuation boundary matrix enumerates at least twelve boundaries, each named once",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 01 an equal-to-parent request is admitted, so refusals below are selective",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 02 a narrowed verb set is admitted",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 03 a verb the parent does not hold is refused",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 04 an empty verb set is admitted: nothing is the strongest narrowing",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 05 a narrowed resource set is admitted",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 06 a resource outside the parent's is refused",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 07 keeping every parent resource and adding one is still refused",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 08 a lower budget is admitted",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 09 a budget equal to the parent's is admitted, not treated as an increase",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 10 a budget one unit above the parent's is refused",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 11 OMITTING a budget under a constrained parent is refused as a widening",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 12 an earlier expiry is admitted",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 13 an expiry equal to the parent's is admitted",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 14 an expiry one millisecond beyond the parent's is refused",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 15 a child of a child narrows again from the CHILD, not the root",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 16 each successful attenuation increments delegationDepth",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 17 a child records its parent's digest, so a chain can be walked back",
+            "P2-02 Fault — attenuation boundary matrix fault boundary 18 a child inherits tenant and capability verbatim, which the request cannot express"
+          ],
+          "capturedAtUtc": "2026-09-06T00:52:14.389Z"
         }
       },
       "supplements": {},
-      "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
+      "candidateSha": "8a640f1aca27af8c938daac7c9664fa9b57dd640",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
