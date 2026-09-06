@@ -6728,6 +6728,59 @@
         "testsDiscovered": 5
       },
       "note": "P (Provider) for P9-03: the flag exists and the runner CALLS the resolver, with the routes that really have an adapter. Resolution happens after loader settlement because no adapter is registered while the command line is parsed. Mutations: forcing the default branch reddens 4; disabling the route-existence check reddens 4. must[2] (auditable selection) is met by the existing request/header event, which already carries the effective provider and model — a second event would give one fact two homes."
+    },
+    {
+      "epic": "P9-03",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/headless-model-route.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-03 Usage — --model reaches a real dsh --profile headless run acceptance[0]: the same task on two --model values is answered by two different routes",
+        "P9-03 Usage — --model reaches a real dsh --profile headless run acceptance[1]: an unregistered route exits non-zero, names the registered routes, and answers nothing"
+      ],
+      "files": [
+        "apps/cli/tests/headless-model-route.spec.ts",
+        "apps/cli/tests/fixtures/two-route-llm.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e2039b43f9187ede3e84408f414d93d5d677e850",
+        "testsDiscovered": 2
+      },
+      "note": "U (Usage) for P9-03 on the REAL product path: the flag must survive the launcher argument parser, the profile cordis.patch.yml !!js expression, and schemastery config validation before it means anything, and any one of those dropping it yields a run that quietly uses the default. Spawns the real dsh --profile headless bin against an isolated DSH_HOME with TWO keyless routes — two because the property is a CHOICE, and with one route the run reaches it however the flag behaves. Mutation: deleting the model field from the startup provider reddens both cases (exit 4, no route reachable)."
+    },
+    {
+      "epic": "P9-03",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/headless-model-route.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P9-03 Fault — --model against a profile with no registered route says the profile has no routes rather than printing an empty list"
+      ],
+      "files": [
+        "apps/cli/tests/headless-model-route.spec.ts",
+        "apps/cli/tests/fixtures/two-route-llm.ts"
+      ],
+      "frozenAtUtc": "2026-09-05T20:11:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e2039b43f9187ede3e84408f414d93d5d677e850",
+        "testsDiscovered": 1
+      },
+      "note": "F (Fault) for P9-03: a profile with NO registered route. The refusal message is built from the routes that exist, so this is the case where a naive implementation prints \"available routes:\" followed by nothing — a message that reads like a truncated bug rather than a statement about the profile. It is also the one refusal a user cannot fix by correcting the argument. Shares its argv with the U cell (same file), the way P9-06 P and F already do."
     }
   ]
 }

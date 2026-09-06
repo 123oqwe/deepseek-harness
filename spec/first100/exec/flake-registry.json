@@ -241,6 +241,27 @@
       "unrelatedNote": "BLOCKED-023 same-SHA divergence evidence (2026-09-02): attempt 1 and attempt 2 of CI run 33578193549 ran the byte-identical candidate commit e4390a90a29e71dea1c2d32f3943b4692b5fd933 -- attempt 1 failed this test, attempt 2 passed it, with zero code changes between attempts (a same-SHA rerun). This is the definition of non-determinism: a deterministic failure cannot flip to passing on a byte-identical retry. This test spawns a real CLI subprocess (pnpm run architecture:seams against a real on-disk fixture) as its own acceptance[3] proof, consistent with subprocess-spawning tests being this repository's highest-flake-risk class (matching the already-registered Inspector real-Worker entry's own failure mode). Independently verified: the Supervisor downloaded and byte-compared both attempts' vitest-report.json artifacts (ids 9827604568 and 9828038921) directly from GitHub before registering.",
       "registeredAtUtc": "2026-09-02T02:10:00Z",
       "registeredBy": "ANSWERED-BY-DELEGATE(gq-92)"
+    },
+    {
+      "testFile": "tests/architecture/check-capability-seams.spec.ts",
+      "testFullName": "CI output (acceptance[3]): the real CLI script names the edge, source file, and a remediation prints the dependency edge, source file, and remediation for a real fixture violation, and exits non-zero",
+      "occurrences": [
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33998988841",
+          "candidateSha": "ee247cc6eef8545e82ebc0d981563a0d3652947f",
+          "observedAtUtc": "2026-09-05T23:42:39Z",
+          "outcome": "failed"
+        },
+        {
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33998988841",
+          "candidateSha": "ee247cc6eef8545e82ebc0d981563a0d3652947f",
+          "observedAtUtc": "2026-09-06T00:05:00Z",
+          "outcome": "passed"
+        }
+      ],
+      "unrelatedNote": "Same candidate SHA, both attempts of run 33998988841: attempt 1 failed this one case of 20000 with \"Test timed out in 5000ms\"; attempt 2 passed 20000/20000 over a byte-identical tree. A deterministic failure cannot flip to passing on a byte-identical retry, so this is BLOCKED-023 standard (b) satisfied by direct proof rather than by argument. Non-association is independent of that: ee247cc6ee changes exactly one file, spec/first100/exec/BLOCKED-QUEUE.md, and its parent ddc00e1f28 passed the identical suite minutes earlier. FORWARD CONSTRAINT (delegate, 2026-09-05): this case spawns the real CLI and times out at 5s where its two sibling cases finish in 1194ms and 1270ms. If it recurs, the fix is a timeout bump under BLOCKED-017's four conditions, NOT further absorption. The registry absorbs randomness, not a threshold that is deterministically too tight for CI. One registration is evidence; two is a signal.",
+      "registeredAtUtc": "2026-09-06T00:10:00Z",
+      "registeredBy": "delegate (C7 flake classification), transcribed by the Supervisor"
     }
   ],
   "candidates": [
