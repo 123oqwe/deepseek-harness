@@ -2823,3 +2823,29 @@ must[3]: 「取消进入 convergence barrier，确认 child/world/actions 停止
 **What is deliberately NOT being built: the hook the suppliers would plug into.** Inventing a `StoppableWorld` interface now would fix the shape of something P3-01 has not designed, and if the shapes disagree it becomes one more field nobody reads — the exact defect this queue has recorded five times today. So the barrier takes a SET of participants rather than three hard-coded slots, and today that set has one member. A supplier adds itself when it lands.
 
 **Unlock signal.** P3-01's `ExecutionWorld` runtime exists with a terminate path, and the `actions` supplier is identified by clause. P5-10 must then write cases observing a world and in-flight actions actually stopping before terminal state — observations with no subject today, which is why the clause is recorded rather than asserted.
+
+## BLOCKED-117 — who owns `trust-kernel/src/index.ts`, and why P0-02's acceptance did not catch the empty root
+
+**Status:** INVESTIGATED, not acted on. Recorded before any edit, at the delegate's instruction.
+
+The P1-02 lock says the fix lives in `packages/kernel/trust-kernel/src/index.ts`, "outside every P1-02 stage's scope". Checked against the registry rather than assumed:
+
+| epic | declares | kind | ledger |
+|---|---|---|---|
+| **P0-02** | `trust-kernel/src/index.ts`, `types.ts`, `invariant.ts`, `tests/boundary.spec.ts` | N | **ACCEPTED** |
+| P2-05 | `trust-kernel/src/index.ts` | P | NOT_RUN |
+| P4-04 | `trust-kernel/src/index.ts` | P | NOT_RUN |
+| P1-02 | `trust-kernel/src/types.ts` only | P | not started |
+
+So `index.ts` is owned by an ACCEPTED epic and claimed by two that have not begun. **P1-02 does not declare it at all** — its own declaration stops at `types.ts`.
+
+**Would editing it disturb P0-02's frozen cases?** No. P0-02 freezes 12 signature-related titles, and every one is about TYPE SURFACE: that `TrustKernelSignatureRoots` is an opaque branded interface rather than a type alias, that its brand symbol carries no export modifier. Populating the roots from configuration keeps all of that true. Read directly, not inferred from the titles alone.
+
+**Is this a BLOCKED-012 deviation?** Two different answers for two different epics, and the distinction is the point:
+
+- Editing `index.ts` **as P2-05 or P4-04** is ordinary work in a declared file.
+- Editing it **as P1-02** adds a file that epic never declared. The precedent is already on record: `P0-05.F`'s note establishes that "an F-stage fixing a real bug in an already-declared, already-accepted earlier-stage file is not 'substituting one declared path for another'" — BLOCKED-012 is about SUBSTITUTION. Adding an undeclared file to a stage is the `P0-03-C-detection-logic` shape instead, which was handled with a recorded `deliverablePathPatch`. **So the mechanism exists and the path is known; which epic carries the work is the open question, and it is the delegate's to rule on.**
+
+**Why P0-02's acceptance did not catch the empty root — and why it should not be withdrawn.** Read against its clauses: must[1] says the kernel OWNS the signature roots; acceptance[0] says no plugin can replace the verifier; acceptance[2] says an uninitialized kernel fails closed. **Not one of them says the roots contain key material.** P0-02 was accepted for what it claimed, and it claimed ownership and non-replaceability, not cryptographic substance. The hollow root is not a missed defect in that epic's own terms — it is a clause nobody wrote, discovered later by an epic that needed it.
+
+That is worth recording anyway, because it is the general shape: **an epic can be correctly accepted and still leave the thing a later epic assumed it delivered.** The register catches it here only because P1-02's lock names the file. Nothing systematic would have.
