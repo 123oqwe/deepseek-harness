@@ -128,6 +128,13 @@ function serverSchemaFingerprint(): string {
   })
 }
 
+/**
+ * The JSON-RPC surface an out-of-process SDK client talks to.
+ *
+ * It holds the per-connection state a session needs — working directory,
+ * provider, model, and the live agent handles — and answers `initialize` with
+ * the negotiated protocol version, capabilities, and schema fingerprint.
+ */
 export class HarnessSdkJsonRpcServer {
   private cwd = process.cwd()
   private provider = 'deepseek-official'

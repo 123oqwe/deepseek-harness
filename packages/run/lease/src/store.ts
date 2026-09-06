@@ -64,12 +64,19 @@ export class LeaseStore {
   private readonly nextEpoch = new Map<WorkItemId, number>()
   private available = true
 
-  /** Mark the store reachable or not; an unreachable store refuses all work. */
+  /**
+   * Mark the store reachable or not; an unreachable store refuses all work.
+   * @param available - whether the store can be reached.
+   */
   setAvailable(available: boolean): void {
     this.available = available
   }
 
-  /** The item's current lease, or `undefined` when none is held. */
+  /**
+   * The item's current lease.
+   * @param workItem - the item to look up.
+   * @returns the lease, or `undefined` when none is held.
+   */
   get(workItem: WorkItemId): Lease | undefined {
     return this.leases.get(workItem)
   }

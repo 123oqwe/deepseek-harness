@@ -61,6 +61,8 @@ export function parseEditArgs(args: { file_path: string; old_string: string; new
  * Format an edit success (single-match or replace-all) as a Claude-style model-facing message.
  * @param displayPath - the backend-resolved path shown to the model.
  * @param replaceAll - selects the all-occurrences wording over the single-replacement one.
+ * @param matchTier - how the edit's target was located; a non-exact tier is named
+ * in the message, so the model learns its string did not match verbatim.
  * @returns the confirmation sentence the model sees as the tool result.
  */
 export function formatEditOutput(displayPath: string, replaceAll: boolean, matchTier: FsEditMatchTier = 'exact'): string {

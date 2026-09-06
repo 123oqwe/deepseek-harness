@@ -58,7 +58,11 @@ export class TaskStore {
     return { submitted: true }
   }
 
-  /** The task with this id, or `undefined`. */
+  /**
+   * The task with this id.
+   * @param id - the task to look up.
+   * @returns the task, or `undefined` when this store holds none with that id.
+   */
   get(id: TaskId): Task | undefined {
     return this.tasks.get(id)
   }
@@ -124,7 +128,10 @@ export class TaskStore {
     return { advanced: true, task: advanced }
   }
 
-  /** Every task currently held, in insertion order. */
+  /**
+   * Every task currently held.
+   * @returns the tasks, in insertion order.
+   */
   list(): readonly Task[] {
     return [...this.tasks.values()]
   }

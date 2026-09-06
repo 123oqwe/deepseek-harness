@@ -92,7 +92,12 @@ export interface DeliveryReceipt {
   readonly consumer: string
 }
 
-/** Whether `from -> to` is a transition the outbox permits. */
+/**
+ * Whether `from -> to` is a transition the outbox permits.
+ * @param from - the state the message is in.
+ * @param to - the state being proposed.
+ * @returns whether the outbox permits that move.
+ */
 export function canTransition(from: OutboxState, to: OutboxState): boolean {
   return LEGAL_TRANSITIONS[from].includes(to)
 }

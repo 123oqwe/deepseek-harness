@@ -9,6 +9,20 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-124 — wiring the registry gate set into CI is blocked on 14 out-of-sync bilingual doc pairs, which only the user may authorize fixing (Supervisor found while wiring, delegate-approved wiring, 2026-09-06)
+
+**The wiring itself is settled.** The delegate approved putting `first100:slice-gate-registry` into the exact-SHA workflow, before the test suite, on the reasoning that the gate set asks whether the registry ITSELF is sound — generated artifacts byte-identical, declared file references valid, frozen titles resolvable — which is a precondition of the observation rather than part of it. If the registry is wrong, the run proves nothing.
+
+**Running the set for the first time in five days found four things, three of them fixed here.** `verify-module-graph` was stale (three artifacts, packages added by earlier First-100 slices and never regenerated). `verify-export-jsdoc` reported 23 violations across five packages. `constraints` reported three packages whose `files` array carried an extra `lib/types/**/*.js` entry. And `packages/policy/capability-token/src/` held **twelve committed build artifacts** — `.d.ts`, `.js` and their maps, tracked in git inside a source directory, landed by 132321e4d1 (P2-02 U). Nothing resolved them: the package's exports point at `lib/types/`. That is the repository's "source plane vs artifact plane, never mixed" rule violated in the tree, undetected because the gate that would have said so ran only when someone typed it.
+
+**What blocks the wiring is the fourth: `verify-translation-pairing` reports 14 out-of-sync pairs** — English README and doc content changed without its Chinese counterpart, across `docs/subsystems/core.md`, `packages/README.md`, and README pairs in `memory-context`, `baseline-preflight`, `feature-gates`, `schema-registry`, `test-support`, `workspace`, and `workspace-trust-local`.
+
+**Why it is not simply fixed.** Re-recording the pair state with `--write` would assert a consistency that does not exist — telling the gate the two sides agree when the English moved and the Chinese did not. That is lying to a gate, which this program has refused everywhere else. The real fix is translation, and `AGENTS.md` reserves `dsh-translate-docs` to explicit user invocation. **A peer cannot authorize it and neither can I.**
+
+**State:** every other gate in the set passes (`verify-typecheck-host`, `verify-registry-extraction`, `verify-specs`, `test-specs`, `verify-baseline-file-references`, `verify-frozen-titles-resolvable`, `verify-p9-cells`, `verify-doc-budgets`, `constraints`, `architecture:layers`, `verify-module-graph` — all exit 0 as of this entry). The workflow step is NOT committed, because committing a step that runs an already-red gate set produces exactly the standing failure [BLOCKED-057](#blocked-057) says makes a later real regression indistinguishable.
+
+**Unlock:** the user authorizes the translation pass for those 14 pairs (or rules that a subset may be re-recorded because the divergence is cosmetic, which is a judgement about the content, not about the gate). Then the workflow step lands unchanged from the version already written.
+
 ### BLOCKED-068 — the program's own predicate (iv) was self-certifying: `--accept` demands a `guanjieqiao-92` sign-off entry, but under BLOCKED-036 the party that writes that entry is the party the gate exists to stop; resolved by carving `--record-signoff` (and only it) out of the delegate's no-execution rule (delegate-initiated and delegate-executed, 2026-09-04, user notified)
 
 
