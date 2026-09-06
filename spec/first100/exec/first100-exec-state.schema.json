@@ -10,7 +10,6 @@
     "lastUpdatedUtc",
     "activeWorktree",
     "activeBranch",
-    "frozenBaselineSha",
     "currentWave",
     "currentSlice",
     "registryDigest",
@@ -22,13 +21,23 @@
     "schema": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "version"],
+      "required": [
+        "name",
+        "version"
+      ],
       "properties": {
-        "name": { "const": "first100-exec-state" },
-        "version": { "const": "1.0" }
+        "name": {
+          "const": "first100-exec-state"
+        },
+        "version": {
+          "const": "1.0"
+        }
       }
     },
-    "lastUpdatedUtc": { "type": "string", "format": "date-time" },
+    "lastUpdatedUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
     "activeWorktree": {
       "type": "string",
       "description": "Absolute realpath of the git worktree this state belongs to. Every session's first action verifies `git rev-parse --show-toplevel` equals this."
@@ -37,11 +46,6 @@
       "type": "string",
       "const": "first100-exec",
       "description": "The sole execution branch. No product-code write ever happens on any other branch during the program."
-    },
-    "frozenBaselineSha": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{40}$",
-      "description": "Must equal tests/first100/registry.json's frozenBaseline.sha. A mismatch is BLOCKED."
     },
     "currentWave": {
       "type": "integer",
@@ -52,17 +56,41 @@
     "currentSlice": {
       "description": "The slice in flight, or null between slices (no slice open).",
       "oneOf": [
-        { "type": "null" },
+        {
+          "type": "null"
+        },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["epic", "stage", "step"],
+          "required": [
+            "epic",
+            "stage",
+            "step"
+          ],
           "properties": {
-            "epic": { "type": "string", "pattern": "^P[0-8]-\\d{2}$" },
-            "stage": { "type": "string", "enum": ["C", "P", "U", "F"] },
+            "epic": {
+              "type": "string",
+              "pattern": "^P[0-8]-\\d{2}$"
+            },
+            "stage": {
+              "type": "string",
+              "enum": [
+                "C",
+                "P",
+                "U",
+                "F"
+              ]
+            },
             "step": {
               "type": "string",
-              "enum": ["SPEC_FREEZE", "RED", "GREEN", "REVIEW", "GREENING", "DONE"],
+              "enum": [
+                "SPEC_FREEZE",
+                "RED",
+                "GREEN",
+                "REVIEW",
+                "GREENING",
+                "DONE"
+              ],
               "description": "Per-slice-flow step (maintainer decision, Step 2 a-f: SPEC-FREEZE / RED / GREEN / REVIEW / greening / persisted)."
             }
           }
@@ -87,14 +115,32 @@
     "totals": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["acceptedEpics", "totalEpics", "programGate"],
+      "required": [
+        "acceptedEpics",
+        "totalEpics",
+        "programGate"
+      ],
       "properties": {
-        "acceptedEpics": { "type": "integer", "minimum": 0, "maximum": 109 },
-        "totalEpics": { "type": "integer", "const": 109, "description": "100 registry epics + 9 P9 extension epics." },
+        "acceptedEpics": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 109
+        },
+        "totalEpics": {
+          "type": "integer",
+          "const": 109,
+          "description": "100 registry epics + 9 P9 extension epics."
+        },
         "programGate": {
           "type": "string",
-          "enum": ["NO-GO"],
-          "description": "Fixed truth: only 100/100 registry ACCEPTED + R10 passed is GO. Never any other value while acceptedEpics < 100."
+          "enum": [
+            "NO-GO"
+          ],
+          "description": "DERIVED by generate-ledger.mjs, never hand-written: GO only when every epic is ACCEPTED, every P9 item is VERIFIED or blocked, and r10Passed is true. It was a hardcoded string that nothing computed and nothing read until 2026-09-05 (BLOCKED-119)."
+        },
+        "r10Passed": {
+          "type": "boolean",
+          "description": "Whether R10 has passed. Read by generate-ledger.mjs's programGate derivation; absent means not passed, never assumed passed."
         }
       }
     }

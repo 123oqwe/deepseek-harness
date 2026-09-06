@@ -106,6 +106,7 @@ const LEDGER_PATH = resolve(REPO_ROOT, opt('ledger', 'spec/first100/exec/ledger.
 const LEDGER_MD_PATH = LEDGER_PATH.replace(/\.json$/, '.md')
 const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
+const P9_VERIFICATION_PATH = join(REPO_ROOT, 'spec/first100/exec/p9-verification.json')
 const ACCEPTANCE_COVERAGE_PATH = join(REPO_ROOT, 'spec/first100/exec/acceptance-coverage.json')
 const FLAKE_REGISTRY_PATH = join(REPO_ROOT, 'spec/first100/exec/flake-registry.json')
 const EXEC_STATE_PATH = join(REPO_ROOT, 'spec/first100/exec/EXEC-STATE.json')
@@ -416,6 +417,27 @@ function writeLedgerHeader(rows, inputsConsumed) {
  */
 const P9_EXTENSION_ITEM_COUNT = 9
 
+/**
+ * Derive the program's own go/no-go marker.
+ *
+ * It was a hardcoded string reading `NO-GO` that nothing computed and nothing
+ * read (BLOCKED-119). Computed here it says something true and falsifiable:
+ * GO requires every epic ACCEPTED, every P9 item VERIFIED or held, and a
+ * RECORDED R10 pass. `r10Passed` absent means not passed — never assumed, since
+ * the one direction this must not get wrong is claiming a gate that never ran.
+ * @param totals - the state file's totals block.
+ * @returns `'GO'` or `'NO-GO'`.
+ */
+function deriveProgramGate(totals) {
+  const everyEpicAccepted = totals.acceptedEpics === totals.totalEpics
+  const p9 = existsSync(P9_VERIFICATION_PATH) ? loadJson(P9_VERIFICATION_PATH).epics ?? [] : []
+  // A P9 item counts as settled when it is VERIFIED; PREMATURE and IN_PROGRESS
+  // do not, and an empty record does not either — nothing observed is not
+  // everything settled.
+  const p9Settled = p9.length > 0 && p9.every((epic) => epic.terminalState === 'VERIFIED')
+  return everyEpicAccepted && p9Settled && totals.r10Passed === true ? 'GO' : 'NO-GO'
+}
+
 function syncExecState(ledgerBytes, rows) {
   if (!existsSync(EXEC_STATE_PATH)) return
   const state = loadJson(EXEC_STATE_PATH)
@@ -425,6 +447,7 @@ function syncExecState(ledgerBytes, rows) {
   if (state.totals) {
     state.totals.acceptedEpics = Object.values(rows).filter((row) => row.status === 'ACCEPTED').length
     state.totals.totalEpics = Object.keys(rows).length + P9_EXTENSION_ITEM_COUNT
+    state.totals.programGate = deriveProgramGate(state.totals)
   }
   writeFileSync(EXEC_STATE_PATH, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
 }
