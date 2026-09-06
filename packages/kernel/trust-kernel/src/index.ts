@@ -59,9 +59,44 @@ import type {
   TrustKernelSandboxAttestation,
   TrustKernelSecretBrokerHandle,
   TrustKernelSignatureRoots,
+  TrustKernelTrustAnchor,
 } from './types.ts'
 
 export type * from './types.ts'
+
+/**
+ * What a deployment configures the kernel with.
+ *
+ * Still no I/O in {@link createTrustKernel}: the caller reads its own
+ * configuration and passes the result, so the kernel stays a pure constructor
+ * that cannot fail, and the boot path keeps ownership of where anchors come
+ * from.
+ */
+export interface TrustKernelConfig {
+  /** Trust anchors this deployment admits; empty when none is configured. */
+  readonly trustAnchors?: readonly TrustKernelTrustAnchor[]
+}
+
+/**
+ * The kernel's private anchor state, keyed by the handle it belongs to.
+ *
+ * A `WeakMap` rather than a field: only a caller already holding the
+ * unforgeable handle can read it, and a forged object reaches nothing, because
+ * it was never a key here.
+ */
+const CONFIGURED_ANCHORS = new WeakMap<TrustKernelSignatureRoots, readonly TrustKernelTrustAnchor[]>()
+
+/**
+ * Read the anchors a deployment configured this kernel with (Epic P1-02
+ * must[2]).
+ * @param signatureRoots - the kernel's own signature-roots handle.
+ * @returns the frozen anchor list, or an empty one for a kernel configured with none.
+ */
+export function configuredTrustAnchors(
+  signatureRoots: TrustKernelSignatureRoots,
+): readonly TrustKernelTrustAnchor[] {
+  return CONFIGURED_ANCHORS.get(signatureRoots) ?? []
+}
 
 /**
  * Construct and deep-freeze the process's one `TrustKernel` value. Pure and
@@ -74,9 +109,15 @@ export type * from './types.ts'
  * entrypoints yet (see this module's own doc comment above).
  * @returns a frozen `TrustKernel`; every opaque handle member is likewise frozen.
  */
-export function createTrustKernel(): TrustKernel {
+export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
   const rootIdentity = Object.freeze({}) as TrustKernelRootIdentity
   const signatureRoots = Object.freeze({}) as TrustKernelSignatureRoots
+  // The deployment's anchors live in this module's private state, keyed by the
+  // handle (Epic P1-02 must[2]). NOT on the handle: `TrustKernelSignatureRoots`
+  // is a capability handle whose one member is its brand, and P0-02's frozen
+  // case pins that count. Copied and frozen rather than referenced, so a caller
+  // holding its own array cannot add an anchor after the kernel is pinned.
+  CONFIGURED_ANCHORS.set(signatureRoots, Object.freeze([...config.trustAnchors ?? []]))
   const secretBroker = Object.freeze({}) as TrustKernelSecretBrokerHandle
   const policyEnforcement = (_query: TrustKernelPolicyQuery): TrustKernelPolicyVerdict => 'deny'
   const auditAppend = (_entry: TrustKernelAuditEntry): void => {}

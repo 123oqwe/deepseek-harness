@@ -46,7 +46,8 @@
 import { createHash, createPublicKey, randomUUID, verify as verifySignature } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { Branded } from '@deepseek-ai/dsh-brand'
-import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
+import { configuredTrustAnchors } from '@deepseek-ai/dsh-trust-kernel'
+import type { TrustKernelSignatureRoots, TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel/types'
 import type { SbomDigest } from './sbom.ts'
 
 /** Content digest of an installed package tarball (must[1]'s "package digest"). */
@@ -288,9 +289,42 @@ function anchorsFor(trustRoot: TrustKernelSignatureRoots): Map<TrustAnchorId, Tr
   let anchors = anchorsByTrustRoot.get(trustRoot)
   if (anchors === undefined) {
     anchors = new Map()
+    // Seed from what the deployment configured the KERNEL with (Epic P1-02
+    // must[2]) before any runtime registration. Seeded once, on first use: a
+    // configured anchor and a `registerTrustAnchor` one are then the same kind
+    // of thing to every reader, including `revokeTrustAnchor` — a deployment
+    // that must withdraw a configured anchor at runtime can, and does not have
+    // to restart to do it.
+    for (const anchor of configuredTrustAnchors(trustRoot)) {
+      anchors.set(
+        brandString<TrustAnchorId>(`trust-anchor-${anchor.mode}-configured-${anchorSelector(anchor)}`),
+        toDeclaration(anchor),
+      )
+    }
     anchorsByTrustRoot.set(trustRoot, anchors)
   }
   return anchors
+}
+
+/** What identifies a configured anchor, for a stable id that does not depend on registration order. */
+function anchorSelector(anchor: TrustKernelTrustAnchor): string {
+  return anchor.mode === 'sigstore' ? anchor.trustedIssuer : anchor.publicKeyFingerprint
+}
+
+/**
+ * Convert a kernel-configured anchor into this package's declaration.
+ * @param anchor - the configured anchor, carrying public material only.
+ * @returns the equivalent declaration.
+ */
+function toDeclaration(anchor: TrustKernelTrustAnchor): TrustAnchorDeclaration {
+  return anchor.mode === 'sigstore'
+    ? { mode: 'sigstore', trustedIssuer: anchor.trustedIssuer }
+    : {
+      mode: 'offline-signed',
+      publicKeyFingerprint: brandString<PublicKeyFingerprint>(anchor.publicKeyFingerprint),
+      owner: anchor.owner,
+      publicKeyPem: anchor.publicKeyPem,
+    }
 }
 
 /**
@@ -364,6 +398,19 @@ export function registerTrustAnchor(
   const anchorId = brandString<TrustAnchorId>(`trust-anchor-${declaration.mode}-${randomUUID()}`)
   anchorsFor(trustRoot).set(anchorId, declaration)
   return anchorId
+}
+
+/**
+ * Every anchor id this root currently holds, configured or registered.
+ *
+ * Exported so a deployment can withdraw an anchor it CONFIGURED: without it,
+ * configuration would be a second admission channel with no way back, and
+ * revocation would cover only the runtime one.
+ * @param trustRoot - the trust root to list.
+ * @returns the anchor ids, in the order the root holds them.
+ */
+export function listTrustAnchorIds(trustRoot: TrustKernelSignatureRoots): readonly TrustAnchorId[] {
+  return [...anchorsFor(trustRoot).keys()]
 }
 
 /**

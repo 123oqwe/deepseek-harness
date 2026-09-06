@@ -13,7 +13,8 @@
 
 import { generateKeyPairSync, sign as signBytes } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { configuredTrustAnchors, createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import type { TrustKernelTrustAnchor } from '@deepseek-ai/dsh-trust-kernel/types'
 import { describe, expect, it } from 'vitest'
 import {
   admitUnsignedDevMode,
@@ -23,7 +24,7 @@ import {
   verifyLockedPackageOffline,
   verifyPluginProvenance,
 } from '../src/index.ts'
-import { signedClaimBytes } from '../src/signature.ts'
+import { listTrustAnchorIds, signedClaimBytes } from '../src/signature.ts'
 import type { PluginProvenanceInput, PluginProvenanceVerification } from '../src/index.ts'
 import type {
   BuilderIdentity,
@@ -610,5 +611,80 @@ describe('P1-02 Provider — a real signature refuses all three acceptance[0] ve
     const result = verifyPluginProvenance(input, kernel.signatureRoots)
     expect(result.trust).toBe('rejected')
     if (result.trust === 'rejected') expect(result.reason).toBe('signature-invalid')
+  })
+})
+
+/**
+ * P1-02 must[2] — the kernel HOLDS the trust roots a deployment configured.
+ *
+ * The clause is about where the roots live, and until now the answer was
+ * nowhere: `createTrustKernel()` minted an empty handle and every anchor had to
+ * be registered at runtime by whoever happened to remember. A configured kernel
+ * now arrives with its anchors already held.
+ *
+ * They are kept in the kernel's private state rather than on the handle, and
+ * that placement is load-bearing: `TrustKernelSignatureRoots` is a capability
+ * handle whose one member is its brand (P0-02's own frozen case pins the
+ * count), so trusted material belongs behind the handle, not on it.
+ */
+describe('P1-02 must[2] — a kernel configured with anchors holds them', () => {
+  it('a configured offline anchor verifies a claim with no registerTrustAnchor call at all', () => {
+    const kernel = createTrustKernel({
+      trustAnchors: [{
+        mode: 'offline-signed',
+        publicKeyFingerprint: offlineFingerprint,
+        owner: 'acme release engineering',
+        publicKeyPem: offlinePublicKeyPem,
+      }],
+    })
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const input = buildInput({ claim: { ...unsigned, evidence: signedOfflineEvidence(unsigned) } })
+    expect(verifyPluginProvenance(input, kernel.signatureRoots).trust).toBe('trusted')
+  })
+
+  it('a kernel configured with NOTHING refuses the same claim, so the configuration is what admitted it', () => {
+    // The control. Without it the case above would pass against a build that
+    // ignored the configuration and trusted the claim for some other reason.
+    const kernel = createTrustKernel()
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const input = buildInput({ claim: { ...unsigned, evidence: signedOfflineEvidence(unsigned) } })
+    const result = verifyPluginProvenance(input, kernel.signatureRoots)
+    expect(result.trust).toBe('rejected')
+    if (result.trust === 'rejected') expect(result.reason).toBe('trust-anchor-unregistered')
+  })
+
+  it('a configured anchor for a DIFFERENT key does not admit this one', () => {
+    const otherKeys = generateKeyPairSync('ed25519')
+    const kernel = createTrustKernel({
+      trustAnchors: [{
+        mode: 'offline-signed',
+        publicKeyFingerprint: 'sha256:some-other-key',
+        owner: 'someone else',
+        publicKeyPem: otherKeys.publicKey.export({ type: 'spki', format: 'pem' }).toString(),
+      }],
+    })
+    const unsigned = buildClaim(offlineEvidence(offlineFingerprint))
+    const input = buildInput({ claim: { ...unsigned, evidence: signedOfflineEvidence(unsigned) } })
+    expect(verifyPluginProvenance(input, kernel.signatureRoots).trust).toBe('rejected')
+  })
+
+  it('a configured anchor can be revoked at runtime, so configuration is not a second, unwithdrawable channel', () => {
+    const kernel = createTrustKernel({
+      trustAnchors: [{ mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer }],
+    })
+    expect(verifyPluginProvenance(buildInput(), kernel.signatureRoots).trust).toBe('trusted')
+    const configured = listTrustAnchorIds(kernel.signatureRoots)
+    expect(configured).toHaveLength(1)
+    expect(revokeTrustAnchor(kernel.signatureRoots, configured[0]!)).toBe(true)
+    expect(verifyPluginProvenance(buildInput(), kernel.signatureRoots).trust).toBe('rejected')
+  })
+
+  it('the anchors are frozen against a caller that keeps its own array', () => {
+    // A caller could otherwise add an anchor after the kernel was pinned, which
+    // is the mutation the pin exists to prevent.
+    const anchors: TrustKernelTrustAnchor[] = [{ mode: 'sigstore', trustedIssuer: sigstoreEvidence.issuer }]
+    const kernel = createTrustKernel({ trustAnchors: anchors })
+    anchors.push({ mode: 'sigstore', trustedIssuer: 'https://added.after.the.fact.example' })
+    expect(configuredTrustAnchors(kernel.signatureRoots)).toHaveLength(1)
   })
 })

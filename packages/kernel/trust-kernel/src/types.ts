@@ -51,8 +51,42 @@ export interface TrustKernelRootIdentity {
 }
 
 /**
+ * One trust anchor a deployment configures the kernel to hold
+ * (Epic P1-02 must[2], "TrustKernel 持有可信根").
+ *
+ * **Public material only, by construction.** A Sigstore anchor names an issuer;
+ * an offline anchor names a fingerprint and a PUBLIC key. There is no member
+ * here a private key could occupy, so acceptance[2]'s "no key is recorded" is a
+ * property of the type rather than a rule a caller has to follow — and a
+ * deployment configuring this file has nothing secret to protect.
+ */
+export type TrustKernelTrustAnchor =
+  | {
+    readonly mode: 'sigstore'
+    /** OIDC issuer URL whose identities this deployment admits. */
+    readonly trustedIssuer: string
+  }
+  | {
+    readonly mode: 'offline-signed'
+    /** Fingerprint the evidence names, used to select this anchor. */
+    readonly publicKeyFingerprint: string
+    /** Owner, for audit display only. */
+    readonly owner: string
+    /** SPKI PEM of the PUBLIC key a signature is checked against. */
+    readonly publicKeyPem: string
+  }
+
+/**
  * Unforgeable reference to the process's signature-verification trust
  * anchors. Opaque for the same reason as {@link TrustKernelRootIdentity}.
+ *
+ * **Exactly one member, and the configured anchors are NOT among them.** This
+ * is a capability handle, not a data bag: what a deployment configured lives in
+ * the kernel's own private state and is read with `configuredTrustAnchors()`,
+ * which takes this handle. Widening the interface to carry the anchors was
+ * tried and correctly refused by P0-02's frozen case pinning the member count —
+ * and the case is right on the merits, since trusted material is an
+ * implementation detail rather than part of a branded type's public shape.
  */
 export interface TrustKernelSignatureRoots {
   readonly [TRUST_KERNEL_SIGNATURE_ROOTS]: true
