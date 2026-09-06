@@ -5122,7 +5122,7 @@
     "P4-07": {
       "must": {
         "sourceCount": 4,
-        "projectedCount": 4,
+        "projectedCount": 3,
         "unmatchedSource": [],
         "invented": [],
         "clauses": [
@@ -5148,14 +5148,6 @@
             "span": {
               "startLine": 7644,
               "endLine": 7644
-            }
-          },
-          {
-            "text": "外部 idempotency ledger 拒绝 stale epoch。",
-            "digest": "d4f2b8a15b72f1d97e2632f238d9f63582bd2f105252b2b4982212b2507ef08e",
-            "span": {
-              "startLine": 7645,
-              "endLine": 7645
             }
           }
         ]
@@ -5665,7 +5657,7 @@
     "P4-12": {
       "must": {
         "sourceCount": 5,
-        "projectedCount": 5,
+        "projectedCount": 6,
         "unmatchedSource": [],
         "invented": [],
         "clauses": [
@@ -5707,6 +5699,14 @@
             "span": {
               "startLine": 8388,
               "endLine": 8388
+            }
+          },
+          {
+            "text": "外部 idempotency ledger 拒绝 stale epoch。",
+            "digest": "d4f2b8a15b72f1d97e2632f238d9f63582bd2f105252b2b4982212b2507ef08e",
+            "span": {
+              "startLine": 7645,
+              "endLine": 7645
             }
           }
         ]

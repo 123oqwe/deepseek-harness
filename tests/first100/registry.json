@@ -48,7 +48,7 @@
   },
   "sourcePins": {
     "first100-requirements-matrix.md": {
-      "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+      "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
       "role": "verbatim acceptance/nonGoals/files/must/validation/command source"
     },
     "implementation-wave-map.md": {
@@ -302,7 +302,7 @@
     "extractor": "scripts/first100/extract-registry.mjs",
     "vendoredSources": "spec/first100/sources/",
     "sourceShas": {
-      "spec/first100/sources/first100-requirements-matrix.md": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+      "spec/first100/sources/first100-requirements-matrix.md": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
       "spec/first100/sources/implementation-wave-map.md": "8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41",
       "spec/first100/sources/r0-decision-package.md": "6e119b61957c73f64c54c674b3b8439a8d430bfc1262a4272ce0dcf260650d32"
     },
@@ -331,6 +331,14 @@
       "priorMatrixSha256": "401a3c63b7639b2df0f6ef81349df28667313deaa2d4f8e777d8f7eb531ce4fa",
       "rescopeSpec": "spec/first100/sources/base-align-v2/23-partial-rescope-spec.md",
       "note": "These canonical epics' `must` text was narrowed in-place in first100-requirements-matrix.md to the delta not yet covered by upstream 4e84901e, per the rescope spec's own per-epic evidence (BLOCKED-012 discipline: only a MUST fragment with direct, fully-covering upstream evidence was removed; a partially-covered fragment was kept in full). acceptance/files/validation/nonGoals were left untouched for every epic rescoped so far. priorMatrixSha256 is the matrix doc's content hash BEFORE this rescope; sourceShas above reflects the state AFTER."
+    },
+    "clauseMovements": {
+      "destinations": [
+        "P4-12"
+      ],
+      "count": 1,
+      "priorMatrixSha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+      "note": "Clauses re-anchored to the epic that owns the mechanism, by approved ruling. Each destination epic carries the origin, date, basis and reason in its own `clauseProvenance`; priorMatrixSha256 is the matrix doc's content hash BEFORE the movements, sourceShas above reflects the state AFTER."
     }
   },
   "epics": [
@@ -400,7 +408,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 36
       },
       "validation": [
@@ -540,7 +548,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 50
       },
       "validation": [
@@ -669,7 +677,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 64
       },
       "validation": [
@@ -785,7 +793,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 78
       },
       "validation": [
@@ -907,7 +915,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 92
       },
       "validation": [
@@ -1035,7 +1043,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 106
       },
       "validation": [
@@ -1159,7 +1167,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 120
       },
       "validation": [
@@ -1287,7 +1295,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 134
       },
       "validation": [
@@ -1426,7 +1434,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 153
       },
       "validation": [
@@ -1554,7 +1562,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 167
       },
       "validation": [
@@ -1676,7 +1684,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 181
       },
       "validation": [
@@ -1796,7 +1804,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 195
       },
       "validation": [
@@ -1916,7 +1924,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 209
       },
       "validation": [
@@ -2046,7 +2054,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 223
       },
       "validation": [
@@ -2176,7 +2184,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 237
       },
       "validation": [
@@ -2296,7 +2304,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 251
       },
       "validation": [
@@ -2416,7 +2424,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 265
       },
       "validation": [
@@ -2539,7 +2547,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 279
       },
       "validation": [
@@ -2680,7 +2688,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 293
       },
       "validation": [
@@ -2811,7 +2819,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 307
       },
       "validation": [
@@ -2939,7 +2947,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 326
       },
       "validation": [
@@ -3070,7 +3078,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 340
       },
       "validation": [
@@ -3202,7 +3210,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 354
       },
       "validation": [
@@ -3326,7 +3334,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 368
       },
       "validation": [
@@ -3459,7 +3467,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 382
       },
       "validation": [
@@ -3585,7 +3593,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 396
       },
       "validation": [
@@ -3714,7 +3722,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 410
       },
       "validation": [
@@ -3837,7 +3845,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 424
       },
       "validation": [
@@ -3955,7 +3963,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 438
       },
       "validation": [
@@ -4081,7 +4089,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 452
       },
       "validation": [
@@ -4202,7 +4210,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 466
       },
       "validation": [
@@ -4333,7 +4341,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 480
       },
       "validation": [
@@ -4470,7 +4478,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 499
       },
       "validation": [
@@ -4603,7 +4611,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 513
       },
       "validation": [
@@ -4730,7 +4738,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 527
       },
       "validation": [
@@ -4859,7 +4867,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 541
       },
       "validation": [
@@ -4982,7 +4990,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 555
       },
       "validation": [
@@ -5112,7 +5120,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 569
       },
       "validation": [
@@ -5227,7 +5235,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 583
       },
       "validation": [
@@ -5345,7 +5353,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 597
       },
       "validation": [
@@ -5468,7 +5476,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 611
       },
       "validation": [
@@ -5596,7 +5604,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 625
       },
       "validation": [
@@ -5719,7 +5727,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 639
       },
       "validation": [
@@ -5853,7 +5861,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 653
       },
       "validation": [
@@ -6142,7 +6150,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 672
       },
       "validation": [
@@ -6266,7 +6274,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 686
       },
       "validation": [
@@ -6389,7 +6397,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 700
       },
       "validation": [
@@ -6507,7 +6515,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 714
       },
       "validation": [
@@ -6625,7 +6633,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 728
       },
       "validation": [
@@ -6751,7 +6759,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 742
       },
       "validation": [
@@ -6864,8 +6872,7 @@
       "must": [
         "每个 work item 由 epoch lease 所有",
         "所有状态写和 action execution 携带 fencing token。",
-        "heartbeat 续租，过期后 scheduler 可 reclaim。",
-        "外部 idempotency ledger 拒绝 stale epoch。"
+        "heartbeat 续租，过期后 scheduler 可 reclaim。"
       ],
       "acceptance": [
         "旧 worker 恢复后无法提交结果或执行新副作用。",
@@ -6878,7 +6885,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 756
       },
       "validation": [
@@ -7016,7 +7023,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 770
       },
       "validation": [
@@ -7147,7 +7154,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 784
       },
       "validation": [
@@ -7278,7 +7285,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 798
       },
       "validation": [
@@ -7414,7 +7421,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 812
       },
       "validation": [
@@ -7531,7 +7538,8 @@
         "ledger 状态 prepared/sent/confirmed/ambiguous/compensated。",
         "provider 若支持原生 key 则透传",
         "不支持时使用目标状态查询/本地 fencing。",
-        "执行前 CAS reserve，完成后记录外部 receipt digest。"
+        "执行前 CAS reserve，完成后记录外部 receipt digest。",
+        "外部 idempotency ledger 拒绝 stale epoch。"
       ],
       "acceptance": [
         "10,000 次随机 crash campaign 中 duplicate external effect 为 0。",
@@ -7544,7 +7552,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 826
       },
       "validation": [
@@ -7606,7 +7614,16 @@
         "fault": "tests/first100/fixtures/P4-12.fault.spec.ts"
       },
       "gate": "Same key+different digest rejects; sent/ambiguous never returns to prepared; irreversible duplicates = 0; S03/S05/S14.",
-      "rollback": "X/D — stop dispatch, preserve ledger/receipts, reconcile ambiguous entries."
+      "rollback": "X/D — stop dispatch, preserve ledger/receipts, reconcile ambiguous entries.",
+      "clauseProvenance": [
+        {
+          "clause": "外部 idempotency ledger 拒绝 stale epoch。",
+          "movedFrom": "P4-07 must[3]",
+          "movedAtUtc": "2026-09-06T02:00:00.000Z",
+          "basis": "BLOCKED-100 third pre-flight question plus the delegate ruling of 2026-09-06, executed under the user's explicit delegation confirmed directly before any registry edit.",
+          "reason": "The clause names an external idempotency ledger that rejects a stale epoch. P4-07 (Worker Lease, Heartbeat and Fencing Token) mints the epoch and has no consumer for it, so satisfying the clause there would mean building the ledger P4-12 is titled after. The mechanism belongs to its owner; the wording is unchanged."
+        }
+      ]
     },
     {
       "id": "P4-13",
@@ -7673,7 +7690,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 840
       },
       "validation": [
@@ -7809,7 +7826,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 854
       },
       "validation": [
@@ -7945,7 +7962,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 873
       },
       "validation": [
@@ -8076,7 +8093,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 887
       },
       "validation": [
@@ -8207,7 +8224,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 901
       },
       "validation": [
@@ -8336,7 +8353,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 915
       },
       "validation": [
@@ -8459,7 +8476,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 929
       },
       "validation": [
@@ -8579,7 +8596,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 943
       },
       "validation": [
@@ -8704,7 +8721,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 957
       },
       "validation": [
@@ -8834,7 +8851,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 971
       },
       "validation": [
@@ -8959,7 +8976,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 985
       },
       "validation": [
@@ -9082,7 +9099,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 999
       },
       "validation": [
@@ -9217,7 +9234,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1013
       },
       "validation": [
@@ -9351,7 +9368,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1027
       },
       "validation": [
@@ -9482,7 +9499,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1046
       },
       "validation": [
@@ -9602,7 +9619,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1060
       },
       "validation": [
@@ -9724,7 +9741,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1074
       },
       "validation": [
@@ -9861,7 +9878,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1088
       },
       "validation": [
@@ -9986,7 +10003,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1102
       },
       "validation": [
@@ -10112,7 +10129,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1116
       },
       "validation": [
@@ -10247,7 +10264,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1130
       },
       "validation": [
@@ -10391,7 +10408,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1144
       },
       "validation": [
@@ -10526,7 +10543,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1158
       },
       "validation": [
@@ -10663,7 +10680,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1172
       },
       "validation": [
@@ -10800,7 +10817,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1191
       },
       "validation": [
@@ -10949,7 +10966,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1205
       },
       "validation": [
@@ -11098,7 +11115,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1219
       },
       "validation": [
@@ -11237,7 +11254,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1233
       },
       "validation": [
@@ -11384,7 +11401,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1247
       },
       "validation": [
@@ -11532,7 +11549,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1261
       },
       "validation": [
@@ -11679,7 +11696,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1275
       },
       "validation": [
@@ -11826,7 +11843,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1289
       },
       "validation": [
@@ -11987,7 +12004,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1303
       },
       "validation": [
@@ -12157,7 +12174,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1317
       },
       "validation": [
@@ -12304,7 +12321,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1336
       },
       "validation": [
@@ -12458,7 +12475,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1350
       },
       "validation": [
@@ -12601,7 +12618,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1364
       },
       "validation": [
@@ -12748,7 +12765,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1378
       },
       "validation": [
@@ -12886,7 +12903,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1392
       },
       "validation": [
@@ -13034,7 +13051,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1406
       },
       "validation": [
@@ -13184,7 +13201,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1420
       },
       "validation": [
@@ -13330,7 +13347,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1434
       },
       "validation": [
@@ -13481,7 +13498,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1448
       },
       "validation": [
@@ -13655,7 +13672,7 @@
       ],
       "acceptanceSource": {
         "path": "first100-requirements-matrix.md",
-        "sha256": "c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0",
+        "sha256": "67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd",
         "line": 1462
       },
       "validation": [

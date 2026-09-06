@@ -1116,6 +1116,54 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     expect(report.epics[first.id]?.must.invented.some(i => i.classification === 'undocumented' && i.text === injected)).toBe(true)
   })
 
+  it('green: the P4-07 -> P4-12 clause movement is what keeps both epics mapped', () => {
+    // The positive control for the movement path: strip the clauseProvenance
+    // record and the very same registry stops being green, at both ends. Without
+    // this, the green case above could not tell a working relocation from a
+    // clause that happened to appear under both epics in the YAML.
+    const { reg } = readRegistry()
+    const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    if (destination === undefined) throw new Error('registry records no clause movement')
+    const [moved] = destination.clauseProvenance as NonNullable<Registry['epics'][number]['clauseProvenance']>
+    if (moved === undefined) throw new Error('movement record is empty')
+    const sourceId = moved.movedFrom.split(' ')[0] as string
+    delete destination.clauseProvenance
+    const report = parseReport(renderClauseCoverageReport(mutated, readYaml()))
+    expect(report.epics[sourceId]?.must.unmatchedSource.map(c => c.text)).toContain(moved.clause)
+    expect(report.epics[destination.id]?.must.invented.some(
+      i => i.text === moved.clause && i.classification === 'undocumented',
+    )).toBe(true)
+    expect(report.totals.epicsMapped).toBe(98)
+  })
+
+  it('red: a movement naming a clause the source epic never had fails closed', () => {
+    const { reg } = readRegistry()
+    const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    if (destination === undefined) throw new Error('registry records no clause movement')
+    const entry = (destination.clauseProvenance as NonNullable<Registry['epics'][number]['clauseProvenance']>)[0]
+    if (entry === undefined) throw new Error('movement record is empty')
+    // The clause text stays exactly what the destination projects, so only the
+    // named origin is wrong: a movement is not allowed to launder an invented
+    // clause by pointing at an epic that never carried it.
+    entry.movedFrom = 'P0-01 must[0]'
+    expect(() => renderClauseCoverageReport(mutated, readYaml()))
+      .toThrow(/moved from P0-01, but that epic's YAML has no such clause/)
+  })
+
+  it('red: a movement whose origin is not a parsable epic and channel fails closed', () => {
+    const { reg } = readRegistry()
+    const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+    const destination = mutated.epics.find(e => (e.clauseProvenance ?? []).length > 0)
+    if (destination === undefined) throw new Error('registry records no clause movement')
+    const entry = (destination.clauseProvenance as NonNullable<Registry['epics'][number]['clauseProvenance']>)[0]
+    if (entry === undefined) throw new Error('movement record is empty')
+    entry.movedFrom = 'moved from the scheduling epic'
+    expect(() => renderClauseCoverageReport(mutated, readYaml()))
+      .toThrow(/does not name an epic and channel/)
+  })
+
   it('red: a registry epic absent from the YAML fails closed', () => {
     const { reg } = readRegistry()
     const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry

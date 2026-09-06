@@ -758,7 +758,7 @@
 - **Priority / Wave / 依赖：** P0 / W6 / `P4-06`。
 - **问题 → 目标：** 没有租约与 fencing 时，旧 worker 在失联后恢复可能继续写状态或重复外部动作。 → 防止网络分区或重启后两个 worker 同时执行同一 Agent/Action。
 - **Files：** target `packages/core/agent/src/dispatch.ts` [B]；`packages/core/agent/src/consumed-work.ts` [B]；`packages/workflow/workflow-worker-thread/src/host.ts` [B]；`packages/workflow/workflow-worker-thread/src/runtime.ts` [B]；new `packages/run/lease/src/index.ts` [N]；`packages/run/lease/src/types.ts` [N]；`packages/run/lease/src/store.ts` [N]；`packages/run/lease/tests/fencing.e2e.ts` [N]。
-- **MUST：** 每个 work item 由 epoch lease 所有；所有状态写和 action execution 携带 fencing token。；heartbeat 续租，过期后 scheduler 可 reclaim。；外部 idempotency ledger 拒绝 stale epoch。
+- **MUST：** 每个 work item 由 epoch lease 所有；所有状态写和 action execution 携带 fencing token。；heartbeat 续租，过期后 scheduler 可 reclaim。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 旧 worker 恢复后无法提交结果或执行新副作用。；clock skew 在容忍范围内不导致双主。；lease store 故障时停止新工作。
@@ -828,7 +828,7 @@
 - **Priority / Wave / 依赖：** P0 / W7 / `P2-03`、`P4-06`、`P4-07`。
 - **问题 → 目标：** Tool result 日志不能证明外部系统是否已提交；在请求发送后、结果持久化前崩溃会产生不确定状态。 → 保证邮件、数据库、CRM、部署、支付模拟等外部写在崩溃重试中不会重复。
 - **Files：** target `packages/core/agent-loop/src/tool-calls.ts` [B]；`packages/core/tools/src/types.ts` [B]；`packages/session/session-persistence/src/write-behind.ts` [B]；`packages/action/action-manifest/src/types.ts` [P]；new `packages/action/action-ledger/src/index.ts` [N]；`packages/action/action-ledger/src/types.ts` [N]；`packages/action/action-ledger/src/store.ts` [N]；`packages/action/action-ledger/tests/idempotency.e2e.ts` [N]。
-- **MUST：** ActionManifest 强制 idempotencyKey；ledger 状态 prepared/sent/confirmed/ambiguous/compensated。；provider 若支持原生 key 则透传；不支持时使用目标状态查询/本地 fencing。；执行前 CAS reserve，完成后记录外部 receipt digest。
+- **MUST：** ActionManifest 强制 idempotencyKey；ledger 状态 prepared/sent/confirmed/ambiguous/compensated。；provider 若支持原生 key 则透传；不支持时使用目标状态查询/本地 fencing。；执行前 CAS reserve，完成后记录外部 receipt digest。；外部 idempotency ledger 拒绝 stale epoch。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - **Acceptance：** 10,000 次随机 crash campaign 中 duplicate external effect 为 0。；ambiguous 状态不盲目重试，进入 reconciliation。；同 key 不同参数被拒绝。

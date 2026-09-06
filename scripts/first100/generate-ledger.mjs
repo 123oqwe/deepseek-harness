@@ -1039,6 +1039,26 @@ function cmdAccept() {
   console.log(`ACCEPTED ${epic}: independentVerdict=APPROVED, status=ACCEPTED`)
 }
 
+/**
+ * Recompute EXEC-STATE's digests against the files as they stand.
+ *
+ * The registry can change without the ledger changing — a clause re-anchoring
+ * moves a MUST between epics and touches no row — and every other path that
+ * refreshes these digests also writes a ledger row, which such a change has no
+ * reason to do. This is that refresh alone. It recomputes; it never invents a
+ * row, and `--check` still fails afterwards if anything else drifted.
+ */
+function cmdSyncExecState() {
+  if (!existsSync(LEDGER_PATH)) {
+    console.error(`no ledger at ${LEDGER_PATH}`)
+    process.exit(1)
+  }
+  const ledgerBytes = readFileSync(LEDGER_PATH)
+  syncExecState(ledgerBytes, loadJson(LEDGER_PATH).rows)
+  console.log(`sync: EXEC-STATE digests recomputed from ${LEDGER_PATH} and ${REGISTRY_PATH}`)
+  process.exit(0)
+}
+
 function cmdCheck() {
   if (!existsSync(LEDGER_PATH)) {
     console.error(`no ledger at ${LEDGER_PATH}`)
@@ -1049,7 +1069,25 @@ function cmdCheck() {
     console.error(`DRIFT: ledger.generatedBy is not this generator — possible hand-edit`)
     process.exit(1)
   }
-  console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows)`)
+  // `syncExecState` writes both digests on every ledger write, and until now
+  // nothing ever read them back — so a registry edit between ledger writes left
+  // EXEC-STATE naming a registry that no longer exists, and said so to nobody.
+  // This is the reader that makes the two fields mean something.
+  if (existsSync(EXEC_STATE_PATH)) {
+    const state = loadJson(EXEC_STATE_PATH)
+    const stale = [
+      ['ledgerDigest', state.ledgerDigest, sha256(readFileSync(LEDGER_PATH))],
+      ['registryDigest', state.registryDigest, sha256(readFileSync(REGISTRY_PATH))],
+    ].filter(([, recorded, actual]) => recorded !== undefined && recorded !== actual)
+    if (stale.length > 0) {
+      for (const [field, recorded, actual] of stale) {
+        console.error(`DRIFT: EXEC-STATE.${field} is ${recorded}, the file now hashes to ${actual}`)
+      }
+      console.error('Re-run a ledger write (which calls syncExecState) after changing the registry or the ledger.')
+      process.exit(1)
+    }
+  }
+  console.log(`verify: ${LEDGER_PATH} carries a generate-ledger.mjs header (${Object.keys(ledger.rows).length} rows); EXEC-STATE digests match both files`)
   process.exit(0)
 }
 
@@ -1058,6 +1096,7 @@ function cmdCheck() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   if (flag('init')) cmdInit()
   else if (flag('check')) cmdCheck()
+  else if (flag('sync-exec-state')) cmdSyncExecState()
   else if (flag('accept')) cmdAccept()
   else if (flag('record-signoff')) cmdRecordSignoff()
   else if (flag('supplement')) cmdGreenSupplement()

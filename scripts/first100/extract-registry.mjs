@@ -52,7 +52,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = 'c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0'
+const MATRIX_SHA = '67f34a8b465779b10d850f9e32ec7d6888427b23af841d930842ee8326e4dcdd'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -132,6 +132,36 @@ const RESCOPE23_PRIOR_MATRIX_SHA = '401a3c63b7639b2df0f6ef81349df28667313deaa2d4
 // change here is a files[] baseline-drift correction (control.ts N->B, a
 // different fix class), not a must-narrowing, so it is not listed either.
 const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11', 'P6-05', 'P6-06', 'P6-07', 'P6-10']
+
+/**
+ * Clauses moved between epics in first100-requirements-matrix.md, keyed by the
+ * epic that carries each one now.
+ *
+ * Same discipline as the rescope above: the pinned doc is edited and
+ * re-extracted, never overlaid. What the doc edit cannot hold is WHERE the
+ * clause came from -- after the edit the matrix reads as if P4-12 always had it
+ * -- so the origin, the date, the basis and the reason live here and reach the
+ * registry as the destination epic's `clauseProvenance`. The clause-coverage
+ * report reads that field to match the clause against the v1.0 YAML span filed
+ * under its former owner, which is why moving a clause does not read as one
+ * epic dropping a source clause and another inventing one.
+ *
+ * Every entry is checked against the extracted MUST text below: a record whose
+ * clause the matrix does not actually give that epic fails the extraction.
+ */
+const CLAUSE_MOVEMENTS = {
+  'P4-12': [
+    {
+      clause: '外部 idempotency ledger 拒绝 stale epoch。',
+      movedFrom: 'P4-07 must[3]',
+      movedAtUtc: '2026-09-06T02:00:00.000Z',
+      basis: 'BLOCKED-100 third pre-flight question plus the delegate ruling of 2026-09-06, executed under the user\'s explicit delegation confirmed directly before any registry edit.',
+      reason: 'The clause names an external idempotency ledger that rejects a stale epoch. P4-07 (Worker Lease, Heartbeat and Fencing Token) mints the epoch and has no consumer for it, so satisfying the clause there would mean building the ledger P4-12 is titled after. The mechanism belongs to its owner; the wording is unchanged.',
+    },
+  ],
+}
+/** The matrix doc's sha256 BEFORE the clause movements above were applied. */
+const PRE_CLAUSE_MOVEMENT_MATRIX_SHA = 'c35e0530c943cb8357bf7aadc97cd2399bbdaa1499cb4e609d8876cd9e25d4b0'
 
 /**
  * Unconditional since P3-13 landed (2026-09-03): its new-gap-matrix.md/
@@ -494,6 +524,12 @@ for (const id of ids) {
           },
         }
       : {}),
+    ...(CLAUSE_MOVEMENTS[id] ? { clauseProvenance: CLAUSE_MOVEMENTS[id] } : {}),
+  }
+  for (const entry of CLAUSE_MOVEMENTS[id] ?? []) {
+    if (!epic.must.includes(entry.clause)) {
+      throw new Error(`${id}: clause movement records "${entry.clause}" but the matrix does not give ${id} that MUST clause -- the doc edit and this record disagree`)
+    }
   }
   epics.push(epic)
 }
@@ -627,6 +663,16 @@ const registry = {
             priorMatrixSha256: RESCOPE23_PRIOR_MATRIX_SHA,
             rescopeSpec: 'spec/first100/sources/base-align-v2/23-partial-rescope-spec.md',
             note: 'These canonical epics\' `must` text was narrowed in-place in first100-requirements-matrix.md to the delta not yet covered by upstream 4e84901e, per the rescope spec\'s own per-epic evidence (BLOCKED-012 discipline: only a MUST fragment with direct, fully-covering upstream evidence was removed; a partially-covered fragment was kept in full). acceptance/files/validation/nonGoals were left untouched for every epic rescoped so far. priorMatrixSha256 is the matrix doc\'s content hash BEFORE this rescope; sourceShas above reflects the state AFTER.',
+          },
+        }
+      : {}),
+    ...(Object.keys(CLAUSE_MOVEMENTS).length > 0
+      ? {
+          clauseMovements: {
+            destinations: Object.keys(CLAUSE_MOVEMENTS).sort(),
+            count: Object.values(CLAUSE_MOVEMENTS).reduce((n, entries) => n + entries.length, 0),
+            priorMatrixSha256: PRE_CLAUSE_MOVEMENT_MATRIX_SHA,
+            note: 'Clauses re-anchored to the epic that owns the mechanism, by approved ruling. Each destination epic carries the origin, date, basis and reason in its own `clauseProvenance`; priorMatrixSha256 is the matrix doc\'s content hash BEFORE the movements, sourceShas above reflects the state AFTER.',
           },
         }
       : {}),

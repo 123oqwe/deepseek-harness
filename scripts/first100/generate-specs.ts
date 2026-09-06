@@ -132,6 +132,18 @@ interface Epic {
    * described it).
    */
   provenance?: { kind: string; source: { path: string; sha256: string }; rationaleDoc: string; authorization: string }
+  /**
+   * Clauses this epic holds that the pinned v1.0 YAML wrote under a DIFFERENT
+   * epic, moved by an approved ruling.
+   *
+   * Coverage is a claim about the program, not about one epic: a clause the
+   * source doc filed under the wrong owner is still covered when its real
+   * owner carries it. Without this, moving a clause would read as one epic
+   * dropping a source clause and another inventing one, and the only way to
+   * keep the report green would be to declare both epics rescoped — which
+   * would hide the movement instead of recording it.
+   */
+  clauseProvenance?: { clause: string; movedFrom: string; movedAtUtc: string; basis: string; reason: string }[]
 }
 export interface Registry {
   frozenBaseline: { sha: string; shortSha: string; label: string }
@@ -1767,6 +1779,39 @@ export function scanYamlClauses(yamlText: string): Map<string, Record<ClauseChan
  *  vendored v1.0 YAML: unmatched source clauses = 0, undocumented invented
  *  clauses = 0. The 156 documented default-boundary non-goals (78 epics whose
  *  YAML lacks non_goals) are surfaced separately, never hidden. */
+/** One clause the registry moved between epics, and the two epics it names. */
+interface RelocatedClause {
+  /** The epic the pinned YAML wrote the clause under. */
+  readonly from: string
+  /** The epic that carries it now. */
+  readonly to: string
+}
+
+/**
+ * Index every `clauseProvenance` movement by channel and canonical clause text.
+ *
+ * The key is canonicalized the same way the coverage comparison canonicalizes,
+ * so a movement matches exactly the clause the YAML scan produces and nothing
+ * near it. A `movedFrom` this function cannot parse throws rather than being
+ * skipped: a movement nobody can locate would silently reopen the unmatched /
+ * invented pair it exists to close.
+ * @param reg - the registry to scan.
+ * @returns the movements, keyed `channel:canonicalClause`.
+ */
+function collectRelocatedClauses(reg: Registry): Map<string, RelocatedClause> {
+  const moves = new Map<string, RelocatedClause>()
+  for (const epic of reg.epics) {
+    for (const entry of epic.clauseProvenance ?? []) {
+      const parsed = /^(P\d-\d\d) (must|acceptance|nonGoals)\[\d+\]$/.exec(entry.movedFrom)
+      if (!parsed) {
+        throw new Error(`clause-coverage: ${epic.id} clauseProvenance.movedFrom "${entry.movedFrom}" does not name an epic and channel`)
+      }
+      moves.set(`${parsed[2]}:${canonicalClause(entry.clause)}`, { from: parsed[1] as string, to: epic.id })
+    }
+  }
+  return moves
+}
+
 export function renderClauseCoverageReport(reg: Registry, yamlText: string): string {
   // BLOCKED-037: an epic tagged provenance (BASE-ALIGN-v2 new-gap) never
   // had a v1.0 YAML clause to begin with -- it postdates that pinned
@@ -1787,6 +1832,7 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
   const canonicalEpics = reg.epics.filter(e => !e.provenance)
   const newGapEpics = reg.epics.filter(e => e.provenance)
   const rescope23Ids = new Set(reg.provenance.baseAlignV2Rescope23?.epicIds ?? [])
+  const relocated = collectRelocatedClauses(reg)
 
   const scanned = scanYamlClauses(yamlText)
   const parsed = parseYaml(yamlText) as { issues?: Array<Record<string, unknown>> }
@@ -1841,7 +1887,11 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
       const unmatchedSource: ClauseBinding[] = []
       for (const item of yamlSourceItems) {
         for (const clause of splitClauses(item.text)) {
-          if (!projectedCanon.has(canonicalClause(clause))) {
+          const canon = canonicalClause(clause)
+          // A clause this epic no longer holds is still covered when an
+          // approved movement gave it to another epic; only a clause nobody
+          // carries is unmatched.
+          if (!projectedCanon.has(canon) && relocated.get(`${channel}:${canon}`)?.from !== e.id) {
             unmatchedSource.push({ text: clause, digest: sha256(clause), span: item.span })
           }
         }
@@ -1861,6 +1911,21 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
               span = item.span
               break
             }
+          }
+          clauses.push({ text: clause, digest: sha256(clause), span })
+        } else if (relocated.get(`${channel}:${canon}`)?.to === e.id) {
+          // Sourced, but from the span the YAML filed under the epic it was
+          // moved off: the clause traces to the pinned document either way.
+          const move = relocated.get(`${channel}:${canon}`) as RelocatedClause
+          let span: ClauseSpan | null = null
+          for (const item of scanned.get(move.from)?.[channel] ?? []) {
+            if (splitClauses(item.text).some(c => canonicalClause(c) === canon)) {
+              span = item.span
+              break
+            }
+          }
+          if (span === null) {
+            throw new Error(`clause-coverage: ${e.id} claims ${channel} clause moved from ${move.from}, but that epic's YAML has no such clause`)
           }
           clauses.push({ text: clause, digest: sha256(clause), span })
         } else if (isDocumentedBoundary) {
