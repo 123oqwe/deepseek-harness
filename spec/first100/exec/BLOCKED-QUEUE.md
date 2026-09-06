@@ -2901,3 +2901,28 @@ The delegate proposed a register of such fields. **The register would have been 
 The rest are mostly evidence written for review, which is legitimate. The scan's value is that the three above surfaced without anyone remembering to look, and that the next six will surface the same way.
 
 **Not fixed here.** Making `treeSha` verifiable means deciding what it should be checked against — the tree at freeze time no longer exists on a later checkout — and that is a design question, not a repair.
+
+## BLOCKED-120 — P9-05's Provider stage is bigger than "apply the factor to the estimate", and an existing test says so
+
+**Status:** OPEN, needs a decision about the anchored branch. The attempted wiring was reverted, not shipped.
+
+The Provider stage was scoped as "apply the calibration factor to the estimated baseline, do not touch the fold". That was tried, and `token-meter`'s own suite refused it:
+
+```
+selects a heuristic anchor when provider usage would undercut its scale
+AssertionError: expected 18 to be 14
+```
+
+**Why it broke, and why the test is right.** `measure()` has two branches. When the effective header MATCHES the anchor's, the baseline is the provider's real usage — there is no estimate to correct. When it does not match, the baseline is a fresh heuristic estimate, and that is the branch the factor was applied to. The existing case asserts those two produce the same total for a session with no images, and after the change one was corrected and the other was not.
+
+**The invariant the test defends is real**: with no images in play, a measurement must not depend on which model header it is taken under. A correction applied to one branch and not the other makes the number route-dependent for a reason that has nothing to do with routes.
+
+**So the Provider stage owes a decision the Contract stage did not need:** what the anchored branch does with a correction when its baseline is already a real report. Three candidates, none obviously right, none an executor's to pick alone:
+
+1. **Correct neither branch at measure time** and expose the factor for callers that price speculatively. The measurement stays exactly as it is; the correction becomes advisory.
+2. **Correct only the surface DELTA**, which is heuristic in both branches, and leave both baselines untouched. The anchored branch keeps its real-usage baseline and its delta gets the same treatment as the unanchored one.
+3. **Correct both**, accepting that a real-usage baseline is scaled by a factor derived from itself — which is close to multiplying a measurement by one and would need arguing.
+
+Option 2 looks most consistent from here and is NOT being taken on that basis: the note exists to hand the choice over, not to pre-decide it.
+
+**What this does not change.** The Contract stage stands: the calibration decisions are pinned, mutation-tested, and honest about what one scalar cannot do. The blocked half of P9-05 (must[0], must[2]) is untouched and still needs the tokenizer-source decision (BLOCKED-107).
