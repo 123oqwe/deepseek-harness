@@ -393,3 +393,14 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 3. **NFD 用例的测量规则**:源码里的 NFD 字面量会被 shell/编辑器归一化成 NFC,两个输入进 node 时已是同一个串——用例测的是"同一个串等于自己"。**NFD 一律用 `'é'` 转义构造,不写字面量**;`sensitivityProof.failureSummary` 记这条。这是当天第四次"仪器不回答问的问题",执行者自己抓住的。
 
 **教训归档**:变异证明只证明"套件对这条要求敏感",不证明"这条要求对"。要求本身的对错由 registry 措辞 + 账本 `risk` + 安全后果推演定——本次三者都指向反方向,而 F 用例是在读账本前冻的。
+
+### 7.6 canonical JSON 的收敛归 R1,不进 P2-03(执行者逐份核后,2026-09-06 晚)
+
+执行者按**行为**(排 key + stringify + 是否喂 hash + 是否喂授权)而非名字逐份核,找到 **5 份**(比我按 `function canonical*` 名字扫到的 4 份多 `scripts/release/collect-evidence.mjs:89`),并把两件事分开:
+
+- **漏洞只有一份**:① `action-manifest/canonicalize.ts`——NFC 喂 hash 喂授权。R2 修。
+- **重复四份,无安全问题**:② `scripts/release/baseline-fingerprint.mjs:57`(NFC 只作用于写盘排版,digest 在归一化前对原始字节算完;固定 ASCII 路径,无触发条件)③ `scripts/first100/attest.ts:20`(喂 hash,无 NFC)④ `session-snapshot/suite.ts:641`(测试支持)⑤ `collect-evidence.mjs:89`(喂 sha256,无 NFC)。另 `guard/repeat-tool-reminder/src/index.ts:103`(启发式去重,不喂授权)。
+
+**裁决**:②③⑤ 全在 P0-01/P0-07 的脚本里,正是 **R1 §3.4 attestation-envelope slice 要改写的文件**,收敛归该 slice(它本来就要把 evidence/baseline 改发 Statement+DSSE),不挂 P2-03——否则 P2-03 重观测范围从 C+F 膨胀到五个包。④ 和 repeat-tool-reminder 不动,按 BLOCKED-126 的范围规矩:**下次有 stage 因自己的子句碰到该文件时顺手换库**,不为一条规矩去动没坏的文件。记 BLOCKED-QUEUE 一条 durable pointer。
+
+**扫描方法归档**:找"第二份声明"按行为扫(`sort.*keys|sortKeysDeep|Object\.keys\(.*\)\.sort` + 后接 `stringify` + 喂 `createHash`),名字扫会漏。
