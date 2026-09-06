@@ -118,6 +118,7 @@ jobs:
       # the run proves nothing. One gate is held back, and the runner prints
       # which, why, and what reinstates it, on every run.
       - name: First-100 registry gate set
+        if: always()
         run: pnpm run first100:registry-gates
 
       # Runs BEFORE the suite, because it asks a question the suite cannot: a
@@ -127,9 +128,22 @@ jobs:
       # caught by a person reading. `vitest list` collects without executing, so
       # this costs seconds against the suite that follows.
       - name: Every live frozen case title exists in the tree
+        # Same reasoning as the suite below: a precondition failing should not
+        # also cost the observation.
+        if: always()
         run: pnpm run first100:verify-frozen-titles-in-tree
 
       - name: Full test suite (verbose json reporter — the ledger's observation input)
+        # `always()`, even though the gate steps above are preconditions of this
+        # observation. When the registry gate set first ran in CI it failed for
+        # an environment reason, the suite was skipped, and the run produced NO
+        # observation at all — eleven cells were waiting on it. A gate-set
+        # failure should cost one round, not one observation. The observation is
+        # still unusable for greening while the preconditions are red (the
+        # recomputation gate refuses it), but an observation that exists tells
+        # you how the suite itself did; one that does not exist tells you
+        # nothing.
+        if: always()
         run: |
           mkdir -p .artifacts/first100/observations
           pnpm exec vitest run --reporter=json --outputFile=.artifacts/first100/observations/vitest-report.json --reporter=default
