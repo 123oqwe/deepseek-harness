@@ -19,6 +19,16 @@
  * | INCOMPLETE | at least one frozen case is absent or not passing here |
  * | UNFROZEN | the stage has no freeze entry yet, so there is nothing to verify |
  * | PREMATURE | the epic is not authorized to start yet, whatever its cases show |
+ * | SCHEDULED_BLOCKED | the stage's clause has no subject, and the blocker is on record and still open |
+ * | STALE_BLOCKER | a stage claims a blocker that is no longer open, or does not exist |
+ *
+ * SCHEDULED_BLOCKED is a terminal state the program's own goal names — "every
+ * P9 item VERIFIED **or** scheduled-BLOCKED on record" — not an invention. It
+ * is claimed through `p9-stage-blockers.json`, and the claim is CHECKED: the
+ * referenced entry is read out of the queue and must still say OPEN. Without
+ * that read the mapping would be the next thing written and never consulted,
+ * and a stage would stay blocked for months after its blocker was resolved. A
+ * stale or missing reference is reported as its own state, never as blocked.
  *
  * PREMATURE exists because authorization is not the same question as evidence.
  * Maintainer decision C3 released P9-01…07 to run in parallel with R10 and left
@@ -53,9 +63,31 @@ const REPO_ROOT = resolve(here, '..', '..')
 const COMMAND_FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 const REGISTRY_EXTENSION_PATH = join(REPO_ROOT, 'tests/first100/registry-extension.json')
 const OUTPUT_PATH = join(REPO_ROOT, 'spec/first100/exec/p9-verification.json')
+const STAGE_BLOCKERS_PATH = join(REPO_ROOT, 'spec/first100/exec/p9-stage-blockers.json')
+const BLOCKED_QUEUE_PATH = join(REPO_ROOT, 'spec/first100/exec/BLOCKED-QUEUE.md')
 
 /** Every stage a P9 epic must clear before it counts as verified. */
 const STAGES = ['C', 'P', 'U', 'F']
+
+/**
+ * Whether the queue still records `blockerId` as open.
+ *
+ * Read from the queue itself rather than trusted from the mapping: a blocker
+ * that was resolved must stop excusing the stage that named it, and the only
+ * place that fact lives is the entry's own status line.
+ * @param blockerId - e.g. `BLOCKED-107`.
+ * @returns `'OPEN'`, `'CLOSED'`, or `'MISSING'` when the queue has no such entry.
+ */
+function blockerStatus(blockerId) {
+  const queue = readFileSync(BLOCKED_QUEUE_PATH, 'utf8')
+  // Headings appear as `### BLOCKED-107 — ...` or `## BLOCKED-116 — ...`.
+  const heading = new RegExp(`^#{2,4} ${blockerId}\\b[^\\n]*$`, 'm').exec(queue)
+  if (heading === null) return 'MISSING'
+  const body = queue.slice(heading.index, heading.index + 2000)
+  // Both status spellings occur: `**Status: OPEN, ...` and `**Status:** OPEN`.
+  const status = /\*\*Status:?\*?\*?:?\s*([A-Z-]+)/.exec(body)?.[1] ?? ''
+  return status === 'OPEN' ? 'OPEN' : 'CLOSED'
+}
 
 /** @param {string} text @returns {string} lowercase hex sha256. */
 function sha256(text) {
@@ -89,7 +121,7 @@ function flag(argv, flag_) {
  * @param {readonly string[]} p9Ids - every P9 epic id, from the registry extension.
  * @returns {object[]} one record per (epic, stage), in stage order.
  */
-export function verifyCells(freeze, passing, p9Ids, releasedEpics) {
+export function verifyCells(freeze, passing, p9Ids, releasedEpics, stageBlockers = []) {
   const cells = []
   for (const epic of p9Ids) {
     if (releasedEpics !== undefined && !releasedEpics.has(epic)) {
@@ -99,6 +131,14 @@ export function verifyCells(freeze, passing, p9Ids, releasedEpics) {
       continue
     }
     for (const stage of STAGES) {
+      const blocked = stageBlockers.find(entry => entry.epic === epic && entry.stage === stage)
+      if (blocked !== undefined) {
+        const status = blockerStatus(blocked.blocker)
+        cells.push(status === 'OPEN'
+          ? { epic, stage, status: 'SCHEDULED_BLOCKED', blocker: blocked.blocker, clause: blocked.clause }
+          : { epic, stage, status: 'STALE_BLOCKER', blocker: blocked.blocker, detail: `${blocked.blocker} is ${status}` })
+        continue
+      }
       const frozen = freeze.entries.filter(entry => entry.epic === epic && entry.stage === stage).at(-1)
       if (frozen === undefined) {
         cells.push({ epic, stage, status: 'UNFROZEN' })
@@ -132,10 +172,20 @@ export function foldEpics(cells, p9Ids) {
       return { epic, verifiedStages: [], terminalState: 'PREMATURE' }
     }
     const verified = own.filter(cell => cell.status === 'VERIFIED').map(cell => cell.stage)
+    const blockedStages = own.filter(cell => cell.status === 'SCHEDULED_BLOCKED').map(cell => cell.stage)
+    if (own.some(cell => cell.status === 'STALE_BLOCKER')) {
+      return { epic, verifiedStages: verified, blockedStages, terminalState: 'STALE_BLOCKER' }
+    }
+    // Settled when every stage is either verified or blocked on record. An
+    // epic whose work is done to the edge of what has a subject is finished in
+    // the only sense available to it, and saying so is more honest than leaving
+    // it IN_PROGRESS forever.
+    const settled = verified.length + blockedStages.length === STAGES.length
     return {
       epic,
       verifiedStages: verified,
-      terminalState: verified.length === STAGES.length ? 'VERIFIED' : 'IN_PROGRESS',
+      ...blockedStages.length === 0 ? {} : { blockedStages },
+      terminalState: settled ? (blockedStages.length === 0 ? 'VERIFIED' : 'VERIFIED_OR_BLOCKED') : 'IN_PROGRESS',
     }
   })
 }
@@ -196,7 +246,8 @@ function main() {
 
   const { raw, titles } = parseVitestJsonReport(reportPath)
   const freeze = loadJson(COMMAND_FREEZE_PATH)
-  const cells = verifyCells(freeze, titles, p9Ids, releasedEpics)
+  const stageBlockers = existsSync(STAGE_BLOCKERS_PATH) ? loadJson(STAGE_BLOCKERS_PATH).entries ?? [] : []
+  const cells = verifyCells(freeze, titles, p9Ids, releasedEpics, stageBlockers)
   const epics = foldEpics(cells, p9Ids)
   const record = {
     schema: { name: 'first100-p9-verification', version: '1.0' },

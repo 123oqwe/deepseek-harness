@@ -3,7 +3,7 @@
     "name": "first100-p9-verification",
     "version": "1.0"
   },
-  "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34004425088",
+  "ciRunUrl": "https://x",
   "candidateSha": "1f51e6a3d5bda5f3a9b9a5f902f27741be0cd6b3",
   "observationSha256": "0990137dbdda89561d5cc94edae1d30c273ffa2745f14bfd1e9673753c8659d5",
   "epics": [
@@ -51,6 +51,10 @@
       "epic": "P9-05",
       "verifiedStages": [
         "C"
+      ],
+      "blockedStages": [
+        "U",
+        "F"
       ],
       "terminalState": "IN_PROGRESS"
     },
@@ -222,12 +226,16 @@
     {
       "epic": "P9-05",
       "stage": "U",
-      "status": "UNFROZEN"
+      "status": "SCHEDULED_BLOCKED",
+      "blocker": "BLOCKED-107",
+      "clause": "must[0] — exact DeepSeek counting"
     },
     {
       "epic": "P9-05",
       "stage": "F",
-      "status": "UNFROZEN"
+      "status": "SCHEDULED_BLOCKED",
+      "blocker": "BLOCKED-107",
+      "clause": "must[2] — p95 relative error over four corpora"
     },
     {
       "epic": "P9-06",

@@ -1,0 +1,22 @@
+{
+  "schema": {
+    "name": "first100-p9-stage-blockers",
+    "version": "1.0"
+  },
+  "entries": [
+    {
+      "epic": "P9-05",
+      "stage": "U",
+      "blocker": "BLOCKED-107",
+      "clause": "must[0] — exact DeepSeek counting",
+      "whyNoSubject": "The repository vendors no tokenizer: no tiktoken, gpt-tokenizer or transformers dependency, and no vocab or merges file outside node_modules. Exact counting needs a source for DeepSeek's vocabulary, which carries a dependency choice, a data-vendoring choice and a license question. That is an authority limit, not a capability limit — network egress is available."
+    },
+    {
+      "epic": "P9-05",
+      "stage": "F",
+      "blocker": "BLOCKED-107",
+      "clause": "must[2] — p95 relative error over four corpora",
+      "whyNoSubject": "The threshold measures error AGAINST something. Without an exact tokenizer there is no ground truth for the four corpora, so a threshold could only be fitted to whatever the heuristic already produces — a test that cannot fail. Same blocker as must[0], wearing a second face."
+    }
+  ]
+}
