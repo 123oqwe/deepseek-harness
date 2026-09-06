@@ -256,7 +256,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 前三问(BLOCKED-101):主体在不在执行路径上 / 冻结挂哪 / 每条子句的主体是什么。**第四问在三问之后、第一行代码之前**,答案写进 `clause-subject-audit.json` 该 epic 的 `preFlight.makeVsUse` 字段:`{ verdict, adopted: [...], residual }`。
 
-**来源**:造用账本(artifact `2e874903`)该 epic 那一行——`verdict` / `oss[]`(每条带 `role`)/ `deletedPct` / `residual`。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**
+**来源**:造用账本(artifact `2e874903`)该 epic **整行 16 个字段**,不是两列。开工时必读并逐项回答的七个:`verdict` **和 `verdictSecondary`**(80/109 行有第二判定——"CONTRACT_WRITE + PROVIDER_ADAPT" 意思是契约自己写、provider 接开源,两半分开答)/ `oss[]` 里 `role: adapt` 的每一条**及其 `note`**(note 是接法,不是介绍)/ **`standards[]`**(71/109 行有;是绑定词汇,见 §7.3)/ **`risk`**(109/109 行有;里面有具体禁令,例:P2-03 "do not write a second canonicalizer")/ `residual`(接完还要自己写什么)/ `deletedPct` / `community`(只作设计参考,不接——CATALOG_ADOPT 为 0 已对抗复核)。**账本是判定不是建议**:三路扫描(catalog 2937 / topic 13k / radar 17.5k)+ 扩展点实测。开工时读它,不重判;**账本与 registry 冲突时先问 delegate,不自选。**(2026-09-06 晚修订:本段原只列四个字段,§7 记录了只读四字段造成的漏检。)
 
 | verdict | 动作 |
 |---|---|
@@ -280,7 +280,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 - **registry 改动**:`first100:verify-specs` 9 产物字节一致;`extract-registry --check` 字节一致;每条改动带 `clauseProvenance`(`rewordedFrom` / `filesReducedFrom` / `hotZoneRelocatedFrom`,措辞由执行者按现有 provenance 形状定);`renderClauseCoverageReport` 100/100 不掉
 - **三个 slice**:各自过独立 Reviewer(BLOCKED-010 五视角)+ conformance 用例 + 双向变异证明;**不挂任何 epic 的格子**,作为 infra slice 记在 EXEC-STATE
-- **本令的落地本身**:执行者在 registry 提交里引用本文件路径;本文件不再编辑,后续变更走 BLOCKED-QUEUE 追加
+- **本令的落地本身**:执行者在 registry 提交里引用本文件路径;§0–§6 不再改写,后续只允许**追加带日期的附录章节**(§7 起),其余变更走 BLOCKED-QUEUE 追加
 
 ## 6. 本令不覆盖的
 
@@ -291,3 +291,95 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 - **P9-08 / P9-09**(PREMATURE,R10 后)
 - **7 条已验收行的灵敏度回填**(已下令,等冻结表稳定)
 - **BLOCKED-124**(14 对双语文档,等用户 `/dsh-translate-docs`)
+
+## 7. 附录(2026-09-06 晚):台账全字段核验——只读两列造成的漏检
+
+### 7.0 漏了什么
+
+§1–§4 只用了账本的 `verdict` / `oss[]` / `deletedPct` / `residual` / `planError`。账本每行 16 个字段,漏读的四个各有后果:
+
+| 漏读字段 | 覆盖 | 后果 |
+|---|---|---|
+| `verdictSecondary` | 80/109 行 | "CONTRACT_WRITE + PROVIDER_ADAPT"被我按主判定归为"写",副判定要接的开源没进 §2/§3 |
+| `standards[]` | 71/109 行 | **标准词汇一条都没进整改令**。它们不是库,是字段名/信封形状/URI 格式——先采用者定了,下游 5–15 条 epic 照抄;先采用者没定,下游各自发明 |
+| `risk` | 109/109 行 | 里面有针对该 epic 的具体禁令。P2-03:"**do not write a second canonicalizer**"——执行者写了第四份 |
+| `community` | 47 行覆盖 ≥30% | 只作设计参考(CATALOG_ADOPT=0 已对抗复核);漏读无直接后果 |
+
+用户先前问"前面的 20 个是不是不用管了",我答"不用"。**按全字段核,答错了两条(P0-01 / P0-07),另有八条词汇债、一条代码缺陷。**下面是逐条核验。
+
+### 7.1 已验收 21 条逐条核验
+
+方法:在 `fork/first100-exec@7993092f79` 上 grep **源码 import**(不是 package.json——根 `package.json` 用 `**/` 通配匹配不稳,已校准)和标准词汇;每组 grep 带阳性对照(`from 'vitest'`=957 / `export class`=389)。
+
+| ID | 主+副判定 | adapt 级 OSS → 实际 | standards → 实际 | 结论 |
+|---|---|---|---|---|
+| P0-01 | CONSUMER_WRITE + CONTRACT_WRITE | in-toto Statement:**0** | ResourceDescriptor:**0** | **整改-传播**(§7.2 R1) |
+| P0-02 | KERNEL_WRITE | `@noble/hashes` ✓ | SPIFFE URI:0 | 词汇债 → P8-06 |
+| P0-03 | PROVIDER_ADAPT + PROVIDER_WRITE | dependency-cruiser:**0**(手写图检查器) | — | 沉没成本,不重写(R6) |
+| P0-04 | PROVIDER_ADAPT + REUSE_UPSTREAM | dependency-cruiser:**0** | — | 同上 |
+| P0-05 | PROVIDER_WRITE + CONTRACT_WRITE | 无 adapt(全 reject) | OpenFeature(optional):1 提及 | OK |
+| P0-06 | CONTRACT_WRITE | zod ✓ · ajv ✓(2) | 2020-12/toJSONSchema ✓(5);Confluent BACKWARD/FORWARD 词汇:0(只有 `SCHEMA_MAJOR_MISMATCH`) | 词汇债 → P8-07 |
+| P0-07 | CONTRACT_WRITE + PROVIDER_ADAPT | in-toto/DSSE/SLSA:**0**;`@sigstore/sign`:**0** | 四项标准全 **0**;`scripts/first100/attest.ts` 自造信封 + 自写 `canonicalJson` | **整改-传播**(R1) |
+| P0-08 | QUALIFICATION_REUSE + REUSE_UPSTREAM | fast-check ✓(9 文件);harbor:0 | — | harbor 归 P9-08(它的 adapt 也是 harbor) |
+| P1-01 | CONTRACT_WRITE | semver:**0**——`dshVersionRange` 只查"是字符串"(`plugin-manifest/src/validate.ts:393`),任意垃圾串通过 | VS Code / MV3 词汇:0 | **代码缺陷**(R4) |
+| P1-02 | PROVIDER_ADAPT + CONTRACT_WRITE | `@sigstore/verify`+`bundle` ✓;tuf-js:0(仅 README);CycloneDX:0 | Sigstore bundle ✓;in-toto/SLSA/CycloneDX:0 | 半做:SBOM 与 SLSA provenance 未建,账本 residual 已列;→ P1-03/P1-12 开工时接(R5) |
+| P1-07 | PROVIDER_WRITE + CONTRACT_WRITE | realpath ✓ | 状态名 `untrusted/trusted-read/trusted-execute`(账本 residual 自己提的);safe.directory:0 | OK |
+| P1-08 | PROVIDER_ADAPT + PROVIDER_WRITE | semver:**0** → 自定整数 `runtimeApiRange{min,max}`;fast-check ✓ | — | 设计偏离但自洽(API level 语义,非 semver);记录不改(R7) |
+| P1-09 | CONSUMER_WRITE + QUALIFICATION_REUSE | fast-check ✓ | 保留 scope 词汇:0 | 词汇债(轻) |
+| P2-01 | CONTRACT_WRITE | — | SPIFFE:0(`PrincipalId` 是裸 brand 串);RFC 8693 act:0;`enduser.id`:0 | 词汇债 → P8-06(SPIFFE)/ P7-07(OTel) |
+| P4-01 | PROVIDER_WRITE + CONTRACT_WRITE | — | CloudEvents:0(字段 `id/runId/seq/occurredAt/fromState/toState`);A2A:0 | 词汇债 → P8-05 拥有映射层 |
+| P4-07 | PROVIDER_WRITE + QUALIFICATION_REUSE | fast-check ✓;fake-timers:0 → 注入时钟(等价) | fencing ✓(8) | OK |
+| P4-08 | PROVIDER_WRITE | 全 reject | — | OK |
+| P5-11 | REUSE_UPSTREAM + PROVIDER_WRITE | `experimental/agent-team` 未复用 → 新建 `collaboration/{taskboard,mailbox,blackboard}`;**核实 agent-team 2452 行里 claim/lease/taskboard 0 提及,不是重复造** | PROV 词汇:0(blackboard 有 `provenance` 字段但内含 `author/source`) | 词汇债 → P7-04 |
+| P6-02 | CONTRACT_WRITE + QUALIFICATION_REUSE | fast-check ✓ | PROV:0(`relations` 用 `'derived'/'supersedes'`);bitemporal 半(`validFrom/validUntil` 有,transaction-time 无);DPV:0(有 `purpose/sensitivity` 字段) | 词汇债 → P6-03 拥有 |
+| P6-07 | REUSE_UPSTREAM + PROVIDER_WRITE | keyset ✓;fast-check ✓ | — | OK |
+| P8-01 | CONTRACT_WRITE + REUSE_UPSTREAM | canonicalize:0(`schema-fingerprint.ts` 手排 name);semver:0;zod ✓;noble ✓ | `protocolVersion` ✓(25);JCS:0 | fingerprint 只 hash 自家 surface、不外发比对 → 可接受;记录(R7) |
+
+**汇总**:OK 7 · 词汇债 8 · 整改-传播 2(P0-01 / P0-07)· 代码缺陷 1(P1-01)· 半做 1(P1-02)· 沉没成本 2(P0-03/04)· 设计偏离记录 2(P1-08 / P8-01)。
+
+**P2-03(在途,未签)**:`action-manifest/src/canonicalize.ts` 手写第四份 canonical JSON(另三份:`attest.ts` / `session-snapshot/suite.ts` / `repeat-tool-reminder`),且对**值和 key**都做 NFC 归一化(`:76` `:89`)。RFC 8785 不归一化 Unicode。后果:macOS 路径是 NFD,`é`(NFC)与 `é`(NFD)是**两个文件**;归一化后同 hash → P2-06 把审批绑到 argumentsHash 时,批准一个路径等于批准另一个。这是 validation[2] 禁止的"hash 混淆",只是方向相反。P8-07 Python SDK 用标准 JCS 库(`rfc8785`)算出的 hash 也会和 TS 不一致。→ R2。
+
+### 7.2 裁决
+
+- **R1 · §3.4 新增共用引擎:attestation envelope(in-toto Statement v1 + DSSE)。** 传播最广的标准(15 条未开工 epic 消费:P1-11/12 · P2-03 · P3-07/09 · P4-04/09 · P6-08/09 · P7-01/02/04/05/10 · P8-10),本该由 P0-01/P0-07/P1-02 定下,三条采用数为 0。in-toto 是 spec 无 npm;DSSE PAE 编码十行。做法:contract 层小包 `packages/attestation/envelope`——`Statement` zod schema(`_type/subject[]/predicateType/predicate`,subject 用 ResourceDescriptor)、`dsseEnvelope(payloadType, payload, signer)` 按 spec 做 PAE、verify 走 P0-02 kernel `signatureRoots`;signer 可插(现在 kernel Ed25519,发布走 P1-02 的 Sigstore 验证器)。**P0-07 的 `attest.ts` 改为发 Statement+DSSE、`canonicalJson` 换 §R2 的库**——账本 risk 已判"reshape 可接受,evidence package 是 per-run 产物";P0-01 的 fingerprint 表示对齐 `subject[]`。**落地时点:P4-04 开工前**(最早要 DSSE 签名的消费者);不重开 P0-01/P0-07 的格子,作为 infra slice 记 EXEC-STATE,P0-07 的 evidence 用例随 slice 重观测。
+- **R2 · P2-03 签发前整改(执行者动作,§7.4)。** `canonicalizeArguments` 换 `canonicalize`(erdtman,RFC 8785 参考实现,已在 lock 里作 sigstore 传递依赖);去掉值与 key 的 NFC;fuzz 套件保留但改为**对库的 conformance**(性质:key 顺序 / 数字拼写 / `é` 与 `é` 字面等价 → 同 hash;NFC≠NFD → **不同** hash)。validation[2] 措辞按 C11 A 类由我改(§7.4 给原文)。C 阶段冻结用例 supersede,重观测;U/U.1/F 不动。另三份手写 canonicalJson:`attest.ts` 随 R1 换;`session-snapshot` / `repeat-tool-reminder` 不做安全绑定,不动,记 BLOCKED-QUEUE。
+- **R3 · 词汇债不重开已验收行;"首个跨线消费者"拥有对齐。** 规则:词汇在**第一次跨进程/跨语言/跨系统**时必须是标准名,内部字段名可保留但要有单向映射函数并冻结用例。所有权:SPIFFE → P8-06;CloudEvents → P8-05(P4-06 的 dedup-on-id 可直接用现有 `id`);PROV-DM → P7-04(ClaimGraph)与 P6-03;Confluent 兼容词汇 → P8-07;OTel `enduser.id`/`gen_ai.*` → P7-07。写进各拥有者 epic 的 `preFlight.makeVsUse.standardsOwned`。
+- **R4 · P1-01 代码缺陷:`dshVersionRange` 未校验。** E 类(不改 registry)。挂到 P1-03(lockfile 本来要解析 range):加 `semver.validRange`,无效即 manifest 拒绝;冻结一个 `dshVersionRange: "not a range"` 被拒的用例。
+- **R5 · P1-02 半做部分**(SBOM/CycloneDX、SLSA provenance、tuf-js 根更新)归 P1-03(lockfile 与 SBOM 同源)与 P1-12(信任等级要 SLSA level)。不重开 P1-02。
+- **R6 · P0-03/P0-04 不重写。** 手写检查器在跑、有变异证明、无下游传播;为 deletedPct 重写等于拿工作的东西换风险。记录为"账本判 adapt 未采用"的两条,**不算整改项**。
+- **R7 · P1-08 整数 API level、P8-01 手排 fingerprint:记录不改。** 前者是自洽的另一种版本语义(账本推荐 semver 是默认不是必须);后者只 hash 自家 surface 且不外发比对。若 P8-07 Python 端需要复算 fingerprint,届时换 JCS(R3 规则自动触发)。
+
+### 7.3 标准词汇传播链(从账本算的,不是记忆)
+
+"首个采用者"按 registry 顺序;**已验收采用者**列里的行是 §7.1 核过的:
+
+| 标准族 | 首个采用者 | 已验收采用者(实际采用?) | 未开工消费者 |
+|---|---|---|---|
+| in-toto / DSSE / SLSA | P0-01 | P0-01 ✗ · P0-07 ✗ · P1-02 半 | P1-11 P1-12 P2-03 P3-07 P3-09 P4-04 P4-09 P6-08 P6-09 P7-01 P7-02 P7-04 P7-05 P7-10 P8-10 |
+| RFC 8785 JCS | P2-03 | P8-01 △(自家 surface) | **P2-03(在途)** P4-03 P4-04 P7-01 P7-05 P8-09 |
+| OTel semconv | P2-01 | P2-01 ✗ | P3-03 P3-10 P5-03 P5-06 P6-05 P7-07 P8-09 |
+| JSON Schema 2020-12 | P0-06 | P0-06 ✓ · P1-01 ✓ | P2-11 P4-02 P5-03 P5-05 P7-01 P8-07 |
+| MCP(ToolAnnotations / initialize / elicitation) | P2-03 | P4-01 ✓ · P8-01 ✓ | P2-03 P2-04 P2-12 P4-05 P8-04 |
+| ACP | P2-06 | — | P2-06 P2-07 P2-12 P5-06 P5-09 P8-04 |
+| OCI runtime-spec / image-spec | P3-01 | — | P3-01 P3-02 P3-08 P3-10 P5-05 P6-09 |
+| A2A | P4-01 | P4-01 ✗ | P4-05 P5-05 P5-06 |
+| CloudEvents | P4-01 | P4-01 ✗ | P4-06 P8-04 P8-05 |
+| SPIFFE | P0-02 | P0-02 ✗ · P2-01 ✗ | P3-06 P3-09 P8-06 |
+| AuthZEN | P2-03 | — | P2-03 P2-05 P2-07 |
+| W3C PROV-DM | P5-11 | P5-11 ✗ · P6-02 ✗ | P6-09 P7-04 |
+| RFC 6902 JSON Patch | P4-13 | — | P4-13 P7-08 |
+| Idempotency-Key / K8s 资源模型 / W3C DPV / OpenFeature | P4-12 / P8-02 / P6-02 / P0-05 | — / — / ✗ / △ | P8-03 / P8-03 / P6-10 / P7-10 |
+
+**规则(写进 §4.1 第四问)**:一条 epic 开工时,它 `standards[]` 里的每个词汇,先查这张表——**自己是首个采用者就定形状并冻结一个 schema 用例;不是就 import 首个采用者的定义,不得再声明一份**(这是 §4.1 "第二份声明"错误的标准版)。
+
+### 7.4 P2-03 整改令(给执行者)
+
+1. `packages/action/action-manifest/src/canonicalize.ts`:`canonicalizeArguments` 改为 `import canonicalize from 'canonicalize'` 后直接调用;删除 NFC 归一化、迭代栈实现、以及"retained copy of the recursive form"的等价测试(库的正确性由库自己的套件验,§4.1)。`canonicalize` 加进 `action-manifest/package.json` 直接依赖(已在 lock 作传递依赖,版本 2.1.0;账本注 4.0.0 ESM 亦可,由执行者按仓库 ESM 约定选,**理由写进 preFlight**)。
+2. 值域声明:JSON only(`JsonValue`),非有限数与 bigint 在进入 `createActionManifest` 前拒绝(账本 risk:"JCS forbids non-finite numbers and big ints — define the argument value domain explicitly")。冻结一个拒绝用例。
+3. conformance 用例(替换现 fuzz 里的等价断言):(a) key 顺序不同 → 同 hash;(b) `1.0` / `1` / `1e0` → 同 hash;(c) `"é"` 与 `"é"` 字面 → 同 hash;(d) **NFC `é` 与 NFD `é` → 不同 hash**(这条是安全边界,必须冻结并做变异:把 (d) 断言反向,套件必须红)。
+4. registry P2-03 validation[2] 措辞(C11 A 类,delegate 裁决,`rewordedFrom` 记原文):
+   - 原:「fuzz canonicalizer,禁止 key order/Unicode/number 表示导致 hash 混淆。」
+   - 新:「canonicalizer 遵循 RFC 8785(JCS):key 顺序、数字拼写、JSON 转义拼写(`é` 与字面 `é`)不同的同一 JSON 值得到相同 hash;不同 code point 序列(含 NFC 与 NFD)是不同值,必须得到不同 hash。fuzz 覆盖以上四类。」
+   - 计入 `planCorrectedClauses`(用户规则:reword 单独计数)。
+5. 冻结:C 阶段受影响用例 **supersede**(替换,BLOCKED-103),不 supplement;`sensitivityProof` 记 (d) 的反向变异;U/U.1/F 的冻结不动,但 U 的 `argumentsHash` 期望值若在 fixture 里写死,随之更新并说明。
+6. 完成后 C 重观测 → 我跑四谓词 → 签。**在此之前不签 P2-03,P2-04 不开。**
