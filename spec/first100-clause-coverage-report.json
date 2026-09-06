@@ -15,7 +15,9 @@
     "channelsTotal": 300,
     "unmatchedSourceClauses": 0,
     "inventedUndocumentedClauses": 0,
-    "inventedDocumentedDefaultBoundaryClauses": 156
+    "inventedDocumentedDefaultBoundaryClauses": 156,
+    "planCorrectedClauses": 2,
+    "supersededSourceClauses": 2
   },
   "epics": {
     "P0-01": {
@@ -5029,15 +5031,18 @@
         "sourceCount": 4,
         "projectedCount": 4,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam",
+            "digest": "de478e7bb25b944c55e5c4e894c51493687943ffd79680af2fcb7e65ea91de2c",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
-            "text": "事务性写入 domain event 与 outbox",
-            "digest": "1308578a5e700cccf410284e61a82c3cba43c9c5f445fc8d9cf999ebe3fe2fab",
-            "span": {
-              "startLine": 7499,
-              "endLine": 7499
-            }
+            "text": "domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam",
+            "digest": "de478e7bb25b944c55e5c4e894c51493687943ffd79680af2fcb7e65ea91de2c",
+            "span": null
           },
           {
             "text": "dispatcher 发送后用 idempotent receipt 标记。",
@@ -5069,15 +5074,18 @@
         "sourceCount": 3,
         "projectedCount": 3,
         "unmatchedSource": [],
-        "invented": [],
+        "invented": [
+          {
+            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。",
+            "digest": "1785a9c58f5014569bed097f8f2cbb5bbfaae1c02635aefa91777de7d3753f92",
+            "classification": "plan-correction"
+          }
+        ],
         "clauses": [
           {
-            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect。",
-            "digest": "70b0aa5c148b180f2fddb9e50a5fa4dd3b054b6943522bb4a2c2c2031d820ab1",
-            "span": {
-              "startLine": 7503,
-              "endLine": 7503
-            }
+            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。",
+            "digest": "1785a9c58f5014569bed097f8f2cbb5bbfaae1c02635aefa91777de7d3753f92",
+            "span": null
           },
           {
             "text": "未送达消息可查询和重放。",

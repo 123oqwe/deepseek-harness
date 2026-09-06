@@ -52,7 +52,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = 'dfbc242b17c8913335eb96915903588fb5a8d8f822065b06cbc2d76fe6c852bf'
+const MATRIX_SHA = '7ddeb57f17bf657e1715660a13077e6719eb27100a9f7fc9ee77843960f629ff'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -133,7 +133,7 @@ for (const cited of CITED_SOURCE_SHAS) {
  * @returns its provenance entries, movements first.
  */
 function clauseProvenanceFor(id) {
-  const entries = [...(CLAUSE_MOVEMENTS[id] ?? [])]
+  const entries = [...(CLAUSE_MOVEMENTS[id] ?? []), ...(CLAUSE_REWORDS[id] ?? [])]
   for (const split of CLAUSE_SPLITS) {
     for (const part of split.parts) {
       if (part.epic !== id) continue
@@ -178,6 +178,46 @@ const RESCOPE23_EPIC_IDS = ['P3-03', 'P3-07', 'P4-05', 'P4-10', 'P5-07', 'P5-11'
  * Every entry is checked against the extracted MUST text below: a record whose
  * clause the matrix does not actually give that epic fails the extraction.
  */
+
+/**
+ * Clauses REWORDED against the pinned source, because the plan was wrong about
+ * reality.
+ *
+ * The third and most consequential provenance kind. A MOVEMENT keeps a clause
+ * verbatim under a new owner; a SPLIT divides a compound clause between owners;
+ * both still trace every word to the pinned document. A REWORD does not. Its
+ * text appears in no source, and it says the source was mistaken.
+ *
+ * That distinction is not bookkeeping. Until 2026-09-06 every registry clause
+ * traced verbatim to a pinned document, and the coverage report's whole meaning
+ * rested on it. A reword breaks that for the first time, so it is counted and
+ * reported as its own category rather than dressed as sourced -- ruled by the
+ * user directly on 2026-09-06, who declined to let corrections hide inside the
+ * matched count.
+ *
+ * Each entry names the EVIDENCE, not just the intent: a plan correction with no
+ * observation behind it is an opinion overwriting a pinned document.
+ */
+const CLAUSE_REWORDS = {
+  'P4-06': [
+    {
+      clause: 'domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam',
+      rewordedFrom: '事务性写入 domain event 与 outbox',
+      channel: 'must',
+      rewordedAtUtc: '2026-09-06T12:00:00.000Z',
+      basis: 'Rectification order §A (spec/first100/exec/plan-rectification-2026-09-06.md), delegate ruling of 2026-09-06, executed under the C11 delegation with the user\'s direct answer on the reword category.',
+      evidence: 'Independently verified in the tree: `commitWithOutbox` (packages/run/message-bus/src/index.ts) calls `sink.enqueueAll([event, ...records])` -- one BATCH, not one transaction. BLOCKED-089 already recorded that recovery truncates to the last COMPLETE record rather than a batch boundary, so a mid-batch crash can keep the domain event and drop its outbox row. `BEGIN IMMEDIATE` exists in this repository (session-query-sqlite) but not on this path, which is what the new wording names.',
+    },
+    {
+      clause: '在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。',
+      rewordedFrom: '在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect。',
+      channel: 'acceptance',
+      rewordedAtUtc: '2026-09-06T12:00:00.000Z',
+      basis: 'Rectification order §A; same ruling as the must[0] reword above.',
+      evidence: 'The outcome the clause asks for is unchanged -- one business effect. What changed is WHO guarantees it: the transport cannot, and must[2] already required the consumer to deduplicate by message id and epoch. The reword makes the clause name the mechanism the epic actually builds instead of one no transport provides.',
+    },
+  ],
+}
 
 /**
  * Compound source clauses split between the epics that own each mechanism.
@@ -589,8 +629,13 @@ for (const id of ids) {
     ...(clauseProvenanceFor(id).length > 0 ? { clauseProvenance: clauseProvenanceFor(id) } : {}),
   }
   for (const entry of clauseProvenanceFor(id)) {
-    if (!epic.must.includes(entry.clause)) {
-      throw new Error(`${id}: clause movement records "${entry.clause}" but the matrix does not give ${id} that MUST clause -- the doc edit and this record disagree`)
+    // A movement or split is always a MUST clause today; a reword names its own
+    // channel, because P4-06's pair spans `must` and `acceptance`. Checking the
+    // wrong channel would report a real edit as a disagreement, and checking
+    // none would let a record name a clause the matrix never got.
+    const channel = entry.channel ?? 'must'
+    if (!epic[channel].includes(entry.clause)) {
+      throw new Error(`${id}: clause provenance records "${entry.clause}" but the matrix does not give ${id} that ${channel.toUpperCase()} clause -- the doc edit and this record disagree`)
     }
   }
   epics.push(epic)

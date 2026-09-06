@@ -1059,6 +1059,8 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
       unmatchedSourceClauses: 0,
       inventedUndocumentedClauses: 0,
       inventedDocumentedDefaultBoundaryClauses: 156,
+      planCorrectedClauses: 2,
+      supersededSourceClauses: 2,
     })
     expect(Object.keys(report.epics).length).toBe(100)
     // BASE-ALIGN-v2 23-PARTIAL: a rescoped epic legitimately diverges from
@@ -1071,7 +1073,13 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
         const c = channels[name]
         if (!rescopedIds.has(id)) {
           expect(c.unmatchedSource.length, `${id}/${name} unmatched`).toBe(0)
-          for (const inv of c.invented) expect(inv.classification, `${id}/${name} classification`).toBe('documented-default-boundary')
+          // Two classifications are accounted-for: a documented default
+          // boundary, and an approved plan correction. `undocumented` is the
+          // only one that means nothing explains this clause.
+          for (const inv of c.invented) {
+            expect(['documented-default-boundary', 'plan-correction'], `${id}/${name} classification`)
+              .toContain(inv.classification)
+          }
         }
         for (const clause of c.clauses) expect(clause.digest, `${id}/${name} digest`).toMatch(/^[0-9a-f]{64}$/)
       }
@@ -1212,8 +1220,43 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     if (entry === undefined) throw new Error('provenance record is empty')
     delete entry.movedFrom
     delete entry.splitFrom
+    delete entry.rewordedFrom
     expect(() => renderClauseCoverageReport(mutated, readYaml()))
-      .toThrow(/names neither movedFrom nor splitFrom/)
+      .toThrow(/names neither movedFrom, splitFrom nor rewordedFrom/)
+  })
+
+  it('green: a plan correction is counted apart from matched and from invented alike', () => {
+    // The user's ruling of 2026-09-06, mechanised. A reword replaces the pinned
+    // source's wording because the plan was wrong about reality, so it is
+    // neither sourced nor an invention, and reporting it as either would
+    // misdescribe an approved correction — one as a defect, the other as a
+    // provenance it does not have.
+    const { reg } = readRegistry()
+    const report = parseReport(renderClauseCoverageReport(reg, readYaml()))
+    expect(report.totals.planCorrectedClauses).toBeGreaterThan(0)
+    expect(report.totals.planCorrectedClauses).toBe(report.totals.supersededSourceClauses)
+    // And it stays out of BOTH other counts.
+    expect(report.totals.inventedUndocumentedClauses).toBe(0)
+    expect(report.totals.unmatchedSourceClauses).toBe(0)
+    const corrected = report.epics['P4-06']?.must.invented.filter(i => i.classification === 'plan-correction')
+    expect(corrected).toHaveLength(1)
+  })
+
+  it('green: dropping the reword record turns the same registry into one unmatched and one undocumented clause', () => {
+    // The positive control. Without it, the counts above could be produced by a
+    // report that classified everything as a correction — and the whole point
+    // is that a correction is the ONLY divergence allowed to be silent about
+    // its source, so it must be the record that earns it.
+    const { reg } = readRegistry()
+    const mutated: Registry = JSON.parse(JSON.stringify(reg)) as Registry
+    const holder = mutated.epics.find(e => (e.clauseProvenance ?? []).some(x => x.rewordedFrom !== undefined))
+    if (holder === undefined) throw new Error('registry records no reword')
+    holder.clauseProvenance = (holder.clauseProvenance ?? []).filter(x => x.rewordedFrom === undefined)
+    if (holder.clauseProvenance.length === 0) delete holder.clauseProvenance
+    const report = parseReport(renderClauseCoverageReport(mutated, readYaml()))
+    expect(report.totals.unmatchedSourceClauses).toBeGreaterThan(0)
+    expect(report.totals.inventedUndocumentedClauses).toBeGreaterThan(0)
+    expect(report.totals.epicsMapped).toBeLessThan(100)
   })
 
   it('red: a registry epic absent from the YAML fails closed', () => {

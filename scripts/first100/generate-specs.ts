@@ -150,6 +150,17 @@ interface Epic {
     movedAtUtc?: string
     /** Present on a SPLIT: a compound source clause divided between owners, with no verbatim survivor. */
     splitFrom?: string
+    /**
+     * Present on a REWORD: the pinned source's own wording, which this clause
+     * REPLACES because the plan was wrong about reality. Unlike a movement or a
+     * split, the new text traces to no document, which is why it is counted as
+     * its own category rather than as matched.
+     */
+    rewordedFrom?: string
+    /** A reword names its channel, since P4-06's pair spans `must` and `acceptance`. */
+    channel?: string
+    /** What was observed in the tree that makes the correction true. */
+    evidence?: string
     sourceClause?: string
     siblingClauses?: string[]
     splitAtUtc?: string
@@ -1588,7 +1599,13 @@ export interface ClauseBinding {
 export interface InventedClause {
   text: string
   digest: string
-  classification: 'documented-default-boundary' | 'undocumented'
+  /**
+   * `plan-correction`: this clause REPLACES the pinned source's own wording
+   * because the plan was wrong about reality. It is not sourced and is not an
+   * invention — counted apart from both so a correction can never be read as
+   * either (user ruling, 2026-09-06).
+   */
+  classification: 'documented-default-boundary' | 'undocumented' | 'plan-correction'
 }
 
 export interface ClauseChannelReport {
@@ -1816,9 +1833,10 @@ function collectRelocatedClauses(reg: Registry): Map<string, RelocatedClause> {
   const moves = new Map<string, RelocatedClause>()
   for (const epic of reg.epics) {
     for (const entry of epic.clauseProvenance ?? []) {
+      if (entry.rewordedFrom !== undefined) continue
       const origin = entry.movedFrom ?? entry.splitFrom
       if (origin === undefined) {
-        throw new Error(`clause-coverage: ${epic.id} clauseProvenance entry names neither movedFrom nor splitFrom`)
+        throw new Error(`clause-coverage: ${epic.id} clauseProvenance entry names neither movedFrom, splitFrom nor rewordedFrom`)
       }
       const parsed = /^(P\d-\d\d) (must|acceptance|nonGoals)\[\d+\]$/.exec(origin)
       if (!parsed) {
@@ -1839,6 +1857,31 @@ function collectRelocatedClauses(reg: Registry): Map<string, RelocatedClause> {
     }
   }
   return moves
+}
+
+/**
+ * Index every reworded clause, in both directions.
+ *
+ * Keyed `epic:channel:canonicalClause` for the NEW text and, separately, for the
+ * source wording it replaces — the report has to recognise both: the projected
+ * clause must not read as invented, and the pinned source's clause must not read
+ * as dropped. Neither is true, and reporting either would misdescribe an
+ * approved correction as a defect.
+ * @param reg - the registry to scan.
+ * @returns the new-text keys and the superseded-source keys.
+ */
+function collectPlanCorrections(reg: Registry): { readonly corrected: Set<string>; readonly superseded: Set<string> } {
+  const corrected = new Set<string>()
+  const superseded = new Set<string>()
+  for (const epic of reg.epics) {
+    for (const entry of epic.clauseProvenance ?? []) {
+      if (entry.rewordedFrom === undefined) continue
+      const channel = entry.channel ?? 'must'
+      corrected.add(`${epic.id}:${channel}:${canonicalClause(entry.clause)}`)
+      superseded.add(`${epic.id}:${channel}:${canonicalClause(entry.rewordedFrom)}`)
+    }
+  }
+  return { corrected, superseded }
 }
 
 export function renderClauseCoverageReport(reg: Registry, yamlText: string): string {
@@ -1862,6 +1905,7 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
   const newGapEpics = reg.epics.filter(e => e.provenance)
   const rescope23Ids = new Set(reg.provenance.baseAlignV2Rescope23?.epicIds ?? [])
   const relocated = collectRelocatedClauses(reg)
+  const corrections = collectPlanCorrections(reg)
 
   const scanned = scanYamlClauses(yamlText)
   const parsed = parseYaml(yamlText) as { issues?: Array<Record<string, unknown>> }
@@ -1898,6 +1942,7 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
   let unmatchedTotal = 0
   let undocumentedTotal = 0
   let documentedTotal = 0
+  let correctionTotal = 0
   const divergedClauses: NonNullable<ClauseCoverageReportV11['baseAlignV2Rescope23']>['divergedClauses'] = {}
 
   for (const e of canonicalEpics) {
@@ -1920,7 +1965,8 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
           // A clause this epic no longer holds is still covered when an
           // approved movement gave it to another epic; only a clause nobody
           // carries is unmatched.
-          if (!projectedCanon.has(canon) && relocated.get(`${channel}:${canon}`)?.from !== e.id) {
+          const supersededHere = corrections.superseded.has(`${e.id}:${channel}:${canon}`)
+          if (!projectedCanon.has(canon) && !supersededHere && relocated.get(`${channel}:${canon}`)?.from !== e.id) {
             unmatchedSource.push({ text: clause, digest: sha256(clause), span: item.span })
           }
         }
@@ -1961,6 +2007,9 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
             throw new Error(`clause-coverage: ${e.id} claims a ${channel} clause from ${move.from}, but that epic's YAML has no such clause`)
           }
           clauses.push({ text: clause, digest: sha256(clause), span })
+        } else if (corrections.corrected.has(`${e.id}:${channel}:${canon}`)) {
+          invented.push({ text: clause, digest: sha256(clause), classification: 'plan-correction' })
+          clauses.push({ text: clause, digest: sha256(clause), span: null })
         } else if (isDocumentedBoundary) {
           invented.push({ text: clause, digest: sha256(clause), classification: 'documented-default-boundary' })
           clauses.push({ text: clause, digest: sha256(clause), span: null })
@@ -1977,6 +2026,7 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
         invented,
         clauses,
       }
+      correctionTotal += invented.filter(i => i.classification === 'plan-correction').length
       const undocumentedInvented = invented.filter(i => i.classification === 'undocumented')
       documentedTotal += invented.filter(i => i.classification === 'documented-default-boundary').length
       // BASE-ALIGN-v2 23-PARTIAL: a rescoped epic's own unmatchedSource/
@@ -1997,8 +2047,15 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
         unmatchedTotal += unmatchedSource.length
         undocumentedTotal += undocumentedInvented.length
       }
+      // "Mapped" means every divergence from the pinned source is ACCOUNTED FOR,
+      // not that none exists. A documented default boundary and an approved plan
+      // correction are both accounted for; an undocumented invention is not.
+      // The correction is still counted separately in `totals` — being
+      // accounted for is not the same as being sourced, and the user's ruling
+      // was that a correction must never disappear into the matched count.
       const channelMapped =
-        isRescoped || (unmatchedSource.length === 0 && invented.every(i => i.classification === 'documented-default-boundary'))
+        isRescoped || (unmatchedSource.length === 0
+          && invented.every(i => i.classification === 'documented-default-boundary' || i.classification === 'plan-correction'))
       if (channelMapped) channelsMapped++
       if (!channelMapped) epicFullyMapped = false
     }
@@ -2025,6 +2082,8 @@ export function renderClauseCoverageReport(reg: Registry, yamlText: string): str
       unmatchedSourceClauses: unmatchedTotal,
       inventedUndocumentedClauses: undocumentedTotal,
       inventedDocumentedDefaultBoundaryClauses: documentedTotal,
+      planCorrectedClauses: correctionTotal,
+      supersededSourceClauses: corrections.superseded.size,
     },
     epics,
     newGapEpics: {

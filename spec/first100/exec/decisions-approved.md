@@ -205,3 +205,23 @@
 **What no check can decide is whether the two halves MEAN what the whole meant.** That is the reviewing judgement this ruling records, and it is deliberately not claimed as a mechanical result.
 
 **Not affected.** P2-03's code-mode half stays with P2-03 and remains blocked on BLOCKED-077; its lock is rewritten rather than lifted. No cell is greened or accepted by this entry.
+
+## C13 (2026-09-06) — P4-06's clause is REWORDED: a plan correction, and a new provenance kind the user ruled on directly
+
+**A reword is the third provenance kind, and the first that does not trace to a pinned document.** A MOVEMENT (C11) keeps a clause verbatim under a new owner. A SPLIT (C12) divides a compound clause between owners. Both still trace every word to the source. **A reword replaces the source's wording, and says the source was wrong.**
+
+That distinction was put to the user directly, because it changes what the registry means: until now every clause traced verbatim to a pinned document, and the coverage report's whole meaning rested on that. **The user ruled: proceed, and mark rewords as plan corrections — reported as a distinct, counted category rather than dressed as sourced.** The mechanism follows that ruling exactly.
+
+**What changed on P4-06.**
+
+| | before | after |
+|---|---|---|
+| title | Durable Inbox / Outbox 与 **Exactly-Once** Effect Handoff | Durable Inbox / Outbox 与 **At-Least-Once 投递 + 幂等消费** |
+| must[0] | 事务性写入 domain event 与 outbox | domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam |
+| acceptance[0] | ……消息最终只产生一次业务 effect。 | ……消息最终只产生一次业务 effect，**由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once**。 |
+
+**The evidence, verified in the tree rather than taken from the order.** `commitWithOutbox` calls `sink.enqueueAll([event, ...records])` — one BATCH, not one transaction. BLOCKED-089 had already recorded that recovery truncates to the last COMPLETE record rather than to a batch boundary, so a mid-batch crash can keep the domain event and drop its outbox row. `BEGIN IMMEDIATE` exists in this repository, in `session-query-sqlite`, but not on this path — which is exactly what the new wording names. must[2] already required the consumer to deduplicate by message id and epoch, so the outcome the clause asks for is unchanged; what changed is which layer is named as guaranteeing it.
+
+**A plan correction with no observation behind it is an opinion overwriting a pinned document**, so every reword record carries its evidence field and the extractor refuses one whose clause the matrix does not actually contain — in the declared channel, since this pair spans `must` and `acceptance`. That check caught a real mismatch on the first run: it was looking only at `must`.
+
+**How the report counts it.** `planCorrectedClauses: 2` and `supersededSourceClauses: 2`, both new totals. The corrected clause is classified `plan-correction` — not `undocumented`, which would call an approved correction a defect, and not matched, which would claim a provenance it does not have. A channel counts as mapped when every divergence is ACCOUNTED FOR, which is a weaker and more honest claim than "sourced". Two cases pin it, including the control that deletes the reword record and asserts the same registry falls to one unmatched and one undocumented clause — without which these counts could be produced by a report that called everything a correction.
