@@ -150,6 +150,7 @@
     "verify-control-protocol-schema": "tsx scripts/gen-control-protocol-schema.ts --check",
     "verify-no-artifacts-in-src": "tsx scripts/verify-no-artifacts-in-src.ts",
     "first100:verify-make-vs-use": "node scripts/first100/verify-make-vs-use.mjs",
+    "first100:verify-freeze-in-candidate-tree": "node scripts/first100/verify-freeze-in-candidate-tree.mjs",
     "first100:registry-gates": "node scripts/first100/run-registry-gates.mjs",
     "first100:slice-gate-registry": "npm run first100:slice-gate && npm run first100:verify-specs && npm run first100:test-specs && npm run first100:verify-baseline-file-references && npm run first100:verify-frozen-titles-resolvable && npm run first100:verify-p9-cells && npm run architecture:layers",
     "gen-tool-catalog": "tsx scripts/gen-tool-catalog.ts",

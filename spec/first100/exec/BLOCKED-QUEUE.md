@@ -294,7 +294,17 @@ BLOCKED-095 asked for the freeze-target listing to be mechanical instead of reme
 
 **One caveat, and it runs in the safe direction.** `frozenAtUtc` is hand-written, not machine-captured: the values cluster on round minutes (`21:00:00.000Z`, `08:00:00.000Z`). So this comparison puts a machine-recorded observation time against a self-reported freeze time. A careless or generous timestamp could HIDE lateness; it cannot manufacture it. **38 is therefore a floor, not an estimate.**
 
-**Buildable form (delegate ruling, not yet built):** the greening path records `observationStartedAtUtc = report.startTime` as a field distinct from the row's write time, existing green cells backfill from their own artifacts, and expired artifacts record UNAVAILABLE under the recompute gate's existing rule. The gate is then: the freeze entries live AT THE OBSERVATION have `frozenAtUtc <= observationStartedAtUtc`, resolving the supersession chain as of that moment. Not required before P2-04; recorded here as the shape.
+**SUPERSEDED BY A BETTER PREDICATE, 2026-09-06 (delegate, §11).** The timestamp route was salvageable and is no longer needed. `frozenAtUtc` is hand-written, so any check reading it inherits a field a writer typed; the delegate's second pass separated the two causes with machine times (first-commit time of the freeze record vs the run's `created_at`) and found that of 59 apparent lateness cases only **12** were genuinely recorded after the observation — the other 47 were the field being backfilled. The third pass drops timestamps entirely:
+
+> **Does the candidate SHA's tree contain the cell's live freeze entry?**
+
+A tree either holds the record or does not. Decidable offline, no clock to trust. **Built as `scripts/first100/verify-freeze-in-candidate-tree.mjs`, acceptance predicate (v), and reproduced independently before being accepted: my implementation and the delegate's agree on the failing set exactly — the same 19 of 108 GREEN cells**, which is the standard BLOCKED-087's resolution set for a claim of this kind (two implementations agreeing on the impact set beats either passing its own tests).
+
+The 19: P0-01.F P0-02.C P0-02.F P0-05.C P0-06.U P0-07.C P0-07.F P1-03.F P2-01.F P4-01.P P4-06.C P4-07.F P4-08.F P5-11.C P5-11.F P6-01.C P6-02.F P6-07.P P8-01.C.
+
+**What the 19 do and do not mean.** The results are not false: the titles passed in the cited report, coverage closure holds at 100/100, and `verify-cells-recomputable` still recomputes each verdict. What is missing is the pre-commitment link — the guarantee that the cases were fixed before the run rather than written to fit it. Guarding against a case that asserts nothing is the mutation proof's job; this predicate guards only the ordering, and says so.
+
+**Buildable form of the timestamp check, retained as the record of the route not taken:** the greening path records `observationStartedAtUtc = report.startTime` as a field distinct from the row's write time, existing green cells backfill from their own artifacts, and expired artifacts record UNAVAILABLE under the recompute gate's existing rule. The gate is then: the freeze entries live AT THE OBSERVATION have `frozenAtUtc <= observationStartedAtUtc`, resolving the supersession chain as of that moment. Not required before P2-04; recorded here as the shape.
 
 **Ruled out, and the reason still holds:** fetching each cell's run timestamp from the API at check time. A gate that needs the network to decide cannot run on a clean offline tree, which this repository's own source-plane rule forbids. That was the right call about the API and the wrong basis for calling the whole check impossible.
 
