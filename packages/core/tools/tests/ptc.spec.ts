@@ -814,6 +814,92 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
     expect(settles).toEqual(['call-1:code:1'])
     expect(abandoned).toEqual(['run_code run is over (run_code settled); writer tool call abandoned'])
   })
+  /**
+ * P2-03 must[2], code-mode half — the manifest is not bypassable through the
+ * PTC transport.
+ *
+ * The clause names code-mode embedded tools alongside native calls, and until
+ * 2026-09-06 only the native path appended a manifest. Wiring it was blocked by
+ * BLOCKED-077, which turned out to be a stale `canonicalize.js` shadowing its
+ * own source rather than anything about this transport.
+ */
+  describe('P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest', () => {
+    it('a manifest precedes each dispatch-start, and each names the sub-call that follows it', async () => {
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      registerEcho(ctx)
+      const { agent, events } = fakeAgent()
+      runtime.behavior = async (request) => {
+        const tools = request.bindings[0]!.functions
+        await tools.echo!({ value: 'a' })
+        await tools.echo!({ value: 'b' })
+        return { logs: [], value: 'done' }
+      }
+      await runCode(ctx, 'program', { agent })
+
+      const ordered = events
+        .filter(event => event.type === 'action/manifest-appended' || event.type === 'tool/code-dispatch-start')
+        .map(event => ({ type: event.type, id: (event.data as { actionId?: string; subCallId?: string }).actionId
+        ?? (event.data as { subCallId?: string }).subCallId }))
+      // Pairs, by identity and in order — a single manifest ahead of a program's
+      // whole run would leave every later dispatch unmanifested.
+      expect(ordered).toStrictEqual([
+        { type: 'action/manifest-appended', id: 'call-1:code:1' },
+        { type: 'tool/code-dispatch-start', id: 'call-1:code:1' },
+        { type: 'action/manifest-appended', id: 'call-1:code:2' },
+        { type: 'tool/code-dispatch-start', id: 'call-1:code:2' },
+      ])
+    })
+
+    it('the manifest records the code-mode origin and the highest-risk default, so the log says which path ran', async () => {
+    // `origin` is what makes must[2]'s three paths distinguishable in the record
+    // afterwards; without it a code-mode dispatch and a native call are the same
+    // line. The unclassifiable default is acceptance[2] on this path.
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      registerEcho(ctx)
+      const { agent, events } = fakeAgent()
+      runtime.behavior = async (request) => {
+        await request.bindings[0]!.functions.echo!({ value: 'a' })
+        return { logs: [], value: 'done' }
+      }
+      await runCode(ctx, 'program', { agent })
+
+      const manifest = events.find(event => event.type === 'action/manifest-appended')?.data as {
+        origin: string
+        capability: string
+        classified: boolean
+        requiresApproval: boolean
+        sequence: number
+      }
+      expect(manifest.origin).toBe('code-mode-embedded')
+      expect(manifest.capability).toBe('echo')
+      expect(manifest.classified).toBe(false)
+      expect(manifest.requiresApproval).toBe(true)
+      expect(manifest.sequence).toBe(1)
+    })
+
+    it('a dispatch abandoned before it starts writes NO manifest, so the log records no action that never happened', async () => {
+    // The manifest is appended at `start`, not at binding entry. A queued call
+    // the run settlement abandons never executes, and a manifest for it would
+    // be a record of an execution that did not occur — the opposite failure
+    // from the one acceptance[0] names, and just as wrong.
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      const exclusive = registerGated(ctx, 'exclusive_write', false)
+      const { agent, events } = fakeAgent()
+      runtime.behavior = async (request) => {
+        const tools = request.bindings[0]!.functions
+        void tools.exclusive_write!({ id: 'a' })
+        void tools.exclusive_write!({ id: 'b' })
+        await expect.poll(() => exclusive.pending()).toBeGreaterThanOrEqual(1)
+        return { logs: [], value: 'returned while calls are still queued' }
+      }
+      await runCode(ctx, 'program', { agent })
+
+      const manifests = events.filter(event => event.type === 'action/manifest-appended')
+      const starts = events.filter(event => event.type === 'tool/code-dispatch-start')
+      // Exactly as many manifests as dispatches that actually started.
+      expect(manifests).toHaveLength(starts.length)
+    })
+  })
 })
 
 describe('the run_code dispatch bridge', () => {
@@ -1716,6 +1802,7 @@ describe('the run_code dispatch bridge', () => {
     expect(result.isError).toBe(true)
     expect(result.error?.info?.code).toBe(TOOL_ABORTED_BEFORE_DISPATCH)
   })
+
 
 })
 

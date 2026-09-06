@@ -25,7 +25,7 @@
 | D. 热区改接法(files[] 变) | 5 | P3-01 · P3-05 · P3-07 · P5-05 · P5-06 |
 | E. 代码级 must-fix(不改 registry) | 1 | P3-12 |
 | F. 已解决,记录即可 | 6 | P8-02 · P8-08 · P8-09 · P5-10 · P2-03 · P4-05 |
-| G. 开工前要定的设计决定 | 6 | P1-05 · P1-06 · P5-04 · P6-01 · P6-08 · P8-06 / P2-05 |
+| G. 开工前要定的设计决定 | 6 | P1-05 · P5-04 · P6-01 · P6-08 · P8-06 · P2-05 |
 
 **分类判据**:改子句的条件是**子句字面要求了一个做不到的东西**;只加约束的条件是**子句字面没错,但实现路径里有一条会走错的岔路**。账本把这两类都标成 planError,registry 改动只落第一类。
 
@@ -176,7 +176,8 @@ must[2]「consumer 按 message id/epoch 去重」不动——它就是幂等消�
 | **P5-04** W11 | `llm/fallback` 事件必须是 **core 事件类型**——`dsh-llm-fallbacks #52` 证明插件声明的事件类型加载不了。断路器用 `cockatiel` 4.0,限流用 `rate-limiter-flexible` 11.2(RateLimiterMemory) | planError |
 | **P6-01** W4 | Mem0 / Zep / Letta 只作可选 provider,其写入变成 MemoryProposal——它们的自动抽取和 P6-01 must「不绕过」矛盾 | planError;P6-01 四格已绿 |
 | **P6-08** W9 | 不用 SQLCipher(要 better-sqlite3,重开 node:sqlite seam)、不用 keytar(archived)。用 Node WebCrypto AES-256-GCM / HKDF + `@noble/*`(已在)+ `@napi-rs/keyring` 1.3 | planError |
-| **P8-06** W17 + **P2-05** W6 | 策略引擎**一次定**:Cedar。P2-10 / P2-05 / P2-08 / P8-06 / P8-09 五条 epic 共用一个引擎 | 见 §3 |
+| **P8-06** W17 | 策略引擎**一次定**:Cedar。P2-10 / P2-05 / P2-08 / P8-06 / P8-09 五条 epic 共用一个引擎 | 见 §3 |
+| **P2-05** W6 | 账本 planError 原文是「gated on BLOCKED-011 which the wave-6 schedule does not show」——**BLOCKED-011 已于 2026-09-01 DE-ESCALATED 并关闭**(三向量 vendor-free 闭合 + 机械门,残留降级为 known-limitation),排期不再受它约束。P2-05 剩下的开工前决定同上一行:Cedar 作为它的引擎,且它是 Cedar 的第一个消费者(§3.1 的 slice 排在它开工之前) | planError 已过时;§3.1 |
 
 ## 3. 三个共用引擎:消费者到来之前先接入
 
@@ -225,6 +226,10 @@ must[2]「consumer 按 message id/epoch 去重」不动——它就是幂等消�
 
 pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· dockerode(P3-08)· git plumbing(P3-11)· cockatiel + rate-limiter-flexible(P5-04)· WebCrypto + noble + keyring(P6-08)· cacache(P7-02)· jose + openid-client(P8-06)· zod(P8-07)· file-type + yauzl(P3-12)
 
+### 账本建议已被事实超越的一条:P2-02(Biscuit,账本 deleted 65%)
+
+账本 2026-09-02 建议 P2-02 接 `eclipse-biscuit/biscuit`。**P2-02 在本令签发时已四格全绿**(C/P/U 于 09-05,F 于 09-06),自有的 capability-token 实现经双向变异证明;它的锁在 vendored Cordis `Fiber` 修复(Option A),与 token 格式无关。**此时改接 Biscuit 是用一段未验证的接线替换一段已验证的实现,不做。** 记在此处是为了让"17 条 PROVIDER_ADAPT 里有 16 条在本令内"这个数字有出处——第 17 条不是漏,是过期。
+
 ## 4. 执行顺序
 
 ```
@@ -255,6 +260,8 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
 
 ## 6. 本令不覆盖的
 
+- **REUSE_UPSTREAM 中无 planError 的 10 条**(P3-03 · P4-10 · P4-11 · P5-09 · P6-06 · P6-10 · P7-08 · P8-03 · P8-05 · P8-10):账本判定"上游已有部分实现",**BASE-ALIGN-v2(2026-09-03)已按 gap-over-upstream 逐条缩范围**(`spec/first100/sources/base-align-v2/23-partial-rescope-spec.md`),registry 现在的 must/files 就是缩后的缺口。本令不再动;开工三问时读 rescope spec 的对应条目即可。
+- **CONTRACT_WRITE / PROVIDER_WRITE / CONSUMER_WRITE 中无 planError 的**:契约和 provider 要自己写,账本没有开源替代,计划没错,不在本令范围。
 - **R10**(131 slice,W19 后串行)——另议
 - **P9-08 / P9-09**(PREMATURE,R10 后)
 - **7 条已验收行的灵敏度回填**(已下令,等冻结表稳定)
