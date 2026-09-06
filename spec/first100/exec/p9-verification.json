@@ -62,12 +62,12 @@
     {
       "epic": "P9-08",
       "verifiedStages": [],
-      "terminalState": "IN_PROGRESS"
+      "terminalState": "PREMATURE"
     },
     {
       "epic": "P9-09",
       "verifiedStages": [],
-      "terminalState": "IN_PROGRESS"
+      "terminalState": "PREMATURE"
     }
   ],
   "cells": [
@@ -102,22 +102,57 @@
     {
       "epic": "P9-02",
       "stage": "C",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 11,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-02 Contract — route templates must[0]: each protocol template carries protocol, endpoint, model, credential ref, and timeout",
+        "P9-02 Contract — route templates must[0]: all three protocol families have a template, and they are distinct",
+        "P9-02 Contract — route templates must[2]: a key pasted where the variable NAME goes is refused",
+        "P9-02 Contract — route templates must[2]: the refusal does NOT echo the suspected key back into a log or a bug report",
+        "P9-02 Contract — route templates must[2]: a template never carries an inline key field of any kind",
+        "P9-02 Contract — route templates must[1]: a missing endpoint names baseURL rather than failing later on a request",
+        "P9-02 Contract — route templates must[1]: a malformed URL is refused, and so is one with a protocol nothing can call",
+        "P9-02 Contract — route templates must[1]: an empty model and a non-positive timeout each name their own field",
+        "P9-02 Contract — route templates an explicit timeout overrides the default rather than being ignored",
+        "P9-02 Contract — route templates must[5]: a template ranks nothing and defaults no route — selection stays the router's",
+        "P9-02 Contract — route templates an unknown template name is not a template name"
+      ]
     },
     {
       "epic": "P9-02",
       "stage": "P",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 4,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-02 Provider — templates resolve through the real config layer acceptance[0]: a settings fragment built from a template resolves to a usable route",
+        "P9-02 Provider — templates resolve through the real config layer acceptance[2]: no configured route at all is the dormant posture, not an error",
+        "P9-02 Provider — templates resolve through the real config layer acceptance[2]: a template route resolves alongside a hand-written route without disturbing it",
+        "P9-02 Provider — templates resolve through the real config layer the credential stays a REFERENCE through resolution, never a materialized value"
+      ]
     },
     {
       "epic": "P9-02",
       "stage": "U",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 2,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-02 Usage — a settings fragment alone activates a template route acceptance[0]: a headless task completes over a mock gateway after three tool calls",
+        "P9-02 Usage — a settings fragment alone activates a template route must[2]: the key reaches the gateway from the environment, and only from there"
+      ]
     },
     {
       "epic": "P9-02",
       "stage": "F",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 2,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-02 Fault — an unserviceable settings fragment stops the run a protocol name nothing implements is refused, naming the route",
+        "P9-02 Fault — an unserviceable settings fragment stops the run a credential reference whose variable is unset fails the request rather than sending an empty key"
+      ]
     },
     {
       "epic": "P9-03",
@@ -154,12 +189,23 @@
     {
       "epic": "P9-03",
       "stage": "U",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 2,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-03 Usage — --model reaches a real dsh --profile headless run acceptance[0]: the same task on two --model values is answered by two different routes",
+        "P9-03 Usage — --model reaches a real dsh --profile headless run acceptance[1]: an unregistered route exits non-zero, names the registered routes, and answers nothing"
+      ]
     },
     {
       "epic": "P9-03",
       "stage": "F",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 1,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-03 Fault — --model against a profile with no registered route says the profile has no routes rather than printing an empty list"
+      ]
     },
     {
       "epic": "P9-04",
@@ -226,7 +272,14 @@
     {
       "epic": "P9-06",
       "stage": "U",
-      "status": "UNFROZEN"
+      "status": "INCOMPLETE",
+      "frozenCases": 3,
+      "matchedCases": 0,
+      "missingCases": [
+        "P9-06 Usage — stream-json is emitted by the product, in the recorded format must[1]: every line parses, events precede exactly one final result line",
+        "P9-06 Usage — stream-json is emitted by the product, in the recorded format must[1]: the emitted envelopes carry the same keys as the recorded SDK fixture",
+        "P9-06 Usage — stream-json is emitted by the product, in the recorded format an unknown --output-format is refused with the accepted list, not silently treated as text"
+      ]
     },
     {
       "epic": "P9-06",
@@ -281,42 +334,42 @@
     {
       "epic": "P9-08",
       "stage": "C",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-08",
       "stage": "P",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-08",
       "stage": "U",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-08",
       "stage": "F",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-09",
       "stage": "C",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-09",
       "stage": "P",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-09",
       "stage": "U",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     },
     {
       "epic": "P9-09",
       "stage": "F",
-      "status": "UNFROZEN"
+      "status": "PREMATURE"
     }
   ]
 }

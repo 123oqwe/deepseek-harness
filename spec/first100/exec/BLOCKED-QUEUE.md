@@ -2783,3 +2783,22 @@ P9-07 acceptance[1] asks for a spend-cap fixture "the same way" as the turn fixt
 2. **Keep it and add a cost source**, which means per-route pricing config with an owner — a larger piece of work than P9-07, and arguably its own epic.
 
 Until then P9-07 acceptance[1] is UNMET and recorded as unmet; must[0]/[1]/[3] and acceptance[0]/[2] are met by `maxTurns`.
+
+## BLOCKED-115 — P9-08 and P9-09 were opened before their wave released them
+
+**Status:** CONTAINED — the code stays, the credit does not, and a gate now reads the field that says so.
+
+Maintainer decision C3 released **P9-01…07** to run in parallel with R10. P9-08 sits in W21 and P9-09 in W22, both recorded in `tests/first100/registry-extension.json` as `parallelWithR10: false`. Both were opened anyway on 2026-09-05: P9-08's Contract stage was written, frozen, and committed (`cb8c2e71b6`), and P9-09's Contract stage was written immediately after.
+
+**Why it happened.** Not a disagreement about the schedule — a failure to consult it. P9-07 finished, and "the next item" was taken as "the next item that may be started". Those are two different sets, and the difference was written in the very file this program maintains. The delegate caught it from the commit title; nothing mechanical did, because `check-ready` gates registry epics and P9 rows are deliberately outside the ledger.
+
+**Why it is not a scheduling preference.** C3 is the user's decision. P9-08 is the task-success-rate benchmark, and its position behind R10 is not arbitrary: the statistical infrastructure it needs is what R10 builds. Starting it early either duplicates part of R10 or builds on a foundation that does not exist yet. Neither the delegate nor the Supervisor may widen an authorization the user granted.
+
+**Handling.**
+
+1. **The freeze entry for P9-08.C stays.** `command-freeze.json` is append-only by its own schema — entries are never edited or removed after freeze — so deleting it would break a stronger rule than the one already broken. It stays in the record, visible, and cannot produce credit.
+2. **`verify-p9-cells.mjs` now reads `parallelWithR10`.** An epic C3 has not released reports **PREMATURE** for every stage, ahead of the freeze lookup, and can never reach VERIFIED however green its cases are. The release set is read from the registry rather than restated in the script, so there is one copy of the decision.
+3. **P9-09.C was never frozen** and is not being frozen. Its module and spec stay on disk, unclaimed, exactly as P9-08's do.
+4. **Neither epic is a candidate again until R10 lands.**
+
+**What this shows.** The same shape as every other finding in this queue: a rule existed, a field recorded it, and nothing read the field. Memory held for seven items and failed on the eighth. The repair is not more care, it is the gate — the field was already there to be read.

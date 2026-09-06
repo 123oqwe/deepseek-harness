@@ -13,11 +13,20 @@
  * derived by `parseVitestJsonReport`, the same function the ledger greens with,
  * so the two can never disagree about what "passing" means.
  *
- * Three outcomes per cell, and only the first is a pass:
+ * Four outcomes per cell, and only the first is a pass:
  *
  * | VERIFIED | every frozen case is present and passing in this observation |
  * | INCOMPLETE | at least one frozen case is absent or not passing here |
  * | UNFROZEN | the stage has no freeze entry yet, so there is nothing to verify |
+ * | PREMATURE | the epic is not authorized to start yet, whatever its cases show |
+ *
+ * PREMATURE exists because authorization is not the same question as evidence.
+ * Maintainer decision C3 released P9-01…07 to run in parallel with R10 and left
+ * P9-08 and P9-09 in W21/W22 behind it; the registry extension records that as
+ * `parallelWithR10`. Both were opened anyway during this program — the failure
+ * was memory, since nothing read that field, and "the next item" is not the
+ * same set as "the next item we may start". This gate reads it, so a cell whose
+ * epic has not been released cannot reach VERIFIED no matter how green it is.
  *
  * An epic reaches `VERIFIED` only when all four stages do. Anything else is
  * reported as what it is; nothing is ever inferred from a sibling stage.
@@ -80,9 +89,15 @@ function flag(argv, flag_) {
  * @param {readonly string[]} p9Ids - every P9 epic id, from the registry extension.
  * @returns {object[]} one record per (epic, stage), in stage order.
  */
-export function verifyCells(freeze, passing, p9Ids) {
+export function verifyCells(freeze, passing, p9Ids, releasedEpics) {
   const cells = []
   for (const epic of p9Ids) {
+    if (releasedEpics !== undefined && !releasedEpics.has(epic)) {
+      // Checked before the freeze lookup: an unreleased epic's cells are not
+      // "unfrozen pending work", they are work that should not have started.
+      for (const stage of STAGES) cells.push({ epic, stage, status: 'PREMATURE' })
+      continue
+    }
     for (const stage of STAGES) {
       const frozen = freeze.entries.filter(entry => entry.epic === epic && entry.stage === stage).at(-1)
       if (frozen === undefined) {
@@ -113,6 +128,9 @@ export function verifyCells(freeze, passing, p9Ids) {
 export function foldEpics(cells, p9Ids) {
   return p9Ids.map((epic) => {
     const own = cells.filter(cell => cell.epic === epic)
+    if (own.every(cell => cell.status === 'PREMATURE')) {
+      return { epic, verifiedStages: [], terminalState: 'PREMATURE' }
+    }
     const verified = own.filter(cell => cell.status === 'VERIFIED').map(cell => cell.stage)
     return {
       epic,
@@ -127,6 +145,10 @@ function main() {
   const registry = loadJson(REGISTRY_EXTENSION_PATH)
   const rows = Array.isArray(registry) ? registry : (registry.epics ?? [])
   const p9Ids = rows.map(row => row.id).filter(id => typeof id === 'string' && id.startsWith('P9-'))
+  // C3's release set, read from the registry rather than restated here: a list
+  // written into this script would be a second copy of the decision, and the
+  // two would agree only until one of them was edited.
+  const releasedEpics = new Set(rows.filter(row => row.parallelWithR10 === true).map(row => row.id))
 
   if (argv.includes('--check')) {
     if (!existsSync(OUTPUT_PATH)) {
@@ -160,7 +182,7 @@ function main() {
 
   const { raw, titles } = parseVitestJsonReport(reportPath)
   const freeze = loadJson(COMMAND_FREEZE_PATH)
-  const cells = verifyCells(freeze, titles, p9Ids)
+  const cells = verifyCells(freeze, titles, p9Ids, releasedEpics)
   const epics = foldEpics(cells, p9Ids)
   const record = {
     schema: { name: 'first100-p9-verification', version: '1.0' },
