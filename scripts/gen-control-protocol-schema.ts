@@ -58,7 +58,8 @@ function main(): void {
   const rendered = renderControlProtocolSchema()
   if (!process.argv.includes('--check')) {
     writeFileSync(ARTIFACT_PATH, rendered, 'utf8')
-    console.log(`gen-control-protocol-schema: wrote spec/control-protocol.schema.json (fingerprint ${JSON.parse(rendered).fingerprint})`)
+    const written = JSON.parse(rendered) as { fingerprint: string }
+    console.log(`gen-control-protocol-schema: wrote spec/control-protocol.schema.json (fingerprint ${written.fingerprint})`)
     return
   }
   const committed = readFileSync(ARTIFACT_PATH, 'utf8')

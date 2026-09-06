@@ -222,9 +222,9 @@ describe('P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同
     // canonicalizer throw would put it out of step with the reference
     // implementation, and the differential case would catch that immediately.
     // The value domain is the manifest's contract; the encoding is JCS's.
-    expect(() => createActionManifest({ ...fixtureRequest(), args: { amount: Number.POSITIVE_INFINITY } as never }))
+    expect(() => createActionManifest({ ...fixtureRequest(), args: { amount: Number.POSITIVE_INFINITY } }))
       .toThrow(/Infinity, which JSON renders as null/)
-    expect(() => createActionManifest({ ...fixtureRequest(), args: { nested: [{ n: Number.NaN }] } as never }))
+    expect(() => createActionManifest({ ...fixtureRequest(), args: { nested: [{ n: Number.NaN }] } }))
       .toThrow(/args\.nested\[0\]\.n is NaN/)
     expect(() => createActionManifest({ ...fixtureRequest(), args: { big: 1n } as never }))
       .toThrow(/is a bigint, which has no JSON form/)
@@ -238,10 +238,10 @@ describe('P2-03 Contract — acceptance[1]: 参数规范化稳定，语义相同
     // `JSON.stringify` renders both as `null`, and the reference implementation
     // does the same. Pinned because "what happens to a value JSON cannot hold"
     // is the kind of edge a hand-written canonicalizer gets wrong silently.
-    expect(canonicalizeArguments({ n: Number.POSITIVE_INFINITY } as never))
-      .toBe(canonicalizeArguments({ n: null } as never))
-    expect(canonicalizeArguments({ n: Number.NaN } as never))
-      .toBe(canonicalizeArguments({ n: null } as never))
+    expect(canonicalizeArguments({ n: Number.POSITIVE_INFINITY }))
+      .toBe(canonicalizeArguments({ n: null }))
+    expect(canonicalizeArguments({ n: Number.NaN }))
+      .toBe(canonicalizeArguments({ n: null }))
   })
 
   it('numbers in different literal representations of the same value hash identically', () => {

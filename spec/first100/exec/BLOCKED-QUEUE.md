@@ -189,6 +189,18 @@ P8-01 was signed off and accepted under this ruling: the shared titles are a rep
 
 These are NOT open questions. They live here because `## Open` means "waiting on a decision", and an entry that is settled but still binding was being read as unresolved — by people and by a monitor. A directive to follow, terms a future epic must honour, and a resolved defect kept for its lesson are three different things, and none of them is a question.
 
+### BLOCKED-129 — STANDING RULE: diagnose a surviving mutation in cost order — behaviour unchanged, then equivalent mutant, then weak suite
+
+**A mutation that reddens nothing has three possible causes, and they are not equally likely or equally expensive to check.** Take them in this order:
+
+1. **The mutation did not change behaviour.** The edit looked meaningful and was not: a branch nothing reaches, a value already clamped, a field nobody reads. Cheapest to check — read what the mutated line feeds.
+2. **The mutant is genuinely equivalent.** The change produces different code and identical observable behaviour, for a structural reason. P2-03's separator case is the worked example: unquoting an object key could not create a collision, because every value this canonicalizer emits is self-delimiting, so no key spelling can produce another value's bytes. **Record the structural reason; do not rewrite the assertion to chase the mutation** ([BLOCKED-079](#blocked-079)).
+3. **The suite is weak.** Only after the first two are excluded. This is the expensive answer because acting on it means writing cases, and reaching for it first produces cases that assert whatever the mutation happened to touch.
+
+**Why this is written down here, and the honest provenance.** It was proposed on 2026-09-05 and adopted the same day, and it has governed several diagnoses since — but it existed only in cross-session messages. `EPIC-LIFECYCLE.md` §2.2 cited BLOCKED-066 for it, which is a freeze-boundary entry and does not say this. **A rule enforced from memory is the shape [BLOCKED-034](#blocked-034) exists to flag**, and an entry-point document citing a source that does not contain the rule is worse than no citation: the reader who checks finds something unrelated and cannot tell whether they misread or the citation did.
+
+**The counterpart already on record:** a mutation proof shows a suite is sensitive to what it asserts, and says nothing about whether the assertion is correct — see P2-03's C and F freeze notes, where a case was frozen with a valid mutation proof while asserting a security defect.
+
 ### BLOCKED-016 — PROGRAM DIRECTIVE: user has decided to re-anchor the frozen baseline to upstream `4e84901e`; BASE-ALIGN-v2 executes between W3-close and W4-open; **W4 must not open until it completes** (ANSWERED-BY-USER via ANSWERED-BY-DELEGATE(gq-92) relay)
 
 - **When:** 2026-09-01. `guanjieqiao-92` ran an independent background gap analysis (workflow `wf_de508756-1b2`, 11 agents, epic-by-epic against upstream `4e84901e` — 414 commits ahead of this program's frozen baseline `0a53fb55`) and reported the fork has real, unaddressed upstream drift across a meaningful slice of the 109-item registry. The user reviewed the analysis and **decided to re-anchor the frozen baseline to `4e84901e`** — this is a firm, made decision, not a pending option. `guanjieqiao-92` was authorized to set the execution timing, optimizing for "fastest completion, highest quality."
@@ -3120,7 +3132,7 @@ Three findings cost a round each and are recorded in the file so the next attemp
 | **P4-06** | C/P/U/F green | lock-listed, three open findings | **8** |
 | **P4-07** | C/P/U/F green | NOT lock-listed — sign-off was WITHDRAWN, must[3] rests on a clause with no subject; needs registry re-anchoring | **7** |
 | **P8-01** | C/P/U/F green | NOT lock-listed — same withdrawal, same cause at must[4] | **5** |
-| **P1-02** | C/P/U/F green | lock narrowed today: offline half closed, Sigstore half open, and Sigstore is the model C10 chose | **4** |
+| **P1-02** | C/P/U/F green | lock narrowed today: offline half closed, Sigstore half open, and Sigstore is the model C10.1 chose | **4** |
 | **P1-03** | C/P/U/F green | lock-listed, three open findings | **3** |
 | **P6-01** | C/P/U/F green | residual lock, owner P6-03 | **2** |
 | **P4-05** | C/U/F green, P NOT_RUN | lock-listed, acceptance[2] needs P4-07's lease store | **1** |

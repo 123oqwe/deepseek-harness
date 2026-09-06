@@ -156,7 +156,9 @@
   3. **不追溯**：P0-02/P2-01/P0-07 已经完成的用户直接确认（含本条之前的 §C9 等）保持原状，不因本条变更需要重新走一遍。
   4. `decisions-approved.md` 本条为 append-only 新增记录，不改写既有条文；C7§②对"109 项收录范围"等其余保留事项的一般规则不因本条而放宽——本条仅缩小 `BLOCKED-022`/`BLOCKED-024` 这一具体子类的用户直接确认要求，用户随时可一句话收回。
 
-## C10 (2026-09-05) — plugin signing model: Sigstore keyless (delegate ruling, user preference recorded)
+## C10.1 (2026-09-05) — plugin signing model: Sigstore keyless (delegate ruling, user preference recorded)
+
+**Renumbered 2026-09-06 from `C10`, which was already taken** by the 2026-09-02 entry above transferring BLOCKED-022/024 sign-off authority. Two different decisions carrying one identifier is a citation hazard: `EPIC-LIFECYCLE.md` §2.7 and `BLOCKED-QUEUE`'s P1-02 row both cite "C10" meaning THIS entry, while `delegate-signoff.json`'s P1-02 note cites "C10" meaning this one too — but a reader checking the first C10 finds an authority transfer and cannot tell whether the citation or their reading is wrong. The number moves rather than the older entry, because the older one is cited in a signed record.
 
 **Recorded as a delegate ruling with the user's stated preference as its input — NOT as a user approval.** The user's word, relayed by `guanjieqiao-92` from their own session, was the single character **「A」**, answering a two-option question: Sigstore-style keyless, or organization offline signing. The delegate ruled it a type-A technical decision inside their own authority (P1-02 must[0] contains the word "or"; the choice changes no registry row, no scope, and no spend, and the code can change later). The Supervisor records it, and labels it as what it is: **delegate ruling, user preference** — the distinction matters because a relayed word is not an approval, and this file is where that difference has to be visible.
 
