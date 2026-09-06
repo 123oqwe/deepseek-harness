@@ -252,9 +252,29 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
-### BLOCKED-132 — BLOCKED-095's repair cannot be mechanized, because `capturedAtUtc` records when the LEDGER was written, not when the observation happened
+### BLOCKED-133 — P1-03's unlock signal names an observation none of its declared files can make
 
-**State: OPEN, and the useful part is why the obvious check is unbuildable rather than merely unbuilt.**
+**State: OPEN. Needs a files[] decision, same class as BLOCKED-131 and the same class of hazard as BLOCKED-096.**
+
+P1-03's lock says the unlock is *"a case asserting that a profile whose lock was written by `dsh plugin` is REFUSED at boot when a digest drifts"*, and gives the reason it cannot be written: **no lock has been produced on a real profile.**
+
+**Two measurements change that picture, and they point in opposite directions.**
+
+**First: must[1] is already wired, so a real lock CAN be produced today.** `apps/cli/src/plugin.ts:260` calls `commitProfileLock(dir)` whenever pnpm exits 0, and that function runs the whole transaction — `readCurrentLock` → `buildCandidateLock(observeInstalledPackages(...))` → `planLockCommit` → `writeLockAtomically(join(profileDir, 'plugins.lock.json'), ...)`, with its own diagnostics for a dependency cycle and for a refused commit. The premise "no lock has been produced" holds only because nobody has run it, not because nothing can.
+
+*(Recorded against my own error: this queue and a delegate ruling both briefly carried "`buildCandidateLock`/`writeLockAtomically` have zero call sites", which came from a grep scoped to `packages` with `apps/` left out. The ruling built on it has been withdrawn.)*
+
+**Second, and this is the blocker: nothing tests it, and no file P1-03 declares can.** `commitProfileLock` and `plugins.lock.json` appear **zero** times anywhere under `apps/cli/tests/`. Producing a lock the way the unlock signal requires means running `dsh plugin add` against a real profile directory — a subprocess-and-filesystem exercise. P1-03's only declared test file is `packages/plugin/plugin-lock/tests/lock.spec.ts`, a unit spec for the library; its U stage declares `profile-boot.ts`, `cordis.patch.yml` and `plugin.ts`, and **no test file at all**.
+
+> **The unlock signal names an outcome that only a test file the epic does not declare could observe.** BLOCKED-096's rule made unlock signals name outcomes rather than mechanisms, precisely so a contract could not forbid them. This one names an outcome and is blocked anyway — by the epic's own file list rather than by another contract.
+
+**Not resolved by writing the file anyway.** That is the BLOCKED-131 move a second time, and unlike the `index.ts` scaffold there is no repository-wide convention forcing this file into existence — it is the epic's own work, so B4(f) does not reach it.
+
+**Decision needed:** either P1-03's U (or F) gains a declared e2e file that can drive `dsh plugin` against a throwaway `$DSH_HOME`, or the unlock signal is restated against an observation `lock.spec.ts` can actually make — which would mean accepting a unit-level proxy for "a real profile", and saying so, rather than leaving a signal that reads as end-to-end.
+
+### BLOCKED-132 — `capturedAtUtc` records when the LEDGER was written, not when the observation happened; the freeze-lateness check is buildable from the artifact and says 38 cells were frozen late
+
+**State: OPEN. The original entry concluded the check was unbuildable. That conclusion was wrong and is corrected in place below, with the measurement it was blocking.**
 
 BLOCKED-095 asked for the freeze-target listing to be mechanical instead of remembered, arguing that "a check written for a different defect found this one" beats remembering. The natural mechanical form is: **a stage frozen AFTER its own observation was not frozen in advance.** Every input for it appears to exist — `command-freeze.json` carries `frozenAtUtc`, the ledger's green cells carry `capturedAtUtc`. It does not work, and the reason is a field that says one thing and means another.
 
@@ -268,7 +288,15 @@ BLOCKED-095 asked for the freeze-target listing to be mechanical instead of reme
 
 **What would make it buildable:** the greening path recording the observation's own time — the CI run's `created_at`/`updated_at`, available from the run the cell already cites in `ciRunUrl` — as a field distinct from the row's write time. That is a change to `generate-ledger.mjs`'s green path and to every existing green cell's record, so it is not a side effect of this finding.
 
-**Not attempted as a workaround:** fetching each cell's run timestamp from the API at check time. A gate that needs the network to decide cannot run on a clean offline tree, which this repository's own source-plane rule forbids.
+**CORRECTION, 2026-09-06, delegate-found: "unbuildable" was wrong, and the error was mine.** I ruled out the network route and stopped, without checking whether the observation carries its own time. It does. **The vitest JSON report has a top-level `startTime` (epoch ms)** — verified on a real artifact: `1788217616668` = `2026-08-31T23:06:56.668Z`. It is inside the artifact each green cell already cites, so the check needs no network at all. The reasoning below about the API route stands; the conclusion drawn from it did not, because I treated one blocked route as proof there was none.
+
+**Measured with the REAL observation time, across every green cell whose artifact is still readable: 87 measurable, 21 artifacts expired, and of the 87 — 49 frozen BEFORE their observation, 38 frozen AFTER.** The 38 span eleven epics, most of them ACCEPTED: P0-04, P0-06, P1-03, P1-09, P2-02, P4-05, P4-06, P4-07, P4-08, P4-09, P5-11, P6-02, P8-01. P1-03's C stage — the case BLOCKED-095 was written about — is one row among many rather than the anomaly it was recorded as.
+
+**One caveat, and it runs in the safe direction.** `frozenAtUtc` is hand-written, not machine-captured: the values cluster on round minutes (`21:00:00.000Z`, `08:00:00.000Z`). So this comparison puts a machine-recorded observation time against a self-reported freeze time. A careless or generous timestamp could HIDE lateness; it cannot manufacture it. **38 is therefore a floor, not an estimate.**
+
+**Buildable form (delegate ruling, not yet built):** the greening path records `observationStartedAtUtc = report.startTime` as a field distinct from the row's write time, existing green cells backfill from their own artifacts, and expired artifacts record UNAVAILABLE under the recompute gate's existing rule. The gate is then: the freeze entries live AT THE OBSERVATION have `frozenAtUtc <= observationStartedAtUtc`, resolving the supersession chain as of that moment. Not required before P2-04; recorded here as the shape.
+
+**Ruled out, and the reason still holds:** fetching each cell's run timestamp from the API at check time. A gate that needs the network to decide cannot run on a clean offline tree, which this repository's own source-plane rule forbids. That was the right call about the API and the wrong basis for calling the whole check impossible.
 
 **The narrower check that IS buildable today, and was measured as already passing:** every GREEN cell has at least one live freeze entry — **0 violations**. It is weaker than what BLOCKED-095 asked for, and stating that plainly matters: it would not have caught P1-03's C stage, which HAD a freeze entry, just one written three stages late.
 
