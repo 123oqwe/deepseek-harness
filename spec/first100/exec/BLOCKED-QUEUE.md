@@ -2753,7 +2753,15 @@ The normalization landed and `bash-tool` stayed red. Reading the actual diff —
 
 ## BLOCKED-113 — a 5s timeout in `check-capability-seams.spec.ts`, seen once, not yet registrable
 
-**Status:** RESOLVED as evidence, ROUTED for classification — the re-run at the identical SHA PASSED.
+**Status:** RESOLVED, and the whole investigation was UNNECESSARY — the test was already a registered flake.
+
+**Found 2026-09-06, after the fact.** `tests/architecture/check-capability-seams.spec.ts`'s CI-output case was registered on **2026-09-02** by the delegate, with three occurrences across two SHAs — stronger evidence than the two-occurrence pair recorded here on 2026-09-06. The first move on seeing that failure should have been to grep the registry for the test name. It was not made, and everything below — declining to register on one occurrence, re-running the job to obtain same-SHA divergence, reasoning about standard (b) — reproduced a conclusion that was already on file.
+
+The reasoning was right and the work was wasted, which is a distinction worth keeping: nothing incorrect entered the record, and a second entry changes no decision, because absorption asks only whether a failing test's `fullName` appears in the registry at all.
+
+**The duplicate stays.** This registry is append-only by its own schema, exactly like `command-freeze.json`, so removing it to tidy up would break a stronger rule than the one already broken. `verify-flake-registry.ts` now REPORTS duplicate registrations — deliberately not fatally, since the duplicate is redundant rather than invalid and there is no legal repair that could clear a fatal error. What the report buys is that the next person reading a failure in this file sees "already registered" before spending a rerun on it.
+
+**Original status line, kept:** RESOLVED as evidence, ROUTED for classification — the re-run at the identical SHA PASSED.
 
 Run `33998988841` attempt 2, same candidate `ee247cc6ee`, same suite: 20000 cases, 0 failed. That is BLOCKED-023's standard (b) satisfied by direct proof — a deterministic failure cannot flip to passing on a byte-identical retry. The entry is now registrable, and registering it is C7 scope: it goes to the delegate, not written here.
 

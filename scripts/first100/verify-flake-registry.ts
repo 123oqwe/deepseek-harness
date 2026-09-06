@@ -64,6 +64,31 @@ function main(): void {
     }
   }
 
+  // A test registered twice. Reported rather than fatal, and the distinction is
+  // the point: absorption asks whether a failing test's fullName appears in this
+  // registry, so a second entry for the same test changes no decision — it is
+  // redundant bookkeeping, not a weakened gate. Making it fatal would also make
+  // the repository red with no legal repair, since this registry is append-only
+  // by its own schema and the duplicate cannot be removed.
+  //
+  // It exists because one was added on 2026-09-05 without checking whether the
+  // test was already registered; it was, three days earlier, with STRONGER
+  // evidence. Printing it is what stops the next person from re-deriving a
+  // rerun that has already been done (BLOCKED-113).
+  const seen = new Map<string, string>()
+  const duplicates: string[] = []
+  for (const entry of registry.entries) {
+    const key = `${entry.testFile}\u0000${entry.testFullName}`
+    const first = seen.get(key)
+    if (first === undefined) seen.set(key, entry.registeredAtUtc)
+    else duplicates.push(`${entry.testFile} :: registered ${first} and again ${entry.registeredAtUtc}`)
+  }
+  if (duplicates.length > 0) {
+    console.log(
+      `verify-flake-registry: ${duplicates.length} duplicate registration(s) -- redundant, not invalid:\n  ${duplicates.join('\n  ')}`,
+    )
+  }
+
   if (failures.length > 0) {
     console.error(`verify-flake-registry: ${failures.length} entr${failures.length === 1 ? 'y' : 'ies'} fail the BLOCKED-023 evidence standard:\n  ${failures.join('\n  ')}`)
     process.exit(1)
