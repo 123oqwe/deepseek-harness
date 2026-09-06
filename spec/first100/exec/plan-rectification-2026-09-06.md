@@ -637,6 +637,6 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 2. **一次重观测修 19 格**:run `34063737869` @ `d4034a8f4c` 的树含全部 live 记录;若它对这 19 格的标题全过,执行者从该报告重绿这 19 格,candidate 记 `d4034a8f4c`,行上记 `reattested: {candidateSha, ciRunUrl, reason: "§11"}`;**验收状态不撤**(实质证据在,链条补齐)。若任一标题不过 → 该行 `--conclusion WITHDRAWN`,修好再签。
 3. **变异回填提到最前**(§6 那条):这 12 条已验收行的每条 live 冻结记录补 `sensitivityProof`,期限 P2-05 开工前;没有变异证明的格,重观测也只补了一环。
 4. **supersede 规则补一条**(BLOCKED-103):supersede 之后该格**自动降为 NOT_RUN**直到用含新记录的树重观测——由谓词 (v) 机械保证,不靠人记得。
-5. BLOCKED-095 改记为"19 分之一",BLOCKED-132 记本节结论;执行者的两次自纠(先说不可建、再说 38)都留在记录里——**方法比结论重要,三次判据一次比一次硬**。
+5.【19:20 补】19 格中 P0-05.C 暴露的是**工具缺陷**不是记录缺陷:其标题在 BLOCKED-040 登记过改名(`frozen-title-renames.json`),但 greening 路径与 `verify-cells-recomputable` 都不读那张表(只有 resolvable / in-tree 读)——四个读冻结标题的工具须共用一个精确的 `resolveFrozenTitle()`。执行者已修 greening,recomputable 待修。BLOCKED-095 改记为"19 分之一",BLOCKED-132 记本节结论;执行者的两次自纠(先说不可建、再说 38)都留在记录里——**方法比结论重要,三次判据一次比一次硬**。
 
 **P1-03 BLOCKED-133 一并裁**:解锁信号保持端到端,不改写成单元替身。U 的 files[] 加 `[N] apps/cli/tests/profiles/plugin-lock.e2e.ts`(能驱动 `dsh plugin` 与 profile boot 的 e2e,与 headless e2e 同形),provenance `testFileAdded(BLOCKED-133)`;调用点代码与这个测试文件同一 slice 落地,RED 先于 GREEN。
