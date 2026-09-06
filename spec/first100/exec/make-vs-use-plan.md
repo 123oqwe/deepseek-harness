@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `ca38cb30e4`);**生成时间** 2026-09-06T15:11-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `8db88ae42d`);**生成时间** 2026-09-06T15:13-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -1356,7 +1356,7 @@
 **禁令/风险(risk)**:Node 22 launcher needs --experimental-wasm-modules via re-exec/NODE_OPTIONS or a byte-instantiation loader (~1 day); small JS-binding community (29★) but Eclipse-governed core; keep behind ctx.capabilityTokens so the format is swappable.
 **裁决叠加(整改令)**:
 - §3 账本判定已被事实超越:Biscuit 的 attenuation 在 Fiber Option A 之后由 kernel 签名的 capability token 自写(锁在 Fiber);Biscuit 降为 optional
-- §10 L2:四格全绿上锁——解锁 = §3.5 SLICE-fiber-A(vendored Cordis Fiber.store,Option A)+ §10.3-3 内核 signatureRoots 每安装 Ed25519 密钥对 → must[1] supersession 用例;同时解锁 P2-05 内核执行点
+- §10 L2(§10.4 16:05 修订):解锁 = 内核句柄解析不经任何 fiber store(dsh 侧优先,探针定;不行才最小 vendored 改 reflect.ts 两处跨类写)+ §10.3-3 内核 signatureRoots 每安装 Ed25519 密钥对(进内核私有状态,单成员句柄不变)→ must[1] 一条真走内核签发/验证且非 root fiber 中毒后仍走真内核的用例;“其他服务名”残留按 BLOCKED-011 用户终裁保持 known-limitation
 
 #### P2-03 · 一等公民 ActionManifest
 
@@ -1511,7 +1511,7 @@
 - §3.1 共用引擎 Cedar(@cedar-policy/cedar-wasm 4.12.0)在 P2-05 开工前作为 infra slice 接入;本 epic 只写 adapter/PEP/explain
 - §9.2 生态迁移目标:5 个权限插件挂 tools/pre-execute + approval answerer 链——PEP 坐该位置;现有 YAML 规则可作 policy source 导入;负用例:first-match 非单调(dsh-permission-rules)必须转换为 forbid > permit
 - §7.11:AuthZEN 形状所有者(P2-03 字段由 registry must[0] 定,不采用 AuthZEN 名;顺延至此作 decide() 输入形状)
-- §10:开工前置 = §3.1 Cedar slice + §3.5 SLICE-fiber-A(内核执行点);不等 P2-02 验收(predecessors 非机械门),但共用 Fiber A
+- §10:开工前置 = §3.1 Cedar slice + §3.5(内核解析不经 fiber store,§10.4 修订);不等 P2-02 验收(predecessors 非机械门)
 
 #### P2-06 · 审批绑定完整规范化参数、资源与前置状态
 
@@ -5808,12 +5808,12 @@ add('P6-09', '§7.11:W3C PROV-DM 与 OCI image-spec Descriptor 两个形状的�
 add('P2-04', '§7.11:MCP ToolAnnotations 形状所有者(P2-03 未采用,顺延)')
 add('P2-05', '§7.11:AuthZEN 形状所有者(P2-03 字段由 registry must[0] 定,不采用 AuthZEN 名;顺延至此作 decide() 输入形状)')
 add('P2-03', '§7.11:MCP ToolAnnotations / AuthZEN 不采用——registry must[0] 定死字段名,这不是词汇债;所有权顺延 P2-04 / P2-05')
-add('P2-02', '§10 L2:四格全绿上锁——解锁 = §3.5 SLICE-fiber-A(vendored Cordis Fiber.store,Option A)+ §10.3-3 内核 signatureRoots 每安装 Ed25519 密钥对 → must[1] supersession 用例;同时解锁 P2-05 内核执行点')
+add('P2-02', '§10 L2(§10.4 16:05 修订):解锁 = 内核句柄解析不经任何 fiber store(dsh 侧优先,探针定;不行才最小 vendored 改 reflect.ts 两处跨类写)+ §10.3-3 内核 signatureRoots 每安装 Ed25519 密钥对(进内核私有状态,单成员句柄不变)→ must[1] 一条真走内核签发/验证且非 root fiber 中毒后仍走真内核的用例;“其他服务名”残留按 BLOCKED-011 用户终裁保持 known-limitation')
 add('P1-03', '§10.3-1 裁决 BLOCKED-094:profile 字段 plugins.lock required|warn(显式 resolve);production-controlled=required;有 lock 而 digest 漂移一律拒绝;lock 生成所有者 = 本 epic U 阶段(dsh plugin lock)→ composeProfile 调用点 → 验收')
 add('P4-06', '§10 L3 + §10.3-2(15:50 修订):(a)(b) 合一——durable inbox 表 {messageId, epoch, claimedByTurn, state} 与 outbox 同一 SQLite BEGIN IMMEDIATE 事务;seen = state=consumed 的键集;classifyIntake 保持纯函数;生产调用点 = core/agent/src/inbox.ts intake 路径,归 U 格(supersede/supplement 按现有用例定);不新增事件类型;原“用 turn/end”撤回(三问核否:纯函数无 session、零生产调用点)')
 add('P4-05', '§10 L3:供给方 P4-07 已验收 → 按 BLOCKED-092 第二步写 acceptance[2] 的 supersession 用例(重启后孤儿 agent 经 lease store 回收/安全失败)→ 验收;排在 P4-06 之后(共 dispatch.ts/inbox.ts)')
 add('P5-10', '§10.3-4:actions 半供给方钉为 P2-03(in-flight = 已 append manifest 无配对终态记录);P2-03 验收后写该用例;world 半等 P3-01')
-add('P2-05', '§10:开工前置 = §3.1 Cedar slice + §3.5 SLICE-fiber-A(内核执行点);不等 P2-02 验收(predecessors 非机械门),但共用 Fiber A')
+add('P2-05', '§10:开工前置 = §3.1 Cedar slice + §3.5(内核解析不经 fiber store,§10.4 修订);不等 P2-02 验收(predecessors 非机械门)')
 add('P3-13', '§6:不在账本内(09-02 同日收录);开工时补单条 make-vs-use 判断,预期 CONSUMER_WRITE,依赖 §3.2 rung')
 
 # ledger oss notes overridden by a ruling: (epic, oss name) -> what stands now

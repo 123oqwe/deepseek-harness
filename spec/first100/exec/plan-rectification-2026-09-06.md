@@ -595,6 +595,14 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 3. **P0-02 `signatureRoots` 真实密钥材料**(P2-02 前置):内核签名根 = **每安装一份 Ed25519 密钥对**,首次 boot 由内核生成,私钥只在内核私有状态,持久化经 credentials provider(P6-08 keychain 落地前:dsh home 下 0600 文件,profile 标 `dev`,`production-controlled` 拒绝文件后端);公钥进 `signatureRoots`,可轮换(旧根保留验证到 expiry)。**不引入任何长期公网密钥**(用户规则);发布签名仍走 P1-02 Sigstore keyless。P2-02 must[1] 的用例对这套材料写。
 4. **P5-10 actions 半的供给方钉为 P2-03**:in-flight action = 已 append manifest 而无配对终态记录;cancel 后 barrier 观测"不再接纳新 manifest 且每个已 append 的 manifest 得到配对终态记录"再进终态。P2-03 验收后 P5-10 写此用例;world 半等 P3-01。
 
-### 10.4 §3.5 SLICE-fiber-A(新增共用前置)
+### 10.4 §3.5 SLICE-fiber-A(新增共用前置)【16:05 EDT 修订:验收目标收窄,vendored 改动降为条件路径】
 
-vendored Cordis `vendor/cordis/src/fiber.ts:198` `public store` 改为受控(Option A,BLOCKED-011 三向量之一),过 vendor manifest guard;conformance:ctx 介导的内核执行点在 Fiber 上不可绕过(P2-02 must[1] 与 P2-05 内核执行点共用);第一个消费者 P2-02 端到端接通作证明(§8 共用引擎两条)。**P2-05 开工前落地,与 Cedar slice 并行。**
+**执行者读完 `store` 全部读写面后的事实**:跨类写只有 `reflect.ts:293/302` 两处;`packages/kernel/trust-kernel/tests/pin-hardening.spec.ts:79` 已绿——P0-02 用 `Object.defineProperty` 把 **root fiber 的 `trustKernel`** 锁住了;残留是"非 root fiber / 其他服务名"的跨插件 property-access 中毒,`docs/architecture/trust-kernel-boundary.md` 已记为 known-residual;**BLOCKED-011 于 09-01 由用户终裁 DE-ESCALATED:三向量 vendor-free 闭合,残留降为 known-limitation**(§2.G)。
+
+**裁决**:本 slice 的验收目标是 **P2-02 must[1] 的可断言内核执行点**——"任何 fiber 上的任何插件都不能用伪造物替换内核服务",**不是**关掉全名残留(那条已由用户终裁降为 known-limitation,且 P1-06 进程外 host 从结构上解决不可信插件)。据此:
+1. **先走 dsh 侧最小路径**:内核句柄的解析**不经任何 fiber store**——`ctx.trustKernel` 在任意 fiber 上都解析到 `pinTrustKernel` 的模块级冻结引用(内核本就"在 Cordis Context 之前初始化、不可注册为可替换服务")。探针:在**非 root** fiber 上执行 `ctx.fiber.store['trustKernel'] = forged`,该 fiber 及其子树的 `ctx.trustKernel` / `ctx.get('trustKernel')` 是否返回伪造物。**不返回 → 不改 vendored 源,slice 更名 SLICE-kernel-resolution**。
+2. **只有当子 fiber 的解析(`reflect.ts:157` 先查本 fiber store)无法在 dsh 侧覆盖时**,才做最小 vendored 改动:`reflect.ts:293/302` 两处跨类写经受控 `provide/revoke` 入口,**对内核服务名在任何 fiber 上拒绝**;`store` 私有化但 `fiber.ts:324/647/687` 的生命周期自写不受影响;登记 `vendor/README.md` local modifications,过 `check-vendor-manifest`。
+3. conformance 按执行者的形状:正(provide/get/撤销正常路径不破)、负(非 root fiber 直写内核名不生效且可观测;P0-02 vector-2 仍绿)、范围(非 root、内核名——这是比 pin 多出来的那一块)。**"其他服务名"不进本 slice 验收**。
+4. **P2-02 端到端**:key material(§10.3-3)+ 本 slice → must[1] 一条真走内核签发/验证的用例(伪造 token 被拒;非 root fiber 中毒后验证仍走真内核),不是两个半边各自绿。
+
+**§10.3-3 与 P0-02 冻结「signatureRoots 恰好一个成员」不冲突**:密钥材料进**内核私有状态**,句柄的单成员接口不变——P1-02 的 anchors 就是这么落的(registered/revocable in kernel private state)。执行者仍需核该冻结用例的标题原文与之一致。
