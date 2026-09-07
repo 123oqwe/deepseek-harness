@@ -126,56 +126,43 @@
   },
   "preFlight": {
     "P5-11": {
-      "recordedBeforeFirstLine": true,
-      "titleNouns": [
-        "Taskboard",
-        "Mailbox",
-        "Blackboard"
-      ],
-      "titleNounCheck": "All three are packages this epic creates (packages/collaboration/{taskboard,mailbox,blackboard} are ABSENT). Planned, not missing -- the distinction P4-09's must[2] failed.",
-      "clauses": [
-        {
-          "clause": "must[0]",
-          "text": "Task 支持 atomic claim、attempt、lease、owner、artifact outputs、verification status",
-          "plannedArtifact": "packages/collaboration/taskboard/src/types.ts (fields + claim decision), src/store.ts (the atomic claim)",
-          "stage": "C, P"
+      "makeVsUse": {
+        "ledgerRow": "P5-11",
+        "card": {
+          "heading": "#### P5-11",
+          "sheetCommit": null
         },
-        {
-          "clause": "must[1]",
-          "text": "Blackboard 只存结构化 facts/artifact refs，带 provenance",
-          "plannedArtifact": "packages/collaboration/blackboard/src/index.ts -- a fact type admitting only structured values and refs, each carrying provenance",
-          "stage": "U"
-        },
-        {
-          "clause": "must[2]",
-          "text": "角色、组织图和 captain 保持插件/skill 层",
-          "plannedArtifact": "A NEGATIVE clause, and the kind most likely to end up unbuilt: it requires that these primitives do NOT encode roles, an org chart, or a captain. Its subject is therefore a case asserting the absence -- the exported surface carries no role/captain concept -- not an implementation. Flagged here because 'implement nothing' is indistinguishable from 'forgot to implement' unless something asserts it.",
-          "stage": "C or F"
-        },
-        {
-          "clause": "acceptance[0]",
-          "text": "多进程并发 claim 只有一个 winner",
-          "plannedArtifact": "taskboard/src/store.ts atomic claim + a contention case",
-          "stage": "P"
-        },
-        {
-          "clause": "acceptance[1]",
-          "text": "模型未手动更新任务时，runtime 根据 receipts 推进状态",
-          "plannedArtifact": "a receipt-driven status advance in taskboard, consuming the receipts P4-06/P4-07 define",
-          "stage": "U"
-        },
-        {
-          "clause": "acceptance[2]",
-          "text": "循环依赖在提交时拒绝",
-          "plannedArtifact": "a dependency-cycle refusal at task submission, in taskboard",
-          "stage": "C, F"
-        }
-      ],
-      "freezeTargets": {
-        "C": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts [NEW; path patch required -- .e2e.ts is key-gated, 5th application of BLOCKED-070's prevention subclass]",
-        "P": "packages/collaboration/taskboard/tests/store.spec.ts [NEW; P declares two source files and no test file]",
-        "U": "packages/collaboration/blackboard/tests/blackboard.spec.ts [NEW; U declares five source files across three packages and no test file]",
-        "F": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts [shared with C, disjoint titles]"
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "packages/experimental/agent-team (existing)",
+            "npm": "packages/experimental/agent-team (existing)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Internal, not an external adoption."
+          },
+          {
+            "standard": "W3C PROV-DM field names for blackboard provenance (wasGeneratedBy, wasAttributedTo, wasDerivedFrom)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of this epic's 64 frozen cases names a PROV relation; the blackboard's fields were defined here."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The taskboard, mailbox and blackboard, and their scoping.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
       }
     },
     "SLICE-3.1-cedar": {
@@ -373,7 +360,11 @@
         ],
         "rejectedAbsent": [],
         "standardsOwned": [
-          "RFC 8785"
+          {
+            "standard": "RFC 8785 JCS",
+            "evidenceTitleSubstring": "RFC 8785",
+            "reason": "This epic's canonicalizer is a hand-written RFC 8785 implementation proved against the reference by a differential case. The frozen title says 'differential conformance against the RFC 8785 reference implementation'; the substring named here is what makes the ownership checkable."
+          }
         ],
         "standardsImported": [],
         "residual": "The canonicalizer itself, the manifest value-domain refusal, and the manifest-before-execution placement on both dispatch paths. The library decides nothing here; it only says whether the implementation agrees with the standard.",
@@ -400,7 +391,36 @@
         ],
         "expectedDeletedPct": "25",
         "recordedBeforeFirstLine": false,
-        "realized": null
+        "realized": null,
+        "deviations": [
+          {
+            "name": "@modelcontextprotocol/sdk",
+            "npm": "@modelcontextprotocol/sdk",
+            "reason": "Present in the repository but NOT used by this epic: the manifest's side-effect class is its own vocabulary, and no ToolAnnotations hint reaches it. Recorded as a deviation rather than adopted, because adopting it here would claim an input the classifier does not read."
+          },
+          {
+            "name": "in-toto/attestation",
+            "npm": "in-toto/attestation",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The manifest is an internal pre-execution record, not an attestation published to a consumer."
+          },
+          {
+            "name": "openid/authzen",
+            "npm": "openid/authzen",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No authorization request/response vocabulary is emitted; admission is a local predicate."
+          },
+          {
+            "standard": "in-toto Statement envelope",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work."
+          },
+          {
+            "standard": "MCP ToolAnnotations as side-effect hint input",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Follows from the sdk deviation: no annotation is read."
+          },
+          {
+            "standard": "AuthZEN subject/action/resource/context (+ MCP profile / COAZ-MCP binding)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work."
+          }
+        ]
       }
     },
     "P2-04": {
@@ -412,45 +432,59 @@
         },
         "verdict": "CONTRACT_WRITE",
         "verdictSecondary": null,
-        "adopted": [],
+        "adopted": [
+          {
+            "name": "@modelcontextprotocol/sdk",
+            "npm": "@modelcontextprotocol/sdk",
+            "form": "runtime",
+            "reason": "Present and imported in the repository. Recorded with that scope stated: the import lives outside this epic's declared files, which BLOCKED-134 established is the norm rather than an anomaly."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "OWASP/www-project-top-10-for-large-language-model-applications",
+            "npm": "OWASP/www-project-top-10-for-large-language-model-applications",
+            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Measured absent, and it is a document rather than a package: nothing to import. The eight risk classes were defined against the clause, not against LLM06."
+          },
+          {
+            "name": "mitre-atlas/atlas-data",
+            "npm": "mitre-atlas/atlas-data",
+            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Same: a data set, not a dependency, and no technique id reaches the taxonomy."
+          },
+          {
+            "standard": "MCP ToolAnnotations",
+            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. The card names it as a hint input. The Contract stage's classifier takes domain tags only; wiring annotations is Provider-stage work and is not claimed here."
+          },
+          {
+            "standard": "P1-01 SideEffectClass",
+            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Deliberately NOT imported: P1-01's vocabulary classifies MECHANISM and this epic's classifies RISK. Recorded in the package's own module doc as the reason a third vocabulary exists."
+          },
+          {
+            "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
+            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built."
+          },
+          {
+            "standard": "MITRE ATLAS technique ids",
+            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built."
+          }
+        ],
         "rejectedAbsent": [],
         "standardsOwned": [],
         "standardsImported": [],
-        "residual": "The whole of it. must[0] fixes eight class names, and no external package supplies that vocabulary: the published risk/permission taxonomies are either capability-mechanism lists (what an operation touches) or CVSS-style severity scores for vulnerabilities, and this clause asks for neither. The classifier, its confidence and grounds, its unknown-goes-higher default, and the organisation-policy override are all owned here.",
+        "residual": "The eight classes, the classifier, its confidence and grounds, and the organisation override.",
         "probes": [
           {
-            "claim": "this repository already has a side-effect taxonomy that must[0] could adopt instead of adding a third",
-            "how": "grep for riskLevel/RiskLevel/actionClass/destructive across packages/*/*/src",
-            "result": "hard-constraint",
-            "evidence": "TWO already exist and neither matches. `SideEffectClass` (plugin-manifest/src/types.ts:72) has six values none|read|write|network|process|destructive; `ActionSideEffectClass` (action-manifest/src/types.ts:123) has five, deliberately mirroring the first as a separate type rather than importing it. Both classify MECHANISM (what the operation touches). must[0]'s eight classify RISK (read, local-reversible, internal-write, external-communication, destructive, financial, security-sensitive, safety-critical). They are different axes, so this is a third vocabulary by necessity, not by omission."
-          },
-          {
-            "claim": "the three vocabularies can coexist without a reader conflating them",
-            "how": "compare the value sets for shared spellings",
-            "result": "finding",
-            "evidence": "`read` and `destructive` appear in all three with different meanings. In action-manifest, `destructive` is additionally the FAIL-CLOSED DEFAULT that classifySideEffect returns when it cannot classify at all. A third `destructive` meaning a risk band is a live conflation hazard, and any mapping between them must be total and monotone or must[1]/acceptance[1] (a plugin cannot downgrade) is unenforceable through the seam."
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
           }
         ],
-        "gapCheck": [
-          {
-            "community": "dsh-plugin-manifest",
-            "gap": "SideEffectClass is a declared mechanism tag, not a decided risk band; nothing consumes it as policy",
-            "clause": "must[0]"
-          },
-          {
-            "community": "dsh-action-manifest",
-            "gap": "ActionSideEffectClass carries the fail-closed default but has no organisation-policy override and no confidence or grounds",
-            "clause": "must[1], must[2]"
-          },
-          {
-            "community": "dsh-permission-presets",
-            "gap": "presets select a whole policy value for a session; they do not classify an individual action",
-            "clause": "acceptance[2]"
-          }
-        ],
+        "gapCheck": [],
         "expectedDeletedPct": "0",
-        "recordedBeforeFirstLine": true,
-        "realized": null
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it. This epic is NOT accepted, so its deviations use the not-started wording rather than the read-only accepted-unadopted reason."
       }
     },
     "P1-03": {
@@ -555,6 +589,10 @@
             "name": "in-toto/attestation",
             "npm": "in-toto/attestation",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The baseline fingerprint is a repository-local digest manifest, not an attestation published to any consumer, so the Statement schema had no reader."
+          },
+          {
+            "standard": "in-toto Statement v1 subject[]/ResourceDescriptor",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The baseline fingerprint lists repository paths and digests in its own shape; no Statement subject or ResourceDescriptor is emitted."
           }
         ],
         "rejectedAbsent": [],
@@ -1086,6 +1124,561 @@
         "recordedBeforeFirstLine": false,
         "realized": null,
         "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+      }
+    },
+    "P2-01": {
+      "makeVsUse": {
+        "ledgerRow": "P2-01",
+        "card": {
+          "heading": "#### P2-01",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "spiffe/spiffe",
+            "npm": "spiffe/spiffe",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent. Principal ids are branded opaque strings, not SPIFFE URIs."
+          },
+          {
+            "standard": "SPIFFE ID URI for principal ids",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic's 98 names SPIFFE; the id shape was defined here."
+          },
+          {
+            "standard": "RFC 8693 act nesting for delegation chain",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The delegation chain is a local array, not an RFC 8693 `act` claim."
+          },
+          {
+            "standard": "OTel semconv enduser.id/service.name",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No telemetry attribute mapping exists in this epic."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Principal identity, the delegation chain, and its runtime policy.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P4-05": {
+      "makeVsUse": {
+        "ledgerRow": "P4-05",
+        "card": {
+          "heading": "#### P4-05",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+          }
+        ],
+        "deviations": [
+          {
+            "standard": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. `waiting_human` appears in this epic's frozen cases as a lifecycle state of its own; the A2A/MCP MAPPING does not, so the state is owned here and the mapping is not claimed."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The agent lifecycle, its dispatch fencing, and the state machine.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P4-01": {
+      "makeVsUse": {
+        "ledgerRow": "P4-01",
+        "card": {
+          "heading": "#### P4-01",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "cloudevents/spec",
+            "npm": "cloudevents/spec",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. A specification repository, not a package; measured absent. The run seam's events use this program's own SessionEventMap names."
+          },
+          {
+            "standard": "CloudEvents attribute names (id/source/type/time/subject/datacontenttype)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic names a CloudEvents attribute. Related to P4-06's card, where the delegate has ruled the inbox table SHOULD adopt these names — that is future work under P4-06, not a claim this epic can make."
+          },
+          {
+            "standard": "A2A TaskState / MCP TaskStatus names at surfaces",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The run seam exposes its own lifecycle states; no surface maps them to A2A or MCP names."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The run seam and its composition.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P4-06": {
+      "makeVsUse": {
+        "ledgerRow": "P4-06",
+        "card": {
+          "heading": "#### P4-06",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "standard": "CloudEvents attribute names; dedup on id",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of this epic's 59 frozen cases names a CloudEvents attribute. The inbox/outbox fields were defined here. The delegate has ruled that the inbox table SHOULD use id/source/type/time/subject/datacontenttype, which is future work: recorded as a deviation now rather than as ownership this epic has not earned."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The durable inbox/outbox, at-least-once delivery, and idempotent consumption.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P4-07": {
+      "makeVsUse": {
+        "ledgerRow": "P4-07",
+        "card": {
+          "heading": "#### P4-07",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "@sinonjs/fake-timers",
+            "npm": "@sinonjs/fake-timers",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent; the lease tests drive time through an injected clock this epic owns, so no timer library is reached."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [
+          {
+            "standard": "Kleppmann fencing-token semantics",
+            "evidenceTitleSubstring": "fencing",
+            "reason": "The lease store issues monotonic fencing tokens and refuses a stale one. Frozen titles use the word 'fencing' rather than the card's full attribution, which is the substring named here."
+          }
+        ],
+        "standardsImported": [],
+        "residual": "The lease store, its fencing tokens, and the dispatch seam.",
+        "probes": [
+          {
+            "claim": "a frozen case names the fencing vocabulary",
+            "how": "substring scan over this epic's 51 live frozen titles",
+            "result": "CONFIRMED",
+            "evidence": "`fencing` and `fence` both appear, so ownership is claimable under verify-make-vs-use's fourth check."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P4-09": {
+      "makeVsUse": {
+        "ledgerRow": "P4-09",
+        "card": {
+          "heading": "#### P4-09",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "packages/storage/storage-sqlite KV unit (existing)",
+            "npm": "packages/storage/storage-sqlite KV unit (existing)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. An internal package rather than an external adoption."
+          },
+          {
+            "standard": "sha256 content digest + DSSE signature (P4-04) for saved definitions",
+            "reason": "IMPORTED-PENDING: the digest half is this epic's; the DSSE half belongs to P4-04, which has not landed. Recorded as a deviation now because importing from an epic that does not yet exist would be a claim with no source. Must be resolved to `standardsImported from P4-04` before acceptance."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Saved definitions, their digests, and the storage seam.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P5-10": {
+      "makeVsUse": {
+        "ledgerRow": "P5-10",
+        "card": {
+          "heading": "#### P5-10",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+          }
+        ],
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Cancellation, the convergence barrier, and terminal state.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P6-01": {
+      "makeVsUse": {
+        "ledgerRow": "P6-01",
+        "card": {
+          "heading": "#### P6-01",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "standard": "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic's 76 names Mem0; the operation set was defined here and only incidentally overlaps."
+          },
+          {
+            "standard": "dsh-memory-protocol v1 (dsh-memento)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Named on the card as this program's own protocol, but no frozen case pins the version, so ownership is not claimed."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The memory seam, its projection, and scoped reads.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P6-02": {
+      "makeVsUse": {
+        "ledgerRow": "P6-02",
+        "card": {
+          "heading": "#### P6-02",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "w3c/prov",
+            "npm": "w3c/prov",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. A specification, not a package; measured absent."
+          },
+          {
+            "name": "w3c/dpv",
+            "npm": "w3c/dpv",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Same."
+          },
+          {
+            "standard": "W3C PROV-DM relations wasDerivedFrom/wasGeneratedBy/wasAttributedTo",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of 47 frozen cases names a PROV relation."
+          },
+          {
+            "standard": "Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case names these; the record's temporal fields were defined here."
+          },
+          {
+            "standard": "W3C DPV for purpose & personal-data categories",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No purpose or personal-data vocabulary exists in the record shape."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The memory record, its scope, and its temporal fields.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P6-07": {
+      "makeVsUse": {
+        "ledgerRow": "P6-07",
+        "card": {
+          "heading": "#### P6-07",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "node:sqlite keyset pagination",
+            "npm": "node:sqlite keyset pagination",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. A technique rather than a package. The lifecycle store's pagination is hand-written over its own query surface; measured, no node:sqlite import in this epic's files."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Session lifecycle, retention, and the corrupted-log read path.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P8-01": {
+      "makeVsUse": {
+        "ledgerRow": "P8-01",
+        "card": {
+          "heading": "#### P8-01",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "canonicalize",
+            "npm": "canonicalize",
+            "form": "oracle",
+            "reason": "Present in the repository as a differential oracle in devDependencies, the same role P2-03 adopted it in. Used for schema fingerprints here."
+          },
+          {
+            "name": "zod",
+            "npm": "zod",
+            "form": "runtime",
+            "reason": "Present and imported in the repository."
+          },
+          {
+            "name": "@noble/hashes",
+            "npm": "@noble/hashes",
+            "form": "runtime",
+            "reason": "Present and imported in the repository; used for digest computation."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "modelcontextprotocol/modelcontextprotocol",
+            "npm": "modelcontextprotocol/modelcontextprotocol",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The specification repository, not a package."
+          },
+          {
+            "name": "semver",
+            "npm": "semver",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent repository-wide; protocol versions are exact strings negotiated by fingerprint, not ranges."
+          },
+          {
+            "standard": "MCP initialize protocolVersion + capabilities shape",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. `capabilities` appears in this epic's frozen cases, but as its OWN negotiation surface rather than as MCP's shape; the MCP binding is not claimed."
+          },
+          {
+            "standard": "LSP ClientCapabilities pattern",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case names LSP."
+          },
+          {
+            "standard": "RFC 8785 JCS for schema fingerprints",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. P2-03 owns RFC 8785 in this program; this epic uses the canonicalizer without owning the standard. Recorded as a deviation rather than a second ownership claim."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Protocol negotiation, the control-protocol schema artifact, and release evidence.",
+        "probes": [
+          {
+            "claim": "each card package is present in the tree",
+            "how": "repository-wide import scan over `git ls-files` (no shell), the same scan verify-make-vs-use uses",
+            "result": "MIXED",
+            "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+      }
+    },
+    "P2-02": {
+      "makeVsUse": {
+        "ledgerRow": "P2-02",
+        "card": {
+          "heading": "#### P2-02",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "@biscuit-auth/biscuit-wasm",
+            "npm": "@biscuit-auth/biscuit-wasm",
+            "reason": "ledger-superseded-by-fact (delegate ruling, §3): after the Fiber Option A work the kernel signs its own attenuable tokens, so attenuation is written here rather than delegated to Biscuit; Biscuit drops to optional. Measured absent from the tree."
+          },
+          {
+            "name": "eclipse-biscuit/biscuit",
+            "npm": "eclipse-biscuit/biscuit",
+            "reason": "The specification repository behind the same decision, not a package; measured absent."
+          },
+          {
+            "name": "eclipse-biscuit/biscuit-rust",
+            "npm": "eclipse-biscuit/biscuit-rust",
+            "reason": "The Rust implementation behind the same decision; this is a TypeScript runtime and it was never reachable."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The token shape, narrowing-only attenuation, cascading revocation, the presence gate, and log-safe redaction.",
+        "probes": [
+          {
+            "claim": "a Biscuit implementation is reachable from this runtime",
+            "how": "repository-wide import scan for all three card entries",
+            "result": "REFUTED",
+            "evidence": "All three absent. Two are specification or Rust repositories rather than npm packages consumable here."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). P2-02 is NOT accepted and holds a live acceptance lock, so this record does not use the read-only accepted-unadopted reason: it states that the card's plan was overtaken by the kernel's own signing path, which is a decision with evidence rather than an omission."
       }
     }
   },

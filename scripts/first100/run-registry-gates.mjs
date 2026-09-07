@@ -53,6 +53,7 @@ const GATES = [
   // recording.
   'first100:verify-ledger-digests',
   'first100:verify-boot-path-offline',
+  'first100:verify-adapt-dispositions',
   'verify-no-artifacts-in-src',
   'verify-control-protocol-schema',
   'verify-module-graph',

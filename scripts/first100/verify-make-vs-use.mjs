@@ -231,10 +231,16 @@ function main() {
         // Checked against the package.json of every package the epic declares a
         // file in, not just declared package.json paths, because an epic rarely
         // lists its own manifest among its files.
+        // Only paths that actually became a package.json: a declared file with
+        // no `/src/` or `/tests/` segment (a doc, a schema, a root script) is
+        // left unchanged by the replace, and loading it as JSON threw
+        // `Unexpected token '#'` on a Markdown file — taking the whole gate
+        // down instead of reporting anything.
         const depFiles = [...new Set(files.map(path => path.replace(/\/(src|tests)\/.*$/u, '/package.json')))]
+          .filter(path => path.endsWith('/package.json'))
         for (const path of depFiles) {
           const full = join(REPO_ROOT, path)
-          if (!existsSync(full)) continue
+          if (!existsSync(full) || !statSync(full).isFile()) continue
           const pkgJson = loadJson(full)
           if (pkgJson.dependencies?.[pkg] !== undefined) {
             findings.push(`${key}: ${pkg} is adopted as an ORACLE but appears in ${path}'s dependencies, not devDependencies`)
@@ -253,11 +259,19 @@ function main() {
       }
     }
 
-    for (const standard of declared.standardsOwned ?? []) {
+    for (const owned of declared.standardsOwned ?? []) {
+      // A card's name for a standard ("RFC 8785 JCS") is rarely the exact
+      // phrase a test title uses ("the RFC 8785 reference implementation"), so
+      // requiring the whole string rejected true ownership. Loosening the
+      // match generally would let any near-miss claim a vocabulary; instead the
+      // claimant NAMES the substring that proves it, and the gate checks that.
+      // The evidence is then auditable rather than inferred.
+      const standard = typeof owned === 'string' ? owned : owned?.standard
+      const needle = typeof owned === 'string' ? owned : owned?.evidenceTitleSubstring ?? owned?.standard
       const named = freeze.some(item => item.epic === key && item.supersededBy === undefined
-        && (item.expectCases ?? []).some(title => title.includes(standard)))
+        && (item.expectCases ?? []).some(title => title.includes(needle)))
       if (!named) {
-        findings.push(`${key}: claims to own the ${standard} vocabulary, but no live frozen case names it`)
+        findings.push(`${key}: claims to own the ${standard} vocabulary, but no live frozen case contains ${JSON.stringify(needle)}`)
         state = 'MISMATCHED'
       }
     }

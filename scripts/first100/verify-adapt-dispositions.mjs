@@ -85,9 +85,21 @@ function main() {
       for (const name of adapts) {
         if (!dispositioned.has(name)) missing.push(`adapt ${name} appears in neither adopted[] nor deviations[]`)
       }
+      // `standardsImported` entries may be a bare name or `{standard, from}`;
+      // reading only the bare form reported P1-02's Sigstore bundle as
+      // undisclosed when its record names both the standard and its source.
+      const importedNames = (declared.standardsImported ?? []).map(
+        entry => typeof entry === 'string' ? entry : entry?.standard,
+      ).filter(Boolean)
+      // Both lists accept a bare name or `{standard, ...}`; the object form
+      // carries the evidence substring or the source epic. Reading only the
+      // bare form reported a fully dispositioned standard as undisclosed.
+      const ownedNames = (declared.standardsOwned ?? []).map(
+        entry => typeof entry === 'string' ? entry : entry?.standard,
+      ).filter(Boolean)
       const accounted = new Set([
-        ...declared.standardsOwned ?? [],
-        ...declared.standardsImported ?? [],
+        ...ownedNames,
+        ...importedNames,
         ...(declared.deviations ?? []).map(entry => entry.standard).filter(Boolean),
       ])
       for (const standard of standards) {
