@@ -680,3 +680,9 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 **事实**:内核现在每次 `createTrustKernel` 铸一对 Ed25519(私钥 module-private WeakMap 按 handle 索引,非本模块 handle 直接拒);token 真签真验,签的字节 = `digestToken` 固定的字节;fixture 自算签名不 import 生产函数;跨内核伪造变异被抓。P2-02 锁行条件"real key material reaches signatureRoots AND Option A"两者都到。
 
 **裁决**:(1) **P2-02 must[1] 现在冻结**,以每进程密钥为准——must[1] 的主体是签发/验证/衰减,与密钥寿命无关;不在 live 锁行下扩范围到 credentials 包。(2) **密钥持久化独立为 SLICE-kernel-keys**(归 P0-02 的内核私有状态 + credentials provider seam):每安装生成、0600 文件后端(profile 标 dev)、`production-controlled` 拒文件后端、轮换保留旧公钥到 expiry、"重启后 token/签名仍可验"作为该 slice 的端到端用例;**P4-04(W9)开工前落地**——它是第一个需要跨重启验证的消费者。§10.3-3 的"每安装"由此 slice 兑现,不由 P2-02。(3) 不声称"根可信"——那是 P1-02 的锁,对。
+
+### 12.5 BLOCKED-136:去重规则写了两遍,P4-06 must[2] 的生产调用点(2026-09-07 02:05 EDT)
+
+**事实**(执行者测量):`core/agent/src/inbox.ts` 是会话日志支撑的 `UserMessage` 提示队列,无 message id / epoch / 跨进程到达——**我 §10.3-2 指它为调用点是错的**(按 files[] 名字而非行为指的,BLOCKED-091 的形状)。真实到达面在 `packages/collaboration/mailbox/src/index.ts`(P5-11,已验收):`deliveryKey`/`decideDelivery` 与 message-bus 的 `dedupKey`/`classifyIntake` 是同一条规则的两份实现,互相引用对方的散文而不 import 对方的函数;message-bus 那份零生产调用者。
+
+**裁决**:一条规则,归 **P4-06(message-bus)** 所有——它的子句就是 at-least-once + 幂等消费。P4-06 U 阶段:(1) mailbox 的 `decideDelivery` 改为 import message-bus 的 `classifyIntake`(mailbox 保留自己的地址检查,去重委托),删除第二份;(2) 持久 `seen` = `bus.sqlite.consumedKeys()`,mailbox 投递路径成为 must[2] 的**生产调用点**;(3) 冻结"一次真实 mailbox 到达经 classifyIntake 被去重"+ P5-11 的 live 冻结用例在同一观测里全过(不 supersede P5-11,按 BLOCKED-059 先例记"改了已验收 epic 的文件、为何不扰其绿");(4) P4-06 的 filesOverlay 记 `mailbox/src/index.ts`(`kind: source, reason: BLOCKED-136 规则合一`);`core/agent/src/inbox.ts` 从 P4-06 的调用点说明中移除,理由记 136。
