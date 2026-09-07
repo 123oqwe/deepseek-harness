@@ -310,7 +310,45 @@
         ],
         "expectedDeletedPct": "55",
         "recordedBeforeFirstLine": false,
-        "realized": null
+        "realized": null,
+        "deviations": [
+          {
+            "name": "sigstore",
+            "npm": "sigstore",
+            "reason": "Superseded by a NARROWER adoption, which is a real decision rather than an omission: `@sigstore/verify` is adopted (with `@sigstore/mock` as its test double) because this epic verifies bundles and does not sign them. Taking the `sigstore` umbrella would have pulled the signing surface in with no consumer."
+          },
+          {
+            "name": "tuf-js",
+            "npm": "tuf-js",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The trusted root is supplied by an admitted anchor as already-resolved data; no TUF metadata refresh happens, so the client had no reader."
+          },
+          {
+            "name": "@cyclonedx/cyclonedx-library",
+            "npm": "@cyclonedx/cyclonedx-library",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. No SBOM is produced or consumed by this epic; the provenance record is a claim over package identity, not a component inventory."
+          },
+          {
+            "name": "node:crypto Ed25519",
+            "npm": "node:crypto Ed25519",
+            "reason": "ADOPTED in substance under a different label: the offline verification half uses node:crypto's Ed25519 directly. The card's label is not an importable specifier; the specifier is `node:crypto`. Recorded here rather than in adopted[] to keep the card-to-record mapping one-to-one."
+          },
+          {
+            "standard": "in-toto Statement v1",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The provenance record is a local claim shape, not an in-toto Statement; no frozen case names the vocabulary."
+          },
+          {
+            "standard": "SLSA provenance v1",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same: `observedSourceCommit`/`observedBuilderIdentity` are attestation-like fields this epic defined, not SLSA predicates."
+          },
+          {
+            "standard": "CycloneDX 1.6",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "standard": "SPDX",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          }
+        ]
       }
     },
     "P2-03": {
@@ -855,6 +893,199 @@
         "recordedBeforeFirstLine": false,
         "realized": null,
         "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P1-01": {
+      "makeVsUse": {
+        "ledgerRow": "P1-01",
+        "card": {
+          "heading": "#### P1-01",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "semver",
+            "npm": "semver",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: `semver` is imported nowhere in the repository. Manifest version handling is exact-string and range-free, so the parser had no subject."
+          },
+          {
+            "standard": "JSON Schema 2020-12 (already)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Used by the manifest schema in practice; not claimed as owned because no live frozen case of this epic names the version."
+          },
+          {
+            "standard": "semver ranges",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Follows from semver being unadopted: there are no ranges to interpret."
+          },
+          {
+            "standard": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The manifest's permission vocabulary was defined here independently; no frozen case names the VS Code source."
+          },
+          {
+            "standard": "Chrome MV3 permissions/host_permissions vocabulary",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The manifest schema, its classification, and pre-mount admission.",
+        "probes": [
+          {
+            "claim": "semver is used for manifest version handling",
+            "how": "git ls-files '*.ts' | grep for `from 'semver'`",
+            "result": "REFUTED",
+            "evidence": "Zero importers in the repository."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+      }
+    },
+    "P1-07": {
+      "makeVsUse": {
+        "ledgerRow": "P1-07",
+        "card": {
+          "heading": "#### P1-07",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fs.realpath + fs.stat ino/dev",
+            "npm": "fs.realpath + fs.stat ino/dev",
+            "form": "builtin",
+            "specifier": "node:fs",
+            "reason": "Adopted in substance: workspace identity is observed through `realpathNormalize`, which this epic's own `dsh-workspace` provides over node:fs. The card's label is descriptive, not an importable specifier, so `specifier` names the real one."
+          }
+        ],
+        "deviations": [
+          {
+            "standard": "VS Code Workspace Trust model (untrustedWorkspaces supported true|false|limited, restrictedConfigurations)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The trust states were defined here; no live frozen case names the VS Code model."
+          },
+          {
+            "standard": "git safe.directory ownership check",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. No ownership comparison against the invoking user exists; identity is path-canonical only."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The trust states, their persistence, and the gates that read them.",
+        "probes": [
+          {
+            "claim": "workspace identity uses realpath rather than a raw path",
+            "how": "read workspace-trust-local/src/index.ts",
+            "result": "CONFIRMED",
+            "evidence": "Imports and calls `realpathNormalize` at index.ts:24,102."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+      }
+    },
+    "P1-08": {
+      "makeVsUse": {
+        "ledgerRow": "P1-08",
+        "card": {
+          "heading": "#### P1-08",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites, including the property-style coverage this epic's compatibility solver relies on."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "semver",
+            "npm": "semver",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Absent from the repository; compatibility is expressed as explicit capability constraints, not version ranges."
+          },
+          {
+            "name": "packages/schema/schema-registry (existing)",
+            "npm": "packages/schema/schema-registry (existing)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. An internal package, not an external adoption; it is a workspace dependency where used rather than a make-vs-use decision."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The compatibility solver, its unsat core, and the negotiation surface.",
+        "probes": [
+          {
+            "claim": "the solver interprets semver ranges",
+            "how": "grep for the semver import",
+            "result": "REFUTED",
+            "evidence": "No importer anywhere; constraints are capability names, not versions."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
+      }
+    },
+    "P1-09": {
+      "makeVsUse": {
+        "ledgerRow": "P1-09",
+        "card": {
+          "heading": "#### P1-09",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Imported by the repository's test suites; the ownership adjudication's generated coverage uses it."
+          }
+        ],
+        "deviations": [
+          {
+            "standard": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The reservation rule is implemented, but as this epic's own namespace policy; no frozen case names npm scope semantics as the source."
+          },
+          {
+            "standard": "VS Code publisher.name id convention",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same: the id shape was defined here."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Tool-name ownership, collision adjudication, and the reserved namespace.",
+        "probes": [
+          {
+            "claim": "fast-check is present and used",
+            "how": "repository-wide import scan",
+            "result": "CONFIRMED",
+            "evidence": "Imported in the test suites."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04 and this epic predates it, so the record states what is true of the tree today rather than reconstructing a decision nobody made. A standard is dispositioned as a deviation rather than `standardsOwned` unless a live frozen case of this epic names it, which is what verify-make-vs-use's fourth check requires."
       }
     }
   },
