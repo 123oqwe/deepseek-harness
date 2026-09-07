@@ -1063,6 +1063,42 @@
       ],
       "status": "SOLE"
     },
+    "packages/collaboration/workflow-journal/src/index.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/workflow-journal/src/replay.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/workflow-journal/src/types.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
+    "packages/collaboration/workflow-journal/tests/resume.e2e.ts": {
+      "owners": [
+        "P4-08"
+      ],
+      "waves": [
+        7
+      ],
+      "status": "SOLE"
+    },
     "packages/compaction/compaction/src/coverage.ts": {
       "owners": [
         "P6-06"
@@ -3657,42 +3693,6 @@
       ],
       "waves": [
         11
-      ],
-      "status": "SOLE"
-    },
-    "packages/workflow/workflow-journal/src/index.ts": {
-      "owners": [
-        "P4-08"
-      ],
-      "waves": [
-        7
-      ],
-      "status": "SOLE"
-    },
-    "packages/workflow/workflow-journal/src/replay.ts": {
-      "owners": [
-        "P4-08"
-      ],
-      "waves": [
-        7
-      ],
-      "status": "SOLE"
-    },
-    "packages/workflow/workflow-journal/src/types.ts": {
-      "owners": [
-        "P4-08"
-      ],
-      "waves": [
-        7
-      ],
-      "status": "SOLE"
-    },
-    "packages/workflow/workflow-journal/tests/resume.e2e.ts": {
-      "owners": [
-        "P4-08"
-      ],
-      "waves": [
-        7
       ],
       "status": "SOLE"
     },

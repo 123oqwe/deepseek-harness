@@ -268,6 +268,19 @@ function applyFileReplacements(id, files) {
 }
 
 const FILES_REPLACED = {
+  'P4-08': {
+    replacements: [
+      { from: 'packages/workflow/workflow-journal/src/index.ts', to: 'packages/collaboration/workflow-journal/src/index.ts', kind: 'N', stage: 'P' },
+      { from: 'packages/workflow/workflow-journal/src/types.ts', to: 'packages/collaboration/workflow-journal/src/types.ts', kind: 'N', stage: 'C' },
+      { from: 'packages/workflow/workflow-journal/src/replay.ts', to: 'packages/collaboration/workflow-journal/src/replay.ts', kind: 'N', stage: 'C' },
+      { from: 'packages/workflow/workflow-journal/tests/resume.e2e.ts', to: 'packages/collaboration/workflow-journal/tests/resume.e2e.ts', kind: 'N', stage: 'C' },
+      { from: 'packages/workflow/workflow-journal/src/replay.ts', to: 'packages/collaboration/workflow-journal/src/replay.ts', kind: 'N', stage: 'F' },
+      { from: 'packages/workflow/workflow-journal/tests/resume.e2e.ts', to: 'packages/collaboration/workflow-journal/tests/resume.e2e.ts', kind: 'N', stage: 'F' },
+    ],
+    reason: "The package moved from `packages/workflow/` to `packages/collaboration/`, and the declared paths named the old directory. Mechanical cause: `check-layer-deps` maps the whole `workflow` group to `orchestration-runtime` while `dsh-workflow-worker-thread` is classified `providers`, so the engine importing the journal registered as a `providers -> orchestration-runtime` edge the moment P4-08's Usage wired them together (findings 120 -> 121, BLOCKED-149). The journal computes nothing at run time and mounts nothing -- a record shape plus four pure decisions over caller-supplied values -- so it belongs in a capability-definitions group by the same argument that moved the lease contract under §12.16, and `collaboration` is where that contract went.",
+    consequence: 'The published package directory changes, so an installed consumer resolving it by path rather than by package name breaks; nothing in this repository does.',
+    authorization: 'delegate ruling, 2026-09-07, §12.22-1 (BLOCKED-149).',
+  },
   'P1-03': {
     replacements: [{
       from: 'packages/bundle/base/cordis.patch.yml',

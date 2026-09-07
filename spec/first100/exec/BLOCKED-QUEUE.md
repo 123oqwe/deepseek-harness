@@ -278,9 +278,17 @@ The only matches outside the owning package are this program's own JSON.
 
 **Why I did not choose.** §12.11 and BLOCKED-136 both record the same mistake in the other direction — an executor settling a stage's scope. Adding a DSL surface that every future script can call is the largest version of that.
 
-### BLOCKED-149 — P4-08's journal is a pure decision library in an orchestration-runtime group, and wiring it added a layer finding
+### BLOCKED-149 — CLOSED: the journal moved to a capability-definitions group, and the finding went back to 120
 
-**State: OPEN, measured, not acted on.** `check-layer-deps` findings went **120 → 121** with P4-08's Usage wiring. Reporting it rather than letting it pass, because a finding that arrives with a change and is not mentioned is how a note comes to record an accepted violation instead of a removed one.
+**State: CLOSED by §12.22-1. Reading (1): the package moved to `packages/collaboration/workflow-journal`, the same group the lease contract went to under §12.16, for the same reason. `check-layer-deps` findings 121 → 120.**
+
+The registry's declared paths moved with it through `FILES_REPLACED` in the extraction — the recorded-replacement route, not a hand edit of the generated registry — with the mechanical reason and the ruling as its authorization. Old freeze entries still cite the old paths and were NOT rewritten: those observations happened at earlier SHAs and rewriting them would restate what a past CI run saw. They surface in the §12.4 overlay with a reason saying exactly that.
+
+The delegate also ruled that the engine's pre-existing `-> dsh-agent` edge of the same kind gets its own register entry rather than riding along here: two edges of one shape cannot have one moved and one left silently.
+
+The original entry follows, kept because the measurement is what made the ruling possible.
+
+**Original state: OPEN, measured, not acted on.** `check-layer-deps` findings went **120 → 121** with P4-08's Usage wiring. Reporting it rather than letting it pass, because a finding that arrives with a change and is not mentioned is how a note comes to record an accepted violation instead of a removed one.
 
 The new finding: `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-workflow-journal: providers -> orchestration-runtime`.
 

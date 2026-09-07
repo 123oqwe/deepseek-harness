@@ -9,11 +9,11 @@
     "spec/deepseek-harness-optimization-manifest-v1.1.yaml": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
-      "bytes": 369866,
-      "sha256": "9e402ef523aad6cc054239e30ff541dbdc0a400a8877b34304be42abdf6e6a1c",
-      "gitBlobOid": "6f0475bbf80d89d3361680ee24f2a8b6b8e77886",
+      "bytes": 369936,
+      "sha256": "c03a801065bdd4bf8b9b46932c99834b9a08609ef628dcc5c1d61f6cc7950a55",
+      "gitBlobOid": "33233600d03cde98e73584e9e37b78a9fccbf271",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "bd34e7912f89ba0f4d52aa103716788afb271b7c68ae58d6fc4c3e6905d7c4d5"
+      "sourceDigest": "52d635cd4710be7364e038577a369c3cd75960aea55ed7faf2b2b750c32073e6"
     },
     "spec/first100-clause-coverage-report.json": {
       "role": "derived-projection",
@@ -22,16 +22,16 @@
       "sha256": "848cf8fe3e47c593f0c0301af81e214490259532877516f72cef18380b3e5a07",
       "gitBlobOid": "79ef5de80d5e9ae05c128c85f1f1a9481923554b",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "ea8ae2cb7b580aad34f712bd48b5ee34ac7df83a6b680b40f4124403795396c1"
+      "sourceDigest": "ee45fcb1c6bbafed11ad221c7dd3c5b2db4a9fc2526547160916823caa70ab7b"
     },
     "spec/first100-command-registry.json": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
-      "bytes": 73903,
-      "sha256": "994a1d0f24b9b47879ab35b90510496c7b246c77c03dd7a85228551609d24a50",
-      "gitBlobOid": "2f4c76a26d301349d92853eac39c59b5d792a809",
+      "bytes": 73913,
+      "sha256": "4914bc59d676630f3317d520a60d5f3cc4107179e619351f5432fce011fbce8a",
+      "gitBlobOid": "98b7767a372c5c321c560443ac152b4887f62555",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "bd34e7912f89ba0f4d52aa103716788afb271b7c68ae58d6fc4c3e6905d7c4d5"
+      "sourceDigest": "52d635cd4710be7364e038577a369c3cd75960aea55ed7faf2b2b750c32073e6"
     },
     "spec/first100-dependency-graph.json": {
       "role": "derived-projection",
@@ -40,7 +40,7 @@
       "sha256": "1bcdffa9a9783a16821b98f5c183c265e0b99ed8d7e9aab7049273f6f3ffcb3b",
       "gitBlobOid": "611a3c463589887837dee80a359fe1f9f6cd35cc",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "bd34e7912f89ba0f4d52aa103716788afb271b7c68ae58d6fc4c3e6905d7c4d5"
+      "sourceDigest": "52d635cd4710be7364e038577a369c3cd75960aea55ed7faf2b2b750c32073e6"
     },
     "spec/first100-evidence.schema.json": {
       "role": "derived-projection",
@@ -49,25 +49,25 @@
       "sha256": "23b017be8f409f9f727749f37a3706795ba8b35a23798380aea7fc387035cb72",
       "gitBlobOid": "c3d1c20a65557c82fd6ca5f8eb346d4205b451e7",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "bd34e7912f89ba0f4d52aa103716788afb271b7c68ae58d6fc4c3e6905d7c4d5"
+      "sourceDigest": "52d635cd4710be7364e038577a369c3cd75960aea55ed7faf2b2b750c32073e6"
     },
     "spec/first100-generated-digests.json": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
       "bytes": 990,
-      "sha256": "7f38d1ac5a8a048976fd2c699fae55e1609c4dc98f99711d69988e69b1f763e2",
-      "gitBlobOid": "de628d99e75983d7d11deba1ccb06dbc25be0c70",
+      "sha256": "d0b7c6a02f2c45328cef78a45729b8b8465b9045fcb2e3b6d8cbfd4e4d4a0ee6",
+      "gitBlobOid": "b4606695b54122d4c6905a5258b04da55eb3fee4",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "2d984118e12725d24f0d7076a1e63af0e98f7dba4661558be1796548880b2544"
+      "sourceDigest": "48ac1bfc696f5f669de43f339c761bb71d95e7ed2950a7b9ec7feedf6b4961ec"
     },
     "spec/first100-owner-map.json": {
       "role": "derived-projection",
       "schemaVersion": "1.1",
-      "bytes": 94862,
-      "sha256": "354c55a3faa03ea9fee8c2f00ce3b1f64381fc1c04b606d27a5f0dda15baf271",
-      "gitBlobOid": "b33c0248571e6ec67c4295298cfa4c272cb8dcfc",
+      "bytes": 94882,
+      "sha256": "39d009d1b79aa3a1b62f1524ceee587cad69fe47809256caea5494adae8f4dce",
+      "gitBlobOid": "8337aa40ed5ab576ff26cc8784bd1537f8fe8bc9",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "bd34e7912f89ba0f4d52aa103716788afb271b7c68ae58d6fc4c3e6905d7c4d5"
+      "sourceDigest": "52d635cd4710be7364e038577a369c3cd75960aea55ed7faf2b2b750c32073e6"
     },
     "spec/first100-thresholds.yaml": {
       "role": "derived-projection",
@@ -76,7 +76,7 @@
       "sha256": "d241956d7a0381f96ee23e80e876aa918006d15c9e17d44dc3cd2ad934ed05c9",
       "gitBlobOid": "7898989848e9f897583c46c359c2f4d5cce8f5bf",
       "generator": "scripts/first100/generate-specs.ts",
-      "sourceDigest": "bd34e7912f89ba0f4d52aa103716788afb271b7c68ae58d6fc4c3e6905d7c4d5"
+      "sourceDigest": "52d635cd4710be7364e038577a369c3cd75960aea55ed7faf2b2b750c32073e6"
     },
     "spec/first100/sources/v1.0/deepseek-harness-artifact-manifest-v1.json": {
       "role": "canonical-vendored-source",
@@ -117,18 +117,18 @@
     "tests/first100/adjudication.json": {
       "role": "canonical-input",
       "schemaVersion": "1",
-      "bytes": 118719,
-      "sha256": "cc1e5a86b8b4c70bd7a1f784aad6dc54ae949603d0eb9f4f78ab41c4f4b60c7b",
-      "gitBlobOid": "53e6b3914e899d1d9ed62a2b67a9bd3f3f36a5b0",
+      "bytes": 118739,
+      "sha256": "852aa9ecf018df1f24579a958943a5057fd55345da0affbfb182e5ccf65c10bb",
+      "gitBlobOid": "42abaad8a24d11cfe7b9d01dd43c1c802c4b0b06",
       "generator": "maintainer-approved decisions (2026-08-25 AskUserQuestion A/B/C)",
       "sourceDigest": null
     },
     "tests/first100/registry.json": {
       "role": "canonical-input",
       "schemaVersion": "1.1",
-      "bytes": 527248,
-      "sha256": "53ed3e884bbcf36ab29c727b744995591df97c75ca23195ab2ca70b268235db5",
-      "gitBlobOid": "9b72147838c38b87e9cbeb83565aaf57b54c9805",
+      "bytes": 529851,
+      "sha256": "729e1910b06ee943e7ea8376e31d94ae302ee7328783cda943eb9ea6daa465f6",
+      "gitBlobOid": "a05c353ebd00f36a429ef8b70c489724a9e9c262",
       "generator": "scripts/first100/extract-registry.mjs",
       "sourceDigest": "1ecdc6f877dc826450d04d244dd48234f8cb0e4f79aaeb0c338e79ed92e487e2"
     }

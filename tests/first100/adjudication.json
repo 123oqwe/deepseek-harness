@@ -1537,8 +1537,8 @@
       "P4-08-C-resume-e2e-not-yet-created": {
         "epic": "P4-08",
         "stage": "C",
-        "declaredPath": "packages/workflow/workflow-journal/tests/resume.e2e.ts",
-        "approvedPath": "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "declaredPath": "packages/collaboration/workflow-journal/tests/resume.e2e.ts",
+        "approvedPath": "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- third application of the precedent set by P4-06 and continued by P4-07. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written. Local-behaviour classification: P4-08's clauses are a journal of script digest, program counter, artifact refs, receipts and phase; skipping completed pure steps on resume; reconciling side-effecting ones; refusing to serialize closures; and a journalable DSL. Its acceptance kills a process around agent() calls and compares a resumed result against an uninterrupted one. None requires a model or an external API -- a journal replay is decided from recorded data. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"
@@ -1546,8 +1546,8 @@
       "P4-08-F-resume-e2e-not-yet-created": {
         "epic": "P4-08",
         "stage": "F",
-        "declaredPath": "packages/workflow/workflow-journal/tests/resume.e2e.ts",
-        "approvedPath": "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+        "declaredPath": "packages/collaboration/workflow-journal/tests/resume.e2e.ts",
+        "approvedPath": "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
         "reason": "SUBSTITUTION, BLOCKED-070's PREVENTION subclass -- third application of the precedent set by P4-06 and continued by P4-07. The declared file does not exist because this epic creates it, so writing it under the declared name would manufacture the archival error in the same commit that first writes it: `.e2e.ts` routes into vitest.e2e.config.ts, whose suites self-skip without an API key, while first100-exact-sha.yml runs the default config and would never observe the cases. Recorded BEFORE the first line is written. Local-behaviour classification: P4-08's clauses are a journal of script digest, program counter, artifact refs, receipts and phase; skipping completed pure steps on resume; reconciling side-effecting ones; refusing to serialize closures; and a journalable DSL. Its acceptance kills a process around agent() calls and compares a resumed result against an uninterrupted one. None requires a model or an external API -- a journal replay is decided from recorded data. `.e2e.spec.ts` keeps the e2e naming while entering the default channel and cannot double-run, since vitest.e2e.config.ts's include requires a filename ending `.e2e.ts`.",
         "approvedAt": "2026-09-06",
         "basis": "spec/first100/exec/BLOCKED-QUEUE.md#BLOCKED-070"

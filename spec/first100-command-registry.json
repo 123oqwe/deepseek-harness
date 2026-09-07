@@ -1159,7 +1159,7 @@
       "epicCommandStatus": "MISSING_UNTIL_WAVE",
       "stages": {
         "C": {
-          "command": "pnpm vitest run packages/workflow/workflow-journal/tests/resume.e2e.ts",
+          "command": "pnpm vitest run packages/collaboration/workflow-journal/tests/resume.e2e.ts",
           "status": "DERIVED_FROM_FILES"
         },
         "P": {
@@ -1171,7 +1171,7 @@
           "status": "LANE_RUNNER"
         },
         "F": {
-          "command": "pnpm vitest run packages/workflow/workflow-journal/tests/resume.e2e.ts",
+          "command": "pnpm vitest run packages/collaboration/workflow-journal/tests/resume.e2e.ts",
           "status": "DERIVED_FROM_FILES"
         }
       }
