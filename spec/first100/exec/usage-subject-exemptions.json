@@ -1,1 +1,24 @@
-{"schema":{"name":"first100-usage-subject-exemptions","version":"1.0"},"note":"Gate (u): a U-stage freeze entry that touches none of its registry stage-U [B] files needs an entry here naming the BLOCKED record and the ruling. An empty object is the correct state until a ruling exists — silence is not an exemption.","exemptions":{}}
+{
+  "schema": {
+    "name": "first100-usage-subject-exemptions",
+    "version": "1.0"
+  },
+  "note": "Gate (u): a U-stage freeze entry that touches none of its registry stage-U [B] files needs an entry here naming the BLOCKED record and the ruling. An empty object is the correct state until a ruling exists — silence is not an exemption.",
+  "exemptions": {
+    "P0-01.U": {
+      "blocked": "BLOCKED-144",
+      "ruling": "§12.14-1",
+      "reason": "The clause's subject is `baseline:verify`, a PROCESS tool run by hand before a batch, not a plugin the harness loads. Its stage-U [B] files are `docs/testing.md`, `BENCHMARK.md` and `packages/bundle/base/cordis.patch.yml` — a procedure, a document and a mount row — so 'touch a baseline consumer file' asks for something the epic does not have. Measured: 1 importer outside the package, and that one is a comment reference in `evidence-format/src/types.ts`, not an import; the bundle row is `disabled: true`. Delegate ruling §12.14: the disabled plugin is an optional extra OUTSIDE the clause, the process tool is the subject, and must[2] therefore rests on a person remembering rather than on a gate — which is why `baseline:verify` joins the gate set instead."
+    },
+    "P0-02.U": {
+      "blocked": "BLOCKED-144",
+      "ruling": "§12.14-1",
+      "reason": "The consumer is real and reached: `createTrustKernel()` has one production caller, `apps/cli/src/profile-boot.ts:478`, on the actual boot path, skipped only under `trustKernelInsecure`. The U freeze cites `trust-kernel/tests/boot.spec.ts` and `apps/cli/tests/trust-kernel-posture.spec.ts` — the second exercises the declared consumer through its own test rather than by listing `profile-boot.ts` among the frozen files. Exempted because the gate reads FILE membership and the evidence here is a call it cannot see; 4.4a is what checked it, and the count is 1 rather than 0."
+    },
+    "P0-06.U": {
+      "blocked": "BLOCKED-144",
+      "ruling": "§12.14-1",
+      "reason": "The clause's subject is a CONSTANT, `SESSION_FORMAT_VERSION`, and 4.4a's 'how many callers construct it' is the wrong question for one — the executor raised that and the delegate agreed. The right question is who ENFORCES it at a boundary, and there are three production sites: `core/session/src/index.ts:103` refuses a header whose version differs, plus the `plugin-compat` solver and the `sdk/server` path. The U freeze cites the tests of those boundaries rather than the boundary files themselves."
+    }
+  }
+}

@@ -252,6 +252,28 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-144 — `hmr-config` fails intermittently with a wandering case name, and it is NOT the recorded isolation set
+
+**State: OPEN, out of scope, not blocking any cell. Recorded because it was nearly dismissed by name.**
+
+Two observed failures, verbatim:
+
+```
+FAIL packages/boot/app-boot/tests/hmr-config.spec.ts
+     > observes add, change, and unlink outside its module roots
+FAIL packages/boot/app-boot/tests/hmr-config.spec.ts
+     > normalizes refresh failures and broadcasts them without escaping the watcher
+Error: Test timed out in 20000ms.
+```
+
+**Three properties, which together are its fingerprint:** the failure is a TIMEOUT rather than an assertion; the failing case NAME moves within the file between runs; and it reproduces in a 285-case scope, not only under the full suite.
+
+**Why this entry exists at all.** It was reported as "one of the full-suite isolation failures `0483973639` already recorded". That commit names four: baseline script spawning, a Python interpreter probe, SIGXCPU inheritance, hook context folding. **HMR watcher is not among them, and the claim was made by matching a file name against a known-red list — the precise move §12.6 forbids and the one BLOCKED-137 exists to record.** The delegate caught it; the retraction is the reason this is written down.
+
+**What is NOT recorded here.** `inspector` and `baseline-fingerprint` failed once in the same full-suite run and did not reproduce. Their text was never read, so they get no entry: **a register that accepts unread failures is the list this program keeps catching itself matching against.**
+
+**Handling.** Out of this batch's scope, so unfixed. It appears in no live freeze entry, and the last CI observation was 20318 passed with 0 failed, so it blocks nothing. If a future observation goes red here, admission goes through this entry's verbatim text under §12.6 — matched against the failure in hand, not against the file name.
+
 ### BLOCKED-143 — P4-12 must[0]'s subject is never constructed: no production path builds an ActionManifest
 
 **State: OPEN, blocking P4-12's U stage. Measured before writing any wiring; nothing changed.**

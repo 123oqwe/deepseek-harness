@@ -1467,12 +1467,14 @@
           {
             "name": "@sinonjs/fake-timers",
             "npm": "@sinonjs/fake-timers",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent; the lease tests drive time through an injected clock this epic owns, so no timer library is reached."
+            "reason": "NOT adopted. The card notes it would arrive `via vitest vi.useFakeTimers()`, and measured: no test under `packages/run/lease` or `packages/core/agent` calls it. The lease suites drive expiry by passing an explicit `nowMs` rather than by moving a clock, which is why nothing needed a fake timer — a deadline the caller supplies is directly testable and needs no global to be manipulated. Kept as a deviation rather than silently dropped, because the U rebuild's heartbeat work may want real timer control and this is where that decision will be revisited.",
+            "ruling": "§12.15-3"
           },
           {
             "name": "fast-check",
             "npm": "fast-check",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
+            "reason": "NOT adopted, and the card's own use case is why: `fast-check` is listed for split-brain and clock-skew simulations — 100 workers racing one item — and P4-07's suites test the fencing DECISION rather than a racing fleet. Measured on this tree: no file under `packages/run/lease` or `packages/core/agent` imports it. That is a real gap rather than a settled choice, and it is recorded as one: the epic's U stage is being rebuilt (§12.15-2) around a lifecycle with a real holder, and a property-based race is the natural shape for `must[2]`'s heartbeat and reclaim once there is something to race. Previously recorded with a read-only reason that named the row's ACCEPTED status, which the withdrawal made false.",
+            "ruling": "§12.15-3"
           }
         ],
         "rejectedAbsent": [],
