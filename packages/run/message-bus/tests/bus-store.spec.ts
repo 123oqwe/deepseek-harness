@@ -20,6 +20,7 @@
  * being re-claimed rather than a transition out of a terminal state.
  */
 
+import { spawn } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -92,6 +93,41 @@ describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox
     expect(bus.domainEvents()).toHaveLength(0)
     expect(bus.outboxRows()).toHaveLength(0)
     expect(bus.inboxRow('m2b', 1)).toBeUndefined()
+  })
+})
+
+describe('P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT rather than fail', () => {
+  it('completes a commit that arrives while another process holds the write lock', async () => {
+    // The one property a single-process suite cannot see. IMMEDIATE and
+    // DEFERRED leave the same end state alone in a process — both roll back to
+    // nothing — so replacing one with the other passed every other case here.
+    // Under contention they differ, and the difference is the product
+    // behaviour the clause names: measured, IMMEDIATE waits out the holder and
+    // succeeds, while DEFERRED's read-to-write upgrade throws `database is
+    // locked` immediately, because waiting at that point would deadlock.
+    //
+    // No test hook in production code: the competing writer is a real second
+    // process against the same file, which is also the situation being modelled.
+    const dir = mkdtempSync(join(tmpdir(), 'bus-contended-'))
+    roots.push(dir)
+    const bus = openBusStore(dir)
+
+    const holder = spawn(process.execPath, ['-e', [
+      "const { DatabaseSync } = require('node:sqlite')",
+      `const db = new DatabaseSync(${JSON.stringify(join(dir, 'bus.sqlite'))})`,
+      "db.exec('BEGIN IMMEDIATE')",
+      "db.prepare(\"INSERT INTO inbox (message_id, epoch, claimed_by_turn, state) VALUES ('holder', 1, 1, 'claimed')\").run()",
+      "console.log('HELD')",
+      "setTimeout(() => { db.exec('COMMIT'); db.close() }, 400)",
+    ].join('\n')], { stdio: ['ignore', 'pipe', 'pipe'] })
+    try {
+      await new Promise(resolve => holder.stdout.once('data', resolve))
+      commitIntake(bus, { message: message('contended'), claimedByTurn: 3, outbox: [{ target: 'peer', payload: { n: 1 } }] })
+      expect(bus.inboxRow('contended', 1)?.state).toBe('consumed')
+      expect(bus.outboxRows()).toHaveLength(1)
+    } finally {
+      holder.kill()
+    }
   })
 })
 

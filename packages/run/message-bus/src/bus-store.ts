@@ -114,6 +114,12 @@ const CONNECTIONS = new WeakMap<BusStore, DatabaseSync>()
 
 /** The schema this module owns; `bus.sqlite` carries its own version. */
 const SCHEMA = [
+  // Contention must WAIT, not fail. Without a busy timeout, a second consumer
+  // arriving while another holds the write lock fails immediately, and the
+  // clause's `BEGIN IMMEDIATE` buys nothing: measured, DEFERRED's read-to-write
+  // upgrade throws `database is locked` at once because waiting there would
+  // deadlock, while IMMEDIATE takes the lock up front and the timeout applies.
+  'PRAGMA busy_timeout = 5000',
   'CREATE TABLE IF NOT EXISTS schema_version (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), version INTEGER NOT NULL)',
   'INSERT OR IGNORE INTO schema_version (singleton, version) VALUES (1, 1)',
   'CREATE TABLE IF NOT EXISTS domain_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, source TEXT NOT NULL, type TEXT NOT NULL, time TEXT NOT NULL, subject TEXT, datacontenttype TEXT, data TEXT NOT NULL, digest TEXT NOT NULL)',
