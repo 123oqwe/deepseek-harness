@@ -252,6 +252,28 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-136 — the consumer dedup rule is implemented TWICE, and P4-06's copy is the one with no caller
+
+**State: OPEN. Found while looking for must[2]'s production call site, before writing anything.**
+
+P4-06's U stage declares `packages/core/agent/src/inbox.ts` as the place `classifyIntake` gets wired. Reading it first: **that class is the wrong subject.** `core/agent`'s `Inbox` is a session-log-backed queue of `UserMessage` prompts awaiting turns — `nextTurn` / `nextStep` — with no message id, no epoch, and no cross-process arrival. Wiring an `(id, epoch)` dedup into it would mean inventing an integration nobody asked for.
+
+**And the rule already has a second implementation.** `packages/collaboration/mailbox/src/index.ts` exports `deliveryKey` and `decideDelivery`, which are `dedupKey` and `classifyIntake` under different names — same key shape, same caller-supplied `ReadonlySet<string>` seen-set, same load-bearing ordering (address checked before duplicate, exactly as tenant is). Its own comments say so: *"a different id/epoch pair, exactly as `dsh-message-bus` does"* and *"the same reason the tenant check precedes deduplication in `dsh-message-bus`"*.
+
+So the situation is:
+
+| | `message-bus.classifyIntake` | `mailbox.decideDelivery` |
+|---|---|---|
+| production callers | **zero** | the mailbox path |
+| seen-set | caller-supplied, nothing durable holds it | caller-supplied, nothing durable holds it |
+| owner | P4-06 | P5-11 |
+
+**Neither is wrong; the pair is.** One rule, written twice, by two epics, each aware of the other — the second cites the first in prose rather than importing it. And the copy that P4-06's clause is about is the one nothing calls, which is why "the classifier decides correctly" has been provable all along while "a real arrival was deduplicated" has not.
+
+**Why this is not fixable inside P4-06's U stage as declared.** The subject its file list names does not exist in that file. The real candidates are the mailbox path (P5-11's package) and whatever future surface delivers bus messages — and choosing between "wire the bus store into mailbox's dedup" and "give message-bus its own arrival surface" decides which epic owns a rule two epics currently share.
+
+**Not acted on.** The delegate has already scheduled P4-06's U call site as a separate batch; this entry is so that batch starts from the measurement rather than from the file list, which points at the wrong file. A durable seen-set now exists either way — `bus.sqlite`'s `consumedKeys()` — so whichever surface is chosen has something real to read.
+
 ### BLOCKED-135 — the plugin lock does not lock integrity: the field it reads is written by nothing
 
 **State: OPEN. This is a defect in a shipped path, not a bookkeeping gap, and it was found by doing P1-03's fourth make-vs-use question rather than by any test.**

@@ -7880,6 +7880,47 @@
         "failureSummary": "(1) 2 failed; (2) 2 failed; (3) initially PASSED ALL TEN and is recorded as a gap the first pass missed — a consumed row swept back to `released` would be re-claimable and the effect would run twice; a case was added and it now fails 1. (4) initially PASSED ALL ELEVEN, because IMMEDIATE and DEFERRED leave the same end state in one process. Measured against a real second process holding the write lock for 400ms: IMMEDIATE with a busy timeout waits 407ms and succeeds, DEFERRED throws `database is locked` in 0ms because its read-to-write upgrade cannot wait, and IMMEDIATE with a zero timeout throws at BEGIN. The contended-commit case now fails both (4) and the busy_timeout removal. All four mutations fail against the frozen set.",
         "probeCorrection": "The first contention probe was INVALID and its result was discarded: the IMMEDIATE trial waited out the holder, so the DEFERRED trial that followed faced no contention and 'passed' in 1ms. Trusting it would have concluded the two are indistinguishable and fallen back to a weaker structural check, on the strength of a measurement that measured nothing. Each trial now gets its own holder process."
       }
+    },
+    {
+      "epic": "P2-02",
+      "stage": "P",
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P2-02",
+        "stage": "P"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/kernel/trust-kernel/tests/signing.spec.ts",
+        "packages/policy/capability-token/tests/token.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-02 must[1]: the kernel signs with real key material verifies a signature it produced, and refuses the same bytes with one byte changed",
+        "P2-02 must[1]: the kernel signs with real key material refuses a signature made by a DIFFERENT kernel, which the marker cannot distinguish",
+        "P2-02 must[1]: the kernel signs with real key material keeps the PRIVATE key off the signatureRoots handle, which crosses the plugin boundary"
+      ],
+      "files": [
+        "packages/kernel/trust-kernel/src/index.ts",
+        "packages/kernel/trust-kernel/tests/signing.spec.ts",
+        "packages/policy/capability-token/src/attenuate.ts",
+        "packages/policy/capability-token/tests/token.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T07:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "1b0f83e17d75d09dfc556b9ec1eabbc9d158384a",
+        "testsDiscovered": 3
+      },
+      "note": "P2-02 must[1]'s signing half. What it replaces: `issueToken`/`attenuateToken` wrote a fixed four-byte marker and `verifyToken` compared a candidate against that same constant — identical in EVERY installation, so another deployment's token verified here and verification could not fail. The parameters were literally named `_trustRoot`: the handle was taken and ignored. This is the third occurrence of one shape in this program (the plugin lock's `unavailable:` integrity, the boot-path fetch assertion, this marker), and the tell each time is a comparison whose two sides come from the same place. The third case PASSED before the key existed and is a regression guard rather than a driver: `signatureRoots` was `Object.freeze({})`, so 'the private key is not on the handle' was trivially true. It is frozen because the handle crosses the plugin boundary and is exactly where a refactor would put the key by accident. Scope, per the delegate's ruling: must[1] is issuance/verification/attenuation and does NOT include key LIFETIME. Persistence, rotation, the 0600 dev file backend, `production-controlled` refusing a file backend, and the survives-a-restart case are SLICE-kernel-keys, due before P4-04. Freezing must[1] now does not claim any of them. NOT claimed: that the root is trustworthy. This makes a token's issuer checkable against a root the deployment configured; whether that root is the right one is P1-02's question, under P1-02's own lock. Fiber-A's poisoning cases are referenced rather than duplicated — they already prove verification reaches the real kernel from a poisoned non-root fiber.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations, each applied alone and reverted. On trust-kernel: (1) all kernels share one keypair, which is precisely the marker's flaw; (2) verify returns true unconditionally; (3) the private key is exported onto the signatureRoots handle. On capability-token: (4) verification ignores the trustRoot and accepts any non-empty signature.",
+        "failureSummary": "(1) 1 failed — the different-kernel case; (2) 2 failed; (3) 1 failed — the guard case, which is why it was written despite passing beforehand; (4) 1 failed of 78 in token.spec.ts, the cross-kernel case, which the marker could never have caught. Restored: 134 passed across both packages.",
+        "fixtureNote": "`fixtureSigned` returned the hardcoded marker and matched only because signing WAS that marker. Against real signatures it is a forgery, correctly refused, and every expiry and replay case would have failed for reasons unrelated to expiry or replay. It now signs with the same kernel the cases verify against, and RECOMPUTES the signed bytes rather than importing the production signer — a test calling the same function agrees with it by construction and cannot catch a change in what the signature covers."
+      }
     }
   ]
 }
