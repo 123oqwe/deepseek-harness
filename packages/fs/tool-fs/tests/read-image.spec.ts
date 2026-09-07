@@ -135,6 +135,8 @@ function agentOn(model: string | undefined, provider = 'visual', messages: reado
       // Read by the PTC dispatch path to number an ActionManifest (P2-03); a
       // double without it throws inside the scheduler lane (BLOCKED-126).
       countEventsOfType: () => 0,
+      id: 'session-fake',
+      snapshotEvents: () => [],
     },
   }
 }

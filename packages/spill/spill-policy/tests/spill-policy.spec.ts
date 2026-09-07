@@ -204,6 +204,8 @@ describe('outer PTC mode failure capture', () => {
         // lane, where the failure shows up as a timeout somewhere unrelated
         // rather than as a missing member (BLOCKED-126).
         countEventsOfType: () => 0,
+        id: 'session-fake',
+        snapshotEvents: () => [],
       },
     }
 
@@ -258,6 +260,8 @@ describe('the durable dispatch-log arm', () => {
         // ActionManifest (P2-03), and a double missing it throws inside the
         // scheduler lane where the failure reads as a timeout (BLOCKED-126).
         countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
+        id: 'session-fake',
+        snapshotEvents: () => events,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
@@ -345,6 +349,8 @@ describe('the durable dispatch-log arm', () => {
         // (P2-03); a double missing it throws inside the scheduler lane,
         // where the failure reads as a timeout (BLOCKED-126).
         countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
+        id: 'session-fake',
+        snapshotEvents: () => events,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
@@ -407,6 +413,8 @@ describe('the durable dispatch-log arm', () => {
         // (P2-03); a double missing it throws inside the scheduler lane,
         // where the failure reads as a timeout (BLOCKED-126).
         countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
+        id: 'session-fake',
+        snapshotEvents: () => events,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
@@ -463,6 +471,8 @@ describe('the durable dispatch-log arm', () => {
         // (P2-03); a double missing it throws inside the scheduler lane,
         // where the failure reads as a timeout (BLOCKED-126).
         countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
+        id: 'session-fake',
+        snapshotEvents: () => events,
       },
     }
     ctx.tools.register(textTool('huge_read', 'H'.repeat(2_000)))
