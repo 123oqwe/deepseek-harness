@@ -263,12 +263,21 @@ Measured while checking whether the new package broke anything. All three predat
 | `publint` | `pkg.exports["./src/*"] is ./src/* but does not match any files` | **265 packages**, identical message |
 | `verify-package-invariants` | `omitted companion requires a README "No ... companion is published" reason sentence` | **11 packages**, plus 7 more reporting an empty `invariant.ts` install function |
 | `verify-package-dependencies` | `@deepseek-ai/dsh-principal must be devDependencies-only at workspace:^; found dependencies` | **1**, `packages/core/session` |
+| `verify-md-wrap` | a paragraph is not one physical line | **198 findings** |
+| `verify-package-readme-model-experience` | `must contain one or more complete model-context entries` | **1**, `packages/policy/risk-taxonomy` |
+| `verify-translation-pairing` | out of sync, or a pair that never existed | **30 files**, which is BLOCKED-124's 14 pairs |
+
+The last three were measured after the first three, while fixing a real failure of this slice's own (below). None of the 229 findings names a file this slice wrote.
 
 **Why this is a pointer and not a fix.** A repo-wide gate red at HEAD is not evidence about the change in front of it, and a slice that quietly repairs 265 packages to make its own run green stops being reviewable. The one package this slice created carries the companion sentence, because writing it correctly the first time is not the same as fixing someone else's.
 
 **Owners, so the pointer resolves to someone.** The `./src/*` export pattern is a repository-wide convention question — every package publishes it and no package ships `src`, so either the pattern or the `files` list is wrong everywhere, and it wants one decision rather than 265. The missing companion sentences belong to their packages' epics, `dsh-mailbox` to P5-11 and `dsh-message-bus` to P4-06 among them. The `core/session` dependency direction belongs to whoever moved `dsh-principal` out of dev dependencies.
 
-**What this entry is NOT evidence of.** It does not say the gates are wrong, and it does not license reading them as noise. It says these three were already red, that this slice did not add to them, and that a later reader comparing a red `hygiene` run against this batch has the measurement rather than a claim.
+**What this entry is NOT evidence of.** It does not say the gates are wrong, and it does not license reading them as noise. It says these were already red, that this slice did not add to them, and that a later reader comparing a red `hygiene` run against this batch has the measurement rather than a claim.
+
+**And the entry's own limit, found the hard way an hour after it was written.** Run 34098026915 went red on ONE case — `doc-standard.spec.ts`: `packages/collaboration/intake-dedup/README.md: missing Dev Note` — a genuine failure of this slice, in the same family of repo-wide documentation gates catalogued above. **Having a list of pre-existing reds is exactly the condition under which a new red gets read as one of them.** It was not; it was mine, and it was found by reading the failure text rather than by matching the gate's name against this table, which is BLOCKED-137's lesson applied to the entry that BLOCKED-137 motivated.
+
+The requirement was real and the documentation was not: `docs/cookbook/adding-a-package.md` calls its README ending "this canonical sequence" while omitting `## Summary`, `## Table of Contents` and `### Dev Note`, which `doc-standard.spec.ts` requires by name. Two new packages have now landed missing one of them. The cookbook says so as of this batch; the gate remains the requirement, and the sentence is only the pointer to it.
 
 ### BLOCKED-138 — the durable seen-set speaks a THIRD key format, and a frozen case pins the disagreement while its title claims agreement
 

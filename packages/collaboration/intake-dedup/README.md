@@ -18,6 +18,7 @@ English | [中文](README.zh.md)
 - [The precedence check stays with the caller](#the-precedence-check-stays-with-the-caller)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+- [Dev Note](#dev-note)
 
 ## Why a package
 
@@ -39,11 +40,24 @@ What counts as "may act on it" differs between the two. The dedup rule does not,
 
 ## Model Experience
 
-- **Model-visible surface:** none. No prompt text, tool schema, or tool result originates here.
-- **Token cost:** none.
-- **KV-cache effect:** none.
+None, as this package exports a duplicate decision and types only and registers nothing model-facing.
+
+#### KV Cache effect
+
+Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
 - **The seen-set is supplied by the caller.** This module holds no state and has no opinion on where the set comes from; `dsh-message-bus`'s `bus.sqlite` provides a durable one, and a caller that assembles its own gets whatever durability it built.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about. Its decisions are pure functions of their arguments, covered by unit cases in the two packages that apply them.
+
+### Dev Note
+
+<details>
+<summary>Working context for maintainers — click to expand</summary>
+
+This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
+
+Three implementations of this rule existed before this package, and the third was found only when the durable one was wired to the other two (BLOCKED-138). Nothing prevents a fourth: a consumer that keys its own state without importing `dedupKey` compiles, passes its own tests, and disagrees silently. Whether that wants a lint rule, a runtime assertion at the seam, or nothing at all is undecided.
+
+</details>

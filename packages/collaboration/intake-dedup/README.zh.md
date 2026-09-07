@@ -7,7 +7,7 @@ kind: "package-reference"
 
 [English](README.md) | 中文
 
-## 摘要
+## 概述
 
 `classifyDedup` 根据消息的 `(id, epoch)` 身份和消费者已应用过的键集合，判断一次到达是首次到达还是重复到达。`dedupKey` 推导该键。此处再无其他内容。
 
@@ -18,6 +18,7 @@ kind: "package-reference"
 - [前置检查留在调用方](#the-precedence-check-stays-with-the-caller)
 - [Model Experience](#model-experience)
 - [已知限制与延后事项](#known-limitations-and-deferred-work)
+- [开发备注](#dev-note)
 
 ## 为什么单独成包
 
@@ -39,11 +40,24 @@ kind: "package-reference"
 
 ## Model Experience
 
-- **模型可见面**：无。没有提示词文本、工具 schema 或工具结果源自此处。
-- **Token 成本**：无。
-- **KV 缓存影响**：无。
+None, as this package exports a duplicate decision and types only and registers nothing model-facing.
+
+#### KV Cache effect
+
+此处没有任何东西进入模型请求，因此不影响 provider 的缓存复用。
 
 ## 已知限制与延后事项
 
 - **seen 集由调用方提供。** 本模块不持有状态，也不对该集合的来源作任何假定；`dsh-message-bus` 的 `bus.sqlite` 提供了一个持久的版本，而自行组装集合的调用方，得到的持久性就是它自己构建出的那一份。
 - 不发布 runtime invariant companion（No runtime invariant companion is published）：本包不持有状态、也不观测任何东西，因此不存在两个观测者可能产生分歧的自有关系。它的判断是参数的纯函数，由应用它的两个包中的单元用例覆盖。
+
+### 开发备注
+
+<details>
+<summary>给维护者的工作上下文 — 点击展开</summary>
+
+本开发备注是给维护者的工作上下文：未决问题与尚未定下的方向。它明确不具权威性——已交付的行为与边界写在上面各节和包代码里。
+
+在本包出现之前，这条规则存在三份实现，而第三份是把持久的那份接到另外两份上时才被发现的（BLOCKED-138）。没有任何东西能阻止第四份：一个不 import `dedupKey` 而自行推导键的消费者，能编译、能通过自己的测试，并静默地与其他实现不一致。这该由 lint 规则、seam 处的运行时断言，还是什么都不做来处理，尚未决定。
+
+</details>

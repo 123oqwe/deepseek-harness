@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/collaboration/intake-dedup/README.md
-README.md: 2a586ec52f93f04f7e5237bf1bd70b359c44da61
-README.zh.md: 89dec3754e71e245db6942509386b5cc43a2f041
+README.md: 9e10015378a8856926fb026f6b209b4aa1ac41b8
+README.zh.md: a9d08a9e597a7aff1e8b00027c8ee9cc8ea2d744
