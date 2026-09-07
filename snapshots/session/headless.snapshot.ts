@@ -1,7 +1,7 @@
 /** Recorded-session replay through the shipped headless `dsh` profile. */
 
 import { cp, copyFile, mkdir, readFile, readdir, rm, utimes, writeFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { basename, delimiter, dirname, join } from 'node:path'
@@ -44,6 +44,14 @@ import { parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url))
 const snapshotsRoot = fileURLToPath(new URL('./', import.meta.url))
+/**
+ * Where a partial refresh records what it could not observe (BLOCKED-137).
+ *
+ * In the tree, committed with the fixtures: the record's whole job is to
+ * outlive the operator's memory of having seen a warning.
+ */
+const REFRESH_SKIPPED_RELATIVE = 'snapshots/.refresh-skipped.json'
+const REFRESH_SKIPPED_PATH = join(repoRoot, REFRESH_SKIPPED_RELATIVE)
 const dshBin = join(repoRoot, 'apps/cli/src/bin.ts')
 const tsconfigPath = join(repoRoot, 'tsconfig.json')
 const editingCordisSkill = join(
@@ -830,12 +838,37 @@ describe('headless recorded-session snapshots', () => {
   // It fires ONLY while refreshing. A plain replay skipping a pwsh scenario is
   // ordinary and correct; a REFRESH skipping one silently leaves that fixture
   // describing an older build, and the gap is invisible until CI runs it.
+  // BLOCKED-137's root fix. The assertion above was already here when the two
+  // pwsh fixtures went stale and reddened five consecutive CI runs, because
+  // its own message offered "or commit knowing these are stale" and nothing
+  // downstream required that knowledge to be written anywhere. "Knowing" lasted
+  // until the next command.
+  //
+  // So the escape hatch now has a cost: a refresh that skips scenarios must
+  // leave a RECORD in the tree, committed beside the fixtures it could not
+  // write. The record is what makes the omission survive the operator's memory,
+  // and it is what CI reads to say "stale-on-host: <name>" instead of a bare
+  // red diff someone has to diagnose.
   it.runIf(mode === 'refresh')('refuses to look complete when it skipped a scenario this host cannot run', () => {
+    if (skippedScenarios.length === 0) {
+      // A refresh that reached everything must not leave a record claiming
+      // otherwise: a stale record is worse than none, because the next reader
+      // treats a named scenario as known-stale and stops looking.
+      expect(existsSync(REFRESH_SKIPPED_PATH), `${REFRESH_SKIPPED_RELATIVE} exists but this refresh skipped nothing; delete it`).toBe(false)
+      return
+    }
+    writeFileSync(REFRESH_SKIPPED_PATH, `${JSON.stringify({
+      host: `${process.platform}-${process.arch}`,
+      reason: hasPwsh ? 'scenarios this host cannot run' : 'no pwsh on this host',
+      scenarios: [...skippedScenarios].sort(),
+    }, null, 2)}\n`, 'utf8')
     expect(
       skippedScenarios,
       `this refresh rewrote the other scenarios and left these untouched: ${skippedScenarios.join(', ')}. `
-      + 'Their expectations still describe whatever build wrote them last, and this host cannot observe otherwise. '
-      + 'Refresh again where they run (pwsh scenarios need a real pwsh), or commit knowing these are stale.',
+      + `They are now recorded in ${REFRESH_SKIPPED_RELATIVE}, which MUST be committed with the fixtures: `
+      + 'their expectations still describe whatever build wrote them last, this host cannot observe otherwise, '
+      + 'and the record is what tells CI so instead of leaving a red diff to diagnose. '
+      + 'Refresh again where they run (pwsh scenarios need a real pwsh) and the record clears itself.',
     ).toStrictEqual([])
   })
 })

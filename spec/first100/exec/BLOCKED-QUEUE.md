@@ -377,7 +377,13 @@ A known-flake list is a legitimate explanation; matching one by test name is not
 
 The repair is two lines, one field per file, each file carrying exactly one `action/manifest-appended` (asserted before writing). It cannot be observed on this host, for the same reason the refresh could not: those two cases skip here. CI is the only place the fix is visible, which is also why the staleness survived.
 
-**Open question for the registry, not acted on:** whether the escape hatch should stay unrecorded. The cheap form is for a refresh that skips scenarios to write the skipped names into a file the exact-SHA workflow reads, so a stale fixture arrives at CI already named rather than as a red run someone has to diagnose.
+**ROOT FIX LANDED 2026-09-07**, delegate ruling §12.11 item 4. The escape hatch now costs something:
+
+- A refresh that skips scenarios WRITES `snapshots/.refresh-skipped.json` — host, reason, and the scenario names — to be committed beside the fixtures it could not rewrite. The record is what outlives the operator's memory of having seen a warning, which is precisely what the old message could not do.
+- A refresh that skips NOTHING refuses to leave a stale record behind. A record naming a scenario that is actually current is worse than no record: the next reader treats the name as known-stale and stops looking.
+- The exact-SHA workflow prints the record BEFORE running the snapshots, so `expected 0 to be 1 in pwsh-tool-turn` arrives as "that fixture is known stale on the host that refreshed it". That is the diagnosis that took five red runs and six hours to reach by hand.
+
+Verified by driving the write-and-clear logic directly: two skipped scenarios produce a record naming both, and a complete refresh with a record left behind is reported rather than ignored.
 
 ### BLOCKED-136 — the consumer dedup rule is implemented TWICE, and P4-06's copy is the one with no caller
 

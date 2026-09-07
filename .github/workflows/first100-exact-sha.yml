@@ -220,7 +220,19 @@ jobs:
         # red says less than it appears to, and P2-03's U stage is the worked
         # example -- it broke 76 and every cell greened anyway. Keyless replay,
         # so this needs no credentials.
-        run: pnpm run test:snapshot
+        #
+        # BLOCKED-137: a refresh that could not observe some scenarios leaves
+        # `snapshots/.refresh-skipped.json` naming them. Printing it BEFORE the
+        # run turns "expected 0 to be 1 in pwsh-tool-turn" into "that fixture is
+        # known stale on the host that refreshed it" -- the diagnosis that took
+        # five red runs to reach by hand.
+        run: |
+          if [ -f snapshots/.refresh-skipped.json ]; then
+            echo "::warning::a refresh left fixtures unobserved; a failure in one of these is stale-on-host, not a regression:"
+            cat snapshots/.refresh-skipped.json
+            echo "refresh them where they run (pwsh scenarios need a real pwsh), then delete the record"
+          fi
+          pnpm run test:snapshot
 
 
       - name: Pack the dsh family
