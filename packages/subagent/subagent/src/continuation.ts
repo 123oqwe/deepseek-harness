@@ -54,6 +54,7 @@ import type { ContinuableCreateRequest, ContinuableCreateSpec, SubagentResult, S
 import type { ActivationObserver, ActivationTerminal } from './lifecycle.ts'
 import { SubagentError } from './error.ts'
 import { isAdjacentAgentSendMessageTool } from './internal.ts'
+import { decideConvergence } from './control-convergence.ts'
 
 /** Durable attribution for one model-authored message between adjacent Agents. */
 export interface AgentMessageSource {
@@ -974,9 +975,22 @@ export class SubagentContinuationManager {
    * holds the ids this manager admitted but has not yet seen drained.
    */
   private stateOf(activation: Activation): ActivationState {
-    if (activation.handle.agent.status === 'running' || activation.accepted.size > 0) return 'running'
-    if (activation.ownedChildren.size > 0) return 'waiting'
-    return 'settled'
+    // Decided through must[3]'s barrier rather than by three inline
+    // comparisons. The barrier is not decoration here: it refuses an EMPTY
+    // participant set, so if a participant is ever dropped from this list the
+    // run stops converging instead of converging trivially — which is how this
+    // clause would otherwise stop meaning anything while every case still
+    // passed.
+    const convergence = decideConvergence([
+      { name: 'agent', stopped: activation.handle.agent.status !== 'running' },
+      { name: 'accepted-work', stopped: activation.accepted.size === 0 },
+      { name: 'owned-children', stopped: activation.ownedChildren.size === 0 },
+    ])
+    if (convergence.converged) return 'settled'
+    // `waiting` is the state where the child itself has stopped and only its
+    // OWN children are outstanding: the manager may deliver settlement to it,
+    // but not treat it as finished. Anything else outstanding is `running`.
+    return convergence.pending.every((name: string) => name === 'owned-children') ? 'waiting' : 'running'
   }
 
   /**
