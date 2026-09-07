@@ -708,3 +708,19 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 **事实**:执行者按 §12 建了 `filesOverlay`(162 条:test 96 / source 43 / doc 15 / manifest 8),门 `verify-files-overlay` 进 gate set。机制我读代码核过三点:overlay **回归生成**不读盘(`--write` 只刷可读产物,不参与判定);**`scaffold` 不按路径推断**(第一版按路径把 `core/session/src/index.ts`、`core/agent/src/index.ts` 归"约定 barrel,无需解释",恰好藏起 §12 第 2 条要我逐个核的热区——已改,source 30→43);source 缺 reason 拒绝,正控验过。**机制过。**
 **理由表不过**:标 `HOT ZONE` 的 5 条(执行者信里说 3 条,漏 P1-08 `profile-boot.ts`),我逐条对 `git show <commit> -- <file>`,**3 条与 diff 相反,且方向一致——都把对共享文件的改动说成"没改"**:(1) P2-03 → `core/session/src/index.ts` 说"没改日志本身",实际 `ed09684ecf` 给 Session 日志类加了 `typeCounts` Map + 公开方法 `countEventsOfType`,每次 append 维护;(2) P4-07 → `core/agent/src/index.ts` 说"没栅栏的那个**仍然**导出",实际 `c79a24f78c^` 的 barrel 里 `advanceAgentLifecycle` 零次出现,是 P4-07 自己同一笔新加了带栅栏与不带栅栏两个导出——open finding 是 P4-07 造的,不是它发现的;(3) P1-02 → `kernel/trust-kernel/src/index.ts` 说"读 signatureRoots,不改构造",实际 `05c22146ef` +42/−1:`createTrustKernel()` 签名加 `config: TrustKernelConfig`,新增 `CONFIGURED_ANCHORS` WeakMap 与导出 `configuredTrustAnchors`。P2-02 / P1-08 / P4-06→mailbox(P5-11 所有,BLOCKED-059 先例)三条相符。
 **裁决**:(1) 三条按 diff 重写,一次提交,随 P4-06 观测结论后一起推(观测中推送会取消该 run);(2) **规则(进 Standing 与 EPIC-LIFECYCLE 2.x)**:共享/热区文件的 overlay 理由必须**从 diff 写起**——先说改了什么(签名 / 状态 / 导出),再说为什么,句中带 commit 短 hash 让人能重新推导;门只能查"有没有句子",查不了"句子对不对",所以 delegate 在每次 overlay 变更时读全部 HOT ZONE 条目的 diff,不接受句子。**教训**:凭意图写的理由系统性偏向"我没动共享的东西"——这正是 §12 第 2 条要抓的偏差,只是换了个写法。
+
+### 12.9 P4-06 签字前核:词汇用例缺席,且去重键漏了 source(2026-09-07 05:25 EDT,不签)
+
+**事实**(delegate 亲核,观测 `34101734274` @ `9cb21a872a` 本身是绿的:P4-06 80/80、P5-11 64/64、`success:true`):
+1. **§12.3 义务未兑现**:P4-06 是「CloudEvents attribute names; dedup on id」的唯一形状所有者,`standardsOwned` 仍是 `assignedBy`,`verify-make-vs-use` 报 PENDING_ADOPTION;`--accept` 时 PENDING → UNRECORDED。**没有任何冻结用例点名这些属性**——`id/source/type/time/subject/datacontenttype` 只作为 fixture 字段出现,把类型和 fixture 里的 `datacontenttype` 一起改名,P4-06 全部用例照绿。`realized.note` 写"所有权已由 P.3 / U.2 用例的证据承载"——那些标题一个属性都没点名;**这句和 §12.8 的热区理由是同一个毛病:凭意图写的**。
+2. **标准本身给出的答案被漏掉了**:CloudEvents 的唯一性是 **`source + id`**;这里的键是 `(id, epoch)`,`source`/`from` 不参与。`MessageId` 文档"程序生命周期内唯一",`SenderEpoch` 是**每发送者**的代,理由文里明说发送者"重启复用计数器"——即 id 是发送者本地计数。两个发送者各发 `(id=1, epoch=1)`,后者被当重复**静默丢弃**;而 `src` 里没有任何铸 id 的代码(今天**零个生产 producer**),唯一性只是一句 JSDoc,消费者验不了。`source` 在 bus 上已是 `TEXT NOT NULL`,mailbox 有 `from`——数据都在,只是没进键。
+3. registry 自己写的就是 `(messageId, epoch)`(must[2] / acceptance[0]),所以代码与 registry 一致;**漏洞在 registry 措辞里**,标准所有权正是为抓这种事设的。
+
+**裁决**:
+1. **键改为 `(source, id, epoch)`**,只改 `dsh-intake-dedup` 一处(id 与 source 都长度前缀);mailbox 传 `from`,bus 传 `source`;租户拒绝仍在键之前。
+2. **A 类 registry 改动**(C11,delegate 裁决,执行者执行,`clauseProvenance: §12.9`):must[2] → "consumer 按 (source, message id, epoch) 去重";acceptance[0] → "按 (source, messageId, epoch) 幂等"。这是**收紧**:同 source 下原保证不变,跨 source 的同 id 不再被误判为同一消息。
+3. **词汇用例(§12.3 义务)**,P 阶段 supplement:(a) `domainEvents()` 回读对象的键**恰为** CloudEvents 属性名(对回读结果断言,不对 fixture);(b) 键的组成:两个 source 同 id 同 epoch → **都投递**,同 source 同 id 同 epoch → 第二条 drop;变异:键里去掉 source → 红。随后 `standardsOwned` 改 `evidenceTitleSubstring`。
+4. BLOCKED-138 的"一致"用例断言的是一致本身,不是拼写:fixture 补 source 后断言不变者 **supplement**,断言变者 **supersede**(BLOCKED-103);inbox 行若无 source 列,加列(pre-release 无迁移承诺)。
+5. `realized.note` 那句改成事实。**再观测一次**,P4-06 顺延一个 CI 周期——代价接受:一条以"幂等消费"为全部内容的 epic,不能带着会静默吞掉第二个发送者消息的键验收。
+
+**教训(进 §11.1 族)**:所有者对标准的第一问是"标准对这个问题怎么说",不是"我们的字段叫什么"。属性名抄对了,唯一性规则漏了——**词汇用例的价值恰在后者**。
