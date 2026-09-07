@@ -299,3 +299,36 @@ declare module '@deepseek-ai/cordis' {
     trustKernel?: TrustKernel
   }
 }
+
+/**
+ * Sign bytes with this kernel's private key (P2-02 must[1]).
+ *
+ * The private key never leaves the kernel: it lives in this module's private
+ * state keyed by the roots handle, the shape {@link configuredTrustAnchors}
+ * already uses for anchors. A caller holding `signatureRoots` can ask for a
+ * signature and cannot obtain the key.
+ *
+ * Replaces the fixed marker `capability-token` signs with today, which every
+ * installation produces identically — so a token from another deployment
+ * verifies here, and verification cannot fail.
+ * @param signatureRoots - the kernel's own signature-roots handle.
+ * @param bytes - the exact bytes to sign.
+ * @returns the detached signature.
+ */
+export function signWithSignatureRoots(signatureRoots: TrustKernelSignatureRoots, bytes: Buffer): Buffer {
+  void signatureRoots
+  throw new Error(`not implemented: signWithSignatureRoots over ${String(bytes.length)} byte(s)`)
+}
+
+/**
+ * Verify a detached signature against this kernel's public key.
+ * @param signatureRoots - the kernel's own signature-roots handle.
+ * @param bytes - the bytes the signature claims to cover.
+ * @param signature - the detached signature.
+ * @returns true only when this kernel produced that signature over those bytes.
+ */
+export function verifyWithSignatureRoots(signatureRoots: TrustKernelSignatureRoots, bytes: Buffer, signature: Buffer): boolean {
+  void signatureRoots
+  void signature
+  throw new Error(`not implemented: verifyWithSignatureRoots over ${String(bytes.length)} byte(s)`)
+}
