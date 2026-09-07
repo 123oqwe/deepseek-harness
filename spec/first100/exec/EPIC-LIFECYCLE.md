@@ -47,6 +47,7 @@
 | 2.7 | 不接受、不索取、不持有、不转发任何密钥;Sigstore keyless 是为此选的 | 用户「记住不要把任何密钥放到公网上」;C10.1 |
 | 2.8 | 第二份声明检查:**按行为扫全树**(排 key+stringify+喂 hash 等),不按名字 | 整改令 §7.6 |
 | 2.9 | 撞到库的硬约束 → 停手,BLOCKED 记实测数字,两条路都实测,等裁决(不自选) | 先例 BLOCKED-128 |
+| 2.10 | 冻结引用了 `files[]` 之外的文件 → 记 `filesOverlay`(机械生成,`kind=source` 附一句 reason);共享/热区文件的 reason **从 `git show <commit> -- <file>` 写起**(先说改了什么,带 commit 短 hash),delegate 逐条对 diff | 整改令 §12 / §12.8;`verify-files-overlay` |
 
 ## 3. 观测
 
