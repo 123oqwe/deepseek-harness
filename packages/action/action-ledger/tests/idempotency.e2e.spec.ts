@@ -126,22 +126,31 @@ describe('P4-12 must[1]: a provider with native support gets the Idempotency-Key
 })
 
 describe('P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally', () => {
-  it('gives two principals presenting the SAME key two independent reservations', () => {
-    // draft-ietf-httpapi-idempotency-key-header-07 defines the key as unique
-    // per client, and its security considerations give the reason: a server
-    // that does not scope by client lets one client learn another's key state.
-    // Stripe scopes per account for the same reason. Two agents deriving a key
-    // from an arguments hash or a counter collide easily, and the second must
-    // not be answered with the first's outcome.
+  it('carries the requesting principal into the reservation, which is what the store persists', () => {
+    // The property this pure function really has, and the one the store then
+    // depends on: it writes the entry the decision produced, so a decision that
+    // dropped or fixed the scope would write rows under the wrong principal.
+    //
+    // A first version of this case asserted that two principals presenting one
+    // key both get `reserved` — with `existing: undefined` passed twice, which
+    // is `reserved` whatever the scope is. No mutation of this function could
+    // redden it; the reddening in its own proof came from the STORE's suite.
+    // A case whose evidence lives in another suite is ceremony here.
+    // Only the first-arrival branch is asserted here. A second case, that a
+    // RE-reservation keeps the stored principal, was written and then deleted:
+    // the store looks an entry up BY `(scope, key)`, so an existing entry's
+    // scope always equals the request's, and the mutation that would break it
+    // (adopting the caller's scope on retry) reddens nothing. Making it fail
+    // would need an input the lookup cannot produce.
     const mine = decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(1) }, undefined)
-    expect(mine.action).toBe('reserved')
     const theirs = decideReservation({ scope: OTHER_SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(1) }, undefined)
-    expect(theirs.action).toBe('reserved')
+    expect(mine).toMatchObject({ action: 'reserved', entry: { scope: SCOPE, key: KEY } })
+    expect(theirs).toMatchObject({ action: 'reserved', entry: { scope: OTHER_SCOPE, key: KEY } })
   })
 
   it('still refuses a second reservation WITHIN one principal, so scoping did not disable dedup', () => {
     // The control: without it, a ledger that scoped everything apart — or
-    // ignored the entry entirely — would satisfy the case above.
+    // ignored the entry entirely — would satisfy the cases above.
     expect(decideReservation({ scope: SCOPE, key: KEY, argumentsHash: ARGS, epoch: epoch(1) }, entry({ state: 'sent' })).action)
       .toBe('duplicate')
   })

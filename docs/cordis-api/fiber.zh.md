@@ -36,7 +36,7 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 **返回**一个用于撤销该作用的清理函数，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L415)
+[源码](../../vendor/cordis/src/fiber.ts#L512)
 
 ### ctx.fiber
 
@@ -55,7 +55,7 @@ fiber: Fiber
 
 fiber 会跟踪 `ctx.plugin()` 返回的插件上下文所对应的依赖状态、经过校验的配置、生命周期作用和清理操作。
 
-[源码](../../vendor/cordis/src/fiber.ts#L184)
+[源码](../../vendor/cordis/src/fiber.ts#L218)
 
 ### fiber.uid
 
@@ -66,7 +66,7 @@ public uid: number | null
 
 在注册表中的唯一 id；根 fiber 的 id 为 0，dispose 后为 `null`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L186)
+[源码](../../vendor/cordis/src/fiber.ts#L220)
 
 ### fiber.ctx
 
@@ -77,7 +77,7 @@ public readonly ctx: Context
 
 此 fiber 的插件运行所在的上下文（扩展自父上下文）。
 
-[源码](../../vendor/cordis/src/fiber.ts#L188)
+[源码](../../vendor/cordis/src/fiber.ts#L222)
 
 ### fiber.config
 
@@ -88,7 +88,7 @@ public config: any
 
 经过校验的插件配置（由 `update()` 更新）。
 
-[源码](../../vendor/cordis/src/fiber.ts#L190)
+[源码](../../vendor/cordis/src/fiber.ts#L224)
 
 ### fiber.state
 
@@ -99,7 +99,7 @@ public state
 
 当前生命周期状态；状态转换会发出 `internal/status`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L194)
+[源码](../../vendor/cordis/src/fiber.ts#L228)
 
 ### fiber.dispose
 
@@ -110,18 +110,67 @@ public readonly dispose: () => Promise<void>
 
 dispose 此 fiber：卸载插件，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L196)
+[源码](../../vendor/cordis/src/fiber.ts#L230)
 
 ### fiber.store
 
 ```ts cordis-catalog
-/** Snapshot of required service implementations while loaded; `undefined` otherwise. */
-public store: Dict<Impl> | undefined
+/**
+ * Snapshot of required service implementations while loaded; `undefined`
+ * otherwise.
+ *
+ * LOCAL MODIFICATION (dsh): an accessor rather than a plain field, so that
+ * every assignment — the two internal ones and any a plugin makes — passes
+ * through `applyStoreGuard`. Sealing only the objects this class creates
+ * would leave `ctx.fiber.store = { trustKernel: forged }` working, which
+ * replaces the guarded object wholesale instead of writing into it.
+ */
+public get store(): Dict<Impl> | undefined
 ```
 
 加载期间所需服务实现的快照；其他情况下为 `undefined`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L198)
+本地修改（dsh）：改为访问器而不是普通字段，使每一次赋值——两处内部赋值以及插件所做的任何赋值——都经过 `applyStoreGuard`。只密封本类创建的对象，会让 `ctx.fiber.store = { trustKernel: forged }` 依然生效：它整体替换掉被守卫的对象，而不是往里写。
+
+[源码](../../vendor/cordis/src/fiber.ts#L241)
+
+### fiber.pinStoreName(name, impl)
+
+```ts cordis-catalog
+/**
+ * Fix `name`'s store entry, in this fiber's whole tree, to `impl`.
+ *
+ * LOCAL MODIFICATION (dsh). Intended for kernel handles pinned before any
+ * plugin mounts. Call it AFTER `ctx.provide(name, ...)`: it reads no
+ * registry itself, so the caller passes the `Impl` record `provide` wrote.
+ * Every fiber created afterwards receives the entry as non-writable and
+ * non-configurable, so a plugin assigning over it throws instead of
+ * succeeding silently, and this fiber's existing store is sealed in the
+ * same call.
+ *
+ * A METHOD, not a module export, because the repository's rule 4
+ * (`kernel-forbidden-cordis-binding`, checked by
+ * `tests/architecture/check-layer-deps.spec.ts`) permits the trust kernel to
+ * import exactly `Context` from Cordis and nothing else. The kernel already
+ * reaches `ctx.reflect.store` and `ctx.reflect.props` through that one
+ * binding; reaching the pin the same way keeps the coupling where the rule
+ * already tolerates it instead of widening the rule to fit this change.
+ * @param name - the service name to pin.
+ * @param impl - the implementation record every fiber in this tree must resolve `name` to.
+ */
+public pinStoreName(name: string, impl: any): void
+```
+
+把 `name` 在本 fiber 整棵树中的 store 条目固定为 `impl`。
+
+本地修改（dsh）。用于在任何插件挂载之前固定的内核句柄。请在 `ctx.provide(name, ...)` **之后**调用：它自身不读取任何注册表，因此由调用方传入 `provide` 写入的那条 `Impl` 记录。此后创建的每个 fiber 拿到的该条目都是不可写、不可配置的，于是插件对它赋值会抛出而不是静默成功；同一次调用中，本 fiber 已有的 store 也会被密封。
+
+它是一个**方法**而不是模块导出，因为仓库规则 4（`kernel-forbidden-cordis-binding`，由 `tests/architecture/check-layer-deps.spec.ts` 检查）只允许信任内核从 Cordis 中恰好 import `Context`，别无其他。内核已经通过这一个绑定访问 `ctx.reflect.store` 与 `ctx.reflect.props`；用同样的方式访问这个固定操作，把耦合留在规则已经容忍的位置，而不是为这次改动放宽规则。
+
+- `name` — 要固定的服务名。
+- `impl` — 本树中每个 fiber 解析 `name` 都必须得到的实现记录。
+
+[源码](../../vendor/cordis/src/fiber.ts#L270)
 
 ### fiber.inertia
 
@@ -132,7 +181,7 @@ public inertia: Promise<void> | undefined
 
 当前正在进行的加载或卸载转换；如果没有此类转换，则为 undefined。
 
-[源码](../../vendor/cordis/src/fiber.ts#L200)
+[源码](../../vendor/cordis/src/fiber.ts#L294)
 
 ### fiber.name
 
@@ -143,7 +192,7 @@ get name()
 
 插件的显示名称，继承自最近的具名祖先；如果不存在，则为 `'root'`。
 
-[源码](../../vendor/cordis/src/fiber.ts#L336)
+[源码](../../vendor/cordis/src/fiber.ts#L433)
 
 ### fiber.assertActive()
 
@@ -161,7 +210,7 @@ assertActive()
 
 **返回**：fiber 仍处于活动状态时不返回任何内容。
 
-[源码](../../vendor/cordis/src/fiber.ts#L351)
+[源码](../../vendor/cordis/src/fiber.ts#L448)
 
 ### fiber.effect(execute, label?)
 
@@ -192,7 +241,7 @@ effect(execute: () => Effect, label?: string): AsyncDisposable<Promise<void>>
 
 **返回**一个用于撤销该作用的清理函数，并在清理完成后结算。
 
-[源码](../../vendor/cordis/src/fiber.ts#L415)
+[源码](../../vendor/cordis/src/fiber.ts#L512)
 
 ### fiber.getEffects()
 
@@ -209,7 +258,7 @@ getEffects()
 
 **返回**：每个带标签的活动作用对应一棵 `EffectMeta` 树。
 
-[源码](../../vendor/cordis/src/fiber.ts#L568)
+[源码](../../vendor/cordis/src/fiber.ts#L665)
 
 ### fiber.await()
 
@@ -227,7 +276,7 @@ async await()
 
 **返回**：进入稳定状态后的此 fiber。
 
-[源码](../../vendor/cordis/src/fiber.ts#L704)
+[源码](../../vendor/cordis/src/fiber.ts#L801)
 
 ### fiber.restart()
 
@@ -245,7 +294,7 @@ dispose 此插件，并立即使用其当前配置重新加载。
 
 **返回**一个在重新加载完成后兑现的 promise。
 
-[源码](../../vendor/cordis/src/fiber.ts#L718)
+[源码](../../vendor/cordis/src/fiber.ts#L815)
 
 ### fiber.update(config, noSave?)
 
@@ -273,7 +322,7 @@ update(config: any, noSave = false)
 
 **返回**更新 waterfall 的结果；默认的重新启动操作返回一个 promise。
 
-[源码](../../vendor/cordis/src/fiber.ts#L736)
+[源码](../../vendor/cordis/src/fiber.ts#L833)
 
 ## Effect
 

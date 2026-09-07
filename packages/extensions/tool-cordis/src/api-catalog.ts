@@ -4340,7 +4340,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'IncomingMessage',
-    declaration: 'export interface IncomingMessage {\n    readonly id: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly tenant: TenantId;\n}',
+    declaration: 'export interface IncomingMessage {\n    readonly source: string;\n    readonly id: BusMessageId;\n    readonly epoch: MessageEpoch;\n    readonly tenant: TenantId;\n}',
   },
   {
     name: 'IndexInjection',

@@ -8158,6 +8158,41 @@
       "supplements": {
         "epic": "P4-12",
         "stage": "C"
+      },
+      "supersededBy": "P4-12.C.2 (ceremony: neither case could be reddened by any mutation of the function they name, 2026-09-07)"
+    },
+    {
+      "epic": "P4-12",
+      "stage": "C",
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
+        "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
+      ],
+      "files": [
+        "packages/action/action-ledger/src/types.ts",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T12:50:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 16 passed (16) in idempotency.e2e.spec.ts, 25 passed (25) across the package.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) fixed the scope inside `decideReservation`'s first-arrival branch -- `entry: { scope: 'agent-1' as typeof request.scope, ... }` instead of `request.scope` -- in packages/action/action-ledger/src/index.ts, then re-ran the frozen command. The mutation is INSIDE the function the case names, which is what the superseded entry could not manage.",
+        "failureSummary": "1 of 16 failed: `carries the requesting principal into the reservation, which is what the store persists` -- the second principal's reservation came back scoped to the first. The control case stayed green, so the failure is about the scope the decision carries and not about dedup being disabled. Mutation reverted; 25 passed (25) before continuing."
+      },
+      "note": "Supersedes P4-12.C.1, which was ceremony. Its first case passed `existing: undefined` twice and asserted both callers get `reserved` -- true for any scope, so no mutation of `decideReservation` could redden it; its own sensitivityProof admitted the reddening came from the STORE's suite, which is that entry's proof rather than this one's. A frozen entry must show ITS OWN suite is sensitive. The replacement asserts what the pure function really decides: the reserved entry carries the requesting principal, which is exactly what the store then writes. A third case (a re-reservation keeps the stored principal) was written and DELETED rather than frozen: the store looks entries up by `(scope, key)`, so an existing entry's scope always equals the request's, and the mutation that would break it reddens nothing. Delegate ruling, 2026-09-07.",
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "C"
       }
     }
   ]

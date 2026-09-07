@@ -252,6 +252,33 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-143 — P4-12 must[0]'s subject is never constructed: no production path builds an ActionManifest
+
+**State: OPEN, blocking P4-12's U stage. Measured before writing any wiring; nothing changed.**
+
+must[0] says the ActionManifest MANDATES `idempotencyKey`. The type does — `ActionManifest.idempotencyKey` is required, as is `actor: Principal`. What is missing is anything that builds one.
+
+| | measured |
+|---|---|
+| `createActionManifest` production callers | **zero** — only `appendManifestThenGate` in the same package, which itself has zero |
+| `appendManifestThenGate` production callers | **zero** |
+| what the two live paths import | `agent-loop/src/tool-calls.ts` and `tools/src/ptc.ts` import `computeArgumentsHash` and `classifySideEffect` only |
+| what they append | a hand-built `action/manifest-appended` payload, not a manifest |
+
+**So the record whose mandate must[0] is about does not exist at run time.** This is BLOCKED-136's shape in a second epic: a clause whose subject has no production site, provable in unit tests and unprovable in the product.
+
+**And the event payload omits exactly the two fields the ledger keys on.** `ActionManifestAppendedEventData` carries `actionId`, `origin`, `capability`, `argumentsHash`, `sideEffectClass`, `classified`, `requiresApproval`, `sequence` — no `idempotencyKey`, no `actor`. P4-12's ledger keys on `(scope = actor principal, key = idempotencyKey)`, so **a reader of the session log cannot reconstruct which reservation an action used**, and the repository's own rule is that durable decisions must be reconstructable from the log.
+
+**Why this is not the executor's to fix.** Adding two required fields to `action/manifest-appended` changes an ACCEPTED epic's event payload (P2-03), and `SessionEventMap` members are required-on-read: a build that does not know a field refuses the log unless the event is `ignorable`. That is a session-format question with a version rule attached, not a wiring detail.
+
+**Three readings, none of them the executor's to pick:**
+
+1. **The event gains `idempotencyKey` and `actor`** — P2-03's payload changes, with whatever `SESSION_FORMAT_VERSION` handling that implies, and P4-12 becomes provable from the log.
+2. **The live paths start constructing a real ActionManifest** through `appendManifestThenGate`, which is what P2-03's own package already offers and nothing calls; the event then derives from the manifest rather than being assembled beside it.
+3. **must[0] is reworded** to describe the mandate at the type level, which is where it currently holds, and P4-12's ledger takes its scope and key from the tool path directly rather than from the log.
+
+**Reading 2 is the one that makes both epics' clauses true at once**, and it is also the largest. Recorded rather than chosen.
+
 ### BLOCKED-140 — the dedup key omitted `source`, so one sender's message silently suppressed another's
 
 **State: FIXED under delegate ruling §12.9 (2026-09-07). Found by the delegate refusing to sign P4-06, not by any test.**
