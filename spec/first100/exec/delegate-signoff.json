@@ -201,6 +201,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-07T14:23:18.607Z",
       "reason": "Rectification §12.15 (4.4a, measured 2026-09-07): advanceAgentLifecycleFenced, advanceAgentLifecycle, holdsDispatchSlot, decideTransition and the AgentLifecycle value have zero production references outside core/agent's three defining files; dsh-lease is imported only by core/agent/src/dispatch.ts, whose fenced functions nobody calls; no production code constructs a lifecycle. must[1] (every state write and action execution carries a fencing token) holds nowhere on a launched profile. The U stage touched a registry [B] file (dispatch.ts) but the code is dead, which gate (u) cannot see and 4.4a can. Withdrawn; P4-07 reopens at U to give the lifecycle a real holder on the real dispatch path and the worker-thread host the registry names."
+    },
+    {
+      "epic": "P6-02",
+      "rowDigestSha256": "fcd4a82e613de90060a6799dde87395e1ba33b7e66f725bc5c190cedc765ee13",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-07T17:07:08.035Z",
+      "reason": "Rectification §12.19 (4.4a, BLOCKED-146, measured 2026-09-07): validateRecord, recordConflict, admitToIndex, withProvenance/isTraceable, isDefaultRetrievable and decideCrossScopeMerge have zero production callers; the package's only importer (memory-context) takes P6-01's types; no live path constructs a MemoryRecord. The registry's own U stage names only two types.ts files and no consumer. Withdrawn; P6-02 reopens at U with the mounted MemoryRuntime's write/read path and memory-context's recall path added as [B] consumers by A-class ruling."
     }
   ]
 }

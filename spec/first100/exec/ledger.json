@@ -5854,11 +5854,11 @@
       },
       "supplements": {},
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": [
         "BLOCKED-096: P6-01 residual lock rewritten as an outcome; both steps now owned by P6-03 (wave 8)"
       ],
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-05T11:57:03.682Z",
         "cells": {
