@@ -236,7 +236,8 @@ That distinction was put to the user directly, because it changes what the regis
 
 **用户补充**(同日稍后,原话):「不不不 你待推 因为你是最终技术实现把关的」——推送是发布动作,由把关方(delegate)执行。
 
-**生效**:自本条起,**delegate(`guanjieqiao-92`)是 `first100-exec` 的唯一推送方**;执行者只在本地提交,不推。每次推送前 delegate 走固定的四步门:① `git log fork/first100-exec..HEAD` 列全部待推提交,执行者的每个提交必须对应 delegate 确认过的 preFlight / 裁决 / BLOCKED 记录,否则不推;② 密钥 / 大文件 / 未跟踪目录扫描;③ 本地跑 registry gate set(`scripts/first100/run-registry-gates.mjs`,与 CI 同一套)+ `generate-ledger.mjs --check`,红则退回执行者;④ 推送后在会话里报告推了什么与 CI run id。**不改变**:强推仍在 deny;delegate 仍不代替执行者做任何 `--accept` / 代码改动。
+**生效**:自本条起,**delegate(`guanjieqiao-92`)是 `first100-exec` 的唯一推送方**;执行者只在本地提交,不推。每次推送前 delegate 走固定的四步门:① `git log fork/first100-exec..HEAD` 列全部待推提交,执行者的每个提交必须对应 delegate 确认过的 preFlight / 裁决 / BLOCKED 记录,否则不推;② 密钥 / 大文件 / 未跟踪目录扫描;③ 本地跑 registry gate set(`scripts/first100/run-registry-gates.mjs`,与 CI 同一套)+ `generate-ledger.mjs --check`,红则退回执行者;④ 推送后在会话里报告推了什么与 CI run id。
+⟦delegate 修订 2026-09-07 07:05 EDT⟧ ③ 的测试范围改为**固定集 + 触及集**,不按改动范围手挑:固定集 = `scripts/`(全部,含 doc-standard)+ `tests/architecture` + `packages/typert/generator`(catalog 产物 == 重生成)+ `check-layer-deps`;触及集 = 待推范围内改过的每个包。**只跑已提交文件**,执行者未提交的 RED 不进门。依据:两次手挑漏项各红一次 CI(`34098026915` doc-standard、`34111234027` cordis-catalog),都是"产物与源同步"一族。**不改变**:强推仍在 deny;delegate 仍不代替执行者做任何 `--accept` / 代码改动。
 
 ## C15 (2026-09-06 22:05 EDT) — 用户授权并行 Writer 子会话(按 C1),质量条件由 delegate 定
 
