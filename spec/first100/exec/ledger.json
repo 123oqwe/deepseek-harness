@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T04:11:57.610Z",
-  "inputDigest": "f727b5758500fea63bae9b9c6a1d46e231a65c763d868179b91131b81369e7f8",
+  "lastUpdatedUtc": "2026-09-07T06:28:44.167Z",
+  "inputDigest": "571e72b2d2f96c49e51672d3619b2502ccf9e3734a1162ecfb39ece2f077da71",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -2582,10 +2582,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "2f5291c323d6957f450fa037543a9fd7c4327074",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33786571517",
-          "observationReportPath": "/tmp/ci-run-33786571517/first100-vitest-report-2f5291c323d6957f450fa037543a9fd7c4327074/vitest-report.json",
-          "observationSha256": "3e687eee668e02a4856443542e03479b6284f27414c71efd464b5ea61ac90cc8",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "issueToken mints a root token with exactly these ten fields, no more and no fewer",
             "verifyToken accepts a token issued by the real TrustKernel under the same trust root",
@@ -2624,14 +2624,14 @@
             "revoking an unrelated digest does not invalidate an unconnected lineage",
             "redactTokenForLog produces exactly digest/subject/tenant/capability/delegationDepth/expiresAt — never verbs, resources, constraints, nonce, or the raw signature"
           ],
-          "capturedAtUtc": "2026-09-03T18:04:26.809Z"
+          "capturedAtUtc": "2026-09-07T06:28:43.550Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "3a5e0692948c78418011204e8d847266a2410a68",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33818016539",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-3a5e/first100-evidence-3a5e0692948c78418011204e8d847266a2410a68/vitest-report.json",
-          "observationSha256": "91e834ae7ef7e24af7e90005fa39c4e0c543966ed10601fb7e3f525f2e742fde",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "reports an empty state for a path that has never been written to, rather than failing",
             "reads back through a separate store instance exactly what the first instance wrote, signature bytes included",
@@ -2657,14 +2657,14 @@
             "keeps every audit record's digest equal to the digest of a token the store really holds",
             "leaves the audit trail on disk carrying no nonce, even though the token registry beside it must"
           ],
-          "capturedAtUtc": "2026-09-03T23:49:54.882Z"
+          "capturedAtUtc": "2026-09-07T06:28:43.760Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "4d7806fb4b0f91c1b50a10727ad542ff3db273b1",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33909882117",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/ci-4d78/first100-evidence-4d7806fb4b0f91c1b50a10727ad542ff3db273b1/vitest-report.json",
-          "observationSha256": "a3aa1f5e89043438184a33ce8318e00e013d645bcdc13585e38fd1076c8e829d",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "must[3]: a scope requiring a capability token refuses a call that presents none, before the tool body runs",
             "control: the same call succeeds and reaches the tool body when an authorizing token is presented",
@@ -2685,14 +2685,14 @@
             "acceptance[2]: the durable descriptor records the delegation digest and no other token material",
             "control: a legitimately delegated child token still executes the tools it kept, and only those"
           ],
-          "capturedAtUtc": "2026-09-05T03:28:32.424Z"
+          "capturedAtUtc": "2026-09-07T06:28:43.963Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "8a640f1aca27af8c938daac7c9664fa9b57dd640",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34001537762",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs2/first100-vitest-report-8a640f1aca27af8c938daac7c9664fa9b57dd640/vitest-report.json",
-          "observationSha256": "ee44eb883adb59a7b6e802c702a1e22fc11175d07ae2649f5dd628a28c49d13f",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P2-02 Fault — attenuation boundary matrix enumerates at least twelve boundaries, each named once",
             "P2-02 Fault — attenuation boundary matrix fault boundary 01 an equal-to-parent request is admitted, so refusals below are selective",
@@ -2714,11 +2714,25 @@
             "P2-02 Fault — attenuation boundary matrix fault boundary 17 a child records its parent's digest, so a chain can be walked back",
             "P2-02 Fault — attenuation boundary matrix fault boundary 18 a child inherits tenant and capability verbatim, which the request cannot express"
           ],
-          "capturedAtUtc": "2026-09-06T00:52:14.389Z"
+          "capturedAtUtc": "2026-09-07T06:28:44.167Z"
         }
       },
-      "supplements": {},
-      "candidateSha": "8a640f1aca27af8c938daac7c9664fa9b57dd640",
+      "supplements": {
+        "P.1": {
+          "status": "GREEN",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "expectCasesMatched": [
+            "P2-02 must[1]: the kernel signs with real key material verifies a signature it produced, and refuses the same bytes with one byte changed",
+            "P2-02 must[1]: the kernel signs with real key material refuses a signature made by a DIFFERENT kernel, which the marker cannot distinguish",
+            "P2-02 must[1]: the kernel signs with real key material keeps the PRIVATE key off the signatureRoots handle, which crosses the plugin boundary"
+          ],
+          "capturedAtUtc": "2026-09-07T06:26:11.614Z"
+        }
+      },
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -4087,7 +4101,30 @@
           "capturedAtUtc": "2026-09-05T18:08:04.945Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "P.1": {
+          "status": "GREEN",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
+          "expectCasesMatched": [
+            "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
+            "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
+            "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes nothing when the commit fails AFTER the outbox rows, which a sequential writer could not survive",
+            "P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT rather than fail completes a commit that arrives while another process holds the write lock",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a crashed claim in `claimed`, not `consumed`",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) sweeps an expired claim to `released`, so the turn that never ran does not consume the message",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a CONSUMED row untouched when recovery sweeps, so a settled effect cannot be undone",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) lets a RELEASED message be claimed again, which is the restoration the previous rule forbade",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) refuses to re-claim a CONSUMED message, so the effect cannot run twice",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) treats the same id at a different EPOCH as a different message",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) drops a second intake of the SAME id and epoch, so the epoch case is not just \"everything is new\"",
+            "P4-06: the seen-set classifyIntake reads is the consumed rows reports exactly the consumed keys, so the pure classifier and the durable state agree"
+          ],
+          "capturedAtUtc": "2026-09-07T06:26:06.673Z"
+        }
+      },
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": [
