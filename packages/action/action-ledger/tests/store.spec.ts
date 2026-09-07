@@ -7,7 +7,7 @@
  */
 
 import { spawn } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -79,26 +79,40 @@ describe('P4-12 must[2]: two workers cannot both hold one reservation', () => {
     // depends on timing tests nothing it claims.
     const dir = directory()
     const go = join(dir, 'go')
-    const child = (label: string) => new Promise<string>((resolve) => {
+    // A READINESS HANDSHAKE, not a sleep. The first version waited 1500 ms and
+    // hoped both children had reached the barrier; the delegate saw it fail
+    // once on a cold-cache first run in a clean worktree and pass nine times
+    // after, which is what a timing assumption looks like from outside. Each
+    // child announces itself, and the parent releases the barrier only once
+    // both have — so the case tests contention rather than scheduling luck.
+    //
+    // stderr is captured into the assertion message: a case that fails once in
+    // ten and discards the child's own output leaves nothing to diagnose.
+    const child = (label: string) => new Promise<{ action: string; stderr: string }>((resolve) => {
       const proc = spawn(process.execPath, ['--import', 'tsx', '-e', [
-        "const { existsSync } = await import('node:fs')",
+        "const { existsSync, writeFileSync } = await import('node:fs')",
         `const { openLedgerStore } = await import(${JSON.stringify(join(process.cwd(), 'packages/action/action-ledger/src/store.ts'))})`,
         `const store = openLedgerStore(${JSON.stringify(dir)})`,
+        `writeFileSync(${JSON.stringify(join(dir, 'ready-'))} + ${JSON.stringify(label)}, '')`,
         `while (!existsSync(${JSON.stringify(go)})) { /* spin to the barrier */ }`,
         "const decision = store.reserve({ scope: 'agent-1', key: 'effect-1', argumentsHash: 'sha256-aaa', epoch: 1 })",
         "if (decision.action === 'reserved') store.markSent('agent-1', 'effect-1', 1)",
         `console.log(${JSON.stringify(label)} + ':' + decision.action)`,
-      ].join('\n')], { stdio: ['ignore', 'pipe', 'inherit'] })
+      ].join('\n')], { stdio: ['ignore', 'pipe', 'pipe'] })
       let out = ''
+      let err = ''
       proc.stdout.on('data', (chunk: Buffer) => { out += chunk.toString() })
-      proc.on('close', () => { resolve(out.trim()) })
+      proc.stderr.on('data', (chunk: Buffer) => { err += chunk.toString() })
+      proc.on('close', () => { resolve({ action: out.trim().split(':')[1] ?? '(no decision)', stderr: err.trim() }) })
     })
     const both = Promise.all([child('a'), child('b')])
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const ready = (label: string) => existsSync(join(dir, `ready-${label}`))
+    while (!ready('a') || !ready('b')) await new Promise(resolve => setImmediate(resolve))
     writeFileSync(go, '')
-    const results = (await both).map(line => line.split(':')[1])
-    expect(results.filter(action => action === 'reserved')).toHaveLength(1)
-    expect(results.filter(action => action === 'duplicate')).toHaveLength(1)
+    const results = await both
+    const detail = results.map(r => r.stderr).filter(Boolean).join('\n---\n')
+    expect(results.filter(r => r.action === 'reserved'), detail).toHaveLength(1)
+    expect(results.filter(r => r.action === 'duplicate'), detail).toHaveLength(1)
   }, 30_000)
 })
 
