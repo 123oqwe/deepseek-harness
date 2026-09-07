@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T09:11:14.007Z",
-  "inputDigest": "4c4a178db0e02c94a2e3f1e3569e682d9e49827bdf6fa755e3a06aae77076357",
+  "lastUpdatedUtc": "2026-09-07T11:58:22.750Z",
+  "inputDigest": "733a412a4c303da20bcc45dd0644a717f29841bcb15357294e33e465423a9ce8",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4126,10 +4126,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
-          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
           "expectCasesMatched": [
             "kill after-commit, then replay: the business effect is applied exactly once",
             "kill after-send, then replay: the business effect is applied exactly once",
@@ -4147,19 +4147,19 @@
             "a refused foreign message cannot suppress a later legitimate one sharing its key"
           ],
           "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
-            "atUtc": "2026-09-07T09:11:13.323Z"
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
+            "atUtc": "2026-09-07T11:58:22.072Z"
           },
-          "capturedAtUtc": "2026-09-07T09:11:13.324Z"
+          "capturedAtUtc": "2026-09-07T11:58:22.073Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
-          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
           "expectCasesMatched": [
             "hands the event and its record to the sink in a single call",
             "keeps a multi-record commit together and preserves its order",
@@ -4180,19 +4180,19 @@
             "retains a failed batch larger than the engine call-argument limit"
           ],
           "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33954161047",
-            "fromCandidateSha": "a7ed2e4f25b736a8bb4470acd7c5828b476eb80f",
-            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
-            "atUtc": "2026-09-07T09:11:13.548Z"
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
+            "atUtc": "2026-09-07T11:58:22.295Z"
           },
-          "capturedAtUtc": "2026-09-07T09:11:13.549Z"
+          "capturedAtUtc": "2026-09-07T11:58:22.296Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
-          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
           "expectCasesMatched": [
             "spends the attempt and persists `sent` BEFORE handing the record to the transport",
             "applies the receipt, and applying the same outcome twice does not ack twice",
@@ -4202,19 +4202,19 @@
             "dispatches in priority order, so a starved low-priority record cannot jump ahead"
           ],
           "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
-            "fromCandidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
-            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
-            "atUtc": "2026-09-07T09:11:13.771Z"
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
+            "atUtc": "2026-09-07T11:58:22.517Z"
           },
-          "capturedAtUtc": "2026-09-07T09:11:13.771Z"
+          "capturedAtUtc": "2026-09-07T11:58:22.518Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
-          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
           "expectCasesMatched": [
             "enumerates at least the twelve boundaries the clause requires",
             "fault boundary 01 deadline expired before any attempt",
@@ -4240,12 +4240,12 @@
             "does not alert when a send merely fails and the record stays retryable"
           ],
           "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
-            "fromCandidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
-            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
-            "atUtc": "2026-09-07T09:11:14.007Z"
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
+            "atUtc": "2026-09-07T11:58:22.749Z"
           },
-          "capturedAtUtc": "2026-09-07T09:11:14.007Z"
+          "capturedAtUtc": "2026-09-07T11:58:22.750Z"
         }
       },
       "supplements": {
@@ -4311,9 +4311,23 @@
             "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) reports every consumed key as the rule computes it, with no second spelling anywhere"
           ],
           "capturedAtUtc": "2026-09-07T09:11:06.128Z"
+        },
+        "P.4": {
+          "status": "GREEN",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "expectCasesMatched": [
+            "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) reads back a domain event whose keys are exactly the CloudEvents attributes this epic adopted",
+            "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) delivers BOTH messages when two different sources emit the same id at the same epoch",
+            "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) still drops a redelivery from the SAME source, so widening the key did not disable dedup",
+            "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) keeps two sources apart in the inbox itself, not only in the key"
+          ],
+          "capturedAtUtc": "2026-09-07T11:58:11.576Z"
         }
       },
-      "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+      "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -4855,10 +4869,47 @@
       "wave": 7,
       "cells": {
         "C": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "expectCasesMatched": [
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry, because nothing left the harness yet",
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports SENT as a duplicate, so a crash after the request does not send it twice",
+            "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports CONFIRMED and COMPENSATED as duplicates too, so a settled key is never re-sent",
+            "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments",
+            "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one",
+            "P4-12 must[3]: a stale epoch is fenced out refuses a caller whose epoch is older than the holder, and names the current one",
+            "P4-12 must[3]: a stale epoch is fenced out admits the SAME epoch, so fencing refuses only what is genuinely behind",
+            "P4-12 must[3]: a stale epoch is fenced out fences BEFORE reporting an outcome, so a superseded generation learns nothing about work it lost",
+            "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again",
+            "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling",
+            "P4-12 must[1]: a provider with native support gets the Idempotency-Key header passes the key through as the Idempotency-Key request header (draft-ietf-httpapi-idempotency-key-header-07)",
+            "P4-12 must[1]: a provider with native support gets the Idempotency-Key header sends no Idempotency-Key header for a local-fencing provider, whose dedup is this ledger"
+          ],
+          "capturedAtUtc": "2026-09-07T11:58:11.803Z"
         },
         "P": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "expectCasesMatched": [
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart, because nothing was sent",
+            "P4-12 must[2]: the reservation is durable BEFORE the request is sent keeps the receipt digest across a restart, so a confirmed effect stays evidenced",
+            "P4-12 must[2]: two workers cannot both hold one reservation gives the reservation to ONE of two concurrent processes, and the other a duplicate",
+            "P4-12 must[3]: a fenced-out generation cannot write refuses a transition from an epoch the current holder has superseded",
+            "P4-12 must[3]: a fenced-out generation cannot write lets the CURRENT holder write, so fencing refuses only what is behind",
+            "P4-12 must[3]: a fenced-out generation cannot write refuses a transition for a key that was never reserved, rather than creating one",
+            "P4-12 must[3]: a fenced-out generation cannot write keeps the database off the handle, so nothing outside the store can run a statement",
+            "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
+            "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
+          ],
+          "capturedAtUtc": "2026-09-07T11:58:12.253Z"
         },
         "U": {
           "status": "NOT_RUN"
@@ -4867,8 +4918,21 @@
           "status": "NOT_RUN"
         }
       },
-      "supplements": {},
-      "candidateSha": null,
+      "supplements": {
+        "C.2": {
+          "status": "GREEN",
+          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
+          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "expectCasesMatched": [
+            "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally carries the requesting principal into the reservation, which is what the store persists",
+            "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
+          ],
+          "capturedAtUtc": "2026-09-07T11:58:12.026Z"
+        }
+      },
+      "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
