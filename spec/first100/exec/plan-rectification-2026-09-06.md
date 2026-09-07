@@ -661,3 +661,7 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 ### 12.1 P1-03 acceptance[0] 离线冷启动的解锁信号(2026-09-06 21:15 EDT,撤回"网络出口零调用")
 
 执行者实测 `composeProfile` 闭包(6 个 workspace 包 + js-yaml / resolve.exports)**没有任何 HTTP 客户端**,fetch spy 的正向断言恒真、反向"正控"也恒真(实现永远不联网,spy 永远证明不了自己在路径上)——我 §11 后那条"网络出口被调用零次 + 反向正控"的裁决撤回。改为:(1) **结构不变量门**:boot 路径传递闭包不含 HTTP 客户端且源码无出口调用,并冻结一条"给闭包内某包加 fetch/undici → 门红"的用例,进 gate set;(2) **一条真分支的行为用例**:lock 记录的包在本地 install 缺失(非漂移)→ boot 拒绝,F 阶段、(A) 复用 `apps/cli/tests/plugin-lock.spec.ts`;`admitBoot` 若无 absent 分支即真缺口,先 RED 再补。锁行措辞:acceptance[0] 成立因"无网络路径(门强制)+ 本地缺包被拒",不是"被验证过的降级逻辑"。**教训**:断言要有主语——路径上不存在的分支不能用 spy 制造出来。
+
+### 12.2 在飞 epic 对卡核验(2026-09-06 21:40 EDT,用户问「是不是按计划混 OSS」)
+
+**对代码不对自述**:P1-03 `makeVsUse` 为空 `{}`,卡上三条 adapt(`write-file-atomic` / `ssri` / `@pnpm/lockfile.fs`)一条未接——原子写手写(`writeFileSync+renameSync`,无 fsync)、integrity 自 brand 字符串且来源是自造的 `dsh.provenance.integrity` 而非 pnpm 锁文件权威值;P2-04 落盘的 preFlight(`adopted: []`、`standardsOwned: []`、`verdict: CONTRACT_WRITE`)**与执行者发 delegate 审的那份不同**(那份 adopted 三条、standardsOwned ToolAnnotations,账本 verdict PROVIDER_WRITE)。**根因**:门 (e) 裁了未建,偏离静默。**处置**:门 (e) 提到夜班队列最前,建完对全部有 preFlight 的 epic 跑一遍;P2-04 记录改回送审版并在 C 的 types 里声明 ToolAnnotations 输入类型;P1-03 补第四问,三条 adapt 默认 adopt(本树复验后有硬约束才 deviation),P 阶段 supersede 与 F 同批观测,验收多一轮。**规则**:签字前 delegate 对代码核 adopted[],不以 preFlight 自述为准。
