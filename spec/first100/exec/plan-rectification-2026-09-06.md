@@ -657,3 +657,7 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 3. **新门**:每条 live 冻结条目的 `files` ⊆ `files[] ∪ filesOverlay`,冻结时即校验(与 (v) 同族),此后出计划的文件只能在冻结时记录,不能事后发现。
 4. **不重开任何验收**:记录现实不改证据;但 source 清单通读若发现有热区文件被直接改而非 contribution,单独裁。
 5. 不再加第四个机制;registry 里三个块的文档改为"记录文件事实"。
+
+### 12.1 P1-03 acceptance[0] 离线冷启动的解锁信号(2026-09-06 21:15 EDT,撤回"网络出口零调用")
+
+执行者实测 `composeProfile` 闭包(6 个 workspace 包 + js-yaml / resolve.exports)**没有任何 HTTP 客户端**,fetch spy 的正向断言恒真、反向"正控"也恒真(实现永远不联网,spy 永远证明不了自己在路径上)——我 §11 后那条"网络出口被调用零次 + 反向正控"的裁决撤回。改为:(1) **结构不变量门**:boot 路径传递闭包不含 HTTP 客户端且源码无出口调用,并冻结一条"给闭包内某包加 fetch/undici → 门红"的用例,进 gate set;(2) **一条真分支的行为用例**:lock 记录的包在本地 install 缺失(非漂移)→ boot 拒绝,F 阶段、(A) 复用 `apps/cli/tests/plugin-lock.spec.ts`;`admitBoot` 若无 absent 分支即真缺口,先 RED 再补。锁行措辞:acceptance[0] 成立因"无网络路径(门强制)+ 本地缺包被拒",不是"被验证过的降级逻辑"。**教训**:断言要有主语——路径上不存在的分支不能用 spy 制造出来。
