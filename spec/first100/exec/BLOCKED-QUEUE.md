@@ -252,7 +252,7 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
-### BLOCKED-137 — five straight exact-SHA runs were red on two stale fixtures, so no cell could be greened at all
+### BLOCKED-137 — five straight exact-SHA runs were red on two stale fixtures, and 25 cells were greened from them anyway
 
 **State: FIXED in `e783b1c0e9`, recorded because the fix is the small half.**
 
@@ -262,7 +262,17 @@ Every exact-SHA run from `d4034a8f` (2026-09-06 22:20) through `afa84cd5` (2026-
 
 **The guard for exactly this already existed and did not stop it.** `790a42f0eb` added `refuses to look complete when it skipped a scenario this host cannot run` — an assertion, not a console line, and it landed *before* the refresh. Its failure message ends: *"Refresh again where they run (pwsh scenarios need a real pwsh), **or commit knowing these are stale**."* That second option is the hole. Nothing downstream requires the knowledge to be written anywhere, so "knowing" lasted until the next command and the stale pair reached CI unannounced.
 
-**What it cost is not two fixtures.** While it stood, **no exact-SHA run could go green, so no cell could be greened from an observation at all** — the program's only greening mechanism was down for five runs and six hours, and the reason was legible in the first run's log.
+**What it cost is not two fixtures, and the first version of this entry got it wrong.** I wrote that the greening mechanism was down — that no cell could be greened while the red stood. **Measured against the ledger instead of assumed: 25 cells were greened from those five red runs**, across 18 epics, 16 of them now ACCEPTED. P1-03 was accepted whole off `a0935394`, a red run; P4-06's own C cell is greened off `d4034a8f`, a red run.
+
+So the rule did not hold the line, and the way it failed is worth more than the fixture:
+
+- The acceptance rule is that only a **green** exact-SHA run may green a cell.
+- Each of those runs was red, and each red was explained as "a pwsh snapshot, on BLOCKED-108's known list, does not block."
+- **The explanation matched the case NAME and never the failure REASON.** The reason was `sequence` `0` vs `1` — a stale fixture, nothing to do with pwsh being unavailable, and legible in the first run's log.
+
+A known-flake list is a legitimate explanation; matching one by test name is not the same as checking that the failure in front of you is the failure the list describes. Applied by name, a list turns every red on a listed case into a pass, which is the check-that-cannot-fail shape this queue keeps recording — this time in the acceptance procedure rather than in code.
+
+**What is and is not in doubt.** The 25 cells' evidence is the unit-test report from the same run at the same SHA, and the failure is now proven to be two fixtures unrelated to any of those epics, so the observations are very likely sound in substance. What is not sound is the procedure: they were admitted under an explanation that did not describe the failure. **Registry decision, not the executor's** — either re-observe those cells at a green SHA, or record a reasoned exception naming this diagnosis as the basis. The imminent green run covers the tree at its own SHA; it does not retroactively cover theirs.
 
 The repair is two lines, one field per file, each file carrying exactly one `action/manifest-appended` (asserted before writing). It cannot be observed on this host, for the same reason the refresh could not: those two cases skip here. CI is the only place the fix is visible, which is also why the staleness survived.
 
