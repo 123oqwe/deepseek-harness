@@ -25,7 +25,13 @@
  *    that standard. Owning a vocabulary means pinning it somewhere a reader can
  *    find, not asserting ownership in a JSON field.
  *
- * Three states per epic, and `UNRECORDED` does not pass: an epic with adopted
+ * `PENDING_ADOPTION` is a fourth state, for an adoption decided before the
+ * stage that lands it has been written. It carries `landsIn` naming that
+ * stage, so the commitment stays checkable rather than deferred forever, and
+ * an ACCEPTED epic may not hold one — acceptance would then rest on a promise
+ * instead of on code. It reports but does not fail.
+ *
+ * Three further states per epic, and `UNRECORDED` does not pass: an epic with adopted
  * packages and no `preFlight.makeVsUse` has not answered the question, and
  * treating silence as success is what this whole family of checks refuses.
  *
@@ -101,8 +107,10 @@ function main() {
   const registry = new Map(loadJson(REGISTRY_PATH).epics.map(epic => [epic.id, epic]))
   const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
   const freeze = loadJson(FREEZE_PATH).entries ?? []
+  const execRows = loadJson(join(REPO_ROOT, 'spec/first100/exec/ledger.json')).rows ?? {}
 
   const findings = []
+  const pending = []
   const states = []
   for (const [key, entry] of Object.entries(preFlight)) {
     const declared = entry.makeVsUse
@@ -135,8 +143,23 @@ function main() {
         continue
       }
       if (form === 'runtime' && epic !== undefined && findImport(pkg, files) === undefined) {
-        findings.push(`${key}: adopts ${pkg} as runtime, but no declared file imports it`)
-        state = 'MISMATCHED'
+        // An adoption DECIDED before the code that lands it is not the same as
+        // an adoption claimed and never made. `landsIn` names the stage that
+        // will import it, which makes the commitment checkable later instead
+        // of indefinitely deferred — and an ACCEPTED epic may not hold one,
+        // because acceptance would then rest on a promise.
+        if (typeof adopted.landsIn === 'string' && adopted.landsIn.length > 0) {
+          if (rows.get(key)?.status === 'ACCEPTED' || execRows[key]?.status === 'ACCEPTED') {
+            findings.push(`${key}: adopts ${pkg} as runtime with landsIn ${JSON.stringify(adopted.landsIn)}, but the epic is ACCEPTED — acceptance cannot rest on an adoption that has not landed`)
+            state = 'MISMATCHED'
+          } else {
+            pending.push(`${key}: ${pkg} adopted, landing in ${adopted.landsIn}`)
+            if (state === 'VERIFIED') state = 'PENDING_ADOPTION'
+          }
+        } else {
+          findings.push(`${key}: adopts ${pkg} as runtime, but no declared file imports it and no landsIn stage is named`)
+          state = 'MISMATCHED'
+        }
       }
       if (form === 'oracle') {
         // An oracle that reached `dependencies` would ship with the product.
@@ -184,6 +207,7 @@ function main() {
     process.exit(1)
   }
 
+  for (const line of pending) console.log(`  PENDING  ${line}`)
   for (const [key, state] of states) console.log(`  ${key}: ${state}`)
   if (findings.length === 0) {
     console.log(`verify-make-vs-use: ${String(states.length)} recorded decision(s) match the tree (import scan control passed at ${control}).`)
