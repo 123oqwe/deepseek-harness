@@ -252,6 +252,33 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-134 — the stage `files` list is not a scope boundary, and I built three provenance mechanisms as if it were
+
+**State: OPEN, and the first thing it needs is a ruling on which of two readings is true.**
+
+Measured across every live freeze entry: **79 of 116 cite at least one file outside their stage's declared `files` list. 58 of those belong to an ACCEPTED epic.** Only 37 are subsets. The files cited outside are ordinary working files — test specs, loader fixtures, composition specs, READMEs, `package.json`s, generated catalogs.
+
+**Two readings, and they cannot both be true.**
+
+1. **The stage list is a sketch of the principal deliverables, not a scope boundary.** A stage freezes on whatever files the work actually touched, and citing more is normal. Then 79 entries are fine, and the ceremony below was unnecessary.
+2. **The stage list IS the boundary.** Then 79 live entries — 58 of them under ACCEPTED epics the delegate signed — are out of scope, which would be the largest finding in this queue.
+
+**Reading 1 is far more likely**, because the practice is near-universal, predates this session, and was signed off repeatedly by an independent verifier who was reading these entries closely enough to catch much smaller things.
+
+**Why this is mine to report rather than someone else's to notice.** Working P2-04, P1-03 and the P1-03 F stage I hit what I read as the same defect three times — "the clause names an observation no declared file can make" — and each time I treated the stage list as a hard boundary and built a registry amendment rather than simply writing the file:
+
+- `SCAFFOLD_FILES` (BLOCKED-131) — admitting a convention-forced `index.ts`
+- `TEST_FILES_ADDED` (BLOCKED-133) — admitting a test file
+- `FILES_REPLACED` — swapping `cordis.patch.yml` for `package.json`
+
+**Under reading 1, all three were ceremony for a constraint that does not exist.** Two of the three still carry findings worth keeping regardless of the ruling — the `index.ts` scaffold is genuinely forced by `tsdown`'s entry glob, and `cordis.patch.yml` genuinely cannot hold a scalar key — but those are facts about the FILES, not about scope, and neither needed a provenance mechanism to record.
+
+**What this changes if reading 1 is ruled.** P1-03's F stage does not need its declared file amended to host the cold-start case; the delegate has already ruled (A), reusing `apps/cli/tests/plugin-lock.spec.ts`, which is consistent with reading 1 and needs no registry edit. The three mechanisms stay (removing them would rewrite provenance already recorded and pushed) but should be documented as recording FILE FACTS rather than enforcing scope, and no fourth should be added.
+
+**What it changes if reading 2 is ruled:** 79 entries need review, and that is a program-level finding, not a slice.
+
+**Not acted on.** Which reading holds is a decision about what the registry's `files` list MEANS, and that is the delegate's or the maintainer's, not the executor's.
+
 ### BLOCKED-133 — P1-03's unlock signal names an observation none of its declared files can make
 
 **State: OPEN. Needs a files[] decision, same class as BLOCKED-131 and the same class of hazard as BLOCKED-096.**
