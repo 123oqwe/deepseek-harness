@@ -4475,11 +4475,11 @@
       },
       "supplements": {},
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": [
         "P4-07 residual: unfenced advanceAgentLifecycle is a public export (pinned by a characterization case)"
       ],
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-06T06:15:40.760Z",
         "cells": {

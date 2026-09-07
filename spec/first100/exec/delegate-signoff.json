@@ -193,6 +193,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-07T12:04:02.647Z",
       "reason": "Rectification §12.13 (4.4a, measured 2026-09-07): dsh-workflow-journal has zero importers outside its own package and tests — workflow-worker-thread/src/{host,worker,runtime}.ts, which the registry's U stage names, never import it; the journal-host is exercised only by a test file. must[4] and acc[0] hold only in unit tests. Withdrawn; P4-08 reopens at U for the worker-thread host wiring the registry named."
+    },
+    {
+      "epic": "P4-07",
+      "rowDigestSha256": "21b2895631077c6617d11a4b08754e57d23b4a47d07a6bb0bee0f4d325f75f5e",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-07T14:23:18.607Z",
+      "reason": "Rectification §12.15 (4.4a, measured 2026-09-07): advanceAgentLifecycleFenced, advanceAgentLifecycle, holdsDispatchSlot, decideTransition and the AgentLifecycle value have zero production references outside core/agent's three defining files; dsh-lease is imported only by core/agent/src/dispatch.ts, whose fenced functions nobody calls; no production code constructs a lifecycle. must[1] (every state write and action execution carries a fencing token) holds nowhere on a launched profile. The U stage touched a registry [B] file (dispatch.ts) but the code is dead, which gate (u) cannot see and 4.4a can. Withdrawn; P4-07 reopens at U to give the lifecycle a real holder on the real dispatch path and the worker-thread host the registry names."
     }
   ]
 }
