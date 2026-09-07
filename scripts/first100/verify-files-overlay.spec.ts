@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { classifyOverlayPath, computeOverlay, declaredPaths } from './files-overlay.mjs'
-import { sourceEntriesWithoutReason, unaccountedCitations } from './verify-files-overlay.mjs'
+import { hotZoneEntriesWithoutCitation, sourceEntriesWithoutReason, unaccountedCitations } from './verify-files-overlay.mjs'
 
 const registry = {
   epics: [{
@@ -81,7 +81,7 @@ describe('computeOverlay', () => {
   })
 })
 
-describe('the two refusals', () => {
+describe('the coverage and reason refusals', () => {
   it('refuses a source path with no reason, and names it', () => {
     const overlay = computeOverlay(registry, freeze(['packages/demo/thing/src/undeclared.ts']), {})
     expect(sourceEntriesWithoutReason(overlay).map(entry => entry.path)).toEqual(['packages/demo/thing/src/undeclared.ts'])
@@ -121,5 +121,27 @@ describe('the two refusals', () => {
     expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/undeclared.ts']), overlay)).toEqual([])
     expect(unaccountedCitations(registry, freeze(['packages/demo/thing/src/other.ts']), overlay))
       .toEqual([{ epic: 'P9-99', stage: 'U', path: 'packages/demo/thing/src/other.ts' }])
+  })
+})
+
+describe('hotZoneEntriesWithoutCitation', () => {
+  const hotZone = (reason: string) => computeOverlay(registry, freeze(['packages/demo/thing/src/shared.ts']), {
+    'P9-99 packages/demo/thing/src/shared.ts': reason,
+  })
+
+  it('refuses a HOT ZONE reason that cites no diff', () => {
+    // Three of the first five hot-zone reasons described the epic's intent
+    // rather than its change, all three calling a modification of a shared
+    // file a read of it. A gate cannot tell whether a sentence is true; it can
+    // require the sentence to name the diff a reviewer checks it against.
+    expect(hotZoneEntriesWithoutCitation(hotZone('HOT ZONE: this epic only reads the file.'))).toHaveLength(1)
+  })
+
+  it('accepts one that names a commit, in the form a reader can re-run', () => {
+    expect(hotZoneEntriesWithoutCitation(hotZone('HOT ZONE. From `git show 05c22146ef -- packages/demo/thing/src/shared.ts`: the constructor gained a parameter.'))).toEqual([])
+  })
+
+  it('leaves a non-hot-zone reason alone, so ordinary source entries are not forced to cite a diff', () => {
+    expect(hotZoneEntriesWithoutCitation(hotZone('The seam the clause is about.'))).toEqual([])
   })
 })

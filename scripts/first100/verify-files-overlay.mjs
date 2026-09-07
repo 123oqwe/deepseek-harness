@@ -71,6 +71,26 @@ export function sourceEntriesWithoutReason(overlay) {
   return overlay.filter(entry => entry.kind === 'source' && (typeof entry.reason !== 'string' || entry.reason.trim() === ''))
 }
 
+/**
+ * `HOT ZONE` entries whose reason cites no commit to check it against.
+ *
+ * The delegate read the first five against their diffs and found three
+ * describing the epic's INTENT rather than its change — all three in the same
+ * direction, calling a modification of a shared file a read of it. A gate
+ * cannot tell whether a sentence is true. It can require the sentence to name
+ * the diff it came from, which is what makes the reviewer's pass possible at
+ * all: `git show <sha> -- <path>` either shows what the reason says or it does
+ * not.
+ * @param overlay - the computed overlay.
+ * @returns hot-zone entries with no `git show <sha>` citation.
+ */
+export function hotZoneEntriesWithoutCitation(overlay) {
+  return overlay.filter(entry =>
+    typeof entry.reason === 'string'
+    && entry.reason.includes('HOT ZONE')
+    && !/git show [0-9a-f]{7,40}\b/u.test(entry.reason))
+}
+
 function main() {
   const { registry, freeze, reasons } = loadOverlayInputs()
   const overlay = computeOverlay(registry, freeze, reasons)
@@ -87,7 +107,12 @@ function main() {
 
   const unaccounted = unaccountedCitations(registry, freeze, overlay)
   const unexplained = sourceEntriesWithoutReason(overlay)
+  const uncited = hotZoneEntriesWithoutCitation(overlay)
   const failures = []
+  if (uncited.length > 0) {
+    failures.push(`${String(uncited.length)} HOT ZONE reason(s) citing no diff — write a shared-file reason from \`git show <sha> -- <path>\` and name that sha, because three of the first five described the epic's intent instead of its change:\n  `
+      + uncited.map(entry => `${entry.epic} ${entry.path}`).join('\n  '))
+  }
   if (unaccounted.length > 0) {
     failures.push(`${String(unaccounted.length)} freeze citation(s) in neither files[] nor the overlay:\n  `
       + unaccounted.map(({ epic, stage, path }) => `${epic}.${stage} ${path}`).join('\n  '))

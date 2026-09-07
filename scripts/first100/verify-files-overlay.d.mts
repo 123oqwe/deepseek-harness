@@ -11,3 +11,5 @@ export function unaccountedCitations(
 ): { epic: string; stage: string; path: string }[]
 
 export function sourceEntriesWithoutReason(overlay: readonly OverlayEntry[]): OverlayEntry[]
+
+export function hotZoneEntriesWithoutCitation(overlay: readonly OverlayEntry[]): OverlayEntry[]

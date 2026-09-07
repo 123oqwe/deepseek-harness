@@ -270,7 +270,7 @@
         "P",
         "F"
       ],
-      "reason": "The signature roots provenance verification is checked against. HOT ZONE: the kernel entry point is shared with P0-02 and P2-02, and this epic reads from it rather than changing its construction."
+      "reason": "HOT ZONE. Written from `git show 05c22146ef -- packages/kernel/trust-kernel/src/index.ts` (+42/-1): `createTrustKernel` takes a new `config: TrustKernelConfig` carrying `trustAnchors`, a module-private `CONFIGURED_ANCHORS` WeakMap keyed by the handle holds them, and `configuredTrustAnchors` is a new export. That is a change to construction, not a read of it. The WeakMap keying is the load-bearing part: only a caller already holding the unforgeable handle can read the anchors, and a forged object reaches nothing because it was never a key. `createTrustKernel` still performs no I/O — the boot path reads configuration and passes the result — so the constructor stays total. An earlier version of this entry said P1-02 only READS `signatureRoots` and does not change construction, which was simply false."
     },
     {
       "epic": "P1-02",
@@ -432,7 +432,7 @@
       "stages": [
         "U"
       ],
-      "reason": "HOT ZONE: the boot path where a compatibility refusal actually stops a launch. The clause is about boot admission, so the assertion has to reach the real boot rather than the solver alone."
+      "reason": "HOT ZONE. Written from `git show c3992e5124 -- apps/cli/src/profile-boot.ts` (+52/-3): profile boot imports `negotiateProfileLayerCompatibility` and `DSH_RUNTIME_API_VERSION`, runs the negotiation on the admitted layers before any patch reaches `boot()`, and the result gains a `compatBlockedLayers` field whose layers are absent from `bundlePatches` — so a blocked layer's plugin code never mounts (acceptance[1]). The change is an added step in the boot sequence, not a change to what boot already did. It is in this epic's scope because the clause is about boot ADMISSION: proving it in the solver alone would leave the refusal unreached by any launch."
     },
     {
       "epic": "P1-08",
@@ -752,7 +752,7 @@
       "stages": [
         "P.1"
       ],
-      "reason": "HOT ZONE: must[1] required real key material in `signatureRoots`, which is minted in the kernel entry point. This epic changed construction there — an Ed25519 keypair per kernel in a module-private WeakMap — under the P2-02 acceptance lock, and the change is recorded in that lock rather than only here."
+      "reason": "HOT ZONE. Written from `git show 1ac2dfe4d1 -- packages/kernel/trust-kernel/src/index.ts` (+31/-5): the module imports `generateKeyPairSync`/`sign`/`verify` from node:crypto, mints an Ed25519 keypair per kernel, and holds it in a module-private WeakMap keyed by the handle — so the PRIVATE key is never a property of `signatureRoots`, which crosses the plugin boundary. `signWithSignatureRoots`/`verifyWithSignatureRoots` are new exports, and a handle this module did not mint is refused rather than handed an empty signature. This replaced a four-byte constant that was identical in every installation, so any deployment's token verified anywhere and verification could not fail (P2-02 must[1]). Construction changed here under P2-02's acceptance lock, and the lift records the same facts."
     },
     {
       "epic": "P2-02",
@@ -817,7 +817,7 @@
       "stages": [
         "U"
       ],
-      "reason": "HOT ZONE: the session log is where a manifest becomes durable, and must[1] requires the manifest appended BEFORE policy. The epic contributes an event type through the documented map rather than changing the log itself."
+      "reason": "HOT ZONE. Written from `git show ed09684ecf -- packages/core/session/src/index.ts` (+24/-0): the Session log gains a private `typeCounts` Map, maintained on every append, and a public `countEventsOfType(type)` reading it. Why: must[1] needs the manifest `sequence` to be one running position across two call sites (the native tool path and the PTC code-mode sub-dispatch), and a per-append counter avoids the O(n) scan a hot path would pay per operation. The method is deliberately generic — this Session names no manifest — because the event map is merge-extended downstream and a manifest-specific counter here would invert that dependency. An earlier version of this entry said the epic \"contributes an event type and does not change the log itself\", which described the declaration merging in dsh-action-manifest and hid this file's actual change."
     },
     {
       "epic": "P2-03",
@@ -994,7 +994,7 @@
       "stages": [
         "U"
       ],
-      "reason": "HOT ZONE: the agent entry point re-exports the lifecycle transition the clause fences. The epic adds the fenced variant beside the existing export; the unfenced one is still published and is P4-07's standing open finding."
+      "reason": "HOT ZONE. Written from `git show c79a24f78c -- packages/core/agent/src/index.ts`: the barrel had ZERO occurrences of `advanceAgentLifecycle` before this commit, and P4-07 added BOTH `advanceAgentLifecycle` and `advanceAgentLifecycleFenced` to it. So the unfenced public export is this epic's own widening, not a pre-existing condition it inherited — P4-07's standing open finding is one it created. Measured on the same question: `src/dispatch.ts` already exported the function and `package.json` already carried `\"./src/*\"`, so `@deepseek-ai/dsh-agent/src/dispatch` was importable beforehand; what this commit added is reachability from the package root, which is the surface the finding is about. An earlier version said the unfenced export was \"still\" exported, which read the epic's intent instead of its diff."
     },
     {
       "epic": "P4-07",
