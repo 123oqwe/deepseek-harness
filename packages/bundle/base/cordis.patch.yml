@@ -400,17 +400,15 @@
     # The engine and the Run Service both inject `leaseStore`, so a provider
     # must be mounted or neither activates.
     #
-    # `.dsh` is relative to the launch directory, which makes the lease store
-    # PER PROJECT rather than per machine — and that is a placement question
-    # §12.20-1 has not settled, not a decision recorded here. Deriving it from
-    # `dshHomePath` was tried and measured: one lease database shared by every
-    # concurrently booting profile made all 16 SDK snapshot scenarios fail at
-    # mount, and the failure named neither the path nor the database. Recorded
-    # in BLOCKED-148; the row moves when that is ruled.
+    # The directory follows the SESSION storage root (§12.21): a lease's scope
+    # is its work item's scope, and runs and sessions both live under that
+    # root. A path relative to the launch directory would let two cwds under
+    # one session root hold separate lease databases — two masters over the
+    # same run, which is the state this capability exists to prevent.
     - id: lease-store
       name: '@deepseek-ai/dsh-lease-sqlite'
       config:
-        directory: .dsh
+        directory: !!js dshHomePath('leases')
 
     - id: workflow-worker-thread
       name: '@deepseek-ai/dsh-workflow-worker-thread'

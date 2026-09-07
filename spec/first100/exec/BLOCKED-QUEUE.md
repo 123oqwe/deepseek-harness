@@ -252,28 +252,27 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
-### BLOCKED-148 — one lease database per machine breaks every concurrent boot; `.dsh` stands until the placement is ruled
+### BLOCKED-148 — CLOSED, and the first version of this entry was wrong about why
 
-**State: OPEN, measured, blocking §12.20-1's second half only.** `run` is enabled and its `storePath` derived; the LEASE directory is not.
+**State: CLOSED. The lease directory now derives from the configured home, as §12.20-1 ruled. This entry is kept because its first version stated a cause that measurement then refuted, and deleting it would erase the correction.**
 
-§12.20-1 rules that `run`'s `storePath` and lease-sqlite's `directory` both derive from the profile's configured storage root, with no `.dsh` literal. Half of that landed: `storePath: !!js dshHomePath('runs', 'runs.json')` works, and every snapshot corpus is green with it.
+**What I wrote first.** That `!!js dshHomePath('leases')` failed all 16 SDK snapshot scenarios because one `$DSH_HOME` per machine made every concurrently booting profile open the same SQLite lease database, and that `.dsh` worked because it is relative to each launch directory. I put a table in this entry, wrote a placement question on top of it, and asked for a ruling between per-project and per-machine.
 
-The other half does not, and the failure is not a wiring mistake:
+**Every part of that was wrong, and each part was checkable.**
 
-| lease `directory` | result |
-| --- | --- |
-| `!!js dshHomePath('leases')` | **all 16 SDK snapshot scenarios fail**, every one with `cannot create effect on inactive context` |
-| `.dsh` | four corpora green — acp 15, sdk 16, session 80 (+3 skipped), web unchanged |
+- **The database was never shared.** `sdk.snapshot.ts` sets `dshHome = join(cwd, '.dsh')` per scenario and `DeepSeekHarness` passes it to the child as `DSH_HOME` (`packages/sdk/client/src/launch.ts`). The derived path was `<scenario cwd>/.dsh/leases/leases.sqlite` — isolated, not shared. One `grep` of the harness answered this.
+- **Concurrent first-open works.** Eight processes opening ONE fresh database at the same moment: all eight opened, exactly one acquired the item, seven were refused `held-by-another`. That is the behaviour §12.21 asked to be proved, and it already held.
+- **The real cause was a stale build.** The `mkdirSync(directory, { recursive: true })` I had just added to `openLeaseStore` was in `src`; the SDK profile launches BUILT `lib/`, and `pnpm run build` had run before that edit. The nested `leases/` directory therefore did not exist, and SQLite said so.
 
-**Why, and why it is a real question rather than a bug to fix quietly.** `dshHomePath` resolves under one `$DSH_HOME` per machine, so every concurrently booting profile opens the SAME SQLite lease database. The snapshot suite boots many app processes at once; `.dsh` is relative to each one's launch directory and isolates them. Ruled out by measurement, not by guess: moving the store's open out of the constructor into `Service.init` (kept, because a constructor throw during service construction unwinds into exactly that message and names neither the path nor the database) did **not** fix it, and `run`'s own derived home path is fine — its store is a per-path JSON file with no cross-process lock.
+**The actual error message, which I should have read first:** `dsh: plugin tree failed to load: failed to apply loader entry lease-store (@deepseek-ai/dsh-lease-sqlite): unable to open database file`. The `cannot create effect on inactive context` I built a theory on was the shell the delegate said it was (§12.21) — obtained by printing the child's stderr, which took one temporary line.
 
-**The question the ruling has to answer.** For leases, sharing is the POINT — two hosts that must not both own a work item have to contend over one store. Machine-wide sharing is one reading of that; per-project is another, and they differ for two unrelated projects open at once, which the current default treats as unrelated and the derived path would treat as competitors for the same rows.
+**How it was found and what it cost.** The delegate ruled §12.21 "first a defect, not a placement" and asked for the SQLite text before any fix. That instruction found it. The cost was a wrong entry in this register, a wrong table, and a placement question asked of the delegate that did not exist.
 
-**Decision needed (delegate's):** either
-1. per-project stays, and the `.dsh` literal is replaced by a path derived from the WORKSPACE root rather than the harness home; or
-2. machine-wide is correct, and concurrent boots against one lease database must be made to work — the mount-time `CREATE TABLE IF NOT EXISTS` / `INSERT OR IGNORE` sequence is the suspect, and it needs its own transaction and busy handling before any profile can point there.
+**The rule this breaks, again.** BLOCKED-137's first version made a central claim I had not measured, and this is the same failure one register entry later: a plausible mechanism, a table that looked like evidence, and no reading of the actual error text. A comparison of two configurations tells you WHICH differs, never WHY.
 
-**Not chosen here.** The row carries a comment saying the placement is unsettled and pointing at this entry, so the literal is a recorded interim rather than a decision. Reading (2) is a change to how the store boots and would ship a shared-lock path on every profile; that is not the executor's to pick.
+**Resolution.** `directory: !!js dshHomePath('leases')` — the lease scope follows the session storage root, as §12.21 ruled, so two cwds under one session root cannot hold separate lease databases and become two masters. Rebuilt, and every corpus is green: acp 15, sdk 16, session 80 (+3 skipped), web unchanged. `mkdirSync` stays, and the store's open stays in `Service.init` rather than the constructor — a constructor throw during service construction unwinds into a message naming neither the path nor the database, which is the whole reason this took a detour.
+
+**Still owed to §12.21, and not done here:** the concurrency case it asked to be frozen — N processes opening one new database and exactly one acquiring. It passes today, as measured above, but it is a scratch script rather than a frozen case; it belongs with P4-07's next observation.
 
 ### BLOCKED-147 — gate (u)'s 11 findings, classified: 3 are citation gaps, 6 are real integrations that were never built
 

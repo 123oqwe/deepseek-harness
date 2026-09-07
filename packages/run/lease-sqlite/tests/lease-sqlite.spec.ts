@@ -64,6 +64,39 @@ describe('P4-07 must[0]: one item, one holder, across PROCESSES', () => {
     expect(results.filter(r => r === 'held-by-another')).toHaveLength(1)
   }, 30_000)
 
+  it('lets N processes CREATE the same new database at once, and still gives the item to one', async () => {
+    // §12.21. Two hosts booting together against a database neither has
+    // created is the scenario a lease exists for, so a failure at first open
+    // is P4-07 failing in its own target case. The schema statements run on
+    // every open — `CREATE TABLE IF NOT EXISTS`, `INSERT OR IGNORE` — and this
+    // is what says they tolerate company.
+    //
+    // Distinct from the two-process race above, which opens a database the
+    // parent already created: there the contention is over a row, here it is
+    // over the file and the schema.
+    const dir = directory()
+    const HOSTS = 8
+    const child = (label: string) => new Promise<string>((resolve) => {
+      const proc = spawn(process.execPath, ['--import', 'tsx', '-e', [
+        `const { openLeaseStore } = await import(${JSON.stringify(join(process.cwd(), 'packages/run/lease-sqlite/src/index.ts'))})`,
+        `const store = openLeaseStore(${JSON.stringify(join(dir, 'never-created'))})`,
+        `const result = store.acquire('run-1', ${JSON.stringify(label)}, Date.now(), 30000)`,
+        `console.log(${JSON.stringify(label)} + ':' + (result.acquired ? 'acquired' : result.reason))`,
+      ].join('\n')], { stdio: ['ignore', 'pipe', 'inherit'] })
+      let out = ''
+      proc.stdout.on('data', (chunk: Buffer) => { out += chunk.toString() })
+      proc.on('close', (code) => { resolve(code === 0 ? (out.trim().split(':')[1] ?? '(no output)') : `exit-${String(code)}`) })
+    })
+    // Spawned together rather than in sequence: `spawnSync` in a loop is eight
+    // opens of an EXISTING database after the first, which proves nothing
+    // about creation, and a first draft of this measurement did exactly that.
+    const results = await Promise.all(Array.from({ length: HOSTS }, (_, index) => child(`host-${String(index)}`)))
+
+    expect(results.filter(result => result.startsWith('exit-'))).toEqual([])
+    expect(results.filter(result => result === 'acquired')).toHaveLength(1)
+    expect(results.filter(result => result === 'held-by-another')).toHaveLength(HOSTS - 1)
+  }, 60_000)
+
   it('keeps the lease after the holder is gone, so a scheduler can still see who owns it', () => {
     // A Map dies with its process; an orphaned lease is exactly what `must[2]`
     // needs to reclaim, and what `acceptance[0]`'s recovered worker must find
