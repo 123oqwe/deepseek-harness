@@ -11,7 +11,8 @@
  * @module @deepseek-ai/dsh-action-manifest
  */
 export * from './canonicalize.ts'
-export { manifestActor, manifestIdempotencyKey } from './identity.ts'
+export { manifestAttribution, manifestIdempotencyKey } from './identity.ts'
+export type { ManifestAttribution } from './identity.ts'
 
 import { createActionManifest, assertManifestPrecedesExecution, computeArgumentsHash } from './canonicalize.ts'
 import type {

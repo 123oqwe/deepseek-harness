@@ -64,6 +64,7 @@ import * as ToolTodo from '@deepseek-ai/dsh-tool-todo'
 import * as ToolSubagent from '@deepseek-ai/dsh-tool-subagent'
 import { registerListSubagentModels } from '../packages/subagent/tool-subagent/src/list-models.ts'
 import * as ToolWeb from '@deepseek-ai/dsh-tool-web'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import VmWorkflowEngine from '@deepseek-ai/dsh-workflow-worker-thread'
 import * as ToolRalph from '@deepseek-ai/dsh-tool-ralph'
 import * as ToolWorkflow from '@deepseek-ai/dsh-tool-workflow'
@@ -412,11 +413,15 @@ const TOOL_PACKAGES: ToolPackage[] = [
     pkg: '@deepseek-ai/dsh-tool-ralph',
     dir: 'tool-ralph',
     source: 'packages/workflow/tool-ralph/src/index.ts',
-    requires: ['ctx.tools', 'ctx.workflowEngine', 'ctx.subagents', 'ctx.systemPrompt', 'a calling Agent (exec.agent parents every fresh round)'],
+    requires: ['ctx.tools', 'ctx.workflowEngine', 'ctx.leaseStore', 'ctx.subagents', 'ctx.systemPrompt', 'a calling Agent (exec.agent parents every fresh round)'],
     writes: ['tool/call', 'tool/result', 'workflow and child session events during execution'],
     async mount(ctx) {
       await ctx.plugin(SubagentRuntime)
       registerCatalogSubagentProvider(ctx, 'mock')
+      // The engine injects `leaseStore`; without a provider it stays PENDING
+      // and registers no tool. The in-memory one is right here — the catalog
+      // boots one process and starts no run.
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(VmWorkflowEngine, { provider: 'mock' })
       await ctx.plugin(ToolRalph, { subagentProvider: 'mock' })
     },
@@ -561,7 +566,7 @@ const TOOL_PACKAGES: ToolPackage[] = [
     pkg: '@deepseek-ai/dsh-tool-workflow',
     dir: 'tool-workflow',
     source: 'packages/workflow/tool-workflow/src/index.ts',
-    requires: ['ctx.tools', 'ctx.workflowEngine', 'ctx.systemPrompt', 'a calling Agent (exec.agent parents the script children)'],
+    requires: ['ctx.tools', 'ctx.workflowEngine', 'ctx.leaseStore', 'ctx.systemPrompt', 'a calling Agent (exec.agent parents the script children)'],
     writes: ['tool/call', 'tool/result'],
     async mount(ctx) {
       // The tool injects `workflows`; boot the vm engine over a scripted
@@ -569,6 +574,10 @@ const TOOL_PACKAGES: ToolPackage[] = [
       // provider backs the engine.
       await ctx.plugin(SubagentRuntime)
       registerCatalogSubagentProvider(ctx, 'mock')
+      // The engine injects `leaseStore`; without a provider it stays PENDING
+      // and registers no tool. The in-memory one is right here — the catalog
+      // boots one process and starts no run.
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(VmWorkflowEngine, { provider: 'mock' })
       await ctx.plugin(ToolWorkflow)
     },

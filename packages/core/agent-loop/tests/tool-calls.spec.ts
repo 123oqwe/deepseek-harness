@@ -14,6 +14,8 @@ import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop, { DEFAULT_MAX_PARALLEL_TOOL_CALLS } from '@deepseek-ai/dsh-agent-loop'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
+import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId } from '@deepseek-ai/dsh-principal'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import type { CodeRunRequest, CodeRunResult } from '@deepseek-ai/dsh-code-runtime'
 
@@ -974,9 +976,37 @@ describe('P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not
     await agent.whenIdle()
 
     const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
-    expect(manifest?.data.runId).toBe('manifest-fields')
+    // No identity was attached, so both fall back to the anonymous form keyed
+    // to the session. The run id is NOT the session id: a session is not a run,
+    // and the two must stay distinguishable even in the fallback.
+    expect(manifest?.data.runId).toBe('anonymous:manifest-fields')
     expect(manifest?.data.actor).toBe('anonymous:manifest-fields')
     expect(manifest?.data.idempotencyKey).toMatch(/^[0-9a-f]{64}$/u)
+  })
+
+  it('logs the ATTACHED identity\'s run, not the session id wearing a RunId brand', async () => {
+    // The defect this pins: `runId: brandString<RunId>(session.id)` produced a
+    // manifest whose mandated field was present and whose value was something
+    // else. Two runs of one session then shared a "runId", and P4-12 keys a
+    // reservation scope on it. The identity carries the real run two lines from
+    // where the manifest is built.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: { a: 1 } }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const sessionId = SessionId('manifest-attached-run')
+    const agent = ctx.agentLoop.create(sessionId, { provider: 'mock', model: 'mock' })
+    const principal = createUserPrincipal(PrincipalId('u1'), TenantId('tenant-a'))
+    const identity: IdentityContext = { principal, runId: RunId('run-9f3c'), chain: createChain(principal, 0) }
+    agent.session.append('identity/attached', { identity })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
+    expect(manifest?.data.runId).toBe('run-9f3c')
+    expect(manifest?.data.runId).not.toBe(sessionId)
   })
 
   it('keys two calls in one session differently, so the key identifies the action and not the run', async () => {

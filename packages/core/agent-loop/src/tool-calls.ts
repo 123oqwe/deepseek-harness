@@ -16,9 +16,8 @@ import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-ll
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { computeArgumentsHash, classifySideEffect, createActionManifest, manifestActor, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import { computeArgumentsHash, classifySideEffect, createActionManifest, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
-import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -303,15 +302,20 @@ function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'n
   // production callers, so must[0]'s "the manifest mandates idempotencyKey"
   // held over a record the product never constructed, and the event carried
   // neither the key nor the actor -- the two fields P4-12's ledger keys on.
+  // The run and the actor come from the attached identity TOGETHER. An earlier
+  // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
+  // present and its value was something else, so two runs of one session shared
+  // a "runId" and P4-12 would have keyed a scope on it.
+  const attribution = manifestAttribution(attachedIdentity(session), session.id)
   const manifest = createActionManifest({
     actionId: brandString<ActionId>(block.id),
-    runId: brandString<RunId>(session.id),
-    actor: manifestActor(attachedIdentity(session), brandString<RunId>(session.id)),
+    runId: attribution.runId,
+    actor: attribution.actor,
     capability: brandString<CapabilityRef>(block.name),
     origin,
     target: { kind: 'other', ref: block.name },
     args: block.arguments,
-    idempotencyKey: manifestIdempotencyKey(brandString<RunId>(session.id), brandString<ActionId>(block.id), argumentsHash),
+    idempotencyKey: manifestIdempotencyKey(session.id, brandString<ActionId>(block.id), argumentsHash),
     preconditions: [],
     expectedDiff: { description: `tool ${block.name} executes with the manifested arguments` },
     compensation: { reversible: false, reason: 'the native tool path declares no compensation; a tool that has one states it in its own manifest contribution' },

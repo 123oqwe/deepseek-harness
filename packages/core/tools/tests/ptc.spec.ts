@@ -12,6 +12,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type { SessionEventMap } from '@deepseek-ai/dsh-session'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
+import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId } from '@deepseek-ai/dsh-principal'
 
 const testToolSignal = new AbortController().signal
 
@@ -882,6 +883,29 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
       expect(manifest.classified).toBe(false)
       expect(manifest.requiresApproval).toBe(true)
       expect(manifest.sequence).toBe(1)
+    })
+
+    it('records the ATTACHED identity\'s run, so code mode cannot bypass the run attribution either (must[2])', async () => {
+      // The native path branded the session id as a `RunId`; this path did the
+      // same, from `agent.session.id`. must[2] is that code mode produces the
+      // SAME record, which includes the field being the same KIND of value —
+      // a manifest whose run is really a session is wrong on both paths.
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      registerEcho(ctx)
+      const { agent, events } = fakeAgent()
+      const principal = createUserPrincipal(PrincipalId('u1'), TenantId('tenant-a'))
+      agent.session.append('identity/attached', {
+        identity: { principal, runId: RunId('run-9f3c'), chain: createChain(principal, 0) },
+      })
+      runtime.behavior = async (request) => {
+        await request.bindings[0]!.functions.echo!({ value: 'a' })
+        return { logs: [], value: 'done' }
+      }
+      await runCode(ctx, 'program', { agent })
+
+      const manifest = events.find(event => event.type === 'action/manifest-appended')?.data as { runId: string }
+      expect(manifest.runId).toBe('run-9f3c')
+      expect(manifest.runId).not.toBe('session-fake')
     })
 
     it('a dispatch abandoned before it starts writes NO manifest, so the log records no action that never happened', async () => {

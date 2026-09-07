@@ -11,10 +11,9 @@ import { createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { classifySideEffect, computeArgumentsHash, createActionManifest, manifestActor, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import { classifySideEffect, computeArgumentsHash, createActionManifest, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
-import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
 import type { PtcDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
@@ -201,15 +200,20 @@ function appendCodeModeManifest(
   // mode cannot bypass" is about this path producing the SAME record, not a
   // similar event: BLOCKED-143 found both paths hand-assembling a payload and
   // neither constructing the manifest whose mandate must[0] describes.
+  // The run and the actor come from the attached identity TOGETHER. An earlier
+  // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
+  // present and its value was something else, so two runs of one session shared
+  // a "runId" and P4-12 would have keyed a scope on it.
+  const attribution = manifestAttribution(attachedIdentity(agent.session), agent.session.id)
   const manifest = createActionManifest({
     actionId: brandString<ActionId>(subCallId),
-    runId: brandString<RunId>(agent.session.id),
-    actor: manifestActor(attachedIdentity(agent.session), brandString<RunId>(agent.session.id)),
+    runId: attribution.runId,
+    actor: attribution.actor,
     capability: brandString<CapabilityRef>(name),
     origin: 'code-mode-embedded',
     target: { kind: 'other', ref: name },
     args: loggedArguments as JsonValue,
-    idempotencyKey: manifestIdempotencyKey(brandString<RunId>(agent.session.id), brandString<ActionId>(subCallId), argumentsHash),
+    idempotencyKey: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
     preconditions: [],
     expectedDiff: { description: `code-mode sub-dispatch of ${name} executes with the manifested arguments` },
     compensation: { reversible: false, reason: 'the code-mode path declares no compensation; a tool that has one states it in its own manifest contribution' },

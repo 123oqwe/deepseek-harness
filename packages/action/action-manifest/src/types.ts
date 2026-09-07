@@ -72,6 +72,21 @@ import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 export type ActionId = Branded<'ActionId'>
 
 /**
+ * The scope an idempotency key is derived within: the session the action
+ * happens in.
+ *
+ * Structurally the same brand as `@deepseek-ai/dsh-session`'s `SessionId`, so
+ * a real session id is assignable with no cast and a bare string is still
+ * refused. It is restated rather than imported because that package is
+ * orchestration runtime and this one is a capability definition; importing it
+ * would put a definition above its own consumers in the layer graph, for a
+ * type that carries no behaviour. If a session identity ever moves into a
+ * definitions package, this alias points there instead and nothing else
+ * changes.
+ */
+export type IdempotencyScope = Branded<'SessionId'>
+
+/**
  * The namespaced identity of the capability an action invokes — a tool
  * name, service method, or plugin RPC endpoint (must[0]'s `capability`
  * field). Deliberately not `@deepseek-ai/dsh-plugin-ownership`'s
