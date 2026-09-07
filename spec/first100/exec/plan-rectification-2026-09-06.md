@@ -686,3 +686,12 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 **事实**(执行者测量):`core/agent/src/inbox.ts` 是会话日志支撑的 `UserMessage` 提示队列,无 message id / epoch / 跨进程到达——**我 §10.3-2 指它为调用点是错的**(按 files[] 名字而非行为指的,BLOCKED-091 的形状)。真实到达面在 `packages/collaboration/mailbox/src/index.ts`(P5-11,已验收):`deliveryKey`/`decideDelivery` 与 message-bus 的 `dedupKey`/`classifyIntake` 是同一条规则的两份实现,互相引用对方的散文而不 import 对方的函数;message-bus 那份零生产调用者。
 
 **裁决**:一条规则,归 **P4-06(message-bus)** 所有——它的子句就是 at-least-once + 幂等消费。P4-06 U 阶段:(1) mailbox 的 `decideDelivery` 改为 import message-bus 的 `classifyIntake`(mailbox 保留自己的地址检查,去重委托),删除第二份;(2) 持久 `seen` = `bus.sqlite.consumedKeys()`,mailbox 投递路径成为 must[2] 的**生产调用点**;(3) 冻结"一次真实 mailbox 到达经 classifyIntake 被去重"+ P5-11 的 live 冻结用例在同一观测里全过(不 supersede P5-11,按 BLOCKED-059 先例记"改了已验收 epic 的文件、为何不扰其绿");(4) P4-06 的 filesOverlay 记 `mailbox/src/index.ts`(`kind: source, reason: BLOCKED-136 规则合一`);`core/agent/src/inbox.ts` 从 P4-06 的调用点说明中移除,理由记 136。
+
+### 12.6 红 run 放行的 25 格(2026-09-07 03:10 EDT,BLOCKED-137 追查,delegate 的错)
+
+**事实**(执行者照账量):09-06 22:20 起五次 exact-SHA 全红,每次只红 `pwsh-tool-turn` / `persistent-pwsh-tool-turn` 两条,真因是 `sequence` 0→1 修复后本机无 pwsh 导致两个夹具未刷新(BLOCKED-137),与 108 名单里的 pwsh 环境问题**不是同一根因**。这五次 run 共绿了 **25 格 / 18 epic(16 已 ACCEPTED)**,含 P1-03 四格、P4-06 C。每次都由 delegate 一句"在 108 名单里,不挡"放行——**按名字匹配名单,没读失败原因**。证据本身完好(同 SHA 单测报告、冻结标题在场 passing、失败与这些 epic 无关);**不成立的是准入程序**。
+
+**裁决:B(记例外),加机械化。**
+1. 25 格每格加 `admittedUnderRedRun: { runId, redSteps: ["Recorded-session snapshots"], diagnosedCause: "BLOCKED-137 stale pwsh fixtures (sequence 0→1)", unrelatedBecause: "该 epic files[]∪overlay 不含 snapshots/session/*pwsh*", admittedBy: "guanjieqiao-92", diagnosedAtUtc }`——由工具写(`generate-ledger --admit-red-run …`),不手改;16 条已验收行验收不撤,行上带同一记录。**不重测**:重跑换不回新信息,却会把"红也绿了格"这件事冲掉不留痕。
+2. **准入规则改为因果制**:从红 run 绿格,必须 (a) vitest 报告 `success:true`(全量单测绿);(b) **每个红步的失败原因已诊断并写进格子**(不是用例名匹配名单);(c) delegate 明示 ack。缺任一 → 绿化拒绝。进 `generate-ledger` 与门。
+3. Standing:引用 flake/已知名单前必须读失败信息并确认同一根因——"按名字匹配名单等于把该用例上的任何红都变成过",这次长在验收流程里。
