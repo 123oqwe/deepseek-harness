@@ -1414,7 +1414,23 @@
               "decidedBy": "delegate — the queue deliberately left this unassigned rather than giving it to the party that misread the clause."
             }
           ],
-          "notClaimed": "Nothing here proposes to satisfy acceptance[0]'s exactly-once business effect through the transport. The reworded clause puts that on the consumer's (messageId, epoch) idempotence, so no transport-level work unlocks it."
+          "notClaimed": "Nothing here proposes to satisfy acceptance[0]'s exactly-once business effect through the transport. The reworded clause puts that on the consumer's (messageId, epoch) idempotence, so no transport-level work unlocks it.",
+          "ruling": {
+            "decidedBy": "delegate, 2026-09-07",
+            "store": "packages/run/message-bus opens its own `bus.sqlite` per profile/run directory through `node:sqlite`.",
+            "reason": "Neither existing SQLite path fits. The KV seam is excluded by the reworded clause itself; session-query-sqlite's job is session SEARCH and its schema version belongs to another package. Reusing either would put run-time message state under an owner that did not choose it.",
+            "tables": [
+              "domain_events (payload + digest)",
+              "outbox",
+              "inbox {messageId, epoch, claimedByTurn, state: claimed|consumed|released}"
+            ],
+            "transaction": "One BEGIN IMMEDIATE covering all three, which is the reworded must[0] read literally.",
+            "relationToP401": "P4-01's append-only log stays the truth and is NOT part of the transaction: the JSONL append is the EFFECT of an outbox delivery, at-least-once, with the consumer idempotent on (messageId, epoch). The durable write is the transaction; the log is its projection.",
+            "turnCommitment": "The inbox row's own state, so no new session event type is added. The consumer commits domain_event + outbox row + inbox->consumed in ONE transaction; a crash leaves the row `claimed`; recovery sweeps lease/epoch expiry to `released`. That is what keeps BLOCKED-088's case legal — goal-round-driver's deliberate restoration of a claimed message whose reservation went stale is a `released` row being re-claimed, not a forbidden transition out of a terminal state. The previous rule treated `claimed` as terminal and forbade it.",
+            "classifyIntake": "Stays a pure function. `seen` becomes the key set of rows in state `consumed`; the production call site is core/agent/src/inbox.ts's intake path, in the U stage.",
+            "fieldNames": "CloudEvents attribute names, which standards-ownership.json assigns this epic to own.",
+            "migration": "bus.sqlite carries its own `schema_version` table, owned by message-bus."
+          }
         }
       }
     },
@@ -1852,7 +1868,20 @@
             }
           ],
           "notClaimed": "No key material is generated or stored by this record. Nothing here proposes that the executor hold, generate outside a test, or transmit any private key.",
-          "constraintHonoured": "The user's standing rule that credentials belong only to them is untouched by this work: what P2-02 needs is code that MINTS a keypair inside the kernel at boot, never a key supplied to or held by the executor."
+          "constraintHonoured": "The user's standing rule that credentials belong only to them is untouched by this work: what P2-02 needs is code that MINTS a keypair inside the kernel at boot, never a key supplied to or held by the executor.",
+          "ruling": {
+            "decidedBy": "delegate, 2026-09-07",
+            "privateKey": "Kernel module-private WeakMap keyed by the signatureRoots handle, the shape P1-02's CONFIGURED_ANCHORS already uses. The private key never leaves the kernel. The public key fills `signatureRoots`, which is the `Object.freeze({})` that made the marker bind nothing.",
+            "persistence": "Through the credentials provider seam. Until P6-08's keychain lands, a 0600 file backend under the dsh home, with the profile marked `dev`; `production-controlled` REFUSES a file backend, fail-closed.",
+            "generation": "Per INSTALL, minted at first boot — not per process, or every restart would invalidate outstanding tokens and P4-04's plan signatures. Rotatable: a new root plus the old public key retained for verification until expiry.",
+            "replacesMarker": "`issueToken`/`attenuateToken`'s fixed marker and `verifyToken` comparing a candidate against that same marker is BLOCKED-135's shape a third time — a check equal to itself. Replaced by node:crypto Ed25519, following P1-02's `verifyPackageSignature` (null algorithm, since Ed25519 carries its own digest).",
+            "mustOneCases": [
+              "a forged token is refused",
+              "after a non-root fiber is poisoned, verification still reaches the real kernel",
+              "a token still verifies after a restart"
+            ],
+            "keyHandlingInTests": "Every test mints its own keypair with `generateKeyPairSync` at run time; no key material is committed, and the executor holds no real private key. This is unchanged by the ruling and is recorded so the constraint is visible at the point someone would otherwise add a fixture key."
+          }
         }
       }
     }
