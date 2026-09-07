@@ -4792,7 +4792,8 @@
       "sensitivityProof": {
         "mutationDescription": "Six mutations. types.ts: (1) side-effecting steps skipped when verified and holding receipts -- the double-charge bug; (2) the verified flag ignored; (3) the digest-mismatch refusal removed. replay.ts: (4) resumeAt counts skippable steps instead of finding the first non-skippable, so it skips PAST a rerun; (5) compaction drops receipts along with inputs; (6) receipts collected only up to resumeAt. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1, 1, 1 and 1 cases respectively. (1) is the targeted mutation in BLOCKED-085's sense: skipping a completed-and-verified step is the natural implementation, and it is precisely how a resumed workflow charges twice."
-      }
+      },
+      "supersededBy": "P4-08.C.1"
     },
     {
       "epic": "P4-08",
@@ -4834,7 +4835,8 @@
       "sensitivityProof": {
         "mutationDescription": "Five mutations on src/recorder.ts: (1) no entry written until a step settles; (2) a settlement for an unstarted step back-fills an invented entry; (3) verification accepts any outcome; (4) entries emitted in insertion order rather than by seq; (5) a settlement appends a second entry instead of replacing the first. All restored byte-identical.",
         "failureSummary": "Reddens 11, 1, 2, 1 and 7 cases respectively. (4) reddened ZERO before a case was added that starts steps out of order -- the suite, not the mutation, was incomplete."
-      }
+      },
+      "supersededBy": "P4-08.P.1"
     },
     {
       "epic": "P4-08",
@@ -5912,7 +5914,8 @@
         "mutationDescription": "Three mutations on src/replay.ts beyond those recorded for the C stage: (1) compaction made non-idempotent by stripping the output ref on a second pass; (2) a refused plan still yields receipts to reconcile; (3) an empty journal reported unresumable. All restored byte-identical.",
         "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
       },
-      "supersedes": "2026-09-06T09:50:00.000Z"
+      "supersedes": "2026-09-06T09:50:00.000Z",
+      "supersededBy": "P4-08.F.2"
     },
     {
       "epic": "P4-09",
@@ -8381,7 +8384,7 @@
         "exec",
         "vitest",
         "run",
-        "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts",
+        "packages/workflow/workflow-worker-thread/tests/journal-live-run.spec.ts",
         "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
         "--reporter=json"
       ],
@@ -8401,16 +8404,151 @@
         "packages/workflow/workflow-worker-thread/src/types.ts",
         "packages/collaboration/workflow-journal/src/store.ts",
         "packages/workflow/workflow/src/index.ts",
-        "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts",
+        "packages/workflow/workflow-worker-thread/tests/journal-live-run.spec.ts",
         "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts"
       ],
       "frozenAtUtc": "2026-09-07T23:10:00.000Z",
-      "dryRunProof": "Ran locally at the candidate tree: packages/workflow, 258 passed.",
+      "dryRunProof": "Ran locally at the candidate tree: journal-live-run.spec.ts + journal-resume.spec.ts, 10 passed; journal-host.spec.ts unchanged at 8.",
       "sensitivityProof": {
         "mutationDescription": "Locally (never committed), two mutations in turn. (a) In packages/workflow/workflow-worker-thread/src/host.ts, removed the `journaling.onAgentStart` call so nothing recorded a step. (b) In packages/workflow/workflow-worker-thread/src/runtime.ts, removed the reuse check so a resumed run always started a child.",
         "failureSummary": "(a) reddened two cases, 'records one entry per agent() call' and 'classes every agent() step SIDE-EFFECTING'. (b) reddened exactly one, 'RESUMES without starting the completed children again' — the resumed run started both children again. The count that fails is taken at `workflow/agent-start`, one event per child actually started, not from the journal, which could only report that it recorded a skip."
       },
-      "note": "Reaches the registry's declared consumer `packages/workflow/workflow-worker-thread/src/host.ts` (§12.24-3). must[1]'s skip and must[2]'s reconciliation reach the world through `sessionPersistence`; the journal alone never authorizes reuse."
+      "note": "Reaches the registry's declared consumer `packages/workflow/workflow-worker-thread/src/host.ts` (§12.24-3). must[1]'s skip and must[2]'s reconciliation reach the world through `sessionPersistence`; the journal alone never authorizes reuse. The live-run cases live in `journal-live-run.spec.ts`, NOT in `journal-host.spec.ts`: that file is P4-08.U's own frozen target and an earlier draft of this supplement overwrote it, deleting eight frozen cases in the commit that added new ones. `verify-frozen-titles-resolvable` is what caught it."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
+        "keeps `verified` separate from `outcome`",
+        "records artifact REFS, never inline content",
+        "skips it and reuses its recorded output",
+        "re-runs a step that never completed",
+        "re-runs a completed step that recorded no output",
+        "reconciles it even when completed AND verified",
+        "reconciles a side-effecting step that recorded no receipts at all",
+        "collects every side-effect receipt in the journal, not only those before the restart point",
+        "resumes at the first step that is not skippable, not past it",
+        "resumes at the end when every step completed and was verified",
+        "resumes at zero when the first step is unskippable, whatever follows it",
+        "does not repeat a completed child agent call: its receipt is retained and its step skipped",
+        "refuses the WHOLE resume rather than degrading to a partial one",
+        "admits an unchanged digest, so the refusal is not unconditional",
+        "drops recomputable inputs from a completed, verified, pure step",
+        "leaves an unverified or side-effecting step untouched",
+        "retains EVERY receipt, which is the evidence nothing can regenerate",
+        "reports a compaction that dropped a receipt as NOT retaining evidence"
+      ],
+      "files": [
+        "packages/collaboration/workflow-journal/src/types.ts",
+        "packages/collaboration/workflow-journal/src/replay.ts",
+        "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "packages/collaboration/workflow-journal/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T00:20:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: run packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts — every listed case passed.",
+      "note": "Package relocation, §12.22-1 (BLOCKED-149): `dsh-workflow-journal` moved from `packages/workflow/` to `packages/collaboration/`, so the superseded entry's `argv` names a path that no longer exists and `verify-frozen-titles-resolvable` can replay nothing from it. Same command, same cases, same assertions — only the directory differs. The superseded entry is KEPT: its observation happened at the SHA it was frozen against and rewriting its argv would restate what a past CI run saw. Chosen over registering a rename because `frozen-title-renames.json` registers TITLE renames, and no title changed.",
+      "sensitivityProof": {
+        "mutationDescription": "Six mutations. types.ts: (1) side-effecting steps skipped when verified and holding receipts -- the double-charge bug; (2) the verified flag ignored; (3) the digest-mismatch refusal removed. replay.ts: (4) resumeAt counts skippable steps instead of finding the first non-skippable, so it skips PAST a rerun; (5) compaction drops receipts along with inputs; (6) receipts collected only up to resumeAt. All restored byte-identical.",
+        "failureSummary": "Reddens 2, 1, 1, 1, 1 and 1 cases respectively. (1) is the targeted mutation in BLOCKED-085's sense: skipping a completed-and-verified step is the natural implementation, and it is precisely how a resumed workflow charges twice."
+      },
+      "supplementSeq": 1
+    },
+    {
+      "epic": "P4-08",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/session-journal.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "writes an in-flight entry when a step STARTS, before it settles",
+        "replaces the in-flight entry in place when the step settles",
+        "orders entries by sequence even when they settle out of order",
+        "carries the declared phase, and names an unphased step rather than omitting it",
+        "orders by sequence even when steps START out of order",
+        "drops a settlement for a step that never started",
+        "refuses to mark an in-flight step verified",
+        "refuses to mark a FAILED step verified",
+        "marks a completed step verified when asked",
+        "records the effect class the caller declared, never one it inferred",
+        "kill BEFORE the agent call settles: the step is re-run",
+        "kill AFTER the agent call settles but before verification: still re-run",
+        "kill after verification: the completed child work is NOT repeated"
+      ],
+      "files": [
+        "packages/collaboration/workflow-journal/src/recorder.ts",
+        "packages/collaboration/workflow-journal/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T00:20:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: run packages/collaboration/workflow-journal/tests/session-journal.spec.ts — every listed case passed.",
+      "note": "Package relocation, §12.22-1 (BLOCKED-149): `dsh-workflow-journal` moved from `packages/workflow/` to `packages/collaboration/`, so the superseded entry's `argv` names a path that no longer exists and `verify-frozen-titles-resolvable` can replay nothing from it. Same command, same cases, same assertions — only the directory differs. The superseded entry is KEPT: its observation happened at the SHA it was frozen against and rewriting its argv would restate what a past CI run saw. Chosen over registering a rename because `frozen-title-renames.json` registers TITLE renames, and no title changed.",
+      "sensitivityProof": {
+        "mutationDescription": "Five mutations on src/recorder.ts: (1) no entry written until a step settles; (2) a settlement for an unstarted step back-fills an invented entry; (3) verification accepts any outcome; (4) entries emitted in insertion order rather than by seq; (5) a settlement appends a second entry instead of replacing the first. All restored byte-identical.",
+        "failureSummary": "Reddens 11, 1, 2, 1 and 7 cases respectively. (4) reddened ZERO before a case was added that starts steps out of order -- the suite, not the mutation, was incomplete."
+      },
+      "supplementSeq": 1
+    },
+    {
+      "epic": "P4-08",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 an in-flight step is re-run",
+        "fault boundary 02 a failed step is re-run",
+        "fault boundary 03 a completed but unverified step is re-run",
+        "fault boundary 04 a completed, verified step with no output is re-run",
+        "fault boundary 05 a completed, verified, pure step is skipped",
+        "fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+        "fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+        "fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+        "fault boundary 09 a changed script digest refuses the whole resume",
+        "fault boundary 10 an empty journal is resumable and resumes at zero",
+        "fault boundary 11 a fully completed journal resumes past its last step",
+        "fault boundary 12 resume stops at the first non-skippable step, not past it",
+        "fault boundary 13 receipts are collected from AFTER the restart point too",
+        "fault boundary 14 a refused plan yields no receipts to reconcile",
+        "fault boundary 15 compaction leaves a side-effecting entry untouched",
+        "fault boundary 16 compaction retains every receipt",
+        "fault boundary 17 compacting an already-compacted journal changes nothing further",
+        "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+      ],
+      "files": [
+        "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+        "packages/collaboration/workflow-journal/src/replay.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T00:20:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: run packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts — every listed case passed.",
+      "note": "Package relocation, §12.22-1 (BLOCKED-149): `dsh-workflow-journal` moved from `packages/workflow/` to `packages/collaboration/`, so the superseded entry's `argv` names a path that no longer exists and `verify-frozen-titles-resolvable` can replay nothing from it. Same command, same cases, same assertions — only the directory differs. The superseded entry is KEPT: its observation happened at the SHA it was frozen against and rewriting its argv would restate what a past CI run saw. Chosen over registering a rename because `frozen-title-renames.json` registers TITLE renames, and no title changed.",
+      "sensitivityProof": {
+        "mutationDescription": "Three mutations on src/replay.ts beyond those recorded for the C stage: (1) compaction made non-idempotent by stripping the output ref on a second pass; (2) a refused plan still yields receipts to reconcile; (3) an empty journal reported unresumable. All restored byte-identical.",
+        "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
+      },
+      "supersedes": "2026-09-06T09:50:00.000Z",
+      "supplementSeq": 2
     }
   ]
 }
