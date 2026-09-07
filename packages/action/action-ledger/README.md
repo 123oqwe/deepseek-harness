@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`decideReservation` answers one question: may this caller send this external effect now? It is a pure function of the request and the ledger's current entry, so the crash campaign can drive it directly. The store that holds entries is the Provider stage; this package decides.
+`decideReservation` answers one question: may this caller send this external effect now? It is a pure function of the request and the ledger's current entry, so the crash campaign can drive it directly. `openLedgerStore` makes that answer durable: one SQLite row per `(scope, key)`, written before the request leaves.
 
 ## Table of Contents
 
@@ -27,6 +27,10 @@ A tool result records what the harness observed. It cannot record what the outsi
 
 `prepared` means nothing left the harness, so a retry may send. `sent` means a request left and no receipt came back, so a retry must NOT. `confirmed` and `compensated` are settled — the second is settled by the compensation having run, which frees nothing. `ambiguous` is the state a retry cannot resolve, and it goes to reconciliation rather than to another attempt.
 
+## Keys are per client
+
+An idempotency key is unique per client, not globally. `draft-ietf-httpapi-idempotency-key-header-07` says so, and its security considerations give the reason: a server that does not scope keys by client identity lets one client discover another's key state. So the ledger's identity is `(scope, key)`, where the scope is the manifest's `actor` principal, and it is half the table's primary key rather than a column beside it. Two agents deriving a key from an arguments hash collide easily; they get two reservations, and neither learns the other exists.
+
 ## Check order
 
 Arguments are compared before state, and the epoch is compared before either outcome check. Both orders are load-bearing rather than stylistic. Answering `duplicate` to a request whose parameters differ would tell a caller that its new, different request had already been carried out; and reporting an outcome to a fenced-out generation would hand it information about work another generation now owns.
@@ -41,7 +45,8 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **No store and no transport.** The Contract stage decides; persisting entries and passing `Idempotency-Key` to a real provider are the Provider and Usage stages, and nothing here proves an external system agreed.
+- **No transport, and no production caller yet.** The store is durable and the decisions are proven against a fake external service, but nothing in the harness reaches this package: passing `Idempotency-Key` to a real provider and reserving before a real tool call are the Usage stage, blocked on BLOCKED-143 — no production path constructs an ActionManifest, and the manifest event carries neither `idempotencyKey` nor `actor`, which are exactly the two fields this ledger keys on.
+- **`ambiguous` has no producer.** Nothing decides that an outcome is unknowable rather than merely unobserved; that judgement belongs with whatever queries target state, and until it exists the state is reachable only by a caller writing it directly.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about.
 
 ### Dev Note
@@ -51,6 +56,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
 
-`ambiguous` has no producer yet: nothing in this stage decides that an outcome is unknowable rather than merely unobserved, and that judgement probably belongs with whatever queries target state. Until it has one, the state is reachable only by a caller writing it directly.
+Whether the ledger should own the reconciliation loop, or only record that one is owed, is undecided. The crash campaign drives `ambiguous` by writing it directly, which is enough to prove the refusal but says nothing about who resolves it.
 
 </details>
