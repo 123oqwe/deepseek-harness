@@ -26,6 +26,8 @@ export enum WorkerToHostType {
   ChildStart = 'child-start',
   /** Child RPC: dispose a started child (answered by ChildDisposed). */
   ChildDispose = 'child-dispose',
+  /** Nested-run RPC: start a nested workflow (answered by NestedSettled or NestedRefused). */
+  NestedStart = 'nested-start',
   /** The run's single terminal result. */
   Result = 'result',
 }
@@ -46,6 +48,8 @@ export interface WorkerToHostPayloads {
   [WorkerToHostType.ChildStart]: { callId: number; request: ChildStartRequest }
   /** The RPC correlation id of the child to dispose. */
   [WorkerToHostType.ChildDispose]: { callId: number }
+  /** The RPC correlation id, the definition to nest, and its `args`. */
+  [WorkerToHostType.NestedStart]: { callId: number; name: string; digest: string; args?: unknown }
   /** The run's terminal outcome. */
   [WorkerToHostType.Result]: { result: WorkflowResult }
 }
@@ -66,6 +70,10 @@ export enum HostToWorkerType {
   ChildFailed = 'child-failed',
   /** Child RPC reply: a requested disposal completed. */
   ChildDisposed = 'child-disposed',
+  /** Nested-run RPC reply: the nested run settled, carrying its value. */
+  NestedSettled = 'nested-settled',
+  /** Nested-run RPC reply: the nested run was refused, or it failed under a `fail-parent` policy. */
+  NestedRefused = 'nested-refused',
 }
 
 /** The payload each host→worker tag carries. */
@@ -84,6 +92,10 @@ export interface HostToWorkerPayloads {
   [HostToWorkerType.ChildFailed]: { callId: number; rendered: string }
   /** The RPC correlation id of the completed disposal. */
   [HostToWorkerType.ChildDisposed]: { callId: number }
+  /** The RPC correlation id and the nested run's returned value. */
+  [HostToWorkerType.NestedSettled]: { callId: number; value: unknown }
+  /** The RPC correlation id and why the nested run did not produce a value. */
+  [HostToWorkerType.NestedRefused]: { callId: number; rendered: string }
 }
 
 /**

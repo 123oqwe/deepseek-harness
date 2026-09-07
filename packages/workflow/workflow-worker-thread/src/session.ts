@@ -23,6 +23,7 @@ import type {
   ChildPort,
   ChildResult,
   ChildStartRequest,
+  NestedStartRequest,
   WorkerInit,
 } from './types.ts'
 
@@ -68,6 +69,8 @@ class RpcChildHandle implements ChildHandle {
 class ChildRpcBridge implements ChildPort {
   private nextCallId = 0
   private readonly pending = new Map<number, PendingChild>()
+  /** Nested-run RPCs awaiting the host's single reply, by callId. */
+  private readonly nested = new Map<number, PromiseWithResolvers<unknown>>()
 
   constructor(private readonly post: Post) {}
 
@@ -87,6 +90,42 @@ class ChildRpcBridge implements ChildPort {
     this.post(WorkerToHostType.ChildStart, { callId, request })
     const childId = await entry.started.promise
     return new RpcChildHandle(this.post, callId, entry, childId)
+  }
+
+  /**
+   * Ask the host to start a nested run and await its value (P4-09 must[3]).
+   *
+   * Shares the callId counter with child starts: one counter means one reply
+   * can never be routed to the other kind of pending call, which two counters
+   * would make possible the first time their sequences overlapped.
+   * @param request - the definition to nest and its `args`.
+   * @returns the nested run's returned value.
+   */
+  startNested(request: NestedStartRequest): Promise<unknown> {
+    this.nextCallId += 1
+    const callId = this.nextCallId
+    const entry = Promise.withResolvers<unknown>()
+    this.nested.set(callId, entry)
+    this.post(WorkerToHostType.NestedStart, {
+      callId,
+      name: request.name,
+      digest: request.digest,
+      ...request.args === undefined ? {} : { args: request.args },
+    })
+    return entry.promise
+  }
+
+  /** The nested run returned a value; releases the `startNested` await. */
+  onNestedSettled(callId: number, value: unknown): void {
+    this.nested.get(callId)?.resolve(value)
+    this.nested.delete(callId)
+  }
+
+  /** The nested run was refused or failed under `fail-parent`; the hook throws. */
+  onNestedRefused(callId: number, rendered: string): void {
+    const entry = this.nested.get(callId)
+    this.nested.delete(callId)
+    entry?.reject(new Error(rendered))
   }
 
   /** The host established a published child; releases the `startAgent` await. */
@@ -187,6 +226,12 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
         break
       case HostToWorkerType.ChildDisposed:
         children.onChildDisposed(message.callId)
+        break
+      case HostToWorkerType.NestedSettled:
+        children.onNestedSettled(message.callId, message.value)
+        break
+      case HostToWorkerType.NestedRefused:
+        children.onNestedRefused(message.callId, message.rendered)
         break
       /* v8 ignore next 2 -- closed engine-owned union; the arm only makes adding a message type a compile error */
       default:

@@ -103,4 +103,27 @@ export interface ChildPort {
    *   provider's asynchronous start fails.
    */
   startAgent(request: ChildStartRequest): Promise<ChildHandle>
+  /**
+   * Start one NESTED workflow run on the host (the `workflow()` hook), and
+   * await its returned value (Epic P4-09 must[3]).
+   *
+   * The host decides admission — the definition, the parent's remaining
+   * budget, the ancestor chain — because it is the side that holds all three.
+   * A worker that decided for itself would be admitting a run against a budget
+   * it only knows its own share of.
+   * @param request - the definition to nest and its `args`.
+   * @returns the nested run's returned value; rejects when it is refused or
+   *   fails under a `fail-parent` policy.
+   */
+  startNested(request: NestedStartRequest): Promise<unknown>
+}
+
+/** What a script's `workflow()` call asks the host to start (P4-09 must[0]/must[1]). */
+export interface NestedStartRequest {
+  /** The definition's registered name, which the digest must resolve under. */
+  readonly name: string
+  /** The definition's digest; the run is reproducible from it. */
+  readonly digest: string
+  /** The nested run's `args`, structured-cloned like any other. */
+  readonly args?: unknown
 }

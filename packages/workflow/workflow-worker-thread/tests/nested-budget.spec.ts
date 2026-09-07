@@ -116,28 +116,56 @@ describe('P4-09 must[3]: the nesting vacuum is pinned, not merely noted', () => 
    * and whoever adds it must confront must[3] then rather than inherit a
    * silent gap.
    */
-  it('TRIPWIRE: a script has no `workflow` global, so nesting cannot be started', async () => {
-    const observed: string[] = []
+  it('installs a `workflow` global, and it is GATED rather than merely present', async () => {
+    // Supersedes the tripwire this case used to be. That one asserted
+    // `typeof workflow === 'undefined'` and said so plainly: the vacuum was
+    // recorded rather than dressed up, and it was written to fail on the day
+    // the hook appeared. This is that day, and the replacement asserts the
+    // thing the tripwire was protecting — that the hook, once present, cannot
+    // start a nested run the host did not admit.
+    const refusals: string[] = []
     const execution = new WorkflowExecution(
-      { name: 'tripwire', description: 'observes the installed globals' },
-      'return typeof workflow',
+      { name: 'gated', description: 'calls the nesting hook' },
+      "try { return await workflow({ name: 'x', digest: 'deadbeef' }) } catch (error) { return 'REFUSED: ' + error.message }",
       undefined,
       { maxConcurrentAgents: 1, maxTotalAgents: 1, maxItemsPerCall: 1, syncTimeoutMs: 5_000 },
+      { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} },
       {
-        phase: () => {},
-        log: message => void observed.push(message),
-        agentStart: () => {},
-        agentEnd: () => {},
+        startAgent: () => Promise.reject(new Error('no children in this case')),
+        startNested: (request) => {
+          refusals.push(`${request.name}:${request.digest}`)
+          return Promise.reject(new Error('unknown-digest'))
+        },
       },
-      { startAgent: () => Promise.reject(new Error('no children in this tripwire')) },
     )
 
     const result = await execution.drive()
 
-    // 'function' means someone installed a nesting hook. When that happens,
-    // P4-09 must[3] stops being vacuous and this epic's nested-budget logic
-    // must actually be wired to it -- see the U-stage freeze note.
-    expect(result.value).toBe('undefined')
-    expect(result.stopReason).toBe('completed')
+    // The hook exists, it asked the HOST, and the host's refusal reached the
+    // script as a throw rather than as a null value — a `workflow()` returning
+    // undefined for "recursive definition" would be indistinguishable from one
+    // whose nested run returned nothing.
+    expect(refusals).toEqual(['x:deadbeef'])
+    expect(result.value).toBe('REFUSED: unknown-digest')
+  })
+
+  it('REFUSES a bare name, because a name alone cannot pin the version a run used', async () => {
+    // must[1]: the run references the digest. Admitting `workflow('name')`
+    // would make a run reproducible only against whatever happened to be
+    // registered under that name at the time.
+    const execution = new WorkflowExecution(
+      { name: 'bare-name', description: 'calls the hook with a bare name' },
+      "try { return await workflow('just-a-name') } catch (error) { return 'REFUSED: ' + error.message }",
+      undefined,
+      { maxConcurrentAgents: 1, maxTotalAgents: 1, maxItemsPerCall: 1, syncTimeoutMs: 5_000 },
+      { phase: () => {}, log: () => {}, agentStart: () => {}, agentEnd: () => {} },
+      {
+        startAgent: () => Promise.reject(new Error('no children in this case')),
+        startNested: () => Promise.reject(new Error('the host must not be asked')),
+      },
+    )
+
+    const result = await execution.drive()
+    expect(result.value).toContain('REFUSED: workflow() requires { name, digest }')
   })
 })

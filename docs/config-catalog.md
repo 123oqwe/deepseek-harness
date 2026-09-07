@@ -3515,10 +3515,25 @@ export interface Config {
   leaseMs?: number
   /** How often a live run renews its lease, in milliseconds (default 10000). */
   heartbeatMs?: number
+  /**
+   * How deep nested workflows may go (default 3; P4-09 acceptance[3]).
+   *
+   * Deployment-varying: a composition that nests three definitions is ordinary
+   * and one that nests thirty is a runaway, and only the profile knows which
+   * it is running. Recursion is caught structurally by the ancestor chain, not
+   * by this — the depth limit bounds a large composition, not a self-calling
+   * one, and an operator needs those reported differently.
+   */
+  maxNestingDepth?: number
+  /**
+   * The token allowance a root run shares with everything it nests
+   * (default 1000000; P4-09 acceptance[3]).
+   */
+  maxNestedTokens?: number
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:38`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:48`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 

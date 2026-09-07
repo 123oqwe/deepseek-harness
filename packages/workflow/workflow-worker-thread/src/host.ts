@@ -22,10 +22,32 @@ import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { createJournalRecorder, journalingObserver, writeJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { JournalRecorder, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import { applyChildFailure, cancelPropagationForNested } from '@deepseek-ai/dsh-workflow-registry'
+import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerPayloads, WorkerToHostMessage } from './protocol.ts'
-import type { ChildResult, ChildStartRequest, WorkerInit } from './types.ts'
+import type { ChildResult, ChildStartRequest, NestedStartRequest, WorkerInit } from './types.ts'
+
+/**
+ * How a run starts the nested runs its script asks for (P4-09 must[3]).
+ *
+ * The engine implements it, because admission needs the definition registry,
+ * the deployment's ceilings and the parent's remaining budget — three things a
+ * single run does not hold. Passed in rather than reached for, so a run cannot
+ * start a nested workflow the engine did not admit.
+ */
+export interface NestingPort {
+  /**
+   * Resolve, admit and start one nested run.
+   * @param request - the definition to nest and its `args`.
+   * @param parent - the run asking, whose budget and ancestry bound the child.
+   * @returns the started run and its declared failure policy, or the refusal.
+   */
+  startNested(request: NestedStartRequest, parent: WorkerRun): Promise<
+    | { readonly started: true; readonly run: WorkflowRun; readonly failurePolicy: ChildFailurePolicy }
+    | { readonly started: false; readonly rendered: string }>
+}
 
 /** One published child and its shared quiescent-disposal transaction. */
 interface ChildRecord {
@@ -144,6 +166,8 @@ export class WorkerRun implements WorkflowRun {
    * `in-flight` entry rather than no trace at all.
    */
   private readonly journal: JournalRecorder
+  /** Nested runs this run started and has not yet settled; a cancel reaches every one. */
+  private readonly nestedRuns = new Set<WorkflowRun>()
   /** Bridges this host's agent events into {@link WorkerRun.journal}. */
   private readonly journaling: ReturnType<typeof journalingObserver>
 
@@ -152,7 +176,7 @@ export class WorkerRun implements WorkflowRun {
     private readonly subagents: SubagentRuntime,
     readonly id: WorkflowRunId,
     readonly meta: WorkflowMeta,
-    private readonly parent: Agent,
+    readonly parentAgent: Agent,
     init: WorkerInit,
     private readonly provider: string,
     private readonly disposeGraceMs: number,
@@ -169,6 +193,8 @@ export class WorkerRun implements WorkflowRun {
     private readonly lease: RunLease,
     /** Directory holding one journal file per run (P4-08 must[1]). */
     private readonly journalDirectory: string,
+    /** Starts nested runs for this run's `workflow()` calls (P4-09 must[3]). */
+    private readonly nesting: NestingPort,
   ) {
     this.journal = createJournalRecorder(brandString<ScriptDigest>(
       createHash('sha256').update(init.body).digest('hex'),
@@ -232,6 +258,15 @@ export class WorkerRun implements WorkflowRun {
     this.cancelReason = reason ?? 'workflow cancelled'
     this.post(HostToWorkerType.Cancel, { reason: this.cancelReason })
     this.abortChildren(this.cancelReason)
+    // acceptance[1]: a nested run holds budget drawn from this run's
+    // allowance, so a child that outlived a cancelled parent would keep
+    // spending an allowance nobody is watching. The propagation is asked of
+    // `cancelPropagationForNested` rather than assumed, so it is a stated
+    // decision rather than an omission — and a DETACHED run, which no parent
+    // owns, is deliberately not this.
+    if (cancelPropagationForNested() === 'cancel-child') {
+      for (const nested of this.nestedRuns) nested.cancel(this.cancelReason)
+    }
     this.graceTimer = setTimeout(() => {
       // Cancellation already owns the race through cancelReason; close the
       // terminal boundary explicitly before observer teardown callbacks.
@@ -355,6 +390,13 @@ export class WorkerRun implements WorkflowRun {
       case WorkerToHostType.ChildDispose:
         this.onChildDispose(message.callId)
         break
+      case WorkerToHostType.NestedStart:
+        this.onNestedStart(message.callId, {
+          name: message.name,
+          digest: message.digest,
+          ...message.args === undefined ? {} : { args: message.args },
+        })
+        break
       case WorkerToHostType.Result:
         this.onResult(message.result)
         break
@@ -403,7 +445,7 @@ export class WorkerRun implements WorkflowRun {
     try {
       run = await this.subagents.start(this.provider, {
         prompt: [{ type: 'text', text: request.prompt }],
-        parent: this.parent,
+        parent: this.parentAgent,
         signal: this.controller.signal,
         ...request.schema !== undefined ? { outputSchema: request.schema } : {},
         ...request.provider !== undefined || request.model !== undefined
@@ -600,6 +642,57 @@ export class WorkerRun implements WorkflowRun {
     // repeat explicit provider cancellation.
     for (const [callId, record] of [...this.children]) void this.disposeChild(callId, record)
     this.endStrandedAgents()
+  }
+
+  /**
+   * Start one nested run for the script's `workflow()` call (P4-09 must[3]).
+   *
+   * Every judgement belongs to `@deepseek-ai/dsh-workflow-registry` and none is
+   * made here: whether the definition resolves under its name, whether the
+   * parent's budget and the ancestor chain admit the nesting, what limits the
+   * child decays to, and what a failing child does to its parent. This method
+   * is the wiring that gives those five decisions a caller — they had none.
+   *
+   * Refusals reach the script as a thrown error rather than a null result: a
+   * `workflow()` that returned `undefined` for "recursive definition" would be
+   * indistinguishable from one whose nested run returned nothing.
+   * @param callId - the worker's RPC correlation id.
+   * @param request - the definition to nest and its `args`.
+   */
+  private onNestedStart(callId: number, request: NestedStartRequest): void {
+    void this.nest(request).then(
+      (value) => { this.post(HostToWorkerType.NestedSettled, { callId, value }) },
+      (error: unknown) => { this.post(HostToWorkerType.NestedRefused, { callId, rendered: renderThrown(error) }) },
+    )
+  }
+
+  /**
+   * Resolve, admit, run and settle one nested workflow.
+   * @param request - the definition to nest and its `args`.
+   * @returns the nested run's returned value.
+   * @throws when the definition does not resolve, the nesting is refused, or
+   *   the child failed under a `fail-parent` policy.
+   */
+  private async nest(request: NestedStartRequest): Promise<unknown> {
+    const nested = await this.nesting.startNested(request, this)
+    if (!nested.started) throw new Error(nested.rendered)
+    // acceptance[1]: the parent's cancellation reaches the child. Registered
+    // before the await so a cancel arriving while the nested run is starting
+    // still finds something to cancel.
+    this.nestedRuns.add(nested.run)
+    try {
+      const result = await nested.run.result
+      if (result.stopReason === 'completed') return result.value
+      const outcome = applyChildFailure(nested.failurePolicy)
+      if (!outcome.parentContinues) throw new Error(`nested workflow "${request.name}" failed: ${result.error ?? result.stopReason}`)
+      // `continue-parent` still RECORDS the failure: a parent reporting success
+      // while a declared child failed silently is what acceptance[2] forbids.
+      this.observer.log(`nested workflow "${request.name}" failed and its policy is continue-parent: ${result.error ?? result.stopReason}`)
+      return null
+    } finally {
+      this.nestedRuns.delete(nested.run)
+      await nested.run.dispose()
+    }
   }
 
   /**

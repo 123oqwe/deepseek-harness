@@ -254,7 +254,11 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 ### BLOCKED-152 — the workflow engine imports `dsh-agent`, a `providers -> orchestration-runtime` edge older than this program
 
-**State: OPEN, one line, placement only.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently — rather than because anything here depends on it.
+**State: OPEN, placement only, now two edges.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently.
+
+**A second edge joined it with P4-09's Usage: `-> @deepseek-ai/dsh-workflow-registry` (findings 120 → 121).** The registry is the same kind of thing as the journal was — five pure decisions plus a store — so §12.22-1's argument would move it too. **It does not move as cleanly, and that is measured rather than assumed:** `dsh-workflow-registry` depends on `@deepseek-ai/dsh-workflow` for `WorkflowRunId`, so relocating it into a capability-definitions group trades a `providers -> orchestration-runtime` finding for a `capability-definitions -> orchestration-runtime` one. The same dependency already blocked declaring `registerDefinition` on the `WorkflowEngine` seam: adding it there is a project-reference CYCLE, which `tsc -b` refused outright.
+
+So the placement question here is really about where `WorkflowRunId` lives, not about where the registry lives. Reported rather than solved; nothing in P4-09's Usage depends on the answer.
 
 ### BLOCKED-151 — CLOSED by §12.23: resume is its own asynchronous entry point
 

@@ -16,6 +16,16 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
 import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { planNestedRun, resolveDefinition } from '@deepseek-ai/dsh-workflow-registry'
+import type {
+  ChildFailurePolicy,
+  InheritedWorkerLimits,
+  DefinitionDigest,
+  DefinitionName,
+  RegisteredDefinition,
+  RunBudget,
+} from '@deepseek-ai/dsh-workflow-registry'
+import type { NestedStartRequest } from './types.ts'
 import { reusableSteps } from './resume.ts'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
@@ -63,6 +73,21 @@ export interface Config {
   leaseMs?: number
   /** How often a live run renews its lease, in milliseconds (default 10000). */
   heartbeatMs?: number
+  /**
+   * How deep nested workflows may go (default 3; P4-09 acceptance[3]).
+   *
+   * Deployment-varying: a composition that nests three definitions is ordinary
+   * and one that nests thirty is a runaway, and only the profile knows which
+   * it is running. Recursion is caught structurally by the ancestor chain, not
+   * by this — the depth limit bounds a large composition, not a self-calling
+   * one, and an operator needs those reported differently.
+   */
+  maxNestingDepth?: number
+  /**
+   * The token allowance a root run shares with everything it nests
+   * (default 1000000; P4-09 acceptance[3]).
+   */
+  maxNestedTokens?: number
 }
 
 type ResolvedConfig = Required<Config>
@@ -138,6 +163,8 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     disposeGraceMs: z.natural().default(5000),
     leaseMs: z.natural().min(1).default(30_000),
     heartbeatMs: z.natural().min(1).default(10_000),
+    maxNestingDepth: z.natural().min(1).default(3),
+    maxNestedTokens: z.natural().min(1).default(1_000_000),
   })
 
   private readonly config: ResolvedConfig
@@ -158,6 +185,16 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
   private readonly leases: LeaseStoreContract
   /** Directory holding one journal file per run (P4-08 must[1]). */
   private readonly journalDirectory: string
+  /** Registered definitions a nested run may name, by digest (P4-09 must[0]). */
+  private readonly definitions = new Map<DefinitionDigest, RegisteredDefinition>()
+  /**
+   * Each live run's remaining budget and ancestor chain (P4-09 must[3]).
+   *
+   * Held by the ENGINE rather than by the run, because admission compares a
+   * child against its parent's allowance and the ancestor chain above it —
+   * neither of which a single run can see.
+   */
+  private readonly budgets = new Map<WorkflowRunId, { budget: RunBudget; ancestors: readonly DefinitionDigest[] }>()
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -240,6 +277,75 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
   }
 
   /**
+   * Register a workflow definition so a nested run can name it (P4-09 must[0]).
+   *
+   * On the CONCRETE engine, not on `WorkflowEngine`. The abstract seam cannot
+   * carry it: `RegisteredDefinition` lives in `@deepseek-ai/dsh-workflow-registry`,
+   * which already depends on `@deepseek-ai/dsh-workflow` for `WorkflowRunId`,
+   * so declaring it upstream is a project-reference cycle — measured, not
+   * assumed. A second engine that wants nesting implements this method under
+   * the same name; nothing in the seam forces it to, and that gap is stated
+   * in this package's Known Limitations rather than left for a reader to find.
+   *
+   * The digest is the caller's, not computed here: must[0] calls a definition a
+   * signed artifact, and a registry that derived the digest itself would be
+   * attesting the bytes rather than recording an attestation. `signer` is
+   * recorded and NOT verified — this build has no signature root to verify it
+   * against, which is stated rather than implied by the field's presence.
+   * @param definition - the definition to register, keyed by its digest.
+   */
+  registerDefinition(definition: RegisteredDefinition): void {
+    this.definitions.set(definition.digest, definition)
+  }
+
+  /**
+   * Resolve, admit and start one nested run ({@link NestingPort}).
+   *
+   * acceptance[0]'s "loading does not execute unverified code" is the resolve
+   * step and nothing more elaborate: a digest that is not registered, or that
+   * resolves under another name, produces a refusal and no worker is spawned.
+   * @param request - the definition to nest and its `args`.
+   * @param parent - the run asking; its budget and ancestry bound the child.
+   * @returns the started run and its failure policy, or the refusal.
+   */
+  startNested(request: NestedStartRequest, parent: WorkerRun): Promise<
+    | { readonly started: true; readonly run: WorkflowRun; readonly failurePolicy: ChildFailurePolicy }
+    | { readonly started: false; readonly rendered: string }> {
+    const digest = brandString<DefinitionDigest>(request.digest)
+    const resolved = resolveDefinition(
+      { runId: parent.id, digest, name: brandString<DefinitionName>(request.name), version: 0 },
+      this.definitions,
+    )
+    if (!resolved.resolved) {
+      return Promise.resolve({ started: false, rendered: `nested workflow "${request.name}" was not started: ${resolved.reason}` })
+    }
+    const budget = this.budgets.get(parent.id)
+    if (budget === undefined) {
+      return Promise.resolve({ started: false, rendered: `nested workflow "${request.name}" was not started: its parent holds no budget` })
+    }
+    const planned = planNestedRun(
+      budget.budget,
+      digest,
+      budget.ancestors,
+      { maxDepth: this.config.maxNestingDepth, maxTotalAgents: this.config.maxTotalAgents, maxTotalTokens: this.config.maxNestedTokens },
+      { maxConcurrentAgents: this.config.maxConcurrentAgents, maxTotalAgents: this.config.maxTotalAgents },
+    )
+    if (!planned.admitted) {
+      return Promise.resolve({ started: false, rendered: `nested workflow "${request.name}" was refused: ${planned.reason}` })
+    }
+    // The child's meta is the definition's own name, and its body is the
+    // registered source: a nested run executes what the digest resolved to,
+    // never what the caller passed alongside it.
+    const run = this.launch({
+      script: resolved.definition.body,
+      meta: { name: resolved.definition.name, description: `nested run of ${resolved.definition.name}`, phases: [] },
+      parent: parent.parentAgent,
+      ...request.args === undefined ? {} : { args: request.args },
+    }, undefined, {}, { budget: planned.budget, ancestors: [...budget.ancestors, digest], limits: planned.workerLimits })
+    return Promise.resolve({ started: true, run, failurePolicy: 'fail-parent' as const })
+  }
+
+  /**
    * Start or resume one run.
    *
    * One body for both entry points, so a resumed run cannot drift from a fresh
@@ -250,7 +356,12 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @param reusable - recorded outputs a resumed run may reuse, by step sequence.
    * @returns the live run.
    */
-  private launch(request: WorkflowStartRequest, resumeRunId: WorkflowRunId | undefined, reusable: Record<number, string>): WorkflowRun {
+  private launch(
+    request: WorkflowStartRequest,
+    resumeRunId: WorkflowRunId | undefined,
+    reusable: Record<number, string>,
+    nested?: { budget: RunBudget; ancestors: readonly DefinitionDigest[]; limits: InheritedWorkerLimits },
+  ): WorkflowRun {
     const meta = validateMeta(request.meta)
     assertBodyParses(request.script, meta.name)
     const subagentProvider = resolveSubagentProvider(this.ctx, this.config.provider, request.subagentProvider)
@@ -258,13 +369,22 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     const id = resumeRunId ?? WorkflowRunId(randomUUID())
     const info: WorkflowRunInfo = { id, meta }
     const limits: WorkerLimits = {
-      maxConcurrentAgents: this.config.maxConcurrentAgents === 0
+      // A nested run's limits are its DECAYED ones (P4-09 must[3]): starting it
+      // with the deployment ceiling would let every run in a tree claim the
+      // full allowance, and the total would be bounded by nothing.
+      maxConcurrentAgents: nested?.limits.maxConcurrentAgents ?? (this.config.maxConcurrentAgents === 0
         ? Math.min(16, Math.max(1, availableParallelism() - 2))
-        : this.config.maxConcurrentAgents,
-      maxTotalAgents,
+        : this.config.maxConcurrentAgents),
+      maxTotalAgents: nested?.limits.maxTotalAgents ?? maxTotalAgents,
       maxItemsPerCall: this.config.maxItemsPerCall,
       syncTimeoutMs: this.config.syncTimeoutMs,
     }
+    // A root run's budget is the deployment's; a nested one carries what its
+    // admission decayed to, and its ancestor chain is what makes a recursive
+    // definition detectable at all.
+    this.budgets.set(id, nested === undefined
+      ? { budget: { depth: 0, agentsRemaining: limits.maxTotalAgents, tokensRemaining: this.config.maxNestedTokens }, ancestors: [] }
+      : { budget: nested.budget, ancestors: nested.ancestors })
     const init: WorkerInit = {
       meta,
       body: request.script,
@@ -318,6 +438,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       request.signal,
       lease,
       this.journalDirectory,
+      this,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
     // lifetime is the run's, and an engine-side timer would outlive the thing

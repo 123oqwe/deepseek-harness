@@ -113,6 +113,7 @@ export class WorkflowExecution {
       agent: (prompt: unknown, opts?: unknown) => this.contain(this.agent(prompt, opts)),
       parallel: (thunks: unknown) => this.contain(this.parallel(thunks)),
       pipeline: (items: unknown, ...stages: unknown[]) => this.contain(this.pipeline(items, stages)),
+      workflow: (nameOrRef: unknown, nestedArgs?: unknown) => this.contain(this.workflow(nameOrRef, nestedArgs)),
       phase: (title: unknown) => { this.phase(title) },
       log: (message: unknown) => { this.log(message) },
       // workerData already performed the real cross-thread structured clone.
@@ -256,6 +257,39 @@ export class WorkflowExecution {
     this.activeSlots -= 1
     const next = this.slotWaiters.shift()
     if (next) next.resolve()
+  }
+
+  /**
+   * The `workflow(nameOrRef, args)` hook (Epic P4-09 must[3]).
+   *
+   * The script names a definition and the HOST decides everything about it:
+   * whether the digest resolves under that name, whether the parent's budget
+   * and ancestor chain admit the nesting, and what limits the child decays to.
+   * A worker that decided for itself would be admitting a run against a budget
+   * it only knows its own share of.
+   *
+   * `nameOrRef` is `{ name, digest }` — no bare-name form. A name alone would
+   * make the run reproducible only against whatever was registered under that
+   * name at the time, which is what must[1]'s "the run references the digest"
+   * exists to prevent.
+   * @param nameOrRef - the definition to nest.
+   * @param nestedArgs - the nested run's `args`, structured-cloned by the host.
+   * @returns the nested run's returned value.
+   */
+  private async workflow(nameOrRef: unknown, nestedArgs: unknown): Promise<unknown> {
+    this.throwIfCancelled()
+    const ref = nameOrRef as { name?: unknown; digest?: unknown } | null
+    if (ref === null || typeof ref !== 'object' || typeof ref.name !== 'string' || typeof ref.digest !== 'string') {
+      throw new WorkflowError(
+        'workflow() requires { name, digest } naming a registered definition; a bare name cannot pin the version a run used',
+        'INVALID_ARGUMENT',
+      )
+    }
+    return this.children.startNested({
+      name: ref.name,
+      digest: ref.digest,
+      ...nestedArgs === undefined ? {} : { args: nestedArgs },
+    })
   }
 
   /** The `agent(prompt, opts)` hook. */

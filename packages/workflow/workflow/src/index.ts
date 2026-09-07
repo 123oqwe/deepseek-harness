@@ -196,6 +196,7 @@ export abstract class WorkflowEngine extends Service {
    */
   abstract resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun>
 
+
   /**
    * Emit a lifecycle event while containing and logging each listener failure.
    * @param name - the `workflow/*` event to dispatch.

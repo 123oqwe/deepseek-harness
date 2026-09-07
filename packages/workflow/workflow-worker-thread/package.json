@@ -42,7 +42,8 @@
     "@deepseek-ai/dsh-subagent": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/dsh-workflow": "workspace:^",
-    "@deepseek-ai/dsh-workflow-journal": "workspace:^"
+    "@deepseek-ai/dsh-workflow-journal": "workspace:^",
+    "@deepseek-ai/dsh-workflow-registry": "workspace:^"
   },
   "dependencies": {
     "@deepseek-ai/dsh-brand": "workspace:^",
