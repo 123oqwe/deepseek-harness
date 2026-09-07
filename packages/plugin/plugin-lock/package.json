@@ -49,6 +49,12 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^",
+    "@types/ssri": "^7.1.5"
+  },
+  "dependencies": {
+    "@pnpm/lockfile.fs": "^1100.2.5",
+    "ssri": "^13.0.1",
+    "write-file-atomic": "^7.0.1"
   }
 }

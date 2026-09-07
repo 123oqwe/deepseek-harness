@@ -12,6 +12,8 @@
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { describe, expect, it } from 'vitest'
 import { gateProductionBoot } from '../src/gate.ts'
+import { admitBoot, UNAVAILABLE_PREFIX } from '../src/index.ts'
+import { WORKSPACE_LINK_PREFIX } from '../src/lockfile-integrity.ts'
 import { resolveLoadOrder } from '../src/types.ts'
 import type { InstalledPlugin } from '../src/index.ts'
 import type {
@@ -110,5 +112,44 @@ describe('P1-03: an unlocked profile is a deployment decision, not a default', (
     // still be distinguishable, because only one of them checked anything.
     expect(locked).toMatchObject({ admitted: true, verified: true })
     expect(unlocked).toMatchObject({ admitted: true, verified: false })
+  })
+})
+
+describe('P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135)', () => {
+  it('refuses a package whose integrity is the `unavailable:` marker on BOTH sides, since two absences are not agreement', () => {
+    // The defect this closes: the marker used to match itself. A lock
+    // recording `unavailable:` and a boot recomputing `unavailable:` compared
+    // EQUAL, so the integrity check passed while verifying nothing — and
+    // because nothing ever wrote the field it read, that was every real
+    // package.
+    const unverifiable = entry('alpha', { integrity: brandString<PackageIntegrity>(`${UNAVAILABLE_PREFIX}installer-recorded-no-integrity`) })
+    const outcome = admitBoot(lock([unverifiable]), [installedFrom(unverifiable)])
+    expect(outcome.admitted).toBe(false)
+    expect(!outcome.admitted && outcome.denials.map(denial => denial.reason)).toContain('integrity-unverifiable')
+  })
+
+  it('admits the same package once BOTH sides carry a real digest, so the refusal is caused by the marker', () => {
+    // The control. Without it, the case above is satisfied by a gate that
+    // refuses every package, and `integrity-unverifiable` would say nothing
+    // about markers in particular.
+    const verifiable = entry('alpha')
+    expect(admitBoot(lock([verifiable]), [installedFrom(verifiable)]).admitted).toBe(true)
+  })
+
+  it('refuses when only the INSTALL side is unverifiable, so a lock with a real digest cannot be satisfied by an absence', () => {
+    const locked = entry('alpha')
+    const installed = installedFrom(locked, { integrity: brandString<PackageIntegrity>(`${UNAVAILABLE_PREFIX}installer-recorded-no-integrity`) })
+    const outcome = admitBoot(lock([locked]), [installed])
+    expect(outcome.admitted).toBe(false)
+    expect(!outcome.admitted && outcome.denials.map(denial => denial.reason)).toContain('integrity-unverifiable')
+  })
+
+  it('admits a workspace link, whose integrity records the link target because there is no archive to hash', () => {
+    // The exemption, and it is narrow: a workspace link genuinely has no
+    // published archive. It is admitted because its integrity is a real
+    // observation of what it is, not a marker standing in for one that is
+    // missing.
+    const linked = entry('alpha', { integrity: brandString<PackageIntegrity>(`${WORKSPACE_LINK_PREFIX}packages/plugin/alpha`) })
+    expect(admitBoot(lock([linked]), [installedFrom(linked)]).admitted).toBe(true)
   })
 })

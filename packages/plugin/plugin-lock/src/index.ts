@@ -11,6 +11,10 @@ export {
 } from './types.ts'
 export { planLockCommit, serializeLock, writeLockAtomically } from './commit.ts'
 export { gateProductionBoot } from './gate.ts'
+export { readLockfileIntegrity, WORKSPACE_LINK_PREFIX } from './lockfile-integrity.ts'
+export type { IntegritySource, ObservedIntegrity } from './lockfile-integrity.ts'
+import { isUnavailable } from './candidate.ts'
+
 export { buildCandidateLock, computeManifestDigest, isUnavailable, summarizeLockCoverage, UNAVAILABLE_PREFIX } from './candidate.ts'
 export type { ObservedPackage } from './candidate.ts'
 export type { GateDenialReason, GateOutcome, UnlockedProfilePolicy } from './gate.ts'
@@ -53,6 +57,16 @@ export type BootDenialReason =
   | 'missing-from-disk'
   /** The installed archive's integrity digest differs from the lock's. */
   | 'integrity-mismatch'
+  /**
+   * Neither side has a verifiable integrity, so equality proves nothing.
+   *
+   * The `unavailable:` marker used to match itself: a lock recording it and a
+   * boot recomputing it compared equal, and the check passed while verifying
+   * nothing (BLOCKED-135). A marker is the ABSENCE of evidence, so two of them
+   * are not agreement. A workspace link is exempt — it has no published
+   * archive to hash, and its integrity records the link target instead.
+   */
+  | 'integrity-unverifiable'
   /** The installed manifest's digest differs from the lock's. */
   | 'manifest-digest-mismatch'
   /** The installed version differs from the locked one. */
@@ -102,6 +116,9 @@ export function admitBoot(lock: PluginLockFile, installed: readonly InstalledPlu
     }
     if (plugin.version !== entry.version) {
       denials.push({ name: entry.name, reason: 'version-mismatch' })
+    } else if (isUnavailable(entry.integrity) || isUnavailable(plugin.integrity)) {
+      // Checked BEFORE equality, because the markers are equal to each other.
+      denials.push({ name: entry.name, reason: 'integrity-unverifiable' })
     } else if (plugin.integrity !== entry.integrity) {
       denials.push({ name: entry.name, reason: 'integrity-mismatch' })
     } else if (plugin.manifestDigest !== entry.manifestDigest) {
