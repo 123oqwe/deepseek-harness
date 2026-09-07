@@ -814,6 +814,26 @@ function preserveFixtureVolatiles(record: Record<string, unknown>, existing: Rec
     return
   }
   if ('time' in record && 'time' in existing) record.time = existing.time
+  // A digest cannot be back-substituted. `refreshFixtureReplacements` rewrites
+  // the fresh run's session id to the fixture's, which keeps every field that
+  // CONTAINS the id stable -- but the manifest's `idempotencyKey` is a hash
+  // TAKEN OVER it, so a refresh wrote a new digest into every fixture and the
+  // packed/unpacked equality case was the only thing that noticed.
+  //
+  // Preserved rather than tokenised in the fixture: the fixture stays a real
+  // recording, and the key's own two directions are unit-tested where the
+  // inputs are fixed rather than environmental.
+  if (record.type === 'action/manifest-appended') {
+    const data = record.data
+    const existingData = existing.data
+    if (
+      data !== null && typeof data === 'object'
+      && existingData !== null && typeof existingData === 'object'
+      && 'idempotencyKey' in data && 'idempotencyKey' in existingData
+    ) {
+      (data as Record<string, unknown>).idempotencyKey = (existingData as Record<string, unknown>).idempotencyKey
+    }
+  }
   if (record.type !== 'hook/result') return
   const data = record.data
   const existingData = existing.data

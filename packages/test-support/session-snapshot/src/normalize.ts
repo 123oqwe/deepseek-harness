@@ -25,6 +25,7 @@ const TOOLS = '{{tools}}'
 const EVENT_TIME = '{{eventTime}}'
 const EVENT_OMITTED_BYTES = '{{eventOmittedBytes}}'
 const ARGUMENTS_HASH = '{{argumentsHash}}'
+const IDEMPOTENCY_KEY = '{{idempotencyKey}}'
 const SANDBOX_MODE = '{{sandboxMode}}'
 const PACKED_CHUNK_ROW_TYPES = new Set(['text-chunks', 'reasoning-chunks', 'tool-call-chunks'])
 
@@ -372,8 +373,20 @@ function scrubHostChosenSandboxMode(record: Record<string, unknown>): void {
 function scrubVolatileArgumentsHash(record: Record<string, unknown>): void {
   if (record.type !== 'action/manifest-appended') return
   const data = record.data as Record<string, unknown> | undefined
-  if (data === undefined || typeof data.argumentsHash !== 'string') return
-  data.argumentsHash = ARGUMENTS_HASH
+  if (data === undefined) return
+  if (typeof data.argumentsHash === 'string') data.argumentsHash = ARGUMENTS_HASH
+  // The idempotency key is a digest over the run id, and a replay is a NEW
+  // run: the packed and unpacked readings of one recording produced two keys
+  // and the equality case caught it. The `actor` beside it is scrubbed for the
+  // same reason and shows it plainly -- `anonymous:{{session:1}}` -- while a
+  // digest cannot show what it was taken over.
+  //
+  // Only the value is dropped. That the field is PRESENT and non-empty is
+  // still pinned by the P2-03 supplement's own case, and the derivation's two
+  // directions -- a replayed attempt keys the same, a new one does not -- are
+  // unit-tested in `dsh-action-manifest`, where the inputs are fixed rather
+  // than environmental.
+  if (typeof data.idempotencyKey === 'string') data.idempotencyKey = IDEMPOTENCY_KEY
 }
 
 /**

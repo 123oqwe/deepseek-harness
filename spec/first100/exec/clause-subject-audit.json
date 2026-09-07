@@ -139,11 +139,13 @@
           {
             "name": "packages/experimental/agent-team (existing)",
             "npm": "packages/experimental/agent-team (existing)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Internal, not an external adoption."
+            "reason": "Not adopted, by §7.10's precedent: an existing in-repo prototype is written fresh only after checking that no upstream primitive covers it, and `packages/experimental/agent-team` is a private prototype rather than a coordination primitive — it has no claim, no delivery decision and no fact ledger, so there is nothing here to reuse. Its lesson was carried instead of its code. Previously recorded with a read-only reason whose subject was the row's ACCEPTED status, which the withdrawal made false.",
+            "ruling": "§7.10"
           },
           {
             "standard": "W3C PROV-DM field names for blackboard provenance (wasGeneratedBy, wasAttributedTo, wasDerivedFrom)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of this epic's 64 frozen cases names a PROV relation; the blackboard's fields were defined here."
+            "reason": "Not adopted here, and NOT this epic's to own: `standards-ownership.json` assigns the PROV-DM field names to P6-09 (`thisEpicOwns: false`, `notAdoptedHere: true`). The blackboard records provenance under its own discriminated union — `{kind:'observed', source}` and `{kind:'derived', from}` — which answers a narrower question than PROV-DM's vocabulary, and adopting the names here would put a standard's spelling in the hands of an epic the table says does not own it. Stated in ordinary words rather than with the `ownership-transferred` token, because that token is reserved for ACCEPTED rows and this row is back in flight; the fact it records is the same and comes from the generated table rather than from this row's status.",
+            "ruling": "§7.11 / standards-ownership.json"
           }
         ],
         "rejectedAbsent": [],

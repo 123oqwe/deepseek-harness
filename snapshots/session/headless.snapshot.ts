@@ -618,9 +618,21 @@ describe('headless recorded-session snapshots', () => {
       const cloned = structuredClone(event) as {
         time?: unknown
         type?: unknown
-        data?: { durationMs?: unknown; id?: unknown; inserted?: Array<{ id?: unknown }>; message?: { id?: unknown } }
+        data?: {
+          durationMs?: unknown
+          id?: unknown
+          idempotencyKey?: unknown
+          inserted?: Array<{ id?: unknown }>
+          message?: { id?: unknown }
+        }
       }
       delete cloned.time
+      // The manifest's idempotency key is a digest over the RUN id, and these
+      // are two scenarios: one recording packed, one not, each replayed in its
+      // own session. The key differs by construction, exactly like the message
+      // ids stripped below. What the comparison is for — that packing a
+      // recording does not change the events it replays to — is unaffected.
+      if (cloned.type === 'action/manifest-appended') delete cloned.data?.idempotencyKey
       if (cloned.type === 'agent/inbox/spliced') {
         for (const message of cloned.data?.inserted ?? []) delete message.id
       }
