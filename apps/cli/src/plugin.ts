@@ -23,6 +23,7 @@ import {
   writeProfileManifest,
   type ProfileManifest,
 } from '@deepseek-ai/dsh-app-boot'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import { classifyPluginDeclaration, evaluatePreMountAdmission } from '@deepseek-ai/dsh-plugin-manifest'
 import {
   buildCandidateLock,
@@ -32,6 +33,8 @@ import {
   writeLockAtomically,
   type ObservedPackage,
   type PluginLockFile,
+  readLockfileIntegrity,
+  type PluginPackageName,
 } from '@deepseek-ai/dsh-plugin-lock'
 import { INSTALL_ANCHOR } from './profile-boot.ts'
 
@@ -131,8 +134,14 @@ function readCurrentLock(profileDir: string): PluginLockFile {
  * @param profileDir - the profile directory (resolution anchor).
  * @returns one observation per resolvable dependency.
  */
-function observeInstalledPackages(profileDir: string): readonly ObservedPackage[] {
+async function observeInstalledPackages(profileDir: string): Promise<readonly ObservedPackage[]> {
   const manifest = readProfileManifest(NAME, profileDir)
+  // Integrity comes from the profile's own pnpm-lock.yaml, which the installer
+  // writes on every install. It used to come from a `dsh.provenance.integrity`
+  // field on each package's manifest -- a field nothing in npm, pnpm or this
+  // repository ever writes, so every entry fell back to the `unavailable:`
+  // marker and the boot comparison could not fail (BLOCKED-135).
+  const recorded = await readLockfileIntegrity(profileDir)
   const observed: ObservedPackage[] = []
   for (const packageName of Object.keys(manifest.dependencies ?? {})) {
     let dir: string
@@ -146,13 +155,14 @@ function observeInstalledPackages(profileDir: string): readonly ObservedPackage[
       dsh?: { provenance?: { integrity?: string; sourceCommit?: string; signatureIdentity?: string } }
     }
     const provenance = installed.dsh?.provenance
+    const lockIntegrity = recorded.get(brandString<PluginPackageName>(packageName))
     observed.push({
       name: packageName,
       version: installed.version ?? '0.0.0',
       manifest: installed,
       dependencies: Object.keys(installed.dependencies ?? {}),
       grantedCapabilities: [],
-      ...(provenance?.integrity === undefined ? {} : { integrity: provenance.integrity }),
+      ...(lockIntegrity === undefined ? {} : { integrity: lockIntegrity.integrity }),
       ...(provenance?.sourceCommit === undefined ? {} : { sourceCommit: provenance.sourceCommit }),
       ...(provenance?.signatureIdentity === undefined ? {} : { signatureIdentity: provenance.signatureIdentity }),
     })
@@ -174,9 +184,9 @@ function observeInstalledPackages(profileDir: string): readonly ObservedPackage[
  * is stated in the message.
  * @param profileDir - the profile directory.
  */
-function commitProfileLock(profileDir: string): void {
+async function commitProfileLock(profileDir: string): Promise<void> {
   const current = readCurrentLock(profileDir)
-  const candidate = buildCandidateLock(observeInstalledPackages(profileDir))
+  const candidate = buildCandidateLock(await observeInstalledPackages(profileDir))
   if (candidate === undefined) {
     process.stderr.write(`${NAME}: lock: not written — the installed dependency graph contains a cycle\n`)
     return
@@ -227,7 +237,7 @@ function anchorPathSpec(argument: string, cwd: string): string {
  * @param args - pnpm arguments with relative path specs anchored to the invoking directory.
  * @returns the pnpm exit code.
  */
-export function runPlugin(profile: string, args: readonly string[]): number {
+export async function runPlugin(profile: string, args: readonly string[]): Promise<number> {
   const dir = resolveProfileDir(profile)
   if (!existsSync(join(dir, 'package.json'))) {
     const template = PROFILE_TEMPLATES[profile]
@@ -257,7 +267,7 @@ export function runPlugin(profile: string, args: readonly string[]): number {
   const exitCode = result.status ?? 1
   if (exitCode === 0) {
     reconcilePlugins(before, dir)
-    commitProfileLock(dir)
+    await commitProfileLock(dir)
   } else {
     // pnpm's own diagnostics name pnpm-workspace.yaml without saying WHICH
     // one; the profile owns it, and the commonest failure here is pnpm ≥10

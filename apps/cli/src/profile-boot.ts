@@ -34,8 +34,9 @@ import {
   type Profile,
 } from '@deepseek-ai/dsh-app-boot'
 import { DSH_RUNTIME_API_VERSION } from '@deepseek-ai/dsh-plugin-compat'
-import { computeManifestDigest, gateProductionBoot, UNAVAILABLE_PREFIX } from '@deepseek-ai/dsh-plugin-lock'
-import type { GateOutcome, InstalledPlugin, PluginLockFile, UnlockedProfilePolicy } from '@deepseek-ai/dsh-plugin-lock'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { computeManifestDigest, gateProductionBoot, readLockfileIntegrity, UNAVAILABLE_PREFIX } from '@deepseek-ai/dsh-plugin-lock'
+import type { GateOutcome, InstalledPlugin, PluginLockFile, PluginPackageName, UnlockedProfilePolicy } from '@deepseek-ai/dsh-plugin-lock'
 import { resolveHostCompatContext } from '@deepseek-ai/dsh-plugin-compat/solver'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
@@ -662,35 +663,34 @@ export function resolveUnlockedProfilePolicy(layerDirs: readonly string[]): Unlo
  * @param policy - the effective unlocked-profile policy.
  * @returns the gate's outcome.
  */
-export function gateProfileAgainstLock(
+export async function gateProfileAgainstLock(
   profileDir: string,
   layerDirs: readonly string[],
   policy: UnlockedProfilePolicy,
-): GateOutcome {
+): Promise<GateOutcome> {
   const lockPath = join(profileDir, PROFILE_LOCK_FILENAME)
   const lock = existsSync(lockPath)
     ? JSON.parse(readFileSync(lockPath, 'utf8')) as PluginLockFile
     : undefined
+  // Integrity comes from the profile's own lockfile, the same source the lock
+  // was BUILT from, so the two sides are observations of one record rather
+  // than of a manifest field nothing writes (BLOCKED-135).
+  const recorded = await readLockfileIntegrity(profileDir)
   const installed: InstalledPlugin[] = []
   for (const packageDir of layerDirs) {
     const manifestPath = join(packageDir, 'package.json')
     if (!existsSync(manifestPath)) continue
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
-      name: string
-      version?: string
-      dsh?: { provenance?: { integrity?: string } }
-    }
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { name: string; version?: string }
     installed.push({
       // Every field is recomputed from what is on disk right now, never read
       // back from the lock: comparing a lock against itself would admit any
-      // profile. `integrity` comes from the installer-recorded provenance and
-      // falls back to the SAME unavailable marker `buildCandidateLock` writes
-      // when a package declares none, so a package with no provenance matches
-      // its own lock entry instead of failing every boot -- and a package that
-      // HAS provenance is compared against the real recorded value.
+      // profile. A package the lockfile does not record keeps the
+      // `unavailable:` marker, which `admitBoot` now REFUSES rather than
+      // matching against itself.
       name: manifest.name,
       version: manifest.version ?? '0.0.0',
-      integrity: manifest.dsh?.provenance?.integrity ?? `${UNAVAILABLE_PREFIX}installer-recorded-no-integrity`,
+      integrity: recorded.get(brandString<PluginPackageName>(manifest.name))?.integrity
+        ?? `${UNAVAILABLE_PREFIX}installer-recorded-no-integrity`,
       manifestDigest: computeManifestDigest(manifest),
     } as InstalledPlugin)
   }
