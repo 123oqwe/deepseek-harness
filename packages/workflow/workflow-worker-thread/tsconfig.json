@@ -43,6 +43,9 @@
     },
     {
       "path": "../../run/lease-sqlite"
+    },
+    {
+      "path": "../workflow-journal"
     }
   ]
 }

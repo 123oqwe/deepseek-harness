@@ -53,9 +53,10 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **Nothing writes a journal yet.** These are the record, the decisions, and the plan; the worker-thread session that would append entries as a workflow runs is the Provider stage's, and the host/worker wiring that consults a plan is the Usage stage's.
+- **A journal is written; nothing READS one back.** `@deepseek-ai/dsh-workflow-worker-thread`'s `WorkerRun` records an entry per `agent()` call through `journalingObserver`, and `WorkerRun.journalSnapshot()` returns it. Nothing persists it and no run resumes from one, so `planResume`, `admitResume` and `receiptsToReconcile` still have no production caller: must[1]'s skip and must[2]'s reconciliation are decisions the harness can make and does not yet make.
+- **Every recorded step is `side-effecting`.** The class is the script's declaration and the DSL has no syntax for it, so the host supplies the fail-closed default. That is correct for `agent()` — a child may have written files or spent money — but it means a genuinely pure step cannot be marked skippable, and must[1]'s optimisation is unreachable until the DSL can say so.
 - **Reconciliation is named, not performed.** `decideResume` returns `reconcile` with the receipts to check; deciding whether an effect actually landed requires the system that produced it and is outside this package.
-- **The script digest is compared, never computed.** Whoever writes a journal must supply it.
+- **The script digest is a SHA-256 of the script body**, computed by the host that records the journal. It changes with whitespace and comments, so a cosmetic edit refuses a resume that would have been safe; refusing too often is the right direction for acceptance[1], but it is a bluntness worth naming.
 
 ### Dev Note
 

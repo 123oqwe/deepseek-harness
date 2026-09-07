@@ -18,6 +18,10 @@ import type { SubagentRun } from '@deepseek-ai/dsh-subagent'
 import type { WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowMeta, WorkflowResult, WorkflowRun, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { renderThrown } from './realm.ts'
 import type { ExecutionObserver } from './runtime.ts'
+import { createHash } from 'node:crypto'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { createJournalRecorder, journalingObserver } from '@deepseek-ai/dsh-workflow-journal'
+import type { JournalRecorder, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerPayloads, WorkerToHostMessage } from './protocol.ts'
@@ -130,6 +134,18 @@ export class WorkerRun implements WorkflowRun {
   private disposed: Promise<void> | undefined
   /** Renews this run's lease while it is live; cleared at settlement (P4-07 must[2]). */
   private heartbeat: NodeJS.Timeout | undefined
+  /**
+   * This run's journal (P4-08 must[0]/must[4]).
+   *
+   * Recorded for EVERY run, not only for one a caller asked to be resumable:
+   * a journal written on request is absent exactly when it is needed, because
+   * the crash that makes it valuable is the one nobody anticipated. The entry
+   * is written when a step STARTS, so a process killed mid-step leaves an
+   * `in-flight` entry rather than no trace at all.
+   */
+  private readonly journal: JournalRecorder
+  /** Bridges this host's agent events into {@link WorkerRun.journal}. */
+  private readonly journaling: ReturnType<typeof journalingObserver>
 
   constructor(
     private readonly ctx: Context,
@@ -152,6 +168,14 @@ export class WorkerRun implements WorkflowRun {
      */
     private readonly lease: RunLease,
   ) {
+    this.journal = createJournalRecorder(brandString<ScriptDigest>(
+      createHash('sha256').update(init.body).digest('hex'),
+    ))
+    // Every step is `effectful`. The class is the SCRIPT's declaration and the
+    // DSL has no syntax for it yet, so the honest default is the one that
+    // forces reconciliation rather than the one that permits a silent skip:
+    // an `agent()` call may have written files, sent messages, or spent money.
+    this.journaling = journalingObserver(this.journal, () => 'side-effecting')
     this.result = new Promise<WorkflowResult>((resolve) => { this.settleResolve = resolve })
     // workerData rides the structured clone: args are plain JSON by the seam
     // contract, so the clone is total and doubles as the caller-isolation
@@ -299,6 +323,7 @@ export class WorkerRun implements WorkflowRun {
         break
       case WorkerToHostType.AgentStart:
         this.liveAgents.set(message.info.seq, message.info)
+        this.journaling.onAgentStart(message.info)
         this.observer.agentStart(message.info)
         break
       case WorkerToHostType.AgentEnd:
@@ -562,6 +587,19 @@ export class WorkerRun implements WorkflowRun {
   }
 
   /**
+   * This run's journal as it stands (P4-08 must[0]).
+   *
+   * Readable at any moment, including mid-run: the point of writing an entry
+   * when a step starts is that the journal is meaningful before the run is
+   * over. Nothing persists it yet — must[1]'s resume is unbuilt — so a caller
+   * that wants it across a restart must write it somewhere itself.
+   * @returns the journal recorded so far.
+   */
+  journalSnapshot(): WorkflowJournal {
+    return this.journal.journal()
+  }
+
+  /**
    * The single agent-end emission gate: forwards `end` iff its start is still
    * unpaired in the ledger, so every forwarded `workflow/agent-start` gets
    * EXACTLY one `workflow/agent-end` — the worker's own report where it can
@@ -571,6 +609,7 @@ export class WorkerRun implements WorkflowRun {
   private endAgent(end: WorkflowAgentEndInfo): void {
     /* v8 ignore next -- a real end still in flight across the grace force-settle: not orderable in-process */
     if (!this.liveAgents.delete(end.seq)) return
+    this.journaling.onAgentEnd(end)
     this.observer.agentEnd(end)
   }
 

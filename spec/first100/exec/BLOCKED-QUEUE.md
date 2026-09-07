@@ -252,6 +252,24 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-149 — P4-08's journal is a pure decision library in an orchestration-runtime group, and wiring it added a layer finding
+
+**State: OPEN, measured, not acted on.** `check-layer-deps` findings went **120 → 121** with P4-08's Usage wiring. Reporting it rather than letting it pass, because a finding that arrives with a change and is not mentioned is how a note comes to record an accepted violation instead of a removed one.
+
+The new finding: `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-workflow-journal: providers -> orchestration-runtime`.
+
+**Why it appeared.** `workflow` maps to `orchestration-runtime` for the whole group, while the engine itself is classified `providers`. So the engine importing anything in its own group reads as an upward edge — it already had exactly one, `-> @deepseek-ai/dsh-agent`, which predates this work. Mine is the second of the same kind.
+
+**Why it is a placement question and not a wiring mistake.** `dsh-workflow-journal` computes nothing at run time and mounts nothing: it is a record shape plus four pure decisions (`decideResume`, `admitResume`, `planResume`, `compactJournal`) over caller-supplied values. That is the same argument that moved the lease contract to `packages/collaboration/lease-contract` under §12.16, and it would remove this finding the same way.
+
+**Why I did not move it.** P4-08's registry row declares `packages/workflow/workflow-journal/src/{types,replay,observer,recorder}.ts`. Relocating the package changes that epic's declared `files[]`, which is registry authority — the executor deciding a stage's scope is the mistake BLOCKED-136 and §12.11 both record.
+
+**Decision needed (delegate's):** either
+1. the journal moves to a capability-definitions group as the lease contract did, with the A-class `files[]` change that implies; or
+2. the edge is accepted for the same reason `-> dsh-agent` is, and both are recorded together rather than one of them silently.
+
+**Not urgent, and not blocking.** The wiring works and P4-08's must[0]/must[4] have a producer; the finding is a classification fact about where the package lives.
+
 ### BLOCKED-148 — CLOSED, and the first version of this entry was wrong about why
 
 **State: CLOSED. The lease directory now derives from the configured home, as §12.20-1 ruled. This entry is kept because its first version stated a cause that measurement then refuted, and deleting it would erase the correction.**
