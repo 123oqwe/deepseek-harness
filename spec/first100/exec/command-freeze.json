@@ -8047,6 +8047,47 @@
         "epic": "P4-06",
         "stage": "P"
       }
+    },
+    {
+      "epic": "P4-12",
+      "stage": "C",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves an unseen key, which is the only decision that authorizes sending",
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reserves again for a PREPARED entry, because nothing left the harness yet",
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports SENT as a duplicate, so a crash after the request does not send it twice",
+        "P4-12 must[0]/must[2]: a reservation is what authorizes an external send reports CONFIRMED and COMPENSATED as duplicates too, so a settled key is never re-sent",
+        "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses the same key presented with different parameters, naming the first arguments",
+        "P4-12 acceptance[2]: the same key, different parameters is refused (Stripe rule) refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one",
+        "P4-12 must[3]: a stale epoch is fenced out refuses a caller whose epoch is older than the holder, and names the current one",
+        "P4-12 must[3]: a stale epoch is fenced out admits the SAME epoch, so fencing refuses only what is genuinely behind",
+        "P4-12 must[3]: a stale epoch is fenced out fences BEFORE reporting an outcome, so a superseded generation learns nothing about work it lost",
+        "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry refuses a retry of an AMBIGUOUS entry rather than sending again",
+        "P4-12 acceptance[1]: an ambiguous outcome goes to reconciliation, not to a retry distinguishes ambiguous from duplicate, because they need different handling",
+        "P4-12 must[1]: a provider with native support gets the Idempotency-Key header passes the key through as the Idempotency-Key request header (draft-ietf-httpapi-idempotency-key-header-07)",
+        "P4-12 must[1]: a provider with native support gets the Idempotency-Key header sends no Idempotency-Key header for a local-fencing provider, whose dedup is this ledger"
+      ],
+      "files": [
+        "packages/action/action-ledger/src/types.ts",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T11:00:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 13 passed (13). tsc and oxlint clean over the new package.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) reordered `decideReservation` so the STATE check runs before the arguments check -- moving the `existing.state === 'ambiguous'` and duplicate branches above the `argumentsHash` comparison in packages/action/action-ledger/src/index.ts -- then re-ran the frozen command. This is the order a reader would write by following the clause order rather than the failure modes.",
+        "failureSummary": "1 of 13 failed: `refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one` -- AssertionError, the decision came back `{action: 'duplicate', state: 'sent'}` where the case requires `{action: 'refused', reason: 'arguments-differ'}`. That is the defect the case exists for: a caller sending a DIFFERENT request under a reused key is told its request was already carried out. The other twelve stayed green, which is what makes the failure specific to check order rather than to the comparison itself. Mutation reverted immediately; 13 passed (13) before continuing."
+      },
+      "note": "P4-12 Contract stage: types plus the pure reservation decision, no store and no wiring. The five case groups name the two standards this epic OWNS -- `Idempotency-Key` from draft-ietf-httpapi-idempotency-key-header-07, and Stripe's same-key-different-parameters rule -- because the pre-flight record claims ownership by EVIDENCE rather than by assignment, and P4-06 (BLOCKED-140) is the record of what assignment alone buys: it owned the CloudEvents shape with no case naming an attribute, and the standard it owned held the answer to the question its clause got wrong. The declared test path is `tests/idempotency.e2e.ts`; the file is `.e2e.spec.ts` because the greening observation collects `*.spec.ts` only, and an `.e2e.ts` file would be frozen against a command that never reports it.",
+      "supplements": null
     }
   ]
 }

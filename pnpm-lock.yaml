@@ -643,6 +643,18 @@ importers:
         specifier: workspace:^
         version: link:../../interaction/user-approval
 
+  packages/action/action-ledger:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-manifest':
+        specifier: workspace:^
+        version: link:../action-manifest
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+
   packages/action/action-manifest:
     devDependencies:
       '@deepseek-ai/cordis':

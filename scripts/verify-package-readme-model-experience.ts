@@ -56,6 +56,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/experimental/code-runtime-python': { kind: 'indirect', reason: 'Explicit source-checkout compositions delegate model rendering to PTC mode in dsh-tools.' },
   'packages/client/ui-agent-preset': { kind: 'indirect', reason: 'Browser-side settings row; the preset it selects owns every model-facing effect.' },
   'packages/util/crypto': { kind: 'indirect', reason: 'Pure identifier minting; the ids consumers mint with it never enter prompts as semantic content.' },
+  'packages/action/action-ledger': { kind: 'none', reason: 'Epic P4-12 ledger: a pure reservation decision over caller-supplied entries; the external effect it authorizes is performed by a provider, and this package registers no prompt, schema, tool, or session event.' },
   'packages/action/action-manifest': { kind: 'none', reason: 'Epic P2-03 manifest: types and pure canonicalization/decision functions; the manifest reaches a session as an event appended by agent-loop, and this package registers no prompt, schema, or tool.' },
   'packages/guard/baseline-preflight': { kind: 'none', reason: 'Epic P0-01 boot guard: it either lets boot proceed unchanged or aborts before any agent, session, or tool registers, so no model observes a partially gated tree.' },
   'packages/migration/feature-gates': { kind: 'none', reason: 'Epic P0-05 gate table: pure predicates over caller-supplied flags, registering no prompt, schema, tool, or session event.' },

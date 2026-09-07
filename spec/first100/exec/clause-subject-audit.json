@@ -1917,6 +1917,63 @@
           "keyHandling": "Every case mints its own keypair with `generateKeyPairSync` at run time. No key material is committed, none is read from the environment, and the executor holds no real private key. Recorded at the point a fixture key would otherwise be added, because that is where the rule gets broken by convenience."
         }
       }
+    },
+    "P4-12": {
+      "makeVsUse": {
+        "ledgerRow": "P4-12",
+        "card": {
+          "heading": "#### P4-12",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [],
+        "rejectedAbsent": [
+          {
+            "npm": "idempotency-key",
+            "reason": "The ledger row rejects it because it does not exist on npm. Re-checked rather than inherited: nothing in package.json or pnpm-lock.yaml references it, and the other packages under that name are Express middleware for HTTP request replay — a server-side cache of responses, not a ledger of external effects with a state machine and a fencing epoch."
+          }
+        ],
+        "standardsOwned": [
+          {
+            "standard": "IETF draft-ietf-httpapi-idempotency-key-header-07 Idempotency-Key passthrough",
+            "evidenceTitleSubstring": "Idempotency-Key",
+            "reason": "Owned by EVIDENCE from the first frozen case, not by assignment. P4-06 is the record of what assignment alone buys: it was the assigned owner of the CloudEvents shape with no frozen case naming an attribute, and the standard it owned contained the answer to the question its clause got wrong (BLOCKED-140). The C-stage cases here name the header and the draft's passthrough rule directly, so the ownership is checkable before any of this is built."
+          },
+          {
+            "standard": "Stripe same-key-different-params reject",
+            "evidenceTitleSubstring": "same key, different parameters",
+            "reason": "Acceptance[2] is this rule verbatim: the same idempotency key presented with different parameters is refused rather than served the first response. Stripe is prior art rather than a dependency — there is nothing to import — so ownership is carried by the frozen case that states the rule."
+          }
+        ],
+        "standardsImported": [],
+        "residual": "The ledger itself: prepared/sent/confirmed/ambiguous/compensated, CAS reserve before execution, receipt digest after, and a stale-epoch refusal.",
+        "probes": [
+          {
+            "claim": "no existing package or repository module already holds an external-effect idempotency ledger",
+            "how": "grep over `git ls-files` for `idempotency` under packages/, plus a package.json/pnpm-lock.yaml check for the rejected npm name",
+            "result": "NEGATIVE",
+            "evidence": "`IdempotencyKey` and `idempotencyKey` exist in packages/action/action-manifest/src/types.ts — P2-03's manifest FIELD, which this epic's must[0] requires to be mandatory — and nowhere else. No store, no state machine, no reservation. packages/action/ contains exactly one package today (action-manifest), so the new package is genuinely new. The scan's own control: the same grep DOES find the manifest field, so a silent zero would have been visible as a zero."
+          }
+        ],
+        "gapCheck": [
+          {
+            "community": "Express idempotency middlewares",
+            "gap": "cache HTTP responses; no external-effect state machine, no fencing epoch, no compensation",
+            "clause": "must[1]"
+          },
+          {
+            "community": "Stripe-style provider SDKs",
+            "gap": "native key passthrough only for that one provider; no local fencing for providers without native support",
+            "clause": "must[2]"
+          }
+        ],
+        "expectedDeletedPct": "3",
+        "recordedBeforeFirstLine": true,
+        "realized": null,
+        "note": "Recorded BEFORE the first line of P4-12, which is the point of the field — P4-06's record was written after the fact and its ownership claim then had to be corrected twice. Two lessons from that epic are applied here in advance: `standardsOwned` carries `evidenceTitleSubstring` from the start rather than `assignedBy`, so the first frozen case must name the standard; and the standards are read as SPECIFICATIONS to build against, not as labels, because the CloudEvents collision (BLOCKED-140) was in the standard's own text the whole time."
+      }
     }
   },
   "methodCorrections": [

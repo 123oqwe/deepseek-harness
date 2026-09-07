@@ -107,6 +107,7 @@ flowchart TD
     pkg_acp["acp"]
   end
   subgraph group_action["packages/action"]
+    pkg_action_ledger["action-ledger"]
     pkg_action_manifest["action-manifest"]
   end
   subgraph group_api["packages/api"]
@@ -494,6 +495,8 @@ flowchart TD
   pkg_spill --> pkg_brand
   pkg_spill --> pkg_llm
   pkg_spill --> pkg_session
+  pkg_action_ledger --> pkg_action_manifest
+  pkg_action_ledger --> pkg_brand
   pkg_app_boot --> pkg_home_paths
   pkg_app_boot --> pkg_launch_environment
   pkg_app_boot --> pkg_system_prompt
@@ -1405,6 +1408,7 @@ flowchart TD
 | [`workspace-trust`](../packages/workspace/workspace-trust) | `workspace` | [`principal`](../packages/identity/principal) |
 | [`skill-badge`](../packages/skill/skill-badge) | `skill` | [`skill`](../packages/skill/skill) |
 | [`spill`](../packages/spill/spill) | `spill` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
+| [`action-ledger`](../packages/action/action-ledger) | `action` | [`action-manifest`](../packages/action/action-manifest), [`brand`](../packages/util/brand) |
 | [`app-boot`](../packages/boot/app-boot) | `boot` | [`home-paths`](../packages/util/home-paths), [`launch-environment`](../packages/util/launch-environment), [`system-prompt`](../packages/core/system-prompt) |
 | [`code-runtime-worker-thread`](../packages/code-runtime/code-runtime-worker-thread) | `code-runtime` | [`code-runtime`](../packages/code-runtime/code-runtime), [`session`](../packages/core/session), [`timeout`](../packages/util/timeout) |
 | [`memory`](../packages/memory/memory) | `memory` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`util-values`](../packages/util/values) |

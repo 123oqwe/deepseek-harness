@@ -271,6 +271,7 @@
       // BEGIN generated package aliases — pnpm run gen-tsconfig-paths
       "@deepseek-ai/dsh-acp": ["./packages/acp/acp/src"],
       "@deepseek-ai/dsh-acp-app": ["./packages/bundle/acp-app/src"],
+      "@deepseek-ai/dsh-action-ledger": ["./packages/action/action-ledger/src"],
       "@deepseek-ai/dsh-action-manifest": ["./packages/action/action-manifest/src"],
       "@deepseek-ai/dsh-blackboard": ["./packages/collaboration/blackboard/src"],
       "@deepseek-ai/dsh-intake-dedup": ["./packages/collaboration/intake-dedup/src"],
