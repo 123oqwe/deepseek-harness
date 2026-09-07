@@ -129,6 +129,35 @@ describe('first100 predicate (v): the freeze must exist in the observed tree', (
     expect(run(root).code).toBe(0)
   })
 
+  it('checks a SUPPLEMENT against its own candidate tree, not the primary cell\'s', () => {
+    // A supplement is a separate observation with its own candidate SHA. Before
+    // this was separated, adding a new supplement entry made the PRIMARY cell
+    // report a missing record that was never the primary cell's to carry --
+    // this gate reporting a false positive against its own author.
+    const primary = entry('P9-99', 'U', ['the primary promise'])
+    const { root, sha } = repoWith([primary])
+    writeFileSync(join(root, FREEZE), JSON.stringify({ entries: [primary, { ...entry('P9-99', 'U', ['the supplement promise']), supplementSeq: 1 }] }))
+    writeFileSync(join(root, LEDGER), JSON.stringify({
+      rows: { 'P9-99': { cells: { U: { status: 'GREEN', candidateSha: sha } }, supplements: {} } },
+    }))
+    // The primary cell passes: the supplement's entry is not its commitment.
+    expect(run(root).code).toBe(0)
+  })
+
+  it('reports MISSING for a GREEN supplement whose own freeze entry is absent from its candidate tree', () => {
+    // The other direction, without which the case above is satisfied by a gate
+    // that simply ignores supplements entirely.
+    const primary = entry('P9-99', 'U', ['the primary promise'])
+    const { root, sha } = repoWith([primary])
+    writeFileSync(join(root, FREEZE), JSON.stringify({ entries: [primary, { ...entry('P9-99', 'U', ['the supplement promise']), supplementSeq: 1 }] }))
+    writeFileSync(join(root, LEDGER), JSON.stringify({
+      rows: { 'P9-99': { cells: { U: { status: 'GREEN', candidateSha: sha } }, supplements: { 'U.1': { status: 'GREEN', candidateSha: sha } } } },
+    }))
+    const { code, output } = run(root)
+    expect(code).toBe(1)
+    expect(output).toContain('MISSING  P9-99.U.1')
+  })
+
   it('ignores a cell that is not GREEN, which has made no claim to check', () => {
     const { root } = repoWith([])
     writeFileSync(join(root, FREEZE), JSON.stringify({ entries: [entry('P9-99', 'C', ['pins the thing'])] }))

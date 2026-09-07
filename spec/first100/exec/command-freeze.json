@@ -7703,6 +7703,50 @@
         "mutationDescription": "Six mutations, applied locally one at a time to packages/policy/risk-taxonomy/src/ and reverted from a saved copy after each, re-running the whole package suite between them. On classify.ts: (1) UNKNOWN_DEFAULT_CLASS lowered from 'safety-critical' to 'read'; (2) the composite maximum comparison `riskRank(rule) > riskRank(decided)` flipped to `<`; (3) the assertPolicyKeepsKernelHardDenies call deleted; (4) confidence pinned to a constant 1. On index.ts: (5) a runtime export appended to the barrel; (6) `export type *` widened to `export *`.",
         "failureSummary": "Each mutation failed cases, and the counts discriminate rather than breaking the file: (1) 3 failed / 11 passed; (2) 2 failed / 12 passed; (3) 1 failed / 13 passed; (4) 1 failed / 13 passed; (5) 1 failed / 14 passed; (6) 1 failed / 14 passed. Restored: 15 passed (15). Mutations 5 and 6 are what make the scaffold pin load-bearing -- without them the barrel case would pass against any index.ts that merely compiled."
       }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "U",
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "apps/cli/tests/plugin-lock.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a profile whose manifest digest has DRIFTED since the lock is refused at boot",
+        "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: the SAME profile with an untouched install is admitted and reports itself verified",
+        "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a package whose recorded INTEGRITY changed is refused even though its manifest is untouched",
+        "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: an UNLOCKED profile is refused under `refuse`",
+        "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: an UNLOCKED profile proceeds UNVERIFIED under `warn-and-proceed`, so the two states are distinguishable",
+        "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: one layer declaring `refuse` beside one declaring `warn-and-proceed` resolves to refuse",
+        "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: layers that all declare `warn-and-proceed` resolve to it, so the rule is not a constant",
+        "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: a profile whose layers declare NO policy fails loudly, because the policy is required with no default",
+        "P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (must[1] to must[2]) must[1]: a lock built from the real installed packages admits the boot it describes"
+      ],
+      "files": [
+        "apps/cli/tests/plugin-lock.spec.ts",
+        "apps/cli/src/profile-boot.ts",
+        "packages/bundle/base/package.json"
+      ],
+      "frozenAtUtc": "2026-09-07T00:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2ecfc6fb3373b8bbc0ddfb3a1a090df7e6b50ce8",
+        "testsDiscovered": 9
+      },
+      "note": "P1-03 Usage supplement 1: must[2]'s PRODUCT half. A SUPPLEMENT and not a supersession, decided by reading the primary entry rather than by the lock row's wording -- the row says 'as a supersession', but it was written before BLOCKED-103 set the rule. The primary U entry's five cases all test `gateProductionBoot`'s DECISION logic in isolation (gate.spec.ts), every one is still true, none asserts that decision-level coverage is sufficient, and none is contradicted by comparing real recorded integrity. Re-run at this tree: 5/5 passing. So they are kept and these nine are added beside them, the P2-03 code-mode shape. What these nine reach that the primary five could not: the gate had zero call sites outside its own package, so 'the gate refuses a drifted digest' and 'a boot was refused' were different claims. These drive `composeProfile`'s two entry points against a real profile directory and the real plugins.lock.json the `dsh plugin` transaction writes. Two of the nine are controls and are load-bearing as such: without #2 the drift refusal is satisfied by a gate that refuses everything, and without #7 most-restrictive-wins is satisfied by a function returning 'refuse' always. NOT claimed: acceptance[0]'s product half. The lock row says acceptance[0] is proven at the decision level rather than by a real cold start, and that stays true -- a cold start means booting with no network available, which none of these cases does. It becomes a second lock row owned by P1-03's F stage (delegate ruling, 2026-09-06). Writing it into coverage would be the assertion-with-no-subject shape.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations to apps/cli/src/profile-boot.ts, each applied alone and reverted from a saved copy, re-running the whole spec between them: (1) `integrity` synthesized back to `sha512-${manifest.name}` instead of reading `dsh.provenance.integrity`; (2) most-restrictive-wins inverted to least-restrictive-wins; (3) the required-no-default throw replaced by a silent fallthrough; (4) the lock always read as absent.",
+        "failureSummary": "(1) 2 failed / 7 passed; (2) 1 failed / 8 passed; (3) 1 failed / 8 passed; (4) 3 failed / 6 passed. Restored: 9 passed. Each mutation fails the cases that name its behaviour and leaves the rest passing, so the suite discriminates rather than collapsing.",
+        "securityBoundaryCase": {
+          "title": "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a package whose recorded INTEGRITY changed is refused even though its manifest is untouched",
+          "reverseMutation": "Restoring the synthesized `integrity` makes this case pass again only if the fixture also fakes it. Recorded separately because this case exists to catch a defect the author WROTE: the first version of the call site synthesized integrity from the package name, `admitBoot` genuinely compares integrity, and a replaced archive with a byte-identical package.json would therefore have passed every check -- a gate that appears to verify provenance while verifying nothing. No case would have caught it, because the fixture used the same fake value: implementation and fixture were wrong in the same direction and confirmed each other. The fix reads the installer-recorded provenance and falls back to the same `unavailable:` marker `buildCandidateLock` writes."
+        }
+      }
     }
   ]
 }

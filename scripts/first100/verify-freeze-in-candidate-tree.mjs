@@ -71,7 +71,7 @@ function freezeEntriesAt(sha) {
 
 /** The identity of a freeze commitment: its stage, and the exact set of titles it pins. */
 const commitmentKey = entry =>
-  JSON.stringify([entry.epic, entry.stage, [...entry.expectCases ?? []].sort()])
+  JSON.stringify([entry.epic, entry.stage, entry.supplementSeq ?? null, [...entry.expectCases ?? []].sort()])
 
 function main() {
   const rows = JSON.parse(readFileSync(LEDGER_PATH, 'utf8')).rows
@@ -86,7 +86,12 @@ function main() {
   for (const [epic, row] of Object.entries(rows)) {
     for (const [stage, cell] of Object.entries(row.cells ?? {})) {
       if (cell.status !== 'GREEN' || cell.candidateSha === undefined) continue
-      const commitments = live.filter(entry => entry.epic === epic && entry.stage === stage)
+      // A supplement is its own observation with its own candidate SHA and its
+      // own freeze entry, so the PRIMARY cell answers only for entries without
+      // a `supplementSeq`. Folding them together made a newly added supplement
+      // report the primary cell as missing a record that was never the primary
+      // cell's to carry -- found by this gate on its own author.
+      const commitments = live.filter(entry => entry.epic === epic && entry.stage === stage && entry.supplementSeq === undefined)
       if (commitments.length === 0) continue
 
       if (!treeCache.has(cell.candidateSha)) treeCache.set(cell.candidateSha, freezeEntriesAt(cell.candidateSha))
@@ -100,6 +105,26 @@ function main() {
       const absent = commitments.filter(entry => !observedKeys.has(commitmentKey(entry)))
       if (absent.length === 0) verified.push(`${epic}.${stage}`)
       else missing.push(`${epic}.${stage}: ${String(absent.length)} live freeze entry/entries absent from ${cell.candidateSha.slice(0, 10)}`)
+    }
+  }
+
+  for (const [epic, row] of Object.entries(rows)) {
+    for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
+      if (supplement.status !== 'GREEN' || supplement.candidateSha === undefined) continue
+      const [stage, seq] = key.split('.')
+      const commitments = live.filter(entry =>
+        entry.epic === epic && entry.stage === stage && entry.supplementSeq === Number(seq))
+      if (commitments.length === 0) continue
+      if (!treeCache.has(supplement.candidateSha)) treeCache.set(supplement.candidateSha, freezeEntriesAt(supplement.candidateSha))
+      const observed = treeCache.get(supplement.candidateSha)
+      if (observed === undefined) {
+        unreadable.push(`${epic}.${key}: candidate ${supplement.candidateSha} is not readable in this clone`)
+        continue
+      }
+      const observedKeys = new Set(observed.map(commitmentKey))
+      const absent = commitments.filter(entry => !observedKeys.has(commitmentKey(entry)))
+      if (absent.length === 0) verified.push(`${epic}.${key}`)
+      else missing.push(`${epic}.${key}: ${String(absent.length)} live freeze entry/entries absent from ${supplement.candidateSha.slice(0, 10)}`)
     }
   }
 
