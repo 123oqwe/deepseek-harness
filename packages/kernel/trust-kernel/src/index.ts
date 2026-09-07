@@ -49,6 +49,7 @@
  *
  * @module @deepseek-ai/dsh-trust-kernel
  */
+import { generateKeyPairSync, sign, verify, type KeyObject } from 'node:crypto'
 import { Context } from '@deepseek-ai/cordis'
 import type {
   TrustKernel,
@@ -87,6 +88,19 @@ export interface TrustKernelConfig {
 const CONFIGURED_ANCHORS = new WeakMap<TrustKernelSignatureRoots, readonly TrustKernelTrustAnchor[]>()
 
 /**
+ * This kernel's own signing keypair, keyed by the handle it belongs to
+ * (P2-02 must[1]).
+ *
+ * Module-private and keyed by the handle for the same reason the anchors are:
+ * only a caller already holding the unforgeable handle can sign with it, and a
+ * forged object reaches nothing because it was never a key here. The PRIVATE
+ * key is therefore never on `signatureRoots` itself, which crosses the plugin
+ * boundary — a case in `signing.spec.ts` guards that, because the handle
+ * travelling to plugins is exactly where a refactor would put it by accident.
+ */
+const SIGNING_KEYS = new WeakMap<TrustKernelSignatureRoots, { privateKey: KeyObject; publicKey: KeyObject }>()
+
+/**
  * Read the anchors a deployment configured this kernel with (Epic P1-02
  * must[2]).
  * @param signatureRoots - the kernel's own signature-roots handle.
@@ -113,6 +127,11 @@ export function configuredTrustAnchors(
 export function createTrustKernel(config: TrustKernelConfig = {}): TrustKernel {
   const rootIdentity = Object.freeze({}) as TrustKernelRootIdentity
   const signatureRoots = Object.freeze({}) as TrustKernelSignatureRoots
+  // Minted per kernel, and the kernel is minted once per process at boot. The
+  // keypair therefore identifies THIS installation: the fixed marker it
+  // replaces was identical everywhere, so another deployment's token verified
+  // here and verification could not fail.
+  SIGNING_KEYS.set(signatureRoots, generateKeyPairSync('ed25519'))
   // The deployment's anchors live in this module's private state, keyed by the
   // handle (Epic P1-02 must[2]). NOT on the handle: `TrustKernelSignatureRoots`
   // is a capability handle whose one member is its brand, and P0-02's frozen
@@ -316,8 +335,15 @@ declare module '@deepseek-ai/cordis' {
  * @returns the detached signature.
  */
 export function signWithSignatureRoots(signatureRoots: TrustKernelSignatureRoots, bytes: Buffer): Buffer {
-  void signatureRoots
-  throw new Error(`not implemented: signWithSignatureRoots over ${String(bytes.length)} byte(s)`)
+  const keys = SIGNING_KEYS.get(signatureRoots)
+  // A handle this module did not mint reaches no key. That is the forgery case
+  // stated as a refusal rather than as a silent empty signature: returning
+  // something signable-looking would let a forged handle produce bytes another
+  // component might accept.
+  if (keys === undefined) throw new Error('trust kernel: this signatureRoots handle was not minted by createTrustKernel')
+  // `null` algorithm: Ed25519 carries its own digest, so passing one would be
+  // rejected. Same call shape P1-02's verifyPackageSignature uses.
+  return sign(null, bytes, keys.privateKey)
 }
 
 /**
@@ -328,7 +354,7 @@ export function signWithSignatureRoots(signatureRoots: TrustKernelSignatureRoots
  * @returns true only when this kernel produced that signature over those bytes.
  */
 export function verifyWithSignatureRoots(signatureRoots: TrustKernelSignatureRoots, bytes: Buffer, signature: Buffer): boolean {
-  void signatureRoots
-  void signature
-  throw new Error(`not implemented: verifyWithSignatureRoots over ${String(bytes.length)} byte(s)`)
+  const keys = SIGNING_KEYS.get(signatureRoots)
+  if (keys === undefined) throw new Error('trust kernel: this signatureRoots handle was not minted by createTrustKernel')
+  return verify(null, bytes, keys.publicKey, signature)
 }
