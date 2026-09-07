@@ -65,6 +65,7 @@
 | 4.2 | `accept-blocked:` 锁与 `openFindings` 为空 | BLOCKED-QUEUE `## ACCEPTANCE LOCKS` |
 | 4.3 | F 阶段填 `preFlight.makeVsUse.realized`;`verify-make-vs-use` 对本 epic VERIFIED(含 (e):账本每条 adapt / 每个标准都有下落——adopted 或 deviations 三类理由之一) | 整改令 §9.1 |
 | 4.4 | delegate 跑四谓词 → `--record-signoff` → 提交只含 `delegate-signoff.json` → 执行者 `--accept` | BLOCKED-036 / 068 |
+| 4.4a | 签字前 delegate **重做 1.2 第一问并量化**:子句名词的构造函数在生产路径上的调用者数(grep,排除 tests),为零不签;事件名 / 文件名与子句名词同名不算 | 整改令 §12.11(BLOCKED-143,P2-03 #22 撤回);同族 BLOCKED-091 / 136 |
 | 4.5 | 用户级确认门:P0-02 / P0-07 / P2-01 的最终 ACCEPT;钱 / 钥匙 / 不可逆触点 | BLOCKED-022 / 024;C7 |
 
 ## 5. 跨 epic 的固定顺序(现行)

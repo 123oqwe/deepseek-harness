@@ -169,6 +169,14 @@
       "conclusion": "PASS",
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-07T06:37:34.787Z"
+    },
+    {
+      "epic": "P2-03",
+      "rowDigestSha256": "59fca99ec7013f52211c0abe6f99d2235fc8431ff097c2691a26d0c0b69dbad9",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-07T11:28:33.011Z",
+      "reason": "BLOCKED-143 / rectification §12.11: createActionManifest and appendManifestThenGate have zero production callers; the live paths (agent-loop tool-calls.ts, tools ptc.ts) hand-build an 8-field action/manifest-appended event that carries no idempotencyKey, actor or runId, so must[1]'s subject (the manifest) is never generated and acceptance[0]'s ActionManifest does not exist in the log. The delegate signed #22 by matching the event name to the clause noun. Withdrawn; P2-03 reopens at U for the manifest construction on the real paths (reading 2)."
     }
   ]
 }

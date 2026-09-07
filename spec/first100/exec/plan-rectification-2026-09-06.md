@@ -730,3 +730,15 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 **P4-12**(`00cb4b19c5`,check-ready 报的唯一可开工 epic;程序规则是前置 ACCEPTED 或全格 GREEN、明确不设 wave 栅栏,故非跳 wave):preFlight 在第一行代码前写、两标准一落盘就 `evidenceTitleSubstring`(门先红后绿)、`idempotency-key` 本树复验、C 冻结 13 条变异只红 1 条——够格。**但 1.11 是"确认后才动文件",这次先动了;下条恢复。** 两处改记录:(1) **键缺 caller scope**——draft-07 的键唯一性是每客户端、Stripe 是每账户;entry 只有 `{key, epoch}`,两个 agent 同 key 互相可见,与 BLOCKED-140 同形,在 C 阶段抓到。裁:键 = `(scope, key)`,scope 取 ActionManifest 上的 principal(P2-01);C 阶段 supplement 一条"两 principal 同 key = 两条 reservation,互不可见",变异去掉 scope 只红此条;13 条不 supersede。(2) gapCheck 记的是 reject 行内容,不是卡上 allinluna 的四项缺口;按 1.6 逐项对子句重写。
 **P9-08 / P9-09**:终态句「scheduled-BLOCKED 在案」取 **(a)**——到 W21/W22 真跑、真阻塞、记账;现在 `PREMATURE` 是唯一诚实的状态值。(b) 以"wave 未到"现在就记,是 BLOCKED-043 把分诊表当状态记录的错再犯一次。
 **R10**:需要 `DEEPSEEK_API_KEY_EXTERNAL` + 单独批的预算 + 三夜统计窗,三者都不在执行者能力内——状态是"等用户授权",不是"未做";delegate 到 W-末向用户要,不催执行者。
+
+### 12.11 BLOCKED-143:ActionManifest 在生产路径上从未被构造——P2-03 的验收(#22)是 delegate 签错的,撤回(2026-09-07 07:40 EDT)
+
+**事实**(执行者测量,delegate 亲核 `tool-calls.ts:292-315` 与 `tools/src/index.ts:2426`):`createActionManifest` / `appendManifestThenGate` **生产调用者为零**;两条真实路径(`agent-loop/src/tool-calls.ts`、`tools/src/ptc.ts`)只 import `computeArgumentsHash` 与 `classifySideEffect`,**手搓**一个 8 字段的 `action/manifest-appended` 事件;must[0] 的 12 个字段只在类型里;事件里**没有 `idempotencyKey`、没有 `actor`、没有 `runId`**——事件文档说"manifest 可由这些字段重建",对这三个字段不成立(`idempotencyKey` 是调用方供给的,事件里不存在就无处重建)。另:生产路径一律 `classifySideEffect(undefined)`,每个动作都是"未分类·最高风险·需审批"——只进日志,policy 不读它;P2-04 落地真实分类前这是常态,记下不扩范围。
+**delegate 的错**:#22 签字时我把事件名 `manifest-appended` 当成了子句里的名词 "manifest"——BLOCKED-091 / 136 的形状(按名字不按行为),这次长在我自己的签字里。P2-03 U 阶段证明的是**顺序**(事件先于 tool/call、sequence 单调、三条路径、旁路可检);没证明的是 **must[1] 的主语被生成**、**acceptance[0] 的 "ActionManifest" 存在于日志**。
+**裁决**:
+1. **取读法 2**(唯一让两条 epic 的子句同时为真的读法);读法 3(把 must[0] 改成类型级)是把子句改成已建之物,拒绝;读法 1 单独做仍是手搓事件,不够。
+2. **撤回 P2-03 签字**(`--record-signoff --conclusion WITHDRAWN`,理由即本节),ACCEPTED 24 → 23。这是诚实的数字;P2-03 全格仍 GREEN,依赖它的 P2-04 / P2-05 / P4-12 按 check-ready 规则(全格 GREEN)不受阻。
+3. **P2-03 U 阶段 supplement**(P2-03 自己的 files[],执行者做,不归 P4-12):两条真实路径经 `appendManifestThenGate`(或 `createActionManifest` + append)构造**真 manifest**;事件由 manifest 派生并**内联 manifest 全部 must[0] 字段**——"可重建"的理由随手搓路径一起作废;`idempotencyKey` 由路径铸造,判据:同一意图的崩溃重试得同一键、新意图得新键,并把派生写进 JSDoc;`actor` 取会话 principal。冻结:(a) 生产路径上一次真实 tool call 的日志事件里 `idempotencyKey`/`actor`/`runId` 非空且与 manifest 一致;(b) `createActionManifest` 生产调用者 ≥ 1 的结构门(与 §12.1 同族);(c) 原 U 用例不 supersede。
+4. **顺序**:先落 BLOCKED-137 根修(`snapshots/.refresh-skipped.json` 机制)——事件字段变了必须重录 snapshot,而两个 pwsh 夹具本机刷不了,不先修会再红一轮。`SESSION_FORMAT_VERSION` 按 pre-release 立场不兑现兼容,旧日志被拒即预期。
+5. **P4-12 U 阶段**等 P2-03 该 supplement 绿后开;C / P / F 照常。
+**规则(进 EPIC-LIFECYCLE 4.x)**:签字前 delegate **重做 1.2 的第一问并量化**——子句名词的构造函数在生产路径上的调用者数(grep,排除 tests),为零则不签;preFlight 时问过一次不算,验收时的路径可能已不是开工时的路径。
