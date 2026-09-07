@@ -1,0 +1,1665 @@
+{
+ "schema": "first100-standards-ownership/1",
+ "generatedFrom": "make-vs-use-ledger.json + ledger.json",
+ "rule": "owner = ruling override; else earliest accepted row that actually adopted; else earliest not-yet-accepted row that will adopt; single-adopter standards are owned by their only epic",
+ "families": [
+  {
+   "family": "in-toto / DSSE / SLSA",
+   "pattern": "in-toto|DSSE|SLSA",
+   "owner": "SLICE-3.4",
+   "basis": "override",
+   "involved": [
+    "P0-01",
+    "P0-07",
+    "P1-02",
+    "P1-11",
+    "P1-12",
+    "P2-03",
+    "P3-07",
+    "P3-09",
+    "P4-04",
+    "P4-09",
+    "P6-08",
+    "P6-09",
+    "P7-01",
+    "P7-02",
+    "P7-04",
+    "P7-05",
+    "P7-10",
+    "P8-10"
+   ],
+   "notAdopted": [
+    "P0-01",
+    "P0-07",
+    "P1-02"
+   ]
+  },
+  {
+   "family": "RFC 8785 JCS",
+   "pattern": "8785|JCS",
+   "owner": "P2-03",
+   "basis": "accepted",
+   "involved": [
+    "P2-03",
+    "P4-03",
+    "P4-04",
+    "P7-01",
+    "P7-05",
+    "P8-01",
+    "P8-09"
+   ],
+   "notAdopted": [
+    "P8-01"
+   ]
+  },
+  {
+   "family": "CloudEvents",
+   "pattern": "CloudEvents",
+   "owner": "P4-06",
+   "basis": "pending",
+   "involved": [
+    "P4-01",
+    "P4-06",
+    "P8-04",
+    "P8-05"
+   ],
+   "notAdopted": [
+    "P4-01"
+   ]
+  },
+  {
+   "family": "SPIFFE ID format",
+   "pattern": "SPIFFE(-style| ID)",
+   "owner": "P3-09",
+   "basis": "pending",
+   "involved": [
+    "P0-02",
+    "P2-01",
+    "P3-09",
+    "P8-06"
+   ],
+   "notAdopted": [
+    "P0-02",
+    "P2-01"
+   ]
+  },
+  {
+   "family": "SPIFFE SVID lifetime rules",
+   "pattern": "SPIFFE SVID",
+   "owner": "P3-06",
+   "basis": "pending",
+   "involved": [
+    "P3-06"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "W3C PROV-DM",
+   "pattern": "PROV",
+   "owner": "P6-09",
+   "basis": "pending",
+   "involved": [
+    "P5-11",
+    "P6-02",
+    "P6-09",
+    "P7-04"
+   ],
+   "notAdopted": [
+    "P5-11",
+    "P6-02"
+   ]
+  },
+  {
+   "family": "OTel GenAI semconv gen_ai.*",
+   "pattern": "gen_ai|GenAI",
+   "owner": "SLICE-3.3",
+   "basis": "override",
+   "involved": [
+    "P5-03",
+    "P5-06",
+    "P6-05",
+    "P7-07"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "OTel resource/error/process semconv",
+   "pattern": "OTel semconv (enduser|error|process)",
+   "owner": "npm @opentelemetry/semantic-conventions",
+   "basis": "override",
+   "involved": [
+    "P2-01",
+    "P3-03"
+   ],
+   "notAdopted": [
+    "P2-01"
+   ]
+  },
+  {
+   "family": "A2A TaskState",
+   "pattern": "A2A TaskState",
+   "owner": "P4-05",
+   "basis": "pending",
+   "involved": [
+    "P4-01",
+    "P4-05"
+   ],
+   "notAdopted": [
+    "P4-01"
+   ]
+  },
+  {
+   "family": "A2A Message/Part/Artifact",
+   "pattern": "A2A (Message|Artifact)",
+   "owner": "P5-05",
+   "basis": "pending",
+   "involved": [
+    "P5-05",
+    "P5-06"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "MCP ToolAnnotations",
+   "pattern": "MCP ToolAnnotations",
+   "owner": "P2-04",
+   "basis": "pending",
+   "involved": [
+    "P2-03",
+    "P2-04"
+   ],
+   "notAdopted": [
+    "P2-03"
+   ]
+  },
+  {
+   "family": "MCP TaskStatus names",
+   "pattern": "MCP TaskStatus",
+   "owner": "P4-05",
+   "basis": "pending",
+   "involved": [
+    "P4-01",
+    "P4-05"
+   ],
+   "notAdopted": [
+    "P4-01"
+   ]
+  },
+  {
+   "family": "MCP initialize/capabilities",
+   "pattern": "MCP initialize",
+   "owner": "P8-01",
+   "basis": "accepted",
+   "involved": [
+    "P8-01"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "MCP elicitation/create",
+   "pattern": "MCP elicitation",
+   "owner": "P2-12",
+   "basis": "pending",
+   "involved": [
+    "P2-12",
+    "P8-04"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "AuthZEN (+MCP profile)",
+   "pattern": "AuthZEN",
+   "owner": "P2-05",
+   "basis": "pending",
+   "involved": [
+    "P2-03",
+    "P2-05",
+    "P2-07"
+   ],
+   "notAdopted": [
+    "P2-03"
+   ]
+  },
+  {
+   "family": "ACP request_permission payload",
+   "pattern": "ACP (RequestPermissionRequest|session/request_permission|allow_always)",
+   "owner": "P2-06",
+   "basis": "pending",
+   "involved": [
+    "P2-06",
+    "P2-07",
+    "P2-12",
+    "P8-04"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "ACP session/* lifecycle",
+   "pattern": "ACP (1\\.4\\.0 session|session/cancel|session/update)",
+   "owner": "P2-12",
+   "basis": "pending",
+   "involved": [
+    "P2-12",
+    "P5-06",
+    "P5-09"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "OCI runtime-spec",
+   "pattern": "OCI (runtime-spec|linux\\.resources)",
+   "owner": "P3-01",
+   "basis": "pending",
+   "involved": [
+    "P3-01",
+    "P3-02",
+    "P3-08",
+    "P3-10"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "OCI image-spec Descriptor",
+   "pattern": "OCI image-spec",
+   "owner": "P6-09",
+   "basis": "pending",
+   "involved": [
+    "P6-09"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "OCI-style sha256:<hex> refs",
+   "pattern": "OCI-style",
+   "owner": "P5-05",
+   "basis": "pending",
+   "involved": [
+    "P5-05"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "JSON Schema 2020-12",
+   "pattern": "JSON Schema",
+   "owner": "P0-06",
+   "basis": "accepted",
+   "involved": [
+    "P0-06",
+    "P1-01",
+    "P2-11",
+    "P4-02",
+    "P5-03",
+    "P5-05",
+    "P7-01",
+    "P8-07"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "RFC 6902 JSON Patch",
+   "pattern": "6902|JSON Patch",
+   "owner": "P4-13",
+   "basis": "pending",
+   "involved": [
+    "P4-13",
+    "P7-08"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "semver",
+   "pattern": "semver",
+   "owner": "P1-03",
+   "basis": "override",
+   "involved": [
+    "P1-01"
+   ],
+   "notAdopted": [
+    "P1-01"
+   ]
+  },
+  {
+   "family": "W3C DPV",
+   "pattern": "DPV",
+   "owner": "P6-10",
+   "basis": "pending",
+   "involved": [
+    "P6-02",
+    "P6-10"
+   ],
+   "notAdopted": [
+    "P6-02"
+   ]
+  },
+  {
+   "family": "Sigstore bundle",
+   "pattern": "Sigstore",
+   "owner": "P1-02",
+   "basis": "accepted",
+   "involved": [
+    "P1-02"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "Idempotency-Key",
+   "pattern": "Idempotency|idempotency-key",
+   "owner": "P4-12",
+   "basis": "pending",
+   "involved": [
+    "P4-12",
+    "P8-03"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "K8s resource model",
+   "pattern": "Kubernetes|K8s|resourceVersion",
+   "owner": "P8-02",
+   "basis": "pending",
+   "involved": [
+    "P8-02",
+    "P8-03"
+   ],
+   "notAdopted": []
+  },
+  {
+   "family": "OpenFeature",
+   "pattern": "OpenFeature",
+   "owner": "P0-05",
+   "basis": "accepted",
+   "involved": [
+    "P0-05",
+    "P7-10"
+   ],
+   "notAdopted": []
+  }
+ ],
+ "perEpic": {
+  "P0-01": [
+   {
+    "standard": "in-toto Statement v1 subject[]/ResourceDescriptor",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P0-02": [
+   {
+    "standard": "SPIFFE-style URI ids",
+    "family": "SPIFFE ID format",
+    "owner": "P3-09",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P0-05": [
+   {
+    "standard": "OpenFeature evaluation API (optional)",
+    "family": "OpenFeature",
+    "owner": "P0-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P0-06": [
+   {
+    "standard": "JSON Schema 2020-12 as interchange",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]",
+    "family": null,
+    "owner": "P0-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P0-07": [
+   {
+    "standard": "in-toto Attestation Statement v1",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "DSSE envelope",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "in-toto test-result/v0.1 predicate",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "SLSA Provenance v1",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P1-01": [
+   {
+    "standard": "JSON Schema 2020-12 (already)",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "semver ranges",
+    "family": "semver",
+    "owner": "P1-03",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
+    "family": null,
+    "owner": "P1-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "Chrome MV3 permissions/host_permissions vocabulary",
+    "family": null,
+    "owner": "P1-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P1-02": [
+   {
+    "standard": "in-toto Statement v1",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "SLSA provenance v1",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "Sigstore bundle v0.3",
+    "family": "Sigstore bundle",
+    "owner": "P1-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "CycloneDX 1.6",
+    "family": null,
+    "owner": "P1-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "SPDX",
+    "family": null,
+    "owner": "P1-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P1-05": [
+   {
+    "standard": "SARIF 2.1.0 report format",
+    "family": null,
+    "owner": "P1-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P1-06": [
+   {
+    "standard": "VS Code extension host design (descriptors and proxies only)",
+    "family": null,
+    "owner": "P1-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P1-07": [
+   {
+    "standard": "VS Code Workspace Trust model (untrustedWorkspaces supported true|false|limited, restrictedConfigurations)",
+    "family": null,
+    "owner": "P1-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "git safe.directory ownership check",
+    "family": null,
+    "owner": "P1-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P1-09": [
+   {
+    "standard": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)",
+    "family": null,
+    "owner": "P1-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "VS Code publisher.name id convention",
+    "family": null,
+    "owner": "P1-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P1-11": [
+   {
+    "standard": "in-toto Statement as the proposal artifact (subject = definition digest)",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P1-12": [
+   {
+    "standard": "SLSA levels",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "in-toto attestation bundle bound to package digest",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "SARIF sections",
+    "family": null,
+    "owner": "P1-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OpenSSF Scorecard checks",
+    "family": null,
+    "owner": "P1-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P2-01": [
+   {
+    "standard": "SPIFFE ID URI for principal ids",
+    "family": "SPIFFE ID format",
+    "owner": "P3-09",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "RFC 8693 act nesting for delegation chain",
+    "family": null,
+    "owner": "P2-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OTel semconv enduser.id/service.name",
+    "family": "OTel resource/error/process semconv",
+    "owner": "npm @opentelemetry/semantic-conventions",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P2-03": [
+   {
+    "standard": "RFC 8785 JCS",
+    "family": "RFC 8785 JCS",
+    "owner": "P2-03",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "in-toto Statement envelope",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "MCP ToolAnnotations as side-effect hint input",
+    "family": "MCP ToolAnnotations",
+    "owner": "P2-04",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "AuthZEN subject/action/resource/context (+ MCP profile / COAZ-MCP binding)",
+    "family": "AuthZEN (+MCP profile)",
+    "owner": "P2-05",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P2-04": [
+   {
+    "standard": "MCP ToolAnnotations",
+    "family": "MCP ToolAnnotations",
+    "owner": "P2-04",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "P1-01 SideEffectClass",
+    "family": null,
+    "owner": "P2-04",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
+    "family": null,
+    "owner": "P2-04",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "MITRE ATLAS technique ids",
+    "family": null,
+    "owner": "P2-04",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P2-05": [
+   {
+    "standard": "AuthZEN request/response vocabulary",
+    "family": "AuthZEN (+MCP profile)",
+    "owner": "P2-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P2-06": [
+   {
+    "standard": "ACP RequestPermissionRequest.toolCall as the wire projection",
+    "family": "ACP request_permission payload",
+    "owner": "P2-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P2-07": [
+   {
+    "standard": "AuthZEN Access Request & Approval Profile Draft 1",
+    "family": "AuthZEN (+MCP profile)",
+    "owner": "P2-05",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "ACP allow_always/reject_always option kinds",
+    "family": "ACP request_permission payload",
+    "owner": "P2-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P2-11": [
+   {
+    "standard": "Codex sandbox_mode/approval_policy names (already mirrored)",
+    "family": null,
+    "owner": "P2-11",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "JSON Schema export for serialization/--dump",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P2-12": [
+   {
+    "standard": "MCP elicitation/create",
+    "family": "MCP elicitation/create",
+    "owner": "P2-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "ACP session/request_permission / elicitation_create",
+    "family": "ACP request_permission payload",
+    "owner": "P2-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "ACP session/cancel",
+    "family": "ACP session/* lifecycle",
+    "owner": "P2-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P3-01": [
+   {
+    "standard": "OCI runtime-spec lifecycle/state (creating/created/running/stopped)",
+    "family": "OCI runtime-spec",
+    "owner": "P3-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "E2B/Daytona SDK shape as reference",
+    "family": null,
+    "owner": "P3-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P3-02": [
+   {
+    "standard": "OCI runtime-spec config.json linux.{namespaces,seccomp,devices,resources,rlimits}, mounts",
+    "family": "OCI runtime-spec",
+    "owner": "P3-01",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "Landlock ABI rights names",
+    "family": null,
+    "owner": "P3-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "srt SandboxRuntimeConfig schema",
+    "family": null,
+    "owner": "P3-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P3-03": [
+   {
+    "standard": "RFC 9457 problem details on SDK/web wire",
+    "family": null,
+    "owner": "P3-03",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OTel semconv error.type",
+    "family": "OTel resource/error/process semconv",
+    "owner": "npm @opentelemetry/semantic-conventions",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "POSIX/GNU exit-status conventions 124/125/126/127/128+n",
+    "family": null,
+    "owner": "P3-03",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P3-05": [
+   {
+    "standard": "Landlock ABI 4 (TCP bind/connect) / ABI 6 (abstract unix socket + signal scopes)",
+    "family": null,
+    "owner": "P3-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "moby default seccomp profile",
+    "family": null,
+    "owner": "P3-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P3-06": [
+   {
+    "standard": "OAuth token-exchange RFC 8693 delegation semantics (borrowed)",
+    "family": null,
+    "owner": "P3-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "SPIFFE SVID lifetime rules (borrowed)",
+    "family": "SPIFFE SVID lifetime rules",
+    "owner": "P3-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P3-07": [
+   {
+    "standard": "in-toto Statement v1 + DSSE envelope for the attestation artifact",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "SLSA-style predicate",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P3-08": [
+   {
+    "standard": "OCI runtime-spec HostConfig knobs (ReadonlyRootfs, Tmpfs, SecurityOpt no-new-privileges/seccomp, CapDrop ALL, PidsLimit, Memory, NanoCpus)",
+    "family": "OCI runtime-spec",
+    "owner": "P3-01",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P3-09": [
+   {
+    "standard": "in-toto/DSSE attestation",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "SPIFFE ID format for tenant/world identity",
+    "family": "SPIFFE ID format",
+    "owner": "P3-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P3-10": [
+   {
+    "standard": "OCI linux.resources names",
+    "family": "OCI runtime-spec",
+    "owner": "P3-01",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "OTel process.* semconv",
+    "family": null,
+    "owner": "P3-10",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P3-12": [
+   {
+    "standard": "Linux openat2 RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS",
+    "family": null,
+    "owner": "P3-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "macOS O_NOFOLLOW_ANY",
+    "family": null,
+    "owner": "P3-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P4-01": [
+   {
+    "standard": "CloudEvents attribute names (id/source/type/time/subject/datacontenttype)",
+    "family": "CloudEvents",
+    "owner": "P4-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "A2A TaskState / MCP TaskStatus names at surfaces",
+    "family": "A2A TaskState",
+    "owner": "P4-05",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P4-02": [
+   {
+    "standard": "JSON Schema for the profile via zod (none exists for the concept)",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P4-03": [
+   {
+    "standard": "RFC 8785 JCS + sha256 for deterministic plan id",
+    "family": "RFC 8785 JCS",
+    "owner": "P2-03",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P4-04": [
+   {
+    "standard": "DSSE envelope over RFC 8785 JCS",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "Ed25519 via node:crypto",
+    "family": null,
+    "owner": "P4-04",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "in-toto/attestation alignment for later P5/P6",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P4-05": [
+   {
+    "standard": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
+    "family": "A2A TaskState",
+    "owner": "P4-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P4-06": [
+   {
+    "standard": "CloudEvents attribute names; dedup on id",
+    "family": "CloudEvents",
+    "owner": "P4-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P4-07": [
+   {
+    "standard": "Kleppmann fencing-token semantics",
+    "family": null,
+    "owner": "P4-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P4-09": [
+   {
+    "standard": "sha256 content digest + DSSE signature (P4-04) for saved definitions",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P4-12": [
+   {
+    "standard": "IETF draft-ietf-httpapi-idempotency-key-header-07 Idempotency-Key passthrough",
+    "family": "Idempotency-Key",
+    "owner": "P4-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "Stripe same-key-different-params reject",
+    "family": null,
+    "owner": "P4-12",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P4-13": [
+   {
+    "standard": "JSON Patch RFC 6902 for StateDiff/repair-option representation",
+    "family": "RFC 6902 JSON Patch",
+    "owner": "P4-13",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P5-03": [
+   {
+    "standard": "JSON Schema for the output contract",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "OTel GenAI semconv gen_ai.usage.* for token-estimate telemetry",
+    "family": "OTel GenAI semconv gen_ai.*",
+    "owner": "SLICE-3.3",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P5-05": [
+   {
+    "standard": "A2A Message/Part/Artifact vocabulary",
+    "family": "A2A Message/Part/Artifact",
+    "owner": "P5-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "JSON Schema for outputSchema",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "W3C Trace Context traceparent",
+    "family": null,
+    "owner": "P5-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OCI-style sha256:<hex> content-addressed refs",
+    "family": "OCI-style sha256:<hex> refs",
+    "owner": "P5-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   }
+  ],
+  "P5-06": [
+   {
+    "standard": "A2A Artifact + TaskState enum (incl. input-required/auth-required/rejected) as failure class",
+    "family": "A2A Message/Part/Artifact",
+    "owner": "P5-05",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "ACP session/update tool_call ids for tool-trace refs",
+    "family": "ACP session/* lifecycle",
+    "owner": "P2-12",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "OTel GenAI gen_ai.usage.* for usage/cost",
+    "family": "OTel GenAI semconv gen_ai.*",
+    "owner": "SLICE-3.3",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P5-09": [
+   {
+    "standard": "ACP 1.4.0 session/load, session/resume, session/fork, session/list, session/request_permission, authenticate, sessionCapabilities",
+    "family": "ACP session/* lifecycle",
+    "owner": "P2-12",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P5-11": [
+   {
+    "standard": "W3C PROV-DM field names for blackboard provenance (wasGeneratedBy, wasAttributedTo, wasDerivedFrom)",
+    "family": "W3C PROV-DM",
+    "owner": "P6-09",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P6-01": [
+   {
+    "standard": "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
+    "family": null,
+    "owner": "P6-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "dsh-memory-protocol v1 (dsh-memento)",
+    "family": null,
+    "owner": "P6-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P6-02": [
+   {
+    "standard": "W3C PROV-DM relations wasDerivedFrom/wasGeneratedBy/wasAttributedTo",
+    "family": "W3C PROV-DM",
+    "owner": "P6-09",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   },
+   {
+    "standard": "Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at",
+    "family": null,
+    "owner": "P6-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "W3C DPV for purpose & personal-data categories",
+    "family": "W3C DPV",
+    "owner": "P6-10",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P6-05": [
+   {
+    "standard": "OTel semconv gen_ai.* attribute names (+ dsh.context.source_id / selection_reason)",
+    "family": "OTel GenAI semconv gen_ai.*",
+    "owner": "SLICE-3.3",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P6-08": [
+   {
+    "standard": "RFC 6962-style hash chain",
+    "family": null,
+    "owner": "P6-08",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "DSSE/in-toto statements for signed tree heads (P0-07 format)",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P6-09": [
+   {
+    "standard": "OCI image-spec Descriptor {mediaType, digest sha256:…, size, annotations} for ArtifactRef",
+    "family": "OCI image-spec Descriptor",
+    "owner": "P6-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "OpenLineage Run/Job/Dataset + facets for lineage events",
+    "family": null,
+    "owner": "P6-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "W3C PROV vocabulary",
+    "family": "W3C PROV-DM",
+    "owner": "P6-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "in-toto attestation for verification links",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P6-10": [
+   {
+    "standard": "W3C DPV for purpose/personal-data categories",
+    "family": "W3C DPV",
+    "owner": "P6-10",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "public/internal/confidential/restricted tiers (convention, no formal standard)",
+    "family": null,
+    "owner": "P6-10",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P7-01": [
+   {
+    "standard": "in-toto Statement v1 + in-toto layout semantics (steps/inspections/functionaries/threshold)",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "JSON Schema 2020-12 via zod4 toJSONSchema",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "RFC 8785 JCS canonical hash",
+    "family": "RFC 8785 JCS",
+    "owner": "P2-03",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P7-02": [
+   {
+    "standard": "in-toto ResourceDescriptor as EvidenceRef",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "DSSE envelope for sealed EvidenceEnvelope",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P7-04": [
+   {
+    "standard": "W3C PROV-DM relations (wasDerivedFrom, wasGeneratedBy, wasInvalidatedBy, wasAttributedTo)",
+    "family": "W3C PROV-DM",
+    "owner": "P6-09",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "in-toto SCAI predicate (attributes + evidence + conditions)",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P7-05": [
+   {
+    "standard": "SLSA Verification Summary Attestation (in-toto vsa.md)",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "in-toto Statement + DSSE envelope",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "RFC 8785 JCS",
+    "family": "RFC 8785 JCS",
+    "owner": "P2-03",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "Ed25519 via node:crypto under Trust Kernel signatureRoots",
+    "family": null,
+    "owner": "P7-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P7-07": [
+   {
+    "standard": "OTel GenAI semantic conventions (gen_ai.agent.*, conversation.id, operation.name, request/response.*, usage.*, evaluation.*)",
+    "family": "OTel GenAI semconv gen_ai.*",
+    "owner": "SLICE-3.3",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "W3C Trace Context traceparent/tracestate",
+    "family": null,
+    "owner": "P7-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OTLP/HTTP wire",
+    "family": null,
+    "owner": "P7-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P7-08": [
+   {
+    "standard": "RFC 6902 JSON Patch for DecisionDiff",
+    "family": "RFC 6902 JSON Patch",
+    "owner": "P4-13",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P7-10": [
+   {
+    "standard": "OpenFeature as the champion/challenger flag standard (only if the routing chapter also adopts it)",
+    "family": "OpenFeature",
+    "owner": "P0-05",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "DSSE-signed EvolutionProposal",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P8-01": [
+   {
+    "standard": "MCP initialize protocolVersion + capabilities shape",
+    "family": "MCP initialize/capabilities",
+    "owner": "P8-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "LSP ClientCapabilities pattern",
+    "family": null,
+    "owner": "P8-01",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "RFC 8785 JCS for schema fingerprints",
+    "family": "RFC 8785 JCS",
+    "owner": "P2-03",
+    "thisEpicOwns": false,
+    "notAdoptedHere": true
+   }
+  ],
+  "P8-02": [
+   {
+    "standard": "Kubernetes resource model (metadata.uid/resourceVersion/creationTimestamp, spec/status, list+watch, resourceVersion precondition)",
+    "family": "K8s resource model",
+    "owner": "P8-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "Google AIP-158 page_token pagination",
+    "family": null,
+    "owner": "P8-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "Google AIP-160 filter grammar",
+    "family": null,
+    "owner": "P8-02",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P8-03": [
+   {
+    "standard": "IETF draft-ietf-httpapi-idempotency-key-header semantics",
+    "family": "Idempotency-Key",
+    "owner": "P4-12",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "AIP-151 long-running Operation {done, metadata, response, error}",
+    "family": null,
+    "owner": "P8-03",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "K8s resourceVersion precondition",
+    "family": "K8s resource model",
+    "owner": "P8-02",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P8-04": [
+   {
+    "standard": "MCP elicitation/create server→client request shape",
+    "family": "MCP elicitation/create",
+    "owner": "P2-12",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "ACP session/request_permission payload shape",
+    "family": "ACP request_permission payload",
+    "owner": "P2-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "CloudEvents-style id/source/subject on the request envelope",
+    "family": "CloudEvents",
+    "owner": "P4-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P8-05": [
+   {
+    "standard": "CloudEvents 1.0 attributes id/source/type/time/subject + sequence extension",
+    "family": "CloudEvents",
+    "owner": "P4-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "SSE Last-Event-ID semantics",
+    "family": null,
+    "owner": "P8-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "NATS JetStream durable-consumer ack model (ack pending, max_ack_pending, slow-consumer eviction)",
+    "family": null,
+    "owner": "P8-05",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P8-06": [
+   {
+    "standard": "SPIFFE ID format for ServiceAccount ids",
+    "family": "SPIFFE ID format",
+    "owner": "P3-09",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "OIDC/JWT",
+    "family": null,
+    "owner": "P8-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P8-07": [
+   {
+    "standard": "JSON Schema 2020-12 as the versioned artifact",
+    "family": "JSON Schema 2020-12",
+    "owner": "P0-06",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   },
+   {
+    "standard": "OpenRPC document format for methods",
+    "family": null,
+    "owner": "P8-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P8-09": [
+   {
+    "standard": "OCSF as SIEM-facing audit event schema",
+    "family": null,
+    "owner": "P8-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "OTLP logs as optional transport",
+    "family": null,
+    "owner": "P8-09",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "RFC 8785 JCS for hash-chain canonicalization",
+    "family": "RFC 8785 JCS",
+    "owner": "P2-03",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P8-10": [
+   {
+    "standard": "SLSA/in-toto attestation (optional)",
+    "family": "in-toto / DSSE / SLSA",
+    "owner": "SLICE-3.4",
+    "thisEpicOwns": false,
+    "notAdoptedHere": false
+   }
+  ],
+  "P9-03": [
+   {
+    "standard": "provider/model id syntax (models.dev/opencode)",
+    "family": null,
+    "owner": "P9-03",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "-m/--model flag naming (codex/claude CLIs)",
+    "family": null,
+    "owner": "P9-03",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P9-06": [
+   {
+    "standard": "NDJSON stream-json shape frozen by headless expected fixtures",
+    "family": null,
+    "owner": "P9-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "codex exec --json / Claude Code --output-format flag names",
+    "family": null,
+    "owner": "P9-06",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ],
+  "P9-07": [
+   {
+    "standard": "maxTurns / MaxTurnsExceeded naming (openai-agents-js, claude-agent-sdk)",
+    "family": null,
+    "owner": "P9-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   },
+   {
+    "standard": "LangGraph recursion_limit",
+    "family": null,
+    "owner": "P9-07",
+    "thisEpicOwns": true,
+    "notAdoptedHere": false,
+    "singleAdopter": true
+   }
+  ]
+ }
+}

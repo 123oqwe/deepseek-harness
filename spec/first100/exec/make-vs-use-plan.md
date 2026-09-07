@@ -1,6 +1,6 @@
 # First-100 造用执行表(派生文档)
 
-**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `52fa75cea4`);**生成时间** 2026-09-06T16:35-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
+**派生自** `spec/first100/exec/make-vs-use-ledger.json`(sha256 前 16 位 `3b481dc50e866f16`)+ `ledger.json` 状态 + `p9-verification.json` + 整改令裁决叠加(整改令最近提交 `36905da6f5`);**生成时间** 2026-09-06T22:57-04:00;生成器源码在文末 `<details>`。**不要手改本文件**——改账本 JSON / 整改令 + 生成器 overlay,重新生成。
 
 ## 0. 文档优先级(执行者与 delegate 共同遵守)——**流程入口是 `EPIC-LIFECYCLE.md`**,本节只讲文件角色
 
@@ -53,7 +53,7 @@
 | 标准(按子规范) | 形状所有者 | 依据 | 全部涉及者(registry 顺序;~~划掉~~ = 已验收但未采用,所有权已转移) |
 |---|---|---|---|
 | in-toto / DSSE / SLSA | **SLICE-3.4** | R1:envelope slice 在 P4-04(W9)前落地 | ~~P0-01~~ ~~P0-07~~ ~~P1-02~~ P1-11 P1-12 P2-03 P3-07 P3-09 P4-04 P4-09 P6-08 P6-09 P7-01 P7-02 P7-04 P7-05 P7-10 P8-10 |
-| RFC 8785 JCS | **P2-03** | 最早涉及者(未验收) | P2-03 P4-03 P4-04 P7-01 P7-05 ~~P8-01~~ P8-09 |
+| RFC 8785 JCS | **P2-03** | 已验收且已采用 | P2-03 P4-03 P4-04 P7-01 P7-05 ~~P8-01~~ P8-09 |
 | CloudEvents | **P4-06** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P4-01~~ P4-06 P8-04 P8-05 |
 | SPIFFE ID format | **P3-09** | 最早将采用的未验收涉及者(先前者未采用,所有权顺延) | ~~P0-02~~ ~~P2-01~~ P3-09 P8-06 |
 | SPIFFE SVID lifetime rules | **P3-06** | 最早涉及者(未验收) | P3-06 |
@@ -180,7 +180,7 @@
     - is a no-op when initialized, opt-in or not
     - fails closed (throws, never warns) when uninitialized without the insecure opt-in
     - …共 11 条(分布在 1 个冻结条目),见 command-freeze.json
-- F:1 条有效冻结 / 10 个具名用例 / 变异证明 0/1 / 格子 GREEN
+- F:1 条有效冻结 / 10 个具名用例 / 变异证明 1/1 / 格子 GREEN · 有 supersede
     - leaves the kernel present after disposing an unrelated plugin, and shows the kernel is owned by the root fiber, not a plugin fiber
     - rejects a plugin row applied to the root Include entry after boot exactly as it rejects one present at initial boot
     - rejects delete-then-reprovide against a kernel pinned via pinTrustKernel, and leaves the original kernel pinned
@@ -719,8 +719,8 @@
 - validation[2] 在 lock 与 node_modules 不一致时 boot fail closed。
 - nonGoals:规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - predecessors:P1-01 P1-02
-- files:[B] `apps/cli/src/plugin.ts` · [B] `apps/cli/src/profile-boot.ts` · [B] `packages/bundle/base/cordis.patch.yml` · [N] `.dsh/plugins.lock.json` · [N] `packages/plugin/plugin-lock/src/index.ts` · [N] `packages/plugin/plugin-lock/src/types.ts` · [N] `packages/plugin/plugin-lock/tests/lock.spec.ts`
-- stages:C:4 文件 · P:2 文件 · U:3 文件 · F:1 文件
+- files:[B] `apps/cli/src/plugin.ts` · [B] `apps/cli/src/profile-boot.ts` · [B] `packages/bundle/base/package.json` · [N] `.dsh/plugins.lock.json` · [N] `packages/plugin/plugin-lock/src/index.ts` · [N] `packages/plugin/plugin-lock/src/types.ts` · [N] `packages/plugin/plugin-lock/tests/lock.spec.ts` · [N] `apps/cli/tests/plugin-lock.spec.ts`
+- stages:C:4 文件 · P:2 文件 · U:4 文件 · F:1 文件
 - realTask:E1 S10
 - gate:Lock binds bytes/source/signature/SBOM/ABI/schema/capability and boot fails on drift; S10.
 - rollback:K/D — retain last verified lock and atomically discard the candidate.
@@ -737,12 +737,12 @@
     - always computes the manifest digest, since that IS observable
     - digests a manifest independently of its key order
     - …共 21 条(分布在 1 个冻结条目),见 command-freeze.json
-- U:1 条有效冻结 / 5 个具名用例 / 变异证明 1/1 / 格子 GREEN
+- U:2 条有效冻结 / 14 个具名用例 / 变异证明 2/2 / 格子 GREEN
     - admits a matching install and reports the boot as verified
     - refuses a drifted install and does not soften admitBoot's verdict
     - refuses when the policy is refuse, naming the gate rather than a plugin
     - proceeds when the policy allows it, but marks the boot UNVERIFIED
-    - …共 5 条(分布在 1 个冻结条目),见 command-freeze.json
+    - …共 14 条(分布在 2 个冻结条目),见 command-freeze.json
 - F:1 条有效冻结 / 18 个具名用例 / 变异证明 1/1 / 格子 GREEN · 有 supersede
     - P1-03 Fault — rejection-boundary matrix enumerates at least twelve boundaries, each named once
     - fault boundary 01 a dangling dependency is refused
@@ -1361,7 +1361,7 @@
 
 #### P2-03 · 一等公民 ActionManifest
 
-`First-class ActionManifest` · 层 L1_CONTRACT · 判决 **CONTRACT_WRITE** · 可省代码 25% · 社区插件最高覆盖 dsh-permission-rules 102★ 覆盖≈0% · 状态 **NOT_RUN (W4)**
+`First-class ActionManifest` · 层 L1_CONTRACT · 判决 **CONTRACT_WRITE** · 可省代码 25% · 社区插件最高覆盖 dsh-permission-rules 102★ 覆盖≈0% · 状态 **ACCEPTED (W4)**
 
 **SDD · 规格(registry 原文,唯一验收依据)**
 - must[0] 字段包含 actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements。
@@ -1435,16 +1435,20 @@
 - nonGoals:规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
 - predecessors:P2-03
 - files:[B] `packages/interaction/permission-presets/src/types.ts` · [B] `packages/core/tools/src/types.ts` · [P] `packages/action/action-manifest/src/types.ts` · [N] `packages/policy/risk-taxonomy/src/index.ts` · [N] `packages/policy/risk-taxonomy/src/types.ts` · [N] `packages/policy/risk-taxonomy/src/classify.ts` · [N] `packages/policy/risk-taxonomy/tests/classify.spec.ts`
-- stages:C:4 文件 · P:1 文件 · U:2 文件 · F:1 文件
+- stages:C:5 文件 · P:1 文件 · U:2 文件 · F:1 文件
 - realTask:E2 S03 S05 S06 S11
 - gate:Unknown action is highest risk; organization floor only tightens; S03/S05/S06/S11.
 - rollback:K/A — disable new classifier and deny unknown actions; never fall back to tool-name allowlists.
 **TDD · 冻结用例(command-freeze.json;开工时按 B4/B5 冻结:dry-run 发现 ≥1 测试、RED 在 parent SHA 上有断言失败、expectCases 与 acceptance 1:1)**
-- C:未冻结(格子 NOT_RUN)
+- C:1 条有效冻结 / 15 个具名用例 / 变异证明 1/1 / 格子 NOT_RUN
+    - must[0]: the taxonomy is exactly the eight named classes, in ascending risk order
+    - must[0]: the order is total and strict, so "highest risk" has exactly one meaning
+    - must[1]: the SAME declared tag classifies differently under two organisation policies
+    - must[1]: a declared tag no policy rule mentions does not carry the plugin's own suggestion into the result
+    - …共 15 条(分布在 1 个冻结条目),见 command-freeze.json
 - P:未冻结(格子 NOT_RUN)
 - U:未冻结(格子 NOT_RUN)
 - F:未冻结(格子 NOT_RUN)
-  (本 epic 尚无任何冻结条目——TDD 目前只有计划层:validation 子句 + stages 文件 + realTask 场景)
 **用什么(OSS / 标准)· adapt**:
 - **OWASP/www-project-top-10-for-large-language-model-applications**(1,383★) — Tag vocabulary, not code
 - **mitre-atlas/atlas-data**(179★) — Tag vocabulary (AML.T00xx), data only
@@ -5993,6 +5997,24 @@ for name, pat in FAM:
 w('')
 w('**规则**:形状所有者 = 最早**已验收且真正采用**该标准的 epic;没有则为最早的未验收涉及者。已验收但未采用的(划掉)不再拥有,由 R3 指定的下游拥有(卡片"裁决叠加"里写明)。所有权按**子规范**算——MCP / ACP / OCI 各含多个互不相干的子规范,一个 epic 只拥有自己那条。')
 w('')
+# machine-readable ownership (the gate reads this, not card prose)
+_own = {'schema': 'first100-standards-ownership/1', 'generatedFrom': 'make-vs-use-ledger.json + ledger.json', 'rule': 'owner = ruling override; else earliest accepted row that actually adopted; else earliest not-yet-accepted row that will adopt; single-adopter standards are owned by their only epic', 'families': [], 'perEpic': {}}
+for name, pat in FAM:
+    ids = sorted([r['id'] for r in rows if any(re.search(pat, s) for s in r['standards'])], key=lambda i: order[i])
+    if not ids: continue
+    own, why = owner_of(name, ids)
+    _own['families'].append({'family': name, 'pattern': pat, 'owner': own, 'basis': why, 'involved': ids, 'notAdopted': [i for i in ids if (name, i) in NOT_ADOPTED]})
+for r in rows:
+    if r.get('_stub'): continue
+    ent = []
+    for st in r['standards']:
+        fams = [n for n, p in FAM if re.search(p, st)]
+        if fams:
+            fa = first.get(fams[0]); ent.append({'standard': st, 'family': fams[0], 'owner': fa, 'thisEpicOwns': fa == r['id'] and (fams[0], r['id']) not in NOT_ADOPTED, 'notAdoptedHere': (fams[0], r['id']) in NOT_ADOPTED})
+        else:
+            ent.append({'standard': st, 'family': None, 'owner': r['id'], 'thisEpicOwns': True, 'notAdoptedHere': False, 'singleAdopter': True})
+    if ent: _own['perEpic'][r['id']] = ent
+open('spec/first100/exec/standards-ownership.json', 'w', encoding='utf-8').write(json.dumps(_own, ensure_ascii=False, indent=1) + '\n')
 w('## 2. 逐条执行卡')
 w('')
 cur = None
