@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T06:40:56.639Z",
-  "inputDigest": "5027d582092987dcfed5cd65c1dbb66cace9276187019ef69744e66a41426fe1",
+  "lastUpdatedUtc": "2026-09-07T06:48:30.585Z",
+  "inputDigest": "809ef75438f3054152f07b4148e46f920e36bf07af8a8b4fb9b700d600f08da0",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4158,12 +4158,22 @@
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": [
-        "BLOCKED-088",
-        "BLOCKED-089",
         "BLOCKED-091"
       ],
       "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null
+      "acceptedEvidence": null,
+      "closedFindings": [
+        {
+          "finding": "BLOCKED-088",
+          "reason": "P4-06.P.1 writes the case the finding said could not be written. The reverted rule treated `claimed` as terminal, which forbade goal-round-driver's deliberate restoration of a claimed message whose reservation went stale. bus-store.ts's state machine is `claimed | consumed | released`, and three CI-observed cases fix it: a released message can be claimed again (the restoration the old rule forbade), a consumed message cannot (so \"released is re-claimable\" is not \"everything is re-claimable\"), and recovery sweeps only `state='claimed'` — that last one found by mutation, since widening the sweep to every row passed the whole suite while making a settled effect re-runnable. Observed green at b3186e6db9, run 34088363628.",
+          "closedAtUtc": "2026-09-07T06:48:22.459Z"
+        },
+        {
+          "finding": "BLOCKED-089",
+          "reason": "Half (b), against the reworded clause (C13). The finding was that one BATCH is not one TRANSACTION: JSONL recovery truncates to the last complete record, so a domain event could survive while its outbox row was dropped — the unrecoverable direction, because replay cannot repair a message it cannot find. bus-store.ts puts the domain event, its outbox rows and the inbox claim inside one `BEGIN IMMEDIATE` on its own bus.sqlite, and three CI-observed cases hold it: a failure after the domain event leaves nothing, a failure AFTER the outbox rows also leaves nothing (the point that separates a transaction from a sequence of writes that stops on error), and a commit arriving while a real second process holds the write lock completes rather than failing — measured, IMMEDIATE waits 407ms and succeeds where DEFERRED throws 'database is locked' at 0ms. Half (a) was BLOCKED-088, closed separately. BLOCKED-091 remains OPEN. Observed green at b3186e6db9, run 34088363628.",
+          "closedAtUtc": "2026-09-07T06:48:30.584Z"
+        }
+      ]
     },
     "P4-07": {
       "id": "P4-07",
