@@ -252,6 +252,40 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-147 — gate (u)'s 11 findings, classified: 3 are citation gaps, 6 are real integrations that were never built
+
+**State: OPEN, measurement complete, no ruling taken.** `verify-usage-stage-subject` is written and registered but held back from the gate set until these 11 are dispositioned. Every declared consumer file EXISTS, so none of the 11 is "the registry names a file that is not there" — each is a Usage stage that did not touch the consumer its own row names.
+
+The distinction that matters is whether the consumer uses the epic's subject TODAY. Measured by grepping the declared `[B]` consumer for the epic's subject:
+
+**Citation gaps — the wiring exists, the freeze just cited other files (3).** A supplement that cites the consumer clears these without new product code.
+
+| entry | declared consumer | subject hits |
+| --- | --- | --- |
+| P1-03.U | `apps/cli/src/profile-boot.ts`, `apps/cli/src/plugin.ts` | 5, 2 |
+| P1-03.U.2 | same | same |
+| P2-03.U.1 | `packages/core/agent-loop/src/tool-calls.ts`, `packages/core/tools/src/index.ts` | 25, 15 |
+
+**Real integration gaps — the consumer has ZERO references to the subject (6).** The library was built and the harness never adopted it. This is the shape of the four withdrawals (P2-03, P5-11, P4-08, P4-07), and finding it here by a different route is corroboration, not coincidence.
+
+| entry | declared consumer | subject hits |
+| --- | --- | --- |
+| P4-06.U | `core/agent/src/inbox.ts`, `core/agent/src/dispatch.ts` | 0, 0 |
+| P4-06.U.2 | same | 0, 0 |
+| P4-08.U | `workflow-worker-thread/src/host.ts`, `src/worker.ts` | 0, 0 |
+| P4-09.U | `workflow-worker-thread/src/runtime.ts`, `src/session.ts` | 0, 0 |
+| P4-09.U.1 | same | 0, 0 |
+| P5-11.U | `core/agent/src/inbox.ts`, `subagent/src/list-children.ts` | 0, 0 |
+| P5-10.U | `subagent/src/child-agent.ts`, `src/lifecycle.ts`, `core/agent/src/inbox.ts` | 0, 0, 0 |
+
+P5-10's `lifecycle.ts` matches `control` once — in the prose of a comment ("the internal control interface"), not in code. Counted as zero, and stated here because a hit count alone would have read as one.
+
+**Structural (1).** P6-02.U: the registry row names NO baseline consumer at all, so no freeze of it can satisfy the gate. See BLOCKED-146, which reaches the same conclusion from the 4.4a side.
+
+**Decision needed (delegate's):** the six integration gaps are each either a U-stage reopening or an exemption with a ruling. The three citation gaps need only a supplement, which is executor work once the classification is accepted. P4-06.U's consumer is `core/agent/src/dispatch.ts` — the same file §12.16 point 3 targets — so that one may close as a side effect of work already ruled.
+
+**Not acted on here.** Writing an exemption requires the ruling that says why a registry's declared consumer is wrong, and the gate's own contract requires BOTH a BLOCKED entry and a ruling for each.
+
 ### BLOCKED-146 — 4.4a on two ACCEPTED epics: P6-02's clause subjects have ZERO production callers, and P1-03's acceptance[1] subject has none either
 
 **State: OPEN. P6-02 is a sign-off falsified by the same rule that took P2-03, P5-11, P4-08 and P4-07 — measured, not suspected.**
