@@ -29,6 +29,14 @@
     agents:
       - id: p4-01-root
 
+# The Run Service injects `leaseStore` (§12.16-2): a Run is a leased work item,
+# and without a provider the plugin stays PENDING and opens nothing. Mounted
+# BEFORE the row that needs it, as the shipped base does. The in-memory
+# provider is right for a one-process composition; a deployment where two hosts
+# must not both own a Run mounts `@deepseek-ai/dsh-lease-sqlite`.
+- id: lease-store
+  name: '@deepseek-ai/dsh-lease'
+
 - id: run
   name: '@deepseek-ai/dsh-run'
   config:

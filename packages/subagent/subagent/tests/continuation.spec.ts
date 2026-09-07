@@ -24,6 +24,9 @@ import SubagentRuntime, {
 import type { SubagentRunEndInfo, SubagentRunInfo } from '../src/index.ts'
 import * as SubagentInvariant from '../src/invariant.ts'
 import { TestSessionQuery } from './test-session-query.ts'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import RunPlugin from '@deepseek-ai/dsh-run'
+import { DuplicateArrivalError } from '@deepseek-ai/dsh-agent'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -1983,6 +1986,44 @@ describe('continuable settlement delivery', () => {
     expect(notice.summary).toBe(
       `Background subagent ${started.childId} finished and will do no further work unless you send it more.`,
     )
+  })
+
+  it('carries the child run\'s LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])', async () => {
+    // The composition half. The unit cases in `dsh-agent` prove the inbox rule;
+    // this proves the harness produces a key for it — the manager's own notice,
+    // built by the manager, carrying the epoch the STORE issued to the child's
+    // Run. Without it the parent's inbox has two thirds of an identity and
+    // cannot tell "this notice again" from "the same child settled again".
+    const { ctx, parent } = await setup([textResponse('the answer'), textResponse('parent ack')])
+    // The Run Service and a lease provider are what give a child an epoch at
+    // all; a composition without them is the documented no-epoch fall-through.
+    await ctx.plugin(InMemoryLeaseStorePlugin)
+    const runRoot = mkdtempSync(join(tmpdir(), 'dsh-subagent-runs-'))
+    cleanups.push(() => { rmSync(runRoot, { recursive: true, force: true }); return Promise.resolve() })
+    await ctx.plugin(RunPlugin, { storePath: join(runRoot, 'runs.json') })
+
+    const started = await ctx.subagents.startContinuable(startSpec(parent))
+    const child = await vi.waitFor(() => {
+      const live = ctx.agents.get(started.childId)
+      expect(live).toBeDefined()
+      return live!
+    })
+    const childEpoch = child.lifecycle?.epoch
+    expect(childEpoch).toBeDefined()
+    await waitNoActivation(ctx, started.childId)
+
+    await vi.waitFor(() => { expect(settlementNotices(parent)).toHaveLength(1) })
+    const delivered = [...parent.inbox.nextStep, ...parent.inbox.nextTurn, ...parent.session.snapshotEvents()
+      .flatMap(event => event.type === 'user/message' ? [event.data] : [])]
+      .find(message => message.source.kind === 'subagent-settled')
+    expect(delivered).toBeDefined()
+    expect((delivered!.source as { senderEpoch?: number }).senderEpoch).toBe(childEpoch)
+
+    // Redelivering the manager's own notice — the shape a retry, a replayed
+    // crash, or a second watcher produces — reaches the parent inbox and is
+    // refused on identity alone.
+    parent.inbox.claim('next-step', 1)
+    expect(() => { parent.inbox.append('next-step', delivered!) }).toThrow(DuplicateArrivalError)
   })
 
   it('delivers settlement even when the child already sent a message', async () => {

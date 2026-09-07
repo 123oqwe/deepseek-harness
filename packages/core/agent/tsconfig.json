@@ -40,6 +40,9 @@
     },
     {
       "path": "../../collaboration/lease-contract"
+    },
+    {
+      "path": "../../collaboration/intake-dedup"
     }
   ]
 }

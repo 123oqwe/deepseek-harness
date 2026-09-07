@@ -576,12 +576,23 @@ async function waitForPersistedTurnEnd(
   sessionId: string,
   timeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
 ): Promise<void> {
-  await vi.waitFor(async () => {
-    const log = (await harvestSessionLogs(root)).find(candidate => candidate.id === sessionId)
-    if (log === undefined || !latestTurnIsClosed(log.content)) {
-      throw new Error(`snapshot-harness: session "${sessionId}" did not persist turn/end within ${timeoutMs}ms`)
-    }
-  }, { interval: WAIT_POLL_INTERVAL_MS, timeout: timeoutMs })
+  const failure = new Error(`snapshot-harness: session "${sessionId}" did not persist turn/end within ${String(timeoutMs)}ms`)
+  try {
+    await vi.waitFor(async () => {
+      const log = (await harvestSessionLogs(root)).find(candidate => candidate.id === sessionId)
+      if (log === undefined || !latestTurnIsClosed(log.content)) throw failure
+    }, { interval: WAIT_POLL_INTERVAL_MS, timeout: timeoutMs })
+  } catch {
+    // The same race `waitForPersistedSubagentTurnEnd` below already closes, in
+    // the sibling that fix did not reach. `vi.waitFor` surfaces the callback's
+    // error only when the callback finished at least once inside the budget;
+    // otherwise it rejects with its own `Timed out in waitFor!`. Harvesting
+    // reads real files, so under load a short budget can elapse with no
+    // completed attempt, and the caller is told the wait timed out without
+    // being told WHAT never arrived. Measured on CI at `bafe5bdf21`, where
+    // this wait produced the bare message while passing locally every time.
+    throw failure
+  }
 }
 
 /**

@@ -38,6 +38,7 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-intake-dedup": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-lease-contract": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-intake-dedup": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-lease-contract": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
