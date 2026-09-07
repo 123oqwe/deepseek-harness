@@ -674,3 +674,9 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 3. **已验收行**(P1-02 / P1-07 / P1-09 / P2-01 / P0-05…):`assignedBy` 允许,状态 **PENDING-BACKFILL**,并入 §11.3 的已验收行回填批(期限 P2-05 开工前),由所有者自己补一条词汇用例;期限前不算 MISMATCHED,期限后红。不重开验收。
 4. 门 (e) 增两条:deviation 理由必须与行状态匹配(`accepted-*` 只许 ACCEPTED 行);`standards-ownership.json` 里 `thisEpicOwns` 为真的条目 `standardsOwned` 不得为空。
 5. **回填错误四行**(P4-05 / P4-06 / P4-09 / P6-01 误用 `accepted-unadopted`)已改 `not-yet-adopted`;**教训**:模板扫过 29 行,不合适的那四行读起来像"考虑过"——记录的完整性门必须和记录同一天建。
+
+### 12.4 P2-02 must[1] 范围与内核密钥持久化(2026-09-07 01:30 EDT)
+
+**事实**:内核现在每次 `createTrustKernel` 铸一对 Ed25519(私钥 module-private WeakMap 按 handle 索引,非本模块 handle 直接拒);token 真签真验,签的字节 = `digestToken` 固定的字节;fixture 自算签名不 import 生产函数;跨内核伪造变异被抓。P2-02 锁行条件"real key material reaches signatureRoots AND Option A"两者都到。
+
+**裁决**:(1) **P2-02 must[1] 现在冻结**,以每进程密钥为准——must[1] 的主体是签发/验证/衰减,与密钥寿命无关;不在 live 锁行下扩范围到 credentials 包。(2) **密钥持久化独立为 SLICE-kernel-keys**(归 P0-02 的内核私有状态 + credentials provider seam):每安装生成、0600 文件后端(profile 标 dev)、`production-controlled` 拒文件后端、轮换保留旧公钥到 expiry、"重启后 token/签名仍可验"作为该 slice 的端到端用例;**P4-04(W9)开工前落地**——它是第一个需要跨重启验证的消费者。§10.3-3 的"每安装"由此 slice 兑现,不由 P2-02。(3) 不声称"根可信"——那是 P1-02 的锁,对。
