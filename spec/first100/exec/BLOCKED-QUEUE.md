@@ -252,6 +252,32 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-150 — P4-09's Usage needs a `workflow()` nesting hook that does not exist, and its own frozen case says so
+
+**State: OPEN. Not built, because building it is a product feature and choosing to add one is not the executor's call.**
+
+Gate (u) reports P4-09.U and P4-09.U.1 as integration gaps (BLOCKED-147). Measured, all five of the epic's subjects have zero production callers, in code:
+
+| subject | clause | production callers |
+| --- | --- | --- |
+| `resolveDefinition` | must[0]/must[1] | 0 |
+| `admitNestedRun` | must[3], acceptance[3] | 0 |
+| `inheritWorkerLimits` | must[3] | 0 |
+| `cancelPropagationForNested` | acceptance[1] | 0 |
+| `applyChildFailure` | acceptance[2] | 0 |
+
+The only matches outside the owning package are this program's own JSON.
+
+**The epic's own frozen case already states the reason, which is why this is a scope question rather than a discovery.** `nested-budget.spec.ts`'s tripwire asserts `typeof workflow === 'undefined'` inside a running script, with the comment: *"'function' means someone installed a nesting hook. When that happens, P4-09 must[3] stops being vacuous."* The case is honest — it pins the absence rather than pretending at coverage — and it is also a statement that must[3] currently constrains nothing.
+
+**What a real Usage would take.** A `workflow(nameOrRef, args)` global inside the worker runtime that starts a nested run: resolving a saved definition by digest (must[0]/must[1]), admitting it through `admitNestedRun` against the parent's remaining budget and ancestor chain (must[3], acceptance[3]), inheriting decayed limits through `inheritWorkerLimits`, propagating parent cancellation (acceptance[1]) and applying the declared child-failure policy (acceptance[2]). That is a feature of the workflow DSL, not a wiring change: the declared consumers `runtime.ts` and `session.ts` have nowhere to call these from until the hook exists.
+
+**Decision needed (delegate's):** either
+1. P4-09's Usage stage includes building the `workflow()` nesting hook, and the scope is stated so the work is not read as an executor widening a stage; or
+2. the hook is out of scope for this epic, the tripwire stands as the recorded state, and P4-09's U is exempted under gate (u) with that ruling — noting that an exemption here says the epic ships five decisions nothing can reach.
+
+**Why I did not choose.** §12.11 and BLOCKED-136 both record the same mistake in the other direction — an executor settling a stage's scope. Adding a DSL surface that every future script can call is the largest version of that.
+
 ### BLOCKED-149 — P4-08's journal is a pure decision library in an orchestration-runtime group, and wiring it added a layer finding
 
 **State: OPEN, measured, not acted on.** `check-layer-deps` findings went **120 → 121** with P4-08's Usage wiring. Reporting it rather than letting it pass, because a finding that arrives with a change and is not mentioned is how a note comes to record an accepted violation instead of a removed one.
