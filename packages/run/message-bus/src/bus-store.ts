@@ -32,6 +32,7 @@
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { dedupKey } from '@deepseek-ai/dsh-intake-dedup'
 
 /** One arriving message, in CloudEvents attribute names plus this bus's epoch. */
 export interface BusMessage {
@@ -127,8 +128,20 @@ const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS inbox (message_id TEXT NOT NULL, epoch INTEGER NOT NULL, claimed_by_turn INTEGER NOT NULL, state TEXT NOT NULL, PRIMARY KEY (message_id, epoch))',
 ]
 
-/** The dedup key for one message, which is its identity across retries. */
-const keyOf = (messageId: string, epoch: number): string => `${messageId}:${String(epoch)}`
+/**
+ * The dedup key for one message, which is its identity across retries.
+ *
+ * Delegates to the shared rule rather than deriving the key again. It did
+ * derive it again — as `${messageId}:${epoch}` — and BLOCKED-138 measured what
+ * that cost: `consumedKeys()` answered in a format `classifyDedup` never
+ * produces, so a message the store had already consumed classified as a first
+ * arrival, silently, with every test on both sides still green. The omitted
+ * length prefix also made `('a:1', 2)` and `('a', '1:2')` the same key.
+ * @param messageId - the message id.
+ * @param epoch - the sender generation.
+ * @returns the key the dedup rule computes for this pair.
+ */
+const keyOf = (messageId: string, epoch: number): string => dedupKey({ id: messageId, epoch })
 
 /**
  * The connection for a store, or a refusal naming the misuse.

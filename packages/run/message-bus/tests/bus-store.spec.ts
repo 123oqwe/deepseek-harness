@@ -25,6 +25,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
+import { classifyDedup, dedupKey } from '@deepseek-ai/dsh-intake-dedup'
 import { commitIntake, openBusStore, recoverStaleClaims } from '../src/bus-store.ts'
 import type { BusStore } from '../src/bus-store.ts'
 
@@ -194,11 +195,45 @@ describe('P4-06 must[2]: the inbox state machine keeps a stale claim recoverable
   })
 })
 
-describe('P4-06: the seen-set classifyIntake reads is the consumed rows', () => {
-  it('reports exactly the consumed keys, so the pure classifier and the durable state agree', () => {
+describe('P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138)', () => {
+  // The superseded case asserted the literal `['m8:1']` under a title claiming
+  // the classifier and the durable state agree. They did not: the store spelled
+  // its key `${id}:${epoch}` while the rule spells it `${id.length}:${id}:${epoch}`,
+  // so a consumed message classified as a first arrival — and the case was
+  // green, and mutation-sensitive, the whole time. A title that claims
+  // agreement has to assert the agreement itself, through the classifier,
+  // rather than pin a value someone typed.
+
+  it('classifies a message the store has CONSUMED as a duplicate, through the real seen-set', () => {
+    const bus = store()
+    commitIntake(bus, { message: message('m8'), claimedByTurn: 7, outbox: [] })
+    expect(classifyDedup(message('m8'), bus.consumedKeys()).action).toBe('drop')
+  })
+
+  it('classifies a message the store has only CLAIMED as a first arrival, so the drop above is selective', () => {
+    // The positive control. Without it, a seen-set that reported every message,
+    // or a classifier that dropped everything, would satisfy the case above.
+    const bus = store()
+    bus.claim(message('m9'), 8)
+    expect(classifyDedup(message('m9'), bus.consumedKeys()).action).toBe('accept')
+  })
+
+  it('keeps `(a:1, 2)` and `(a, 1:2)` distinct on BOTH sides, which the store\'s own spelling did not', () => {
+    // The collision the length prefix exists to prevent. The store had dropped
+    // the prefix, so these two messages shared one key and consuming either
+    // would have suppressed the other.
+    const bus = store()
+    commitIntake(bus, { message: { ...message('a:1'), epoch: 2 }, claimedByTurn: 1, outbox: [] })
+    expect(classifyDedup({ id: 'a:1', epoch: 2 }, bus.consumedKeys()).action).toBe('drop')
+    expect(classifyDedup({ id: 'a', epoch: 12 }, bus.consumedKeys()).action).toBe('accept')
+  })
+
+  it('reports every consumed key as the rule computes it, with no second spelling anywhere', () => {
     const bus = store()
     commitIntake(bus, { message: message('m8'), claimedByTurn: 7, outbox: [] })
     bus.claim(message('m9'), 8)
-    expect([...bus.consumedKeys()]).toEqual(['m8:1'])
+    // The expectation comes from `dedupKey`, not from a typed literal: a
+    // literal is what made the superseded case wrong.
+    expect([...bus.consumedKeys()]).toEqual([dedupKey({ id: 'm8', epoch: 1 })])
   })
 })

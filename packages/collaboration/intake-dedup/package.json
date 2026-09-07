@@ -1,6 +1,6 @@
 {
-  "name": "@deepseek-ai/dsh-mailbox",
-  "description": "At-most-once directed messaging for Epic P5-11: (id, epoch) deduplication and address-before-dedup ordering so a misdirected message cannot suppress a legitimate one",
+  "name": "@deepseek-ai/dsh-intake-dedup",
+  "description": "The one (message id, epoch) deduplication rule for Epic P4-06: the key derivation and the seen-set decision that both the message bus and the mailbox apply, each keeping its own precedence check",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
-    "directory": "packages/collaboration/mailbox"
+    "directory": "packages/collaboration/intake-dedup"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -27,13 +27,9 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-intake-dedup": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:^"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-intake-dedup": "workspace:^"
+    "@deepseek-ai/cordis": "workspace:^"
   }
 }

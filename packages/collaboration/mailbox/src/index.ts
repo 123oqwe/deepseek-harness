@@ -7,14 +7,16 @@
  * transport that cannot confirm receipt will redeliver.
  *
  * This is the same problem P4-06's message bus solves for durable effects, and
- * the resemblance is deliberate rather than duplicated logic: dedup here keys
- * on `(id, epoch)` for exactly the reason recorded there — a message id alone
- * cannot separate a replayed message from a genuinely new one after a sender
- * restarts and reuses a counter.
+ * it is now the same CODE: both apply `dsh-intake-dedup`'s rule, keying on
+ * `(id, epoch)` because a message id alone cannot separate a replayed message
+ * from a genuinely new one after a sender restarts and reuses a counter. Until
+ * BLOCKED-136, this module implemented that rule a second time and cited the
+ * first in a comment.
  *
  * @module @deepseek-ai/dsh-mailbox
  */
 
+import { classifyDedup, dedupKey } from '@deepseek-ai/dsh-intake-dedup'
 import type { Branded, BrandedNumber } from '@deepseek-ai/dsh-brand'
 
 /** Identifies one message for the life of the program. */
@@ -45,13 +47,15 @@ export type DeliveryDecision =
 /**
  * The deduplication key for one message.
  *
- * Length-prefixes the id so an id containing the separator cannot collide with
- * a different id/epoch pair, exactly as `dsh-message-bus` does.
+ * The rule itself lives in `dsh-intake-dedup` and this is its name here.
+ * Until BLOCKED-136, the derivation was written out again in this file with a
+ * comment saying it matched `dsh-message-bus` — a citation in prose where an
+ * import belonged, which is how one rule came to have two implementations.
  * @param message - the message to key.
  * @returns a key unique to this id and epoch.
  */
 export function deliveryKey(message: Pick<Message, 'id' | 'epoch'>): string {
-  return `${message.id.length}:${message.id}:${message.epoch}`
+  return dedupKey(message)
 }
 
 /**
@@ -73,7 +77,6 @@ export function decideDelivery(
   seen: ReadonlySet<string>,
 ): DeliveryDecision {
   if (message.to !== recipient) return { action: 'refuse', reason: 'not-addressed-to-recipient' }
-  const key = deliveryKey(message)
-  if (seen.has(key)) return { action: 'drop', reason: 'duplicate', key }
-  return { action: 'deliver', key }
+  const decided = classifyDedup(message, seen)
+  return decided.action === 'accept' ? { action: 'deliver', key: decided.key } : decided
 }

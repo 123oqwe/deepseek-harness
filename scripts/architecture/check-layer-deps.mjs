@@ -138,10 +138,13 @@ const GROUP_LAYERS = {
   action: 'capability-definitions',
   migration: 'capability-definitions',
   attachment: 'capability-definitions',
-  // Epic P5-11's coordination primitives (taskboard, mailbox, blackboard):
-  // pure decision functions over caller-supplied state, depending only on
-  // `dsh-brand`. They define what a claim, a delivery and a fact ARE and
-  // ship no provider, which is the capability-definition role.
+  // P5-11's coordination primitives (taskboard, mailbox, blackboard) and
+  // P4-06's `intake-dedup`: pure decision functions over caller-supplied
+  // state, depending only on `dsh-brand` and on each other. They define what a
+  // claim, a delivery, a fact and a duplicate ARE and ship no provider, which
+  // is the capability-definition role. `intake-dedup` is here rather than
+  // beside its bus because a definition may not depend on a runtime, which is
+  // what a mailbox importing `dsh-message-bus` would have been (BLOCKED-136).
   collaboration: 'capability-definitions',
   e2b: 'providers',
   core: 'orchestration-runtime',

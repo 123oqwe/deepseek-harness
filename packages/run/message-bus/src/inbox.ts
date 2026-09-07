@@ -11,6 +11,7 @@
  * @module @deepseek-ai/dsh-message-bus/inbox
  */
 
+import { classifyDedup, dedupKey as intakeDedupKey } from '@deepseek-ai/dsh-intake-dedup'
 import type { BusMessageId, MessageEpoch, TenantId } from './outbox.ts'
 
 /** One arriving message, as the consumer sees it. */
@@ -21,16 +22,14 @@ export interface IncomingMessage {
 }
 
 /**
- * The deduplication key for one message.
- *
- * Length-prefixes the id so a message id containing the separator cannot
- * collide with a different id/epoch pair -- `('a:1', 2)` and `('a', '1:2')`
- * would otherwise produce the same key.
+ * The deduplication key for one message: this epic's name for
+ * `dsh-intake-dedup`'s rule, which `dsh-mailbox` applies under a name of its
+ * own.
  * @param message - the message to key.
  * @returns a string key unique to this `(id, epoch)` pair.
  */
 export function dedupKey(message: Pick<IncomingMessage, 'id' | 'epoch'>): string {
-  return `${message.id.length}:${message.id}:${message.epoch}`
+  return intakeDedupKey(message)
 }
 
 /** What the consumer should do with an arriving message. */
@@ -63,7 +62,5 @@ export function classifyIntake(
   consumerTenant: TenantId,
 ): IntakeDecision {
   if (message.tenant !== consumerTenant) return { action: 'refuse', reason: 'foreign-tenant' }
-  const key = dedupKey(message)
-  if (seen.has(key)) return { action: 'drop', reason: 'duplicate', key }
-  return { action: 'accept', key }
+  return classifyDedup(message, seen)
 }

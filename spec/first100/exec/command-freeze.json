@@ -7879,7 +7879,8 @@
         "mutationDescription": "Four mutations to packages/run/message-bus/src/bus-store.ts, each applied alone and reverted: (1) the transaction removed entirely, leaving sequential writes; (2) the consumed-state refusal in claimRow disabled; (3) the recovery sweep widened to every row regardless of state; (4) BEGIN IMMEDIATE replaced by BEGIN DEFERRED. A fifth removed `PRAGMA busy_timeout`.",
         "failureSummary": "(1) 2 failed; (2) 2 failed; (3) initially PASSED ALL TEN and is recorded as a gap the first pass missed — a consumed row swept back to `released` would be re-claimable and the effect would run twice; a case was added and it now fails 1. (4) initially PASSED ALL ELEVEN, because IMMEDIATE and DEFERRED leave the same end state in one process. Measured against a real second process holding the write lock for 400ms: IMMEDIATE with a busy timeout waits 407ms and succeeds, DEFERRED throws `database is locked` in 0ms because its read-to-write upgrade cannot wait, and IMMEDIATE with a zero timeout throws at BEGIN. The contended-commit case now fails both (4) and the busy_timeout removal. All four mutations fail against the frozen set.",
         "probeCorrection": "The first contention probe was INVALID and its result was discarded: the IMMEDIATE trial waited out the holder, so the DEFERRED trial that followed faced no contention and 'passed' in 1ms. Trusting it would have concluded the two are indistinguishable and fallen back to a weaker structural check, on the strength of a measurement that measured nothing. Each trial now gets its own holder process."
-      }
+      },
+      "supersededBy": "P4-06.P.3 (BLOCKED-138 key-format correction, 2026-09-07)"
     },
     {
       "epic": "P2-02",
@@ -7920,6 +7921,93 @@
         "mutationDescription": "Four mutations, each applied alone and reverted. On trust-kernel: (1) all kernels share one keypair, which is precisely the marker's flaw; (2) verify returns true unconditionally; (3) the private key is exported onto the signatureRoots handle. On capability-token: (4) verification ignores the trustRoot and accepts any non-empty signature.",
         "failureSummary": "(1) 1 failed — the different-kernel case; (2) 2 failed; (3) 1 failed — the guard case, which is why it was written despite passing beforehand; (4) 1 failed of 78 in token.spec.ts, the cross-kernel case, which the marker could never have caught. Restored: 134 passed across both packages.",
         "fixtureNote": "`fixtureSigned` returned the hardcoded marker and matched only because signing WAS that marker. Against real signatures it is a forgery, correctly refused, and every expiry and replay case would have failed for reasons unrelated to expiry or replay. It now signs with the same kernel the cases verify against, and RECOMPUTES the signed bytes rather than importing the production signer — a test calling the same function agrees with it by construction and cannot catch a change in what the signature covers."
+      }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/bus-store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
+        "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
+        "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes nothing when the commit fails AFTER the outbox rows, which a sequential writer could not survive",
+        "P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT rather than fail completes a commit that arrives while another process holds the write lock",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a crashed claim in `claimed`, not `consumed`",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) sweeps an expired claim to `released`, so the turn that never ran does not consume the message",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a CONSUMED row untouched when recovery sweeps, so a settled effect cannot be undone",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) lets a RELEASED message be claimed again, which is the restoration the previous rule forbade",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) refuses to re-claim a CONSUMED message, so the effect cannot run twice",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) treats the same id at a different EPOCH as a different message",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) drops a second intake of the SAME id and epoch, so the epoch case is not just \"everything is new\"",
+        "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) classifies a message the store has CONSUMED as a duplicate, through the real seen-set",
+        "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) classifies a message the store has only CLAIMED as a first arrival, so the drop above is selective",
+        "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) keeps `(a:1, 2)` and `(a, 1:2)` distinct on BOTH sides, which the store's own spelling did not",
+        "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) reports every consumed key as the rule computes it, with no second spelling anywhere"
+      ],
+      "files": [
+        "packages/run/message-bus/src/bus-store.ts",
+        "packages/run/message-bus/tests/bus-store.spec.ts",
+        "packages/collaboration/intake-dedup/src/dedup.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T08:10:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 15 passed (15). Sensitivity proof for the corrected case: reverting `keyOf` to `${messageId}:${epoch}` turns 3 of the 4 new cases red (CONSUMED-classifies-duplicate, the collision pair, and the computed-key report); restoring it returns 15/15.",
+      "note": "Supersedes P4-06.P.1's `reports exactly the consumed keys, so the pure classifier and the durable state agree`, which asserted the literal ['m8:1'] under a title claiming agreement the code did not have: the store spelled its key `${id}:${epoch}` while the rule spells it `${id.length}:${id}:${epoch}`, so a consumed message classified as a first arrival (BLOCKED-138). The replacement asserts the agreement itself, through the classifier, and its one remaining literal comes from a `dedupKey()` call rather than a typed value — a typed value is what made the superseded case wrong. Case 2 is case 1's positive control: without it, a seen-set reporting everything would satisfy the drop. Case 3 is the collision the length prefix exists to prevent, which the store's spelling did not.",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "P"
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) reverted `keyOf` in packages/run/message-bus/src/bus-store.ts to the spelling BLOCKED-138 found — `${messageId}:${String(epoch)}` instead of delegating to the shared `dedupKey` — then re-ran the frozen command.",
+        "failureSummary": "3 of the 4 new cases failed: `classifies a message the store has CONSUMED as a duplicate ...` AssertionError: expected 'accept' to be 'drop'; the `(a:1, 2)` / `(a, 1:2)` collision case; and `reports every consumed key as the rule computes it ...`. The control case (a CLAIMED message classifying as a first arrival) still passed, which is what makes the three failures specific to the key format rather than to the seen-set being empty. Mutation reverted immediately; the command returned 15 passed (15) before continuing."
+      }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/mailbox-delivery.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set delivers a message this bus has never consumed",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set drops a REDELIVERY of a message this bus already consumed, which is the effect must[2] names",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set treats the same id at a LATER epoch as a new message, so a restarted sender is not silenced",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set refuses a message addressed elsewhere BEFORE consulting the seen-set",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set reads the seen-set at DECISION time, so a message consumed after the handle was taken still drops",
+        "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set still drops the redelivery after a RESTART, because the seen-set is the durable rows"
+      ],
+      "files": [
+        "packages/run/message-bus/src/mailbox-delivery.ts",
+        "packages/run/message-bus/tests/mailbox-delivery.spec.ts",
+        "packages/collaboration/intake-dedup/src/index.ts",
+        "packages/collaboration/intake-dedup/src/dedup.ts",
+        "packages/collaboration/mailbox/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T08:12:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 6 passed (6). packages/run + packages/collaboration together: 351 passed, including P5-11's four live frozen mailbox cases, which this change does not disturb.",
+      "note": "must[2]'s production call site, which BLOCKED-136 measured as absent: `classifyIntake` had no production caller, so 'the classifier decides correctly' was provable while 'a real arrival was deduplicated' was not. The join lives in `dsh-message-bus` rather than in `dsh-mailbox` because the store is orchestration-runtime and the mailbox is a capability definition — a mailbox reaching for the store would be a definition depending on a runtime (delegate ruling §12.5 B, 2026-09-07). Cases 5 and 6 are the two directions a caller-supplied seen-set fails silently: a set snapshotted before another consumer commits is stale, and one assembled in a previous process is empty after a restart.",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) replaced the seen-set the call site reads — `decideDelivery(message, recipient, store.consumedKeys())` became `decideDelivery(message, recipient, new Set<string>())` in packages/run/message-bus/src/mailbox-delivery.ts — which is exactly the caller-supplied-set implementation this call site exists to replace, then re-ran the frozen command.",
+        "failureSummary": "3 of 6 failed: `drops a REDELIVERY ...` and `still drops the redelivery after a RESTART ...` both AssertionError: expected 'deliver' to be 'drop'; `reads the seen-set at DECISION time ...` AssertionError: expected [ 'deliver', 'deliver' ] to deeply equal [ 'deliver', 'drop' ]. The 3 that still passed are the ones that do not depend on the durable set (first delivery, later epoch, wrong addressee), which is the expected split rather than a gap. Mutation reverted immediately; `git diff --stat` on the file was empty and the command returned 6 passed (6) before continuing."
       }
     }
   ]

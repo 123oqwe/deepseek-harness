@@ -252,6 +252,29 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-138 — the durable seen-set speaks a THIRD key format, and a frozen case pins the disagreement while its title claims agreement
+
+**State: OPEN, found while wiring §12.5 B, before the wiring was finished. Nothing changed in a frozen case; that is the delegate's.**
+
+BLOCKED-136 found the dedup rule implemented twice. Wiring the shared rule to the durable seen-set turned up a third:
+
+| | derivation | `('m1', 1)` |
+|---|---|---|
+| `intake-dedup.dedupKey` (the rule) | `${id.length}:${id}:${epoch}` | `2:m1:1` |
+| `bus-store.keyOf` (the durable set) | `${id}:${epoch}` | `m1:1` |
+
+**Measured, not reasoned:** a probe committing one intake and then classifying the same message against `consumedKeys()` prints `store keys: [ 'm1:1' ] rule key: 2:m1:1` and fails with `expected 'accept' to be 'drop'`. **A message the store has already consumed classifies as a first arrival.** Wiring the two together without noticing would have produced a dedup that never dedups — the failure mode is silent, and every unit test on either side keeps passing, because each is internally consistent.
+
+**The store's format also has the exact collision the length prefix exists to prevent:** `keyOf('a:1', 2)` and `keyOf('a', '1:2')` are both `a:1:2`. The rule's own doc names this case; the store re-derived the key without it.
+
+**And a live frozen case pins the wrong value.** P4-06.P.1, greened today from run 34088363628:
+
+> `reports exactly the consumed keys, so the pure classifier and the durable state agree` — `expect([...bus.consumedKeys()]).toEqual(['m8:1'])`
+
+The title asserts agreement between the classifier and the durable state. The assertion pins the value that disagrees with the classifier. **A case can be green, sensitive to mutation, and still assert the wrong thing — the mutation proof shows a suite notices change, never that the expectation is right.**
+
+**The fix is small and inside P4-06's own files** (`bus-store.ts` calls `dedupKey`), but it changes what a frozen case asserts, and that case was frozen and observed hours ago. **Superseding it is a registry act, so it is proposed rather than done.** The wiring is held until then: shipping the join over two key formats would make must[2]'s production call site prove the opposite of what it claims.
+
 ### BLOCKED-137 — five straight exact-SHA runs were red on two stale fixtures, and 25 cells were greened from them anyway
 
 **State: FIXED in `e783b1c0e9`, recorded because the fix is the small half.**

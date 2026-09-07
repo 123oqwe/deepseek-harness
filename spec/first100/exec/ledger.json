@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T07:03:46.255Z",
-  "inputDigest": "6f41711ac458742779904dc1f46230caaf6c5d7bdb803aec06159c55870e9042",
+  "lastUpdatedUtc": "2026-09-07T07:38:49.714Z",
+  "inputDigest": "42a2b17710755b9c0045efdb37c71b6db6f205cb3434467deeb8f8cef9736841",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4253,9 +4253,7 @@
       },
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
-      "openFindings": [
-        "BLOCKED-091"
-      ],
+      "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": null,
       "closedFindings": [
@@ -4268,6 +4266,11 @@
           "finding": "BLOCKED-089",
           "reason": "Half (b), against the reworded clause (C13). The finding was that one BATCH is not one TRANSACTION: JSONL recovery truncates to the last complete record, so a domain event could survive while its outbox row was dropped — the unrecoverable direction, because replay cannot repair a message it cannot find. bus-store.ts puts the domain event, its outbox rows and the inbox claim inside one `BEGIN IMMEDIATE` on its own bus.sqlite, and three CI-observed cases hold it: a failure after the domain event leaves nothing, a failure AFTER the outbox rows also leaves nothing (the point that separates a transaction from a sequence of writes that stops on error), and a commit arriving while a real second process holds the write lock completes rather than failing — measured, IMMEDIATE waits 407ms and succeeds where DEFERRED throws 'database is locked' at 0ms. Half (a) was BLOCKED-088, closed separately. BLOCKED-091 remains OPEN. Observed green at b3186e6db9, run 34088363628.",
           "closedAtUtc": "2026-09-07T06:48:30.584Z"
+        },
+        {
+          "finding": "BLOCKED-091",
+          "reason": "P4-06's declared files were chosen by NAME: the U stage named `packages/core/agent/src/inbox.ts`, whose `Inbox` is a session-log-backed queue of user prompts awaiting a turn — no message id, no epoch, no cross-process arrival. BLOCKED-136 measured the consequence: the clause's subject had no production caller anywhere, and the rule it names was implemented twice, the second copy citing the first in a comment rather than importing it. Closed on BEHAVIOUR, not by renaming a file: `packages/run/message-bus/src/mailbox-delivery.ts` is a real production call site joining the mailbox arrival path to the durable consumed set, frozen as P4-06.U.2 (6 cases, 6/6 locally), and `packages/collaboration/intake-dedup` now holds the one implementation both consumers import. Where the corrected declaration lives, stated exactly rather than by citing a mechanism that does not exist: `filesOverlay` is specified in §12.4 and implemented by nothing, so the paths are recorded in the freeze entries' own `files` — P4-06.U.2 and P4-06.P.3 name mailbox-delivery.ts, both intake-dedup sources and mailbox/src/index.ts — which is what the reality set reads (declaration plus live freeze entries). `core/agent/src/inbox.ts` is still in the registry's U stage list and is still the wrong subject there; editing the registry text is a separate registry act and this closure does not depend on it. Delegate ruling §12.5 B, 2026-09-07.",
+          "closedAtUtc": "2026-09-07T07:38:49.713Z"
         }
       ]
     },
