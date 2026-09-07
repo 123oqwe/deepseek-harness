@@ -52,6 +52,7 @@ const GATES = [
   // only where someone remembers to run it is the shape this program keeps
   // recording.
   'first100:verify-ledger-digests',
+  'first100:verify-boot-path-offline',
   'verify-no-artifacts-in-src',
   'verify-control-protocol-schema',
   'verify-module-graph',

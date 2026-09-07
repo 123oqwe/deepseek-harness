@@ -165,6 +165,37 @@ describe('P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (m
   })
 })
 
+describe('P1-03 Fault — an offline cold start refuses a locked package that is not installed (acceptance[0])', () => {
+  it('acceptance[0]: a package the lock requires but the local install does not have is REFUSED, not treated as verified', () => {
+    // The behavioural half of acceptance[0], and it has a real branch:
+    // `admitBoot` reports `missing-from-disk` for a locked entry with nothing
+    // on disk. This is what "offline, using only the local cache" has to mean
+    // when the cache is incomplete — refuse, rather than boot a profile whose
+    // lock describes plugins that are not there.
+    const { dir, layerDirs } = profileWith([
+      { name: 'alpha', policy: 'warn-and-proceed' },
+      { name: 'beta', policy: 'warn-and-proceed' },
+    ])
+    // Locked with BOTH packages, then only one is presented as installed.
+    lockProfile(dir, observedFrom(layerDirs))
+    const outcome = gateProfileAgainstLock(dir, [layerDirs[0]!], 'warn-and-proceed')
+    expect(outcome.admitted).toBe(false)
+  })
+
+  it('acceptance[0]: the SAME lock with every package present is admitted, so the refusal is caused by the absence', () => {
+    // Without this, the case above is satisfied by a gate that refuses any
+    // multi-package profile.
+    const { dir, layerDirs } = profileWith([
+      { name: 'alpha', policy: 'warn-and-proceed' },
+      { name: 'beta', policy: 'warn-and-proceed' },
+    ])
+    lockProfile(dir, observedFrom(layerDirs))
+    const outcome = gateProfileAgainstLock(dir, layerDirs, 'warn-and-proceed')
+    expect(outcome.admitted).toBe(true)
+    expect(outcome.admitted ? outcome.verified : undefined).toBe(true)
+  })
+})
+
 /**
  * Observe the bundles on disk exactly as the boot path does, so a fixture
  * cannot drift from the code under test.
