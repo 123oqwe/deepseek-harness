@@ -57,11 +57,19 @@ const loadJson = (path) => JSON.parse(readFileSync(path, 'utf8'))
  * @param epic - the registry row.
  * @returns declared repo-relative paths.
  */
-function declaredFiles(epic) {
+function declaredFiles(epic, freeze) {
   const paths = new Set()
   for (const file of epic.files ?? []) paths.add(file.path)
   for (const stage of Object.values(epic.stages ?? {})) {
     for (const path of stage?.files ?? []) paths.add(path)
+  }
+  // The epic's REALITY SET, not just its declaration. BLOCKED-134 measured
+  // that a stage's `files` is a sketch of the principal deliverables — 79 of
+  // 116 live freeze entries cite something outside it — so a live freeze
+  // entry's own `files` are part of what this epic touched.
+  for (const entry of freeze) {
+    if (entry.epic !== epic.id || entry.supersededBy !== undefined) continue
+    for (const path of entry.files ?? []) paths.add(path)
   }
   return [...paths]
 }
@@ -172,7 +180,7 @@ function main() {
     const declared = entry.makeVsUse
     if (declared === undefined) continue
     const epic = registry.get(key)
-    const files = epic === undefined ? [] : declaredFiles(epic)
+    const files = epic === undefined ? [] : declaredFiles(epic, freeze)
     const row = rows.get(key)
     let state = 'VERIFIED'
 
@@ -225,10 +233,13 @@ function main() {
         // searched as a second step and the answer is reported under its own
         // name, because an adoption that lives outside the declared list is a
         // different fact from one that does not exist.
-        const elsewhere = findImportAnywhere(pkg)
-        if (elsewhere !== undefined) {
-          outside.push(`${key}: ${pkg} imported at ${elsewhere}, outside this epic's declared files (BLOCKED-134)`)
-        } else if (typeof adopted.landsIn === 'string' && adopted.landsIn.length > 0) {
+        // Deliberately NOT a repository-wide search any more. An earlier
+        // version fell back to scanning the whole tree, so `adopted: runtime`
+        // passed whenever ANY package imported the dependency — `fast-check`
+        // counted as adopted by P4-05 and P5-10 because some other package's
+        // tests use it. Adopted means THIS EPIC took it on; "the repository
+        // has it" is a different fact and was passing as this one.
+        if (typeof adopted.landsIn === 'string' && adopted.landsIn.length > 0) {
           if (rows.get(key)?.status === 'ACCEPTED' || execRows[key]?.status === 'ACCEPTED') {
             findings.push(`${key}: adopts ${pkg} as runtime with landsIn ${JSON.stringify(adopted.landsIn)}, but the epic is ACCEPTED — acceptance cannot rest on an adoption that has not landed`)
             state = 'MISMATCHED'
@@ -323,11 +334,6 @@ function main() {
 
   // The positive control for the import scan itself: a claim of "nothing
   // imports this" is worthless from a scan that finds nothing at all.
-  const wideControl = findImportAnywhere('vitest')
-  if (wideControl === undefined) {
-    console.error('verify-make-vs-use: the repository-wide import scan found no importer of `vitest`, which every spec imports — the scan is broken, and every OUTSIDE-DECLARED verdict above would be meaningless.')
-    process.exit(1)
-  }
   const control = findImport('canonicalize', ['packages/action/action-manifest/tests/manifest.spec.ts'])
   if (control === undefined) {
     console.error('verify-make-vs-use: the import scan found NOTHING where a known import exists — the scan is broken, and every "not imported" result above would be meaningless.')

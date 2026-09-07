@@ -443,7 +443,8 @@
             "name": "@modelcontextprotocol/sdk",
             "npm": "@modelcontextprotocol/sdk",
             "form": "runtime",
-            "reason": "Present and imported in the repository. Recorded with that scope stated: the import lives outside this epic's declared files, which BLOCKED-134 established is the norm rather than an anomaly."
+            "reason": "Present and imported in the repository. Recorded with that scope stated: the import lives outside this epic's declared files, which BLOCKED-134 established is the norm rather than an anomaly. Not imported by the Contract stage's files: the classifier takes domain tags only. Wiring ToolAnnotations as an input is Provider-stage work, so this is a decision recorded ahead of the code that lands it, not an adoption already made.",
+            "landsIn": "P"
           }
         ],
         "deviations": [
@@ -813,25 +814,22 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
-          {
-            "name": "zod",
-            "npm": "zod",
-            "form": "runtime",
-            "reason": "Present and imported in the repository. Recorded as adopted at the repository level; this epic's own files do not import it directly, which is why the form is stated rather than assumed."
-          },
-          {
-            "name": "ajv",
-            "npm": "ajv",
-            "form": "runtime",
-            "reason": "Present and imported in the repository, used for JSON Schema validation of generated artifacts."
-          }
-        ],
+        "adopted": [],
         "deviations": [
           {
             "name": "schemastery (vendored)",
             "npm": "schemastery (vendored)",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Vendored under vendor/, not adopted as an npm dependency by this epic; its use is the framework's, not this epic's."
+          },
+          {
+            "name": "zod",
+            "npm": "zod",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'."
+          },
+          {
+            "name": "ajv",
+            "npm": "ajv",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'."
           }
         ],
         "rejectedAbsent": [],
@@ -942,19 +940,17 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
-          {
-            "name": "fast-check",
-            "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Present and imported in the repository's test suites; this epic's property-style coverage uses the same dependency."
-          }
-        ],
+        "adopted": [],
         "deviations": [
           {
             "name": "laude-institute/harbor",
             "npm": "laude-institute/harbor",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured absent. The harness comparison this named was never built as a dependency."
+          },
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
         "rejectedAbsent": [],
@@ -1141,15 +1137,14 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
+        "adopted": [],
+        "deviations": [
           {
             "name": "fast-check",
             "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Imported by the repository's test suites; the ownership adjudication's generated coverage uses it."
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
-        "deviations": [],
         "rejectedAbsent": [],
         "standardsOwned": [
           {
@@ -1242,15 +1237,14 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
+        "adopted": [],
+        "deviations": [
           {
             "name": "fast-check",
             "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies. The package is present in the repository but absent from this epic's reality set (files[] plus its live frozen entries' files), so it has not been taken on here. Adoption stays open until a stage that uses it is built. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
-        "deviations": [],
         "rejectedAbsent": [],
         "standardsOwned": [
           {
@@ -1433,19 +1427,17 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
-          {
-            "name": "fast-check",
-            "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
-          }
-        ],
+        "adopted": [],
         "deviations": [
           {
             "name": "@sinonjs/fake-timers",
             "npm": "@sinonjs/fake-timers",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent; the lease tests drive time through an injected clock this epic owns, so no timer library is reached."
+          },
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
         "rejectedAbsent": [],
@@ -1488,15 +1480,18 @@
             "name": "packages/storage/storage-sqlite KV unit (existing)",
             "npm": "packages/storage/storage-sqlite KV unit (existing)",
             "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. An internal package rather than an external adoption."
-          },
-          {
-            "standard": "sha256 content digest + DSSE signature (P4-04) for saved definitions",
-            "reason": "IMPORTED-PENDING: the digest half is this epic's; the DSSE half belongs to P4-04, which has not landed. Recorded as a deviation now because importing from an epic that does not yet exist would be a claim with no source. Must be resolved to `standardsImported from P4-04` before acceptance."
           }
         ],
         "rejectedAbsent": [],
         "standardsOwned": [],
-        "standardsImported": [],
+        "standardsImported": [
+          {
+            "standard": "sha256 content digest + DSSE signature (P4-04) for saved definitions",
+            "from": "SLICE-3.4",
+            "pending": true,
+            "reason": "The digest half is this epic's; the DSSE half belongs to P4-04, which has not landed. Recorded as imported-PENDING rather than as a deviation: it is not a decision against adopting, it is a dependency on an epic that does not exist yet. Must resolve to a real import before acceptance."
+          }
+        ],
         "residual": "Saved definitions, their digests, and the storage seam.",
         "probes": [
           {
@@ -1522,15 +1517,14 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
+        "adopted": [],
+        "deviations": [
           {
             "name": "fast-check",
             "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
+            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies. The package is present in the repository but absent from this epic's reality set (files[] plus its live frozen entries' files), so it has not been taken on here. Adoption stays open until a stage that uses it is built. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
-        "deviations": [],
         "rejectedAbsent": [],
         "standardsOwned": [],
         "standardsImported": [],
@@ -1602,14 +1596,7 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
-          {
-            "name": "fast-check",
-            "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
-          }
-        ],
+        "adopted": [],
         "deviations": [
           {
             "name": "w3c/prov",
@@ -1628,6 +1615,11 @@
           {
             "standard": "W3C DPV for purpose & personal-data categories",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No purpose or personal-data vocabulary exists in the record shape."
+          },
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
         "rejectedAbsent": [],
@@ -1665,19 +1657,17 @@
         },
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
-        "adopted": [
-          {
-            "name": "fast-check",
-            "npm": "fast-check",
-            "form": "runtime",
-            "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
-          }
-        ],
+        "adopted": [],
         "deviations": [
           {
             "name": "node:sqlite keyset pagination",
             "npm": "node:sqlite keyset pagination",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. A technique rather than a package. The lifecycle store's pagination is hand-written over its own query surface; measured, no node:sqlite import in this epic's files."
+          },
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
           }
         ],
         "rejectedAbsent": [],
@@ -1714,18 +1704,6 @@
             "npm": "canonicalize",
             "form": "oracle",
             "reason": "Present in the repository as a differential oracle in devDependencies, the same role P2-03 adopted it in. Used for schema fingerprints here."
-          },
-          {
-            "name": "zod",
-            "npm": "zod",
-            "form": "runtime",
-            "reason": "Present and imported in the repository."
-          },
-          {
-            "name": "@noble/hashes",
-            "npm": "@noble/hashes",
-            "form": "runtime",
-            "reason": "Present and imported in the repository; used for digest computation."
           }
         ],
         "deviations": [
@@ -1742,6 +1720,16 @@
           {
             "standard": "RFC 8785 JCS for schema fingerprints",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. P2-03 owns RFC 8785 in this program; this epic uses the canonicalizer without owning the standard. Recorded as a deviation rather than a second ownership claim."
+          },
+          {
+            "name": "zod",
+            "npm": "zod",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'."
+          },
+          {
+            "name": "@noble/hashes",
+            "npm": "@noble/hashes",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'."
           }
         ],
         "rejectedAbsent": [],
@@ -1819,7 +1807,53 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). P2-02 is NOT accepted and holds a live acceptance lock, so this record does not use the read-only accepted-unadopted reason: it states that the card's plan was overtaken by the kernel's own signing path, which is a decision with evidence rather than an omission."
+        "note": "Backfilled 2026-09-07 under gate (e). P2-02 is NOT accepted and holds a live acceptance lock, so this record does not use the read-only accepted-unadopted reason: it states that the card's plan was overtaken by the kernel's own signing path, which is a decision with evidence rather than an omission.",
+        "designPreFlight": {
+          "recordedAtUtc": "2026-09-07T04:30:00.000Z",
+          "scope": "must[1]'s TrustKernel issuance/verification: real key material in kernel private state, replacing the fixed signature marker.",
+          "lockState": {
+            "condition": "Real key material AND Option A. Both, not either.",
+            "optionA": "MET. SLICE-fiber-A landed: Fiber.store is an accessor whose setter re-seals pinned names, and pinTrustKernel fixes trustKernel in every fiber of the tree. The probe that measured the forgery succeeding now measures it refused.",
+            "keyMaterial": "NOT MET. `createTrustKernel` still mints `signatureRoots` as `Object.freeze({})`; the four-byte marker binds nothing.",
+            "secondStep": "BLOCKED-092 applies: the suppliers landing does NOT unlock the row. P2-02 must then WRITE the case proving must[1] against them, and that case cannot be written today, which is the reason for the lock."
+          },
+          "findings": [
+            {
+              "claim": "the capability token is cryptographically signed today",
+              "how": "read packages/policy/capability-token/src/attenuate.ts",
+              "result": "REFUTED",
+              "evidence": "`issueToken`/`attenuateToken` sign with a FIXED MARKER byte sequence and `verifyToken` compares a candidate against that same marker. The module says so in its own doc. A marker equal to itself is the same shape as BLOCKED-135's `unavailable:` integrity — verification that cannot fail."
+            },
+            {
+              "claim": "this repository already has a real Ed25519 verification path to model on",
+              "how": "read packages/plugin/plugin-provenance/src/signature.ts",
+              "result": "CONFIRMED",
+              "evidence": "P1-02's `verifyPackageSignature` uses node:crypto's `verify` with `createPublicKey` and a `null` algorithm, because Ed25519 carries its own digest. That is the shape the kernel's issuance/verification should follow, and it is already accepted and covered."
+            }
+          ],
+          "openQuestions": [
+            {
+              "question": "Where does the private key live, and who may reach it?",
+              "options": [
+                "kernel module-private WeakMap keyed by the signatureRoots handle, like P1-02's CONFIGURED_ANCHORS",
+                "a file backend under the dsh home"
+              ],
+              "cost": "The WeakMap keeps the key unreachable without the unforgeable handle and needs no filesystem policy, but the key then lives only for the process and cannot persist across restarts. A file backend persists and immediately raises mode, ownership and platform questions the delegate has already flagged (0600 for dev; production-controlled must REFUSE a file backend).",
+              "decidedBy": "delegate — this is a durable-format and threat-model decision."
+            },
+            {
+              "question": "Per-install or per-process key generation?",
+              "options": [
+                "generated once per install and persisted",
+                "generated per process"
+              ],
+              "cost": "Per-process makes every restart invalidate outstanding tokens, which may be correct for a capability token whose lifetime is a session; per-install needs the persistence question answered first.",
+              "decidedBy": "delegate."
+            }
+          ],
+          "notClaimed": "No key material is generated or stored by this record. Nothing here proposes that the executor hold, generate outside a test, or transmit any private key.",
+          "constraintHonoured": "The user's standing rule that credentials belong only to them is untouched by this work: what P2-02 needs is code that MINTS a keypair inside the kernel at boot, never a key supplied to or held by the executor."
+        }
       }
     }
   },
