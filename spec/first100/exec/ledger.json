@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-06T23:19:03.084Z",
-  "inputDigest": "7f00cf93a157ebaefbc47abb55f277e61e8fc6f2f8223d604c9102e0053173b3",
+  "lastUpdatedUtc": "2026-09-07T01:25:15.007Z",
+  "inputDigest": "564fcdf1d216b4336db839be86d8321f0eca82cbe511b8ac787dcd2028f24c05",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1668,7 +1668,27 @@
           "capturedAtUtc": "2026-09-06T23:04:04.455Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "d52b4530daa31aa97278c341cc1e9880f6e225a6",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34070950825",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d52b4530da/vitest-report.json",
+          "observationSha256": "0171b32a088d67351d360d6d3938f89758a133b5b1676c57b631b62f64d53aa5",
+          "expectCasesMatched": [
+            "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a profile whose manifest digest has DRIFTED since the lock is refused at boot",
+            "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: the SAME profile with an untouched install is admitted and reports itself verified",
+            "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a package whose recorded INTEGRITY changed is refused even though its manifest is untouched",
+            "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: an UNLOCKED profile is refused under `refuse`",
+            "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: an UNLOCKED profile proceeds UNVERIFIED under `warn-and-proceed`, so the two states are distinguishable",
+            "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: one layer declaring `refuse` beside one declaring `warn-and-proceed` resolves to refuse",
+            "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: layers that all declare `warn-and-proceed` resolve to it, so the rule is not a constant",
+            "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: a profile whose layers declare NO policy fails loudly, because the policy is required with no default",
+            "P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (must[1] to must[2]) must[1]: a lock built from the real installed packages admits the boot it describes"
+          ],
+          "capturedAtUtc": "2026-09-07T01:25:15.006Z"
+        }
+      },
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
       "independentVerdict": "PENDING_WITH_LIVE_LOCK",
       "openFindings": [
