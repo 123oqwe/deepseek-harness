@@ -11,7 +11,10 @@ import { createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { classifySideEffect, computeArgumentsHash } from '@deepseek-ai/dsh-action-manifest'
+import { classifySideEffect, computeArgumentsHash, createActionManifest, manifestActor, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
+import { attachedIdentity } from '@deepseek-ai/dsh-session'
+import type { RunId } from '@deepseek-ai/dsh-principal/types'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
 import type { PtcDispatchLog, ToolDefinition, ToolExecutionResult, ToolRuntime, ToolRunContext } from './index.ts'
@@ -193,14 +196,36 @@ function appendCodeModeManifest(
   if (agent === undefined) return
   const classification = classifySideEffect(undefined)
   const sequence = agent.session.countEventsOfType('action/manifest-appended') + 1
-  agent.session.append('action/manifest-appended', {
-    actionId: subCallId,
+  const argumentsHash = computeArgumentsHash(loggedArguments as JsonValue)
+  // A real manifest, exactly as the native path builds one. must[2]'s "code
+  // mode cannot bypass" is about this path producing the SAME record, not a
+  // similar event: BLOCKED-143 found both paths hand-assembling a payload and
+  // neither constructing the manifest whose mandate must[0] describes.
+  const manifest = createActionManifest({
+    actionId: brandString<ActionId>(subCallId),
+    runId: brandString<RunId>(agent.session.id),
+    actor: manifestActor(attachedIdentity(agent.session), brandString<RunId>(agent.session.id)),
+    capability: brandString<CapabilityRef>(name),
     origin: 'code-mode-embedded',
-    capability: name,
-    argumentsHash: computeArgumentsHash(loggedArguments as JsonValue),
-    sideEffectClass: classification.sideEffectClass,
+    target: { kind: 'other', ref: name },
+    args: loggedArguments as JsonValue,
+    idempotencyKey: manifestIdempotencyKey(brandString<RunId>(agent.session.id), brandString<ActionId>(subCallId), argumentsHash),
+    preconditions: [],
+    expectedDiff: { description: `code-mode sub-dispatch of ${name} executes with the manifested arguments` },
+    compensation: { reversible: false, reason: 'the code-mode path declares no compensation; a tool that has one states it in its own manifest contribution' },
+    evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/code-dispatch-end event for sub-call ${subCallId}` }],
+  })
+  agent.session.append('action/manifest-appended', {
+    actionId: manifest.actionId,
+    origin: manifest.origin,
+    capability: manifest.capability,
+    argumentsHash: manifest.argumentsHash,
+    sideEffectClass: manifest.sideEffectClass,
     classified: classification.classified,
-    requiresApproval: classification.requiresApproval,
+    requiresApproval: manifest.requiresApproval,
+    runId: manifest.runId,
+    actor: manifest.actor.id,
+    idempotencyKey: manifest.idempotencyKey,
     sequence,
   })
 }

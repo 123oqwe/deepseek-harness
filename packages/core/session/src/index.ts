@@ -12,6 +12,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { deepFreeze, snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
 import { scopeOf, scopeTarget } from '@deepseek-ai/dsh-scope'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
+import type { IdentityContext } from '@deepseek-ai/dsh-principal/types'
 import type { Message } from '@deepseek-ai/dsh-llm'
 import { SESSION_FORMAT_VERSION, SessionLogOffset, SessionSeq } from './types.ts'
 import type { TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
@@ -1244,4 +1245,29 @@ export class SessionStore extends Service {
 }
 
 export { decodeSeqRanges, encodeSeqRanges } from './seq-ranges.ts'
+/**
+ * The identity a session durably attached, or `undefined` when none was.
+ *
+ * The LAST occurrence is authoritative: a resumed run may attach again, and
+ * the current identity is the one it attached now. Read from the log rather
+ * than from any live context, and never from model-visible content — the
+ * event is the only durable record of who a run is acting as.
+ *
+ * Lives here because this package declares `identity/attached` and already
+ * depends on `dsh-principal`. Two execution paths need the answer, and each
+ * scanning for itself is one rule with two implementations (BLOCKED-136).
+ * `dsh-agent-loop`'s `lastAttachedIdentity` is the same read for its own
+ * resolve-and-log decision.
+ * @param session - the session to read.
+ * @returns the attached identity, or undefined.
+ */
+export function attachedIdentity(session: Session): IdentityContext | undefined {
+  const events = session.snapshotEvents()
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]
+    if (event?.type === 'identity/attached') return event.data.identity
+  }
+  return undefined
+}
+
 export default SessionStore

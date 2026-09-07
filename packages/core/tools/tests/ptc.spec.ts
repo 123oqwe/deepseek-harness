@@ -102,6 +102,13 @@ function fakeAgent(): { agent: Agent; events: { type: string; data: unknown }[] 
       // reads as a concurrency bug. That is how P2-03's code-mode manifest
       // looked "blocked for an unknown reason" for an afternoon.
       countEventsOfType: (type: string) => events.filter(event => event.type === type).length,
+      // The same lesson, learned twice. Building a real ActionManifest here
+      // made the manifest path read the session's own identity record, and a
+      // fake without `snapshotEvents` timed out eight cases exactly as the
+      // comment above describes — the throw happens inside the scheduler lane,
+      // so the failure names concurrency rather than the missing member.
+      id: 'session-fake',
+      snapshotEvents: () => events,
     },
   } as unknown as Agent
   return { agent, events }

@@ -16,7 +16,11 @@ import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-ll
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { computeArgumentsHash, classifySideEffect } from '@deepseek-ai/dsh-action-manifest'
+import { computeArgumentsHash, classifySideEffect, createActionManifest, manifestActor, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
+import type { RunId } from '@deepseek-ai/dsh-principal/types'
+import { attachedIdentity } from '@deepseek-ai/dsh-session'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 /** One tool call after argument parsing, ready to schedule. */
 interface PlannedCall {
@@ -289,19 +293,48 @@ function appendToolCall(session: Session, turn: number, step: number, block: Too
  * @param block - the tool call about to be dispatched.
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
+
 function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'native-tool-call'): void {
   const classification = classifySideEffect(undefined)
-  session.append('action/manifest-appended', {
-    actionId: block.id,
+  const argumentsHash = computeArgumentsHash(block.arguments)
+  // A REAL ActionManifest, built through the package that owns the record and
+  // then appended, rather than an event assembled beside it. BLOCKED-143
+  // measured what the old arrangement cost: `createActionManifest` had zero
+  // production callers, so must[0]'s "the manifest mandates idempotencyKey"
+  // held over a record the product never constructed, and the event carried
+  // neither the key nor the actor -- the two fields P4-12's ledger keys on.
+  const manifest = createActionManifest({
+    actionId: brandString<ActionId>(block.id),
+    runId: brandString<RunId>(session.id),
+    actor: manifestActor(attachedIdentity(session), brandString<RunId>(session.id)),
+    capability: brandString<CapabilityRef>(block.name),
     origin,
-    capability: block.name,
-    argumentsHash: computeArgumentsHash(block.arguments as never),
-    sideEffectClass: classification.sideEffectClass,
+    target: { kind: 'other', ref: block.name },
+    args: block.arguments,
+    idempotencyKey: manifestIdempotencyKey(brandString<RunId>(session.id), brandString<ActionId>(block.id), argumentsHash),
+    preconditions: [],
+    expectedDiff: { description: `tool ${block.name} executes with the manifested arguments` },
+    compensation: { reversible: false, reason: 'the native tool path declares no compensation; a tool that has one states it in its own manifest contribution' },
+    evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/result event for call ${block.id}` }],
+  })
+  session.append('action/manifest-appended', {
+    actionId: manifest.actionId,
+    origin: manifest.origin,
+    capability: manifest.capability,
+    argumentsHash: manifest.argumentsHash,
+    sideEffectClass: manifest.sideEffectClass,
     classified: classification.classified,
-    requiresApproval: classification.requiresApproval,
+    requiresApproval: manifest.requiresApproval,
+    // must[0]'s remaining fields, INLINED rather than left reconstructable.
+    // `idempotencyKey` is minted by this path from caller-supplied values, so
+    // an event without it cannot be rebuilt from anything else in the log
+    // (BLOCKED-143).
+    runId: manifest.runId,
+    actor: manifest.actor.id,
+    idempotencyKey: manifest.idempotencyKey,
     // The manifest's own position among this session's manifests. It was the
     // literal `0` on every manifest ever written, which made a field documented
-    // as "the monotonic append position" a constant — acceptance[0] asks
+    // as "the monotonic append position" a constant -- acceptance[0] asks
     // whether a manifest PRECEDES its execution, and a position that never
     // advances cannot answer that.
     //

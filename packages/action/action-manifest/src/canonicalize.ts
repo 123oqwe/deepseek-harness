@@ -177,7 +177,15 @@ export function classifySideEffect(declared: ActionSideEffectClass | undefined):
  * @throws TypeError naming the offending path when a value has no JSON form.
  */
 function assertJsonArguments(args: JsonValue): void {
-  const walk = (value: unknown, path: string): void => {
+  // An explicit stack, not recursion. `computeArgumentsHash` canonicalises the
+  // same value iteratively and survives arguments deeper than the structured-
+  // clone call stack -- a case `ptc.spec.ts` pins -- so a recursive validator
+  // in front of it turned a supported input into a RangeError. Nothing found
+  // it while `createActionManifest` had no production caller: the validator
+  // only ever saw test-sized values (BLOCKED-143).
+  const pending: { value: unknown; path: string }[] = [{ value: args, path: 'args' }]
+  for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+    const { value, path } = next
     if (typeof value === 'bigint') {
       throw new TypeError(`createActionManifest: ${path} is a bigint, which has no JSON form`)
     }
@@ -185,14 +193,13 @@ function assertJsonArguments(args: JsonValue): void {
       throw new TypeError(`createActionManifest: ${path} is ${String(value)}, which JSON renders as null and would share a hash with a real null`)
     }
     if (Array.isArray(value)) {
-      value.forEach((item, index) => { walk(item, `${path}[${String(index)}]`) })
-      return
+      value.forEach((item, index) => { pending.push({ value: item, path: `${path}[${String(index)}]` }) })
+      continue
     }
     if (value !== null && typeof value === 'object') {
-      for (const [key, nested] of Object.entries(value)) walk(nested, `${path}.${key}`)
+      for (const [key, nested] of Object.entries(value)) pending.push({ value: nested, path: `${path}.${key}` })
     }
   }
-  walk(args, 'args')
 }
 
 /**

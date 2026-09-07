@@ -2438,6 +2438,19 @@ export interface ActionManifestAppendedEventData {
   classified: boolean
   /** Whether the manifest requires approval before execution. */
   requiresApproval: boolean
+  /** The run the action belongs to, from the manifest's `runId`. */
+  runId: string
+  /** The principal the action is attributed to, from the manifest's `actor`. */
+  actor: string
+  /**
+   * The manifest's idempotency key.
+   *
+   * INLINED rather than left reconstructable: the key is minted by the
+   * execution path from caller-supplied values, so a reader with only the
+   * other fields cannot derive it (BLOCKED-143), and it is what an
+   * external-effect ledger reserves against.
+   */
+  idempotencyKey: string
   /** The monotonic append position this manifest occupies in the durable log. */
   sequence: number
 }
@@ -2462,6 +2475,9 @@ declare module '@deepseek-ai/dsh-session/types' {
      * @param sideEffectClass - the classified class, or the destructive default.
      * @param classified - false when no declared class was available.
      * @param requiresApproval - whether approval is required before execution.
+     * @param runId - the run the action belongs to.
+     * @param actor - the principal the action is attributed to.
+     * @param idempotencyKey - the manifest's idempotency key, minted by the execution path.
      * @param sequence - the monotonic append position in the durable log.
      */
     'action/manifest-appended': ActionManifestAppendedEventData
