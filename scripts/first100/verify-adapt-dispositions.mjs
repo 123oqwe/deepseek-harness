@@ -16,6 +16,11 @@
  * - For a standard, `standardsOwned` or `standardsImported` — this epic fixes
  *   the vocabulary, or inherits it from a named source.
  *
+ * A `PENDING_ADOPTION` entry — one carrying `landsIn`, recorded before the
+ * stage that imports it exists — passes mid-epic and FAILS once the Fault
+ * stage has started or the epic is ACCEPTED. By then the adoption has landed
+ * or it was never made, and without this rule `landsIn` defers forever.
+ *
  * An epic with no `makeVsUse` record at all and a card that names something is
  * `UNRECORDED`, which does not pass. That is the state P1-03 was in: three
  * `adapt` packages on its card, no pre-flight record of any kind, and the
@@ -105,7 +110,35 @@ function main() {
       for (const standard of standards) {
         if (!accounted.has(standard)) missing.push(`standard ${JSON.stringify(standard)} is neither owned, imported, nor deviated`)
       }
+      // A `landsIn` adoption is a decision recorded before the code that
+      // lands it. That is legitimate mid-epic and NOT at the end: by the time
+      // the Fault stage runs or the epic is accepted, the adoption has either
+      // landed or it was never made. Left unchecked, `landsIn` is an escape
+      // hatch that defers forever, and acceptance would rest on a promise.
+      const pending = (declared.adopted ?? []).filter(entry => typeof entry.landsIn === 'string' && entry.landsIn.length > 0)
+      if (pending.length > 0) {
+        const faultStarted = rows[id]?.cells?.F?.status !== undefined
+          && rows[id].cells.F.status !== 'NOT_RUN' && rows[id].cells.F.status !== 'N/A'
+        if (rows[id]?.status === 'ACCEPTED' || faultStarted) {
+          for (const entry of pending) {
+            missing.push(`${adaptName(entry)} is still adopted-pending (landsIn ${JSON.stringify(entry.landsIn)}) while the epic is ${rows[id]?.status === 'ACCEPTED' ? 'ACCEPTED' : 'past its Fault stage'} — a pending adoption is not a disposition at this point`)
+          }
+        }
+      }
+
       for (const deviation of declared.deviations ?? []) {
+        // A read-only reason is reserved for an ACCEPTED row. `accepted-unadopted`
+        // says "this shipped, hand-written, and nothing propagates from it";
+        // `ownership-transferred` says a standard's owner moved. Neither is
+        // available to work still in flight, where "we did not adopt it" is a
+        // live choice rather than a settled fact. Using one on an unaccepted
+        // row opens exactly the escape the register exists to close — and a
+        // batch backfill applied it to four such rows before this check
+        // existed.
+        const readOnly = /accepted-unadopted|ownership-transferred/u.test(String(deviation.reason))
+        if (readOnly && rows[id]?.status !== 'ACCEPTED') {
+          missing.push(`a deviation for ${String(adaptName(deviation) ?? deviation.standard)} uses a read-only reason, but this epic is ${String(rows[id]?.status ?? 'unrecorded')} rather than ACCEPTED`)
+        }
         if (typeof deviation.reason !== 'string' || deviation.reason.length === 0) {
           missing.push(`a deviation for ${String(adaptName(deviation) ?? deviation.standard)} carries no reason, which is not a disposition`)
         }

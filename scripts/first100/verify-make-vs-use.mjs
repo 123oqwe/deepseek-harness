@@ -267,10 +267,26 @@ function main() {
       // claimant NAMES the substring that proves it, and the gate checks that.
       // The evidence is then auditable rather than inferred.
       const standard = typeof owned === 'string' ? owned : owned?.standard
+      // Ownership comes two ways and they are different claims. EVIDENCE
+      // ownership points at a frozen case naming the vocabulary. ASSIGNMENT
+      // ownership comes from the shape-ownership table before any case exists,
+      // which is legitimate for an epic whose subject is not built yet and is
+      // NOT a pass: it is reported, and refused once the epic is ACCEPTED,
+      // exactly like a pending adoption. Otherwise `assignedBy` would let an
+      // epic own a vocabulary it never pins.
+      const assignedBy = typeof owned === 'string' ? undefined : owned?.assignedBy
       const needle = typeof owned === 'string' ? owned : owned?.evidenceTitleSubstring ?? owned?.standard
       const named = freeze.some(item => item.epic === key && item.supersededBy === undefined
         && (item.expectCases ?? []).some(title => title.includes(needle)))
-      if (!named) {
+      if (!named && typeof assignedBy === 'string' && assignedBy.length > 0) {
+        if (execRows[key]?.status === 'ACCEPTED') {
+          findings.push(`${key}: owns ${standard} by assignment (${assignedBy}) with no frozen case naming it, but the epic is ACCEPTED — ownership must be pinned before acceptance`)
+          state = 'MISMATCHED'
+        } else {
+          pending.push(`${key}: ${standard} owned by assignment (${assignedBy}), no frozen case pins it yet`)
+          if (state === 'VERIFIED') state = 'PENDING_ADOPTION'
+        }
+      } else if (!named) {
         findings.push(`${key}: claims to own the ${standard} vocabulary, but no live frozen case contains ${JSON.stringify(needle)}`)
         state = 'MISMATCHED'
       }

@@ -502,16 +502,14 @@
             "npm": "@pnpm/lockfile.fs",
             "version": "1100.2.5",
             "form": "runtime",
-            "reason": "The authoritative integrity for an installed package is in pnpm-lock.yaml — 1299 real sha512- values on this tree — not in each package's manifest. The hand-written path invented `dsh.provenance.integrity`, a field nothing writes, so every lock entry records the `unavailable:` marker and the boot comparison is structurally inert (BLOCKED-135). Adopting the lockfile reader is what gives must[0]'s `integrity` a real value. Step-3 re-verification on this tree: ESM (`type: module`), engines `>=22.13` which the repository's `^22.19.0 || >=24.0.0` satisfies.",
-            "landsIn": "P supersession"
+            "reason": "The authoritative integrity for an installed package is in pnpm-lock.yaml — 1299 real sha512- values on this tree — not in each package's manifest. The hand-written path invented `dsh.provenance.integrity`, a field nothing writes, so every lock entry records the `unavailable:` marker and the boot comparison is structurally inert (BLOCKED-135). Adopting the lockfile reader is what gives must[0]'s `integrity` a real value. Step-3 re-verification on this tree: ESM (`type: module`), engines `>=22.13` which the repository's `^22.19.0 || >=24.0.0` satisfies. LANDED 2026-09-07 in packages/plugin/plugin-lock/src/lockfile-integrity.ts; the `landsIn` marker is removed because the adoption is now code rather than a commitment."
           },
           {
             "name": "ssri",
             "npm": "ssri",
             "version": "13.0.1",
             "form": "runtime",
-            "reason": "Parses and compares Subresource Integrity strings, which is the format pnpm-lock.yaml records. Hand-comparing `sha512-...` strings byte-for-byte works only while the algorithm and encoding never vary; ssri is the maintained implementation of that comparison. Step-3 re-verification: v13.0.1 pinned deliberately, NOT the latest v14. v14's engines are `^22.22.2 || ^24.15.0 || >=26.0.0`, which EXCLUDES part of this repository's declared range (22.19-22.22.1 and 24.0-24.14); adopting it would silently narrow the Node versions dsh supports. v13.0.1's `^20.17.0 || >=22.9.0` covers the whole range. CommonJS, which is fine for a dependency — the ESM-only rule governs this repository's own modules, and 19 of 36 sampled dependencies are already CJS.",
-            "landsIn": "P supersession"
+            "reason": "Parses and compares Subresource Integrity strings, which is the format pnpm-lock.yaml records. Hand-comparing `sha512-...` strings byte-for-byte works only while the algorithm and encoding never vary; ssri is the maintained implementation of that comparison. Step-3 re-verification: v13.0.1 pinned deliberately, NOT the latest v14. v14's engines are `^22.22.2 || ^24.15.0 || >=26.0.0`, which EXCLUDES part of this repository's declared range (22.19-22.22.1 and 24.0-24.14); adopting it would silently narrow the Node versions dsh supports. v13.0.1's `^20.17.0 || >=22.9.0` covers the whole range. CommonJS, which is fine for a dependency — the ESM-only rule governs this repository's own modules, and 19 of 36 sampled dependencies are already CJS. LANDED 2026-09-07 in packages/plugin/plugin-lock/src/lockfile-integrity.ts; the `landsIn` marker is removed because the adoption is now code rather than a commitment."
           }
         ],
         "rejectedAbsent": [
@@ -1217,7 +1215,7 @@
         "deviations": [
           {
             "standard": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. `waiting_human` appears in this epic's frozen cases as a lifecycle state of its own; the A2A/MCP MAPPING does not, so the state is owned here and the mapping is not claimed."
+            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. `waiting_human` appears in this epic's frozen cases as a lifecycle state of its own; the A2A/MCP MAPPING does not, so the state is owned here and the mapping is not claimed."
           }
         ],
         "rejectedAbsent": [],
@@ -1290,17 +1288,18 @@
           "heading": "#### P4-06",
           "sheetCommit": null
         },
-        "verdict": "PROVIDER_WRITE",
-        "verdictSecondary": null,
+        "verdict": "REUSE_UPSTREAM",
+        "verdictSecondary": "PROVIDER_WRITE",
         "adopted": [],
-        "deviations": [
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
           {
             "standard": "CloudEvents attribute names; dedup on id",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of this epic's 59 frozen cases names a CloudEvents attribute. The inbox/outbox fields were defined here. The delegate has ruled that the inbox table SHOULD use id/source/type/time/subject/datacontenttype, which is future work: recorded as a deviation now rather than as ownership this epic has not earned."
+            "assignedBy": "§7.11 shape-ownership table",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence: no frozen case names these attributes because the inbox/outbox table that will carry them is not built. The new [N] files must use id/source/type/time/subject/datacontenttype directly, and a case naming them lands with that table."
           }
         ],
-        "rejectedAbsent": [],
-        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The durable inbox/outbox, at-least-once delivery, and idempotent consumption.",
         "probes": [
@@ -1311,11 +1310,32 @@
             "evidence": "Results recorded per entry below; the scan carries its own positive control (an importer of `vitest` must be found) so a silent zero cannot pass as a clean result."
           }
         ],
-        "gapCheck": [],
+        "gapCheck": [
+          {
+            "community": "upstream message-bus-like project (~35% coverage)",
+            "gap": "no dead-letter",
+            "clause": "must[3]"
+          },
+          {
+            "community": "same",
+            "gap": "no per-message priority or deadline",
+            "clause": "must[3]"
+          },
+          {
+            "community": "same",
+            "gap": "no consumer-side epoch dedup",
+            "clause": "must[2]"
+          },
+          {
+            "community": "same",
+            "gap": "no tenant scoping on intake",
+            "clause": "must[2] / acceptance[0]"
+          }
+        ],
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it.",
+        "note": "Corrected 2026-09-07 after the delegate found four errors in the batch-backfilled version, and the shape of those errors is the finding: a template was applied across 29 rows and it fitted most of them, so the ones it did not fit read as considered. The card carries NO `adapt` entries — bullmq, pg-boss and graphile are all `optional`, which enters neither dependencies nor CI — so `adopted: []` with `deviations: []` is the correct state rather than a gap. The earlier version used the ACCEPTED-only `accepted-unadopted` reason on a row that is BLOCKED_ON_ACCEPTANCE; a gate check now refuses that pairing. Verdict restored to the card's REUSE_UPSTREAM + PROVIDER_WRITE: the reuse half is what upstream message-bus already provides, the write half is the inbox table, its same-transaction write, and the production call site.",
         "designPreFlight": {
           "recordedAtUtc": "2026-09-07T03:40:00.000Z",
           "scope": "The durable inbox table, its same-transaction write, and the production call site for must[2]'s consumer dedup.",
@@ -1427,7 +1447,7 @@
           {
             "name": "packages/storage/storage-sqlite KV unit (existing)",
             "npm": "packages/storage/storage-sqlite KV unit (existing)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. An internal package rather than an external adoption."
+            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. An internal package rather than an external adoption."
           },
           {
             "standard": "sha256 content digest + DSSE signature (P4-04) for saved definitions",
@@ -1503,11 +1523,11 @@
         "deviations": [
           {
             "standard": "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic's 76 names Mem0; the operation set was defined here and only incidentally overlaps."
+            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. No frozen case of this epic's 76 names Mem0; the operation set was defined here and only incidentally overlaps."
           },
           {
             "standard": "dsh-memory-protocol v1 (dsh-memento)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Named on the card as this program's own protocol, but no frozen case pins the version, so ownership is not claimed."
+            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. Named on the card as this program's own protocol, but no frozen case pins the version, so ownership is not claimed."
           }
         ],
         "rejectedAbsent": [],
