@@ -402,29 +402,41 @@
           {
             "name": "@modelcontextprotocol/sdk",
             "npm": "@modelcontextprotocol/sdk",
-            "reason": "Present in the repository but NOT used by this epic: the manifest's side-effect class is its own vocabulary, and no ToolAnnotations hint reaches it. Recorded as a deviation rather than adopted, because adopting it here would claim an input the classifier does not read."
+            "reason": "Not adopted, by §7.11: the registry's must[0] fixes the manifest's field names, so MCP's ToolAnnotations cannot be the vocabulary here without contradicting the clause. This is a decision about ownership rather than a debt — the annotations belong to whoever classifies side effects, which §7.11 assigns to P2-04, and this epic reads a class it is given. Previously recorded as `accepted-unadopted`, which was true of the row's status and silent about the ruling that had already been made.",
+            "ruling": "§7.11"
           },
           {
             "name": "in-toto/attestation",
             "npm": "in-toto/attestation",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The manifest is an internal pre-execution record, not an attestation published to a consumer."
+            "reason": "slice-consumer of SLICE-3.4 (§3.4/R1): the in-toto Statement envelope lands in `packages/attestation/envelope` before P4-04 in W9, and P2-03 IMPORTS it there rather than declaring an envelope of its own. Recorded as a consumer, not as a rejection: the difference is checkable, because once the slice lands a consumer that has not wired it up is a defect while a rejection is not. Previously recorded as `accepted-unadopted`, which said the epic had shipped without it and not that it is scheduled to receive it.",
+            "ruling": "§3.4/R1",
+            "landsIn": "packages/attestation/envelope",
+            "importedAs": "@deepseek-ai/dsh-attestation-envelope",
+            "sliceRef": "SLICE-3.4"
           },
           {
             "name": "openid/authzen",
             "npm": "openid/authzen",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No authorization request/response vocabulary is emitted; admission is a local predicate."
+            "reason": "Not adopted, by §7.11: AuthZEN's subject/action/resource/context is an AUTHORIZATION vocabulary, and the manifest describes an action rather than deciding on one. §7.11 assigns it to P2-05, which owns the decision surface. Previously recorded as `accepted-unadopted`.",
+            "ruling": "§7.11"
           },
           {
             "standard": "in-toto Statement envelope",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work."
+            "reason": "slice-consumer of SLICE-3.4 (§3.4/R1): the in-toto Statement envelope lands in `packages/attestation/envelope` before P4-04 in W9, and P2-03 IMPORTS it there rather than declaring an envelope of its own. Recorded as a consumer, not as a rejection: the difference is checkable, because once the slice lands a consumer that has not wired it up is a defect while a rejection is not. Previously recorded as `accepted-unadopted`, which said the epic had shipped without it and not that it is scheduled to receive it.",
+            "ruling": "§3.4/R1",
+            "landsIn": "packages/attestation/envelope",
+            "importedAs": "@deepseek-ai/dsh-attestation-envelope",
+            "sliceRef": "SLICE-3.4"
           },
           {
             "standard": "MCP ToolAnnotations as side-effect hint input",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Follows from the sdk deviation: no annotation is read."
+            "reason": "Not adopted, by §7.11: the registry's must[0] fixes the manifest's field names, so MCP's ToolAnnotations cannot be the vocabulary here without contradicting the clause. This is a decision about ownership rather than a debt — the annotations belong to whoever classifies side effects, which §7.11 assigns to P2-04, and this epic reads a class it is given. Previously recorded as `accepted-unadopted`, which was true of the row's status and silent about the ruling that had already been made.",
+            "ruling": "§7.11"
           },
           {
             "standard": "AuthZEN subject/action/resource/context (+ MCP profile / COAZ-MCP binding)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work."
+            "reason": "Not adopted, by §7.11: AuthZEN's subject/action/resource/context is an AUTHORIZATION vocabulary, and the manifest describes an action rather than deciding on one. §7.11 assigns it to P2-05, which owns the decision surface. Previously recorded as `accepted-unadopted`.",
+            "ruling": "§7.11"
           }
         ]
       }

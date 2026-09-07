@@ -41,15 +41,18 @@
  *
  * @module scripts/first100/verify-adapt-dispositions
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { realitySet } from './epic-reality-set.mjs'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/make-vs-use-ledger.json')
 const AUDIT_PATH = join(REPO_ROOT, 'spec/first100/exec/clause-subject-audit.json')
 const EXEC_LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
 const OWNERSHIP_PATH = join(REPO_ROOT, 'spec/first100/exec/standards-ownership.json')
+const REGISTRY_PATH = join(REPO_ROOT, 'tests/first100/registry.json')
+const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 
 const loadJson = path => JSON.parse(readFileSync(path, 'utf8'))
 
@@ -68,6 +71,8 @@ function main() {
   const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
   const rows = loadJson(EXEC_LEDGER_PATH).rows
   const ownership = loadJson(OWNERSHIP_PATH).perEpic ?? {}
+  const registryEpics = loadJson(REGISTRY_PATH).epics
+  const freeze = loadJson(FREEZE_PATH).entries
 
   const unrecorded = []
   const deferred = []
@@ -149,12 +154,48 @@ function main() {
         // row opens exactly the escape the register exists to close — and a
         // batch backfill applied it to four such rows before this check
         // existed.
-        const readOnly = /accepted-unadopted|ownership-transferred/u.test(String(deviation.reason))
+        //
+        // Anchored at the start, because a disposition states its KIND first
+        // and all 57 existing read-only reasons are written that way. An
+        // unanchored match also fired on a reason that NAMED the old label
+        // while replacing it -- "previously recorded as `accepted-unadopted`,
+        // which said the row's status and not the ruling" is a real
+        // disposition, and reading it as the label it corrects would force the
+        // history out of the record to satisfy the check.
+        const readOnly = /^\s*(?:accepted-unadopted|ownership-transferred)\b/u.test(String(deviation.reason))
         if (readOnly && rows[id]?.status !== 'ACCEPTED') {
           missing.push(`a deviation for ${String(adaptName(deviation) ?? deviation.standard)} uses a read-only reason, but this epic is ${String(rows[id]?.status ?? 'unrecorded')} rather than ACCEPTED`)
         }
         if (typeof deviation.reason !== 'string' || deviation.reason.length === 0) {
           missing.push(`a deviation for ${String(adaptName(deviation) ?? deviation.standard)} carries no reason, which is not a disposition`)
+        }
+
+        // `slice-consumer` says: this epic does not implement the thing, it
+        // RECEIVES it from a scheduled slice. That is a real disposition and
+        // not a rejection, and the difference is checkable at exactly one
+        // moment — when the slice lands. Before then the consumer has nothing
+        // to wire; after, a consumer that has not wired it is a defect, while
+        // a rejection would still be fine.
+        //
+        // So the gate bites later rather than looser: `landsIn` names the path
+        // the slice creates, and once that path exists the epic's reality set
+        // must import it. Delegate ruling, 2026-09-07, scoped to slices §3.1
+        // to §3.4 name with a schedule.
+        if (/^\s*slice-consumer\b/u.test(String(deviation.reason))) {
+          if (typeof deviation.landsIn !== 'string' || deviation.landsIn.length === 0) {
+            missing.push(`a slice-consumer deviation for ${String(adaptName(deviation) ?? deviation.standard)} names no landsIn path, so nothing can tell when the slice arrived`)
+          } else if (existsSync(resolve(REPO_ROOT, deviation.landsIn))) {
+            const registryEpic = registryEpics.find(entry => entry.id === id)
+            const files = registryEpic === undefined ? [] : realitySet(registryEpic, freeze)
+            const importing = files.some(file => {
+              const absolute = resolve(REPO_ROOT, file)
+              if (!existsSync(absolute) || !statSync(absolute).isFile()) return false
+              return readFileSync(absolute, 'utf8').includes(String(deviation.importedAs ?? deviation.landsIn))
+            })
+            if (!importing) {
+              missing.push(`${String(adaptName(deviation) ?? deviation.standard)} is recorded as a slice-consumer and its slice has LANDED at ${deviation.landsIn}, but no file in this epic's reality set imports it`)
+            }
+          }
         }
       }
     }
