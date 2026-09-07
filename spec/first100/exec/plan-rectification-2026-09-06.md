@@ -665,3 +665,12 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 ### 12.2 在飞 epic 对卡核验(2026-09-06 21:40 EDT,用户问「是不是按计划混 OSS」)
 
 **对代码不对自述**:P1-03 `makeVsUse` 为空 `{}`,卡上三条 adapt(`write-file-atomic` / `ssri` / `@pnpm/lockfile.fs`)一条未接——原子写手写(`writeFileSync+renameSync`,无 fsync)、integrity 自 brand 字符串且来源是自造的 `dsh.provenance.integrity` 而非 pnpm 锁文件权威值;P2-04 落盘的 preFlight(`adopted: []`、`standardsOwned: []`、`verdict: CONTRACT_WRITE`)**与执行者发 delegate 审的那份不同**(那份 adopted 三条、standardsOwned ToolAnnotations,账本 verdict PROVIDER_WRITE)。**根因**:门 (e) 裁了未建,偏离静默。**处置**:门 (e) 提到夜班队列最前,建完对全部有 preFlight 的 epic 跑一遍;P2-04 记录改回送审版并在 C 的 types 里声明 ToolAnnotations 输入类型;P1-03 补第四问,三条 adapt 默认 adopt(本树复验后有硬约束才 deviation),P 阶段 supersede 与 F 同批观测,验收多一轮。**规则**:签字前 delegate 对代码核 adopted[],不以 preFlight 自述为准。
+
+### 12.3 标准所有权:指派 vs 证据(2026-09-06 22:50 EDT,执行者报规则冲突)
+
+**冲突**:计划(执行卡 §1)把形状所有权**指派**给 48 个 epic(含单一涉及者),与有没有用例无关;门 (e) 的第四检查要求 `standardsOwned` 有一条 live 冻结用例点名该词汇,否则 MISMATCHED。**裁决**:所有权是**指派**,证据是**义务**,两者分层——
+1. `standardsOwned[]` 条目两种来源:`assignedBy: plan`(指派、尚无用例)与 `evidenceTitleSubstring`(有用例点名)。数据源是生成器输出的 **`spec/first100/exec/standards-ownership.json`**(families + perEpic,机器可读),不从卡片正文抓。
+2. **未验收行**:`assignedBy` 允许,状态 PENDING;`--accept` 时 PENDING → UNRECORDED(与 PENDING_ADOPTION 同形):所有者在验收前必须冻结一条 schema/词汇用例。
+3. **已验收行**(P1-02 / P1-07 / P1-09 / P2-01 / P0-05…):`assignedBy` 允许,状态 **PENDING-BACKFILL**,并入 §11.3 的已验收行回填批(期限 P2-05 开工前),由所有者自己补一条词汇用例;期限前不算 MISMATCHED,期限后红。不重开验收。
+4. 门 (e) 增两条:deviation 理由必须与行状态匹配(`accepted-*` 只许 ACCEPTED 行);`standards-ownership.json` 里 `thisEpicOwns` 为真的条目 `standardsOwned` 不得为空。
+5. **回填错误四行**(P4-05 / P4-06 / P4-09 / P6-01 误用 `accepted-unadopted`)已改 `not-yet-adopted`;**教训**:模板扫过 29 行,不合适的那四行读起来像"考虑过"——记录的完整性门必须和记录同一天建。
