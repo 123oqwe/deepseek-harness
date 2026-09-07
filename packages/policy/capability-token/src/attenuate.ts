@@ -40,6 +40,7 @@
  */
 
 import { createHash } from 'node:crypto'
+import { signWithSignatureRoots, verifyWithSignatureRoots } from '@deepseek-ai/dsh-trust-kernel'
 import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel/types'
 import { CapabilityTokenDigest } from './types.ts'
 import type {
@@ -59,30 +60,45 @@ import type {
 } from './types.ts'
 
 /**
- * The fixed signature marker `issueToken`/`attenuateToken` produce and
- * `verifyToken` checks a candidate signature against — see this module's
- * top-of-file doc comment for why a fixed marker, not content-binding
- * cryptography, is this Contract stage's real signing scheme.
+ * The exact bytes a token's signature covers.
+ *
+ * The canonical field list `digestToken` already fixes, so the signature binds
+ * the same content the digest identifies and the two cannot disagree about
+ * what a token IS. A signature over anything less would leave the unsigned
+ * fields free to change without invalidating it.
+ * @param token - the token to serialize.
+ * @returns the bytes to sign or verify.
  */
-const GENUINE_SIGNATURE_BYTES = [0x01, 0x02, 0x03, 0x04] as const
-
-/**
- * Produce the fixed marker signature `issueToken`/`attenuateToken` sign
- * with.
- * @returns a fresh copy of the marker signature bytes.
- */
-function sign(): Uint8Array {
-  return new Uint8Array(GENUINE_SIGNATURE_BYTES)
+function signedTokenBytes(token: CapabilityToken): Buffer {
+  return Buffer.from(digestToken(token), 'utf8')
 }
 
 /**
- * Whether `signature` matches the fixed marker `sign()` produces.
- * @param signature - the candidate signature bytes to check.
- * @returns `true` when `signature` is byte-for-byte the marker `sign()` produces.
+ * Sign one token with the kernel that owns `trustRoot` (P2-02 must[1]).
+ *
+ * Replaces a fixed four-byte marker that every installation produced
+ * identically: a token minted by any other deployment verified here, and
+ * `verifyToken` could not fail. The marker was the same shape BLOCKED-135
+ * recorded for the plugin lock's `unavailable:` integrity — a value compared
+ * against itself.
+ * @param trustRoot - the issuing kernel's signature-roots handle.
+ * @param token - the token to sign.
+ * @returns the detached signature.
  */
-function isGenuineSignature(signature: Uint8Array): boolean {
-  if (signature.length !== GENUINE_SIGNATURE_BYTES.length) return false
-  return GENUINE_SIGNATURE_BYTES.every((byte, index) => signature[index] === byte)
+function sign(trustRoot: TrustKernelSignatureRoots, token: CapabilityToken): Uint8Array {
+  return new Uint8Array(signWithSignatureRoots(trustRoot, signedTokenBytes(token)))
+}
+
+/**
+ * Whether `signature` is this kernel's signature over this token's canonical
+ * bytes.
+ * @param trustRoot - the verifying kernel's signature-roots handle.
+ * @param token - the token the signature claims to cover.
+ * @param signature - the candidate signature bytes.
+ * @returns true only when this kernel signed exactly this token.
+ */
+function isGenuineSignature(trustRoot: TrustKernelSignatureRoots, token: CapabilityToken, signature: Uint8Array): boolean {
+  return verifyWithSignatureRoots(trustRoot, signedTokenBytes(token), Buffer.from(signature))
 }
 
 /**
@@ -121,7 +137,7 @@ function isBudgetWithinParent(requested: TokenBudget | undefined, parentBudget: 
  * to call this successfully is to already hold a real
  * `TrustKernelSignatureRoots` handle
  * (`@deepseek-ai/dsh-trust-kernel`'s `createTrustKernel()`).
- * @param _trustRoot - the real `TrustKernelSignatureRoots` handle every issued token is signed under.
+ * @param trustRoot - the issuing kernel's handle; the token is signed with its private key.
  * Underscore-prefixed because the body never reads it: holding a real handle is
  * the precondition this parameter enforces, and the signature stays a fixed byte
  * sequence until real key material exists (BLOCKED-050).
@@ -130,7 +146,7 @@ function isBudgetWithinParent(requested: TokenBudget | undefined, parentBudget: 
  * @returns a freshly signed root {@link SignedCapabilityToken}.
  */
 export function issueToken(
-  _trustRoot: TrustKernelSignatureRoots,
+  trustRoot: TrustKernelSignatureRoots,
   request: TokenIssuanceRequest,
   nonce: CapabilityTokenNonce,
 ): SignedCapabilityToken {
@@ -146,7 +162,7 @@ export function issueToken(
     delegationDepth: 0,
     parentDigest: null,
   }
-  return { token, signature: sign() }
+  return { token, signature: sign(trustRoot, token) }
 }
 
 /**
@@ -156,7 +172,7 @@ export function issueToken(
  * that `context.now` has not reached `signed.token.expiresAt`, and that
  * `signed.token.nonce` is absent from `context.seenNonces` — refusing
  * fail-closed on the first check that fails.
- * @param _trustRoot - the real `TrustKernelSignatureRoots` handle to verify `signed.signature` against.
+ * @param trustRoot - the verifying kernel's handle; a token signed by any other kernel is refused.
  * Underscore-prefixed because the body never reads it: holding a real handle is
  * the precondition this parameter enforces, and the signature stays a fixed byte
  * sequence until real key material exists (BLOCKED-050).
@@ -165,11 +181,11 @@ export function issueToken(
  * @returns `{ verified: true, token }`, or `{ verified: false, reason }` naming the first failed check.
  */
 export function verifyToken(
-  _trustRoot: TrustKernelSignatureRoots,
+  trustRoot: TrustKernelSignatureRoots,
   signed: SignedCapabilityToken,
   context: TokenVerificationContext,
 ): TokenVerificationResult {
-  if (!isGenuineSignature(signed.signature)) return { verified: false, reason: 'signature-invalid' }
+  if (!isGenuineSignature(trustRoot, signed.token, signed.signature)) return { verified: false, reason: 'signature-invalid' }
   if (context.now >= signed.token.expiresAt) return { verified: false, reason: 'expired' }
   if (context.seenNonces.has(signed.token.nonce)) return { verified: false, reason: 'replayed' }
   return { verified: true, token: signed.token }
@@ -188,7 +204,7 @@ export function verifyToken(
  * top-of-file grounding note), `delegationDepth` is
  * `parent.token.delegationDepth + 1`, and `parentDigest` is
  * `digestToken(parent.token)`.
- * @param _trustRoot - the real `TrustKernelSignatureRoots` handle the child is signed under.
+ * @param trustRoot - the issuing kernel's handle; the child is signed with its private key.
  * Underscore-prefixed because the body never reads it: holding a real handle is
  * the precondition this parameter enforces, and the signature stays a fixed byte
  * sequence until real key material exists (BLOCKED-050).
@@ -199,7 +215,7 @@ export function verifyToken(
  * order) that would have widened.
  */
 export function attenuateToken(
-  _trustRoot: TrustKernelSignatureRoots,
+  trustRoot: TrustKernelSignatureRoots,
   parent: SignedCapabilityToken,
   request: TokenAttenuationRequest,
 ): TokenAttenuationDecision {
@@ -222,7 +238,7 @@ export function attenuateToken(
     delegationDepth: parentToken.delegationDepth + 1,
     parentDigest: digestToken(parentToken),
   }
-  return { accepted: true, child: { token: child, signature: sign() } }
+  return { accepted: true, child: { token: child, signature: sign(trustRoot, child) } }
 }
 
 /**

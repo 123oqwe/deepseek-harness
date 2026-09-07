@@ -13,7 +13,8 @@
  * P0-02).
  */
 
-import { createTrustKernel } from '@deepseek-ai/dsh-trust-kernel'
+import { createTrustKernel, signWithSignatureRoots } from '@deepseek-ai/dsh-trust-kernel'
+import type { TrustKernelSignatureRoots } from '@deepseek-ai/dsh-trust-kernel'
 import { PrincipalId, TenantId } from '@deepseek-ai/dsh-principal/types'
 import { describe, expect, it } from 'vitest'
 import {
@@ -41,6 +42,18 @@ import type {
 } from '../src/types.ts'
 
 const trustRoot = createTrustKernel().signatureRoots
+
+/**
+ * The exact bytes `attenuate.ts` signs, recomputed here rather than exported
+ * from it: a test that imported the production signer would agree with it by
+ * construction and could not catch a change in what the signature covers.
+ * @param roots - the signing kernel's handle.
+ * @param token - the token to sign.
+ * @returns the detached signature.
+ */
+function signTokenForTest(roots: TrustKernelSignatureRoots, token: CapabilityToken): Uint8Array {
+  return new Uint8Array(signWithSignatureRoots(roots, Buffer.from(digestToken(token), 'utf8')))
+}
 
 const FIXED_TIME = 1_700_000_000_000
 const PARENT_EXPIRES_AT = FIXED_TIME + 1_000_000
@@ -71,8 +84,20 @@ function fixtureRootToken(overrides: Partial<CapabilityToken> = {}): CapabilityT
   }
 }
 
+/**
+ * Sign a fixture token with the SAME kernel the cases verify against.
+ *
+ * This used to return a hardcoded four-byte marker, which matched because
+ * signing WAS that marker. Once tokens carry a real Ed25519 signature, a
+ * hand-written constant is a forgery — correctly refused — and every expiry
+ * and replay case would have failed for a reason that has nothing to do with
+ * expiry or replay. A fixture that builds its own version of what production
+ * produces stops testing production the moment the two diverge (BLOCKED-135).
+ * @param token - the token to sign.
+ * @returns the token signed by the test kernel.
+ */
 function fixtureSigned(token: CapabilityToken): SignedCapabilityToken {
-  return { token, signature: new Uint8Array([0x01, 0x02, 0x03, 0x04]) }
+  return { token, signature: signTokenForTest(trustRoot, token) }
 }
 
 function buildIssuanceRequest(overrides: Partial<TokenIssuanceRequest> = {}): TokenIssuanceRequest {
