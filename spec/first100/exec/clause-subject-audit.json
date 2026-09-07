@@ -399,7 +399,12 @@
         ],
         "expectedDeletedPct": "25",
         "recordedBeforeFirstLine": false,
-        "realized": null,
+        "realized": {
+          "adoptedOnPath": [],
+          "rejectedAbsent": true,
+          "expectedDeletedPct": "0",
+          "note": "The ledger's expected 25% did not materialise; the realised figure is 0, and nothing was adopted onto a production path. Measured over `git ls-files`: `canonicalize` is imported by exactly one file, packages/action/action-manifest/tests/manifest.spec.ts, and appears only in that package's devDependencies (\"canonicalize\": \"2.1.0\", no dependencies entry), so it is the differential oracle the card describes and not a runtime dependency. It deletes no owned code: the hand-written canonicalizer stays, because the frozen case 'canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written' records the reference throwing at depth 5000 where the code-mode path dispatches. Nothing else on the card was adopted, so `rejectedAbsent` holds."
+        },
         "deviations": [
           {
             "name": "@modelcontextprotocol/sdk",
