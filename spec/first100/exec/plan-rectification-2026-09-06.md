@@ -695,3 +695,5 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 1. 25 格每格加 `admittedUnderRedRun: { runId, redSteps: ["Recorded-session snapshots"], diagnosedCause: "BLOCKED-137 stale pwsh fixtures (sequence 0→1)", unrelatedBecause: "该 epic files[]∪overlay 不含 snapshots/session/*pwsh*", admittedBy: "guanjieqiao-92", diagnosedAtUtc }`——由工具写(`generate-ledger --admit-red-run …`),不手改;16 条已验收行验收不撤,行上带同一记录。**不重测**:重跑换不回新信息,却会把"红也绿了格"这件事冲掉不留痕。
 2. **准入规则改为因果制**:从红 run 绿格,必须 (a) vitest 报告 `success:true`(全量单测绿);(b) **每个红步的失败原因已诊断并写进格子**(不是用例名匹配名单);(c) delegate 明示 ack。缺任一 → 绿化拒绝。进 `generate-ledger` 与门。
 3. Standing:引用 flake/已知名单前必须读失败信息并确认同一根因——"按名字匹配名单等于把该用例上的任何红都变成过",这次长在验收流程里。
+
+**12.6 修订(03:25 EDT,执行者两点)**:(a) `unrelatedBecause` 不得按 `files[]` 判——`files[]` 不是范围边界(§12);改为 **reality set**:`files[] ∪ filesOverlay ∪ 该 epic live 冻结引用的文件` 不含红步涉及的文件(复用 `verify-make-vs-use` 的集合)。(b) `redSteps[]` 每条必须带 **`failingCases[]` 与从该 run 日志取到的失败原文 `evidence`**(如 `"sequence":0` vs `":1` 两行),不是散文;工具在缺 evidence 时**拒绝写入**。理由:"写进格子"与"诊断对了"不是一回事——108 名单出事时也写了理由。
