@@ -527,7 +527,7 @@ pnpm(P1-03/P1-04)· js-x-ray(P1-05)· vscode-jsonrpc(P1-06)· E2B(P3-09)· docke
   (b) 该 epic 账本 `oss[role=reject]` 的 npm 名在其 `files[]` 里 **0** import(阴性;阳性对照用一个已知 import 的包);
   (c) `form = oracle` 的包只在 `devDependencies`,不在 `dependencies`(P2-03 的 `canonicalize` 必须以此形态 VERIFIED);
   (d) `standardsOwned` 非空时,冻结表里该 epic 至少一条用例标题含该标准名;
-  (e)【2026-09-06 17:20 EDT 加,用户令「能用已有 OSS 就用,配合标准与备注」】**账本该 epic 每条 `oss[role=adapt]` 条目必须有下落**:出现在 `adopted[]`(任一 form),或出现在 `deviations[]`(`{ name, reason, ruling: "§x.y" }`,理由只能是三类:与 registry 冲突 / 实测硬约束(附复现用例)/ 账本被事实超越),否则 UNRECORDED。**没有第四类理由。** 同理每条 `standards[]` 必须在 `standardsOwned` 或 `standardsImported` 或 `deviations[]` 之一。
+  (e)【2026-09-06 17:20 EDT 加,用户令「能用已有 OSS 就用,配合标准与备注」】**账本该 epic 每条 `oss[role=adapt]` 条目必须有下落**:出现在 `adopted[]`(任一 form),或出现在 `deviations[]`(`{ name, reason, ruling: "§x.y" }`,理由只能是三类:与 registry 冲突 / 实测硬约束(附复现用例)/ 账本被事实超越),否则 UNRECORDED。**未验收行没有第四类理由。**【22:15 EDT 补,门 (e) 建成后报 29 条含已验收行】已验收行回填时另许两种**只读性质**的理由:`accepted-unadopted`(R6/§7.9 判据:已验收、手写在跑、无传播——仅限已 ACCEPTED 行,不得用于新工作)与 `ownership-transferred`(§7.11:标准所有权已转移到别的 epic,写明所有者)。门 (e) 在 29 条回填完成前不进 gate set,回填完成即进。 同理每条 `standards[]` 必须在 `standardsOwned` 或 `standardsImported` 或 `deviations[]` 之一。
 - **不做**:不按行数算"省了多少"。行数不是目标;**复用在执行路径上**才是——这正是 §4.1"包一层就叫做完"错误的机械版。
 
 ### 9.2 社区插件最高覆盖 → 四种用法
