@@ -500,25 +500,25 @@
           {
             "name": "@pnpm/lockfile.fs",
             "npm": "@pnpm/lockfile.fs",
-            "version": "pending-probe",
+            "version": "1100.2.5",
             "form": "runtime",
-            "reason": "The authoritative integrity for an installed package is in pnpm-lock.yaml — 1299 real sha512- values on this tree — not in each package's manifest. The hand-written path invented `dsh.provenance.integrity`, a field nothing writes, so every lock entry records the `unavailable:` marker and the boot comparison is structurally inert (BLOCKED-135). Adopting the lockfile reader is what gives must[0]'s `integrity` a real value.",
+            "reason": "The authoritative integrity for an installed package is in pnpm-lock.yaml — 1299 real sha512- values on this tree — not in each package's manifest. The hand-written path invented `dsh.provenance.integrity`, a field nothing writes, so every lock entry records the `unavailable:` marker and the boot comparison is structurally inert (BLOCKED-135). Adopting the lockfile reader is what gives must[0]'s `integrity` a real value. Step-3 re-verification on this tree: ESM (`type: module`), engines `>=22.13` which the repository's `^22.19.0 || >=24.0.0` satisfies.",
             "landsIn": "P supersession"
           },
           {
             "name": "ssri",
             "npm": "ssri",
-            "version": "pending-probe",
+            "version": "13.0.1",
             "form": "runtime",
-            "reason": "Parses and compares Subresource Integrity strings, which is the format pnpm-lock.yaml records. Hand-comparing `sha512-...` strings byte-for-byte works only while the algorithm and encoding never vary; ssri is the maintained implementation of that comparison.",
+            "reason": "Parses and compares Subresource Integrity strings, which is the format pnpm-lock.yaml records. Hand-comparing `sha512-...` strings byte-for-byte works only while the algorithm and encoding never vary; ssri is the maintained implementation of that comparison. Step-3 re-verification: v13.0.1 pinned deliberately, NOT the latest v14. v14's engines are `^22.22.2 || ^24.15.0 || >=26.0.0`, which EXCLUDES part of this repository's declared range (22.19-22.22.1 and 24.0-24.14); adopting it would silently narrow the Node versions dsh supports. v13.0.1's `^20.17.0 || >=22.9.0` covers the whole range. CommonJS, which is fine for a dependency — the ESM-only rule governs this repository's own modules, and 19 of 36 sampled dependencies are already CJS.",
             "landsIn": "P supersession"
           },
           {
             "name": "write-file-atomic",
             "npm": "write-file-atomic",
-            "version": "pending-probe",
+            "version": "7.0.1",
             "form": "runtime",
-            "reason": "`writeLockAtomically` hand-rolls writeFileSync + renameSync with no fsync, and it duplicates this repository's own `@deepseek-ai/dsh-atomic-write`, whose source already carries `TODO(settings-atomic-durability): Use a replacement that fsyncs the file`. One adoption closes the duplication and the recorded TODO together, which is the case AGENTS.md's dependencies-over-hand-rolling rule is written for: it genuinely deletes owned code rather than adding a layer.",
+            "reason": "`writeLockAtomically` hand-rolls writeFileSync + renameSync with no fsync, and it duplicates this repository's own `@deepseek-ai/dsh-atomic-write`, whose source already carries `TODO(settings-atomic-durability): Use a replacement that fsyncs the file`. One adoption closes the duplication and the recorded TODO together, which is the case AGENTS.md's dependencies-over-hand-rolling rule is written for: it genuinely deletes owned code rather than adding a layer. Step-3 re-verification: v7.0.1 pinned for the same reason as ssri — v8 carries the same narrowed engines and would drop supported Node versions. CommonJS, which is acceptable for a dependency.",
             "landsIn": "P supersession, alongside dsh-atomic-write's own TODO"
           }
         ],
@@ -546,6 +546,18 @@
             "how": "read `writeLockAtomically` and this repository's own `dsh-atomic-write`",
             "result": "REFUTED",
             "evidence": "Neither fsyncs; `dsh-atomic-write` says so in its own source and carries a TODO naming the fix. A rename is atomic against a concurrent reader, not against a crash."
+          },
+          {
+            "claim": "the latest major of each adopted package fits this repository's supported Node range",
+            "how": "npm view engines.node for each, compared against the root package.json's `^22.19.0 || >=24.0.0`",
+            "result": "REFUTED for two of three",
+            "evidence": "ssri@14 and write-file-atomic@8 both declare `^22.22.2 || ^24.15.0 || >=26.0.0`, which excludes 22.19-22.22.1 and 24.0-24.14 — a range this repository declares support for. Taking the latest would have narrowed the product's supported Node versions as a side effect of a lock-integrity fix. ssri@13.0.1 and write-file-atomic@7.0.1 declare `^20.17.0 || >=22.9.0` and cover it. @pnpm/lockfile.fs@1100.2.5 needs >=22.13 and is fine."
+          },
+          {
+            "claim": "a CommonJS dependency is unusable here because the source launch is ESM-only",
+            "how": "read the rule, then classify the root manifest's dependencies by `type`",
+            "result": "REFUTED",
+            "evidence": "The rule governs modules the launcher REACHES in this repository, not third-party packages. 19 of 36 sampled root dependencies are CJS today, so ssri and write-file-atomic being CJS is not a constraint."
           }
         ],
         "gapCheck": [
@@ -563,7 +575,7 @@
         "expectedDeletedPct": "10",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Recorded AFTER the epic's C/P/U stages were built, not before. The fourth make-vs-use question became standard practice at P2-04, and P1-03 started earlier; gate (e) is what surfaced the omission. Versions read `pending-probe` because adoption requires the §8 step-3 re-verification on this tree (version, ESM, pnpm 11 coupling, behaviour) and that has not been run — recording a version here without it would be the same silence this record exists to end."
+        "note": "Recorded AFTER the epic's C/P/U stages were built, not before. The fourth make-vs-use question became standard practice at P2-04, and P1-03 started earlier; gate (e) is what surfaced the omission. Step-3 re-verification ran on 2026-09-07 and pinned versions accordingly; the two probes below record what it found, including the engine-range conflict that rules out the latest major of two of the three."
       }
     },
     "P0-01": {
