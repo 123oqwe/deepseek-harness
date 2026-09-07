@@ -252,6 +252,29 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-135 — the plugin lock does not lock integrity: the field it reads is written by nothing
+
+**State: OPEN. This is a defect in a shipped path, not a bookkeeping gap, and it was found by doing P1-03's fourth make-vs-use question rather than by any test.**
+
+P1-03 must[0] requires the lock to pin `package/version/**integrity**/source commit/manifest digest/...`. Measured on this tree:
+
+- **`dsh.provenance.integrity` is READ in exactly two places** — `apps/cli/src/plugin.ts:155` (`observeInstalledPackages`, feeding `buildCandidateLock`) and `apps/cli/src/profile-boot.ts:693` (`gateProfileAgainstLock`, feeding `admitBoot`).
+- **It is WRITTEN nowhere.** No `package.json` in the repository declares `dsh.provenance`, no script emits it, and it is not an npm or pnpm convention — npm records integrity in the LOCKFILE, never in each package's manifest.
+
+**So every real package resolves to `buildCandidateLock`'s fallback, `unavailable:installer-recorded-no-integrity`.** The lock records that marker; the boot recomputes the same marker; `admitBoot` compares them and they are equal. **The integrity comparison is structurally inert in production — it cannot fail, whatever anyone does to an installed package.**
+
+**This is the inverse of the shape this queue keeps recording.** The usual one is a fact recorded and nothing reading it. This is a field read by two consumers and written by nobody, which is worse in one specific way: the read side looks complete, and both call sites carry careful comments about comparing real recorded provenance.
+
+**It touches evidence I produced today.** `apps/cli/tests/plugin-lock.spec.ts`'s case *"a package whose recorded INTEGRITY changed is refused even though its manifest is untouched"* passes — but only because the FIXTURE writes `dsh.provenance.integrity`. No real package has it. The case is not vacuous (it does exercise the comparison, and the mutation proof holds) but it exercises a configuration that does not occur, so it must not be read as evidence that integrity is enforced on a real profile. `manifestDigest` drift IS genuinely caught; integrity is not.
+
+**The card already names the fix, which is why the fourth question found it.** `make-vs-use-ledger.json`'s P1-03 row carries three `adapt` entries, none dispositioned before gate (e) existed: `@pnpm/lockfile.fs`, `ssri`, `write-file-atomic`. The authoritative integrity for an installed package is in `pnpm-lock.yaml` — **1299 real `sha512-` values on this tree** — parsed by `@pnpm/lockfile.fs` and compared by `ssri`. The hand-written path invented a manifest field instead and got a marker.
+
+**Owner:** P1-03's Provider stage (`packages/plugin/plugin-lock/src/candidate.ts` builds the observation; `apps/cli/src/plugin.ts` supplies it), as a supersession. Not the Usage stage, which only reads what the Provider produces.
+
+**Unlock signal:** a lock built from a real profile records a real `sha512-` integrity for at least one package — no `unavailable:` marker — and a case proves boot refuses when that recorded value stops matching what the lockfile says, with the fixture no longer inventing a manifest field.
+
+**Not fixed here.** It changes what the Provider stage produces, and P1-03 has two live lock rows already; adding a third disposition-driven change without a ruling would be the executor deciding a stage's scope.
+
 ### BLOCKED-134 — the stage `files` list is not a scope boundary, and I built three provenance mechanisms as if it were
 
 **State: OPEN, and the first thing it needs is a ruling on which of two readings is true.**
