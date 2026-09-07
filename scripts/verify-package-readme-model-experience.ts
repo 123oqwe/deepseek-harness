@@ -61,6 +61,8 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/guard/baseline-preflight': { kind: 'none', reason: 'Epic P0-01 boot guard: it either lets boot proceed unchanged or aborts before any agent, session, or tool registers, so no model observes a partially gated tree.' },
   'packages/migration/feature-gates': { kind: 'none', reason: 'Epic P0-05 gate table: pure predicates over caller-supplied flags, registering no prompt, schema, tool, or session event.' },
   'packages/plugin/plugin-compat': { kind: 'none', reason: 'Epic P1-08 solver: a pure compatibility decision over declared ranges, registering nothing model-facing.' },
+  'packages/collaboration/lease-contract': { kind: 'none', reason: 'Epic P4-07 capability definition: identities and two pure decisions over caller-supplied values, registering no prompt, schema, tool, or session event.' },
+  'packages/run/lease-sqlite': { kind: 'none', reason: 'Epic P4-07 durable store: it persists leases a host holds and registers no prompt, schema, tool, or session event; a refused acquisition stops a run before any model request.' },
   'packages/plugin/plugin-lock': { kind: 'none', reason: 'Epic P1-03 lock: decision functions and an atomic commit over caller-supplied state; boot admission is decided before any agent exists.' },
   'packages/plugin/plugin-ownership': { kind: 'none', reason: 'Epic P1-09 ownership: pure attribution decisions; the tool names it attributes are rendered by dsh-tools, not here.' },
   'packages/plugin/plugin-provenance': { kind: 'none', reason: 'Epic P1-02 provenance: verification functions over recorded facts, registering no prompt, schema, or tool.' },

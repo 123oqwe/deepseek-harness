@@ -14,6 +14,7 @@ import { workerSpawnEnv } from '../src/host.ts'
 import { HostToWorkerType, WorkerToHostType } from '../src/protocol.ts'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 
 /** A minimal parent stand-in: the engine only threads it through to the provider. */
 function fakeParent(): Agent {
@@ -166,6 +167,7 @@ async function setup(options?: SetupOptions) {
   // A fixed concurrency ceiling: the auto-resolved default is machine-derived
   // (cores - 2, floored at 1), so tests that expect N children in flight
   // would wedge on small CI runners.
+  await ctx.plugin(InMemoryLeaseStorePlugin)
   const engineFiber = await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'stub', maxConcurrentAgents: 8, ...options?.config })
   return { ctx, provider, parent: fakeParent(), engineFiber }
 }
@@ -482,6 +484,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
         }),
       }
       ctx.subagents.registerProvider(provider)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'rejecting', maxConcurrentAgents: 2 })
       const result = await run(ctx, fakeParent(), scripted(`
         try { await agent('p'); return 'unreachable' } catch (e) { return { name: e.name, code: e.code, fatal: e.fatal, message: e.message } }
@@ -543,6 +546,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
         }),
       }
       ctx.subagents.registerProvider(provider)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'bad-dispose', maxConcurrentAgents: 2 })
       const result = await run(ctx, fakeParent(), scripted("return await agent('p')"))
       expect(result.stopReason).toBe('completed')
@@ -570,6 +574,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
         }),
       }
       ctx.subagents.registerProvider(provider)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'coercion-trap-dispose', maxConcurrentAgents: 2 })
       const result = await run(ctx, fakeParent(), scripted("return await agent('p')"))
       expect(result.stopReason).toBe('completed')
@@ -925,6 +930,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
         },
       }
       ctx.subagents.registerProvider(provider)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'signal-only', maxConcurrentAgents: 2 })
       const handle = ctx.workflowEngine.start({
         ...scripted(`
@@ -1217,6 +1223,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
         },
       }
       ctx.subagents.registerProvider(provider)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'late-ready', maxConcurrentAgents: 1 })
       const lifecycle: string[] = []
       ctx.on('workflow/agent-start', () => { lifecycle.push('start') })
@@ -1286,6 +1293,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
         },
       }
       ctx.subagents.registerProvider(provider)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'doomed', maxConcurrentAgents: 2 })
       const runEnds: WorkflowResultInfo[] = []
       ctx.on('workflow/end', (_info, result) => { runEnds.push(result) })
@@ -1451,6 +1459,7 @@ describe('dsh-workflow-worker-thread', { timeout: 120_000 }, () => {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
       await ctx.plugin(SubagentRuntime)
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       const fiber = await ctx.plugin(WorkerThreadWorkflowEngine, {})
       expect(ctx.get('workflowEngine')).toBeDefined()
       await fiber.dispose()

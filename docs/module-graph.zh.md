@@ -191,6 +191,7 @@ flowchart TD
   subgraph group_collaboration["packages/collaboration"]
     pkg_blackboard["blackboard"]
     pkg_intake_dedup["intake-dedup"]
+    pkg_lease_contract["lease-contract"]
     pkg_mailbox["mailbox"]
     pkg_taskboard["taskboard"]
   end
@@ -304,6 +305,7 @@ flowchart TD
   end
   subgraph group_run["packages/run"]
     pkg_lease["lease"]
+    pkg_lease_sqlite["lease-sqlite"]
     pkg_message_bus["message-bus"]
     pkg_run["run"]
   end
@@ -413,6 +415,7 @@ flowchart TD
   pkg_evidence_format --> pkg_invariants
   pkg_attachment --> pkg_brand
   pkg_blackboard --> pkg_brand
+  pkg_lease_contract --> pkg_brand
   pkg_mailbox --> pkg_brand
   pkg_mailbox --> pkg_intake_dedup
   pkg_taskboard --> pkg_brand
@@ -450,7 +453,6 @@ flowchart TD
   pkg_plugin_manifest --> pkg_invariants
   pkg_plugin_manifest --> pkg_util_values
   pkg_plugin_ownership --> pkg_brand
-  pkg_lease --> pkg_brand
   pkg_storage_domain --> pkg_invariants
   pkg_storage_domain --> pkg_storage
   pkg_storage_json --> pkg_storage
@@ -489,6 +491,10 @@ flowchart TD
   pkg_capability_token --> pkg_brand
   pkg_capability_token --> pkg_principal
   pkg_capability_token --> pkg_trust_kernel
+  pkg_lease --> pkg_brand
+  pkg_lease --> pkg_lease_contract
+  pkg_lease_sqlite --> pkg_brand
+  pkg_lease_sqlite --> pkg_lease_contract
   pkg_message_bus --> pkg_brand
   pkg_message_bus --> pkg_intake_dedup
   pkg_message_bus --> pkg_mailbox
@@ -1216,7 +1222,7 @@ flowchart TD
   pkg_tool_ralph --> pkg_workflow
   pkg_workflow_worker_thread --> pkg_agent
   pkg_workflow_worker_thread --> pkg_brand
-  pkg_workflow_worker_thread --> pkg_lease
+  pkg_workflow_worker_thread --> pkg_lease_contract
   pkg_workflow_worker_thread --> pkg_llm
   pkg_workflow_worker_thread --> pkg_session
   pkg_workflow_worker_thread --> pkg_subagent
@@ -1371,6 +1377,7 @@ flowchart TD
 | [`evidence-format`](../packages/assurance/evidence-format) | `assurance` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants) |
 | [`attachment`](../packages/attachment/attachment) | `attachment` | [`brand`](../packages/util/brand) |
 | [`blackboard`](../packages/collaboration/blackboard) | `collaboration` | [`brand`](../packages/util/brand) |
+| [`lease-contract`](../packages/collaboration/lease-contract) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`mailbox`](../packages/collaboration/mailbox) | `collaboration` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup) |
 | [`taskboard`](../packages/collaboration/taskboard) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`credentials`](../packages/credentials/credentials) | `credentials` | [`invariants`](../packages/runtime-diagnostics/invariants) |
@@ -1389,7 +1396,6 @@ flowchart TD
 | [`plugin-lock`](../packages/plugin/plugin-lock) | `plugin` | [`brand`](../packages/util/brand) |
 | [`plugin-manifest`](../packages/plugin/plugin-manifest) | `plugin` | [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
 | [`plugin-ownership`](../packages/plugin/plugin-ownership) | `plugin` | [`brand`](../packages/util/brand) |
-| [`lease`](../packages/run/lease) | `run` | [`brand`](../packages/util/brand) |
 | [`storage-domain`](../packages/storage/storage-domain) | `storage` | [`invariants`](../packages/runtime-diagnostics/invariants), [`storage`](../packages/storage/storage) |
 | [`storage-json`](../packages/storage/storage-json) | `storage` | [`storage`](../packages/storage/storage) |
 | [`storage-sqlite`](../packages/storage/storage-sqlite) | `storage` | [`storage`](../packages/storage/storage) |
@@ -1409,6 +1415,8 @@ flowchart TD
 | [`credentials-local`](../packages/credentials/credentials-local) | `credentials` | [`atomic-write`](../packages/util/atomic-write), [`credentials`](../packages/credentials/credentials), [`home-paths`](../packages/util/home-paths), [`launch-environment`](../packages/util/launch-environment) |
 | [`plugin-provenance`](../packages/plugin/plugin-provenance) | `plugin` | [`brand`](../packages/util/brand), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`capability-token`](../packages/policy/capability-token) | `policy` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`trust-kernel`](../packages/kernel/trust-kernel) |
+| [`lease`](../packages/run/lease) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
+| [`lease-sqlite`](../packages/run/lease-sqlite) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
 | [`message-bus`](../packages/run/message-bus) | `run` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup), [`mailbox`](../packages/collaboration/mailbox) |
 | [`workspace-trust`](../packages/workspace/workspace-trust) | `workspace` | [`principal`](../packages/identity/principal) |
 | [`skill-badge`](../packages/skill/skill-badge) | `skill` | [`skill`](../packages/skill/skill) |
@@ -1548,7 +1556,7 @@ flowchart TD
 | [`experimental-agent-team`](../packages/experimental/agent-team) | `experimental` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`subagent`](../packages/subagent/subagent), [`typert-protocol`](../packages/typert/protocol) |
 | [`sdk-protocol`](../packages/sdk/protocol) | `sdk` | [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent) |
 | [`tool-ralph`](../packages/workflow/tool-ralph) | `workflow` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`subagent`](../packages/subagent/subagent), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`workflow`](../packages/workflow/workflow) |
-| [`workflow-worker-thread`](../packages/workflow/workflow-worker-thread) | `workflow` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`lease`](../packages/run/lease), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools), [`workflow`](../packages/workflow/workflow) |
+| [`workflow-worker-thread`](../packages/workflow/workflow-worker-thread) | `workflow` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools), [`workflow`](../packages/workflow/workflow) |
 | [`subagent-fork-in-process`](../packages/subagent/subagent-fork-in-process) | `subagent` | [`agent`](../packages/core/agent), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver) |
 | [`subagent-spawn-in-process`](../packages/subagent/subagent-spawn-in-process) | `subagent` | [`subagent`](../packages/subagent/subagent), [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver) |
 | [`experimental-client-ui-agent-team`](../packages/experimental/client-ui-agent-team) | `experimental` | [`api-remotes`](../packages/api/remotes), [`api-session-controller`](../packages/api/session-controller), [`client-locale`](../packages/client/locale), [`client-ui-conversation`](../packages/client/ui-conversation), [`client-ui-primitives`](../packages/client/ui-primitives), [`client-ui-renderer`](../packages/client/ui-renderer), [`client-ui-session`](../packages/client/ui-session), [`client-ui-slots`](../packages/client/ui-slots), [`experimental-agent-team`](../packages/experimental/agent-team), [`session`](../packages/core/session), [`typert-protocol`](../packages/typert/protocol) |

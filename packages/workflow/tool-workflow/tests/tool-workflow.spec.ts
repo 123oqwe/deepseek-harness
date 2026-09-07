@@ -16,6 +16,7 @@ import WorkerThreadWorkflowEngine from '@deepseek-ai/dsh-workflow-worker-thread'
 import * as toolWorkflow from '../src/index.ts'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 
 const testToolSignal = new AbortController().signal
 
@@ -433,6 +434,7 @@ describe('dsh-tool-workflow', () => {
         inheritsParentContext: false,
         start: () => Promise.reject(new Error('the parked-script fixture must not start a child')),
       })
+      await ctx.plugin(InMemoryLeaseStorePlugin)
       await ctx.plugin(WorkerThreadWorkflowEngine, { disposeGraceMs: 30 })
       await ctx.plugin(toolWorkflow, {})
       const session = Session.create(SessionId('caller'))

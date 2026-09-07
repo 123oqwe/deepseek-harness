@@ -340,6 +340,8 @@
       "@deepseek-ai/dsh-jobs-local": ["./packages/jobs/jobs-local/src"],
       "@deepseek-ai/dsh-launch-environment": ["./packages/util/launch-environment/src"],
       "@deepseek-ai/dsh-lease": ["./packages/run/lease/src"],
+      "@deepseek-ai/dsh-lease-contract": ["./packages/collaboration/lease-contract/src"],
+      "@deepseek-ai/dsh-lease-sqlite": ["./packages/run/lease-sqlite/src"],
       "@deepseek-ai/dsh-llm": ["./packages/llm/llm/src"],
       "@deepseek-ai/dsh-llm/invariant": ["./packages/llm/llm/src/invariant.ts"],
       "@deepseek-ai/dsh-llm-deepseek": ["./packages/llm/llm-deepseek/src"],

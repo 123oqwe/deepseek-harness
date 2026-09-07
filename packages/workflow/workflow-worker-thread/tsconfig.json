@@ -39,7 +39,10 @@
       "path": "../workflow"
     },
     {
-      "path": "../../run/lease"
+      "path": "../../collaboration/lease-contract"
+    },
+    {
+      "path": "../../run/lease-sqlite"
     }
   ]
 }

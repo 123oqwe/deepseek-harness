@@ -1,6 +1,6 @@
 {
-  "name": "@deepseek-ai/dsh-lease",
-  "description": "Worker leases, fencing tokens, and the epoch staleness test for Epic P4-07: per-work-item lease generations, a token carried by every state write, expiry and scheduler reclaim, and fail-closed refusal of any write whose epoch is not the item's current one",
+  "name": "@deepseek-ai/dsh-lease-contract",
+  "description": "The lease capability definition for Epic P4-07: work-item and epoch identities, the fencing token every state write carries, the staleness and expiry rules, and the store operations a provider must implement",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
-    "directory": "packages/run/lease"
+    "directory": "packages/collaboration/lease-contract"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -23,11 +23,7 @@
       "default": "./lib/types/types.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json",
-    "./store": {
-      "types": "./lib/types/store.d.ts",
-      "default": "./lib/types/store.js"
-    }
+    "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
@@ -37,13 +33,10 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-lease-contract": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
-    "@deepseek-ai/dsh-agent": "workspace:^",
-    "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-lease-contract": "workspace:^"
+    "@deepseek-ai/dsh-brand": "workspace:^"
   }
 }

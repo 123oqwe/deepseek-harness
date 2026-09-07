@@ -12,6 +12,7 @@ import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import { SessionId } from '@deepseek-ai/dsh-session'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 
 // A fresh thread compiles the source runtime. Leave contention headroom on
 // shared CI runners without weakening any engine-level timeout assertion.
@@ -28,6 +29,7 @@ it('runs the default config through the source worker', async () => {
     start: () => Promise.reject(new Error('source-worker compat script must not start a child')),
   }
   ctx.subagents.registerProvider(provider)
+  await ctx.plugin(InMemoryLeaseStorePlugin)
   const engine = await ctx.plugin(WorkerThreadWorkflowEngine, {})
   const parent = { id: SessionId('workflow-compat-parent'), options: {} } as unknown as Agent
   try {

@@ -820,6 +820,74 @@ roots(): Agent[]
 
 Source: [`packages/core/agent/src/index.ts`](../../packages/core/agent/src/index.ts)
 
+<a id="ctxleasestore--leasestorecontract"></a>
+
+### `ctx.leaseStore` — `LeaseStoreContract`
+
+What a lease store must do, independent of where it keeps the leases.
+
+Declared here, away from every implementation, so a consumer depends on the RULE rather than on whichever store happens to be nearest. A consumer that `new`s a concrete store instead of taking one is choosing the storage for its callers, which is how a workflow engine came to hold every lease in a `Map` nobody could share.
+
+```ts cordis-catalog
+/**
+ * Mark the store reachable or not; an unreachable store refuses all work.
+ * @param available - whether the store can be reached.
+ */
+setAvailable(available: boolean): void
+
+/**
+ * The item's current lease.
+ * @param workItem - the item to look up.
+ * @returns the lease, or `undefined` when none is held.
+ */
+get(workItem: WorkItemId): Lease | undefined
+
+/**
+ * Take an item, issuing a strictly greater epoch, or say why not.
+ *
+ * An expired lease is taken over rather than refused: expiry is precisely
+ * the condition under which the scheduler may reclaim (must[2]). The
+ * previous holder is not consulted and is not notified — it discovers it was
+ * fenced when its next write is refused, the one notification that cannot be
+ * lost. While the store is unavailable this refuses rather than reporting
+ * the item free, because "nobody holds this" and "I cannot tell you who
+ * holds this" must not look alike to a scheduler (acceptance[2]).
+ * @param workItem - the item to acquire.
+ * @param worker - the acquiring worker.
+ * @param nowMs - the instant to judge the incumbent's expiry against.
+ * @param leaseMs - how long the new lease should run from `nowMs`.
+ * @returns the new lease and its token, or the reason for refusal.
+ */
+acquire(workItem: WorkItemId, worker: WorkerId, nowMs: number, leaseMs: number): AcquireResult
+
+/**
+ * Extend the lease a token authorizes (must[2]).
+ *
+ * Refuses an already-expired lease even when the token is otherwise current:
+ * a holder whose lease lapsed has become reclaimable, and reviving it would
+ * resurrect an authority the scheduler may already have handed elsewhere.
+ * Renewal issues no new epoch — only the deadline moves.
+ * @param token - the holder's current authority.
+ * @param nowMs - the instant to judge expiry against.
+ * @param leaseMs - how long the renewed lease should run from `nowMs`.
+ * @returns the extended lease, or the reason for refusal.
+ */
+renew(token: FencingToken, nowMs: number, leaseMs: number): RenewResult
+
+/**
+ * Every item whose lease has expired at `nowMs` and may be reclaimed.
+ *
+ * Empty while the store is unavailable rather than throwing: a scheduler
+ * asking what it may pick up during an outage should find nothing, and
+ * `acquire` refuses anyway, so this is stop-work in both directions.
+ * @param nowMs - the instant to judge expiry against.
+ * @returns the reclaimable work items.
+ */
+reclaimable(nowMs: number): readonly WorkItemId[]
+```
+
+Source: [`packages/collaboration/lease-contract/src/types.ts`](../../packages/collaboration/lease-contract/src/types.ts)
+
 <a id="ctxruns--runplugin"></a>
 
 ### `ctx.runs` — `RunPlugin`

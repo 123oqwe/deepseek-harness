@@ -13,8 +13,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import WorkflowEngine, { WorkflowError, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { LeaseStore } from '@deepseek-ai/dsh-lease'
-import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease'
+import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 import { acquireRunLease } from './run-lease.ts'
 import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import { WorkerRun } from './host.ts'
@@ -125,7 +124,7 @@ function resolveMaxTotalAgents(requested: number | undefined, ceiling: number): 
  * the seam contract.
  */
 class WorkerThreadWorkflowEngine extends WorkflowEngine {
-  static inject = ['subagents']
+  static inject = ['subagents', 'leaseStore']
 
   static Config: z<Config> = z.object({
     provider: z.string().default('spawn'),
@@ -140,21 +139,27 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
 
   private readonly config: ResolvedConfig
   /**
-   * The lease store this engine owns work items in (P4-07 must[0]).
+   * The lease store this engine takes work items from (P4-07 must[0]).
    *
-   * One per engine instance: a store shared across engines would let two
-   * hosts in one process believe they hold the same run, which is the state a
-   * lease exists to make impossible. A deployment with two real hosts gives
-   * them two stores over shared durable state; that provider is not this
-   * epic's, and the seam is the same either way.
+   * DURABLE and shared, and INJECTED rather than constructed. An earlier
+   * version `new`'d an in-memory store per engine instance, which made
+   * "another host cannot take this item" true only between two runs inside one
+   * process — two real processes each held their own map and both won, and the
+   * case asserting otherwise ran in a single process. Replacing that `new` with
+   * a different `new` would only move the mistake: an engine that opens its own
+   * store still decides for its deployment where leases live, and two hosts
+   * meant to contend can still be pointed at different files. `leaseStore` is
+   * injected, so the profile answers that and every host mounted against one
+   * store contends over the same rows.
    */
-  private readonly leases = new LeaseStore()
+  private readonly leases: LeaseStoreContract
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
     // schemastery (static Config) has already filled the defaulted fields;
     // the assertion records that resolution, not a hidden fallback.
     this.config = config as ResolvedConfig
+    this.leases = ctx.leaseStore
   }
 
   /**

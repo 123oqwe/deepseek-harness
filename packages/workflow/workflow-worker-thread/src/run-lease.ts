@@ -16,8 +16,8 @@
  * @module @deepseek-ai/dsh-workflow-worker-thread/run-lease
  */
 
-import { LeaseStore, checkFencing } from '@deepseek-ai/dsh-lease'
-import type { FencingToken, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease'
+import { checkFencing } from '@deepseek-ai/dsh-lease-contract'
+import type { FencingToken, LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 
 /** Why a run could not take, or could not keep, its lease. */
 export type RunLeaseDenial =
@@ -51,7 +51,7 @@ export interface RunLease {
  * acceptance[2] is "stop new work when the lease store fails", and a store
  * that cannot answer is not the same as an item someone else holds: conflating
  * them would let an outage read as a busy item and be retried forever.
- * @param store - the lease store this host writes through.
+ * @param store - the lease store this host writes through, durable and shared.
  * @param workItem - the run, as the item being owned.
  * @param holder - this host's worker identity.
  * @param nowMs - the caller's clock reading.
@@ -59,7 +59,7 @@ export interface RunLease {
  * @returns the lease, or the denial that stops the run before it starts.
  */
 export function acquireRunLease(
-  store: LeaseStore,
+  store: LeaseStoreContract,
   workItem: WorkItemId,
   holder: WorkerId,
   nowMs: number,

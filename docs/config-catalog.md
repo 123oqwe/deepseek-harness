@@ -111,7 +111,7 @@ export interface Config {
 
 Depends on: [`AgentOptions`](subsystems/core.md) · [`SessionId`](subsystems/core.md)
 
-Source: [`packages/core/agent-loop/src/index.ts:311`](../packages/core/agent-loop/src/index.ts)
+Source: [`packages/core/agent-loop/src/index.ts:339`](../packages/core/agent-loop/src/index.ts)
 
 <a id="deepseek-aidsh-agent-presets"></a>
 
@@ -265,6 +265,23 @@ export interface Config {
 ```
 
 Source: [`packages/attachment/attachment-local/src/index.ts:55`](../packages/attachment/attachment-local/src/index.ts)
+
+<a id="deepseek-aidsh-baseline-preflight"></a>
+
+## `@deepseek-ai/dsh-baseline-preflight`
+
+```ts config-catalog
+/** Plugin config: which checkout to verify against its captured baseline. */
+export interface Config {
+  /**
+   * Checkout root to verify (default: `process.cwd()`), matching
+   * `--repo-root` on `scripts/release/baseline-fingerprint.mjs`.
+   */
+  repoRoot?: string
+}
+```
+
+Source: [`packages/guard/baseline-preflight/src/index.ts:33`](../packages/guard/baseline-preflight/src/index.ts)
 
 <a id="deepseek-aidsh-bash-local"></a>
 
@@ -776,10 +793,45 @@ Requires: `agentDefaultModel` · `agents` · `sessions`
 export interface Config {
   /** The prompt text for the single run. */
   task: string
+  /**
+   * Continue an existing session instead of creating one (Epic P9-06 must[0]).
+   *
+   * The session layer already owns what resuming MEANS — replaying a persisted
+   * log and continuing from its end — so this carries the id and nothing else.
+   * A headless-specific notion of resume would be a second answer to a question
+   * `ctx.agents.resume` has already answered, and the two would diverge the
+   * first time either changed.
+   */
+  resumeSessionId?: string
+  /**
+   * `--model <provider:model>` as typed, or absent to use the configured
+   * default (Epic P9-03 must[0]).
+   *
+   * Unparsed here for the same reason the startup provider does not parse it:
+   * the routes it is checked against exist only after the application settles.
+   */
+  model?: string
+  /**
+   * How stdout is written (Epic P9-06 must[1]); `text` when absent.
+   *
+   * Validated here rather than defaulted: an unknown value must fail rather
+   * than fall back, because a script that asked for JSON and silently received
+   * prose parses the wrong thing without noticing.
+   */
+  outputFormat?: OutputFormat
 }
+
+/** How a scriptable run writes its outcome to stdout. */
+export type OutputFormat =
+  /** The final assistant text, and nothing else. The default, unchanged. */
+  | 'text'
+  /** One JSON object per session event, then one `result` line. */
+  | 'stream-json'
+  /** Exactly one JSON object: the same `result` line, with no event stream. */
+  | 'json'
 ```
 
-Source: [`packages/bundle/headless/src/index.ts:34`](../packages/bundle/headless/src/index.ts)
+Source: [`packages/bundle/headless/src/index.ts:39`](../packages/bundle/headless/src/index.ts)
 
 <a id="deepseek-aidsh-hooks-claude-code"></a>
 
@@ -932,6 +984,26 @@ export interface Config {
 ```
 
 Source: [`packages/jobs/jobs-local/src/index.ts:31`](../packages/jobs/jobs-local/src/index.ts)
+
+<a id="deepseek-aidsh-lease-sqlite"></a>
+
+## `@deepseek-ai/dsh-lease-sqlite`
+
+```ts config-catalog
+/** Where this mount keeps its leases. */
+export interface Config {
+  /**
+   * Directory holding `leases.sqlite`.
+   *
+   * Deployment-varying: a laptop keeps leases beside the workspace, while two
+   * hosts that must not both own a work item need one shared directory, and
+   * only the profile knows which arrangement it is in.
+   */
+  directory: string
+}
+```
+
+Source: [`packages/run/lease-sqlite/src/index.ts:33`](../packages/run/lease-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-llm-deepseek"></a>
 
@@ -1485,6 +1557,62 @@ export interface ReconnectConfig {
 
 Source: [`packages/mcp/mcp-client/src/index.ts:98`](../packages/mcp/mcp-client/src/index.ts)
 
+<a id="deepseek-aidsh-memory"></a>
+
+## `@deepseek-ai/dsh-memory`
+
+```ts config-catalog
+/**
+ * Config for the memory seam. `providerId` pins which provider wins; omitted
+ * = auto-select when exactly one registered provider is usable. An
+ * operational override must feed this same field rather than introduce a
+ * hidden priority chain.
+ */
+export interface MemoryRuntimeConfig {
+  /** Explicit provider id. Omitted = auto-select when exactly one usable. */
+  readonly providerId?: string
+  /**
+   * Directory for a self-registered {@link createDurableFileMemoryProvider}.
+   * Omitted = register nothing, leaving every provider to arrive through
+   * {@link MemoryRuntime.registerProvider}. This is the only route by which a
+   * composition gets a usable provider from `cordis.yml` alone: the service
+   * registers none on its own, so a profile that mounts it without either
+   * route fails every call with `MEMORY_PROVIDER_UNAVAILABLE`.
+   */
+  readonly durableFileDirectory?: string
+}
+```
+
+Source: [`packages/memory/memory/src/index.ts:85`](../packages/memory/memory/src/index.ts)
+
+<a id="deepseek-aidsh-memory-context"></a>
+
+## `@deepseek-ai/dsh-memory-context`
+
+Requires: `agents` · `memory`
+
+```ts config-catalog
+/**
+ * Read scoping this consumer applies to every memory read it performs. Every
+ * field is required: `must[3]` puts `principal`, `purpose`, `scope`, and
+ * `contextBudget` on every read, so a composition that omits one is a
+ * misconfiguration and fails loud at load rather than silently reading
+ * unscoped.
+ */
+export interface Config {
+  /** Tenant this consumer reads within; becomes `MemoryScope.tenantId`. */
+  tenantId: string
+  /** Principal id used when the agent carries no attached `IdentityContext`; see {@link resolveMemoryAccessContext}. */
+  principalId: string
+  /** Why this consumer reads, recorded on every `memory/access` event. */
+  purpose: string
+  /** Upper bound on recalled records; becomes `MemoryContextBudget.maxRecords`. */
+  maxRecords: number
+}
+```
+
+Source: [`packages/context/memory-context/src/index.ts:40`](../packages/context/memory-context/src/index.ts)
+
 <a id="deepseek-aidsh-message-feedback"></a>
 
 ## `@deepseek-ai/dsh-message-feedback`
@@ -1684,6 +1812,25 @@ export interface Config {
 ```
 
 Source: [`packages/guard/repeat-tool-reminder/src/index.ts:28`](../packages/guard/repeat-tool-reminder/src/index.ts)
+
+<a id="deepseek-aidsh-run"></a>
+
+## `@deepseek-ai/dsh-run`
+
+Requires: `agents`
+
+```ts config-catalog
+/** Deployment-varying configuration of {@link RunPlugin}. */
+export interface Config {
+  /**
+   * Filesystem path of the durable Run store document this plugin's
+   * {@link RunService} reads and writes (see {@link createFileRunStore}).
+   */
+  readonly storePath: string
+}
+```
+
+Source: [`packages/run/run/src/index.ts:488`](../packages/run/run/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 
@@ -2130,7 +2277,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/skill/skill-filesystem/src/index.ts:49`](../packages/skill/skill-filesystem/src/index.ts)
+Source: [`packages/skill/skill-filesystem/src/index.ts:50`](../packages/skill/skill-filesystem/src/index.ts)
 
 <a id="deepseek-aidsh-spill-local"></a>
 
@@ -3075,13 +3222,37 @@ export interface Config {
    * restores strictly serial dispatch. Must be a positive integer.
    */
   maxParallelSubCalls?: number
+  /**
+   * Epic P1-09's namespace and ownership policy for this registry. A
+   * deployment supplies both fields from its `cordis.yml`; neither is
+   * hardcoded here, because which plugins count as official and whether
+   * replacement is permitted vary per deployment.
+   */
+  ownership?: ToolOwnershipConfig
 }
 
 /** How the registry presents its tools to the model (see {@link Config.mode}). */
 export type ToolPresentationMode = 'native' | 'ptc' | 'both'
+
+/** Epic P1-09's registry policy, as a deployment declares it in `cordis.yml`. */
+export interface ToolOwnershipConfig {
+  /**
+   * Plugin identities trusted to register a tool inside the reserved `dsh.*`
+   * namespace (must[1]). An identity absent from this list is a third party
+   * for every reserved-namespace check, whatever its load order.
+   */
+  officialPluginIdentities?: string[]
+  /**
+   * Whether `ToolRuntime.replace` may hand an owned tool name to a new owner
+   * (must[2]'s policy gate). A well-formed replace request is still refused
+   * when this is `false`; a plain `register` of an owned name is a collision
+   * either way.
+   */
+  allowReplace?: boolean
+}
 ```
 
-Source: [`packages/core/tools/src/index.ts:647`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:820`](../packages/core/tools/src/index.ts)
 
 <a id="deepseek-aidsh-typert-loader"></a>
 
@@ -3304,7 +3475,7 @@ Source: [`packages/webhook/webhook-github/src/index.ts:17`](../packages/webhook/
 
 ## `@deepseek-ai/dsh-workflow-worker-thread`
 
-Requires: `subagents`
+Requires: `subagents` · `leaseStore`
 
 ```ts config-catalog
 /** Plugin config (all optional — `static Config` supplies the defaults). */
@@ -3325,10 +3496,49 @@ export interface Config {
    * 5000 ms); also bounds `dispose()`.
    */
   disposeGraceMs?: number
+  /**
+   * How long a run's lease is granted for, in milliseconds (default 30000).
+   *
+   * A deployment choice rather than a constant: the right value is a function
+   * of how long a host may be paused before another may take its work, which
+   * differs between a laptop and a scheduler with tight failover. `leaseMs`
+   * must exceed `heartbeatMs` by enough to survive one missed beat.
+   */
+  leaseMs?: number
+  /** How often a live run renews its lease, in milliseconds (default 10000). */
+  heartbeatMs?: number
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:32`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:35`](../packages/workflow/workflow-worker-thread/src/index.ts)
+
+<a id="deepseek-aidsh-workspace-trust-local"></a>
+
+## `@deepseek-ai/dsh-workspace-trust-local`
+
+```ts config-catalog
+/** Host-local workspace trust provider configuration. */
+export interface Config {
+  /**
+   * Workspace paths this host grants a state above `'untrusted'`, standing in
+   * for must[2]'s host-user interaction until an interactive upgrade exists. A
+   * path absent here resolves to `'untrusted'`.
+   */
+  grants?: TrustGrant[]
+}
+
+/** One operator-configured trust grant for a workspace path. */
+export interface TrustGrant {
+  /** Path of the workspace this grant applies to; canonicalized before it is matched. */
+  path: string
+  /** The state that path is granted, bound to the identity observed the first time it is read. */
+  state: TrustState
+}
+```
+
+Depends on: `TrustState` (`@deepseek-ai/dsh-workspace-trust/types`)
+
+Source: [`packages/workspace/workspace-trust-local/src/index.ts:44`](../packages/workspace/workspace-trust-local/src/index.ts)
 
 ## Loadable plugins with no config
 
@@ -3437,12 +3647,16 @@ Abstract service classes — a deployment loads a concrete implementation packag
 
 Imported as libraries by other packages; a `cordis.yml` cannot load them.
 
+- `@deepseek-ai/dsh-action-ledger` ([`packages/action/action-ledger/src/index.ts`](../packages/action/action-ledger/src/index.ts))
+- `@deepseek-ai/dsh-action-manifest` ([`packages/action/action-manifest/src/index.ts`](../packages/action/action-manifest/src/index.ts))
 - `@deepseek-ai/dsh-agent-loop-testkit` ([`packages/test-support/agent-loop-testkit/src/index.ts`](../packages/test-support/agent-loop-testkit/src/index.ts))
 - `@deepseek-ai/dsh-anonymous-user-id` ([`packages/identity/anonymous-user-id/src/index.ts`](../packages/identity/anonymous-user-id/src/index.ts))
 - `@deepseek-ai/dsh-app-boot` ([`packages/boot/app-boot/src/index.ts`](../packages/boot/app-boot/src/index.ts))
 - `@deepseek-ai/dsh-atomic-write` ([`packages/util/atomic-write/src/index.ts`](../packages/util/atomic-write/src/index.ts))
 - `@deepseek-ai/dsh-base` ([`packages/bundle/base/src/index.ts`](../packages/bundle/base/src/index.ts))
+- `@deepseek-ai/dsh-blackboard` ([`packages/collaboration/blackboard/src/index.ts`](../packages/collaboration/blackboard/src/index.ts))
 - `@deepseek-ai/dsh-brand` ([`packages/util/brand/src/index.ts`](../packages/util/brand/src/index.ts))
+- `@deepseek-ai/dsh-capability-token` ([`packages/policy/capability-token/src/index.ts`](../packages/policy/capability-token/src/index.ts))
 - `@deepseek-ai/dsh-client-store` ([`packages/client/store/src/index.ts`](../packages/client/store/src/index.ts))
 - `@deepseek-ai/dsh-client-test-runtime` ([`packages/test-support/client-runtime/src/index.ts`](../packages/test-support/client-runtime/src/index.ts))
 - `@deepseek-ai/dsh-client-ui-primitives` ([`packages/client/ui-primitives/src/index.ts`](../packages/client/ui-primitives/src/index.ts))
@@ -3450,27 +3664,45 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-client-web` ([`packages/client/web/src/index.ts`](../packages/client/web/src/index.ts))
 - `@deepseek-ai/dsh-cmdline` ([`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts))
 - `@deepseek-ai/dsh-deque` ([`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts))
+- `@deepseek-ai/dsh-evidence-format` ([`packages/assurance/evidence-format/src/index.ts`](../packages/assurance/evidence-format/src/index.ts))
 - `@deepseek-ai/dsh-experimental-agent-team-profile` ([`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts))
 - `@deepseek-ai/dsh-experimental-agent-team-web-profile` ([`packages/experimental/agent-team-web-profile/src/index.ts`](../packages/experimental/agent-team-web-profile/src/index.ts))
 - `@deepseek-ai/dsh-experimental-webworker-packer` ([`packages/experimental/webworker-packer/src/index.ts`](../packages/experimental/webworker-packer/src/index.ts))
 - `@deepseek-ai/dsh-experimental-webworker-runtime` ([`packages/experimental/webworker-runtime/src/index.ts`](../packages/experimental/webworker-runtime/src/index.ts))
+- `@deepseek-ai/dsh-feature-gates` ([`packages/migration/feature-gates/src/index.ts`](../packages/migration/feature-gates/src/index.ts))
 - `@deepseek-ai/dsh-home-paths` ([`packages/util/home-paths/src/index.ts`](../packages/util/home-paths/src/index.ts))
 - `@deepseek-ai/dsh-hook-protocol` ([`packages/hooks/hook-protocol/src/index.ts`](../packages/hooks/hook-protocol/src/index.ts))
+- `@deepseek-ai/dsh-intake-dedup` ([`packages/collaboration/intake-dedup/src/index.ts`](../packages/collaboration/intake-dedup/src/index.ts))
 - `@deepseek-ai/dsh-launch-environment` ([`packages/util/launch-environment/src/index.ts`](../packages/util/launch-environment/src/index.ts))
+- `@deepseek-ai/dsh-lease` ([`packages/run/lease/src/index.ts`](../packages/run/lease/src/index.ts))
+- `@deepseek-ai/dsh-lease-contract` ([`packages/collaboration/lease-contract/src/index.ts`](../packages/collaboration/lease-contract/src/index.ts))
 - `@deepseek-ai/dsh-llm-mock-server` ([`packages/test-support/llm-mock-server/src/index.ts`](../packages/test-support/llm-mock-server/src/index.ts))
 - `@deepseek-ai/dsh-loader-smoke` ([`packages/test-support/loader-smoke/src/index.ts`](../packages/test-support/loader-smoke/src/index.ts))
+- `@deepseek-ai/dsh-mailbox` ([`packages/collaboration/mailbox/src/index.ts`](../packages/collaboration/mailbox/src/index.ts))
+- `@deepseek-ai/dsh-message-bus` ([`packages/run/message-bus/src/index.ts`](../packages/run/message-bus/src/index.ts))
 - `@deepseek-ai/dsh-native-command` ([`packages/util/native-command/src/index.ts`](../packages/util/native-command/src/index.ts))
 - `@deepseek-ai/dsh-output-retention` ([`packages/util/output-retention/src/index.ts`](../packages/util/output-retention/src/index.ts))
+- `@deepseek-ai/dsh-plugin-compat` ([`packages/plugin/plugin-compat/src/index.ts`](../packages/plugin/plugin-compat/src/index.ts))
+- `@deepseek-ai/dsh-plugin-lock` ([`packages/plugin/plugin-lock/src/index.ts`](../packages/plugin/plugin-lock/src/index.ts))
+- `@deepseek-ai/dsh-plugin-manifest` ([`packages/plugin/plugin-manifest/src/index.ts`](../packages/plugin/plugin-manifest/src/index.ts))
+- `@deepseek-ai/dsh-plugin-ownership` ([`packages/plugin/plugin-ownership/src/index.ts`](../packages/plugin/plugin-ownership/src/index.ts))
+- `@deepseek-ai/dsh-plugin-provenance` ([`packages/plugin/plugin-provenance/src/index.ts`](../packages/plugin/plugin-provenance/src/index.ts))
+- `@deepseek-ai/dsh-principal` ([`packages/identity/principal/src/index.ts`](../packages/identity/principal/src/index.ts))
+- `@deepseek-ai/dsh-risk-taxonomy` ([`packages/policy/risk-taxonomy/src/index.ts`](../packages/policy/risk-taxonomy/src/index.ts))
 - `@deepseek-ai/dsh-sandbox-windows-acl` ([`packages/sandbox/sandbox-windows-acl/src/index.ts`](../packages/sandbox/sandbox-windows-acl/src/index.ts))
+- `@deepseek-ai/dsh-schema-registry` ([`packages/schema/schema-registry/src/index.ts`](../packages/schema/schema-registry/src/index.ts))
 - `@deepseek-ai/dsh-scope` ([`packages/core/scope/src/index.ts`](../packages/core/scope/src/index.ts))
 - `@deepseek-ai/dsh-sdk-client` ([`packages/sdk/client/src/index.ts`](../packages/sdk/client/src/index.ts))
 - `@deepseek-ai/dsh-sdk-minimal` ([`packages/bundle/sdk-minimal/src/index.ts`](../packages/bundle/sdk-minimal/src/index.ts))
 - `@deepseek-ai/dsh-sdk-protocol` ([`packages/sdk/protocol/src/index.ts`](../packages/sdk/protocol/src/index.ts))
+- `@deepseek-ai/dsh-session-lifecycle` ([`packages/session/session-lifecycle/src/index.ts`](../packages/session/session-lifecycle/src/index.ts))
 - `@deepseek-ai/dsh-session-snapshot` ([`packages/test-support/session-snapshot/src/index.ts`](../packages/test-support/session-snapshot/src/index.ts))
 - `@deepseek-ai/dsh-session-telemetry` ([`packages/session/session-telemetry/src/index.ts`](../packages/session/session-telemetry/src/index.ts))
 - `@deepseek-ai/dsh-session-title-llm` ([`packages/session/session-title-llm/src/index.ts`](../packages/session/session-title-llm/src/index.ts))
 - `@deepseek-ai/dsh-subagent-in-process-driver` ([`packages/subagent/subagent-in-process-driver/src/index.ts`](../packages/subagent/subagent-in-process-driver/src/index.ts))
+- `@deepseek-ai/dsh-taskboard` ([`packages/collaboration/taskboard/src/index.ts`](../packages/collaboration/taskboard/src/index.ts))
 - `@deepseek-ai/dsh-timeout` ([`packages/util/timeout/src/index.ts`](../packages/util/timeout/src/index.ts))
+- `@deepseek-ai/dsh-trust-kernel` ([`packages/kernel/trust-kernel/src/index.ts`](../packages/kernel/trust-kernel/src/index.ts))
 - `@deepseek-ai/dsh-typert-generator` ([`packages/typert/generator/src/index.ts`](../packages/typert/generator/src/index.ts))
 - `@deepseek-ai/dsh-typert-protocol` ([`packages/typert/protocol/src/index.ts`](../packages/typert/protocol/src/index.ts))
 - `@deepseek-ai/dsh-typert-registry` ([`packages/typert/registry/src/index.ts`](../packages/typert/registry/src/index.ts))
@@ -3479,3 +3711,6 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-util-values` ([`packages/util/values/src/index.ts`](../packages/util/values/src/index.ts))
 - `@deepseek-ai/dsh-util-workspace-path` ([`packages/util/workspace-path/src/index.ts`](../packages/util/workspace-path/src/index.ts))
 - `@deepseek-ai/dsh-win32-process` ([`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts))
+- `@deepseek-ai/dsh-workflow-journal` ([`packages/workflow/workflow-journal/src/index.ts`](../packages/workflow/workflow-journal/src/index.ts))
+- `@deepseek-ai/dsh-workflow-registry` ([`packages/workflow/workflow-registry/src/index.ts`](../packages/workflow/workflow-registry/src/index.ts))
+- `@deepseek-ai/dsh-workspace-trust` ([`packages/workspace/workspace-trust/src/index.ts`](../packages/workspace/workspace-trust/src/index.ts))

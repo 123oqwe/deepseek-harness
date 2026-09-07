@@ -1096,6 +1096,42 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'leaseStore',
+    summary: 'What a lease store must do, independent of where it keeps the leases.',
+    description: 'What a lease store must do, independent of where it keeps the leases.\n\nDeclared here, away from every implementation, so a consumer depends on the RULE rather than on whichever store happens to be nearest. A consumer that `new`s a concrete store instead of taking one is choosing the storage for its callers, which is how a workflow engine came to hold every lease in a `Map` nobody could share.',
+    methods: [
+      {
+        signature: 'setAvailable(available: boolean): void',
+        description: 'Mark the store reachable or not; an unreachable store refuses all work.',
+        parameters: [{ name: 'available', description: 'whether the store can be reached.' }],
+      },
+      {
+        signature: 'get(workItem: WorkItemId): Lease | undefined',
+        description: 'The item\'s current lease.',
+        parameters: [{ name: 'workItem', description: 'the item to look up.' }],
+        returns: 'the lease, or `undefined` when none is held.',
+      },
+      {
+        signature: 'acquire(workItem: WorkItemId, worker: WorkerId, nowMs: number, leaseMs: number): AcquireResult',
+        description: 'Take an item, issuing a strictly greater epoch, or say why not.\n\nAn expired lease is taken over rather than refused: expiry is precisely the condition under which the scheduler may reclaim (must[2]). The previous holder is not consulted and is not notified — it discovers it was fenced when its next write is refused, the one notification that cannot be lost. While the store is unavailable this refuses rather than reporting the item free, because "nobody holds this" and "I cannot tell you who holds this" must not look alike to a scheduler (acceptance[2]).',
+        parameters: [{ name: 'workItem', description: 'the item to acquire.' }, { name: 'worker', description: 'the acquiring worker.' }, { name: 'nowMs', description: 'the instant to judge the incumbent\'s expiry against.' }, { name: 'leaseMs', description: 'how long the new lease should run from `nowMs`.' }],
+        returns: 'the new lease and its token, or the reason for refusal.',
+      },
+      {
+        signature: 'renew(token: FencingToken, nowMs: number, leaseMs: number): RenewResult',
+        description: 'Extend the lease a token authorizes (must[2]).\n\nRefuses an already-expired lease even when the token is otherwise current: a holder whose lease lapsed has become reclaimable, and reviving it would resurrect an authority the scheduler may already have handed elsewhere. Renewal issues no new epoch — only the deadline moves.',
+        parameters: [{ name: 'token', description: 'the holder\'s current authority.' }, { name: 'nowMs', description: 'the instant to judge expiry against.' }, { name: 'leaseMs', description: 'how long the renewed lease should run from `nowMs`.' }],
+        returns: 'the extended lease, or the reason for refusal.',
+      },
+      {
+        signature: 'reclaimable(nowMs: number): readonly WorkItemId[]',
+        description: 'Every item whose lease has expired at `nowMs` and may be reclaimed.\n\nEmpty while the store is unavailable rather than throwing: a scheduler asking what it may pick up during an outage should find nothing, and `acquire` refuses anyway, so this is stop-work in both directions.',
+        parameters: [{ name: 'nowMs', description: 'the instant to judge expiry against.' }],
+        returns: 'the reclaimable work items.',
+      },
+    ],
+  },
+  {
     key: 'llm',
     summary: 'The abstract `llm` service: an adapter registry plus a streaming model-call API, interceptable via the `llm/stream` waterfall.',
     description: 'The abstract `llm` service: an adapter registry plus a streaming model-call API, interceptable via the `llm/stream` waterfall.',
@@ -3531,6 +3567,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
 /** Shapes of every exported type the Service and Event signatures reference (transitively), sorted by name. */
 export const TYPE_API: readonly TypeApiEntry[] = [
   {
+    name: 'AcquireDenialReason',
+    declaration: 'export type AcquireDenialReason = \'held-by-another\' | \'store-unavailable\';',
+  },
+  {
+    name: 'AcquireResult',
+    declaration: 'export type AcquireResult = {\n    readonly acquired: true;\n    readonly lease: Lease;\n    readonly token: FencingToken;\n} | {\n    readonly acquired: false;\n    readonly reason: AcquireDenialReason;\n};',
+  },
+  {
     name: 'ActionRef',
     declaration: 'export type ActionRef = Branded<\'ActionRef\'>;',
   },
@@ -4187,6 +4231,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface EpochHeader {\n    config: LlmCallConfig;\n    adapterDefaults?: LlmCallConfigAdapterDefaults;\n    system?: string;\n    tools?: ToolSchema[];\n}',
   },
   {
+    name: 'FencingToken',
+    declaration: 'export interface FencingToken {\n    readonly workItem: WorkItemId;\n    readonly epoch: LeaseEpoch;\n    readonly holder: WorkerId;\n}',
+  },
+  {
     name: 'FiberState',
     declaration: 'export type FiberState = FiberStateEnum;',
   },
@@ -4469,6 +4517,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'KvUnitDescriptor',
     declaration: 'export interface KvUnitDescriptor {\n    readonly name: string;\n    readonly version: number;\n    readonly tables: readonly string[];\n    readonly hasGlobal: boolean;\n    readonly layout?: \'single\' | \'per-record\';\n}',
+  },
+  {
+    name: 'Lease',
+    declaration: 'export interface Lease {\n    readonly workItem: WorkItemId;\n    readonly holder: WorkerId;\n    readonly epoch: LeaseEpoch;\n    readonly expiresAtMs: number;\n}',
   },
   {
     name: 'LlmAdapter',
@@ -4929,6 +4981,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RemoteEventHostInfo',
     declaration: 'export interface RemoteEventHostInfo {\n    readonly home: string;\n}',
+  },
+  {
+    name: 'RenewDenialReason',
+    declaration: 'export type RenewDenialReason = \'not-holder\' | \'already-expired\' | \'store-unavailable\';',
+  },
+  {
+    name: 'RenewResult',
+    declaration: 'export type RenewResult = {\n    readonly renewed: true;\n    readonly lease: Lease;\n} | {\n    readonly renewed: false;\n    readonly reason: RenewDenialReason;\n};',
   },
   {
     name: 'ReplayEnvelope',
@@ -6473,6 +6533,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'WorkflowStopReason',
     declaration: 'export type WorkflowStopReason = \'completed\' | \'cancelled\' | \'error\';',
+  },
+  {
+    name: 'WorkItemId',
+    declaration: 'export type WorkItemId = Branded<\'WorkItemId\'>;',
   },
   {
     name: 'Workspace',

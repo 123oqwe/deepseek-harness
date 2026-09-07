@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-`dsh-lease` owns Epic P4-07's authority model. A scheduler cannot stop an old worker from waking up; it can only ensure that when one does, nothing it says is believed. `src/types.ts` holds the pieces that make that true: a per-work-item `LeaseEpoch` that increases with every acquisition (must[0]), a `FencingToken` carried by every state write and action execution (must[1]), `isReclaimable` for expiry and scheduler reclaim (must[2]), and `checkFencing`, which refuses any write whose epoch is not the item's current one (must[3]).
+`dsh-lease` is Epic P4-07's in-memory Service Provider, and the home its callers still import the authority model from. The declarations and the two decisions moved to `@deepseek-ai/dsh-lease-contract` so a consumer can depend on the rule without depending on orchestration runtime; `src/types.ts` re-exports them unchanged, and nothing here redeclares them. What that model holds: a per-work-item `LeaseEpoch` that increases with every acquisition (must[0]), a `FencingToken` carried by every state write and action execution (must[1]), `isReclaimable` for expiry and scheduler reclaim (must[2]), and `checkFencing`, which refuses any write whose epoch is not the item's current one (must[3]).
 
 ## Table of Contents
 
@@ -51,12 +51,13 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **The store is in-memory and single-process.** `LeaseStore` holds leases in a `Map`, so it proves the epoch and availability rules but not the contention they exist to survive. A shared, durable store is not in this package.
-- **Nothing carries the token yet.** `FencingToken` is defined and checked, but no state write in this repository presents one. The Usage stage owns threading it through the agent dispatch path and the workflow worker host.
-- **Contention is proved sequentially.** `tests/fencing.e2e.spec.ts` runs a hundred acquisitions in order and asserts exactly one token survives. Genuinely concurrent acquisition needs a shared store, which does not exist here.
+- **This package's store is in-memory and single-process.** `LeaseStore` holds leases in a `Map`, so it proves the epoch and availability rules but not the contention they exist to survive, and `InMemoryLeaseStorePlugin` is for a caller that is genuinely alone. A deployment where two hosts must not both own a work item mounts `@deepseek-ai/dsh-lease-sqlite` instead.
+- **The agent dispatch path carries no token.** `@deepseek-ai/dsh-workflow-worker-thread` acquires a lease for every run and refuses an outcome from a fenced-out worker, so a state write does present one. Agent dispatch does not: `advanceAgentLifecycleFenced` still has no production caller.
+- **Contention is proved sequentially HERE.** `tests/fencing.e2e.spec.ts` runs a hundred acquisitions in order and asserts exactly one token survives; a `Map` cannot show more. Two processes racing for one item are covered where a shared store exists, in `@deepseek-ai/dsh-lease-sqlite`.
 - **`setAvailable` is a switch, not a health check.** Nothing detects an outage; a caller must tell the store it is unreachable.
 - **The unfenced lifecycle entry point is still public.** `advanceAgentLifecycle` is exported from `@deepseek-ai/dsh-agent` and adopts whatever epoch a proposal carries, so any consumer reaches the unauthorized path by importing it. `advanceAgentLifecycleFenced` closes the hole only for callers who choose it. Withdrawing or gating the unfenced export changes P4-05's delivered surface and is not this package's to make; a characterization case in `tests/fault-matrix.spec.ts` pins the reachability as a measured fact.
 - **A refusal's audit record can be produced but not appended.** `describeFencingRejection` returns a complete record, and `TrustKernel.auditAppend` is `(_entry) => {}` with no read member on the kernel at all, so nothing can observe an appended entry — including a test.
+- No runtime invariant companion is published: the leases live in this mount's own `Map`, so nothing outside it holds a second observation of who owns an item, and a checker reading that map would be comparing it with itself.
 
 ### Dev Note
 

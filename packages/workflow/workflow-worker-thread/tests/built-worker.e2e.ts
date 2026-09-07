@@ -25,6 +25,7 @@ import { Context } from '@deepseek-ai/cordis'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import WorkerThreadWorkflowEngine from '@deepseek-ai/dsh-workflow-worker-thread'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 
 const ctx = new Context()
 await ctx.plugin(SessionProjectionRegistry)
@@ -43,6 +44,7 @@ ctx.subagents.registerProvider({
     }
   },
 })
+await ctx.plugin(InMemoryLeaseStorePlugin)
 await ctx.plugin(WorkerThreadWorkflowEngine, { provider: 'must-not-be-used' })
 const run = ctx.workflowEngine.start({
   script: "const value = await agent('answer', { schema: { type: 'object', properties: { answer: { type: 'number' } }, required: ['answer'] } }); return value.answer",

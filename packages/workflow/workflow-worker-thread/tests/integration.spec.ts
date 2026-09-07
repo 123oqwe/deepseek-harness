@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -12,9 +15,10 @@ import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { STRUCTURED_OUTPUT_TOOL } from '@deepseek-ai/dsh-subagent-in-process-driver'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import LeaseStorePlugin from '@deepseek-ai/dsh-lease-sqlite'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import type { LeaseStore, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease'
+import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -33,6 +37,9 @@ async function mountInvariants(ctx: Context): Promise<void> {
  * cannot give — the MessageChannel suite fakes the host, and the host suite
  * stubs the subagent seam.
  */
+const leaseRoots: string[] = []
+afterEach(() => { for (const root of leaseRoots.splice(0)) rmSync(root, { recursive: true, force: true }) })
+
 async function setup(script: Script) {
   const ctx = new Context()
   const adapter = new MockAdapter(script)
@@ -42,6 +49,14 @@ async function setup(script: Script) {
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
+  // The engine INJECTS its lease store, so the stack must mount a provider
+  // for it — the same wiring a profile does. A temp directory per setup: the
+  // store is a real file now, and a suite that wrote it into the repository
+  // root would leave `.dsh/leases.sqlite` behind and let one case's leases
+  // reach the next.
+  const directory = mkdtempSync(join(tmpdir(), 'workflow-leases-'))
+  leaseRoots.push(directory)
+  await ctx.plugin(LeaseStorePlugin, { directory })
   await ctx.plugin(WorkerThreadWorkflowEngine, {})
   ctx.llm.registerAdapter(['mock'], adapter)
   const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
@@ -111,7 +126,7 @@ describe('P4-07 Usage: a workflow run holds an epoch lease on the real stack', (
 
   it('must[0]: a run takes a lease, and a second host cannot take the same item while it is held', async () => {
     const { ctx, parent } = await setup([textResponse('done')])
-    const engine = ctx.workflowEngine as unknown as { leases: LeaseStore }
+    const engine = ctx.workflowEngine as unknown as { leases: LeaseStoreContract }
     const run = ctx.workflowEngine.start({
       meta: { name: 'leased', description: 'holds a lease' },
       script: "return 'ok'",
@@ -132,7 +147,7 @@ describe('P4-07 Usage: a workflow run holds an epoch lease on the real stack', (
     // another host already owns this item, and starting anyway is how two
     // masters happen.
     const { ctx, parent } = await setup([textResponse('done')])
-    const engine = ctx.workflowEngine as unknown as { leases: LeaseStore }
+    const engine = ctx.workflowEngine as unknown as { leases: LeaseStoreContract }
     engine.leases.setAvailable(false)
     expect(() => ctx.workflowEngine.start({
       meta: { name: 'unavailable', description: 'refused' },
@@ -147,7 +162,7 @@ describe('P4-07 Usage: a workflow run holds an epoch lease on the real stack', (
     // the item now, and a second `workflow/end` for one run is the
     // two-masters state this epic exists to prevent.
     const { ctx, parent } = await setup([textResponse('done')])
-    const engine = ctx.workflowEngine as unknown as { leases: LeaseStore }
+    const engine = ctx.workflowEngine as unknown as { leases: LeaseStoreContract }
     const ends: unknown[] = []
     ctx.on('workflow/end', (info: unknown) => { ends.push(info) })
     const run = ctx.workflowEngine.start({

@@ -1178,6 +1178,9 @@ importers:
       '@deepseek-ai/dsh-jobs-local':
         specifier: workspace:^
         version: link:../../jobs/jobs-local
+      '@deepseek-ai/dsh-lease-sqlite':
+        specifier: workspace:^
+        version: link:../../run/lease-sqlite
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
@@ -3923,6 +3926,15 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+
+  packages/collaboration/lease-contract:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
 
   packages/collaboration/mailbox:
     devDependencies:
@@ -7006,6 +7018,25 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
+      '@deepseek-ai/dsh-lease-contract':
+        specifier: workspace:^
+        version: link:../../collaboration/lease-contract
+
+  packages/run/lease-sqlite:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-lease-contract':
+        specifier: workspace:^
+        version: link:../../collaboration/lease-contract
 
   packages/run/message-bus:
     devDependencies:
@@ -10031,6 +10062,9 @@ importers:
       '@deepseek-ai/dsh-agent-loop-testkit':
         specifier: workspace:^
         version: link:../../test-support/agent-loop-testkit
+      '@deepseek-ai/dsh-lease':
+        specifier: workspace:^
+        version: link:../../run/lease
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
@@ -10077,6 +10111,9 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-lease':
+        specifier: workspace:^
+        version: link:../../run/lease
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
@@ -10174,6 +10211,12 @@ importers:
       '@deepseek-ai/dsh-lease':
         specifier: workspace:^
         version: link:../../run/lease
+      '@deepseek-ai/dsh-lease-contract':
+        specifier: workspace:^
+        version: link:../../collaboration/lease-contract
+      '@deepseek-ai/dsh-lease-sqlite':
+        specifier: workspace:^
+        version: link:../../run/lease-sqlite
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm

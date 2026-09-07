@@ -397,6 +397,14 @@
         toolName: subagent_fork
         backgroundMode: one-shot
 
+    # The engine injects `leaseStore`, so a provider for it must be mounted or
+    # the engine never activates. The durable store is the one a deployment
+    # wants: two hosts sharing this directory cannot both own a run.
+    - id: lease-store
+      name: '@deepseek-ai/dsh-lease-sqlite'
+      config:
+        directory: .dsh
+
     - id: workflow-worker-thread
       name: '@deepseek-ai/dsh-workflow-worker-thread'
       config:

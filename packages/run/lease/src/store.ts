@@ -17,41 +17,26 @@
  */
 
 import { brandNumber } from '@deepseek-ai/dsh-brand'
-import {
-  isReclaimable,
-  type FencingDenialReason,
-  type FencingToken,
-  type Lease,
-  type LeaseEpoch,
-  type WorkerId,
-  type WorkItemId,
-} from './types.ts'
+import { isReclaimable } from '@deepseek-ai/dsh-lease-contract'
+import type {
+  AcquireResult,
+  FencingDenialReason,
+  FencingToken,
+  Lease,
+  LeaseEpoch,
+  LeaseStoreContract,
+  RenewResult,
+  WorkerId,
+  WorkItemId,
+} from '@deepseek-ai/dsh-lease-contract'
 
-/** Why an acquisition was refused. */
-export type AcquireDenialReason =
-  /** Another worker holds an unexpired lease on this item. */
-  | 'held-by-another'
-  /** The store is unavailable, so no answer about ownership is possible. */
-  | 'store-unavailable'
-
-/** The outcome of an acquisition attempt. */
-export type AcquireResult =
-  | { readonly acquired: true; readonly lease: Lease; readonly token: FencingToken }
-  | { readonly acquired: false; readonly reason: AcquireDenialReason }
-
-/** Why a renewal was refused. */
-export type RenewDenialReason =
-  /** The presented token is not the item's current authority. */
-  | 'not-holder'
-  /** The lease had already expired; renewing it would resurrect a fenced worker. */
-  | 'already-expired'
-  /** The store is unavailable. */
-  | 'store-unavailable'
-
-/** The outcome of a heartbeat. */
-export type RenewResult =
-  | { readonly renewed: true; readonly lease: Lease }
-  | { readonly renewed: false; readonly reason: RenewDenialReason }
+export type {
+  AcquireDenialReason,
+  AcquireResult,
+  LeaseStoreContract,
+  RenewDenialReason,
+  RenewResult,
+} from '@deepseek-ai/dsh-lease-contract'
 
 /**
  * An in-memory lease store.
@@ -59,7 +44,7 @@ export type RenewResult =
  * `available` is settable so acceptance[2] can be driven directly: a test, and
  * a real deployment's health check, need the same switch.
  */
-export class LeaseStore {
+export class LeaseStore implements LeaseStoreContract {
   private readonly leases = new Map<WorkItemId, Lease>()
   private readonly nextEpoch = new Map<WorkItemId, number>()
   private available = true
