@@ -810,3 +810,12 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 2. **agent run 没有心跳**(must[2] 前半):长 run 的租约到期即可被夺,原持有者之后被 fence 是对的,但 run 本身丢了。裁:agent run 按 TTL 比例续租(TTL 与比例来自 lease 配置或协议常量,不新增 tunable);冻结:续租停止 → 可回收 → 第二 host 在真实 store 上取得(两进程或 `nowMs` 驱动)。
 3. **完成不释放**:Known Limitations 记的"`completed`/`failed` 不可达"意味着每个结束的会话留下一份租约等到期。裁:run 结束(agent 停机)→ 释放/完成租约;`orphaned` 与回收扫描可留 Known Limitations(scheduler 归 P4-05),但 completed/failed 两个终态必须可达。
 **147 的 P4-06 两条不因本次改了 `dispatch.ts` 而补**——执行者拒得对,按名字对号入座正是门要抓的。**顺序**:上面三处 → 观测 → 再 P4-06 U(它消费的 epoch 现在真在 launched profile 上才有)。
+
+### 12.21 BLOCKED-148:租约库放置,与它掩盖的并发首开缺陷(2026-09-07 15:45 EDT)
+
+**事实**:`run` 启用(`storePath: dshHomePath('runs','runs.json')`)、心跳 `leaseMs/3`(除数是协议常量)、会话结束释放、manifest 事件带 `leaseEpoch`、结构门 `verify-run-enabled-in-bundles` 带正对照——§12.20 三条落地。租约 `directory` 未定:`dshHomePath('leases')` 让 16 个 SDK 快照场景红(`cannot create effect on inactive context`,cordis 生命周期文案,**底层 SQLite 错误至今没看到**);`.dsh` 相对 cwd 全绿,作记录在案的临时。session 语料的 launcher 按场景设 `DSH_HOME=cwd/.dsh`,SDK 语料显然共用一个 home——16 个进程**同时首开同一个新库**。
+**裁决**:
+1. **这首先是缺陷不是放置**:两个 host 同时启动、对着同一个租约库,正是租约存在的场景;首开失败就是 P4-07 在它的目标场景里失败。先把 SQLite 原文抓出来(dsh-ci-test-reliability:子进程 + 共享资源),再修——schema 创建在 `BEGIN IMMEDIATE` 内、`busy_timeout` 生效于 PRAGMA 之前的第一条语句、SQLITE_BUSY 重试;冻结:N 个进程并发首开同一新库全部成功 + 之后只一个能取同一 item。
+2. **放置 = 与 session 存储同根**(`dshHomePath('leases')`,即 sessions 旁边):租约的作用域就是 work item 的作用域,run / session 都在那个根下;`.dsh` 相对 cwd 会让同一 session 根上两个不同 cwd 的进程各持一库——双主可能,正是要防的。"整机 vs 按项目"的真答案是"跟 session 根走",DSH_HOME 本身就是 profile 选的。
+3. `.dsh` 字面量随本批推送作临时(148 开着、P4-07 不在它上签);缺陷修好即换,顺序:148 → P4-06 U。执行者要等 148 再动 P4-06,对——epoch 不该建在会改的配置上。
+**顺带两处 harness 缺陷修法认可**:tokenizer 标签 `{{run:N}}`;复合 id 只认整串。匿名兜底拆成 `anonymous-run:` / `anonymous:` 两串,对。四语料计数 acp 15 / sdk 16 / session 80+3 / web 0 变化(实测 manifest 事件不出现),按 Standing 报齐。
