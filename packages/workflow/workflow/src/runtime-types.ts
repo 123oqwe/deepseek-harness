@@ -31,6 +31,21 @@ export interface WorkflowStartRequest {
   parent: Agent
   /** Cancels the run when aborted. */
   signal?: AbortSignal
+  /**
+   * Resume the interrupted run with this id, instead of starting a fresh one
+   * (Epic P4-08 must[1], acceptance[0]).
+   *
+   * The id is the caller's, because only the caller knows that the previous
+   * process died and that this invocation continues it. An engine that decided
+   * for itself would have to guess whether a journal on disk describes work
+   * this call is continuing or work someone else is still doing.
+   *
+   * A journal that does not exist, or whose script digest differs, starts the
+   * run fresh rather than failing — `admitResume` refuses the RESUME, not the
+   * run, and a caller that asked to continue a run that cannot be continued
+   * wants it to happen, not to be told no.
+   */
+  resumeRunId?: WorkflowRunId
 }
 
 /**

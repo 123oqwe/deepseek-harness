@@ -80,6 +80,8 @@ export class WorkflowExecution {
     private readonly limits: WorkerLimits,
     private readonly observer: ExecutionObserver,
     private readonly children: ChildPort,
+    /** Recorded outputs this resumed run may reuse, by step sequence. */
+    private readonly reusable: Record<number, string> = {},
   ) {
     // Compile FIRST: a body syntax error must throw out of the constructor
     // before any realm state exists. The host pre-parses the identical
@@ -264,6 +266,13 @@ export class WorkflowExecution {
     const seq = this.started
     const label = opts.label ?? defaultLabel(rawPrompt)
     const phase = opts.phase ?? this.currentPhase
+
+    // acceptance[0]: a step whose child the host reconciled against its own
+    // session is NOT run again. No slot is acquired and no observer event is
+    // emitted — a reused step started no child, and reporting one would put a
+    // second child receipt in the journal for work that happened once.
+    const recorded = this.reusable[seq]
+    if (recorded !== undefined) return recorded
 
     await this.acquireSlot()
     try {

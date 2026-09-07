@@ -14,6 +14,9 @@ import z from '@deepseek-ai/schemastery'
 import WorkflowEngine, { WorkflowError, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
+import { dshHomePath } from '@deepseek-ai/dsh-home-paths'
+import type { SessionId } from '@deepseek-ai/dsh-session/types'
+import { reusableSteps } from './resume.ts'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import { WorkerRun } from './host.ts'
@@ -153,6 +156,8 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * store contends over the same rows.
    */
   private readonly leases: LeaseStoreContract
+  /** Directory holding one journal file per run (P4-08 must[1]). */
+  private readonly journalDirectory: string
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -160,6 +165,10 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // the assertion records that resolution, not a hidden fallback.
     this.config = config as ResolvedConfig
     this.leases = ctx.leaseStore
+    // Derived from the profile's configured harness home, not a Config field:
+    // where a run's recovery record lives is not a deployment CHOICE, it
+    // follows the storage root the profile already set (§12.22-2).
+    this.journalDirectory = dshHomePath('journals')
   }
 
   /**
@@ -172,12 +181,31 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    *   agent, and an optional cancel signal.
    * @returns the live run (its `result` resolves when the script settles).
    */
+  /**
+   * Whether one child session's own log shows it finished work.
+   *
+   * The external check a resume reconciles against (P4-08 must[2]). Asked of
+   * the SESSION rather than of the journal, because the journal is the
+   * interrupted process's account of itself and the question is whether that
+   * account is true.
+   * @param childId - the child session recorded on a journal entry.
+   * @returns whether that session exists and closed a turn.
+   */
+  private childFinished(childId: string): boolean {
+    const session = this.ctx.sessions.get(brandString<SessionId>(childId))
+    if (session === undefined) return false
+    return session.snapshotEvents().some(event => event.type === 'turn/end')
+  }
+
   start(request: WorkflowStartRequest): WorkflowRun {
     const meta = validateMeta(request.meta)
     assertBodyParses(request.script, meta.name)
     const subagentProvider = resolveSubagentProvider(this.ctx, this.config.provider, request.subagentProvider)
     const maxTotalAgents = resolveMaxTotalAgents(request.maxTotalAgents, this.config.maxTotalAgents)
-    const id = WorkflowRunId(randomUUID())
+    const id = request.resumeRunId ?? WorkflowRunId(randomUUID())
+    const resume = request.resumeRunId === undefined
+      ? undefined
+      : reusableSteps(this.journalDirectory, request.resumeRunId, request.script, childId => this.childFinished(childId))
     const info: WorkflowRunInfo = { id, meta }
     const limits: WorkerLimits = {
       maxConcurrentAgents: this.config.maxConcurrentAgents === 0
@@ -192,6 +220,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       body: request.script,
       ...request.args !== undefined ? { args: request.args } : {},
       limits,
+      ...resume === undefined || Object.keys(resume).length === 0 ? {} : { reusable: resume },
     }
     // Capture the dependency while this service call is still traced through
     // the start() holder. Cordis strips the engine-provider shadow when it
@@ -238,6 +267,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       },
       request.signal,
       lease,
+      this.journalDirectory,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
     // lifetime is the run's, and an engine-side timer would outlive the thing

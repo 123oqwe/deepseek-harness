@@ -155,7 +155,7 @@ export async function runWorkerSession(port: MessagePort, init: WorkerInit): Pro
 
   let execution: WorkflowExecution
   try {
-    execution = new WorkflowExecution(init.meta, init.body, init.args, init.limits, observer, children)
+    execution = new WorkflowExecution(init.meta, init.body, init.args, init.limits, observer, children, init.reusable ?? {})
   } catch (error: unknown) {
     post(WorkerToHostType.Result, { result: { value: null, stopReason: 'error', error: renderThrown(error), agentsStarted: 0 } })
     return

@@ -46,6 +46,9 @@
     },
     {
       "path": "../../collaboration/workflow-journal"
+    },
+    {
+      "path": "../../util/home-paths"
     }
   ]
 }

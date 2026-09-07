@@ -20,7 +20,7 @@ import { renderThrown } from './realm.ts'
 import type { ExecutionObserver } from './runtime.ts'
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { createJournalRecorder, journalingObserver } from '@deepseek-ai/dsh-workflow-journal'
+import { createJournalRecorder, journalingObserver, writeJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { JournalRecorder, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
 import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
@@ -167,6 +167,8 @@ export class WorkerRun implements WorkflowRun {
      * describes.
      */
     private readonly lease: RunLease,
+    /** Directory holding one journal file per run (P4-08 must[1]). */
+    private readonly journalDirectory: string,
   ) {
     this.journal = createJournalRecorder(brandString<ScriptDigest>(
       createHash('sha256').update(init.body).digest('hex'),
@@ -175,7 +177,14 @@ export class WorkerRun implements WorkflowRun {
     // DSL has no syntax for it yet, so the honest default is the one that
     // forces reconciliation rather than the one that permits a silent skip:
     // an `agent()` call may have written files, sent messages, or spent money.
-    this.journaling = journalingObserver(this.journal, () => 'side-effecting')
+    const record = journalingObserver(this.journal, () => 'side-effecting')
+    // Persisted after EVERY step edge, synchronously. A journal flushed at
+    // settlement describes only runs that did not crash, which is the set that
+    // never needed one.
+    this.journaling = {
+      onAgentStart: (event) => { record.onAgentStart(event); this.persistJournal() },
+      onAgentEnd: (event) => { record.onAgentEnd(event); this.persistJournal() },
+    }
     this.result = new Promise<WorkflowResult>((resolve) => { this.settleResolve = resolve })
     // workerData rides the structured clone: args are plain JSON by the seam
     // contract, so the clone is total and doubles as the caller-isolation
@@ -278,6 +287,13 @@ export class WorkerRun implements WorkflowRun {
       ])
       await this.worker.terminate()
       this.reapChildren('workflow disposed')
+      // Give the work item back at DISPOSAL, not at settlement (§12.20-3, the
+      // rule the agent run follows). Releasing at settlement was measured and
+      // reverted: the run's own final writes — `workflow/end` among them —
+      // are gated on `mayReportOutcome`, which reads the store, so a released
+      // lease made this host fence itself out of announcing its own result and
+      // nine cases lost their terminal event.
+      this.releaseLease()
     })().then(
       () => { claimed.resolve(undefined) },
       /* v8 ignore next -- result/quiescence never reject and Worker.terminate is the only external promise */
@@ -587,6 +603,23 @@ export class WorkerRun implements WorkflowRun {
   }
 
   /**
+   * Write this run's journal to the directory the engine configured.
+   *
+   * A failed write is logged and swallowed, deliberately: the journal is a
+   * recovery aid, and a full disk or a read-only directory must not take down
+   * a run that is otherwise working. The cost is stated where it lands — a
+   * resume of THIS run will find a stale journal or none, which `planResume`
+   * and `admitResume` already handle as their ordinary refusals.
+   */
+  private persistJournal(): void {
+    try {
+      writeJournal(this.journalDirectory, this.id, this.journal.journal())
+    } catch (error: unknown) {
+      this.ctx.logger.warn(`workflow run ${this.id}: journal not persisted (${renderThrown(error)})`)
+    }
+  }
+
+  /**
    * This run's journal as it stands (P4-08 must[0]).
    *
    * Readable at any moment, including mid-run: the point of writing an entry
@@ -661,6 +694,25 @@ export class WorkerRun implements WorkflowRun {
     clearTimeout(this.graceTimer)
     clearInterval(this.heartbeat)
     this.settleResolve(result)
+  }
+
+  /**
+   * Release this run's lease, if the store this host mounted still has one.
+   *
+   * Silent when the store cannot be reached or the lease was already
+   * reclaimed: a holder that has nothing to give up has nothing to report, and
+   * an error here would turn ordinary teardown into a failure.
+   */
+  private releaseLease(): void {
+    this.lease.release()
+  }
+
+  /**
+   * This run's journal directory, for a caller resuming it (P4-08 must[1]).
+   * @returns the directory this run persists into.
+   */
+  get journalRoot(): string {
+    return this.journalDirectory
   }
 
   /**

@@ -252,6 +252,25 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-151 — a resume's reconciliation needs a DURABLE child record, and `start()` is synchronous
+
+**State: OPEN. The durable half of P4-08's resume is built and proved; the composition case acceptance[0] asks for cannot pass under the current entry point, and changing that entry point is a public-surface decision.**
+
+§12.22-2 asked for three things. Two landed: the journal is persisted per run under `dshHomePath('journals')` after every step edge, and `reusableSteps` reads it back, refuses a changed script, and reuses only steps whose recorded children are confirmed. Six cases cover it, including "the journal says completed, the world does not agree, and the world wins".
+
+**What the third one hit.** The reconciliation must ask something that survives the crash. It currently asks `ctx.sessions.get(childId)`, the LIVE registry — and measured on a real run, that answers `false` for both children, because a settled workflow disposes them. In an actual restart it would answer `false` for everything, so every step would rerun and acceptance[0] would be satisfied by never reusing anything, which is the vacuous reading of it.
+
+The durable source is `ctx.sessionPersistence.load(childId)`, and it is **asynchronous**. `WorkflowEngine.start()` returns a `WorkflowRun` synchronously, and the reusable map must be in `WorkerInit` before the Worker spawns, because `workerData` is structured-cloned at spawn time. There is no point in the current surface where an awaited read fits.
+
+**Decision needed (delegate's):** either
+1. resuming gets its own asynchronous entry point (`resume(runId, request): Promise<WorkflowRun>`), leaving `start()` synchronous — a new public method on the engine seam; or
+2. `start()` becomes asynchronous for every caller, which changes every existing call site and the `WorkflowEngine` contract; or
+3. reconciliation reads a durable record synchronously — which means either a synchronous persistence read that does not exist, or coupling the engine to the jsonl backend's on-disk layout, and the second is a definition depending on a provider's file names.
+
+**Not chosen.** All three change a seam's public shape or its dependencies, and picking one is the scope decision §12.11 records as not the executor's.
+
+**One defect fixed on the way, worth its own line.** Releasing the run's lease at SETTLEMENT — the rule §12.20-3 applies to agent runs — broke nine cases: the run's own terminal writes, `workflow/end` among them, are gated on `mayReportOutcome`, which reads the store, so a released lease made the host fence itself out of announcing its own result. The release moved to disposal, after the worker is terminated. The measurement is in the code comment so the next person does not re-derive it.
+
 ### BLOCKED-150 — P4-09's Usage needs a `workflow()` nesting hook that does not exist, and its own frozen case says so
 
 **State: OPEN. Not built, because building it is a product feature and choosing to add one is not the executor's call.**

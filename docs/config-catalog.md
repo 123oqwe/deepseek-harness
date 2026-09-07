@@ -3517,7 +3517,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/workflow/workflow-worker-thread/src/index.ts:35`](../packages/workflow/workflow-worker-thread/src/index.ts)
+Source: [`packages/workflow/workflow-worker-thread/src/index.ts:38`](../packages/workflow/workflow-worker-thread/src/index.ts)
 
 <a id="deepseek-aidsh-workspace-trust-local"></a>
 
@@ -3718,6 +3718,6 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-util-values` ([`packages/util/values/src/index.ts`](../packages/util/values/src/index.ts))
 - `@deepseek-ai/dsh-util-workspace-path` ([`packages/util/workspace-path/src/index.ts`](../packages/util/workspace-path/src/index.ts))
 - `@deepseek-ai/dsh-win32-process` ([`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts))
-- `@deepseek-ai/dsh-workflow-journal` ([`packages/workflow/workflow-journal/src/index.ts`](../packages/workflow/workflow-journal/src/index.ts))
+- `@deepseek-ai/dsh-workflow-journal` ([`packages/collaboration/workflow-journal/src/index.ts`](../packages/collaboration/workflow-journal/src/index.ts))
 - `@deepseek-ai/dsh-workflow-registry` ([`packages/workflow/workflow-registry/src/index.ts`](../packages/workflow/workflow-registry/src/index.ts))
 - `@deepseek-ai/dsh-workspace-trust` ([`packages/workspace/workspace-trust/src/index.ts`](../packages/workspace/workspace-trust/src/index.ts))

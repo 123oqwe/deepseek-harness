@@ -48,6 +48,15 @@ export interface RunLease {
   /** Whether this holder may still write (must[1]). */
   mayWrite: (nowMs: number) => boolean
   /**
+   * Give the work item back when the run is over.
+   *
+   * A finished run is not a lapsed one. Holding the item until a deadline it
+   * no longer needs blocks the caller most likely to want it next — a resume
+   * of this very run — and makes a host of many short runs spend its capacity
+   * waiting out leases nobody holds.
+   */
+  release: () => void
+  /**
    * The item's lease as the store holds it NOW, for a caller that must check a
    * token against current authority — `dsh-agent`'s
    * `advanceAgentLifecycleFenced` is the one that matters.
@@ -102,6 +111,7 @@ export function acquireRunLease(
       // whether a stale worker may write.
       mayWrite: () => checkFencing(token, store.get(workItem)).admitted,
       currentLease: () => store.get(workItem),
+      release: () => { store.release(token) },
     },
   }
 }

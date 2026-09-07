@@ -34,6 +34,18 @@ export interface WorkerInit {
   args?: unknown
   /** The worker-enforced limits. */
   limits: WorkerLimits
+  /**
+   * Recorded outputs a resumed run may reuse, by 1-based `agent()` sequence
+   * (P4-08 must[1], acceptance[0]).
+   *
+   * Present only on a resume, and only for steps whose recorded children were
+   * confirmed against their own sessions — the host does that reconciliation,
+   * because it is the side with a session registry. The worker's part is to
+   * return the recorded output instead of starting a child, which is what
+   * makes "resume does not repeat completed child work" true rather than
+   * asserted.
+   */
+  reusable?: Record<number, string>
 }
 
 /** What the worker asks the host to start for one `agent()` call (options already validated worker-side). */
