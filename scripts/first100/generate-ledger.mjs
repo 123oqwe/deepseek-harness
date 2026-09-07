@@ -979,6 +979,50 @@ export function checkDelegateSignoff(epicId, row, signoffRegistry, userConfirmat
   return { valid: true, reason: null, currentRowDigest: currentDigest, matchedEntry: matching }
 }
 
+/**
+ * Close one open finding on a row, recording what closed it.
+ *
+ * `openFindings` was carried forward from the prior row and had no way OUT.
+ * A finding that cannot be closed through the tool gets closed by hand-editing
+ * the ledger, which is the one thing the ledger's own rules forbid — so the
+ * findings accumulated instead, and P1-03 reached sign-off still carrying
+ * three that its own lift, ruling and gate had already resolved.
+ *
+ * The closure reason is required and is kept on the row. A finding that
+ * vanishes with no record is indistinguishable from one nobody looked at.
+ */
+function cmdCloseFinding() {
+  const epic = opt('epic')
+  const match = opt('finding')
+  const reason = opt('reason')
+  if (!epic || !match || !reason) {
+    console.error('usage: generate-ledger.mjs --close-finding --epic <id> --finding <substring> --reason <what closed it>')
+    process.exit(1)
+  }
+  const ledger = loadJson(LEDGER_PATH)
+  const row = ledger.rows[epic]
+  if (!row) {
+    console.error(`BLOCKED: no ledger row for ${epic}`)
+    process.exit(1)
+  }
+  const open = Array.isArray(row.openFindings) ? row.openFindings : []
+  const hit = open.filter((finding) => String(finding).includes(match))
+  if (hit.length === 0) {
+    console.error(`BLOCKED: ${epic} has no open finding containing ${JSON.stringify(match)}; open findings are:\n  ${open.join('\n  ')}`)
+    process.exit(1)
+  }
+  if (hit.length > 1) {
+    console.error(`BLOCKED: ${JSON.stringify(match)} matches ${String(hit.length)} findings on ${epic}; name one exactly:\n  ${hit.join('\n  ')}`)
+    process.exit(1)
+  }
+  row.openFindings = open.filter((finding) => finding !== hit[0])
+  row.closedFindings = [...row.closedFindings ?? [], { finding: hit[0], reason, closedAtUtc: nowIso() }]
+  if (row.openFindings.length === 0) row.openFindings = null
+  const written = writeLedgerHeader(ledger.rows, { epic, closedFinding: hit[0], reason })
+  renderMarkdown(written)
+  console.log(`closed 1 finding on ${epic}: ${hit[0]}`)
+}
+
 function cmdRecordSignoff() {
   const epic = opt('epic')
   const conclusion = opt('conclusion')
@@ -1203,6 +1247,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   else if (flag('check')) cmdCheck()
   else if (flag('sync-exec-state')) cmdSyncExecState()
   else if (flag('accept')) cmdAccept()
+  else if (flag('close-finding')) cmdCloseFinding()
   else if (flag('record-signoff')) cmdRecordSignoff()
   else if (flag('supplement')) cmdGreenSupplement()
   else if (opt('epic')) cmdGreen()

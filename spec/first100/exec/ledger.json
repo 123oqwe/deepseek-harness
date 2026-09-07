@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T03:42:47.910Z",
-  "inputDigest": "d0603e5067b2d21c464062cd19b9f5a0981a905aa90eb54d2c6b4908a7cf4cdd",
+  "lastUpdatedUtc": "2026-09-07T04:01:31.201Z",
+  "inputDigest": "fbcd1fc734993e8336fa53213152d372f89193f7c93f567fde7d23cb5f6162a9",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1722,13 +1722,26 @@
       },
       "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
       "independentVerdict": "PENDING_WITH_LIVE_LOCK",
-      "openFindings": [
-        "ACCEPTANCE LOCK: must[2] product-level half + acceptance[0] product-level half — the gate has zero call sites",
-        "BLOCKED-094 (the unlocked-profile policy decision must come first)",
-        "BLOCKED-095 (C freeze is post-hoc, self-declared)"
-      ],
+      "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
-      "acceptedEvidence": null
+      "acceptedEvidence": null,
+      "closedFindings": [
+        {
+          "finding": "ACCEPTANCE LOCK: must[2] product-level half + acceptance[0] product-level half — the gate has zero call sites",
+          "reason": "Both lock halves LIFTED 2026-09-07 on run 34079177586: the gate now has two call sites in composeProfile, covered by U.1's nine cases and U.2's four; acceptance[0] by F.1's seven.",
+          "closedAtUtc": "2026-09-07T04:01:21.155Z"
+        },
+        {
+          "finding": "BLOCKED-094 (the unlocked-profile policy decision must come first)",
+          "reason": "Ruled and landed: unlockedProfilePolicy is a required no-default field read from each bundle's dsh.pluginLock, most-restrictive-wins, with all three states pinned by U.1's cases.",
+          "closedAtUtc": "2026-09-07T04:01:31.064Z"
+        },
+        {
+          "finding": "BLOCKED-095 (C freeze is post-hoc, self-declared)",
+          "reason": "Superseded by predicate (v): freeze-in-candidate-tree replaces the timestamp-based lateness question entirely, and P1-03's seven cells pass it at candidate a093539442.",
+          "closedAtUtc": "2026-09-07T04:01:31.200Z"
+        }
+      ]
     },
     "P1-04": {
       "id": "P1-04",
