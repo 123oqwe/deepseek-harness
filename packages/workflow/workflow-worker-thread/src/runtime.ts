@@ -63,8 +63,17 @@ function defaultLabel(prompt: string): string {
  * host owns cancellation and cleanup of any dropped child work.
  */
 export class WorkflowExecution {
-  /** 1-based count of `agent()` calls started (the `agentsStarted` result field). */
+  /** 1-based count of `agent()` calls that actually started a child (the `agentsStarted` result field). */
   private started = 0
+  /**
+   * 1-based count of `agent()` calls REACHED, whether or not a child started.
+   *
+   * Separate from {@link WorkflowExecution.started} because a resumed run
+   * reuses steps: the sequence has to keep matching the journal's step ids, so
+   * it counts calls, while `started` counts children and must not credit a
+   * reused step with a start that did not happen.
+   */
+  private calls = 0
   private activeSlots = 0
   private readonly slotWaiters: { resolve(): void; reject(error: unknown): void }[] = []
   private cancelReason: string | undefined
@@ -262,17 +271,20 @@ export class WorkflowExecution {
         'AGENT_CAP',
       )
     }
-    this.started += 1
-    const seq = this.started
-    const label = opts.label ?? defaultLabel(rawPrompt)
-    const phase = opts.phase ?? this.currentPhase
+    this.calls += 1
+    const seq = this.calls
 
     // acceptance[0]: a step whose child the host reconciled against its own
-    // session is NOT run again. No slot is acquired and no observer event is
-    // emitted — a reused step started no child, and reporting one would put a
-    // second child receipt in the journal for work that happened once.
+    // durable session is NOT run again. Checked BEFORE the cap and before the
+    // start counter: a reused step acquires no slot, emits no observer event,
+    // and must not be credited with a child it did not start — reporting one
+    // would put a second receipt in the journal for work that happened once.
     const recorded = this.reusable[seq]
     if (recorded !== undefined) return recorded
+
+    this.started += 1
+    const label = opts.label ?? defaultLabel(rawPrompt)
+    const phase = opts.phase ?? this.currentPhase
 
     await this.acquireSlot()
     try {

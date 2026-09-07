@@ -18,5 +18,6 @@ export type {
   VerificationStatus,
   WorkerId,
 } from './types.ts'
+export type { TaskStoreContract } from './store.ts'
 export { TaskStore } from './store.ts'
 export type { ReceiptOutcome, ReceiptRejectionReason, SubmitOutcome, SubmitRefusalReason, TaskReceipt } from './store.ts'

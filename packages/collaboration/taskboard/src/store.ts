@@ -29,8 +29,37 @@ export type SubmitOutcome =
   | { readonly submitted: true }
   | { readonly submitted: false; readonly reason: SubmitRefusalReason; readonly detail: string }
 
-/** An in-memory taskboard. */
-export class TaskStore {
+/**
+ * What a taskboard must do, independent of where it keeps the tasks.
+ *
+ * Declared away from the in-memory class so a consumer depends on the RULE
+ * rather than on the storage. acceptance[0] is about MULTI-PROCESS contention,
+ * and a `Map` cannot hold that property at all: two processes each hold their
+ * own and both claim the same task. `@deepseek-ai/dsh-taskboard-sqlite` is the
+ * provider that can.
+ */
+export interface TaskStoreContract {
+  /** Submit a task graph, refusing cycles before anything is stored. */
+  submit(tasks: readonly Task[]): SubmitOutcome
+  /** One task, or undefined. */
+  get(id: TaskId): Task | undefined
+  /** Claim a task, atomically against every other claimer of this store. */
+  claim(id: TaskId, worker: WorkerId, nowMs: number, leaseMs: number): ClaimDecision
+  /** Advance a task from a receipt, without the model touching it. */
+  applyReceipt(receipt: TaskReceipt): ReceiptOutcome
+  /** Every task currently held. */
+  list(): readonly Task[]
+}
+
+/**
+ * An in-memory taskboard.
+ *
+ * Atomic within ONE process, which is what its `claim` can promise: the read,
+ * the decision and the write have no `await` between them. Across processes it
+ * promises nothing, so a deployment whose workers are separate processes
+ * mounts the durable provider instead.
+ */
+export class TaskStore implements TaskStoreContract {
   private readonly tasks = new Map<TaskId, Task>()
 
   /**

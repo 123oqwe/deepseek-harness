@@ -1820,6 +1820,7 @@ Source: [`packages/guard/repeat-tool-reminder/src/index.ts:28`](../packages/guar
 Requires: `agents` · `leaseStore`
 
 ```ts config-catalog
+/** Deployment-varying configuration of {@link RunPlugin}. */
 export interface Config {
   /**
    * Filesystem path of the durable Run store document this plugin's
@@ -3708,6 +3709,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-session-title-llm` ([`packages/session/session-title-llm/src/index.ts`](../packages/session/session-title-llm/src/index.ts))
 - `@deepseek-ai/dsh-subagent-in-process-driver` ([`packages/subagent/subagent-in-process-driver/src/index.ts`](../packages/subagent/subagent-in-process-driver/src/index.ts))
 - `@deepseek-ai/dsh-taskboard` ([`packages/collaboration/taskboard/src/index.ts`](../packages/collaboration/taskboard/src/index.ts))
+- `@deepseek-ai/dsh-taskboard-sqlite` ([`packages/run/taskboard-sqlite/src/index.ts`](../packages/run/taskboard-sqlite/src/index.ts))
 - `@deepseek-ai/dsh-timeout` ([`packages/util/timeout/src/index.ts`](../packages/util/timeout/src/index.ts))
 - `@deepseek-ai/dsh-trust-kernel` ([`packages/kernel/trust-kernel/src/index.ts`](../packages/kernel/trust-kernel/src/index.ts))
 - `@deepseek-ai/dsh-typert-generator` ([`packages/typert/generator/src/index.ts`](../packages/typert/generator/src/index.ts))

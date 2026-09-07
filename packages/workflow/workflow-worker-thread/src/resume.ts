@@ -22,8 +22,15 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { planResume, readJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { ScriptDigest } from '@deepseek-ai/dsh-workflow-journal'
 
-/** Whether one child session finished work, as its own log records it. */
-export type ChildCompleted = (childId: string) => boolean
+/**
+ * Whether one child session finished work, as its own DURABLE log records it.
+ *
+ * Asynchronous because the answer has to survive the crash: a settled run
+ * disposes its children, so the live registry answers `false` for every child
+ * after a restart and a resume reading it would never reuse anything —
+ * satisfying acceptance[0] by doing nothing, which is its vacuous reading.
+ */
+export type ChildCompleted = (childId: string) => Promise<boolean>
 
 /**
  * The digest a journal is written under and compared against.
@@ -52,12 +59,12 @@ export function scriptDigestOf(body: string): ScriptDigest {
  * @param childCompleted - whether a recorded child's session shows finished work.
  * @returns recorded outputs by step sequence, for steps whose child is confirmed.
  */
-export function reusableSteps(
+export async function reusableSteps(
   directory: string,
   runId: string,
   body: string,
   childCompleted: ChildCompleted,
-): Record<number, string> {
+): Promise<Record<number, string>> {
   const journal = readJournal(directory, runId)
   if (journal === undefined) return {}
   const plan = planResume(journal, scriptDigestOf(body))
@@ -71,7 +78,8 @@ export function reusableSteps(
     // reusing it while one of them is unaccounted for would skip work that
     // never finished.
     if (entry.childReceipts.length === 0) continue
-    if (!entry.childReceipts.every(receipt => childCompleted(receipt))) continue
+    const confirmations = await Promise.all(entry.childReceipts.map(receipt => childCompleted(receipt)))
+    if (!confirmations.every(Boolean)) continue
     const seq = Number(entry.stepId.replace(/^step-/u, ''))
     if (Number.isSafeInteger(seq) && seq > 0) reusable[seq] = entry.output
   }

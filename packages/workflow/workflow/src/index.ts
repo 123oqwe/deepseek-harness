@@ -12,6 +12,7 @@ import type {
   WorkflowResultInfo,
   WorkflowRunInfo,
 } from './types.ts'
+import type { WorkflowRunId } from './types.ts'
 import type { WorkflowRun, WorkflowStartRequest } from './runtime-types.ts'
 
 export { WorkflowRunId } from './types.ts'
@@ -170,6 +171,30 @@ export abstract class WorkflowEngine extends Service {
    * @returns the live run; its `result` resolves when the script settles.
    */
   abstract start(request: WorkflowStartRequest): WorkflowRun
+
+  /**
+   * Continue an interrupted run from its journal (Epic P4-08 must[1],
+   * acceptance[0]).
+   *
+   * **Asynchronous where {@link WorkflowEngine.start} is not, because it does
+   * strictly more.** Deciding what a resumed run may reuse means reconciling
+   * each recorded step against the world — the child's own DURABLE session,
+   * which only a persistence read can answer, and that read is async. The
+   * alternatives were measured and rejected under §12.23: making `start()`
+   * async charges every existing caller for an input they do not have, and
+   * reading a durable record synchronously means coupling the engine to a
+   * provider's on-disk layout.
+   *
+   * A journal that does not exist, or one written under a different script
+   * digest, starts the run fresh rather than failing: `admitResume` refuses
+   * the RESUME, not the run, and a caller asking to continue wants the work to
+   * happen.
+   * @param runId - the interrupted run to continue; its journal is read by this id.
+   * @param request - the same fields `start` takes; the script must be the one
+   *   the journal was written under, or the resume degrades to a fresh run.
+   * @returns the live run; its `result` resolves when the script settles.
+   */
+  abstract resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun>
 
   /**
    * Emit a lifecycle event while containing and logging each listener failure.

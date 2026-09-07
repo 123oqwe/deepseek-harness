@@ -252,9 +252,21 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
-### BLOCKED-151 — a resume's reconciliation needs a DURABLE child record, and `start()` is synchronous
+### BLOCKED-152 — the workflow engine imports `dsh-agent`, a `providers -> orchestration-runtime` edge older than this program
 
-**State: OPEN. The durable half of P4-08's resume is built and proved; the composition case acceptance[0] asks for cannot pass under the current entry point, and changing that entry point is a public-surface decision.**
+**State: OPEN, one line, placement only.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently — rather than because anything here depends on it.
+
+### BLOCKED-151 — CLOSED by §12.23: resume is its own asynchronous entry point
+
+**Resolution: reading (1).** `WorkflowEngine.resume(runId, request): Promise<WorkflowRun>` is a separate abstract method; `start()`'s signature is untouched. Resume and start are different operations — one more input, one more reconciliation — and each signature now says its own truth. The reconciliation reads the child's DURABLE session through `sessionPersistence`, falling back to the live registry only where no persistence is mounted and nothing outlives the process anyway.
+
+acceptance[0] runs through `resume` on a real stack with persistence: two children start on the first run, the host is disposed, and the resumed run starts **none** while still producing both results. Counted at `workflow/agent-start` — one event per child actually started — not at the journal, which could only report that it recorded a skip. Removing the reuse check reddens exactly that case.
+
+`agentsStarted` needed splitting to make this true rather than approximately true: the sequence counter must keep matching the journal's step ids, so it counts CALLS, while the start counter counts children. Crediting a reused step with a start would have put a second receipt in the journal for work that happened once.
+
+**Also checked, on the delegate's instruction:** the agent run's release ordering (§12.20-3). `RunPlugin.finish` advances the lifecycle to its terminal state and releases afterwards, and that order is already pinned — moving the release before the advances reddens two existing cases, because a released lease makes the fenced advance answer `fenced`. Verified by mutation rather than by reading.
+
+**Original state: OPEN. The durable half of P4-08's resume is built and proved; the composition case acceptance[0] asks for cannot pass under the current entry point, and changing that entry point is a public-surface decision.**
 
 §12.22-2 asked for three things. Two landed: the journal is persisted per run under `dshHomePath('journals')` after every step edge, and `reusableSteps` reads it back, refuses a changed script, and reuses only steps whose recorded children are confirmed. Six cases cover it, including "the journal says completed, the world does not agree, and the world wins".
 

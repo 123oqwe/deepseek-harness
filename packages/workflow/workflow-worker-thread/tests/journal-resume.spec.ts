@@ -58,9 +58,9 @@ describe('P4-08 acceptance[0]: a resume does not repeat completed child work', (
     // Every child the journal names is confirmed: this is the reconciliation,
     // and it asks the world (the child's own log), not the journal.
     const asked: string[] = []
-    const reusable = reusableSteps(dir, 'run-1', SCRIPT, (childId) => {
+    const reusable = await reusableSteps(dir, 'run-1', SCRIPT, (childId) => {
       asked.push(childId)
-      return true
+      return Promise.resolve(true)
     })
 
     expect(reusable).toEqual({ 1: 'agent-result-1' })
@@ -78,7 +78,7 @@ describe('P4-08 acceptance[0]: a resume does not repeat completed child work', (
     const dir = directory()
     writeJournal(dir, 'run-1', interrupted(scriptDigestOf(SCRIPT)))
 
-    expect(reusableSteps(dir, 'run-1', SCRIPT, () => false)).toEqual({})
+    expect(await reusableSteps(dir, 'run-1', SCRIPT, () => Promise.resolve(false))).toEqual({})
   })
 
   it('REFUSES the whole resume when the script changed (acceptance[1])', async () => {
@@ -88,13 +88,13 @@ describe('P4-08 acceptance[0]: a resume does not repeat completed child work', (
     const dir = directory()
     writeJournal(dir, 'run-1', interrupted(scriptDigestOf(SCRIPT)))
 
-    expect(reusableSteps(dir, 'run-1', `${SCRIPT} // edited`, () => true)).toEqual({})
+    expect(await reusableSteps(dir, 'run-1', `${SCRIPT} // edited`, () => Promise.resolve(true))).toEqual({})
   })
 
   it('starts fresh when no journal was ever written, rather than failing', async () => {
     // "This run was never journalled" and "there is nothing to resume" are one
     // situation, and a caller asking to continue wants the run to happen.
-    expect(reusableSteps(directory(), 'run-never-seen', SCRIPT, () => true)).toEqual({})
+    expect(await reusableSteps(directory(), 'run-never-seen', SCRIPT, () => Promise.resolve(true))).toEqual({})
   })
 
   it('requires EVERY recorded child of a step, not just the first', async () => {
@@ -109,8 +109,8 @@ describe('P4-08 acceptance[0]: a resume does not repeat completed child work', (
     } as unknown as WorkflowJournal
     writeJournal(dir, 'run-2', both)
 
-    expect(reusableSteps(dir, 'run-2', SCRIPT, childId => childId === 'child-one')).toEqual({})
-    expect(reusableSteps(dir, 'run-2', SCRIPT, () => true)).toEqual({ 1: 'agent-result-1' })
+    expect(await reusableSteps(dir, 'run-2', SCRIPT, childId => Promise.resolve(childId === 'child-one'))).toEqual({})
+    expect(await reusableSteps(dir, 'run-2', SCRIPT, () => Promise.resolve(true))).toEqual({ 1: 'agent-result-1' })
   })
 
   it('round-trips a journal through the file, since a resume reads what a dead process wrote', async () => {

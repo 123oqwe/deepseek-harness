@@ -7121,6 +7121,18 @@ importers:
         specifier: workspace:^
         version: link:../../workflow/workflow
 
+  packages/run/taskboard-sqlite:
+    devDependencies:
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-brand':
+        specifier: workspace:^
+        version: link:../../util/brand
+      '@deepseek-ai/dsh-taskboard':
+        specifier: workspace:^
+        version: link:../../collaboration/taskboard
+
   packages/runtime-diagnostics/invariants:
     dependencies:
       '@deepseek-ai/schemastery':

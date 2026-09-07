@@ -488,7 +488,6 @@ export function workflowRefOf(id: WorkflowRunId): WorkflowRef {
   return brandString<WorkflowRef>(id)
 }
 
-/** Deployment-varying configuration of {@link RunPlugin}. */
 /**
  * How many renewals fit inside one lease term.
  *
@@ -500,6 +499,7 @@ export function workflowRefOf(id: WorkflowRunId): WorkflowRef {
  */
 const LEASE_RENEWAL_DIVISOR = 3
 
+/** Deployment-varying configuration of {@link RunPlugin}. */
 export interface Config {
   /**
    * Filesystem path of the durable Run store document this plugin's

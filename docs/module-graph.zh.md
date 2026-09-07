@@ -309,6 +309,7 @@ flowchart TD
     pkg_lease_sqlite["lease-sqlite"]
     pkg_message_bus["message-bus"]
     pkg_run["run"]
+    pkg_taskboard_sqlite["taskboard-sqlite"]
   end
   subgraph group_runtime_diagnostics["packages/runtime-diagnostics"]
     pkg_invariants["invariants"]
@@ -498,6 +499,8 @@ flowchart TD
   pkg_message_bus --> pkg_brand
   pkg_message_bus --> pkg_intake_dedup
   pkg_message_bus --> pkg_mailbox
+  pkg_taskboard_sqlite --> pkg_brand
+  pkg_taskboard_sqlite --> pkg_taskboard
   pkg_workspace_trust --> pkg_principal
   pkg_skill_badge --> pkg_skill
   pkg_spill --> pkg_brand
@@ -1423,6 +1426,7 @@ flowchart TD
 | [`lease`](../packages/run/lease) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
 | [`lease-sqlite`](../packages/run/lease-sqlite) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
 | [`message-bus`](../packages/run/message-bus) | `run` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup), [`mailbox`](../packages/collaboration/mailbox) |
+| [`taskboard-sqlite`](../packages/run/taskboard-sqlite) | `run` | [`brand`](../packages/util/brand), [`taskboard`](../packages/collaboration/taskboard) |
 | [`workspace-trust`](../packages/workspace/workspace-trust) | `workspace` | [`principal`](../packages/identity/principal) |
 | [`skill-badge`](../packages/skill/skill-badge) | `skill` | [`skill`](../packages/skill/skill) |
 | [`spill`](../packages/spill/spill) | `spill` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |

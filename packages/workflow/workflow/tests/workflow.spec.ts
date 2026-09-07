@@ -10,6 +10,11 @@ import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '../src/
 
 /** A minimal concrete subclass exposing the protected emit helper for tests. */
 class StubEngine extends WorkflowEngine {
+  /** This stub does not journal, so a resume is a fresh start with the same id. */
+  resume(_runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
+    return Promise.resolve(this.start(request))
+  }
+
   start(request: WorkflowStartRequest): WorkflowRun {
     void request
     throw new Error('not under test')

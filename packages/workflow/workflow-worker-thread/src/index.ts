@@ -191,21 +191,71 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @param childId - the child session recorded on a journal entry.
    * @returns whether that session exists and closed a turn.
    */
-  private childFinished(childId: string): boolean {
-    const session = this.ctx.sessions.get(brandString<SessionId>(childId))
-    if (session === undefined) return false
-    return session.snapshotEvents().some(event => event.type === 'turn/end')
+  private async childFinished(childId: string): Promise<boolean> {
+    const id = brandString<SessionId>(childId)
+    // The DURABLE log first: a settled run disposes its children, so the live
+    // registry is empty exactly when a resume needs an answer. The live
+    // session is the fallback for a composition with no persistence mounted,
+    // where nothing outlives the process anyway.
+    const persistence = this.ctx.get('sessionPersistence')
+    if (persistence !== undefined) {
+      try {
+        const loaded = await persistence.load(id)
+        return loaded.events.some((event: { type: string }) => event.type === 'turn/end')
+      } catch {
+        // A session the backend has never heard of is not an error here: it is
+        // the answer. Anything else it throws is also a refusal to confirm,
+        // and a resume that cannot confirm reruns, which is the safe side.
+        return false
+      }
+    }
+    return this.ctx.sessions.get(id)?.snapshotEvents().some(event => event.type === 'turn/end') ?? false
+  }
+
+  /**
+   * Continue an interrupted run from its journal (§12.23).
+   *
+   * The asynchronous step is the reconciliation: each recorded step's children
+   * are checked against their own DURABLE sessions, because the question a
+   * resume asks is whether the interrupted process's account of itself is
+   * true, and the live registry cannot answer it — a settled run disposes its
+   * children, so after a restart it answers "no" for everything and the resume
+   * would degrade to never reusing anything.
+   * @param runId - the interrupted run; its journal is read by this id.
+   * @param request - the same fields `start` takes.
+   * @returns the live run.
+   */
+  async resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
+    const reusable = await reusableSteps(
+      this.journalDirectory,
+      runId,
+      request.script,
+      childId => this.childFinished(childId),
+    )
+    return this.launch(request, runId, reusable)
   }
 
   start(request: WorkflowStartRequest): WorkflowRun {
+    return this.launch(request, undefined, {})
+  }
+
+  /**
+   * Start or resume one run.
+   *
+   * One body for both entry points, so a resumed run cannot drift from a fresh
+   * one in lease acquisition, limits, or teardown — the two differ only in
+   * their id and in what they may reuse.
+   * @param request - the caller's start request.
+   * @param resumeRunId - the run being continued, or `undefined` for a fresh one.
+   * @param reusable - recorded outputs a resumed run may reuse, by step sequence.
+   * @returns the live run.
+   */
+  private launch(request: WorkflowStartRequest, resumeRunId: WorkflowRunId | undefined, reusable: Record<number, string>): WorkflowRun {
     const meta = validateMeta(request.meta)
     assertBodyParses(request.script, meta.name)
     const subagentProvider = resolveSubagentProvider(this.ctx, this.config.provider, request.subagentProvider)
     const maxTotalAgents = resolveMaxTotalAgents(request.maxTotalAgents, this.config.maxTotalAgents)
-    const id = request.resumeRunId ?? WorkflowRunId(randomUUID())
-    const resume = request.resumeRunId === undefined
-      ? undefined
-      : reusableSteps(this.journalDirectory, request.resumeRunId, request.script, childId => this.childFinished(childId))
+    const id = resumeRunId ?? WorkflowRunId(randomUUID())
     const info: WorkflowRunInfo = { id, meta }
     const limits: WorkerLimits = {
       maxConcurrentAgents: this.config.maxConcurrentAgents === 0
@@ -220,7 +270,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       body: request.script,
       ...request.args !== undefined ? { args: request.args } : {},
       limits,
-      ...resume === undefined || Object.keys(resume).length === 0 ? {} : { reusable: resume },
+      ...Object.keys(reusable).length === 0 ? {} : { reusable },
     }
     // Capture the dependency while this service call is still traced through
     // the start() holder. Cordis strips the engine-provider shadow when it

@@ -196,6 +196,7 @@
     { "path": "./packages/policy/risk-taxonomy" },
     { "path": "./packages/run/lease" },
     { "path": "./packages/run/lease-sqlite" },
+    { "path": "./packages/run/taskboard-sqlite" },
     { "path": "./packages/run/message-bus" },
     { "path": "./packages/run/run" },
     { "path": "./packages/session/session-telemetry-otel" },

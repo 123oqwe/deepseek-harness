@@ -2961,6 +2961,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'request', description: 'the script, its `args`, the parent agent, and an optional cancel signal.' }],
         returns: 'the live run; its `result` resolves when the script settles.',
       },
+      {
+        signature: 'abstract resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun>',
+        description: 'Continue an interrupted run from its journal (Epic P4-08 must[1], acceptance[0]).\n\n**Asynchronous where WorkflowEngine.start is not, because it does strictly more.** Deciding what a resumed run may reuse means reconciling each recorded step against the world — the child\'s own DURABLE session, which only a persistence read can answer, and that read is async. The alternatives were measured and rejected under §12.23: making `start()` async charges every existing caller for an input they do not have, and reading a durable record synchronously means coupling the engine to a provider\'s on-disk layout.\n\nA journal that does not exist, or one written under a different script digest, starts the run fresh rather than failing: `admitResume` refuses the RESUME, not the run, and a caller asking to continue wants the work to happen.',
+        parameters: [{ name: 'runId', description: 'the interrupted run to continue; its journal is read by this id.' }, { name: 'request', description: 'the same fields `start` takes; the script must be the one the journal was written under, or the resume degrades to a fresh run.' }],
+        returns: 'the live run; its `result` resolves when the script settles.',
+      },
     ],
   },
   {
@@ -5174,7 +5180,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'RunLease',
-    declaration: 'export interface RunLease {\n    readonly token: FencingToken;\n    renew: (nowMs: number) => RunLeaseDenial | undefined;\n    mayWrite: (nowMs: number) => boolean;\n    currentLease: () => Lease | undefined;\n}',
+    declaration: 'export interface RunLease {\n    readonly token: FencingToken;\n    renew: (nowMs: number) => RunLeaseDenial | undefined;\n    mayWrite: (nowMs: number) => boolean;\n    release: () => void;\n    currentLease: () => Lease | undefined;\n}',
   },
   {
     name: 'RunLeaseDenial',

@@ -24,6 +24,11 @@ class StubEngine extends WorkflowEngine {
   startError: Error | undefined
   onStart: (() => void) | undefined
 
+  /** This stub does not journal, so a resume is a fresh start with the same id. */
+  resume(_runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
+    return Promise.resolve(this.start(request))
+  }
+
   start(request: WorkflowStartRequest): WorkflowRun {
     if (this.startError !== undefined) throw this.startError
     this.requests.push(request)
