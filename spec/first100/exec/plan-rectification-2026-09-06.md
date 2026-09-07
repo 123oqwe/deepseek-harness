@@ -697,3 +697,8 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 3. Standing:引用 flake/已知名单前必须读失败信息并确认同一根因——"按名字匹配名单等于把该用例上的任何红都变成过",这次长在验收流程里。
 
 **12.6 修订(03:25 EDT,执行者两点)**:(a) `unrelatedBecause` 不得按 `files[]` 判——`files[]` 不是范围边界(§12);改为 **reality set**:`files[] ∪ filesOverlay ∪ 该 epic live 冻结引用的文件` 不含红步涉及的文件(复用 `verify-make-vs-use` 的集合)。(b) `redSteps[]` 每条必须带 **`failingCases[]` 与从该 run 日志取到的失败原文 `evidence`**(如 `"sequence":0` vs `":1` 两行),不是散文;工具在缺 evidence 时**拒绝写入**。理由:"写进格子"与"诊断对了"不是一回事——108 名单出事时也写了理由。
+
+### 12.7 BLOCKED-138:第三份键推导,与"一致"用例钉了不一致的值(2026-09-07 03:40 EDT)
+
+**事实**(执行者探针):`intake-dedup.dedupKey` = `${id.length}:${id}:${epoch}`(长度前缀防碰撞),`bus-store.keyOf` = `${id}:${epoch}`——**持久 seen 集与规则算的不是同一个键**;按 §12.5 直接接 `consumedKeys()` 作 seen,去重永远不去重且静默(两边单测各自自洽)。P4-06.P.1 今天刚绿的那条「…so the pure classifier and the durable state agree」**断言钉的正是不一致的值 `'m8:1'`**——变异敏感、写得认真、期望错。
+**裁决**:(1) `bus-store` 改用共享 `dedupKey`,键推导全仓一处;(2) 该用例 **supersede**(BLOCKED-066:性质变了),新条目断言"一致"本身——store 已 consumed 的消息经 `classifyDedup(msg, consumedKeys())` 判 drop(正控 accept)、碰撞对两侧都不同键、`consumedKeys()` 元素等于 `dedupKey(row)`;变异:`keyOf` 换回旧式 → 红;(3) 生产调用点落 **message-bus 的 mailbox 投递适配层**(`packages/run/message-bus/src/mailbox-delivery.ts`,orchestration import definitions 向下)——§12.5 "mailbox 投递路径就是调用点"改为此,mailbox 是 definitions 不得读 store。**规则(进 §11.1)**:标题宣称"一致/等价"的用例必须断言一致本身(round-trip),不得钉字面值;变异证明不证明期望正确。
