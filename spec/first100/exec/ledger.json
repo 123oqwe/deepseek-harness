@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T01:25:15.007Z",
-  "inputDigest": "564fcdf1d216b4336db839be86d8321f0eca82cbe511b8ac787dcd2028f24c05",
+  "lastUpdatedUtc": "2026-09-07T03:42:47.910Z",
+  "inputDigest": "d0603e5067b2d21c464062cd19b9f5a0981a905aa90eb54d2c6b4908a7cf4cdd",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -1569,10 +1569,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
-          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
           "expectCasesMatched": [
             "carries package, version, integrity, source commit, manifest digest, signature identity, dependencies and capabilities",
             "records the signature identity WITHOUT that recording implying it was verified",
@@ -1591,14 +1591,14 @@
             "reports drift when the registry has moved, without changing what boot loads",
             "refuses the drifted version even once it is what is installed"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:03.369Z"
+          "capturedAtUtc": "2026-09-07T03:42:38.415Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
-          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
           "expectCasesMatched": [
             "marks integrity, source commit and signature identity when the package declares none",
             "records a declared provenance fact verbatim instead of marking it",
@@ -1622,14 +1622,14 @@
             "leaves no scratch file behind, so a reader never finds a partial lock",
             "writes a complete, re-readable lock when the target did not exist"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:03.594Z"
+          "capturedAtUtc": "2026-09-07T03:42:38.651Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "f5fb9f901603a61ef68765be1c19a92429fe35bc",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33961861988",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r10/first100-evidence-f5fb9f901603a61ef68765be1c19a92429fe35bc/vitest-report.json",
-          "observationSha256": "1bbd1d765d1533893e07f267b3f98c204309327c027d7b3e431c880605c79010",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
           "expectCasesMatched": [
             "admits a matching install and reports the boot as verified",
             "refuses a drifted install and does not soften admitBoot's verdict",
@@ -1637,14 +1637,14 @@
             "proceeds when the policy allows it, but marks the boot UNVERIFIED",
             "marks a locked, matching boot verified and an unlocked one not, on the same install"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:03.825Z"
+          "capturedAtUtc": "2026-09-07T03:42:38.906Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
           "expectCasesMatched": [
             "P1-03 Fault — rejection-boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 a dangling dependency is refused",
@@ -1665,16 +1665,16 @@
             "fault boundary 16 an empty lock admits an empty install rather than refusing",
             "fault boundary 17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it"
           ],
-          "capturedAtUtc": "2026-09-06T23:04:04.455Z"
+          "capturedAtUtc": "2026-09-07T03:42:39.132Z"
         }
       },
       "supplements": {
         "U.1": {
           "status": "GREEN",
-          "candidateSha": "d52b4530daa31aa97278c341cc1e9880f6e225a6",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34070950825",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d52b4530da/vitest-report.json",
-          "observationSha256": "0171b32a088d67351d360d6d3938f89758a133b5b1676c57b631b62f64d53aa5",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
           "expectCasesMatched": [
             "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: a profile whose manifest digest has DRIFTED since the lock is refused at boot",
             "P1-03 Usage — a production boot consults the lock (must[2]) must[2]: the SAME profile with an untouched install is admitted and reports itself verified",
@@ -1686,10 +1686,41 @@
             "P1-03 Usage — the unlocked-profile policy comes from the bundles (must[2]) must[2]: a profile whose layers declare NO policy fails loudly, because the policy is required with no default",
             "P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (must[1] to must[2]) must[1]: a lock built from the real installed packages admits the boot it describes"
           ],
-          "capturedAtUtc": "2026-09-07T01:25:15.006Z"
+          "capturedAtUtc": "2026-09-07T03:42:47.377Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
+          "expectCasesMatched": [
+            "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) refuses a package whose integrity is the `unavailable:` marker on BOTH sides, since two absences are not agreement",
+            "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) admits the same package once BOTH sides carry a real digest, so the refusal is caused by the marker",
+            "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) refuses when only the INSTALL side is unverifiable, so a lock with a real digest cannot be satisfied by an absence",
+            "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) admits a workspace link, whose integrity records the link target because there is no archive to hash"
+          ],
+          "capturedAtUtc": "2026-09-07T03:42:47.652Z"
+        },
+        "F.1": {
+          "status": "GREEN",
+          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
+          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
+          "expectCasesMatched": [
+            "P1-03 acceptance[0]: the profile-boot closure cannot reach the network passes a closure with no HTTP client and no egress call",
+            "P1-03 acceptance[0]: the profile-boot closure cannot reach the network REFUSES a closure whose package.json depends on an HTTP client",
+            "P1-03 acceptance[0]: the profile-boot closure cannot reach the network REFUSES a closure whose source calls fetch, with no such dependency declared",
+            "P1-03 acceptance[0]: the profile-boot closure cannot reach the network REFUSES an egress reached TRANSITIVELY, not only in the two roots",
+            "P1-03 acceptance[0]: the profile-boot closure cannot reach the network ignores a vendored Cordis dependency, which is the framework rather than a chosen dependency",
+            "P1-03 Fault — an offline cold start refuses a locked package that is not installed (acceptance[0]) acceptance[0]: a package the lock requires but the local install does not have is REFUSED, not treated as verified",
+            "P1-03 Fault — an offline cold start refuses a locked package that is not installed (acceptance[0]) acceptance[0]: the SAME lock with every package present is admitted, so the refusal is caused by the absence"
+          ],
+          "capturedAtUtc": "2026-09-07T03:42:47.909Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
       "independentVerdict": "PENDING_WITH_LIVE_LOCK",
       "openFindings": [
         "ACCEPTANCE LOCK: must[2] product-level half + acceptance[0] product-level half — the gate has zero call sites",
