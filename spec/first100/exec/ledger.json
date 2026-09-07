@@ -4632,9 +4632,9 @@
       },
       "supplements": {},
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": [],
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-05T12:37:07.353Z",
         "cells": {
@@ -5519,9 +5519,9 @@
       },
       "supplements": {},
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
-      "independentVerdict": "APPROVED",
+      "independentVerdict": "PENDING",
       "openFindings": [],
-      "status": "ACCEPTED",
+      "status": "BLOCKED_ON_ACCEPTANCE",
       "acceptedEvidence": {
         "acceptedAtUtc": "2026-09-06T00:04:00.046Z",
         "cells": {

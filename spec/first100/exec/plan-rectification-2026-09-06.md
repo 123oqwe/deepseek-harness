@@ -746,3 +746,16 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 ### 12.12 撤签后的五条 `accepted-unadopted`:处置词汇不收行状态(2026-09-07 08:20 EDT)
 
 P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`openid/authzen`、in-toto/attestation 及其三个标准)——`accepted-unadopted` 的主语"本 epic 已 ACCEPTED"不再为真。**裁 (a)**:改成真处置;**拒 (b)** `signoff-withdrawn` 类别——那是行的状态不是库的处置,收进词汇门就从"每条库有下落"退化成"每行有借口"。真处置卡上早有(五条 `ruling` 全为 None 即模板盖掉裁决的证据):MCP 两条与 AuthZEN 两条按 §7.11 **裁定不采用**,所有权 P2-04 / P2-05;in-toto 两条按 §3.4/R1 是 **SLICE-3.4 的消费者**。门若无此类别,窄加 `slice-consumer{sliceRef}`,只限 §3.1–3.4 有排期的 slice,slice 落地后消费者未接线即 MISMATCHED。**其余 ACCEPTED 行的 `accepted-unadopted` 同样各有卡上裁决,回填批(P2-05 前)填实 `ruling`。**
+
+### 12.13 4.4a 全账本量化:三条 epic 的 U 阶段从没碰过 registry 点名的消费者;撤 P5-11 / P4-08,P4-06 不签(2026-09-07 09:10 EDT)
+
+**测量**(delegate 亲跑,排除 tests / lib / 本包):
+- **P4-06**:`@deepseek-ai/dsh-message-bus` 生产 importer **0**;`commitWithOutbox` / `dispatchOnce` / `openBusStore` / `decideMailboxDelivery` 调用者 **0**;无任何 cordis.yml 挂载。执行者同日自查得同一数字并**主动不发签**——4.4a 生效。§12.5 / §12.7 里我裁的"生产调用点"(mailbox → message-bus 的 mailbox-delivery)是一个没人调用的导出:**§12.5 "core/agent inbox 不是 fit" 的结论撤回**——inbox 没有 id/epoch 不是它不是 surface 的证据,是 U 阶段要补的缺口;registry U 文件(`core/agent/src/inbox.ts` + `dispatch.ts`)一直是对的。真实到达面存在:**子代理 settlement 进父 inbox**(`subagent/src/continuation.ts`,生产),且 ACP / Codex 子代理是 spawn 的子进程——真重启边界。
+- **P5-11**(已验收):`dsh-blackboard` / `dsh-taskboard` importer **0**;`dsh-mailbox` 唯一 importer 是未接线的 message-bus。registry U 文件点名 `core/agent/src/inbox.ts`、`subagent/src/list-children.ts`,冻结 U 一个没碰。**撤签。**
+- **P4-08**(已验收):`dsh-workflow-journal` importer **0**;registry U 文件 `workflow-worker-thread/src/{host,worker,runtime}.ts` 都不 import 它,journal-host 只被一个测试文件用。**撤签。** ACCEPTED 23 → **21**。
+- 代理指标"冻结 U 未碰任何 registry U [B] 文件"另标出 P0-01 / P0-02 / P0-06(已验收,但包在 profile-boot 等生产路径上有 importer)与 P4-09 / P5-10(在飞)——**不凭代理撤签**;这五条各做一次 4.4a 量化(子句名词构造函数的生产调用者数),执行者报数,我裁。P0-07 的消费者是 `scripts/release/collect-evidence.mjs`,成立。
+**裁决**:
+1. **P4-06 走 registry 自己的 U**(不是发明集成):子代理 settlement 经总线到父 inbox——settlement 带 `(source = 子会话/run id, id, epoch = 子代理 LeaseEpoch,P4-07 已在 dispatch.ts)`;父侧消费经 `bus.sqlite` inbox claim,与 session 事件 append 同一 `BEGIN IMMEDIATE`(P 阶段的 `commitWithOutbox` + write-behind `enqueueAll` 正是为此);message-bus 挂进 base bundle(`packages/bundle/base/cordis.patch.yml`,与 run / memory 同法);**真组合测试**(packages/AGENTS.md:经 Loader 起 profile,一个子代理 settle 两次 → 父 inbox 一次效果)。U.2 mailbox-delivery 保留为库级契约,不再称"生产调用点"。选项 3(改词)拒,理由同 §12.11 读法 3。
+2. **门 (u),机械化**:U 阶段冻结条目的 `files` 必须含 ≥1 个 registry stage-U 的 [B] 文件;否则须有 BLOCKED + 裁决说明 registry 的消费者为何错(§12.5 那种,且要对)。回扫全账本。与 4.4a(签字时量化)是同一规则的两个时刻。
+3. **顺序**:门 (u) 先(便宜,止血)→ P2-03 U(137 根修已落)→ P4-06 U(解锁 L3 与 P4-12 的键来源)→ P5-11 U → P4-08 U。
+**教训**:U 是 "usage",registry 用 [B] 文件把"谁用"写死了;三条 epic 的 U 都把 "usage" 做成了"本包内的第二层单测",而 delegate 在 #22 之外又签了两次同样的东西。规则不是"更仔细",是**让门在冻结 U 时就要求 [B] 文件在场**。
