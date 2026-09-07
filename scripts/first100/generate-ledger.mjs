@@ -82,6 +82,7 @@
  */
 import { spawnSync } from 'node:child_process'
 import { frozenTitlePresent, registeredRenames } from './frozen-title-renames.mjs'
+import { realitySet, realitySetOverlap } from './epic-reality-set.mjs'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
@@ -1051,6 +1052,109 @@ function cmdCloseFinding() {
   console.log(`closed 1 finding on ${epic}: ${hit[0]}`)
 }
 
+/**
+ * Validate the red-step records an admission rests on.
+ *
+ * Every field is required and none may be empty, because the failure this
+ * guards against is not a missing record — it is a present one that says
+ * nothing checkable. BLOCKED-108's waivers all carried a reason; what they
+ * lacked was a reason tied to the failure in front of them. `evidence` must
+ * therefore be text lifted from the run's own log, so a later reader can match
+ * it against the run instead of trusting the diagnosis.
+ * @param steps - the parsed `--red-steps` array.
+ * @returns per-step complaints, empty when every step is admissible.
+ */
+export function redStepComplaints(steps) {
+  if (!Array.isArray(steps) || steps.length === 0) return ['--red-steps must be a non-empty array: an admission with no red step describes no failure']
+  const complaints = []
+  steps.forEach((step, index) => {
+    const at = `red step ${String(index)}`
+    if (typeof step?.step !== 'string' || step.step.trim() === '') complaints.push(`${at}: missing \`step\` (which CI step was red)`)
+    if (!Array.isArray(step?.failingCases) || step.failingCases.length === 0) complaints.push(`${at}: missing \`failingCases\` (which cases failed)`)
+    if (typeof step?.evidence !== 'string' || step.evidence.trim() === '') {
+      complaints.push(`${at}: missing \`evidence\` — verbatim text from the run's log, not prose about it`)
+    }
+    if (!Array.isArray(step?.subjectPaths) || step.subjectPaths.length === 0) {
+      complaints.push(`${at}: missing \`subjectPaths\` (the files the failure is about), without which unrelatedness cannot be computed`)
+    }
+  })
+  return complaints
+}
+
+/**
+ * Record that a cell's observation came from a run whose conclusion was
+ * `failure`, with the diagnosis that licenses it.
+ *
+ * Only for a cell that cannot be re-greened from a green run — re-greening is
+ * always the better repair, because it returns the row to the rule instead of
+ * writing an exception beside it. BLOCKED-137 is the record of what the
+ * alternative costs: 25 cells admitted on an explanation that matched the
+ * failing case's NAME and never its reason.
+ *
+ * Unrelatedness is COMPUTED, never asserted: the failure's subject paths are
+ * checked against the epic's reality set (declaration plus live freeze
+ * entries), and an overlap refuses the admission. Computing it from `files[]`
+ * alone would make the claim true whether or not the epic touched the files.
+ */
+function cmdAdmitRedRun() {
+  const epic = opt('epic')
+  const stage = opt('stage')
+  const runId = opt('run-id')
+  const stepsPath = opt('red-steps')
+  const cause = opt('diagnosed-cause')
+  const admittedBy = opt('admitted-by')
+  if (!epic || !stage || !runId || !stepsPath || !cause || !admittedBy) {
+    console.error(
+      'usage: generate-ledger.mjs --admit-red-run --epic <id> --stage <C|P|U|F> --run-id <id> '
+      + '--red-steps <path-to-json> --diagnosed-cause <text> --admitted-by <who>',
+    )
+    process.exit(1)
+  }
+  const ledger = loadJson(LEDGER_PATH)
+  const row = ledger.rows[epic]
+  const cell = row?.cells?.[stage]
+  if (!cell) {
+    console.error(`BLOCKED: ${epic}.${stage} has no cell to admit`)
+    process.exit(1)
+  }
+  if (!String(cell.ciRunUrl ?? '').includes(runId)) {
+    console.error(`BLOCKED: ${epic}.${stage} was observed at ${String(cell.ciRunUrl)}, which is not run ${runId}`)
+    process.exit(1)
+  }
+  const steps = loadJson(resolve(stepsPath))
+  const complaints = redStepComplaints(steps)
+  if (complaints.length > 0) {
+    console.error(`BLOCKED: the admission is not admissible as written:\n  ${complaints.join('\n  ')}`)
+    process.exit(1)
+  }
+  const registryEpic = loadJson(REGISTRY_PATH).epics.find((e) => e.id === epic)
+  if (registryEpic === undefined) {
+    console.error(`unknown epic ${epic} (not in tests/first100/registry.json)`)
+    process.exit(1)
+  }
+  const touched = realitySet(registryEpic, loadJson(COMMAND_FREEZE_PATH).entries)
+  const subjects = steps.flatMap((step) => step.subjectPaths)
+  const overlap = realitySetOverlap(touched, subjects)
+  if (overlap.length > 0) {
+    console.error(
+      `BLOCKED: the failure is NOT unrelated to ${epic} — its reality set reaches the failing subject:\n  `
+      + `${overlap.map(({ subject, declared }) => `${subject} <- ${declared}`).join('\n  ')}`,
+    )
+    process.exit(1)
+  }
+  cell.admittedUnderRedRun = {
+    runId,
+    redSteps: steps,
+    diagnosedCause: cause,
+    unrelatedBecause: `the epic's reality set (${String(touched.length)} path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject ${JSON.stringify(subjects)}`,
+    admittedBy,
+    diagnosedAtUtc: nowIso(),
+  }
+  const written = writeLedgerHeader(ledger.rows, { epic, stage, admittedRun: runId, diagnosedCause: cause })
+  renderMarkdown(written)
+  console.log(`admitted ${epic}.${stage} under red run ${runId}: ${String(steps.length)} red step(s), reality set of ${String(touched.length)} path(s) disjoint from the failure`)
+}
+
 function cmdRecordSignoff() {
   const epic = opt('epic')
   const conclusion = opt('conclusion')
@@ -1276,6 +1380,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   else if (flag('sync-exec-state')) cmdSyncExecState()
   else if (flag('accept')) cmdAccept()
   else if (flag('close-finding')) cmdCloseFinding()
+  else if (flag('admit-red-run')) cmdAdmitRedRun()
   else if (flag('record-signoff')) cmdRecordSignoff()
   else if (flag('supplement')) cmdGreenSupplement()
   else if (opt('epic')) cmdGreen()

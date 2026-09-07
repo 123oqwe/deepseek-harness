@@ -43,6 +43,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { realitySet } from './epic-reality-set.mjs'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/make-vs-use-ledger.json')
@@ -52,27 +53,6 @@ const FREEZE_PATH = join(REPO_ROOT, 'spec/first100/exec/command-freeze.json')
 
 const loadJson = (path) => JSON.parse(readFileSync(path, 'utf8'))
 
-/**
- * Every file an epic declares, across its top-level list and its stages.
- * @param epic - the registry row.
- * @returns declared repo-relative paths.
- */
-function declaredFiles(epic, freeze) {
-  const paths = new Set()
-  for (const file of epic.files ?? []) paths.add(file.path)
-  for (const stage of Object.values(epic.stages ?? {})) {
-    for (const path of stage?.files ?? []) paths.add(path)
-  }
-  // The epic's REALITY SET, not just its declaration. BLOCKED-134 measured
-  // that a stage's `files` is a sketch of the principal deliverables — 79 of
-  // 116 live freeze entries cite something outside it — so a live freeze
-  // entry's own `files` are part of what this epic touched.
-  for (const entry of freeze) {
-    if (entry.epic !== epic.id || entry.supersededBy !== undefined) continue
-    for (const path of entry.files ?? []) paths.add(path)
-  }
-  return [...paths]
-}
 
 /**
  * The import pattern for one package name, escaped once in one place.
@@ -180,7 +160,7 @@ function main() {
     const declared = entry.makeVsUse
     if (declared === undefined) continue
     const epic = registry.get(key)
-    const files = epic === undefined ? [] : declaredFiles(epic, freeze)
+    const files = epic === undefined ? [] : realitySet(epic, freeze)
     const row = rows.get(key)
     let state = 'VERIFIED'
 

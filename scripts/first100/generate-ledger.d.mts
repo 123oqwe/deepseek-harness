@@ -106,3 +106,12 @@ export function checkDelegateSignoff(
  * @returns whether every item is settled.
  */
 export function p9ItemsSettled(p9: readonly { terminalState: string }[]): boolean
+
+export interface RedStep {
+  step: string
+  failingCases: readonly string[]
+  evidence: string
+  subjectPaths: readonly string[]
+}
+
+export function redStepComplaints(steps: unknown): string[]

@@ -35,9 +35,11 @@ import {
   findDuplicateFrozenCases,
   p9ItemsSettled,
   reattestationOf,
+  redStepComplaints,
   checkObservationDistinctness,
   rowDigest,
 } from './generate-ledger.mjs'
+import { realitySetOverlap } from './epic-reality-set.mjs'
 
 // checkCandidateChainConsistency's real usage always runs locally against
 // the Supervisor's own full-history clone -- never inside a CI job's shallow
@@ -522,5 +524,58 @@ describe('reattestationOf (BLOCKED-137, 2026-09-07)', () => {
 
   it('records nothing without a stated reason, so the field never appears unexplained', () => {
     expect(reattestationOf(prior, 'https://ci/runs/2', undefined, '2026-09-07T00:00:00.000Z')).toBeUndefined()
+  })
+})
+
+describe('redStepComplaints (BLOCKED-137 §12.6, 2026-09-07)', () => {
+  const good = {
+    step: 'install / typecheck / test @ exact SHA — the snapshot job',
+    failingCases: ['replays pwsh-tool-turn through dsh --profile headless'],
+    evidence: 'AssertionError: ... "sequence":0 ... "sequence":1',
+    subjectPaths: ['snapshots/session/pwsh-tool-turn'],
+  }
+
+  it('admits a step carrying all four fields', () => {
+    expect(redStepComplaints([good])).toEqual([])
+  })
+
+  it('refuses a step whose evidence is missing, which is how a name-matched waiver looked correct', () => {
+    // BLOCKED-108's waivers all carried a reason. What they lacked was text
+    // from the failure in front of them, so nobody could check the diagnosis
+    // against the run.
+    expect(redStepComplaints([{ ...good, evidence: '   ' }])).toHaveLength(1)
+    expect(redStepComplaints([{ ...good, evidence: undefined }])[0]).toMatch(/verbatim/u)
+  })
+
+  it('refuses a step with no subjectPaths, without which unrelatedness cannot be computed at all', () => {
+    expect(redStepComplaints([{ ...good, subjectPaths: [] }])[0]).toMatch(/unrelatedness cannot be computed/u)
+  })
+
+  it('refuses an EMPTY admission, so "no red steps" cannot pass as "no problem"', () => {
+    expect(redStepComplaints([])).toHaveLength(1)
+    expect(redStepComplaints(undefined)).toHaveLength(1)
+  })
+
+  it('names every defective step, not just the first, so one fix per run is not required', () => {
+    expect(redStepComplaints([{ ...good, evidence: '' }, { ...good, failingCases: [] }])).toHaveLength(2)
+  })
+})
+
+describe('realitySetOverlap (BLOCKED-134/137)', () => {
+  const epicPaths = ['packages/core/agent/src/dispatch.ts', 'packages/run/lease/src/index.ts']
+
+  it('is empty for a failure the epic never touched, which is what licenses an admission', () => {
+    expect(realitySetOverlap(epicPaths, ['snapshots/session/pwsh-tool-turn'])).toEqual([])
+  })
+
+  it('names the overlap for a file the epic owns, so "unrelated" cannot be claimed over its own code', () => {
+    // The positive control. Without it, a matcher that never matches would
+    // license every admission — BLOCKED-137's shape exactly.
+    expect(realitySetOverlap(epicPaths, ['packages/core/agent/src/dispatch.ts']))
+      .toEqual([{ subject: 'packages/core/agent/src/dispatch.ts', declared: 'packages/core/agent/src/dispatch.ts' }])
+  })
+
+  it('matches a declared file underneath a subject DIRECTORY, not only an exact path', () => {
+    expect(realitySetOverlap(epicPaths, ['packages/run/lease'])).toHaveLength(1)
   })
 })

@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T06:50:48.674Z",
-  "inputDigest": "713d5c9c33c7ce7875f398f72834119ddc1aa2edf6ccc74a6b8a1b9f34dedb2d",
+  "lastUpdatedUtc": "2026-09-07T07:03:46.255Z",
+  "inputDigest": "6f41711ac458742779904dc1f46230caaf6c5d7bdb803aec06159c55870e9042",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4370,7 +4370,28 @@
             "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
             "CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not"
           ],
-          "capturedAtUtc": "2026-09-06T23:04:05.813Z"
+          "capturedAtUtc": "2026-09-06T23:04:05.813Z",
+          "admittedUnderRedRun": {
+            "runId": "34063737869",
+            "redSteps": [
+              {
+                "step": "install / typecheck / test @ exact SHA — the snapshot job (pnpm run test:snapshot)",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays pwsh-tool-turn through dsh --profile headless",
+                  "headless recorded-session snapshots > replays persistent-pwsh-tool-turn through dsh --profile headless"
+                ],
+                "evidence": "AssertionError: pwsh-tool-turn: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality  @@ -18,11 +18,11 @@  - {\"type\":\"action/manifest-appended\",...,\"sequence\":0}}  + {\"type\":\"action/manifest-appended\",...,\"sequence\":1}}",
+                "subjectPaths": [
+                  "snapshots/session/pwsh-tool-turn",
+                  "snapshots/session/persistent-pwsh-tool-turn"
+                ]
+              }
+            ],
+            "diagnosedCause": "BLOCKED-137: two recorded pwsh fixtures still carried action/manifest-appended's sequence as 0 after the 0-to-1 fix; DSH_SNAPSHOT=refresh skips pwsh scenarios on a host without pwsh, so the refresh that updated the other 124 fixtures could not reach these two. Fixed in e783b1c0e9; run 34088363628 is green on the same two cases.",
+            "unrelatedBecause": "the epic's reality set (11 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"snapshots/session/pwsh-tool-turn\",\"snapshots/session/persistent-pwsh-tool-turn\"]",
+            "admittedBy": "sonnet-executor, diagnosed from the run log; ruling guanjieqiao-92 §12.6",
+            "diagnosedAtUtc": "2026-09-07T07:03:26.723Z"
+          }
         }
       },
       "supplements": {},
@@ -5667,7 +5688,28 @@
             "fault boundary 17 normal content is indexable even under the strictest policy",
             "fault boundary 18 a well-formed record validates, so the checks above refuse selectively"
           ],
-          "capturedAtUtc": "2026-09-06T23:04:06.207Z"
+          "capturedAtUtc": "2026-09-06T23:04:06.207Z",
+          "admittedUnderRedRun": {
+            "runId": "34063737869",
+            "redSteps": [
+              {
+                "step": "install / typecheck / test @ exact SHA — the snapshot job (pnpm run test:snapshot)",
+                "failingCases": [
+                  "headless recorded-session snapshots > replays pwsh-tool-turn through dsh --profile headless",
+                  "headless recorded-session snapshots > replays persistent-pwsh-tool-turn through dsh --profile headless"
+                ],
+                "evidence": "AssertionError: pwsh-tool-turn: session 0: expected '{\"type\":\"session\",\"version\":0,\"id\":\"{…' to be '{\"type\":\"session\",\"version\":0,\"id\":\"{…' // Object.is equality  @@ -18,11 +18,11 @@  - {\"type\":\"action/manifest-appended\",...,\"sequence\":0}}  + {\"type\":\"action/manifest-appended\",...,\"sequence\":1}}",
+                "subjectPaths": [
+                  "snapshots/session/pwsh-tool-turn",
+                  "snapshots/session/persistent-pwsh-tool-turn"
+                ]
+              }
+            ],
+            "diagnosedCause": "BLOCKED-137: two recorded pwsh fixtures still carried action/manifest-appended's sequence as 0 after the 0-to-1 fix; DSH_SNAPSHOT=refresh skips pwsh scenarios on a host without pwsh, so the refresh that updated the other 124 fixtures could not reach these two. Fixed in e783b1c0e9; run 34088363628 is green on the same two cases.",
+            "unrelatedBecause": "the epic's reality set (8 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"snapshots/session/pwsh-tool-turn\",\"snapshots/session/persistent-pwsh-tool-turn\"]",
+            "admittedBy": "sonnet-executor, diagnosed from the run log; ruling guanjieqiao-92 §12.6",
+            "diagnosedAtUtc": "2026-09-07T07:03:46.254Z"
+          }
         }
       },
       "supplements": {},
