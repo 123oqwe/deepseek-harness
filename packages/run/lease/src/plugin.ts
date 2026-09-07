@@ -81,6 +81,14 @@ export default class InMemoryLeaseStorePlugin extends Service {
   }
 
   /**
+   * Give up the lease `token` authorizes.
+   * @param token - the holder's authority over the item it is giving up.
+   */
+  release(token: FencingToken): void {
+    this.store.release(token)
+  }
+
+  /**
    * Every item whose lease has expired at `nowMs`.
    * @param nowMs - the instant to judge expiry against.
    * @returns the reclaimable work items.

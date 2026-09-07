@@ -1,11 +1,24 @@
 /** Relationship-preserving identity redaction for committed session snapshots. */
 
 const UUID_FRAGMENT_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+/**
+ * A value that is ENTIRELY one opaque id, rather than one containing an id.
+ *
+ * The distinction keeps this redaction idempotent, which it has to be: a
+ * fixture is redacted when it is written and redacted again when it is
+ * compared, and a rule that swallows a whole COMPOSITE value on the first pass
+ * cannot reproduce itself on the second. `anonymous-run:<uuid>` becomes
+ * `{{run:1}}` under a substring test and `anonymous-run:{{session:1}}` under a
+ * whole-value one — the first spelling is unreachable from an already-redacted
+ * fixture, so refresh and verify disagree forever. Composite values are left
+ * for the value-wise replacement below, which rewrites the id inside them.
+ */
+const WHOLE_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const LEGACY_TOKEN_RE = /^\{\{(?:sessionId|messageId)\}\}$/
-const CANONICAL_TOKEN_RE = /^\{\{(session|message|approval|workflow|command|rpc|retry|id):([1-9]\d*)\}\}$/
+const CANONICAL_TOKEN_RE = /^\{\{(session|message|approval|run|command|rpc|retry|id):([1-9]\d*)\}\}$/
 const ID_KEY_RE = /(?:^id$|Id$|Ids$)/
 
-type IdentityKind = 'session' | 'message' | 'approval' | 'workflow' | 'command' | 'rpc' | 'retry' | 'id'
+type IdentityKind = 'session' | 'message' | 'approval' | 'run' | 'command' | 'rpc' | 'retry' | 'id'
 
 interface ParsedLog {
   readonly records: Record<string, unknown>[]
@@ -93,7 +106,14 @@ export function redactSessionSnapshotIds(logs: readonly string[]): string[] {
       } else if (childKey === 'retryId') {
         claim(item, 'retry')
       } else if (childKey === 'runId') {
-        claim(item, 'workflow')
+        // Whole ids only, for the idempotence reason on WHOLE_UUID_RE: a
+        // workflow run id IS one, while a manifest's anonymous fallback is a
+        // composite whose session id is already tokenized on its own.
+        // `run`, not `workflow`. The label was accurate while the only `runId`
+        // in a log was a workflow run's; a manifest's `runId` is the identity's
+        // execution run, and a token reading `{{workflow:1}}` there tells the
+        // next reader of the fixture that a workflow ran when none did.
+        if (typeof item === 'string' && WHOLE_UUID_RE.test(item)) claim(item, 'run')
       } else if (ID_KEY_RE.test(childKey)) {
         claim(item, 'id')
       }

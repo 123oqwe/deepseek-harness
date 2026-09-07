@@ -1,0 +1,8 @@
+{
+  "host": "darwin-arm64",
+  "reason": "no pwsh on this host",
+  "scenarios": [
+    "persistent-pwsh-tool-turn",
+    "pwsh-tool-turn"
+  ]
+}

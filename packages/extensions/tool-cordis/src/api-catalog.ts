@@ -1124,6 +1124,11 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the extended lease, or the reason for refusal.',
       },
       {
+        signature: 'release(token: FencingToken): void',
+        description: 'Give up the lease a token authorizes, so the item is free immediately.\n\nA run that FINISHED is not the same as one whose lease lapsed. Without this, every completed run leaves its item owned until the deadline it never needed, and a scheduler with a thousand short runs spends its capacity waiting for leases nobody holds. Releasing is not reclaiming: it issues no epoch and hands the item to nobody, it only stops this holder from owning it.\n\nIdempotent, and silent when the token is not current — a holder that was already fenced out has nothing to give up, and reporting that as an error would make ordinary teardown noisy.',
+        parameters: [{ name: 'token', description: 'the holder\'s authority over the item it is giving up.' }],
+      },
+      {
         signature: 'reclaimable(nowMs: number): readonly WorkItemId[]',
         description: 'Every item whose lease has expired at `nowMs` and may be reclaimed.\n\nEmpty while the store is unavailable rather than throwing: a scheduler asking what it may pick up during an outage should find nothing, and `acquire` refuses anyway, so this is stop-work in both directions.',
         parameters: [{ name: 'nowMs', description: 'the instant to judge expiry against.' }],

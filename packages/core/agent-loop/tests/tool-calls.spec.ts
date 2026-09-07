@@ -976,10 +976,11 @@ describe('P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not
     await agent.whenIdle()
 
     const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
-    // No identity was attached, so both fall back to the anonymous form keyed
-    // to the session. The run id is NOT the session id: a session is not a run,
-    // and the two must stay distinguishable even in the fallback.
-    expect(manifest?.data.runId).toBe('anonymous:manifest-fields')
+    // No identity was attached, so both fall back to a form keyed to the
+    // session — under DIFFERENT prefixes. A run and a principal are different
+    // things, and while they shared a spelling the durable log rendered both as
+    // one value and a reader could not tell the actor from the run it acted in.
+    expect(manifest?.data.runId).toBe('anonymous-run:manifest-fields')
     expect(manifest?.data.actor).toBe('anonymous:manifest-fields')
     expect(manifest?.data.idempotencyKey).toMatch(/^[0-9a-f]{64}$/u)
   })

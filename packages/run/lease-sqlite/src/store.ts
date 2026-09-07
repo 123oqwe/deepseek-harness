@@ -19,6 +19,7 @@
  * @module @deepseek-ai/dsh-lease-sqlite/store
  */
 
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { brandNumber } from '@deepseek-ai/dsh-brand'
@@ -71,6 +72,11 @@ const toLease = (row: LeaseRow): Lease => ({
  * @returns a store honouring the lease contract, backed by SQLite.
  */
 export function openLeaseStore(directory: string): LeaseStoreContract {
+  // The directory is derived from the profile's storage root, which may not
+  // exist yet on a first run: SQLite reports a missing parent as a generic
+  // "unable to open database file", which reads as corruption rather than as a
+  // path that was never created.
+  mkdirSync(directory, { recursive: true })
   const db = new DatabaseSync(join(directory, 'leases.sqlite'))
   for (const statement of SCHEMA) db.exec(statement)
   // Availability is a property of the STORE, not of this handle: a caller that
@@ -134,6 +140,15 @@ export function openLeaseStore(directory: string): LeaseStoreContract {
       db.prepare('UPDATE leases SET expires_at_ms = ? WHERE work_item = ? AND epoch = ? AND holder = ?')
         .run(nowMs + leaseMs, token.workItem, token.epoch, token.holder)
       return { renewed: true, lease: { ...lease, expiresAtMs: nowMs + leaseMs } }
+    },
+    release: (token: FencingToken) => {
+      if (!available) return
+      // Deleting the lease row leaves `lease_epochs` untouched, which is the
+      // point: the next holder of this item still receives an epoch greater
+      // than every one issued for it, so a released item cannot hand a stale
+      // worker back an epoch it already holds.
+      db.prepare('DELETE FROM leases WHERE work_item = ? AND epoch = ? AND holder = ?')
+        .run(token.workItem, token.epoch, token.holder)
     },
     reclaimable: (nowMs) => {
       if (!available) return []

@@ -397,9 +397,16 @@
         toolName: subagent_fork
         backgroundMode: one-shot
 
-    # The engine injects `leaseStore`, so a provider for it must be mounted or
-    # the engine never activates. The durable store is the one a deployment
-    # wants: two hosts sharing this directory cannot both own a run.
+    # The engine and the Run Service both inject `leaseStore`, so a provider
+    # must be mounted or neither activates.
+    #
+    # `.dsh` is relative to the launch directory, which makes the lease store
+    # PER PROJECT rather than per machine — and that is a placement question
+    # §12.20-1 has not settled, not a decision recorded here. Deriving it from
+    # `dshHomePath` was tried and measured: one lease database shared by every
+    # concurrently booting profile made all 16 SDK snapshot scenarios fail at
+    # mount, and the failure named neither the path nor the database. Recorded
+    # in BLOCKED-148; the row moves when that is ruled.
     - id: lease-store
       name: '@deepseek-ai/dsh-lease-sqlite'
       config:
@@ -438,15 +445,20 @@
     # a UI session or turn holder, and keeps its append-only event log at
     # `config.storePath`.
     #
-    # Disabled by default, matching `baseline-preflight` above: opt-in per
-    # profile, not a shared-base default. `storePath` names a real write
-    # target with no neutral value — a shared-base default would have every
-    # profile writing Runs to one inherited path it never chose — so a
-    # profile that wants first-class Runs enables this row and supplies that
-    # path explicitly.
+    # ENABLED, and the path is derived rather than left to each profile
+    # (§12.20-1). It was disabled on the argument that `storePath` "names a
+    # real write target with no neutral value" — but `session-persistence-jsonl`
+    # and `storage-json` above derive exactly such targets from
+    # `dshHomePath`, and so does the lease store below, so the same argument
+    # reached two conclusions. The measured cost of the old one: with `run`
+    # off on every shipped bundle, no launched profile opened a Run, so
+    # `Agent.runLease` was undefined everywhere, tool dispatch presented no
+    # fencing token, and P4-07's refusal path had callers that nothing
+    # reached.
     - id: run
       name: '@deepseek-ai/dsh-run'
-      disabled: true
+      config:
+        storePath: !!js dshHomePath('runs', 'runs.json')
 
     - id: spill-local
       name: '@deepseek-ai/dsh-spill-local'

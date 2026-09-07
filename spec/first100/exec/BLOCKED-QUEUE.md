@@ -252,6 +252,29 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-148 — one lease database per machine breaks every concurrent boot; `.dsh` stands until the placement is ruled
+
+**State: OPEN, measured, blocking §12.20-1's second half only.** `run` is enabled and its `storePath` derived; the LEASE directory is not.
+
+§12.20-1 rules that `run`'s `storePath` and lease-sqlite's `directory` both derive from the profile's configured storage root, with no `.dsh` literal. Half of that landed: `storePath: !!js dshHomePath('runs', 'runs.json')` works, and every snapshot corpus is green with it.
+
+The other half does not, and the failure is not a wiring mistake:
+
+| lease `directory` | result |
+| --- | --- |
+| `!!js dshHomePath('leases')` | **all 16 SDK snapshot scenarios fail**, every one with `cannot create effect on inactive context` |
+| `.dsh` | four corpora green — acp 15, sdk 16, session 80 (+3 skipped), web unchanged |
+
+**Why, and why it is a real question rather than a bug to fix quietly.** `dshHomePath` resolves under one `$DSH_HOME` per machine, so every concurrently booting profile opens the SAME SQLite lease database. The snapshot suite boots many app processes at once; `.dsh` is relative to each one's launch directory and isolates them. Ruled out by measurement, not by guess: moving the store's open out of the constructor into `Service.init` (kept, because a constructor throw during service construction unwinds into exactly that message and names neither the path nor the database) did **not** fix it, and `run`'s own derived home path is fine — its store is a per-path JSON file with no cross-process lock.
+
+**The question the ruling has to answer.** For leases, sharing is the POINT — two hosts that must not both own a work item have to contend over one store. Machine-wide sharing is one reading of that; per-project is another, and they differ for two unrelated projects open at once, which the current default treats as unrelated and the derived path would treat as competitors for the same rows.
+
+**Decision needed (delegate's):** either
+1. per-project stays, and the `.dsh` literal is replaced by a path derived from the WORKSPACE root rather than the harness home; or
+2. machine-wide is correct, and concurrent boots against one lease database must be made to work — the mount-time `CREATE TABLE IF NOT EXISTS` / `INSERT OR IGNORE` sequence is the suspect, and it needs its own transaction and busy handling before any profile can point there.
+
+**Not chosen here.** The row carries a comment saying the placement is unsettled and pointing at this entry, so the literal is a recorded interim rather than a decision. Reading (2) is a change to how the store boots and would ship a shared-lock path on every profile; that is not the executor's to pick.
+
 ### BLOCKED-147 — gate (u)'s 11 findings, classified: 3 are citation gaps, 6 are real integrations that were never built
 
 **State: OPEN, measurement complete, no ruling taken.** `verify-usage-stage-subject` is written and registered but held back from the gate set until these 11 are dispositioned. Every declared consumer file EXISTS, so none of the 11 is "the registry names a file that is not there" — each is a Usage stage that did not touch the consumer its own row names.

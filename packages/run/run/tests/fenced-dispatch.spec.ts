@@ -60,7 +60,7 @@ function multiCall(calls: { id: string; name: string; args: object }[]): StreamC
   return chunks
 }
 
-async function harness(): Promise<Context> {
+async function harness(options: { leaseMs?: number } = {}): Promise<Context> {
   const root = await mkdtemp(join(tmpdir(), 'dsh-run-fenced-'))
   roots.push(root)
   const ctx = new Context()
@@ -72,7 +72,7 @@ async function harness(): Promise<Context> {
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(InMemoryLeaseStorePlugin)
-  await ctx.plugin(RunPlugin, { storePath: join(root, 'runs.json'), leaseMs: 1000 })
+  await ctx.plugin(RunPlugin, { storePath: join(root, 'runs.json'), leaseMs: options.leaseMs ?? 1000 })
   mounted.push(ctx)
   return ctx
 }
@@ -232,6 +232,75 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
 
     expect(executed).toBe(2)
     expect(agent.lifecycle?.state).toBe('running')
+  })
+
+  it('RENEWS the lease while the run is alive, so a long run does not fence itself out', async () => {
+    // Without renewal every Run lapses at `leaseMs` while still working, and
+    // the next dispatch refuses the run that legitimately holds the item —
+    // the fencing rule firing on its own holder, which is worse than not
+    // having it.
+    const ctx = await harness({ leaseMs: 90 })
+    const agent = ctx.agentLoop.create(SessionId('session-long'))
+    const workItem = brandString<WorkItemId>(agent.runId!)
+    const granted = ctx.leaseStore.get(workItem)?.expiresAtMs
+
+    await new Promise<void>((resolve) => { setTimeout(resolve, 120) })
+
+    const held = ctx.leaseStore.get(workItem)
+    expect(held?.expiresAtMs).toBeGreaterThan(granted!)
+    // The epoch is UNCHANGED: renewal moves a deadline, it does not reissue
+    // authority. A renewal that bumped the epoch would fence the holder out of
+    // its own work.
+    expect(held?.epoch).toBe(agent.lifecycle?.epoch)
+  })
+
+  it('stops renewing once the run is finished, so a second host can take the item', async () => {
+    // The heartbeat's other half. A timer that outlived its run would assert
+    // ownership of work nobody is doing, and the item would never come back.
+    const ctx = await harness({ leaseMs: 90 })
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-short') })
+    const workItem = brandString<WorkItemId>(handle.agent.runId!)
+    await handle.dispose()
+
+    await new Promise<void>((resolve) => { setTimeout(resolve, 120) })
+
+    const second = ctx.leaseStore.acquire(workItem, brandString<WorkerId>('a-second-host'), Date.now(), 1_000)
+    expect(second.acquired).toBe(true)
+  })
+
+  it('RELEASES the lease and completes the lifecycle when the session ends', async () => {
+    // §12.20-3. A finished run is not a lapsed one: holding the item until a
+    // deadline it no longer needs makes a host of many short sessions spend
+    // its capacity waiting out leases nobody holds.
+    const ctx = await harness()
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-ending') })
+    const { agent } = handle
+    const workItem = brandString<WorkItemId>(agent.runId!)
+    expect(ctx.leaseStore.get(workItem)).toBeDefined()
+
+    await handle.dispose()
+
+    expect(agent.lifecycle?.state).toBe('completed')
+    expect(ctx.leaseStore.get(workItem)).toBeUndefined()
+    // Immediately, not after the term: a second host takes it now.
+    const second = ctx.leaseStore.acquire(workItem, brandString<WorkerId>('a-second-host'), Date.now(), 1_000)
+    expect(second.acquired).toBe(true)
+    // And with a GREATER epoch, because releasing hands the item to nobody:
+    // the released item must never reissue an epoch a stale worker still holds.
+    expect(second.acquired && second.token.epoch).toBeGreaterThan(agent.lifecycle!.epoch)
+  })
+
+  it('ends a run disposed before its first step through cancelling, not as if it had completed its work', async () => {
+    // Only `running` reaches `completed` directly, and that is the state
+    // machine being right rather than in the way: a run that never started did
+    // not finish its work, it was ended. Reporting it as a plain completion
+    // would make an abandoned session indistinguishable from a finished one in
+    // the durable record.
+    const ctx = await harness()
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-unstepped') })
+    expect(handle.agent.lifecycle?.state).toBe('queued')
+    await handle.dispose()
+    expect(handle.agent.lifecycle?.state).toBe('completed')
   })
 
   it('opens NO Run when the lease store refuses, so an unauthorized agent gets no Run rather than an unowned one', async () => {

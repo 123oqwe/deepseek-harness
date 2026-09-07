@@ -2453,6 +2453,19 @@ export interface ActionManifestAppendedEventData {
   idempotencyKey: string
   /** The monotonic append position this manifest occupies in the durable log. */
   sequence: number
+  /**
+   * The lease epoch under which this action was manifested (P4-07 must[1]),
+   * absent when the run holds no lease.
+   *
+   * The authority is recorded, not just presented. A reader asking "who was
+   * allowed to do this, and under which generation" must be able to answer
+   * from the log alone: an epoch that only ever lived in memory makes a
+   * fenced-out host's actions indistinguishable from the current holder's
+   * after the fact. Absent means no Run Service was mounted, which is itself
+   * the fact worth recording — §12.20 measured a build where that was true of
+   * every shipped profile.
+   */
+  leaseEpoch?: number
 }
 
 declare module '@deepseek-ai/dsh-session/types' {
@@ -2479,6 +2492,7 @@ declare module '@deepseek-ai/dsh-session/types' {
      * @param actor - the principal the action is attributed to.
      * @param idempotencyKey - the manifest's idempotency key, minted by the execution path.
      * @param sequence - the monotonic append position in the durable log.
+     * @param leaseEpoch - the lease epoch the action was authorized under, absent when the run holds no lease.
      */
     'action/manifest-appended': ActionManifestAppendedEventData
   }

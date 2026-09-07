@@ -1820,7 +1820,6 @@ Source: [`packages/guard/repeat-tool-reminder/src/index.ts:28`](../packages/guar
 Requires: `agents` · `leaseStore`
 
 ```ts config-catalog
-/** Deployment-varying configuration of {@link RunPlugin}. */
 export interface Config {
   /**
    * Filesystem path of the durable Run store document this plugin's
@@ -1838,7 +1837,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/run/run/src/index.ts:492`](../packages/run/run/src/index.ts)
+Source: [`packages/run/run/src/index.ts:503`](../packages/run/run/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 

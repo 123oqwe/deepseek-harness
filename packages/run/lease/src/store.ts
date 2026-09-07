@@ -124,6 +124,20 @@ export class LeaseStore implements LeaseStoreContract {
   }
 
   /**
+   * Give up the lease `token` authorizes.
+   *
+   * Silent when the token is not current: a holder already fenced out has
+   * nothing to give up, and an unavailable store has nothing to record.
+   * @param token - the holder's authority over the item it is giving up.
+   */
+  release(token: FencingToken): void {
+    if (!this.available) return
+    const lease = this.leases.get(token.workItem)
+    if (lease === undefined || lease.epoch !== token.epoch || lease.holder !== token.holder) return
+    this.leases.delete(token.workItem)
+  }
+
+  /**
    * Every item whose lease has expired and may be reclaimed at `nowMs`.
    *
    * Returns an empty list while unavailable rather than throwing: a scheduler

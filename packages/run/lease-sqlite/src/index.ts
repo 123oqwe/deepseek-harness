@@ -54,7 +54,7 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
     directory: z.string().required(),
   }) as z<Config>
 
-  private readonly store: LeaseStoreContract
+  private opened: LeaseStoreContract | undefined
 
   /**
    * @param ctx - the mounting context; the plugin registers itself as `ctx.leaseStore`.
@@ -62,7 +62,34 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    */
   constructor(ctx: Context, public readonly config: Config) {
     super(ctx, 'leaseStore')
-    this.store = openLeaseStore(config.directory)
+  }
+
+  /**
+   * Open the database at mount.
+   *
+   * In `Service.init` rather than in the constructor, and the difference is not
+   * stylistic: creating the directory and opening SQLite are the two steps that
+   * can fail on a real deployment, and a constructor that throws during service
+   * construction unwinds the tree into `cannot create effect on inactive
+   * context` — a message naming neither the path nor the database. Measured:
+   * pointing this row at a derived home path made every SDK snapshot scenario
+   * fail with exactly that, and nothing in the failure said `leases`.
+   * @yields the teardown that closes the store handle.
+   */
+  * [Service.init](): Generator<() => void, void, void> {
+    this.opened = openLeaseStore(this.config.directory)
+    yield () => { this.opened = undefined }
+  }
+
+  /**
+   * The opened store.
+   * @returns the store this mount opened.
+   * @throws when read before the mount finished, which no consumer can do —
+   * `inject` holds them until the service is available.
+   */
+  private get store(): LeaseStoreContract {
+    if (this.opened === undefined) throw new Error('LeaseStorePlugin used before its mount opened the database')
+    return this.opened
   }
 
   /**
@@ -103,6 +130,14 @@ export default class LeaseStorePlugin extends Service implements LeaseStoreContr
    */
   renew(token: FencingToken, nowMs: number, leaseMs: number): RenewResult {
     return this.store.renew(token, nowMs, leaseMs)
+  }
+
+  /**
+   * Give up the lease `token` authorizes.
+   * @param token - the holder's authority over the item it is giving up.
+   */
+  release(token: FencingToken): void {
+    this.store.release(token)
   }
 
   /**

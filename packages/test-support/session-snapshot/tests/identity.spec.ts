@@ -46,12 +46,31 @@ describe('session snapshot identity redaction', () => {
     expect(redacted[1]).toContain('"parentSession":"{{session:1}}"')
     expect(redacted.join('\n').match(/\{\{message:1\}\}/g)).toHaveLength(2)
     expect(redacted[0]).toContain('"id":"{{approval:1}}"')
-    expect(redacted[0]).toContain('"runId":"{{workflow:1}}"')
+    // `run`, not `workflow`: a manifest's `runId` is an execution run, and the
+    // old label told a fixture's next reader that a workflow had run.
+    expect(redacted[0]).toContain('"runId":"{{run:1}}"')
     expect(redacted[0]).toContain('"requestId":"{{id:1}}"')
     expect(redacted[0]).toContain('"echoed":"{{id:1}}"')
     expect(redacted[0]).toContain(proseUuid)
     expect(redacted[0]).toContain('session {{session:2}}')
     expect(redactSessionSnapshotIds(redacted)).toEqual(redacted)
+  })
+
+  it('leaves a COMPOSITE runId to value-wise replacement, so redaction is idempotent', () => {
+    // The refresh/verify divergence this rule closes: `anonymous-run:<uuid>`
+    // whole-claimed to `{{run:1}}` on a live log, while the already-redacted
+    // fixture read `anonymous-run:{{session:1}}` and could never produce the
+    // first spelling again. Every session snapshot corpus disagreed with its
+    // own fixtures until the claim was narrowed to whole ids.
+    const sessionId = '11111111-1111-4111-8111-111111111111'
+    const log = [
+      JSON.stringify({ type: 'session', id: sessionId }),
+      JSON.stringify({ type: 'action/manifest-appended', data: { runId: `anonymous-run:${sessionId}` } }),
+      '',
+    ].join('\n')
+    const once = redactSessionSnapshotIds([log])
+    expect(once[0]).toContain('"runId":"anonymous-run:{{session:1}}"')
+    expect(redactSessionSnapshotIds(once)).toEqual(once)
   })
 
   it('classifies semantic text plus command, RPC, and retry identity fields', () => {

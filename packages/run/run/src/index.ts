@@ -489,6 +489,17 @@ export function workflowRefOf(id: WorkflowRunId): WorkflowRef {
 }
 
 /** Deployment-varying configuration of {@link RunPlugin}. */
+/**
+ * How many renewals fit inside one lease term.
+ *
+ * A protocol constant, not a tunable: it is a ratio between two things the
+ * deployment already chose — the lease term and how much of it may pass
+ * unrenewed — and exposing it would let a profile configure a heartbeat slower
+ * than its own lease, which is the one setting that cannot be correct. Three
+ * means two renewals may be lost before the lease lapses.
+ */
+const LEASE_RENEWAL_DIVISOR = 3
+
 export interface Config {
   /**
    * Filesystem path of the durable Run store document this plugin's
@@ -561,6 +572,9 @@ export default class RunPlugin extends Service {
   /** In-flight durable writes this mount started, awaited by its disposer. */
   private readonly writes: Promise<void>[] = []
 
+  /** Live renewal timers by Run; each value is its own clear. */
+  private readonly heartbeats = new Map<RunId, NodeJS.Timeout>()
+
   /**
    * The durable registry this plugin restored at mount, for a caller that
    * needs the Run Service's full surface rather than this plugin's
@@ -619,7 +633,65 @@ export default class RunPlugin extends Service {
     agent.runId = opened.run.id
     agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }
     agent.runLease = taken.lease
+    this.heartbeats.set(runId, setInterval(() => { this.beat(agent) }, this.config.leaseMs / LEASE_RENEWAL_DIVISOR))
     this.writes.push(opened.durable)
+  }
+
+  /**
+   * Renew one live Run's lease (P4-07 must[2]).
+   *
+   * Without this every Run lapses at `leaseMs` while it is still working, and
+   * the next tool dispatch refuses itself — the fencing rule would fire on the
+   * run that legitimately holds the item, which is worse than not having it.
+   *
+   * A refused renewal stops the timer rather than retrying. `store-unavailable`
+   * and `fenced-out` both mean this holder must not keep asserting ownership,
+   * and a timer that kept firing would turn one outage into a stream of them.
+   * The run is not torn down here: it discovers its position at its next state
+   * write, which is the one notification that cannot be lost.
+   * @param agent - the agent whose Run holds the lease.
+   */
+  private beat(agent: Agent): void {
+    const denial = agent.runLease?.renew(Date.now())
+    if (denial === undefined) return
+    this.stopHeartbeat(agent.runId)
+  }
+
+  /**
+   * Stop renewing one Run's lease, if it was being renewed.
+   * @param runId - the Run whose timer should stop; absent runs are ignored.
+   */
+  private stopHeartbeat(runId: RunId | undefined): void {
+    if (runId === undefined) return
+    const timer = this.heartbeats.get(runId)
+    if (timer !== undefined) clearInterval(timer)
+    this.heartbeats.delete(runId)
+  }
+
+  /**
+   * Finish one agent's Run: stop renewing, take the lifecycle to its terminal
+   * state, and give the item back (§12.20-3).
+   *
+   * Releasing matters as much as the terminal state. A finished run that keeps
+   * its lease until the deadline it no longer needs leaves the item owned by
+   * nobody doing work, and a host running many short sessions spends its
+   * capacity waiting out leases.
+   * @param agent - the agent whose session ended.
+   */
+  private finish(agent: Agent): void {
+    this.stopHeartbeat(agent.runId)
+    // Only `running` reaches `completed` directly, and that is the state
+    // machine being right rather than in the way: a run that was waiting, or
+    // that never started, did not finish its work — it was ended. Those pass
+    // through `cancelling`, which is what actually happened, instead of being
+    // reported as a run that completed.
+    const state = agent.lifecycle?.state
+    if (state !== undefined && state !== 'running') {
+      advanceLeasedAgent(agent, 'cancelling', 'the agent session ended before its work finished')
+    }
+    advanceLeasedAgent(agent, 'completed', 'the agent session ended')
+    const lease = agent.runLease
+    if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
   }
 
   /**
@@ -678,6 +750,9 @@ export default class RunPlugin extends Service {
     const unsubscribe = this.ctx.on('agent/session-start', ({ agent }) => {
       this.open(agent)
     })
+    const undispose = this.ctx.on('agent/disposed', ({ agent }) => {
+      this.finish(agent)
+    })
     const unstep = this.ctx.on('agent/pre-step', ({ agent }, next) => {
       this.ensureRunning(agent)
       // Waterfall: delegating is mandatory. Returning without `next()` would
@@ -694,6 +769,10 @@ export default class RunPlugin extends Service {
     yield async () => {
       unsubscribe()
       unstep()
+      undispose()
+      // Every renewal timer stops with the mount. A Run whose host is unloading
+      // is not a Run whose lease should keep being asserted.
+      for (const runId of [...this.heartbeats.keys()]) this.stopHeartbeat(runId)
       // Every Run this mount opened is durable before the fiber finishes
       // unloading, so a boot that ends immediately after starting an agent
       // still leaves that agent's Run in the store.

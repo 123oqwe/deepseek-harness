@@ -157,6 +157,7 @@
     "first100:verify-files-overlay": "node scripts/first100/verify-files-overlay.mjs",
     "first100:verify-usage-stage-subject": "node scripts/first100/verify-usage-stage-subject.mjs",
     "first100:verify-manifest-constructed": "node scripts/first100/verify-manifest-constructed.mjs",
+    "first100:verify-run-enabled-in-bundles": "node scripts/first100/verify-run-enabled-in-bundles.mjs",
     "first100:registry-gates": "node scripts/first100/run-registry-gates.mjs",
     "first100:slice-gate-registry": "npm run first100:slice-gate && npm run first100:verify-specs && npm run first100:test-specs && npm run first100:verify-baseline-file-references && npm run first100:verify-frozen-titles-resolvable && npm run first100:verify-p9-cells && npm run architecture:layers",
     "gen-tool-catalog": "tsx scripts/gen-tool-catalog.ts",

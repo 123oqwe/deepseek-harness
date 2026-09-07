@@ -20,6 +20,7 @@ import { computeArgumentsHash, classifySideEffect, createActionManifest, manifes
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
+import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
 /** One tool call after argument parsing, ready to schedule. */
@@ -71,21 +72,22 @@ export async function executeToolCalls(
   acceptContext: (context: UserMessage) => void,
 ): Promise<{ concluded: boolean }> {
   const agent = ctx.agents.requireInitiator()
-  const { session } = agent
 
   // P4-07 must[1]: the state write this dispatch is about to make carries the
   // Run's fencing token. The token is the one the Run Service took when it
   // opened this Run, checked against the store's CURRENT lease — so a host
   // whose Run was reclaimed while it was thinking is refused here, before it
   // dispatches a single tool, rather than discovering it when its results are
-  // ignored. `ctx.get` because the Run Service is optional: a composition
-  // without one has no Run, no lease, and no authority to present.
+  // ignored. Read from the AGENT rather than from the Run Service:
+  // `@deepseek-ai/dsh-run` already depends on this package, so calling back
+  // into it would be a cycle. An agent with no lease answers `no-run`, which
+  // is what a composition without a Run Service gets, and dispatches normally.
   const fencing = advanceLeasedAgent(agent, 'waiting_tool', `dispatching ${String(toolCalls.length)} tool call(s)`)
   if (fencing === 'fenced') {
     // Every call gets its ordered synthetic result: the model must see that
     // its calls did not run, and a silent drop would leave the turn's log
     // claiming calls that neither executed nor failed.
-    for (const block of toolCalls) appendFencedToolCall(session, turn, step, block)
+    for (const block of toolCalls) appendFencedToolCall(agent, turn, step, block)
     return { concluded: false }
   }
 
@@ -115,7 +117,7 @@ export async function executeToolCalls(
     next += outcome.consumed
     concluded ||= outcome.concluded
     if (outcome.aborted) {
-      for (const call of planned.slice(next)) appendSkippedToolCall(session, turn, step, call.block)
+      for (const call of planned.slice(next)) appendSkippedToolCall(agent, turn, step, call.block)
       return { concluded }
     }
   }
@@ -149,7 +151,8 @@ async function runGroup(
   signal: AbortSignal,
   acceptContext: (context: UserMessage) => void,
 ): Promise<GroupOutcome> {
-  const { session } = ctx.agents.requireInitiator()
+  const agent = ctx.agents.requireInitiator()
+  const { session } = agent
   const { maxParallelToolCalls } = ctx.agentLoop.config
   const slots: (Slot | undefined)[] = group.map(() => undefined)
   // Started slots retain their `tool/call` seq so the result can cite it.
@@ -186,7 +189,7 @@ async function runGroup(
   const startCall = async (index: number): Promise<void> => {
     // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded index
     const call = group[index]!
-    callSeqs[index] = appendToolCall(session, turn, step, call.block)
+    callSeqs[index] = appendToolCall(agent, turn, step, call.block)
     started++
     const prepared = await ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(call.exec)
     throwSchedulerFailure()
@@ -259,7 +262,7 @@ async function runGroup(
   if (aborted) {
     // Started calls and accepted context settle first; every remaining model
     // call then receives an ordered synthetic result before the turn aborts.
-    for (const call of group.slice(started)) appendSkippedToolCall(session, turn, step, call.block)
+    for (const call of group.slice(started)) appendSkippedToolCall(agent, turn, step, call.block)
     return { consumed: group.length, aborted: true, concluded }
   }
   /* v8 ignore next -- unreachable: a non-aborted group commits every started call */
@@ -275,13 +278,14 @@ async function runGroup(
  * decision, while a fenced one means another holder owns this Run now. The
  * texts differ because the model's next move differs — a cancelled turn may be
  * retried, a fenced one must not be.
- * @param session - the session log to append to.
+ * @param agent - the agent the call belonged to; its session is appended to.
  * @param turn - the turn the call belonged to.
  * @param step - the step the call belonged to.
  * @param block - the model call that will not run.
  */
-function appendFencedToolCall(session: Session, turn: number, step: number, block: ToolCallBlock): void {
-  const callSeq = appendToolCall(session, turn, step, block)
+function appendFencedToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
+  const { session } = agent
+  const callSeq = appendToolCall(agent, turn, step, block)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: this run is no longer the owner of its work item' }],
     isError: true,
@@ -293,8 +297,9 @@ function appendFencedToolCall(session: Session, turn: number, step: number, bloc
 }
 
 /** Append the durable call/result pair for a model call skipped after cancellation. */
-function appendSkippedToolCall(session: Session, turn: number, step: number, block: ToolCallBlock): void {
-  const callSeq = appendToolCall(session, turn, step, block)
+function appendSkippedToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
+  const { session } = agent
+  const callSeq = appendToolCall(agent, turn, step, block)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: tool call aborted before dispatch' }],
     isError: true,
@@ -306,8 +311,9 @@ function appendSkippedToolCall(session: Session, turn: number, step: number, blo
 }
 
 /** Append a started call and return the event seq that its result must cite. */
-function appendToolCall(session: Session, turn: number, step: number, block: ToolCallBlock): SessionSeq {
-  appendActionManifest(session, block, 'native-tool-call')
+function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): SessionSeq {
+  const { session } = agent
+  appendActionManifest(agent, block, 'native-tool-call')
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
   return event.seq
 }
@@ -330,12 +336,13 @@ function appendToolCall(session: Session, turn: number, step: number, block: Too
  * highest-risk class requiring approval rather than to a convenient guess. A
  * later slice supplying real declarations narrows this without changing the
  * default's direction.
- * @param session - the session log to append to.
+ * @param agent - the agent dispatching it; its session is appended to and its lease epoch recorded.
  * @param block - the tool call about to be dispatched.
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
 
-function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'native-tool-call'): void {
+function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): void {
+  const { session } = agent
   const classification = classifySideEffect(undefined)
   const argumentsHash = computeArgumentsHash(block.arguments)
   // A REAL ActionManifest, built through the package that owns the record and
@@ -390,6 +397,10 @@ function appendActionManifest(session: Session, block: ToolCallBlock, origin: 'n
     // counting for itself made the same field mean two things and cost a log
     // scan per call.
     sequence: session.countEventsOfType('action/manifest-appended') + 1,
+    // The authority is RECORDED, not only presented: an epoch that lived only
+    // in memory leaves a fenced-out host's actions indistinguishable from the
+    // current holder's afterwards.
+    ...agent.lifecycle === undefined ? {} : { leaseEpoch: agent.lifecycle.epoch },
   })
 }
 

@@ -47,6 +47,7 @@ const GATES = [
   'first100:verify-freeze-in-candidate-tree',
   'first100:verify-files-overlay',
   'first100:verify-manifest-constructed',
+  'first100:verify-run-enabled-in-bundles',
   // The ledger's own digest check. It lived only in the push gate, so a
   // registry edit could leave EXEC-STATE stale through a full green gate-set
   // run -- which happened twice: once after SCAFFOLD_FILES changed

@@ -36,9 +36,11 @@ export interface ManifestAttribution {
  *
  * When nothing was attached the answer is the anonymous-dev principal the
  * harness already uses for unauthenticated local work, keyed to the session,
- * and a run id keyed the same way: the manifest REQUIRES both, and naming the
- * only identity the session actually has is better than inventing a plausible
- * one.
+ * and a run id keyed to the same session under its own prefix. The two
+ * fallbacks are deliberately DIFFERENT strings: a run and a principal are
+ * different things, and while they shared a spelling the durable log rendered
+ * both as one value, so a reader could not tell the actor from the run it
+ * acted in.
  * @param identity - the run's attached identity, absent when none was.
  * @param sessionId - the session, used to key the anonymous fallback.
  * @returns the run and actor for this session's manifests.
@@ -46,7 +48,7 @@ export interface ManifestAttribution {
 export function manifestAttribution(identity: IdentityContext | undefined, sessionId: IdempotencyScope): ManifestAttribution {
   if (identity === undefined) {
     return {
-      runId: brandString<RunId>(`anonymous:${sessionId}`),
+      runId: brandString<RunId>(`anonymous-run:${sessionId}`),
       actor: createAnonymousDevPrincipal(brandString<PrincipalId>(`anonymous:${sessionId}`), brandString<TenantId>('local')),
     }
   }
