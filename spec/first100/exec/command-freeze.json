@@ -8225,6 +8225,43 @@
       },
       "note": "P4-12 Fault: acceptance[0]'s crash campaign plus the two validation lines. The duplicate count comes from a fake external service that RECORDS every request, not from the ledger -- asking the ledger whether it prevented a duplicate is asking the defendant. The campaign is deterministic (a fixed LCG seed) rather than clock-seeded, so a failure is reproducible instead of being a story about which run it was; one ledger directory per key is reused across that key's attempts, which is what a restart is, and a fresh directory per attempt would have measured nothing. The campaign also asserts 250 commits, without which it passes when nothing was ever sent.",
       "supplements": null
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/tool-calls.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId",
+        "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) keys two calls in one session differently, so the key identifies the action and not the run"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/action/action-manifest/src/identity.ts",
+        "packages/core/session/src/index.ts",
+        "packages/core/agent-loop/tests/tool-calls.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T15:30:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 29 passed (29) in tool-calls.spec.ts. `vitest run packages/`: 18404 passed with 3 pre-existing intermittent failures, one of which is now BLOCKED-144.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) removed the three inlined fields from the event payload in `appendActionManifest` (packages/core/agent-loop/src/tool-calls.ts), leaving the manifest constructed but the event carrying what it carried before -- which is the arrangement BLOCKED-143 found: a real record beside a payload that omits the fields a reader needs. Re-ran the frozen command.",
+        "failureSummary": "Both new cases fail: `logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId` (runId undefined) and `keys two calls in one session differently` (zero keys collected). The 27 pre-existing cases stay green, so the failure is specific to what the event carries rather than to the manifest being built at all -- which is why the structural gate below covers the other half."
+      },
+      "note": "§12.11 items 1-3. The behavioural half of must[0]: a REAL dispatch through the loop, asserted on the logged event rather than on a hand-built payload. The second case is the first one's control -- a key that were merely the run id would satisfy 'non-empty' and be useless to a ledger. The structural half is `first100:verify-manifest-constructed`, added to the gate set in the same change: it counts production callers of `createActionManifest` excluding tests, refuses zero, and carries its own positive control (the owning package must still contain the definition, so a zero means a broken scan rather than a real result). Verified by disabling both call sites: the gate reports NO production caller across 1769 scanned files.",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      }
     }
   ]
 }

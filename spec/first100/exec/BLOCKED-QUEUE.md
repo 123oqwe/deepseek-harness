@@ -252,6 +252,27 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-145 — the Inspector's realm-forwarding case fails intermittently, and it eats an observation each time
+
+**State: OPEN, out of scope, not blocking any cell — but it cost one observation.**
+
+Verbatim, from run 34132816361 @ `1fa938efad` (20330 passed, 1 failed):
+
+```
+packages/experimental/inspector/tests/integration.host.spec.ts:381
+  > forwards Client Console objects through isolated realm sessions
+AssertionError: expected undefined to be defined
+  ❯ Timeout.checkCallback
+```
+
+**The shape is a polling assertion that ran out of time**, inside a real Worker with console forwarding — not a wrong value, an absent one at the moment the poll gave up. That is why it belongs in the same family as BLOCKED-144 and NOT in the same entry: different file, different mechanism, and this one's failing case name has stayed put across the two runs where it appeared.
+
+**Recorded now because the text was finally read.** It failed once in a local full-suite run earlier and was dismissed with `hmr-config` as "the recorded isolation set"; that dismissal was retracted, and this entry exists because the delegate's CI run supplied the verbatim text a local run had not.
+
+**What it costs.** Under §12.6(a) a run whose conclusion is `failure` greens nothing, so a single intermittent failure in `packages/experimental` — outside the official release scope — postpones every cell in that observation. P4-12.F was postponed by exactly this.
+
+**Not a reason to change the rule yet.** The candidate revision — admit a single-point failure in an experimental package when its text is diagnosed and its reality set is disjoint from the epic's — is written here so it is not invented under pressure later. It waits for a second occurrence: **a rule relaxed the first time it costs something is a rule that was never load-bearing.**
+
 ### BLOCKED-144 — `hmr-config` fails intermittently with a wandering case name, and it is NOT the recorded isolation set
 
 **State: OPEN, out of scope, not blocking any cell. Recorded because it was nearly dismissed by name.**

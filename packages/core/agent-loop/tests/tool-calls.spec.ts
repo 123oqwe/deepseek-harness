@@ -955,3 +955,50 @@ describe('P2-03 Usage — every dispatched call is preceded by its own manifest'
     expect(ordered[ordered.length - 1]).toBe('tool/call')
   })
 })
+
+describe('P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143)', () => {
+  it('logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId', async () => {
+    // BLOCKED-143 measured the alternative: `createActionManifest` had zero
+    // production callers, so must[0]'s "the ActionManifest mandates
+    // idempotencyKey" held over a record the product never built, and the event
+    // carried neither the key nor the actor. Asserted on a real dispatch
+    // through the loop rather than on a hand-built payload.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: { a: 1 } }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-fields'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
+    expect(manifest?.data.runId).toBe('manifest-fields')
+    expect(manifest?.data.actor).toBe('anonymous:manifest-fields')
+    expect(manifest?.data.idempotencyKey).toMatch(/^[0-9a-f]{64}$/u)
+  })
+
+  it('keys two calls in one session differently, so the key identifies the action and not the run', async () => {
+    // The control the field needs: a key that were merely the run id would be
+    // "non-empty" in the case above and useless to a ledger.
+    const adapter = new MockAdapter([
+      multiCall([
+        { id: 'c1', name: 'noop', args: {} },
+        { id: 'c2', name: 'noop', args: {} },
+      ]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-two-keys'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const keys = events(agent)
+      .filter(event => event.type === 'action/manifest-appended')
+      .map(event => event.data.idempotencyKey)
+    expect(keys).toHaveLength(2)
+    expect(new Set(keys).size).toBe(2)
+  })
+})

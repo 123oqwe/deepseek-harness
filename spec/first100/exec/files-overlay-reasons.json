@@ -47,6 +47,7 @@
     "P6-07 packages/session-query/session-query/src/corpus.ts": "The corpus assembly the search clause queries over.",
     "P6-07 packages/session-query/session-query/src/types.ts": "The query and result types the corpus and its callers share.",
     "P6-07 packages/session/session-lifecycle/src/store.ts": "The lifecycle store the P-stage clause persists through.",
-    "P8-01 scripts/gen-control-protocol-schema.ts": "The generator for the control-protocol schema the frozen case compares against. A generated artifact cannot be frozen without naming its generator."
+    "P8-01 scripts/gen-control-protocol-schema.ts": "The generator for the control-protocol schema the frozen case compares against. A generated artifact cannot be frozen without naming its generator.",
+    "P2-03 packages/action/action-manifest/src/identity.ts": "Created by this epic under §12.11: the actor resolution and the idempotency-key derivation both execution paths need. Not a hot zone — a new file in the package that already owns the manifest — but recorded because the plan named neither. It exists rather than living in each caller for the reason BLOCKED-136 measures: two paths deriving the same key is one rule with two implementations, and the derivation IS the contract (a replayed attempt keys the same, a new one does not)."
   }
 }

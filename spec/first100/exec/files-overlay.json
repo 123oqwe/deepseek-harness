@@ -804,10 +804,20 @@
     },
     {
       "epic": "P2-03",
+      "path": "packages/action/action-manifest/src/identity.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Created by this epic under §12.11: the actor resolution and the idempotency-key derivation both execution paths need. Not a hot zone — a new file in the package that already owns the manifest — but recorded because the plan named neither. It exists rather than living in each caller for the reason BLOCKED-136 measures: two paths deriving the same key is one rule with two implementations, and the derivation IS the contract (a replayed attempt keys the same, a new one does not)."
+    },
+    {
+      "epic": "P2-03",
       "path": "packages/core/agent-loop/tests/tool-calls.spec.ts",
       "kind": "test",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ]
     },
     {
@@ -815,7 +825,8 @@
       "path": "packages/core/session/src/index.ts",
       "kind": "source",
       "stages": [
-        "U"
+        "U",
+        "U.2"
       ],
       "reason": "HOT ZONE. Written from `git show ed09684ecf -- packages/core/session/src/index.ts` (+24/-0): the Session log gains a private `typeCounts` Map, maintained on every append, and a public `countEventsOfType(type)` reading it. Why: must[1] needs the manifest `sequence` to be one running position across two call sites (the native tool path and the PTC code-mode sub-dispatch), and a per-append counter avoids the O(n) scan a hot path would pay per operation. The method is deliberately generic — this Session names no manifest — because the event map is merge-extended downstream and a manifest-specific counter here would invert that dependency. An earlier version of this entry said the epic \"contributes an event type and does not change the log itself\", which described the declaration merging in dsh-action-manifest and hid this file's actual change."
     },
@@ -905,7 +916,8 @@
       "kind": "source",
       "stages": [
         "P.3",
-        "U.2"
+        "U.2",
+        "P.4"
       ],
       "reason": "Created by this epic under ruling §12.5 B: the single (id, epoch) rule both consumers now import, replacing two implementations (BLOCKED-136). The plan predates the finding."
     },
@@ -923,7 +935,8 @@
       "path": "packages/collaboration/mailbox/src/index.ts",
       "kind": "source",
       "stages": [
-        "U.2"
+        "U.2",
+        "P.4"
       ],
       "reason": "P5-11 OWNS THIS FILE. Changed here so its second copy of the dedup rule becomes an import of the shared one; the mailbox keeps its own address check and its exported names, and P5-11's four live frozen cases pass unchanged in the same observation (BLOCKED-059 precedent)."
     },
@@ -932,7 +945,8 @@
       "path": "packages/run/message-bus/src/bus-store.ts",
       "kind": "source",
       "stages": [
-        "P.3"
+        "P.3",
+        "P.4"
       ],
       "reason": "The durable store must[0] names: one BEGIN IMMEDIATE over the domain event, its outbox rows and the inbox claim. Created by this epic after the clause was reworded (C13) to exclude the KV seam."
     },
@@ -960,7 +974,8 @@
       "path": "packages/run/message-bus/tests/bus-store.spec.ts",
       "kind": "test",
       "stages": [
-        "P.3"
+        "P.3",
+        "P.4"
       ]
     },
     {
@@ -1081,6 +1096,31 @@
       "stages": [
         "U",
         "U.1"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/action/action-ledger/tests/fault-matrix.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "C.2"
+      ]
+    },
+    {
+      "epic": "P4-12",
+      "path": "packages/action/action-ledger/tests/store.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
       ]
     },
     {
