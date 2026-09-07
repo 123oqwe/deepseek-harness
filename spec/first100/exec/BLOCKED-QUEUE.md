@@ -357,9 +357,24 @@ The new finding: `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-wo
 
 **Still owed to §12.21, and not done here:** the concurrency case it asked to be frozen — N processes opening one new database and exactly one acquiring. It passes today, as measured above, but it is a scratch script rather than a frozen case; it belongs with P4-07's next observation.
 
-### BLOCKED-147 — gate (u)'s 11 findings, classified: 3 are citation gaps, 6 are real integrations that were never built
+### BLOCKED-147 — gate (u): from 11 entry-level findings to 4 epic-level ones
 
-**State: OPEN, measurement complete, no ruling taken.** `verify-usage-stage-subject` is written and registered but held back from the gate set until these 11 are dispositioned. Every declared consumer file EXISTS, so none of the 11 is "the registry names a file that is not there" — each is a Usage stage that did not touch the consumer its own row names.
+**State: PARTLY CLOSED by §12.24-3.** The gate now asks per EPIC — the union of an epic's live U entries must contain ≥1 declared `[B]` file — rather than per entry. An early library-level entry records what was observed at the SHA it was frozen against, and a later supplement reaching the consumer does not make that observation untrue; asking each entry separately would have forced the earlier one to be superseded, which is rewriting provenance to satisfy a check about scope. A stage that as a whole never reaches its consumer is still red, and that case is pinned.
+
+The three citation gaps closed with the reading. P4-06 and P4-08 closed with work: their new U supplements reach `core/agent/src/inbox.ts` and `workflow-worker-thread/src/host.ts` respectively, and neither supersedes an earlier entry.
+
+**Four remain, none exempted:**
+
+| epic | state |
+| --- | --- |
+| P4-09 | needs the `workflow()` nesting hook (§12.24-1 ruled the scope; BLOCKED-150) |
+| P5-10 | needs `orderByPriority` at the control-message dequeue point, plus the A-class `[B] subagent/src/index.ts` (§12.24-2) |
+| P5-11 | needs its U redone against the declared consumers |
+| P6-02 | the row names no baseline consumer at all (§12.19-1's A-class change) |
+
+The exemptions file was re-keyed by epic, each entry recording the key it migrated from and that its reasoning is unchanged — what it exempts is the STAGE not reaching its consumer, which is what the gate now asks.
+
+**Original state: OPEN, measurement complete, no ruling taken.** `verify-usage-stage-subject` is written and registered but held back from the gate set until these 11 are dispositioned. Every declared consumer file EXISTS, so none of the 11 is "the registry names a file that is not there" — each is a Usage stage that did not touch the consumer its own row names.
 
 The distinction that matters is whether the consumer uses the epic's subject TODAY. Measured by grepping the declared `[B]` consumer for the epic's subject:
 

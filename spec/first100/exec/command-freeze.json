@@ -8336,6 +8336,81 @@
         "failureSummary": "The agent-loop mutation reddened TWO cases: this supplement's own case, and the pre-existing 'logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId', whose expectation is now `anonymous-run:manifest-fields`. Both are assertions about the mutated value, so the second red is coverage rather than noise, and neither case was weakened to make the count match a prediction. The ptc mutation reddened exactly one: this supplement's code-mode case. Restored from a copy taken before each mutation; 125 passed (125) again."
       },
       "note": "The subject is the VALUE, not the field. P2-03's delegate re-verify found the field must[0] mandates present and its content something else: `RunId` is the invocation a principal acts inside and P4-01 mints `run-<uuid>`, while both paths branded the session id. Two runs of one session therefore shared a runId, and P4-12 keys a reservation scope on it. Ruling: §12.19 reading 2 and §12.19-4. This supplement does not supersede U.1 or U.2; it adds the value assertion neither made."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "U",
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent/tests/arrival-dedup.spec.ts",
+        "packages/subagent/subagent/tests/continuation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once REFUSES a settlement redelivered after the parent already ran it",
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once SURVIVES a restart, which is the only reason the rule means anything",
+        "P4-06 must[2]: an inbox consumes one (source, id, epoch) once ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed",
+        "continuable settlement delivery carries the child run's LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])"
+      ],
+      "files": [
+        "packages/core/agent/src/inbox.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/subagent/subagent/src/continuation.ts",
+        "packages/core/agent/tests/arrival-dedup.spec.ts",
+        "packages/subagent/subagent/tests/continuation.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T23:10:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: packages/core/agent + packages/subagent/subagent, 1367 passed.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed), two mutations in turn. (a) In packages/core/agent/src/inbox.ts, replaced the epoch component of the dedup key with the constant 0, leaving the source and id components and the consumed-set machinery unchanged. (b) In packages/subagent/subagent/src/continuation.ts, removed the `senderEpoch` field from the settlement notice's source, leaving the notice and its delivery unchanged.",
+        "failureSummary": "(a) reddened exactly one case, 'ADMITS a settlement from the same child in a LATER epoch' — a second activation was suppressed as a duplicate. (b) reddened exactly one case, the composition case in continuation.spec.ts. Also measured and recorded in the spec itself: replacing the SOURCE component with a constant reddens nothing here, because every sender reaching this inbox with an epoch is a `subagent-settled` notice today; the case that reads as covering it varies the id, and both the case name and the module doc now say so rather than implying coverage the assertion does not have."
+      },
+      "note": "Reaches the registry's declared consumer `packages/core/agent/src/inbox.ts` (§12.24-3). Does not supersede U or U.2: those observations recorded the bus and dedup library at the SHAs they were frozen against, and remain true."
+    },
+    {
+      "epic": "P4-08",
+      "stage": "U",
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts",
+        "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-08 must[0]: a real run keeps a journal records one entry per agent() call, keyed to the script digest",
+        "P4-08 must[0]: a real run keeps a journal RESUMES without starting the completed children again (acceptance[0])",
+        "P4-08 must[0]: a real run keeps a journal classes every agent() step SIDE-EFFECTING, so a resume reconciles rather than skips",
+        "P4-08 acceptance[0]: a resume does not repeat completed child work RERUNS a completed step whose child session cannot be confirmed"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/resume.ts",
+        "packages/workflow/workflow-worker-thread/src/runtime.ts",
+        "packages/workflow/workflow-worker-thread/src/session.ts",
+        "packages/workflow/workflow-worker-thread/src/types.ts",
+        "packages/collaboration/workflow-journal/src/store.ts",
+        "packages/workflow/workflow/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts",
+        "packages/workflow/workflow-worker-thread/tests/journal-resume.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T23:10:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: packages/workflow, 258 passed.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed), two mutations in turn. (a) In packages/workflow/workflow-worker-thread/src/host.ts, removed the `journaling.onAgentStart` call so nothing recorded a step. (b) In packages/workflow/workflow-worker-thread/src/runtime.ts, removed the reuse check so a resumed run always started a child.",
+        "failureSummary": "(a) reddened two cases, 'records one entry per agent() call' and 'classes every agent() step SIDE-EFFECTING'. (b) reddened exactly one, 'RESUMES without starting the completed children again' — the resumed run started both children again. The count that fails is taken at `workflow/agent-start`, one event per child actually started, not from the journal, which could only report that it recorded a skip."
+      },
+      "note": "Reaches the registry's declared consumer `packages/workflow/workflow-worker-thread/src/host.ts` (§12.24-3). must[1]'s skip and must[2]'s reconciliation reach the world through `sessionPersistence`; the journal alone never authorizes reuse."
     }
   ]
 }

@@ -63,6 +63,7 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/plugin/plugin-compat': { kind: 'none', reason: 'Epic P1-08 solver: a pure compatibility decision over declared ranges, registering nothing model-facing.' },
   'packages/collaboration/lease-contract': { kind: 'none', reason: 'Epic P4-07 capability definition: identities and two pure decisions over caller-supplied values, registering no prompt, schema, tool, or session event.' },
   'packages/run/lease-sqlite': { kind: 'none', reason: 'Epic P4-07 durable store: it persists leases a host holds and registers no prompt, schema, tool, or session event; a refused acquisition stops a run before any model request.' },
+  'packages/run/taskboard-sqlite': { kind: 'none', reason: 'Epic P5-11 durable store: it persists task claims and registers no prompt, schema, tool, or session event; nothing model-facing reads or writes it.' },
   'packages/plugin/plugin-lock': { kind: 'none', reason: 'Epic P1-03 lock: decision functions and an atomic commit over caller-supplied state; boot admission is decided before any agent exists.' },
   'packages/plugin/plugin-ownership': { kind: 'none', reason: 'Epic P1-09 ownership: pure attribution decisions; the tool names it attributes are rendered by dsh-tools, not here.' },
   'packages/plugin/plugin-provenance': { kind: 'none', reason: 'Epic P1-02 provenance: verification functions over recorded facts, registering no prompt, schema, or tool.' },

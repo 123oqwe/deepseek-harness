@@ -17,9 +17,12 @@ export interface UsageSubjectFreezeEntry {
 }
 
 export interface UsageSubjectFinding {
+  /** The EPIC the finding is about; the gate is asked per epic since §12.24-3. */
   key: string
   subjects: string[]
   files: readonly string[]
+  /** Every live U entry behind this finding, so a reader sees which observations it covers. */
+  entries: readonly string[]
 }
 
 export function usageBaselineFiles(epic: UsageSubjectEpic): string[]

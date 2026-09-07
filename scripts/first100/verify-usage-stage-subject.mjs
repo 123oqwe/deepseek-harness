@@ -9,12 +9,22 @@
  * because "usage" had been read as a second layer of unit tests inside the same
  * package.
  *
- * So the check is mechanical and narrow: at least one file in a U-stage freeze
- * entry must be a file the registry's own `stages.U` list marks `[B]` — a
- * BASELINE file, one that existed before this epic and belongs to the consumer
- * the plan named. An epic that genuinely should not touch its declared consumer
- * says so in `usage-subject-exemptions.json`, with the BLOCKED entry and the
- * ruling that decided it.
+ * So the check is mechanical and narrow, and it is asked PER EPIC: the union of
+ * an epic's live U-stage freeze entries must contain at least one file the
+ * registry's own `stages.U` list marks `[B]` — a BASELINE file, one that
+ * existed before this epic and belongs to the consumer the plan named.
+ *
+ * **Per epic, not per entry (§12.24-3).** An early library-level U entry
+ * records what was observed at the SHA it was frozen against, and a later
+ * supplement that reaches the declared consumer does not make that observation
+ * untrue. Asking each entry separately would force the earlier one to be
+ * superseded — rewriting provenance to satisfy a check about scope. A stage
+ * that as a whole never reaches its consumer is still red, which is the
+ * failure this gate exists for.
+ *
+ * An epic that genuinely should not touch its declared consumer says so in
+ * `usage-subject-exemptions.json`, with the BLOCKED entry and the ruling that
+ * decided it.
  *
  * **What this gate does NOT check**: that the touched file is reached at run
  * time. A file can be edited and still be dead. 4.4a — counting a clause
@@ -52,25 +62,33 @@ export function usageBaselineFiles(epic) {
 }
 
 /**
- * U-stage freeze entries that cite none of their epic's stage-U baseline files.
+ * Epics whose live U-stage entries, taken together, cite none of their
+ * declared stage-U baseline files.
  * @param registry - the parsed registry.
  * @param freeze - all freeze entries; superseded ones are skipped here.
- * @param exemptions - `{ "<epic>.U[.<seq>]": { blocked, ruling } }`.
- * @returns one finding per unexempted entry.
+ * @param exemptions - `{ "<epic>": { blocked, ruling } }`, keyed by epic since §12.24-3.
+ * @returns one finding per unexempted epic.
  */
 export function usageEntriesWithoutSubject(registry, freeze, exemptions) {
   const byId = new Map(registry.epics.map(epic => [epic.id, epic]))
-  const findings = []
+  /** Every file cited by an epic's live U entries, and the entry keys behind them. */
+  const cited = new Map()
   for (const entry of freeze) {
     if (entry.supersededBy !== undefined || entry.stage !== 'U') continue
-    const epic = byId.get(entry.epic)
-    if (epic === undefined) continue
-    const subjects = usageBaselineFiles(epic)
-    if ((entry.files ?? []).some(path => subjects.includes(path))) continue
-    const key = entry.supplementSeq === undefined ? `${entry.epic}.U` : `${entry.epic}.U.${String(entry.supplementSeq)}`
-    const exemption = exemptions[key]
+    if (!byId.has(entry.epic)) continue
+    const seen = cited.get(entry.epic) ?? { files: new Set(), entries: [] }
+    for (const path of entry.files ?? []) seen.files.add(path)
+    seen.entries.push(entry.supplementSeq === undefined ? `${entry.epic}.U` : `${entry.epic}.U.${String(entry.supplementSeq)}`)
+    cited.set(entry.epic, seen)
+  }
+
+  const findings = []
+  for (const [id, seen] of cited) {
+    const subjects = usageBaselineFiles(byId.get(id))
+    if (subjects.some(path => seen.files.has(path))) continue
+    const exemption = exemptions[id]
     if (exemption !== undefined && typeof exemption.blocked === 'string' && typeof exemption.ruling === 'string') continue
-    findings.push({ key, subjects, files: entry.files ?? [] })
+    findings.push({ key: id, subjects, files: [...seen.files], entries: seen.entries })
   }
   return findings
 }
@@ -83,18 +101,18 @@ function main() {
 
   if (findings.length > 0) {
     console.error(
-      `verify-usage-stage-subject: ${String(findings.length)} Usage-stage freeze entry/entries touch none of the consumer files their registry row names.\n`
+      `verify-usage-stage-subject: ${String(findings.length)} epic(s) whose Usage stage, taken as a whole, touches none of the consumer files its registry row names.\n`
       + 'A Usage stage inside the epic\'s own package proves the library, not the use of it. Touch the declared consumer, or record the entry in\n'
       + 'spec/first100/exec/usage-subject-exemptions.json with the BLOCKED entry and the ruling that says why the registry\'s consumer is wrong.\n',
     )
-    for (const { key, subjects, files } of findings) {
-      console.error(`  ${key}`)
+    for (const { key, subjects, files, entries } of findings) {
+      console.error(`  ${key} (live U entries: ${entries.join(', ')})`)
       console.error(`      registry stage-U [B] files: ${subjects.length > 0 ? subjects.join(', ') : '(none — the row names no baseline consumer)'}`)
-      console.error(`      frozen files: ${files.join(', ')}`)
+      console.error(`      frozen files across those entries: ${files.join(', ')}`)
     }
     process.exit(1)
   }
-  console.log('verify-usage-stage-subject: every live Usage-stage freeze entry touches a consumer file its registry row names, or is exempted with a ruling.')
+  console.log('verify-usage-stage-subject: every epic\'s live Usage stage touches a consumer file its registry row names, or is exempted with a ruling.')
 }
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main()

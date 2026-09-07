@@ -40,23 +40,48 @@ describe('usageEntriesWithoutSubject', () => {
     expect(usageEntriesWithoutSubject(registry, [entry(['packages/host/consumer/src/index.ts'])], {})).toEqual([])
   })
 
-  it('reports one that touches only the epic\'s own package', () => {
+  it('reports an epic whose Usage touches only its own package', () => {
     const findings = usageEntriesWithoutSubject(registry, [entry(['packages/demo/thing/src/index.ts'])], {})
     expect(findings).toHaveLength(1)
-    expect(findings[0]?.key).toBe('P9-99.U')
+    expect(findings[0]?.key).toBe('P9-99')
+  })
+
+  it('accepts the epic when a LATER supplement reaches the consumer the first entry missed', () => {
+    // §12.24-3: asked per epic, not per entry. An early library-level entry
+    // records what was observed at the SHA it was frozen against, and a
+    // supplement that reaches the consumer does not make that observation
+    // untrue — asking each entry separately would force the earlier one to be
+    // superseded, rewriting provenance to satisfy a check about scope.
+    expect(usageEntriesWithoutSubject(registry, [
+      entry(['packages/demo/thing/src/index.ts']),
+      entry(['packages/host/consumer/src/index.ts'], { supplementSeq: 3 }),
+    ], {})).toEqual([])
+  })
+
+  it('still reports the epic when EVERY live entry misses the consumer', () => {
+    // The failure the gate exists for survives the per-epic reading: a stage
+    // that as a whole never reaches its consumer is red however many entries
+    // it has.
+    const findings = usageEntriesWithoutSubject(registry, [
+      entry(['packages/demo/thing/src/index.ts']),
+      entry(['packages/demo/thing/src/other.ts'], { supplementSeq: 2 }),
+    ], {})
+    expect(findings).toHaveLength(1)
+    expect(findings[0]?.entries).toEqual(['P9-99.U', 'P9-99.U.2'])
   })
 
   it('skips a SUPERSEDED entry, which describes a shape the epic no longer promises', () => {
     expect(usageEntriesWithoutSubject(registry, [entry(['packages/demo/thing/src/index.ts'], { supersededBy: 'later' })], {})).toEqual([])
   })
 
-  it('keys a supplement by its sequence, so one exemption cannot cover another entry', () => {
+  it('names every live entry behind a finding, so a reader can see which observations it covers', () => {
     const findings = usageEntriesWithoutSubject(registry, [entry(['packages/demo/thing/src/index.ts'], { supplementSeq: 2 })], {})
-    expect(findings[0]?.key).toBe('P9-99.U.2')
+    expect(findings[0]?.key).toBe('P9-99')
+    expect(findings[0]?.entries).toEqual(['P9-99.U.2'])
   })
 
   it('accepts an exemption carrying BOTH a BLOCKED entry and a ruling', () => {
-    const exempt = { 'P9-99.U': { blocked: 'BLOCKED-999', ruling: '§12.x' } }
+    const exempt = { 'P9-99': { blocked: 'BLOCKED-999', ruling: '§12.x' } }
     expect(usageEntriesWithoutSubject(registry, [entry(['packages/demo/thing/src/index.ts'])], exempt)).toEqual([])
   })
 
@@ -64,7 +89,7 @@ describe('usageEntriesWithoutSubject', () => {
     // The case that keeps the exemption honest. Without it, `{"P9-99.U": {}}`
     // silences the finding while recording nothing a reader can check.
     for (const partial of [{}, { blocked: 'BLOCKED-999' }, { ruling: '§12.x' }]) {
-      expect(usageEntriesWithoutSubject(registry, [entry(['packages/demo/thing/src/index.ts'])], { 'P9-99.U': partial }), JSON.stringify(partial))
+      expect(usageEntriesWithoutSubject(registry, [entry(['packages/demo/thing/src/index.ts'])], { 'P9-99': partial }), JSON.stringify(partial))
         .toHaveLength(1)
     }
   })
