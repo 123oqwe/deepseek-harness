@@ -267,13 +267,27 @@
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
-        "standardsImported": [
+        "standardsOwned": [
+          {
+            "standard": "CycloneDX 1.6",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          },
+          {
+            "standard": "SPDX",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          },
           {
             "standard": "Sigstore bundle v0.3",
-            "from": "upstream @sigstore/verify"
+            "assignedBy": "standards-ownership.json",
+            "basis": "assignment",
+            "reason": "The record previously placed this under `standardsImported` from upstream `@sigstore/verify`, which is true of the FORMAT and not of the shape: the ownership table assigns this epic the shape, meaning how a dsh trust anchor binds a bundle to a claim. Both facts are real and only one is ownership. ACCEPTED row, so PENDING-BACKFILL: the owner owes one schema/vocabulary case, due before P2-05 starts."
           }
         ],
+        "standardsImported": [],
         "residual": "Which anchors are admitted, that an unregistered issuer is refused, where the trusted root comes from, that revocation works in both directions, and that the offline path is not the weaker one. sigstore-js does the cryptography; none of those decisions exist upstream.",
         "probes": [
           {
@@ -326,14 +340,6 @@
           {
             "standard": "SLSA provenance v1",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same: `observedSourceCommit`/`observedBuilderIdentity` are attestation-like fields this epic defined, not SLSA predicates."
-          },
-          {
-            "standard": "CycloneDX 1.6",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
-          },
-          {
-            "standard": "SPDX",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
           }
         ]
       }
@@ -450,26 +456,35 @@
             "name": "mitre-atlas/atlas-data",
             "npm": "mitre-atlas/atlas-data",
             "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Same: a data set, not a dependency, and no technique id reaches the taxonomy."
-          },
-          {
-            "standard": "MCP ToolAnnotations",
-            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. The card names it as a hint input. The Contract stage's classifier takes domain tags only; wiring annotations is Provider-stage work and is not claimed here."
-          },
-          {
-            "standard": "P1-01 SideEffectClass",
-            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built. Deliberately NOT imported: P1-01's vocabulary classifies MECHANISM and this epic's classifies RISK. Recorded in the package's own module doc as the reason a third vocabulary exists."
-          },
-          {
-            "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
-            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built."
-          },
-          {
-            "standard": "MITRE ATLAS technique ids",
-            "reason": "The epic has not been accepted, so this is not a read-only disposition: it records that the package was measured absent from the tree at the time the record was written, and adopting it remains open until the stage that would use it is built."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
+        "standardsOwned": [
+          {
+            "standard": "MCP ToolAnnotations",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+          },
+          {
+            "standard": "P1-01 SideEffectClass",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+          },
+          {
+            "standard": "OWASP LLM Top-10 2025 (LLM06 Excessive Agency)",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+          },
+          {
+            "standard": "MITRE ATLAS technique ids",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
+          }
+        ],
         "standardsImported": [],
         "residual": "The eight classes, the classifier, its confidence and grounds, and the organisation override.",
         "probes": [
@@ -762,14 +777,16 @@
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
         "adopted": [],
-        "deviations": [
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
           {
             "standard": "OpenFeature evaluation API (optional)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Carried as optional on the card. The feature-gate surface is a local typed table with no evaluation-provider seam, and no frozen case names OpenFeature."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
           }
         ],
-        "rejectedAbsent": [],
-        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The gate table, its typing, and the migration path.",
         "probes": [
@@ -815,18 +832,23 @@
             "name": "schemastery (vendored)",
             "npm": "schemastery (vendored)",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Vendored under vendor/, not adopted as an npm dependency by this epic; its use is the framework's, not this epic's."
-          },
-          {
-            "standard": "JSON Schema 2020-12 as interchange",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Used in practice by the generated schema artifacts, but no live frozen case of this epic names the version, so ownership is not claimed."
-          },
-          {
-            "standard": "Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The registry's compatibility modes were written independently; no frozen case names the Confluent vocabulary."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
+        "standardsOwned": [
+          {
+            "standard": "JSON Schema 2020-12 as interchange",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          },
+          {
+            "standard": "Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          }
+        ],
         "standardsImported": [],
         "residual": "The registry, its migration path, and the compatibility decision.",
         "probes": [
@@ -977,18 +999,23 @@
           {
             "standard": "semver ranges",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Follows from semver being unadopted: there are no ranges to interpret."
-          },
-          {
-            "standard": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The manifest's permission vocabulary was defined here independently; no frozen case names the VS Code source."
-          },
-          {
-            "standard": "Chrome MV3 permissions/host_permissions vocabulary",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
+        "standardsOwned": [
+          {
+            "standard": "VS Code contributes/capabilities.untrustedWorkspaces vocabulary",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          },
+          {
+            "standard": "Chrome MV3 permissions/host_permissions vocabulary",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          }
+        ],
         "standardsImported": [],
         "residual": "The manifest schema, its classification, and pre-mount admission.",
         "probes": [
@@ -1024,18 +1051,22 @@
             "reason": "Adopted in substance: workspace identity is observed through `realpathNormalize`, which this epic's own `dsh-workspace` provides over node:fs. The card's label is descriptive, not an importable specifier, so `specifier` names the real one."
           }
         ],
-        "deviations": [
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
           {
             "standard": "VS Code Workspace Trust model (untrustedWorkspaces supported true|false|limited, restrictedConfigurations)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The trust states were defined here; no live frozen case names the VS Code model."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
           },
           {
             "standard": "git safe.directory ownership check",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. No ownership comparison against the invoking user exists; identity is path-canonical only."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
           }
         ],
-        "rejectedAbsent": [],
-        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The trust states, their persistence, and the gates that read them.",
         "probes": [
@@ -1118,18 +1149,22 @@
             "reason": "Imported by the repository's test suites; the ownership adjudication's generated coverage uses it."
           }
         ],
-        "deviations": [
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
           {
             "standard": "npm scope = publisher identity (reserve dsh.*/@deepseek-ai/*)",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The reservation rule is implemented, but as this epic's own namespace policy; no frozen case names npm scope semantics as the source."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
           },
           {
             "standard": "VS Code publisher.name id convention",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Same: the id shape was defined here."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
           }
         ],
-        "rejectedAbsent": [],
-        "standardsOwned": [],
         "standardsImported": [],
         "residual": "Tool-name ownership, collision adjudication, and the reserved namespace.",
         "probes": [
@@ -1168,16 +1203,19 @@
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case of this epic's 98 names SPIFFE; the id shape was defined here."
           },
           {
-            "standard": "RFC 8693 act nesting for delegation chain",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. The delegation chain is a local array, not an RFC 8693 `act` claim."
-          },
-          {
             "standard": "OTel semconv enduser.id/service.name",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No telemetry attribute mapping exists in this epic."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
+        "standardsOwned": [
+          {
+            "standard": "RFC 8693 act nesting for delegation chain",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          }
+        ],
         "standardsImported": [],
         "residual": "Principal identity, the delegation chain, and its runtime policy.",
         "probes": [
@@ -1212,14 +1250,16 @@
             "reason": "Imported by the repository's test suites; this epic's generated coverage uses it. Verified present by a repository-wide import scan, not assumed from the card."
           }
         ],
-        "deviations": [
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
           {
             "standard": "A2A TaskState / MCP TaskStatus mapping at surfaces (waiting_human ↔ input_required)",
-            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. `waiting_human` appears in this epic's frozen cases as a lifecycle state of its own; the A2A/MCP MAPPING does not, so the state is owned here and the mapping is not claimed."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
           }
         ],
-        "rejectedAbsent": [],
-        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The agent lifecycle, its dispatch fencing, and the state machine.",
         "probes": [
@@ -1520,18 +1560,22 @@
         "verdict": "PROVIDER_WRITE",
         "verdictSecondary": null,
         "adopted": [],
-        "deviations": [
+        "deviations": [],
+        "rejectedAbsent": [],
+        "standardsOwned": [
           {
             "standard": "Mem0 OSS API op names add/search/get/update/delete/history (alignment)",
-            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. No frozen case of this epic's 76 names Mem0; the operation set was defined here and only incidentally overlaps."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
           },
           {
             "standard": "dsh-memory-protocol v1 (dsh-memento)",
-            "reason": "not-yet-adopted: this epic is NOT accepted, so no read-only disposition applies to it. The package or vocabulary is measured absent from the tree today, and adopting it stays open until the stage that would use it is built. Recorded so the absence is a stated position rather than a silence. Named on the card as this program's own protocol, but no frozen case pins the version, so ownership is not claimed."
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is not accepted, so the claim is PENDING until a case pins it; --accept refuses a pending ownership."
           }
         ],
-        "rejectedAbsent": [],
-        "standardsOwned": [],
         "standardsImported": [],
         "residual": "The memory seam, its projection, and scoped reads.",
         "probes": [
@@ -1582,16 +1626,19 @@
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of 47 frozen cases names a PROV relation."
           },
           {
-            "standard": "Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case names these; the record's temporal fields were defined here."
-          },
-          {
             "standard": "W3C DPV for purpose & personal-data categories",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No purpose or personal-data vocabulary exists in the record shape."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
+        "standardsOwned": [
+          {
+            "standard": "Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          }
+        ],
         "standardsImported": [],
         "residual": "The memory record, its scope, and its temporal fields.",
         "probes": [
@@ -1693,20 +1740,25 @@
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Measured absent repository-wide; protocol versions are exact strings negotiated by fingerprint, not ranges."
           },
           {
-            "standard": "MCP initialize protocolVersion + capabilities shape",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. `capabilities` appears in this epic's frozen cases, but as its OWN negotiation surface rather than as MCP's shape; the MCP binding is not claimed."
-          },
-          {
-            "standard": "LSP ClientCapabilities pattern",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No frozen case names LSP."
-          },
-          {
             "standard": "RFC 8785 JCS for schema fingerprints",
             "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. P2-03 owns RFC 8785 in this program; this epic uses the canonicalizer without owning the standard. Recorded as a deviation rather than a second ownership claim."
           }
         ],
         "rejectedAbsent": [],
-        "standardsOwned": [],
+        "standardsOwned": [
+          {
+            "standard": "MCP initialize protocolVersion + capabilities shape",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          },
+          {
+            "standard": "LSP ClientCapabilities pattern",
+            "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
+            "basis": "assignment",
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+          }
+        ],
         "standardsImported": [],
         "residual": "Protocol negotiation, the control-protocol schema artifact, and release evidence.",
         "probes": [

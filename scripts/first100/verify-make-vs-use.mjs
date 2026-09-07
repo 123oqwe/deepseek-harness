@@ -135,6 +135,21 @@ function trackedSources() {
 }
 
 /**
+ * Whether P2-05 has begun, which is the deadline for the accepted rows'
+ * ownership backfill.
+ *
+ * A state, not a date: a calendar deadline in a checked file goes stale
+ * silently, while "P2-05 has left NOT_RUN" is something the ledger answers.
+ * @param rows - the ledger rows.
+ * @returns true once any P2-05 cell has left NOT_RUN.
+ */
+function p205Started(rows) {
+  return Object.values(rows['P2-05']?.cells ?? {}).some(
+    cell => cell?.status !== undefined && cell.status !== 'NOT_RUN' && cell.status !== 'N/A',
+  )
+}
+
+/**
  * The npm names the ledger rejects for one epic.
  * @param row - the ledger row.
  * @returns rejected npm package names.
@@ -280,8 +295,20 @@ function main() {
         && (item.expectCases ?? []).some(title => title.includes(needle)))
       if (!named && typeof assignedBy === 'string' && assignedBy.length > 0) {
         if (execRows[key]?.status === 'ACCEPTED') {
-          findings.push(`${key}: owns ${standard} by assignment (${assignedBy}) with no frozen case naming it, but the epic is ACCEPTED — ownership must be pinned before acceptance`)
-          state = 'MISMATCHED'
+          // An ACCEPTED row may hold an assignment it has not yet pinned:
+          // these epics were accepted before the ownership table existed, and
+          // reopening their acceptance to add a vocabulary case would punish
+          // them for a rule that arrived afterwards. The debt is real, so it
+          // carries a DEADLINE that is a state rather than a date — the owner
+          // owes one schema/vocabulary case before P2-05 starts, and P2-05
+          // starting is something this repository can observe.
+          if (p205Started(execRows)) {
+            findings.push(`${key}: owns ${standard} by assignment with no frozen case naming it, and P2-05 has started — the backfill deadline has passed`)
+            state = 'MISMATCHED'
+          } else {
+            pending.push(`${key}: ${standard} owned by assignment, PENDING-BACKFILL (one vocabulary case owed before P2-05 starts)`)
+            if (state === 'VERIFIED') state = 'PENDING_ADOPTION'
+          }
         } else {
           pending.push(`${key}: ${standard} owned by assignment (${assignedBy}), no frozen case pins it yet`)
           if (state === 'VERIFIED') state = 'PENDING_ADOPTION'

@@ -2,10 +2,9 @@
  * Compare the standards the PLAN assigns each epic to own against what the
  * pre-flight records actually claim.
  *
- * `make-vs-use-plan.md` marks shape ownership inline, on the standards line of
- * each epic's card: a standard followed by `唯一涉及者,本 epic 是形状所有者`
- * is assigned to that epic. That is a decision, made once, independent of any
- * test.
+ * `standards-ownership.json` is generated from the plan's shape-ownership
+ * marking and is the single source for who owns which vocabulary. Ownership is
+ * a decision, made once, independent of any test.
  *
  * **This is a report, not a gate, and the reason is a live rule conflict.**
  * `verify-make-vs-use` requires an owned standard to be named by a live frozen
@@ -30,36 +29,27 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const PLAN_PATH = join(REPO_ROOT, 'spec/first100/exec/make-vs-use-plan.md')
+const OWNERSHIP_PATH = join(REPO_ROOT, 'spec/first100/exec/standards-ownership.json')
 const AUDIT_PATH = join(REPO_ROOT, 'spec/first100/exec/clause-subject-audit.json')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
 
-/** The marker the plan uses to assign a vocabulary's shape to one epic. */
-const OWNER_MARKER = '形状所有者'
-
 /**
- * The standards each epic's card assigns it to own.
+ * The standards each epic is assigned to own.
  *
- * Parsed from the card's own standards line rather than from a maintained
- * list, so the report cannot drift from the document it reports on.
+ * Read from the GENERATED `standards-ownership.json` rather than by parsing
+ * the plan's prose. An earlier version scraped the card text and produced
+ * names subtly different from the generator's — "OpenFeature evaluation API"
+ * against "OpenFeature evaluation API (optional)" — so seven epics looked like
+ * gaps when the only disagreement was a parenthetical. Two parsers of one
+ * document is one parser too many.
  * @returns owned standard names by epic id.
  */
 function planAssignedOwnership() {
+  const perEpic = JSON.parse(readFileSync(OWNERSHIP_PATH, 'utf8')).perEpic ?? {}
   const assigned = new Map()
-  let current
-  for (const line of readFileSync(PLAN_PATH, 'utf8').split('\n')) {
-    const heading = line.match(/`?(P\d-\d\d)`?/u)
-    if (line.startsWith('####') && heading !== null) {
-      current = heading[1]
-      continue
-    }
-    if (current === undefined || !/标准[(（]绑定词汇[)）]/u.test(line)) continue
-    const body = line.replace(/^.*?标准[(（]绑定词汇[)）][^:：]*[:：]/u, '')
-    for (const item of body.split(' · ')) {
-      if (!item.includes(OWNER_MARKER)) continue
-      const name = item.replace(/\(\*\*[^)]*\)/gu, '').replaceAll('**', '').split('(')[0].trim()
-      if (name.length > 2) assigned.set(current, [...assigned.get(current) ?? [], name])
-    }
+  for (const [epic, standards] of Object.entries(perEpic)) {
+    const owned = standards.filter(entry => entry.thisEpicOwns === true).map(entry => entry.standard)
+    if (owned.length > 0) assigned.set(epic, owned)
   }
   return assigned
 }
@@ -86,7 +76,7 @@ function main() {
   }
 
   const total = [...assigned.values()].reduce((count, list) => count + list.length, 0)
-  console.log(`plan-assigned ownership: ${String(assigned.size)} epic(s), ${String(total)} standard(s) marked "${OWNER_MARKER}".`)
+  console.log(`plan-assigned ownership: ${String(assigned.size)} epic(s), ${String(total)} standard(s) assigned by standards-ownership.json.`)
   console.log(`of the epics that have a pre-flight record: ${String(matched)} assigned standard(s) claimed, ${String(gaps.length)} epic(s) with a gap.`)
   for (const { epic, status, missing } of gaps) {
     console.log(`  ${epic} (${status})`)

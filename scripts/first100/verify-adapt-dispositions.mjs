@@ -49,6 +49,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/make-vs-use-ledger.json')
 const AUDIT_PATH = join(REPO_ROOT, 'spec/first100/exec/clause-subject-audit.json')
 const EXEC_LEDGER_PATH = join(REPO_ROOT, 'spec/first100/exec/ledger.json')
+const OWNERSHIP_PATH = join(REPO_ROOT, 'spec/first100/exec/standards-ownership.json')
 
 const loadJson = path => JSON.parse(readFileSync(path, 'utf8'))
 
@@ -66,6 +67,7 @@ function main() {
   const cards = new Map(loadJson(LEDGER_PATH).rows.map(row => [row.id, row]))
   const preFlight = loadJson(AUDIT_PATH).preFlight ?? {}
   const rows = loadJson(EXEC_LEDGER_PATH).rows
+  const ownership = loadJson(OWNERSHIP_PATH).perEpic ?? {}
 
   const unrecorded = []
   const deferred = []
@@ -115,6 +117,18 @@ function main() {
       // the Fault stage runs or the epic is accepted, the adoption has either
       // landed or it was never made. Left unchecked, `landsIn` is an escape
       // hatch that defers forever, and acceptance would rest on a promise.
+      // Shape ownership is ASSIGNED by standards-ownership.json, generated
+      // from the plan. An epic the table names as owner must claim it: the
+      // check grades evidence, the table decides who owns the vocabulary, and
+      // an executor writing records must not settle that by omission — which
+      // is what a backfill did to 22 standards across 12 epics.
+      const assignedOwned = (ownership[id] ?? []).filter(entry => entry.thisEpicOwns === true).map(entry => entry.standard)
+      for (const standard of assignedOwned) {
+        if (!ownedNames.includes(standard)) {
+          missing.push(`standards-ownership.json assigns ${JSON.stringify(standard)} to this epic, but standardsOwned does not claim it`)
+        }
+      }
+
       const pending = (declared.adopted ?? []).filter(entry => typeof entry.landsIn === 'string' && entry.landsIn.length > 0)
       if (pending.length > 0) {
         const faultStarted = rows[id]?.cells?.F?.status !== undefined
