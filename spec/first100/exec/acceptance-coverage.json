@@ -2176,6 +2176,123 @@
         }
       ],
       "note": "The second Contract case is the control: without it, a classifier that returned the high-risk default for EVERY action would satisfy the first. The Usage case moves the claim from a return value to the durable log, which is where acceptance[0]'s reader looks."
+    },
+    {
+      "epic": "P2-02",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "acceptance[0]: a child `allow` filter naming a tool the parent never held gains nothing"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: `delegatedChildResources` never returns a name outside the parent set, for allow, deny, and none"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: a delegation requesting an expiry past the parent's is refused, not clamped"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: a delegation requesting a budget above the parent's is refused"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[0]: dropping a budget-constrained parent's ceiling entirely is refused as a widening"
+        },
+        {
+          "stage": "C",
+          "title": "requesting one unit more than the parent's budget is rejected (one past the exact boundary)"
+        },
+        {
+          "stage": "C",
+          "title": "requesting an unconstrained (omitted) budget under a budget-constrained parent is rejected as wider"
+        },
+        {
+          "stage": "C",
+          "title": "requesting an expiry one millisecond past the parent's is rejected (one past the exact boundary)"
+        },
+        {
+          "stage": "F",
+          "title": "P2-02 Fault — attenuation boundary matrix fault boundary 07 keeping every parent resource and adding one is still refused"
+        },
+        {
+          "stage": "F",
+          "title": "P2-02 Fault — attenuation boundary matrix fault boundary 15 a child of a child narrows again from the CHILD, not the root"
+        }
+      ],
+      "note": "acceptance[0]: a child token is never wider than its parent on resources, verbs, budget or expiry. The C and F citations prove the rule at each boundary, including the two directions a permissive implementation passes by accident: an equal-to-parent request is admitted, so the refusals are selective, and OMITTING a constrained dimension is refused as a widening rather than read as no request at all. The U citations prove the rule is reached from the real delegation path rather than only from attenuateToken's own unit tests — U12 records that an over-long expiry is REFUSED, not silently clamped, which is the difference between enforcing a ceiling and quietly editing a request."
+    },
+    {
+      "epic": "P2-02",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "P",
+          "title": "revoking the root invalidates a grandchild two attenuation hops away"
+        },
+        {
+          "stage": "P",
+          "title": "revoking an intermediate child invalidates its own descendant but leaves the root valid"
+        },
+        {
+          "stage": "P",
+          "title": "revoking one branch's root leaves an unrelated branch's descendant valid"
+        },
+        {
+          "stage": "P",
+          "title": "a revocation recorded before a restart still invalidates the descendant after it"
+        },
+        {
+          "stage": "P",
+          "title": "the grandchild's own token never names the root's digest, so a cascade cannot be a direct digest match"
+        },
+        {
+          "stage": "C",
+          "title": "revoking the root ancestor invalidates a grandchild many delegation hops away"
+        },
+        {
+          "stage": "C",
+          "title": "revoking an unrelated digest does not invalidate an unconnected lineage"
+        }
+      ],
+      "note": "acceptance[1]: revoking a parent invalidates every descendant. The load-bearing citation is the fifth: the grandchild's own token never names the root's digest, so a cascade cannot be a direct digest comparison and the lineage walk is really being performed. Without it, a store that compared the presented digest against the revoked set would pass every other case here. The unrelated-branch case is the negative control, and the across-a-restart case proves the revocation is durable rather than an in-memory set a restart clears."
+    },
+    {
+      "epic": "P2-02",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "U",
+          "title": "acceptance[2]: a refusal reaching the model quotes no token material"
+        },
+        {
+          "stage": "U",
+          "title": "acceptance[2]: the durable descriptor records the delegation digest and no other token material"
+        },
+        {
+          "stage": "P",
+          "title": "records exactly redactTokenForLog's output for each issued and attenuated token, oldest first"
+        },
+        {
+          "stage": "P",
+          "title": "never lets a nonce or a signature byte reach the audit surface"
+        },
+        {
+          "stage": "P",
+          "title": "keeps the audit trail free of nonces after a restart, when it is read back from disk"
+        },
+        {
+          "stage": "P",
+          "title": "leaves the audit trail on disk carrying no nonce, even though the token registry beside it must"
+        },
+        {
+          "stage": "C",
+          "title": "redactTokenForLog produces exactly digest/subject/tenant/capability/delegationDepth/expiresAt — never verbs, resources, constraints, nonce, or the raw signature"
+        }
+      ],
+      "note": "acceptance[2]: no token reaches model-visible text, and the log carries only a digest and security metadata. Two surfaces, both cited: the MODEL surface (a refusal message) and the LOG surface (the audit cases). The last P citation is what makes this more than a formatting assertion — it reads the trail back off disk and finds no nonce there, while the token registry beside it necessarily holds one, so the redaction is a property of what is written rather than of how it is rendered."
     }
   ]
 }
