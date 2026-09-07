@@ -742,3 +742,7 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 4. **顺序**:先落 BLOCKED-137 根修(`snapshots/.refresh-skipped.json` 机制)——事件字段变了必须重录 snapshot,而两个 pwsh 夹具本机刷不了,不先修会再红一轮。`SESSION_FORMAT_VERSION` 按 pre-release 立场不兑现兼容,旧日志被拒即预期。
 5. **P4-12 U 阶段**等 P2-03 该 supplement 绿后开;C / P / F 照常。
 **规则(进 EPIC-LIFECYCLE 4.x)**:签字前 delegate **重做 1.2 的第一问并量化**——子句名词的构造函数在生产路径上的调用者数(grep,排除 tests),为零则不签;preFlight 时问过一次不算,验收时的路径可能已不是开工时的路径。
+
+### 12.12 撤签后的五条 `accepted-unadopted`:处置词汇不收行状态(2026-09-07 08:20 EDT)
+
+P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`openid/authzen`、in-toto/attestation 及其三个标准)——`accepted-unadopted` 的主语"本 epic 已 ACCEPTED"不再为真。**裁 (a)**:改成真处置;**拒 (b)** `signoff-withdrawn` 类别——那是行的状态不是库的处置,收进词汇门就从"每条库有下落"退化成"每行有借口"。真处置卡上早有(五条 `ruling` 全为 None 即模板盖掉裁决的证据):MCP 两条与 AuthZEN 两条按 §7.11 **裁定不采用**,所有权 P2-04 / P2-05;in-toto 两条按 §3.4/R1 是 **SLICE-3.4 的消费者**。门若无此类别,窄加 `slice-consumer{sliceRef}`,只限 §3.1–3.4 有排期的 slice,slice 落地后消费者未接线即 MISMATCHED。**其余 ACCEPTED 行的 `accepted-unadopted` 同样各有卡上裁决,回填批(P2-05 前)填实 `ruling`。**
