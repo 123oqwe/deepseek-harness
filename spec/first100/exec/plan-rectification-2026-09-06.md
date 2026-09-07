@@ -789,3 +789,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 
 **事实**:执行者给 P4-12.F 绿格时手打了一个 40 位合法但不存在的 SHA,工具收了(只查格式);已修为 `git cat-file -t` 存在性检查(`5efb4f585d`)。**根**:`generate-ledger.mjs` 的绿化与 supplement 两条路径都收操作者手打的 `--candidate-sha` 与 `--report <path>`,**从不读 `evidence-bundle.json`、从不看 `signature`**——"引签名副本"至今是纪律不是机制;假 SHA 只是第一种暴露方式,对的 SHA 配错的 report 是第二种。
 **裁决**:两条路径改收 `--evidence-dir <签名产物目录>`,`candidateSha` / `ciRunUrl` / vitest report 全部从包里取,操作者不输入任何一个;存在性检查留作底。签名先量产生方式:本地可验则读包时验,不可验则 BLOCKED 记"签名不可本地验证",不假装验。已绿格子不重绿(delegate 已逐个对过签名包)。**教训**:一个只查格式的输入,和不查一样;一个可以手打的证据引用,和没有引用一样。
+
+### 12.18 P2-03 重签核:`manifest.runId` 是会话 id 贴了 RunId 品牌(2026-09-07 13:40 EDT,不签)
+
+**事实**:谓词 (i)(ii)(iii)(v)(e) 全过,`createActionManifest` 生产调用者 delegate 自数 = 2,manifest 十二字段齐、事件由它派生。但 `tool-calls.ts:306` / `ptc.ts:204` 写的是 `runId: brandString<RunId>(session.id)`;`dsh-principal` 定义 RunId 为"execution-run identifier",P4-01 Run Service 铸 `run-<uuid>`,且 `IdentityContext.runId` 在同一函数两行前 `attachedIdentity(session)` 的返回值里就有。同一会话多个 run 的 manifest 共享一个"runId";P4-12 要拿它进 scope/键。
+**裁决**:(1) runId 取 `attachedIdentity(session).runId`;(2) `manifestIdempotencyKey` 派生改 `(sessionId, actionId, argumentsHash)`——崩溃重试要跨重启稳定的身份,session id 是、per-invocation 的 run id 不是(用它则重启换键 → 重复外部效应);写进 JSDoc;(3) U supplement 一条(`runId === attachedIdentity(session).runId && !== session.id`,变异改回 → 只红这条),再观测,签。**教训(4.4a 之后的第二问)**:调用者数够了,还要读调用点传的**值**——品牌类型只保证形状,不保证来源。
