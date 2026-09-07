@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T07:38:49.714Z",
-  "inputDigest": "42a2b17710755b9c0045efdb37c71b6db6f205cb3434467deeb8f8cef9736841",
+  "lastUpdatedUtc": "2026-09-07T09:11:14.007Z",
+  "inputDigest": "4c4a178db0e02c94a2e3f1e3569e682d9e49827bdf6fa755e3a06aae77076357",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4126,10 +4126,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
+          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
           "expectCasesMatched": [
             "kill after-commit, then replay: the business effect is applied exactly once",
             "kill after-send, then replay: the business effect is applied exactly once",
@@ -4146,14 +4146,20 @@
             "a foreign message is refused WITHOUT its key being looked up in the seen-set",
             "a refused foreign message cannot suppress a later legitimate one sharing its key"
           ],
-          "capturedAtUtc": "2026-09-06T23:04:05.454Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
+            "atUtc": "2026-09-07T09:11:13.323Z"
+          },
+          "capturedAtUtc": "2026-09-07T09:11:13.324Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "a7ed2e4f25b736a8bb4470acd7c5828b476eb80f",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33954161047",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r5/first100-evidence-a7ed2e4f25b736a8bb4470acd7c5828b476eb80f/vitest-report.json",
-          "observationSha256": "5e3d2e5d04f067163984b2ff3bcbafee7a947be316de836b9a2f35adbf2d3ccf",
+          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
+          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
           "expectCasesMatched": [
             "hands the event and its record to the sink in a single call",
             "keeps a multi-record commit together and preserves its order",
@@ -4173,17 +4179,20 @@
             "surfaces a barrier failure without detached logging and retains its batch",
             "retains a failed batch larger than the engine call-argument limit"
           ],
-          "absorbedFlakes": [
-            "experimental Inspector real Worker forwards Client Console objects through isolated realm sessions"
-          ],
-          "capturedAtUtc": "2026-09-05T18:08:04.497Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33954161047",
+            "fromCandidateSha": "a7ed2e4f25b736a8bb4470acd7c5828b476eb80f",
+            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
+            "atUtc": "2026-09-07T09:11:13.548Z"
+          },
+          "capturedAtUtc": "2026-09-07T09:11:13.549Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r6/first100-evidence-4ce759848ccf663f7b18ed18a9de96959157c8ad/vitest-report.json",
-          "observationSha256": "b25e3445447517bbf61a22ea94436327cab27c014f41cf626bcffa347c3ecd32",
+          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
+          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
           "expectCasesMatched": [
             "spends the attempt and persists `sent` BEFORE handing the record to the transport",
             "applies the receipt, and applying the same outcome twice does not ack twice",
@@ -4192,14 +4201,20 @@
             "reads the clock ONCE, so a slow transport cannot expire a later record",
             "dispatches in priority order, so a starved low-priority record cannot jump ahead"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:04.719Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
+            "fromCandidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
+            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
+            "atUtc": "2026-09-07T09:11:13.771Z"
+          },
+          "capturedAtUtc": "2026-09-07T09:11:13.771Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/r6/first100-evidence-4ce759848ccf663f7b18ed18a9de96959157c8ad/vitest-report.json",
-          "observationSha256": "b25e3445447517bbf61a22ea94436327cab27c014f41cf626bcffa347c3ecd32",
+          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
+          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
           "expectCasesMatched": [
             "enumerates at least the twelve boundaries the clause requires",
             "fault boundary 01 deadline expired before any attempt",
@@ -4224,7 +4239,13 @@
             "alerts only AFTER the dead-letter state is persisted",
             "does not alert when a send merely fails and the record stays retryable"
           ],
-          "capturedAtUtc": "2026-09-05T18:08:04.945Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/33955647211",
+            "fromCandidateSha": "4ce759848ccf663f7b18ed18a9de96959157c8ad",
+            "reason": "BLOCKED-137 §12.6 for C (greened from run 34063737869, whose conclusion was failure); all four re-observed at the SHA where BLOCKED-091 is closed and must[2] has a production call site.",
+            "atUtc": "2026-09-07T09:11:14.007Z"
+          },
+          "capturedAtUtc": "2026-09-07T09:11:14.007Z"
         }
       },
       "supplements": {
@@ -4249,9 +4270,50 @@
             "P4-06: the seen-set classifyIntake reads is the consumed rows reports exactly the consumed keys, so the pure classifier and the durable state agree"
           ],
           "capturedAtUtc": "2026-09-07T06:26:06.673Z"
+        },
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
+          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "expectCasesMatched": [
+            "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set delivers a message this bus has never consumed",
+            "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set drops a REDELIVERY of a message this bus already consumed, which is the effect must[2] names",
+            "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set treats the same id at a LATER epoch as a new message, so a restarted sender is not silenced",
+            "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set refuses a message addressed elsewhere BEFORE consulting the seen-set",
+            "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set reads the seen-set at DECISION time, so a message consumed after the handle was taken still drops",
+            "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set still drops the redelivery after a RESTART, because the seen-set is the durable rows"
+          ],
+          "capturedAtUtc": "2026-09-07T09:11:05.892Z"
+        },
+        "P.3": {
+          "status": "GREEN",
+          "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-9cb21a872a/vitest-report.json",
+          "observationSha256": "c4826c083cb9b7792c0b6099dcf8a2d1892094353010547bbe7d3ae60e37e8a3",
+          "expectCasesMatched": [
+            "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
+            "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
+            "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes nothing when the commit fails AFTER the outbox rows, which a sequential writer could not survive",
+            "P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT rather than fail completes a commit that arrives while another process holds the write lock",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a crashed claim in `claimed`, not `consumed`",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) sweeps an expired claim to `released`, so the turn that never ran does not consume the message",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a CONSUMED row untouched when recovery sweeps, so a settled effect cannot be undone",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) lets a RELEASED message be claimed again, which is the restoration the previous rule forbade",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) refuses to re-claim a CONSUMED message, so the effect cannot run twice",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) treats the same id at a different EPOCH as a different message",
+            "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) drops a second intake of the SAME id and epoch, so the epoch case is not just \"everything is new\"",
+            "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) classifies a message the store has CONSUMED as a duplicate, through the real seen-set",
+            "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) classifies a message the store has only CLAIMED as a first arrival, so the drop above is selective",
+            "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) keeps `(a:1, 2)` and `(a, 1:2)` distinct on BOTH sides, which the store's own spelling did not",
+            "P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-138) reports every consumed key as the rule computes it, with no second spelling anywhere"
+          ],
+          "capturedAtUtc": "2026-09-07T09:11:06.128Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",

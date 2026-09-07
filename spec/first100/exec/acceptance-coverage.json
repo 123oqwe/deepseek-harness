@@ -2293,6 +2293,125 @@
         }
       ],
       "note": "acceptance[2]: no token reaches model-visible text, and the log carries only a digest and security metadata. Two surfaces, both cited: the MODEL surface (a refusal message) and the LOG surface (the audit cases). The last P citation is what makes this more than a formatting assertion — it reads the trail back off disk and finds no nonce there, while the token registry beside it necessarily holds one, so the redaction is a property of what is written rather than of how it is rendered."
+    },
+    {
+      "epic": "P4-06",
+      "acceptanceIndex": 0,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "kill after-commit, then replay: the business effect is applied exactly once"
+        },
+        {
+          "stage": "C",
+          "title": "kill after-send, then replay: the business effect is applied exactly once"
+        },
+        {
+          "stage": "C",
+          "title": "kill after-effect, then replay: the business effect is applied exactly once"
+        },
+        {
+          "stage": "C",
+          "title": "kill after-ack, then replay: the business effect is applied exactly once"
+        },
+        {
+          "stage": "C",
+          "title": "ten thousand redeliveries of one message produce one effect (validation[1])"
+        },
+        {
+          "stage": "U",
+          "title": "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set treats the same id at a LATER epoch as a new message, so a restarted sender is not silenced",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "U",
+          "title": "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set still drops the redelivery after a RESTART, because the seen-set is the durable rows",
+          "supplementSeq": 2
+        },
+        {
+          "stage": "P",
+          "title": "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "P",
+          "title": "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "P",
+          "title": "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes nothing when the commit fails AFTER the outbox rows, which a sequential writer could not survive",
+          "supplementSeq": 3
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 14 a duplicate arrival is dropped without a second effect"
+        }
+      ],
+      "note": "acceptance[0]: killing before and after commit, send and ack still yields exactly one business effect, guaranteed by the consumer's (messageId, epoch) idempotence rather than by transport exactly-once. The four kill points are cited directly, and the two P.3 torn-write cases are what make them mean something durable: a failure after the domain event and a failure AFTER the outbox rows both leave NOTHING, so replay never finds an event whose outgoing message no record explains. The U.2 citations are the arrival side of the same guarantee on a real path — a redelivery dropped against the durable consumed set, and dropped again after a restart, which a caller-supplied seen-set could not show."
+    },
+    {
+      "epic": "P4-06",
+      "acceptanceIndex": 1,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "a crash after send leaves a record replay can still find, not a lost message"
+        },
+        {
+          "stage": "C",
+          "title": "a pending message is visible as undelivered and still delivers after replay"
+        },
+        {
+          "stage": "F",
+          "title": "reports the buried record and its reason to the alert channel"
+        },
+        {
+          "stage": "F",
+          "title": "alerts only AFTER the dead-letter state is persisted"
+        },
+        {
+          "stage": "F",
+          "title": "does not alert when a send merely fails and the record stays retryable"
+        },
+        {
+          "stage": "U",
+          "title": "returns a failed send to pending with its attempt spent, not dead-lettered"
+        }
+      ],
+      "note": "acceptance[1]: an undelivered message stays queryable and replayable. The load-bearing pair is the alerting order — a buried record is reported only AFTER its dead-letter state is persisted, and a merely-failed send does not alert at all — because an alert that precedes persistence describes a state a reader cannot then find. The U citation is the retry path: a failed send returns to pending with its attempt spent rather than being dead-lettered, which is what keeps it replayable."
+    },
+    {
+      "epic": "P4-06",
+      "acceptanceIndex": 2,
+      "coveredBy": [
+        {
+          "stage": "C",
+          "title": "refuses a foreign-tenant message and records nothing about it"
+        },
+        {
+          "stage": "C",
+          "title": "a foreign message is refused WITHOUT its key being looked up in the seen-set"
+        },
+        {
+          "stage": "C",
+          "title": "a refused foreign message cannot suppress a later legitimate one sharing its key"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 15 a foreign-tenant arrival is refused and records nothing"
+        },
+        {
+          "stage": "F",
+          "title": "fault boundary 16 a foreign-tenant arrival is refused even when its key is already seen"
+        },
+        {
+          "stage": "U",
+          "title": "P4-06 must[2]: a real mailbox arrival is deduplicated against the durable consumed set refuses a message addressed elsewhere BEFORE consulting the seen-set",
+          "supplementSeq": 2
+        }
+      ],
+      "note": "acceptance[2]: a cross-tenant message cannot be consumed. The citation that carries this is not the refusal but the ORDER: a foreign message is refused WITHOUT its key being looked up, and cannot suppress a later legitimate message sharing that key. A refusal that consulted the seen-set first would still refuse, and would silently poison a real message — so the check order is the property, and the epoch case is the control proving the seen-set still distinguishes a genuinely new arrival."
     }
   ]
 }
