@@ -1,0 +1,1365 @@
+{
+  "schema": {
+    "name": "first100-files-overlay",
+    "version": "1.0"
+  },
+  "generatedBy": "scripts/first100/verify-files-overlay.mjs --write",
+  "entries": [
+    {
+      "epic": "P0-01",
+      "path": "packages/guard/baseline-preflight/tests/apply.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-01",
+      "path": "tests/first100/fixtures/P0-01.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "apps/cli/tests/trust-kernel-posture.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/kernel/trust-kernel/tests/boot.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/kernel/trust-kernel/tests/dispose.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-02",
+      "path": "packages/kernel/trust-kernel/tests/pin-hardening.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-03",
+      "path": "docs/glossary.md",
+      "kind": "doc",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-03",
+      "path": "docs/glossary.zh.md",
+      "kind": "doc",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-03",
+      "path": "scripts/architecture/capability-seams.ts",
+      "kind": "source",
+      "stages": [
+        "C",
+        "F"
+      ],
+      "reason": "The seam-classification rules themselves. The registry declared the checker but not the module holding the rules it applies, and a frozen case naming a classification has to name where that classification is decided."
+    },
+    {
+      "epic": "P0-03",
+      "path": "scripts/architecture/check-capability-seams.d.mts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The declaration file for the .mjs checker. Repo convention pairs every scripts/*.mjs with a .d.mts so TypeScript consumers see its API; the registry named only the runtime half."
+    },
+    {
+      "epic": "P0-03",
+      "path": "tests/architecture/check-capability-seams.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U",
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-04",
+      "path": "scripts/architecture/layer-order.ts",
+      "kind": "source",
+      "stages": [
+        "C"
+      ],
+      "reason": "The canonical layer sequence and edge-classification rules must[0] is about. The registry declared the scanner (a later stage) and not the contract module the scanner applies."
+    },
+    {
+      "epic": "P0-04",
+      "path": "tests/architecture/__fixtures__/p0-04-calibration/packages/client/probe-ui/package.json",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-04",
+      "path": "tests/architecture/__fixtures__/p0-04-calibration/packages/kernel/probe-kernel/package.json",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-04",
+      "path": "tests/architecture/__fixtures__/p0-04-calibration/pnpm-workspace.yaml",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-04",
+      "path": "tests/architecture/check-layer-deps.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-04",
+      "path": "tests/first100/architecture.layers.json",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/schema/schema-registry/tests/migration.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/sdk/server/tests/server.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/session/session-persistence-jsonl/tests/jsonl.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U",
+        "F"
+      ]
+    },
+    {
+      "epic": "P0-06",
+      "path": "packages/settings/settings/tests/settings.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P0-08",
+      "path": "benchmarks/harness-capability/scenarios/index.ts",
+      "kind": "source",
+      "stages": [
+        "F"
+      ],
+      "reason": "The scenario table the fault-matrix cases enumerate. A benchmark scenario list is neither test nor product source, and the registry file list has no benchmarks/ entry at all."
+    },
+    {
+      "epic": "P0-08",
+      "path": "tests/benchmark/lane-runner.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-01",
+      "path": "packages/host/plugin-inventory/tests/permission-state.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-01",
+      "path": "packages/plugin/plugin-manifest/src/invariant.ts",
+      "kind": "source",
+      "stages": [
+        "C"
+      ],
+      "reason": "The published ./invariant companion. Package rules require the companion to live beside the manifest module it observes; the registry declared the manifest module alone."
+    },
+    {
+      "epic": "P1-01",
+      "path": "packages/plugin/plugin-manifest/tests/manifest.provider.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/host/plugin-inventory/package.json",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/host/plugin-inventory/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The consumer that reads recorded provenance in production. must[2] is about verification reaching a real inventory, and the inventory is where that call site lives."
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/host/plugin-inventory/tests/permission-state.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/host/plugin-inventory/tests/provenance-record.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/host/plugin-inventory/tsconfig.json",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/kernel/trust-kernel/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "P",
+        "F"
+      ],
+      "reason": "The signature roots provenance verification is checked against. HOT ZONE: the kernel entry point is shared with P0-02 and P2-02, and this epic reads from it rather than changing its construction."
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/README.md",
+      "kind": "doc",
+      "stages": [
+        "P",
+        "F"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/tests/audit-record.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/tests/fixtures/sigstore-chain.ts",
+      "kind": "test",
+      "stages": [
+        "P",
+        "F"
+      ]
+    },
+    {
+      "epic": "P1-02",
+      "path": "packages/plugin/plugin-provenance/tests/package-digest.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/src/candidate.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "Candidate-lock construction, which is half of must[0]: a lock that pins integrity has to be built somewhere, and the registry declared only the comparison side."
+    },
+    {
+      "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/src/commit.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The atomic commit path. must[0] requires the lock to be written durably; the registry named the decision functions and not the write."
+    },
+    {
+      "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/src/gate.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The boot-admission decision the U stage proves. The registry declared the lock package broadly and this file is where admission is decided."
+    },
+    {
+      "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/src/lockfile-integrity.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "Created by this epic to close BLOCKED-135: real integrity read from pnpm-lock.yaml, replacing a `dsh.provenance.integrity` field nothing wrote. The plan predates the finding, so it could not have named the file."
+    },
+    {
+      "epic": "P1-03",
+      "path": "packages/plugin/plugin-lock/tests/gate.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P1-03",
+      "path": "scripts/first100/verify-boot-path-offline.mjs",
+      "kind": "source",
+      "stages": [
+        "F.1"
+      ],
+      "reason": "The structural gate §12.1 substituted for the withdrawn fetch-spy assertion: the boot closure contains no HTTP client. It is program infrastructure the epic was told to build, not product code."
+    },
+    {
+      "epic": "P1-03",
+      "path": "scripts/first100/verify-boot-path-offline.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/context/agent-instructions/tests/trust-gate.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/skill/skill-filesystem/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The provider whose filesystem access the trust decision gates. The clause is about what a skill may reach, and this is the reaching."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/skill/skill-filesystem/tests/trust-gate.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The local trust store the decision reads. The registry declared the policy and not the store it consults."
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace-trust-local/tests/provider.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "packages/workspace/workspace/tests/trust-observation.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-07",
+      "path": "tests/first100/fixtures/P1-07.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-08",
+      "path": "apps/cli/src/profile-boot.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "HOT ZONE: the boot path where a compatibility refusal actually stops a launch. The clause is about boot admission, so the assertion has to reach the real boot rather than the solver alone."
+    },
+    {
+      "epic": "P1-08",
+      "path": "apps/cli/tests/plugin-compat-boot.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-08",
+      "path": "packages/boot/app-boot/tests/profile-compat.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-08",
+      "path": "packages/plugin/plugin-compat/README.md",
+      "kind": "doc",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P1-08",
+      "path": "packages/plugin/plugin-compat/tests/provider-resolution.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": ".agents/notes/implemented/feature/2026-09-04-tool-registry-namespace-and-ownership-adjudication.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": ".agents/notes/implemented/feature/2026-09-04-tool-registry-namespace-and-ownership-adjudication.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "docs/subsystems/tools.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "docs/subsystems/tools.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/core/tools/README.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/core/tools/README.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/core/tools/tests/ownership.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U",
+        "F"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/extensions/cordis-host-runner/README.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/extensions/cordis-host-runner/README.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/extensions/cordis-host-runner/src/guard.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The runtime guard that attributes a tool call to its owning plugin. Ownership is decided here, and the registry named only the attribution rules."
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/extensions/cordis-host-runner/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The host runner entry that installs the guard above. Its registration is what puts attribution on the live path."
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/extensions/cordis-host-runner/tests/ownership.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/extensions/tool-cordis/src/api-catalog.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The catalog surface whose entries carry owner attribution to the model."
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/host/plugin-inventory/README.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/host/plugin-inventory/README.zh.md",
+      "kind": "doc",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "packages/plugin/plugin-ownership/README.md",
+      "kind": "doc",
+      "stages": [
+        "U",
+        "F"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "scripts/gen-cordis-catalog.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The generator that produces the catalog the case reads. A generated artifact cannot be frozen without naming its generator."
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/clean.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/collision.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/first-owner.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/fixture-tool.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/replace.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/replacer.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/reserved-claimant.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/reserved.cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/loader/p1-09-ownership/second-owner.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P1-09",
+      "path": "tests/first100/fixtures/P1-09.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/identity/principal/src/invariant.ts",
+      "kind": "source",
+      "stages": [
+        "C"
+      ],
+      "reason": "The published ./invariant companion for the principal package, required beside the module it observes."
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/identity/principal/tests/invariant.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/identity/principal/tests/runtime-policy.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-01",
+      "path": "packages/sdk/protocol/tests/types.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/core/tools/package.json",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/core/tools/tests/capability-token.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/kernel/trust-kernel/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "P.1"
+      ],
+      "reason": "HOT ZONE: must[1] required real key material in `signatureRoots`, which is minted in the kernel entry point. This epic changed construction there — an Ed25519 keypair per kernel in a module-private WeakMap — under the P2-02 acceptance lock, and the change is recorded in that lock rather than only here."
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/kernel/trust-kernel/tests/signing.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P.1"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/policy/capability-token/package.json",
+      "kind": "manifest",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/policy/capability-token/tests/token-service.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/subagent/subagent/package.json",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-02",
+      "path": "packages/subagent/subagent/tests/capability-token-delegation.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/action/action-manifest/package.json",
+      "kind": "manifest",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/core/agent-loop/tests/tool-calls.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/core/session/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "HOT ZONE: the session log is where a manifest becomes durable, and must[1] requires the manifest appended BEFORE policy. The epic contributes an event type through the documented map rather than changing the log itself."
+    },
+    {
+      "epic": "P2-03",
+      "path": "packages/core/tools/tests/ptc.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/bundle/base/cordis.patch.yml",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/bundle/base/package.json",
+      "kind": "manifest",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/tests/plugin.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "packages/run/run/tests/run-service.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/loader/p4-01-run/cordis.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/loader/p4-01-run/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/P4-01.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-01",
+      "path": "tests/first100/fixtures/P4-01.fault.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P4-05",
+      "path": "packages/core/agent/tests/lifecycle-dispatch.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/collaboration/intake-dedup/src/dedup.ts",
+      "kind": "source",
+      "stages": [
+        "P.3",
+        "U.2"
+      ],
+      "reason": "Created by this epic under ruling §12.5 B: the single (id, epoch) rule both consumers now import, replacing two implementations (BLOCKED-136). The plan predates the finding."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/collaboration/intake-dedup/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "The new package barrel, forced by the repository convention that every packages/*/* directory carries an index.ts entry (B4(f) scaffold)."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/collaboration/mailbox/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "P5-11 OWNS THIS FILE. Changed here so its second copy of the dedup rule becomes an import of the shared one; the mailbox keeps its own address check and its exported names, and P5-11's four live frozen cases pass unchanged in the same observation (BLOCKED-059 precedent)."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/src/bus-store.ts",
+      "kind": "source",
+      "stages": [
+        "P.3"
+      ],
+      "reason": "The durable store must[0] names: one BEGIN IMMEDIATE over the domain event, its outbox rows and the inbox claim. Created by this epic after the clause was reworded (C13) to exclude the KV seam."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/src/dispatcher.ts",
+      "kind": "source",
+      "stages": [
+        "U",
+        "F"
+      ],
+      "reason": "The dispatch loop that turns outbox rows into delivery attempts, which is the at-least-once half of the clause."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/src/mailbox-delivery.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "must[2]'s production call site: a real mailbox arrival decided against the durable consumed set. It lives in this package rather than in dsh-mailbox because the store is orchestration-runtime and the mailbox is a capability definition (ruling §12.5 B)."
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/tests/bus-store.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P.3"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/tests/crash.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/tests/fault-matrix.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P4-06",
+      "path": "packages/run/message-bus/tests/mailbox-delivery.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/core/agent/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "HOT ZONE: the agent entry point re-exports the lifecycle transition the clause fences. The epic adds the fenced variant beside the existing export; the unfenced one is still published and is P4-07's standing open finding."
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/lease/tests/fault-matrix.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P4-07",
+      "path": "packages/run/lease/tests/fencing.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-journal/src/observer.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The observer that turns journal records into an observable stream, which the U stage's clause is about."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-journal/src/recorder.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The recorder that writes journal entries. The registry named the journal package without naming where a record is produced."
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-journal/tests/resume.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "F"
+      ]
+    },
+    {
+      "epic": "P4-08",
+      "path": "packages/workflow/workflow-worker-thread/tests/journal-host.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-registry/src/nesting.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "Nesting-depth decisions, which is the subject of the U-stage clause."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-registry/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The registry store the P-stage clause persists through."
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-registry/tests/nested.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "F"
+      ]
+    },
+    {
+      "epic": "P4-09",
+      "path": "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U",
+        "U.1"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/src/control-convergence.ts",
+      "kind": "source",
+      "stages": [
+        "C"
+      ],
+      "reason": "Convergence decisions for a delegated run, created by this epic as the C-stage contract module."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/src/control-router.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The router that applies those decisions, created by this epic as the Provider half."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/src/control-types.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The types both halves share; separated because src/types.ts contains only types by repository rule."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U",
+        "F"
+      ],
+      "reason": "The package barrel, which must re-export the control surface for any consumer to reach it."
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/tests/control-convergence.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/tests/control-router.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P5-10",
+      "path": "packages/subagent/subagent/tests/control.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U",
+        "F"
+      ]
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/collaboration/blackboard/tests/blackboard.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P5-11",
+      "path": "packages/collaboration/taskboard/tests/claims.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C",
+        "F"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/context/memory-context/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The context contributor whose recall query the clause constrains."
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/context/memory-context/tests/fixtures/driver.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/context/memory-context/tests/fixtures/memory-context.patch.yml",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/context/memory-context/tests/fixtures/mock-llm.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/context/memory-context/tests/memory-context.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/context/memory-context/tests/render.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "packages/memory/memory/tests/durable-provider.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P6-01",
+      "path": "tests/first100/fixtures/P6-01.fault.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P6-02",
+      "path": "packages/memory/memory/src/index.ts",
+      "kind": "source",
+      "stages": [
+        "C",
+        "U"
+      ],
+      "reason": "The memory service the clause is about; the registry declared the package and not its entry point."
+    },
+    {
+      "epic": "P6-02",
+      "path": "packages/memory/memory/tests/scope.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session-query/session-query/src/corpus.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The corpus assembly the search clause queries over."
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session-query/session-query/src/types.ts",
+      "kind": "source",
+      "stages": [
+        "U"
+      ],
+      "reason": "The query and result types the corpus and its callers share."
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session-query/session-query/tests/lifecycle-projection.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session/session-lifecycle/src/store.ts",
+      "kind": "source",
+      "stages": [
+        "P"
+      ],
+      "reason": "The lifecycle store the P-stage clause persists through."
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session/session-lifecycle/tests/lifecycle.e2e.spec.ts",
+      "kind": "test",
+      "stages": [
+        "F"
+      ]
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session/session-lifecycle/tests/lifecycle.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C"
+      ]
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session/session-lifecycle/tests/projection.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P6-07",
+      "path": "packages/session/session-lifecycle/tests/store.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/sdk/client/tests/fake-runtime.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/sdk/client/tests/negotiated-handshake.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/sdk/server/tests/negotiation-provider.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "packages/sdk/server/tests/plugin-apply.spec.ts",
+      "kind": "test",
+      "stages": [
+        "P"
+      ]
+    },
+    {
+      "epic": "P8-01",
+      "path": "scripts/gen-control-protocol-schema.ts",
+      "kind": "source",
+      "stages": [
+        "C.1"
+      ],
+      "reason": "The generator for the control-protocol schema the frozen case compares against. A generated artifact cannot be frozen without naming its generator."
+    },
+    {
+      "epic": "P8-01",
+      "path": "tests/first100/fixtures/P8-01.composition.spec.ts",
+      "kind": "test",
+      "stages": [
+        "C.1"
+      ]
+    }
+  ]
+}
