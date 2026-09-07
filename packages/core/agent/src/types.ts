@@ -6,6 +6,8 @@
 
 import type { UserMessage } from '@deepseek-ai/dsh-llm/types'
 import type { IdentityContext, RunId } from '@deepseek-ai/dsh-principal/types'
+import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
+import type { AgentLifecycle } from './state-machine.ts'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
 import type { TypertContext, TypertLookup } from '@deepseek-ai/dsh-typert-protocol'
 
@@ -35,6 +37,38 @@ export interface Agent {
    * failed to open.
    */
   runId?: RunId
+  /**
+   * This agent run's position in the lifecycle, and the authority every state
+   * write it makes is checked against (first100 registry P4-05 must[1], P4-07
+   * must[1]).
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer.
+   * It sets this beside {@link Agent.runId} when it opens the Run, having
+   * taken that Run's lease from `ctx.leaseStore`, and it advances it. The
+   * `epoch` here is one a lease store ISSUED, never one a caller chose — that
+   * is the whole difference between this field and a number, and why
+   * `advanceAgentLifecycleFenced` rather than `advanceAgentLifecycle` is the
+   * entry point that may move it.
+   *
+   * Absent when no Run Service is mounted, or when the Run's lease was
+   * refused. A reader treats absence as "this agent may not make authorized
+   * state writes", never as a lifecycle at its initial state.
+   */
+  lifecycle?: AgentLifecycle
+  /**
+   * The lease this agent's Run holds, and the authority every state write it
+   * makes presents (first100 registry P4-07 must[1]).
+   *
+   * Writer contract: `RunPlugin` (`@deepseek-ai/dsh-run`) is the sole writer,
+   * setting it beside {@link Agent.lifecycle} from the same acquisition.
+   *
+   * It lives on the Agent rather than behind the Run Service so that a
+   * dispatcher can present it WITHOUT depending on that service: the agent
+   * loop is where tool calls are dispatched and `@deepseek-ai/dsh-run` already
+   * depends on the agent loop, so a reverse call would be a cycle. Absent
+   * means this agent holds no Run and may make no authorized state write.
+   */
+  runLease?: RunLease
 }
 
 declare module '@deepseek-ai/dsh-typert-protocol' {

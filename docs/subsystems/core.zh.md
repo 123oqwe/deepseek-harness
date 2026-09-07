@@ -907,6 +907,22 @@ On mount it restores the durable registry from Config.storePath (acceptance[0]'s
  * outside the agent registry this plugin observes, for instance.
  */
 runFor(agent: Agent): Run | undefined
+
+/**
+ * Advance one agent's lifecycle under the Run's lease (P4-05 must[1], P4-07
+ * must[1]).
+ *
+ * The production caller `advanceAgentLifecycleFenced` did not have. The
+ * token and the current lease both come from the lease this plugin took, so
+ * a caller cannot present authority it was not granted, and an agent whose
+ * Run was reclaimed by another host is refused here rather than allowed to
+ * write on a stale epoch.
+ * @param agent - the agent whose lifecycle is proposed to move.
+ * @param to - the state proposed.
+ * @param reason - why, recorded on the transition (must[1] requires it non-empty).
+ * @returns the refusal, or `undefined` when the agent advanced.
+ */
+advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenialReason | 'fenced' | 'no-run' | undefined
 ```
 
 Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)

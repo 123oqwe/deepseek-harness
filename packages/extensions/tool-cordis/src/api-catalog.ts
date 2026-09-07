@@ -1379,10 +1379,21 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     description: 'Epic P4-01\'s Run Service as a mounted Cordis plugin: the one place a real harness run becomes a Run.\n\nOn mount it restores the durable registry from Config.storePath (acceptance[0]\'s restart path, executed on every boot including the first), then subscribes to the agent registry\'s own extension points. Every agent session the harness starts opens a Run owned by `RUN_SERVICE_OWNER_ID` (must[2]) whose `sessionIds` begins with that session (acceptance[2]), and every workflow execution that session runs is referenced in that Run\'s append-only log (must[1]).\n\n`inject` names the agent registry, so the plugin activates only where the events it subscribes to are actually emitted rather than sitting inert.',
     methods: [
       {
+        signature: 'public readonly config: Required<Config>',
+        description: 'The validated configuration, with every defaulted field resolved.',
+        parameters: [],
+      },
+      {
         signature: 'runFor(agent: Agent): Run | undefined',
         description: 'The Run the harness opened for `agent`\'s session.',
         parameters: [{ name: 'agent', description: 'a live agent handle from the agent registry.' }],
         returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when no Run was opened for it — a subagent session started outside the agent registry this plugin observes, for instance.',
+      },
+      {
+        signature: 'advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenialReason | \'fenced\' | \'no-run\' | undefined',
+        description: 'Advance one agent\'s lifecycle under the Run\'s lease (P4-05 must[1], P4-07 must[1]).\n\nThe production caller `advanceAgentLifecycleFenced` did not have. The token and the current lease both come from the lease this plugin took, so a caller cannot present authority it was not granted, and an agent whose Run was reclaimed by another host is refused here rather than allowed to write on a stale epoch.',
+        parameters: [{ name: 'agent', description: 'the agent whose lifecycle is proposed to move.' }, { name: 'to', description: 'the state proposed.' }, { name: 'reason', description: 'why, recorded on the transition (must[1] requires it non-empty).' }],
+        returns: 'the refusal, or `undefined` when the agent advanced.',
       },
     ],
   },
@@ -3588,7 +3599,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Agent',
-    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n}',
+    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n}',
   },
   {
     name: 'AgentCancelCause',
@@ -3601,6 +3612,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AgentHandle',
     declaration: 'export interface AgentHandle {\n    agent: Agent;\n    dispose(): Promise<void>;\n}',
+  },
+  {
+    name: 'AgentLifecycle',
+    declaration: 'export interface AgentLifecycle {\n    readonly runId: AgentRunId;\n    readonly state: AgentLifecycleState;\n    readonly epoch: LeaseEpoch;\n}',
+  },
+  {
+    name: 'AgentLifecycleState',
+    declaration: 'export type AgentLifecycleState = \'queued\' | \'starting\' | \'running\' | \'waiting_tool\' | \'waiting_human\' | \'paused\' | \'cancelling\' | \'failed\' | \'completed\' | \'orphaned\';',
   },
   {
     name: 'AgentOptions',
@@ -3637,6 +3656,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'AgentPrincipal',
     declaration: 'export interface AgentPrincipal {\n    readonly kind: \'agent\';\n    readonly id: PrincipalId;\n    readonly tenantId: TenantId;\n    readonly delegatedBy: PrincipalId;\n}',
+  },
+  {
+    name: 'AgentRunId',
+    declaration: 'export type AgentRunId = Branded<\'AgentRunId\'>;',
   },
   {
     name: 'AgentSetup',
@@ -5075,6 +5098,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type RunId = Branded<\'RunId\'>;',
   },
   {
+    name: 'RunLease',
+    declaration: 'export interface RunLease {\n    readonly token: FencingToken;\n    renew: (nowMs: number) => RunLeaseDenial | undefined;\n    mayWrite: (nowMs: number) => boolean;\n    currentLease: () => Lease | undefined;\n}',
+  },
+  {
+    name: 'RunLeaseDenial',
+    declaration: 'export type RunLeaseDenial = {\n    readonly reason: \'store-unavailable\';\n} | {\n    readonly reason: \'held-by-another\';\n} | {\n    readonly reason: \'fenced-out\';\n    readonly currentEpoch: number;\n};',
+  },
+  {
     name: 'RunnerFailureRule',
     declaration: 'export interface RunnerFailureRule {\n    allowedExitCodes?: readonly number[];\n    fatalSignatures: readonly string[];\n    informationalLines?: readonly string[];\n}',
   },
@@ -6225,6 +6256,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ToolSchema',
     declaration: 'export interface ToolSchema {\n    name: string;\n    description: string;\n    parameters: Record<string, unknown>;\n}',
+  },
+  {
+    name: 'TransitionDenialReason',
+    declaration: 'export type TransitionDenialReason = \'illegal-transition\' | \'stale-epoch\' | \'run-mismatch\' | \'missing-reason\';',
   },
   {
     name: 'TrustRecord',

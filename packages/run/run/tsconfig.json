@@ -28,6 +28,9 @@
     },
     {
       "path": "../../workflow/workflow"
+    },
+    {
+      "path": "../../collaboration/lease-contract"
     }
   ]
 }

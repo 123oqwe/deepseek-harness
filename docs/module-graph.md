@@ -534,6 +534,7 @@ flowchart TD
   pkg_session_snapshot --> pkg_session
   pkg_agent --> pkg_invariants
   pkg_agent --> pkg_lease
+  pkg_agent --> pkg_lease_contract
   pkg_agent --> pkg_llm
   pkg_agent --> pkg_principal
   pkg_agent --> pkg_scope
@@ -771,6 +772,7 @@ flowchart TD
   pkg_jobs_local --> pkg_timeout
   pkg_run --> pkg_agent
   pkg_run --> pkg_brand
+  pkg_run --> pkg_lease_contract
   pkg_run --> pkg_principal
   pkg_run --> pkg_session
   pkg_run --> pkg_workflow
@@ -1431,7 +1433,7 @@ flowchart TD
 | [`session-projection`](../packages/session/session-projection) | `session` | [`session`](../packages/core/session) |
 | [`settings`](../packages/settings/settings) | `settings` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`session`](../packages/core/session) |
 | [`session-snapshot`](../packages/test-support/session-snapshot) | `test-support` | [`session`](../packages/core/session) |
-| [`agent`](../packages/core/agent) | `core` | [`invariants`](../packages/runtime-diagnostics/invariants), [`lease`](../packages/run/lease), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt), [`typert-protocol`](../packages/typert/protocol) |
+| [`agent`](../packages/core/agent) | `core` | [`invariants`](../packages/runtime-diagnostics/invariants), [`lease`](../packages/run/lease), [`lease-contract`](../packages/collaboration/lease-contract), [`llm`](../packages/llm/llm), [`principal`](../packages/identity/principal), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`system-prompt`](../packages/core/system-prompt), [`typert-protocol`](../packages/typert/protocol) |
 | [`fs`](../packages/fs/fs) | `fs` | [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox) |
 | [`spill-local`](../packages/spill/spill-local) | `spill` | [`spill`](../packages/spill/spill) |
 | [`message-feedback`](../packages/feedback/message-feedback) | `feedback` | [`brand`](../packages/util/brand), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`storage-domain`](../packages/storage/storage-domain), [`typert-protocol`](../packages/typert/protocol) |
@@ -1483,7 +1485,7 @@ flowchart TD
 | [`command-feedback`](../packages/feedback/command-feedback) | `feedback` | [`anonymous-user-id`](../packages/identity/anonymous-user-id), [`commands`](../packages/interaction/commands), [`session`](../packages/core/session), [`session-telemetry`](../packages/session/session-telemetry) |
 | [`permission-presets`](../packages/interaction/permission-presets) | `interaction` | [`commands`](../packages/interaction/commands), [`invariants`](../packages/runtime-diagnostics/invariants), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`shell`](../packages/shell/shell), [`user-approval`](../packages/interaction/user-approval) |
 | [`jobs-local`](../packages/jobs/jobs-local) | `jobs` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`scope`](../packages/core/scope), [`timeout`](../packages/util/timeout) |
-| [`run`](../packages/run/run) | `run` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`workflow`](../packages/workflow/workflow) |
+| [`run`](../packages/run/run) | `run` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract), [`principal`](../packages/identity/principal), [`session`](../packages/core/session), [`workflow`](../packages/workflow/workflow) |
 | [`session-title-llm`](../packages/session/session-title-llm) | `session` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`timeout`](../packages/util/timeout) |
 | [`bash-sandbox`](../packages/shell/bash-sandbox) | `shell` | [`bash-local`](../packages/shell/bash-local), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`shell`](../packages/shell/shell) |
 | [`pwsh-sandbox`](../packages/shell/pwsh-sandbox) | `shell` | [`pwsh-local`](../packages/shell/pwsh-local), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`shell`](../packages/shell/shell) |

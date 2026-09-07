@@ -47,6 +47,10 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
+import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
+import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
+import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
+import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
 // The `agent/session-start` declaration this plugin subscribes to is merged
 // into Cordis's event map by the agent package's runtime face, not its
 // type-only entry.
@@ -491,6 +495,14 @@ export interface Config {
    * {@link RunService} reads and writes (see {@link createFileRunStore}).
    */
   readonly storePath: string
+  /**
+   * How long a Run's lease is granted for, in milliseconds (default 30000).
+   *
+   * Deployment-varying: a laptop tolerates a long lease because nothing else
+   * competes for the Run, while a scheduler with tight failover needs a short
+   * one so a dead host's work is reclaimable sooner.
+   */
+  readonly leaseMs?: number
 }
 
 /**
@@ -510,20 +522,38 @@ export interface Config {
  */
 export default class RunPlugin extends Service {
   /** Cordis service dependencies; the plugin activates once these are available. */
-  static inject = ['agents']
+  static inject = ['agents', 'leaseStore']
 
   /** Runtime configuration schema, validated at mount from the profile's `cordis.yml` row. */
   static Config = z.object({
     storePath: z.string().required(),
+    leaseMs: z.natural().min(1).default(30_000),
   }) as z<Config>
+
+  /**
+   * This host's worker identity, minted per mount.
+   *
+   * Per MOUNT rather than per process: two engines in one process are two
+   * holders as far as the store is concerned, which is what makes a
+   * single-process test of "another holder is refused" mean anything.
+   */
+  private readonly worker = brandString<WorkerId>(`run-plugin-${randomUUID()}`)
 
   /**
    * @param ctx - the mounting context; the plugin registers itself as `ctx.runs`.
    * @param config - the validated configuration, naming the durable store's path.
    */
-  constructor(ctx: Context, public readonly config: Config) {
+  constructor(ctx: Context, config: Config) {
     super(ctx, 'runs')
+    // schemastery (static Config) has already filled the defaulted fields; the
+    // assertion records that resolution rather than hiding a `?? default` at
+    // the use site, which would put the choice inside `open()` instead of in
+    // the schema a profile can change.
+    this.config = config as Required<Config>
   }
+
+  /** The validated configuration, with every defaulted field resolved. */
+  public readonly config: Required<Config>
 
   /** The registry restored from {@link Config.storePath}; undefined until `Service.init` completes. */
   private restored: RunService | undefined
@@ -562,13 +592,76 @@ export default class RunPlugin extends Service {
    */
   private open(agent: Agent): void {
     if (agent.runId !== undefined) return
-    const opened = this.service.openForSession(
-      brandString<RunId>(`run-${randomUUID()}`),
-      agent.id,
+    const runId = brandString<RunId>(`run-${randomUUID()}`)
+    // The lease is taken BEFORE the Run is registered. A Run that exists
+    // without an owner is a Run a second host can also open work against, and
+    // the window between registering and acquiring is exactly the window
+    // P4-07 exists to close (§12.19-3: the core agent run is the holder).
+    const taken = acquireRunLease(
+      this.ctx.leaseStore,
+      brandString<WorkItemId>(runId),
+      this.worker,
       Date.now(),
+      this.config.leaseMs,
     )
+    if ('denied' in taken) {
+      // No lifecycle and no Run. A refused lease is stop-work, not a warning:
+      // an agent that proceeded without one would make state writes nothing
+      // could refuse, which is the unauthorized path this epic removes.
+      this.ctx.logger.warn(
+        'run: no Run opened for agent %s — its lease was refused (%s)',
+        agent.id,
+        taken.denied.reason,
+      )
+      return
+    }
+    const opened = this.service.openForSession(runId, agent.id, Date.now())
     agent.runId = opened.run.id
+    agent.lifecycle = { runId: brandString<AgentRunId>(runId), state: 'queued', epoch: taken.lease.token.epoch }
+    agent.runLease = taken.lease
     this.writes.push(opened.durable)
+  }
+
+  /**
+   * Bring an agent that is about to take a model step to `running`.
+   *
+   * The lifecycle needs a driver or it stays `queued` forever and the fenced
+   * transitions at tool dispatch are unreachable — a state machine nothing
+   * moves refuses nothing, the same defect one level up from the one this
+   * epic is fixing. `agent/pre-step` is the honest point: it fires when the
+   * run is actually about to do work, and again after every tool result, so
+   * the return from `waiting_tool` needs no second subscription.
+   *
+   * Silent when the agent has no lifecycle: a composition with no Run Service
+   * mounted, or a Run whose lease was refused, has nothing to advance.
+   * @param agent - the agent about to step.
+   */
+  private ensureRunning(agent: Agent): void {
+    const state = agent.lifecycle?.state
+    if (state === 'queued') {
+      this.advance(agent, 'starting', 'the run is taking its first model step')
+      this.advance(agent, 'running', 'the run started')
+      return
+    }
+    if (state === 'waiting_tool') this.advance(agent, 'running', 'the tool calls settled')
+  }
+
+  /**
+   * Advance one agent's lifecycle under the Run's lease (P4-05 must[1], P4-07
+   * must[1]).
+   *
+   * The production caller `advanceAgentLifecycleFenced` did not have. The
+   * token and the current lease both come from the lease this plugin took, so
+   * a caller cannot present authority it was not granted, and an agent whose
+   * Run was reclaimed by another host is refused here rather than allowed to
+   * write on a stale epoch.
+   * @param agent - the agent whose lifecycle is proposed to move.
+   * @param to - the state proposed.
+   * @param reason - why, recorded on the transition (must[1] requires it non-empty).
+   * @returns the refusal, or `undefined` when the agent advanced.
+   */
+  advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenialReason | 'fenced' | 'no-run' | undefined {
+    return advanceLeasedAgent(agent, to, reason)
   }
 
   /**
@@ -585,6 +678,13 @@ export default class RunPlugin extends Service {
     const unsubscribe = this.ctx.on('agent/session-start', ({ agent }) => {
       this.open(agent)
     })
+    const unstep = this.ctx.on('agent/pre-step', ({ agent }, next) => {
+      this.ensureRunning(agent)
+      // Waterfall: delegating is mandatory. Returning without `next()` would
+      // short-circuit every listener after this one, and this listener has no
+      // opinion about the step it is observing.
+      return next()
+    })
     // Agents a profile configures are created inside the agent loop's own
     // constructor, which may run before this plugin mounts — Cordis load
     // order follows service availability, not `cordis.yml` row order. Their
@@ -593,6 +693,7 @@ export default class RunPlugin extends Service {
     for (const agent of this.ctx.agents.list()) this.open(agent)
     yield async () => {
       unsubscribe()
+      unstep()
       // Every Run this mount opened is durable before the fiber finishes
       // unloading, so a boot that ends immediately after starting an agent
       // still leaves that agent's Run in the store.

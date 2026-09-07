@@ -21,6 +21,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { afterEach, describe, expect, it } from 'vitest'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import RunPlugin, { createFileRunStore, RUN_SERVICE_OWNER_ID, RunService, workflowRefOf } from '../src/index.ts'
 
 const roots: string[] = []
@@ -50,6 +51,9 @@ async function harness(path: string): Promise<Context> {
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  // The plugin injects `leaseStore`: a Run is a leased work item now, and a
+  // mount without a provider opens no Run at all (§12.19-3).
+  await ctx.plugin(InMemoryLeaseStorePlugin)
   await ctx.plugin(RunPlugin, { storePath: path })
   return ctx
 }

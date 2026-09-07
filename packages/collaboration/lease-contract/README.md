@@ -11,6 +11,8 @@ kind: "package-reference"
 
 It contains no store. The providers are `@deepseek-ai/dsh-lease` (in-memory, single-process) and `@deepseek-ai/dsh-lease-sqlite` (durable, shared).
 
+`acquireRunLease` lives here too: a holder is not a storage choice, and the two holders — the core agent run (`@deepseek-ai/dsh-run`) and a workflow run (`@deepseek-ai/dsh-workflow-worker-thread`) — must not depend on each other to share the shape.
+
 ## Table of Contents
 
 - [Why the definition is separate](#why-the-definition-is-separate)

@@ -1817,7 +1817,7 @@ Source: [`packages/guard/repeat-tool-reminder/src/index.ts:28`](../packages/guar
 
 ## `@deepseek-ai/dsh-run`
 
-Requires: `agents`
+Requires: `agents` · `leaseStore`
 
 ```ts config-catalog
 /** Deployment-varying configuration of {@link RunPlugin}. */
@@ -1827,10 +1827,18 @@ export interface Config {
    * {@link RunService} reads and writes (see {@link createFileRunStore}).
    */
   readonly storePath: string
+  /**
+   * How long a Run's lease is granted for, in milliseconds (default 30000).
+   *
+   * Deployment-varying: a laptop tolerates a long lease because nothing else
+   * competes for the Run, while a scheduler with tight failover needs a short
+   * one so a dead host's work is reclaimable sooner.
+   */
+  readonly leaseMs?: number
 }
 ```
 
-Source: [`packages/run/run/src/index.ts:488`](../packages/run/run/src/index.ts)
+Source: [`packages/run/run/src/index.ts:492`](../packages/run/run/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 

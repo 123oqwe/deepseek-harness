@@ -200,6 +200,19 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 <a id="known-limitations-and-deferred-work"></a>
 
+- **A Run's lease is only as durable as the store mounted for it.** `RunPlugin`
+  injects `ctx.leaseStore` and takes a lease on the Run's work item BEFORE
+  registering the Run (P4-07, §12.19-3), so no Run exists without an owner and a
+  refused lease opens none at all. Mounted against
+  `@deepseek-ai/dsh-lease`'s in-memory provider, that ownership holds only
+  inside one process — a deployment where two hosts must not both own a Run
+  mounts `@deepseek-ai/dsh-lease-sqlite`.
+- **The lifecycle is driven from `agent/pre-step` only.** `queued → starting →
+  running` and the return from `waiting_tool` happen where the run is actually
+  about to do work. Nothing yet moves a Run to `paused`, `waiting_human`,
+  `cancelling`, `completed`, `failed` or `orphaned`, so those states are legal
+  and unreached: a Run that ends leaves its lifecycle wherever the last step
+  left it, and no sweep reclaims an abandoned one.
 - **Concurrent Run writers are serialized within one process only.**
   `createFileRunStore` chains every read and write on the store's resolved
   path, shared by every store instance over that path in this process, and

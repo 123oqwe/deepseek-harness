@@ -1,23 +1,28 @@
 /**
- * The lease a workflow run holds while it is the current owner of its work
- * item (Epic P4-07 must[0]–must[2]).
+ * The lease one run holds while it is the current owner of its work item
+ * (Epic P4-07 must[0]–must[2]).
  *
  * **This is the holder P4-07's clauses did not have.** The lease package has
- * had `LeaseStore.acquire`/`renew`, `checkFencing` and `isReclaimable` since
- * its Contract stage, and `dsh-agent`'s `advanceAgentLifecycleFenced` has
- * existed beside them — with, measured, zero production callers of either. A
- * fencing rule nothing holds refuses nothing, which is why P4-07's sign-off
- * was withdrawn (§12.15).
+ * had `acquire`/`renew`, `checkFencing` and `isReclaimable` since its Contract
+ * stage, and `dsh-agent`'s `advanceAgentLifecycleFenced` has existed beside
+ * them — with, measured, zero production callers of either. A fencing rule
+ * nothing holds refuses nothing, which is why P4-07's sign-off was withdrawn
+ * (§12.15).
  *
- * A workflow run is the work item because it is the thing two hosts could
- * both believe they own: it has a durable id, it writes state its parent
- * reads, and it outlives individual messages.
+ * A run is the work item because it is the thing two hosts could both believe
+ * they own: it has a durable id, it writes state its parent reads, and it
+ * outlives individual messages. Two holders exist and share this shape
+ * (§12.19-3): the core agent run, whose lease `dsh-run` takes when it opens a
+ * Run and whose authority `agent-loop` presents on every tool dispatch, and a
+ * workflow run in `dsh-workflow-worker-thread`. It lives HERE, beside the
+ * contract, because a holder is not a storage choice and neither consumer may
+ * depend on the other.
  *
- * @module @deepseek-ai/dsh-workflow-worker-thread/run-lease
+ * @module @deepseek-ai/dsh-lease-contract/run-lease
  */
 
-import { checkFencing } from '@deepseek-ai/dsh-lease-contract'
-import type { FencingToken, LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
+import { checkFencing } from './index.ts'
+import type { FencingToken, Lease, LeaseStoreContract, WorkItemId, WorkerId } from './types.ts'
 
 /** Why a run could not take, or could not keep, its lease. */
 export type RunLeaseDenial =
@@ -42,6 +47,16 @@ export interface RunLease {
   renew: (nowMs: number) => RunLeaseDenial | undefined
   /** Whether this holder may still write (must[1]). */
   mayWrite: (nowMs: number) => boolean
+  /**
+   * The item's lease as the store holds it NOW, for a caller that must check a
+   * token against current authority — `dsh-agent`'s
+   * `advanceAgentLifecycleFenced` is the one that matters.
+   *
+   * Read through rather than cached: a lease this holder lost is exactly the
+   * case the check exists for, and a cached copy would report the authority
+   * the holder wishes it still had.
+   */
+  currentLease: () => Lease | undefined
 }
 
 /**
@@ -86,6 +101,7 @@ export function acquireRunLease(
       // BLOCKED-136 records, and this one would be the shape that decides
       // whether a stale worker may write.
       mayWrite: () => checkFencing(token, store.get(workItem)).admitted,
+      currentLease: () => store.get(workItem),
     },
   }
 }

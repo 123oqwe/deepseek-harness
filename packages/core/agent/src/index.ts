@@ -24,6 +24,7 @@ export * from './model-selection.ts'
 export {
   advanceAgentLifecycle,
   advanceAgentLifecycleFenced,
+  advanceLeasedAgent,
   agentCarrier,
   agentEvents,
   assembleContextFor,

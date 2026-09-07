@@ -19,6 +19,7 @@ import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { computeArgumentsHash, classifySideEffect, createActionManifest, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
+import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
 /** One tool call after argument parsing, ready to schedule. */
@@ -71,6 +72,22 @@ export async function executeToolCalls(
 ): Promise<{ concluded: boolean }> {
   const agent = ctx.agents.requireInitiator()
   const { session } = agent
+
+  // P4-07 must[1]: the state write this dispatch is about to make carries the
+  // Run's fencing token. The token is the one the Run Service took when it
+  // opened this Run, checked against the store's CURRENT lease — so a host
+  // whose Run was reclaimed while it was thinking is refused here, before it
+  // dispatches a single tool, rather than discovering it when its results are
+  // ignored. `ctx.get` because the Run Service is optional: a composition
+  // without one has no Run, no lease, and no authority to present.
+  const fencing = advanceLeasedAgent(agent, 'waiting_tool', `dispatching ${String(toolCalls.length)} tool call(s)`)
+  if (fencing === 'fenced') {
+    // Every call gets its ordered synthetic result: the model must see that
+    // its calls did not run, and a silent drop would leave the turn's log
+    // claiming calls that neither executed nor failed.
+    for (const block of toolCalls) appendFencedToolCall(session, turn, step, block)
+    return { concluded: false }
+  }
 
   // Inputs are distinct because tools/execute wrappers may replace `exec.signal`.
   const planned: PlannedCall[] = toolCalls.map(block => ({
@@ -248,6 +265,31 @@ async function runGroup(
   /* v8 ignore next -- unreachable: a non-aborted group commits every started call */
   if (committed !== started) throw new Error('tool-call scheduler: uncommitted settled calls')
   return { consumed: started, aborted: false, concluded }
+}
+
+/**
+ * Append the durable call/result pair for a call refused because this host was
+ * fenced out of its Run (P4-07 must[1]/must[3]).
+ *
+ * Distinct from the cancellation path below: an aborted call was this run's own
+ * decision, while a fenced one means another holder owns this Run now. The
+ * texts differ because the model's next move differs — a cancelled turn may be
+ * retried, a fenced one must not be.
+ * @param session - the session log to append to.
+ * @param turn - the turn the call belonged to.
+ * @param step - the step the call belonged to.
+ * @param block - the model call that will not run.
+ */
+function appendFencedToolCall(session: Session, turn: number, step: number, block: ToolCallBlock): void {
+  const callSeq = appendToolCall(session, turn, step, block)
+  appendToolResult(session, turn, step, block, {
+    content: [{ type: 'text', text: 'Error: this run is no longer the owner of its work item' }],
+    isError: true,
+    error: {
+      message: 'this run is no longer the owner of its work item',
+      info: { name: 'FencedError', code: TOOL_ABORTED_BEFORE_DISPATCH },
+    },
+  }, callSeq)
 }
 
 /** Append the durable call/result pair for a model call skipped after cancellation. */

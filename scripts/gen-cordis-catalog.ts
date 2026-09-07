@@ -669,6 +669,8 @@ export const TYPE_LINK_EXEMPTIONS: Readonly<Record<string, string>> = {
   RevocationResult: 'ownership revocation outcome is owned by packages/plugin/plugin-ownership/README.md',
   Run: 'first-class Run record is owned by packages/run/run/README.md',
   Lease: 'lease record is owned by packages/collaboration/lease-contract/README.md',
+  TransitionDenialReason: 'agent lifecycle refusal reason is owned by packages/core/agent/README.md',
+  AgentLifecycleState: 'agent lifecycle state is owned by packages/core/agent/README.md',
   WorkItemId: 'work-item identity is owned by packages/collaboration/lease-contract/README.md',
   WorkerId: 'worker identity is owned by packages/collaboration/lease-contract/README.md',
   FencingToken: 'fencing authority is owned by packages/collaboration/lease-contract/README.md',

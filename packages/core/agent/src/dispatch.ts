@@ -6,11 +6,11 @@
  * @module @deepseek-ai/dsh-agent/dispatch
  */
 
-import { checkFencing, type FencingToken, type Lease } from '@deepseek-ai/dsh-lease'
+import { checkFencing, type FencingToken, type Lease } from '@deepseek-ai/dsh-lease-contract'
 import type { Context, Events } from '@deepseek-ai/cordis'
 import { scopeTarget } from '@deepseek-ai/dsh-scope'
 import { consumesNoResources, decideTransition } from './state-machine.ts'
-import type { AgentLifecycle, AgentTransition, TransitionDenialReason } from './state-machine.ts'
+import type { AgentLifecycle, AgentLifecycleState, AgentTransition, TransitionDenialReason } from './state-machine.ts'
 import type { Scoped } from '@deepseek-ai/dsh-scope'
 import type { AssembleContext } from '@deepseek-ai/dsh-system-prompt'
 import type { Agent } from './types.ts'
@@ -259,4 +259,46 @@ export function advanceAgentLifecycleFenced(
   const fencing = checkFencing(token, lease)
   if (!fencing.admitted) return { ok: false, reason: 'fenced' }
   return advanceAgentLifecycle(lifecycle, transition)
+}
+
+
+/**
+ * Advance a live agent's lifecycle under the lease its Run holds (P4-07
+ * must[1], §12.19-3).
+ *
+ * The one implementation of "this agent proposes a state change". Both callers
+ * reach it: `@deepseek-ai/dsh-run`, which drives the run's own progress, and
+ * the agent loop, which presents the authority at tool dispatch. A second copy
+ * in either would be the shape BLOCKED-136 records, and this is the copy that
+ * decides whether a stale host may write.
+ *
+ * The token and the current lease both come from {@link Agent.runLease}, never
+ * from the caller: a caller that supplied its own would be asserting the
+ * authority this check exists to verify. The lease is read through on every
+ * call because a lease this holder has LOST is exactly the case that matters,
+ * and a cached copy would report the authority the holder wishes it still had.
+ * @param agent - the agent proposing the change; unchanged when refused.
+ * @param to - the state proposed.
+ * @param reason - why, recorded on the transition (must[1] rejects an empty one).
+ * @returns the refusal, or `undefined` when the agent advanced.
+ */
+export function advanceLeasedAgent(
+  agent: Agent,
+  to: AgentLifecycleState,
+  reason: string,
+): TransitionDenialReason | 'fenced' | 'no-run' | undefined {
+  const { lifecycle, runLease } = agent
+  // Absence is its own answer, never a lifecycle at its initial state: an
+  // agent with no Run holds no authority, and treating it as `queued` would
+  // let it advance through a state machine no store backs.
+  if (lifecycle === undefined || runLease === undefined) return 'no-run'
+  const decided = advanceAgentLifecycleFenced(
+    lifecycle,
+    { runId: lifecycle.runId, from: lifecycle.state, to, epoch: lifecycle.epoch, reason },
+    runLease.token,
+    runLease.currentLease(),
+  )
+  if (!decided.ok) return decided.reason
+  agent.lifecycle = decided.next
+  return undefined
 }
