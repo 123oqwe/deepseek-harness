@@ -237,3 +237,16 @@ That distinction was put to the user directly, because it changes what the regis
 **用户补充**(同日稍后,原话):「不不不 你待推 因为你是最终技术实现把关的」——推送是发布动作,由把关方(delegate)执行。
 
 **生效**:自本条起,**delegate(`guanjieqiao-92`)是 `first100-exec` 的唯一推送方**;执行者只在本地提交,不推。每次推送前 delegate 走固定的四步门:① `git log fork/first100-exec..HEAD` 列全部待推提交,执行者的每个提交必须对应 delegate 确认过的 preFlight / 裁决 / BLOCKED 记录,否则不推;② 密钥 / 大文件 / 未跟踪目录扫描;③ 本地跑 registry gate set(`scripts/first100/run-registry-gates.mjs`,与 CI 同一套)+ `generate-ledger.mjs --check`,红则退回执行者;④ 推送后在会话里报告推了什么与 CI run id。**不改变**:强推仍在 deny;delegate 仍不代替执行者做任何 `--accept` / 代码改动。
+
+## C15 (2026-09-06 22:05 EDT) — 用户授权并行 Writer 子会话(按 C1),质量条件由 delegate 定
+
+**用户原话**(对 delegate 会话):「可以开并行 这样会更快 但是一定要保证质量的情况下 你仔细想」。此前用户已令 delegate 为其与执行者交互的全权代理(「你来给我跟执行agent交互吧」「你是 pilot 不是半自动 而是全自动」)。
+
+**生效**:执行者按 C1 的形态为 §10.1 的各 lane 起 Writer 子会话并行。**质量条件(delegate 定,违反即停并行)**:
+1. **每个 Writer 在自己的 git worktree + lane 分支上工作**(`lane/<epic>`),不在共享工作树里——今日已实证共享树里一方的未提交编译错会挡另一方的推送;§12 又证 files[] 不是真实触碰集,"files[] 不相交"不足以避免冲突。
+2. **Writer 只写代码 / 测试 / 本 epic 的文档**;`spec/first100/exec/*`(冻结表、账本、BLOCKED、preFlight 记录)、`tests/first100/registry*.json`、`.github/`、`vendor/` **只由执行者主会话串行写**。Writer 的交付物 = lane 分支上的提交 + 一份报告(RED 证据、拟冻结的用例标题、三问/第四问答案、变异结果)。
+3. **冻结先于观测**在合并时由主会话执行:先记冻结条目再合并 lane 分支到 `first100-exec`,再由 delegate 过门推送,CI 才是观测。
+4. 每个候选一个**新的** Reviewer 子会话(writer ≠ reviewer,BLOCKED-010 五视角 + §8 两问 + §11.1 第三问)。
+5. Writer 不推送、不 `--accept`、不改权限、不持有密钥。
+6. delegate 的门不变:preFlight 先批;签字前对代码核 adopted[];偏离检测每次推送自动跑。
+7. 并行度上限 3(C5);主会话本身算一条 lane。
