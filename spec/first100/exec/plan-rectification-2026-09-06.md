@@ -724,3 +724,9 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 5. `realized.note` 那句改成事实。**再观测一次**,P4-06 顺延一个 CI 周期——代价接受:一条以"幂等消费"为全部内容的 epic,不能带着会静默吞掉第二个发送者消息的键验收。
 
 **教训(进 §11.1 族)**:所有者对标准的第一问是"标准对这个问题怎么说",不是"我们的字段叫什么"。属性名抄对了,唯一性规则漏了——**词汇用例的价值恰在后者**。
+
+### 12.10 P4-12 开工补审;P9-08/09 终态状态;R10 归属(2026-09-07 06:40 EDT)
+
+**P4-12**(`00cb4b19c5`,check-ready 报的唯一可开工 epic;程序规则是前置 ACCEPTED 或全格 GREEN、明确不设 wave 栅栏,故非跳 wave):preFlight 在第一行代码前写、两标准一落盘就 `evidenceTitleSubstring`(门先红后绿)、`idempotency-key` 本树复验、C 冻结 13 条变异只红 1 条——够格。**但 1.11 是"确认后才动文件",这次先动了;下条恢复。** 两处改记录:(1) **键缺 caller scope**——draft-07 的键唯一性是每客户端、Stripe 是每账户;entry 只有 `{key, epoch}`,两个 agent 同 key 互相可见,与 BLOCKED-140 同形,在 C 阶段抓到。裁:键 = `(scope, key)`,scope 取 ActionManifest 上的 principal(P2-01);C 阶段 supplement 一条"两 principal 同 key = 两条 reservation,互不可见",变异去掉 scope 只红此条;13 条不 supersede。(2) gapCheck 记的是 reject 行内容,不是卡上 allinluna 的四项缺口;按 1.6 逐项对子句重写。
+**P9-08 / P9-09**:终态句「scheduled-BLOCKED 在案」取 **(a)**——到 W21/W22 真跑、真阻塞、记账;现在 `PREMATURE` 是唯一诚实的状态值。(b) 以"wave 未到"现在就记,是 BLOCKED-043 把分诊表当状态记录的错再犯一次。
+**R10**:需要 `DEEPSEEK_API_KEY_EXTERNAL` + 单独批的预算 + 三夜统计窗,三者都不在执行者能力内——状态是"等用户授权",不是"未做";delegate 到 W-末向用户要,不催执行者。
