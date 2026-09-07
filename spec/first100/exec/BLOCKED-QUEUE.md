@@ -252,6 +252,39 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-146 — 4.4a on two ACCEPTED epics: P6-02's clause subjects have ZERO production callers, and P1-03's acceptance[1] subject has none either
+
+**State: OPEN. P6-02 is a sign-off falsified by the same rule that took P2-03, P5-11, P4-08 and P4-07 — measured, not suspected.**
+
+Rule 4.4a: before signing, count a clause subject's production callers, excluding tests. Zero means do not sign. Run against the two epics still owing the count.
+
+**P6-02 — every subject, zero.** Measured over `git ls-files`, excluding the owning package and every `tests/` path:
+
+| subject | clause | production callers |
+| --- | --- | --- |
+| `validateRecord` | must[0] | 0 |
+| `recordConflict` | must[1] | 0 |
+| `admitToIndex` | must[2] | 0 |
+| `withProvenance` / `isTraceable` | acceptance[0] | 0 |
+| `isDefaultRetrievable` | acceptance[1] | 0 |
+| `decideCrossScopeMerge` | acceptance[2] | 0 |
+
+Nothing outside `packages/memory/memory` names any of them; the only matches in the whole tree are this program's own JSON. The one importer of the package, `packages/context/memory-context/src/index.ts`, takes `MemoryAccessContext` and `MemoryRecordView` — **P6-01's types, not P6-02's functions**. So the epic's every clause holds over a library the harness never calls: no record is validated, no conflict is recorded as a relation, no sensitive field is kept out of an index, because nothing builds a `MemoryRecord` on a live path at all.
+
+This is the exact shape of the four withdrawals: a U stage that proves the library rather than its use.
+
+**P1-03 — one subject, zero; the rest are reached.** `gateProductionBoot` and `admitBoot` (must[2]) and `computeManifestDigest` (must[0]) are called by `apps/cli/src/profile-boot.ts`; `buildCandidateLock` and `planLockCommit` (must[1]) by `apps/cli/src/plugin.ts`; `validateLock` and `resolveLoadOrder` are reached indirectly through those two, so must[0]'s completeness and load-order halves are on a production path.
+
+`hasTagDrifted` — **acceptance[1]'s entire subject** ("a registry tag drift does not change a locked profile") — appears in exactly two files: its own `src/index.ts` and `tests/lock.spec.ts`.
+
+There is a reading on which acceptance[1] holds anyway: boot reads the lock and never consults a registry, so drift cannot reach a locked profile, and the clause is satisfied by the ABSENCE of a lookup rather than by a function. That reading is defensible and it is not the executor's to choose — it also leaves the epic shipping an exported function no path calls, which is its own smell.
+
+**Decision needed (delegate's, both):**
+1. P6-02: withdraw and reopen at U for a real consumer, or rule why a memory library with no caller satisfies clauses about records the harness stores.
+2. P1-03 acceptance[1]: accept the absence-of-a-lookup reading and record it, or reopen for a production caller of `hasTagDrifted`.
+
+**Not acted on here.** Both epics are ACCEPTED with a recorded delegate sign-off; withdrawing one is registry authority, not the executor's, and 4.4a's own history is that the count is reported and the delegate decides.
+
 ### BLOCKED-145 — the Inspector's realm-forwarding case fails intermittently, and it eats an observation each time
 
 **State: OPEN, out of scope, not blocking any cell — but it cost one observation.**
