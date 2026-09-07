@@ -644,3 +644,16 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 ### 11.1 先例:fixture 与实现同错(P1-03 U,2026-09-06 20:05 EDT)
 
 执行者写 `composeProfile` 调用点时第一版把 `integrity` 写成 `sha512-${manifest.name}`(从包名合成),而 `admitBoot` 真比较 integrity(`plugin-lock/src/index.ts:105`)——一个被替换的归档只要 package.json 不变就能通过全部检查;**且当时没有任何用例会红,因为 fixture 用同一个假 integrity,两边同错互证**。自纠:读安装器记录的 `dsh.provenance.integrity`,缺失回落到 `buildCandidateLock` 写的同一 `unavailable:` 标记,有 provenance 的真比较;补用例「recorded integrity 变了、manifest 一字未动 → 拒绝」,合成写法放回去正是这条挂。**规则**:安全边界用例的 fixture 数据必须来自与生产同一条路径(安装器/记录),不得在测试里合成;Reviewer 两问加第三问——"fixture 和实现是不是同一个人用同一个假设写的"。
+
+## 12. files[] 的含义与 B4(e) overlay(2026-09-06 21:05 EDT,BLOCKED-134)
+
+**执行者的测量**:116 条 live 冻结条目里 79 条引用了 stage 声明列表之外的文件。**我按对的边界再量**——B4(e)(用户批复)说的是 **epic 级 `files[]`**("被冻测试文件必须落在该项 files[] 内,append-only overlay 补充"),不是 stage 列表:**75/116 条引用了 epic 级 files[](含 scaffoldFiles / testFilesAdded)之外的文件**,遍及几乎每条 epic,含大量测试/fixture/README/package.json,**也含产品源码**(如 P2-03 U 的 `core/session/src/index.ts`、P1-03 的 `plugin-lock/src/{gate,candidate,commit}.ts`、P4-07 U 的 `core/agent/src/index.ts`、P5-10 的 `subagent/src/control-*.ts`)。
+
+**裁决(读法)**:`files[]` 是**钉住源的计划**(不可变);B4(e) 要求的 **append-only overlay 是现实的记录**;两者之并才是 scope。执行者建的三个机制(`SCAFFOLD_FILES` / `TEST_FILES_ADDED` / `FILES_REPLACED`)**正是 B4(e) 要的 overlay,不是仪式**——问题是它只用了 3 次,另外 75 条从没记。所以 134 的发现不是"边界不存在",是"**overlay 从第一天起就没维护**"。
+
+**处置**:
+1. 三个机制合并为一个 `filesOverlay`(按 epic,append-only),条目 `{path, kind: test|fixture|doc|manifest|scaffold|source, stage, reason, provenance}`;既有三种 provenance 保留为 `reason` 词汇。
+2. **机械回填**:从 116 条 live 冻结条目生成 overlay(脚本,不手写);`kind=source`(产品 `src/`、`scripts/`)的每条由执行者附一句 reason(通常是"子句主体所在 seam"),**delegate 通读一次 source 清单**(约 25 个文件),热区文件(§2.D 列的)逐个核是否已按 contribution 模式接。
+3. **新门**:每条 live 冻结条目的 `files` ⊆ `files[] ∪ filesOverlay`,冻结时即校验(与 (v) 同族),此后出计划的文件只能在冻结时记录,不能事后发现。
+4. **不重开任何验收**:记录现实不改证据;但 source 清单通读若发现有热区文件被直接改而非 contribution,单独裁。
+5. 不再加第四个机制;registry 里三个块的文档改为"记录文件事实"。
