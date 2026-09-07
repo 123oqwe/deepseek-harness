@@ -640,3 +640,7 @@ P1-03(10.3 裁决后,U 阶段 supersession:lock 生成 + `composeProfile` 调用
 5.【19:20 补】19 格中 P0-05.C 暴露的是**工具缺陷**不是记录缺陷:其标题在 BLOCKED-040 登记过改名(`frozen-title-renames.json`),但 greening 路径与 `verify-cells-recomputable` 都不读那张表(只有 resolvable / in-tree 读)——四个读冻结标题的工具须共用一个精确的 `resolveFrozenTitle()`。执行者已修 greening,recomputable 待修。BLOCKED-095 改记为"19 分之一",BLOCKED-132 记本节结论;执行者的两次自纠(先说不可建、再说 38)都留在记录里——**方法比结论重要,三次判据一次比一次硬**。
 
 **P1-03 BLOCKED-133 一并裁**:解锁信号保持端到端,不改写成单元替身。U 的 files[] 加 `[N] apps/cli/tests/profiles/plugin-lock.e2e.ts`(能驱动 `dsh plugin` 与 profile boot 的 e2e,与 headless e2e 同形),provenance `testFileAdded(BLOCKED-133)`;调用点代码与这个测试文件同一 slice 落地,RED 先于 GREEN。
+
+### 11.1 先例:fixture 与实现同错(P1-03 U,2026-09-06 20:05 EDT)
+
+执行者写 `composeProfile` 调用点时第一版把 `integrity` 写成 `sha512-${manifest.name}`(从包名合成),而 `admitBoot` 真比较 integrity(`plugin-lock/src/index.ts:105`)——一个被替换的归档只要 package.json 不变就能通过全部检查;**且当时没有任何用例会红,因为 fixture 用同一个假 integrity,两边同错互证**。自纠:读安装器记录的 `dsh.provenance.integrity`,缺失回落到 `buildCandidateLock` 写的同一 `unavailable:` 标记,有 provenance 的真比较;补用例「recorded integrity 变了、manifest 一字未动 → 拒绝」,合成写法放回去正是这条挂。**规则**:安全边界用例的 fixture 数据必须来自与生产同一条路径(安装器/记录),不得在测试里合成;Reviewer 两问加第三问——"fixture 和实现是不是同一个人用同一个假设写的"。
