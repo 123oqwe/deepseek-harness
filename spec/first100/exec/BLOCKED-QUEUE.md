@@ -252,6 +252,24 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-139 — three hygiene gates are red at HEAD, none of them ours, and nobody is named
+
+**State: OPEN as a durable pointer, by delegate ruling (2026-09-07): recorded here for each owner, not fixed in the intake-dedup slice.**
+
+Measured while checking whether the new package broke anything. All three predate it, and the counts are what make that unambiguous:
+
+| gate | what it says | scope measured |
+|---|---|---|
+| `publint` | `pkg.exports["./src/*"] is ./src/* but does not match any files` | **265 packages**, identical message |
+| `verify-package-invariants` | `omitted companion requires a README "No ... companion is published" reason sentence` | **11 packages**, plus 7 more reporting an empty `invariant.ts` install function |
+| `verify-package-dependencies` | `@deepseek-ai/dsh-principal must be devDependencies-only at workspace:^; found dependencies` | **1**, `packages/core/session` |
+
+**Why this is a pointer and not a fix.** A repo-wide gate red at HEAD is not evidence about the change in front of it, and a slice that quietly repairs 265 packages to make its own run green stops being reviewable. The one package this slice created carries the companion sentence, because writing it correctly the first time is not the same as fixing someone else's.
+
+**Owners, so the pointer resolves to someone.** The `./src/*` export pattern is a repository-wide convention question — every package publishes it and no package ships `src`, so either the pattern or the `files` list is wrong everywhere, and it wants one decision rather than 265. The missing companion sentences belong to their packages' epics, `dsh-mailbox` to P5-11 and `dsh-message-bus` to P4-06 among them. The `core/session` dependency direction belongs to whoever moved `dsh-principal` out of dev dependencies.
+
+**What this entry is NOT evidence of.** It does not say the gates are wrong, and it does not license reading them as noise. It says these three were already red, that this slice did not add to them, and that a later reader comparing a red `hygiene` run against this batch has the measurement rather than a claim.
+
 ### BLOCKED-138 — the durable seen-set speaks a THIRD key format, and a frozen case pins the disagreement while its title claims agreement
 
 **State: OPEN, found while wiring §12.5 B, before the wiring was finished. Nothing changed in a frozen case; that is the delegate's.**
