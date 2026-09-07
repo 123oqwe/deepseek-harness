@@ -34,10 +34,12 @@ function store(): BusStore {
 
 const RECIPIENT = brandString<ParticipantId>('worker-1')
 
+const SENDER = brandString<ParticipantId>('sender-1')
+
 const arriving = (id: string, epoch = 1, to: ParticipantId = RECIPIENT) => ({
   id: brandString<MessageId>(id),
   epoch: epoch as SenderEpoch,
-  from: brandString<ParticipantId>('sender-1'),
+  from: SENDER,
   to,
   body: { n: 1 },
 })
@@ -45,7 +47,11 @@ const arriving = (id: string, epoch = 1, to: ParticipantId = RECIPIENT) => ({
 /** The same message as the bus sees it, so one arrival can be committed first. */
 const busMessage = (id: string, epoch = 1) => ({
   id,
-  source: '/dsh/mailbox',
+  // The bus records the SAME emitter the mailbox message carries in `from`:
+  // the dedup key is `(source, id, epoch)`, so a commit under a different
+  // source would key a different message and the redelivery would not match
+  // (BLOCKED-140).
+  source: SENDER,
   type: 'dsh.mailbox.message',
   time: '2026-09-07T00:00:00.000Z',
   subject: 'subject-1',

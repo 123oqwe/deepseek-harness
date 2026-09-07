@@ -16,8 +16,8 @@
     "unmatchedSourceClauses": 0,
     "inventedUndocumentedClauses": 0,
     "inventedDocumentedDefaultBoundaryClauses": 156,
-    "planCorrectedClauses": 2,
-    "supersededSourceClauses": 2
+    "planCorrectedClauses": 3,
+    "supersededSourceClauses": 3
   },
   "epics": {
     "P0-01": {
@@ -5036,6 +5036,11 @@
             "text": "domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam",
             "digest": "de478e7bb25b944c55e5c4e894c51493687943ffd79680af2fcb7e65ea91de2c",
             "classification": "plan-correction"
+          },
+          {
+            "text": "consumer 按 (source, message id, epoch) 去重。",
+            "digest": "057201cce61065a9f20c17fae582bdf7ea37e9f25811cf189ee117f788e91fee",
+            "classification": "plan-correction"
           }
         ],
         "clauses": [
@@ -5053,12 +5058,9 @@
             }
           },
           {
-            "text": "consumer 按 message id/epoch 去重。",
-            "digest": "44b68b9dde02523ea56e700c20da636636b1f72684b5f1ed96f7037f9db83b82",
-            "span": {
-              "startLine": 7500,
-              "endLine": 7500
-            }
+            "text": "consumer 按 (source, message id, epoch) 去重。",
+            "digest": "057201cce61065a9f20c17fae582bdf7ea37e9f25811cf189ee117f788e91fee",
+            "span": null
           },
           {
             "text": "支持 priority、deadline、dead-letter 和 backpressure。",
@@ -5076,15 +5078,15 @@
         "unmatchedSource": [],
         "invented": [
           {
-            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。",
-            "digest": "1785a9c58f5014569bed097f8f2cbb5bbfaae1c02635aefa91777de7d3753f92",
+            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (source, messageId, epoch) 幂等保证，不由传输保证 exactly-once。",
+            "digest": "c8452731967f1f2ae32a3e6d11f21b16ac059b3c5c1c2c91124440c4f6226a6b",
             "classification": "plan-correction"
           }
         ],
         "clauses": [
           {
-            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。",
-            "digest": "1785a9c58f5014569bed097f8f2cbb5bbfaae1c02635aefa91777de7d3753f92",
+            "text": "在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (source, messageId, epoch) 幂等保证，不由传输保证 exactly-once。",
+            "digest": "c8452731967f1f2ae32a3e6d11f21b16ac059b3c5c1c2c91124440c4f6226a6b",
             "span": null
           },
           {

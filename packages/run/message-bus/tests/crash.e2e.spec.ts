@@ -27,6 +27,7 @@ import {
   type TenantId,
 } from '../src/outbox.ts'
 
+const SOURCE = '/dsh/sender-a'
 const TENANT = 'tenant-a' as TenantId
 const OTHER_TENANT = 'tenant-b' as TenantId
 
@@ -77,7 +78,7 @@ function runDispatcher(state: DurableState, crashAt: CrashPoint, nowMs = 0): voi
       state.outbox.set(record.id, { ...record, state: 'sent', attempts: decision.attempt })
       if (crashAt === 'after-send') throw new SimulatedCrash()
 
-      const intake = classifyIntake({ id: record.id, epoch: record.epoch, tenant: record.tenant }, state.seen, TENANT)
+      const intake = classifyIntake({ source: SOURCE, id: record.id, epoch: record.epoch, tenant: record.tenant }, state.seen, TENANT)
       if (intake.action === 'accept') {
         state.effects.push(record.id)
         state.seen.add(intake.key)
@@ -207,7 +208,7 @@ describe('P4-06 acceptance[2]: a cross-tenant message is never consumed', () => 
   it('refuses a foreign-tenant message and records nothing about it', () => {
     const seen = new Set<string>()
     const decision = classifyIntake(
-      { id: 'msg-1' as BusMessageId, epoch: 1 as MessageEpoch, tenant: OTHER_TENANT },
+      { source: SOURCE, id: 'msg-1' as BusMessageId, epoch: 1 as MessageEpoch, tenant: OTHER_TENANT },
       seen,
       TENANT,
     )
@@ -220,9 +221,9 @@ describe('P4-06 acceptance[2]: a cross-tenant message is never consumed', () => 
     // duplicate check ran first, this returns `drop` -- which tells the foreign
     // tenant that this id/epoch was already processed here, a fact about
     // another tenant's traffic. Refusal must not depend on our seen-set at all.
-    const seen = new Set([dedupKey({ id: 'msg-1' as BusMessageId, epoch: 1 as MessageEpoch })])
+    const seen = new Set([dedupKey({ source: SOURCE, id: 'msg-1' as BusMessageId, epoch: 1 as MessageEpoch })])
     const decision = classifyIntake(
-      { id: 'msg-1' as BusMessageId, epoch: 1 as MessageEpoch, tenant: OTHER_TENANT },
+      { source: SOURCE, id: 'msg-1' as BusMessageId, epoch: 1 as MessageEpoch, tenant: OTHER_TENANT },
       seen,
       TENANT,
     )

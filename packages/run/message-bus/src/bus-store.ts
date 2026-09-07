@@ -58,6 +58,8 @@ export type InboxState =
 
 /** One inbox row. */
 export interface InboxRow {
+  /** The emitter the id is scoped to. */
+  readonly source: string
   readonly messageId: string
   readonly epoch: number
   readonly claimedByTurn: number
@@ -74,8 +76,8 @@ export interface OutboxRow {
 export interface BusStore {
   /** Take responsibility for a message on behalf of one turn. */
   claim: (message: BusMessage, turn: number) => void
-  /** The inbox row for one `(id, epoch)`, or undefined when none exists. */
-  inboxRow: (messageId: string, epoch: number) => InboxRow | undefined
+  /** The inbox row for one `(source, id, epoch)`, or undefined when none exists. */
+  inboxRow: (source: string, messageId: string, epoch: number) => InboxRow | undefined
   /** Every committed domain event, in commit order. */
   domainEvents: () => readonly BusMessage[]
   /** Every outbox row awaiting delivery. */
@@ -125,7 +127,10 @@ const SCHEMA = [
   'INSERT OR IGNORE INTO schema_version (singleton, version) VALUES (1, 1)',
   'CREATE TABLE IF NOT EXISTS domain_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, source TEXT NOT NULL, type TEXT NOT NULL, time TEXT NOT NULL, subject TEXT, datacontenttype TEXT, data TEXT NOT NULL, digest TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS outbox (seq INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, target TEXT NOT NULL, payload TEXT NOT NULL)',
-  'CREATE TABLE IF NOT EXISTS inbox (message_id TEXT NOT NULL, epoch INTEGER NOT NULL, claimed_by_turn INTEGER NOT NULL, state TEXT NOT NULL, PRIMARY KEY (message_id, epoch))',
+  // `source` is part of the PRIMARY KEY, not a passenger column: a message id
+  // is unique only within its sender, so two senders emitting the same id at
+  // the same epoch are two messages and must occupy two rows (BLOCKED-140).
+  'CREATE TABLE IF NOT EXISTS inbox (source TEXT NOT NULL, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, claimed_by_turn INTEGER NOT NULL, state TEXT NOT NULL, PRIMARY KEY (source, message_id, epoch))',
 ]
 
 /**
@@ -137,11 +142,12 @@ const SCHEMA = [
  * produces, so a message the store had already consumed classified as a first
  * arrival, silently, with every test on both sides still green. The omitted
  * length prefix also made `('a:1', 2)` and `('a', '1:2')` the same key.
+ * @param source - the emitter this id is scoped to.
  * @param messageId - the message id.
  * @param epoch - the sender generation.
- * @returns the key the dedup rule computes for this pair.
+ * @returns the key the dedup rule computes for this triple.
  */
-const keyOf = (messageId: string, epoch: number): string => dedupKey({ id: messageId, epoch })
+const keyOf = (source: string, messageId: string, epoch: number): string => dedupKey({ source, id: messageId, epoch })
 
 /**
  * The connection for a store, or a refusal naming the misuse.
@@ -157,15 +163,24 @@ function connectionOf(store: BusStore): DatabaseSync {
 /**
  * Read one inbox row.
  * @param db - the database.
+ * @param source - the emitter the id is scoped to.
  * @param messageId - the message id.
  * @param epoch - the delivery epoch.
  * @returns the row, or undefined.
  */
-function readInbox(db: DatabaseSync, messageId: string, epoch: number): InboxRow | undefined {
-  const row = db.prepare('SELECT message_id, epoch, claimed_by_turn, state FROM inbox WHERE message_id = ? AND epoch = ?')
-    .get(messageId, epoch) as { message_id: string; epoch: number; claimed_by_turn: number; state: string } | undefined
+function readInbox(db: DatabaseSync, source: string, messageId: string, epoch: number): InboxRow | undefined {
+  const row = db
+    .prepare('SELECT source, message_id, epoch, claimed_by_turn, state FROM inbox WHERE source = ? AND message_id = ? AND epoch = ?')
+    .get(source, messageId, epoch) as
+      { source: string; message_id: string; epoch: number; claimed_by_turn: number; state: string } | undefined
   if (row === undefined) return undefined
-  return { messageId: row.message_id, epoch: row.epoch, claimedByTurn: row.claimed_by_turn, state: row.state as InboxState }
+  return {
+    source: row.source,
+    messageId: row.message_id,
+    epoch: row.epoch,
+    claimedByTurn: row.claimed_by_turn,
+    state: row.state as InboxState,
+  }
 }
 
 /**
@@ -175,18 +190,18 @@ function readInbox(db: DatabaseSync, messageId: string, epoch: number): InboxRow
  * @param turn - the claiming turn.
  */
 function claimRow(db: DatabaseSync, message: BusMessage, turn: number): void {
-  const existing = readInbox(db, message.id, message.epoch)
+  const existing = readInbox(db, message.source, message.id, message.epoch)
   // A consumed message has already had its effect. Re-claiming it is the
   // double-effect this epic's dedup exists to prevent, so it is refused rather
   // than overwritten -- whereas `released` is precisely the state a stale
   // claim is swept to so it CAN be claimed again (BLOCKED-088).
   if (existing?.state === 'consumed') {
-    throw new Error(`bus store: ${keyOf(message.id, message.epoch)} is already consumed and cannot be claimed again`)
+    throw new Error(`bus store: ${keyOf(message.source, message.id, message.epoch)} is already consumed and cannot be claimed again`)
   }
   db.prepare(
-    'INSERT INTO inbox (message_id, epoch, claimed_by_turn, state) VALUES (?, ?, ?, \'claimed\')'
-    + ' ON CONFLICT (message_id, epoch) DO UPDATE SET claimed_by_turn = excluded.claimed_by_turn, state = \'claimed\'',
-  ).run(message.id, message.epoch, turn)
+    'INSERT INTO inbox (source, message_id, epoch, claimed_by_turn, state) VALUES (?, ?, ?, ?, \'claimed\')'
+    + ' ON CONFLICT (source, message_id, epoch) DO UPDATE SET claimed_by_turn = excluded.claimed_by_turn, state = \'claimed\'',
+  ).run(message.source, message.id, message.epoch, turn)
 }
 
 /**
@@ -199,7 +214,7 @@ export function openBusStore(directory: string): BusStore {
   for (const statement of SCHEMA) db.exec(statement)
   const store: BusStore = {
     claim: (message, turn) => { claimRow(db, message, turn) },
-    inboxRow: (messageId, epoch) => readInbox(db, messageId, epoch),
+    inboxRow: (source, messageId, epoch) => readInbox(db, source, messageId, epoch),
     domainEvents: () => (db.prepare('SELECT message_id, epoch, source, type, time, subject, datacontenttype, data FROM domain_events ORDER BY seq').all() as Record<string, string | number | null>[])
       .map(row => ({
         id: String(row.message_id),
@@ -213,8 +228,8 @@ export function openBusStore(directory: string): BusStore {
       })),
     outboxRows: () => (db.prepare('SELECT target, payload FROM outbox ORDER BY seq').all() as { target: string; payload: string }[])
       .map(row => ({ target: row.target, payload: JSON.parse(row.payload) as unknown })),
-    consumedKeys: () => new Set((db.prepare("SELECT message_id, epoch FROM inbox WHERE state = 'consumed'").all() as { message_id: string; epoch: number }[])
-      .map(row => keyOf(row.message_id, row.epoch))),
+    consumedKeys: () => new Set((db.prepare("SELECT source, message_id, epoch FROM inbox WHERE state = 'consumed'").all() as { source: string; message_id: string; epoch: number }[])
+      .map(row => keyOf(row.source, row.message_id, row.epoch))),
   }
   CONNECTIONS.set(store, db)
   return store
@@ -250,7 +265,7 @@ export function commitIntake(store: BusStore, commit: IntakeCommit): void {
     if (commit.failAt === 'after-outbox') {
       throw new Error('bus store: injected failure after the outbox rows, before the inbox transition')
     }
-    db.prepare("UPDATE inbox SET state = 'consumed' WHERE message_id = ? AND epoch = ?").run(message.id, message.epoch)
+    db.prepare("UPDATE inbox SET state = 'consumed' WHERE source = ? AND message_id = ? AND epoch = ?").run(message.source, message.id, message.epoch)
     db.exec('COMMIT')
   } catch (error) {
     db.exec('ROLLBACK')

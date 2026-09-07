@@ -52,10 +52,10 @@ export type DeliveryDecision =
  * comment saying it matched `dsh-message-bus` — a citation in prose where an
  * import belonged, which is how one rule came to have two implementations.
  * @param message - the message to key.
- * @returns a key unique to this id and epoch.
+ * @returns a key unique to this sender, id and epoch.
  */
-export function deliveryKey(message: Pick<Message, 'id' | 'epoch'>): string {
-  return dedupKey(message)
+export function deliveryKey(message: Pick<Message, 'from' | 'id' | 'epoch'>): string {
+  return dedupKey({ source: message.from, id: message.id, epoch: message.epoch })
 }
 
 /**
@@ -77,6 +77,9 @@ export function decideDelivery(
   seen: ReadonlySet<string>,
 ): DeliveryDecision {
   if (message.to !== recipient) return { action: 'refuse', reason: 'not-addressed-to-recipient' }
-  const decided = classifyDedup(message, seen)
+  // `from` is the rule's `source`: a message id is unique only within its
+  // sender, so keying without it lets one participant's message suppress
+  // another's (BLOCKED-140).
+  const decided = classifyDedup({ source: message.from, id: message.id, epoch: message.epoch }, seen)
   return decided.action === 'accept' ? { action: 'deliver', key: decided.key } : decided
 }

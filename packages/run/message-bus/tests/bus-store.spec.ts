@@ -29,6 +29,8 @@ import { classifyDedup, dedupKey } from '@deepseek-ai/dsh-intake-dedup'
 import { commitIntake, openBusStore, recoverStaleClaims } from '../src/bus-store.ts'
 import type { BusStore } from '../src/bus-store.ts'
 
+const SOURCE = '/dsh/test'
+
 const roots: string[] = []
 afterEach(() => { for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true }) })
 
@@ -56,7 +58,7 @@ describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox
     commitIntake(bus, { message: message('m1'), claimedByTurn: 7, outbox: [{ target: 'peer', payload: { n: 1 } }] })
     expect(bus.domainEvents()).toHaveLength(1)
     expect(bus.outboxRows()).toHaveLength(1)
-    expect(bus.inboxRow('m1', 1)?.state).toBe('consumed')
+    expect(bus.inboxRow(SOURCE, 'm1', 1)?.state).toBe('consumed')
   })
 
   it('writes NOTHING when the commit fails partway, rather than the domain event without its outbox row', () => {
@@ -74,7 +76,7 @@ describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox
     }).toThrow()
     expect(bus.domainEvents()).toHaveLength(0)
     expect(bus.outboxRows()).toHaveLength(0)
-    expect(bus.inboxRow('m2', 1)).toBeUndefined()
+    expect(bus.inboxRow(SOURCE, 'm2', 1)).toBeUndefined()
   })
 
   it('writes nothing when the commit fails AFTER the outbox rows, which a sequential writer could not survive', () => {
@@ -93,7 +95,7 @@ describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox
     }).toThrow()
     expect(bus.domainEvents()).toHaveLength(0)
     expect(bus.outboxRows()).toHaveLength(0)
-    expect(bus.inboxRow('m2b', 1)).toBeUndefined()
+    expect(bus.inboxRow(SOURCE, 'm2b', 1)).toBeUndefined()
   })
 })
 
@@ -117,14 +119,14 @@ describe('P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT r
       "const { DatabaseSync } = require('node:sqlite')",
       `const db = new DatabaseSync(${JSON.stringify(join(dir, 'bus.sqlite'))})`,
       "db.exec('BEGIN IMMEDIATE')",
-      "db.prepare(\"INSERT INTO inbox (message_id, epoch, claimed_by_turn, state) VALUES ('holder', 1, 1, 'claimed')\").run()",
+      "db.prepare(\"INSERT INTO inbox (source, message_id, epoch, claimed_by_turn, state) VALUES ('/dsh/holder', 'holder', 1, 1, 'claimed')\").run()",
       "console.log('HELD')",
       "setTimeout(() => { db.exec('COMMIT'); db.close() }, 400)",
     ].join('\n')], { stdio: ['ignore', 'pipe', 'pipe'] })
     try {
       await new Promise(resolve => holder.stdout.once('data', resolve))
       commitIntake(bus, { message: message('contended'), claimedByTurn: 3, outbox: [{ target: 'peer', payload: { n: 1 } }] })
-      expect(bus.inboxRow('contended', 1)?.state).toBe('consumed')
+      expect(bus.inboxRow(SOURCE, 'contended', 1)?.state).toBe('consumed')
       expect(bus.outboxRows()).toHaveLength(1)
     } finally {
       holder.kill()
@@ -136,14 +138,14 @@ describe('P4-06 must[2]: the inbox state machine keeps a stale claim recoverable
   it('leaves a crashed claim in `claimed`, not `consumed`', () => {
     const bus = store()
     bus.claim(message('m3'), 9)
-    expect(bus.inboxRow('m3', 1)?.state).toBe('claimed')
+    expect(bus.inboxRow(SOURCE, 'm3', 1)?.state).toBe('claimed')
   })
 
   it('sweeps an expired claim to `released`, so the turn that never ran does not consume the message', () => {
     const bus = store()
     bus.claim(message('m4'), 9)
     expect(recoverStaleClaims(bus, { expiredBefore: 10 })).toBe(1)
-    expect(bus.inboxRow('m4', 1)?.state).toBe('released')
+    expect(bus.inboxRow(SOURCE, 'm4', 1)?.state).toBe('released')
   })
 
   it('leaves a CONSUMED row untouched when recovery sweeps, so a settled effect cannot be undone', () => {
@@ -155,8 +157,8 @@ describe('P4-06 must[2]: the inbox state machine keeps a stale claim recoverable
     commitIntake(bus, { message: message('m4b'), claimedByTurn: 1, outbox: [] })
     bus.claim(message('m4c'), 1)
     expect(recoverStaleClaims(bus, { expiredBefore: 10 })).toBe(1)
-    expect(bus.inboxRow('m4b', 1)?.state).toBe('consumed')
-    expect(bus.inboxRow('m4c', 1)?.state).toBe('released')
+    expect(bus.inboxRow(SOURCE, 'm4b', 1)?.state).toBe('consumed')
+    expect(bus.inboxRow(SOURCE, 'm4c', 1)?.state).toBe('released')
   })
 
   it('lets a RELEASED message be claimed again, which is the restoration the previous rule forbade', () => {
@@ -166,8 +168,8 @@ describe('P4-06 must[2]: the inbox state machine keeps a stale claim recoverable
     bus.claim(message('m5'), 9)
     recoverStaleClaims(bus, { expiredBefore: 10 })
     expect(() => { bus.claim(message('m5'), 11) }).not.toThrow()
-    expect(bus.inboxRow('m5', 1)?.state).toBe('claimed')
-    expect(bus.inboxRow('m5', 1)?.claimedByTurn).toBe(11)
+    expect(bus.inboxRow(SOURCE, 'm5', 1)?.state).toBe('claimed')
+    expect(bus.inboxRow(SOURCE, 'm5', 1)?.claimedByTurn).toBe(11)
   })
 
   it('refuses to re-claim a CONSUMED message, so the effect cannot run twice', () => {
@@ -182,7 +184,7 @@ describe('P4-06 must[2]: the inbox state machine keeps a stale claim recoverable
     const bus = store()
     commitIntake(bus, { message: message('m7', 1), claimedByTurn: 7, outbox: [] })
     expect(() => { bus.claim(message('m7', 2), 8) }).not.toThrow()
-    expect(bus.inboxRow('m7', 2)?.state).toBe('claimed')
+    expect(bus.inboxRow(SOURCE, 'm7', 2)?.state).toBe('claimed')
   })
 
   it('drops a second intake of the SAME id and epoch, so the epoch case is not just "everything is new"', () => {
@@ -224,8 +226,8 @@ describe('P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-
     // would have suppressed the other.
     const bus = store()
     commitIntake(bus, { message: { ...message('a:1'), epoch: 2 }, claimedByTurn: 1, outbox: [] })
-    expect(classifyDedup({ id: 'a:1', epoch: 2 }, bus.consumedKeys()).action).toBe('drop')
-    expect(classifyDedup({ id: 'a', epoch: 12 }, bus.consumedKeys()).action).toBe('accept')
+    expect(classifyDedup({ source: SOURCE, id: 'a:1', epoch: 2 }, bus.consumedKeys()).action).toBe('drop')
+    expect(classifyDedup({ source: SOURCE, id: 'a', epoch: 12 }, bus.consumedKeys()).action).toBe('accept')
   })
 
   it('reports every consumed key as the rule computes it, with no second spelling anywhere', () => {
@@ -234,6 +236,50 @@ describe('P4-06 must[2]: the durable seen-set and the dedup rule agree (BLOCKED-
     bus.claim(message('m9'), 8)
     // The expectation comes from `dedupKey`, not from a typed literal: a
     // literal is what made the superseded case wrong.
-    expect([...bus.consumedKeys()]).toEqual([dedupKey({ id: 'm8', epoch: 1 })])
+    expect([...bus.consumedKeys()]).toEqual([dedupKey({ source: SOURCE, id: 'm8', epoch: 1 })])
+  })
+})
+
+describe('P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140)', () => {
+  // §12.3's ownership question, answered by evidence rather than by assignment.
+  // The audit recorded this epic as the shape owner of "CloudEvents attribute
+  // names; dedup on id" while NO frozen case named a single attribute — the
+  // fields appeared only as fixture keys, so renaming `datacontenttype` in both
+  // the type and the fixtures left all eighty titles green.
+  it('reads back a domain event whose keys are exactly the CloudEvents attributes this epic adopted', () => {
+    // Asserted on the READ-BACK object, not on the fixture: a fixture asserts
+    // what the test wrote, and both sides can be renamed together.
+    const bus = store()
+    commitIntake(bus, { message: message('ce-1'), claimedByTurn: 1, outbox: [] })
+    const [event] = bus.domainEvents()
+    expect(Object.keys(event ?? {}).sort())
+      .toEqual(['data', 'datacontenttype', 'epoch', 'id', 'source', 'subject', 'time', 'type'])
+  })
+
+  it('delivers BOTH messages when two different sources emit the same id at the same epoch', () => {
+    // The defect the standard's own answer would have prevented: CloudEvents
+    // says uniqueness is `source` + `id`, and this epic keyed on `(id, epoch)`
+    // alone. Measured before the fix: two senders emitting ('evt-1', 1)
+    // produced one key, and the second message was dropped as a duplicate of a
+    // message it had nothing to do with.
+    const bus = store()
+    commitIntake(bus, { message: { ...message('evt-1'), source: '/dsh/sender-a' }, claimedByTurn: 1, outbox: [] })
+    expect(classifyDedup({ source: '/dsh/sender-b', id: 'evt-1', epoch: 1 }, bus.consumedKeys()).action).toBe('accept')
+  })
+
+  it('still drops a redelivery from the SAME source, so widening the key did not disable dedup', () => {
+    const bus = store()
+    commitIntake(bus, { message: { ...message('evt-2'), source: '/dsh/sender-a' }, claimedByTurn: 1, outbox: [] })
+    expect(classifyDedup({ source: '/dsh/sender-a', id: 'evt-2', epoch: 1 }, bus.consumedKeys()).action).toBe('drop')
+  })
+
+  it('keeps two sources apart in the inbox itself, not only in the key', () => {
+    // The durable half of the same rule: one row per (source, id, epoch), so a
+    // second sender's claim cannot collide with the first's consumed row.
+    const bus = store()
+    commitIntake(bus, { message: { ...message('evt-3'), source: '/dsh/sender-a' }, claimedByTurn: 1, outbox: [] })
+    expect(() => { bus.claim({ ...message('evt-3'), source: '/dsh/sender-b' }, 2) }).not.toThrow()
+    expect(bus.inboxRow('/dsh/sender-a', 'evt-3', 1)?.state).toBe('consumed')
+    expect(bus.inboxRow('/dsh/sender-b', 'evt-3', 1)?.state).toBe('claimed')
   })
 })

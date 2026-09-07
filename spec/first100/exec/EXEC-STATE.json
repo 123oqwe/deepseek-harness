@@ -3,12 +3,12 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-07T09:11:14.012Z",
+  "lastUpdatedUtc": "2026-09-07T09:44:24.124Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
   "currentSlice": null,
-  "registryDigest": "7fae586f79377f57bbfea3ef5bc3d493f371ec7864a2e7552dae94184a2138a3",
+  "registryDigest": "53ed3e884bbcf36ab29c727b744995591df97c75ca23195ab2ca70b268235db5",
   "ledgerDigest": "c907c1e1a9ee36c3bc9263137f352f2aac6ffb1118f9a5180def02f631e2ba52",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {

@@ -1330,8 +1330,8 @@
         "standardsOwned": [
           {
             "standard": "CloudEvents attribute names; dedup on id",
-            "assignedBy": "§7.11 shape-ownership table",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence: no frozen case names these attributes because the inbox/outbox table that will carry them is not built. The new [N] files must use id/source/type/time/subject/datacontenttype directly, and a case naming them lands with that table."
+            "reason": "Owned by EVIDENCE as of 2026-09-07: the frozen case 'P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) reads back a domain event whose keys are exactly the CloudEvents attributes this epic adopted' asserts the attribute set on the object read back out of the store. It was owned by ASSIGNMENT before that, with no frozen case naming an attribute -- and the cost of the gap is BLOCKED-140: the standard this epic owns says uniqueness is `source` + `id`, and the clause and the code both keyed on `(id, epoch)` until someone read the standard against them.",
+            "evidenceTitleSubstring": "CloudEvents attribute"
           }
         ],
         "standardsImported": [],
@@ -1368,7 +1368,12 @@
         ],
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
-        "realized": null,
+        "realized": {
+          "adoptedOnPath": [],
+          "rejectedAbsent": true,
+          "expectedDeletedPct": "0",
+          "note": "Nothing was adopted, and the ledger's `deletedPct: 3` did not materialise -- the realised figure is 0. Measured: no file under packages/run/message-bus or packages/collaboration/intake-dedup imports `cloudevents`, `better-queue`, `bullmq`, `pg-boss` or `graphile-worker`, so `rejectedAbsent` holds for both rejected entries and no optional provider slipped in as a default. The durable store is `node:sqlite`'s DatabaseSync -- a Node builtin, not an npm dependency -- chosen because the reworded must[0] (C13) names one `BEGIN IMMEDIATE` and excludes the storage KV seam. CloudEvents was adopted as NAMES while the `cloudevents` SDK stayed rejected, which is what the ledger's reject note asked for: the attribute names, not the HTTP binding. CORRECTION 2026-09-07: an earlier version of this note claimed that ownership was 'now carried by evidence rather than by assignment, since the P.3 and U.2 frozen cases name those fields'. That was false and the delegate caught it -- zero frozen titles named a single attribute, and the fields appeared only as fixture keys, so renaming `datacontenttype` in both the type and the fixtures left all eighty titles green. It was written from what the epic meant to do rather than from the titles. The gap was not only bookkeeping: reading the standard is what surfaced BLOCKED-140, where uniqueness is `source` + `id` and this epic keyed on `(id, epoch)`, so two senders collided and the second message was dropped. Vocabulary cases now assert the CloudEvents attribute names on the READ-BACK object rather than on a fixture, and `standardsOwned` moves to `evidenceTitleSubstring`."
+        },
         "note": "Corrected 2026-09-07 after the delegate found four errors in the batch-backfilled version, and the shape of those errors is the finding: a template was applied across 29 rows and it fitted most of them, so the ones it did not fit read as considered. The card carries NO `adapt` entries — bullmq, pg-boss and graphile are all `optional`, which enters neither dependencies nor CI — so `adopted: []` with `deviations: []` is the correct state rather than a gap. The earlier version used the ACCEPTED-only `accepted-unadopted` reason on a row that is BLOCKED_ON_ACCEPTANCE; a gate check now refuses that pairing. Verdict restored to the card's REUSE_UPSTREAM + PROVIDER_WRITE: the reuse half is what upstream message-bus already provides, the write half is the inbox table, its same-transaction write, and the production call site.",
         "designPreFlight": {
           "recordedAtUtc": "2026-09-07T03:40:00.000Z",

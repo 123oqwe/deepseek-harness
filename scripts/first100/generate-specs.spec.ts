@@ -1061,8 +1061,8 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
       unmatchedSourceClauses: 0,
       inventedUndocumentedClauses: 0,
       inventedDocumentedDefaultBoundaryClauses: 156,
-      planCorrectedClauses: 2,
-      supersededSourceClauses: 2,
+      planCorrectedClauses: 3,
+      supersededSourceClauses: 3,
     })
     expect(Object.keys(report.epics).length).toBe(100)
     // BASE-ALIGN-v2 23-PARTIAL: a rescoped epic legitimately diverges from
@@ -1240,8 +1240,12 @@ describe('first100 U3 clause coverage (maintainer directive Q3/U3)', () => {
     // And it stays out of BOTH other counts.
     expect(report.totals.inventedUndocumentedClauses).toBe(0)
     expect(report.totals.unmatchedSourceClauses).toBe(0)
+    // P4-06's MUST channel now carries two corrections: must[0]'s C13 reword
+    // (one BEGIN IMMEDIATE, no KV seam) and must[2]'s §12.9 reword, which put
+    // `source` into the dedup key after BLOCKED-140 measured two senders
+    // colliding on one key.
     const corrected = report.epics['P4-06']?.must.invented.filter(i => i.classification === 'plan-correction')
-    expect(corrected).toHaveLength(1)
+    expect(corrected).toHaveLength(2)
   })
 
   it('green: dropping the reword record turns the same registry into one unmatched and one undocumented clause', () => {

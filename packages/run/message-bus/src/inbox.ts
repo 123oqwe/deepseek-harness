@@ -16,6 +16,8 @@ import type { BusMessageId, MessageEpoch, TenantId } from './outbox.ts'
 
 /** One arriving message, as the consumer sees it. */
 export interface IncomingMessage {
+  /** The CloudEvents `source` that emitted it; part of the message's identity. */
+  readonly source: string
   readonly id: BusMessageId
   readonly epoch: MessageEpoch
   readonly tenant: TenantId
@@ -26,9 +28,9 @@ export interface IncomingMessage {
  * `dsh-intake-dedup`'s rule, which `dsh-mailbox` applies under a name of its
  * own.
  * @param message - the message to key.
- * @returns a string key unique to this `(id, epoch)` pair.
+ * @returns a string key unique to this `(source, id, epoch)` triple.
  */
-export function dedupKey(message: Pick<IncomingMessage, 'id' | 'epoch'>): string {
+export function dedupKey(message: Pick<IncomingMessage, 'source' | 'id' | 'epoch'>): string {
   return intakeDedupKey(message)
 }
 

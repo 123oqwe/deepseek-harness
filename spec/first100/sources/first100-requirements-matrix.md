@@ -744,10 +744,10 @@
 - **Priority / Wave / 依赖：** P0 / W5 / `P4-01`、`P2-01`。
 - **问题 → 目标：** 内存 inbox 和直接 event dispatch 无法覆盖跨进程/网络故障；单纯 exactly-once 不现实，需要 inbox/outbox + 幂等消费。 → 保证消息、工具结果、审批和调度指令在崩溃与重试中不丢失、不重复。
 - **Files：** target `packages/core/agent/src/inbox.ts` [B]；`packages/core/agent/src/dispatch.ts` [B]；`packages/session/session-persistence/src/write-behind.ts` [B]；`packages/session/session-persistence/src/coordinator.ts` [B]；new `packages/run/message-bus/src/index.ts` [N]；`packages/run/message-bus/src/inbox.ts` [N]；`packages/run/message-bus/src/outbox.ts` [N]；`packages/run/message-bus/tests/crash.e2e.ts` [N]。
-- **MUST：** domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam；dispatcher 发送后用 idempotent receipt 标记。；consumer 按 message id/epoch 去重。；支持 priority、deadline、dead-letter 和 backpressure。
+- **MUST：** domain event 与 outbox 行在同一 SQLite 事务（BEGIN IMMEDIATE）内写入，不经 storage KV seam；dispatcher 发送后用 idempotent receipt 标记。；consumer 按 (source, message id, epoch) 去重。；支持 priority、deadline、dead-letter 和 backpressure。
 - **不变量 / 失败语义：** 下列 Acceptance 全为 required；typed deny/拒绝/不兼容/不确定状态按本项文字 fail closed；未满足为 FAIL，未执行为 NOT_RUN，缺依赖/证据为 BLOCKED。
 - **明确 non-goal：** YAML 来源缺失；规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。
-- **Acceptance：** 在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。；未送达消息可查询和重放。；跨租户消息不能被消费。
+- **Acceptance：** 在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (source, messageId, epoch) 幂等保证，不由传输保证 exactly-once。；未送达消息可查询和重放。；跨租户消息不能被消费。
 - **Validation：** 系统化 fault matrix 覆盖至少 12 个边界。；运行重复投递 10,000 次。；监控 dead-letter 产生明确告警。
 - **验证命令：** 来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。
 - **真实任务证据：** E4；场景 S07、S14；必须走本项 Validation 所述真实产品路径/可观测外部边界，并保存原始 receipts、before/after、独立验证与 13 项 evidence pack；真实 provider/model 支持声明另需 live lane。

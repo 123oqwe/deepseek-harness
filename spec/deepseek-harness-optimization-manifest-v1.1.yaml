@@ -3909,7 +3909,7 @@ epics:
     layerStatus: "ADJUDICATED"
     canonicalOwner: "packages/run/message-bus"
     humanAssignee: "UNASSIGNED"
-    acceptance: ["在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。", "未送达消息可查询和重放。", "跨租户消息不能被消费。"]
+    acceptance: ["在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (source, messageId, epoch) 幂等保证，不由传输保证 exactly-once。", "未送达消息可查询和重放。", "跨租户消息不能被消费。"]
     nonGoals: ["YAML 来源缺失", "规范化边界：不引入与本项无关的垂直业务逻辑，不扩权、不跨项偷做。"]
     verifyCommand: "来源没有项级可执行命令；实施前必须在 manifest 注册 focused command、fixture 路径与预期 exit code（不得猜），再跑 G/适用 R。"
     files:

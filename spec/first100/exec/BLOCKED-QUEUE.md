@@ -252,6 +252,30 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-140 — the dedup key omitted `source`, so one sender's message silently suppressed another's
+
+**State: FIXED under delegate ruling §12.9 (2026-09-07). Found by the delegate refusing to sign P4-06, not by any test.**
+
+CloudEvents defines message uniqueness as **`source` + `id`**. P4-06's clause said `(message id, epoch)`, the implementation matched the clause exactly, and eighty frozen titles were green over it.
+
+**Measured on the shipped code before the fix:**
+
+```
+sender A key: 5:evt-1:1        {source: '/dsh/sender-a', id: 'evt-1', epoch: 1}
+sender B key: 5:evt-1:1        {source: '/dsh/sender-b', id: 'evt-1', epoch: 1}
+B classified after A consumed: {"action":"drop","reason":"duplicate","key":"5:evt-1:1"}
+```
+
+**Two unrelated senders, and the second message is dropped as a duplicate of the first.** Silently — a drop is the dedup working, as far as any caller can see.
+
+**Why the id alone could not carry it.** `MessageId`'s JSDoc claims uniqueness "for the life of the program", but **no production code mints an id** — measured, zero producers under `src` — so the claim is a sentence, not a mechanism, and a consumer cannot verify it. `intake-dedup`'s own doc says the opposite in passing: a sender "restarts and reuses a counter", which is a sender-local counter by definition.
+
+**The data was already there.** `source` is `TEXT NOT NULL` on the bus and the mailbox carries `from`. Nothing had to be plumbed; the key simply did not include what both paths already recorded.
+
+**The fix (§12.9):** the key is `(source, id, epoch)` with source and id both length-prefixed, in `dsh-intake-dedup` alone; mailbox passes `from`, the bus passes `source`; the tenant refusal still precedes the key. The inbox's PRIMARY KEY becomes `(source, message_id, epoch)` so two senders occupy two rows. The registry clauses are reworded as an A-class change, recorded in `CLAUSE_REWORDS` with this measurement as evidence — a tightening, since within one source the previous guarantee is unchanged.
+
+**What this is really a record of.** The epic OWNS the CloudEvents shape, and the standard it owns contains the answer to the question its clause got wrong. Ownership was recorded as `assignedBy` — an assignment, with no frozen case naming a single attribute — so nothing ever forced a reading of the standard against the clause. **A shape owner that never cites its standard is an owner in name.** The new vocabulary cases assert the attribute names on the READ-BACK object rather than on a fixture, because a fixture asserts what the test itself wrote and both sides rename together.
+
 ### BLOCKED-139 — three hygiene gates are red at HEAD, none of them ours, and nobody is named
 
 **State: OPEN as a durable pointer, by delegate ruling (2026-09-07): recorded here for each owner, not fixed in the intake-dedup slice.**

@@ -52,7 +52,7 @@ const matrixText = readFileSync(join(SOURCES_DIR, 'first100-requirements-matrix.
 const waveMapText = readFileSync(join(SOURCES_DIR, 'implementation-wave-map.md'), 'utf8')
 const decisionText = readFileSync(join(SOURCES_DIR, 'r0-decision-package.md'), 'utf8')
 
-const MATRIX_SHA = '12fd5550908c0c47838a91f1d6a72cedba29c2d9834b43540926c714238c3b7d'
+const MATRIX_SHA = 'c8dc62fa7d5e37ae303ecbe6045dfee3781b519ba116d1d0b05f221133f31b63'
 const WAVEMAP_SHA = '8c84597f87289fe5dfbf675dcba072149c6678cecc81a2611329b42de6c56d41'
 const actualMatrixSha = sha256(matrixText)
 const actualWaveSha = sha256(waveMapText)
@@ -347,12 +347,21 @@ const CLAUSE_REWORDS = {
       evidence: 'Independently verified in the tree: `commitWithOutbox` (packages/run/message-bus/src/index.ts) calls `sink.enqueueAll([event, ...records])` -- one BATCH, not one transaction. BLOCKED-089 already recorded that recovery truncates to the last COMPLETE record rather than a batch boundary, so a mid-batch crash can keep the domain event and drop its outbox row. `BEGIN IMMEDIATE` exists in this repository (session-query-sqlite) but not on this path, which is what the new wording names.',
     },
     {
-      clause: '在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。',
+      clause: '在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (source, messageId, epoch) 幂等保证，不由传输保证 exactly-once。',
       rewordedFrom: '在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect。',
+      intermediateWording: '在 commit 前后、发送前后、ack 前后 kill，消息最终只产生一次业务 effect，由 consumer 按 (messageId, epoch) 幂等保证，不由传输保证 exactly-once。',
       channel: 'acceptance',
-      rewordedAtUtc: '2026-09-06T12:00:00.000Z',
-      basis: 'Rectification order §A; same ruling as the must[0] reword above.',
-      evidence: 'The outcome the clause asks for is unchanged -- one business effect. What changed is WHO guarantees it: the transport cannot, and must[2] already required the consumer to deduplicate by message id and epoch. The reword makes the clause name the mechanism the epic actually builds instead of one no transport provides.',
+      rewordedAtUtc: '2026-09-07T09:30:00.000Z',
+      basis: 'Rectification order §A (2026-09-06) named the consumer as the guarantor; §12.9 (2026-09-07) corrected WHAT the consumer keys on. One entry rather than two because a provenance record whose clause is not in the matrix fails extraction, and the intermediate wording is preserved here instead of in a dangling second record.',
+      evidence: 'Two changes to one clause. §A: the outcome is unchanged -- one business effect -- and what changed is WHO guarantees it, since the transport cannot and must[2] already put the duty on the consumer. §12.9: The standard this epic OWNS answers the question the clause got wrong. CloudEvents defines uniqueness as `source` + `id`; the clause said `(message id, epoch)` and the implementation matched the clause exactly, so no test could catch it. Measured on the shipped `classifyDedup` before the reword: `{source:\'/dsh/sender-a\',id:\'evt-1\',epoch:1}` and the same id and epoch from `/dsh/sender-b` both produced the key `5:evt-1:1`, and the second returned `{action:\'drop\',reason:\'duplicate\'}` -- one sender\'s message silently suppressed by another\'s. `MessageId` claims uniqueness \'for the life of the program\' in its own JSDoc, but no production code mints an id (measured: zero producers under `src`), so a consumer cannot verify that claim and must not rest on it. The data was already on both paths -- `source` is `TEXT NOT NULL` on the bus and the mailbox carries `from` -- it simply was not in the key. A TIGHTENING: within one source the previous guarantee is unchanged, and messages that were wrongly conflated are now kept apart.',
+    },
+    {
+      clause: 'consumer 按 (source, message id, epoch) 去重。',
+      rewordedFrom: 'consumer 按 message id/epoch 去重。',
+      channel: 'must',
+      rewordedAtUtc: '2026-09-07T09:30:00.000Z',
+      basis: 'Rectification order §12.9 (spec/first100/exec/plan-rectification-2026-09-06.md), delegate ruling of 2026-09-07 under the C11 delegation. A-class: the delegate rules the change, the executor edits the pinned source and re-extracts.',
+      evidence: "The standard this epic OWNS answers the question the clause got wrong. CloudEvents defines uniqueness as `source` + `id`; the clause said `(message id, epoch)` and the implementation matched the clause exactly, so no test could catch it. Measured on the shipped `classifyDedup` before the reword: `{source:'/dsh/sender-a',id:'evt-1',epoch:1}` and the same id and epoch from `/dsh/sender-b` both produced the key `5:evt-1:1`, and the second returned `{action:'drop',reason:'duplicate'}` -- one sender's message silently suppressed by another's. `MessageId` claims uniqueness 'for the life of the program' in its own JSDoc, but no production code mints an id (measured: zero producers under `src`), so a consumer cannot verify that claim and must not rest on it. The data was already on both paths -- `source` is `TEXT NOT NULL` on the bus and the mailbox carries `from` -- it simply was not in the key. A TIGHTENING: within one source the previous guarantee is unchanged, and messages that were wrongly conflated are now kept apart.",
     },
   ],
 }

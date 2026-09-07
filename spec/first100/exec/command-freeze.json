@@ -8009,6 +8009,44 @@
         "mutationDescription": "Locally (never committed) replaced the seen-set the call site reads — `decideDelivery(message, recipient, store.consumedKeys())` became `decideDelivery(message, recipient, new Set<string>())` in packages/run/message-bus/src/mailbox-delivery.ts — which is exactly the caller-supplied-set implementation this call site exists to replace, then re-ran the frozen command.",
         "failureSummary": "3 of 6 failed: `drops a REDELIVERY ...` and `still drops the redelivery after a RESTART ...` both AssertionError: expected 'deliver' to be 'drop'; `reads the seen-set at DECISION time ...` AssertionError: expected [ 'deliver', 'deliver' ] to deeply equal [ 'deliver', 'drop' ]. The 3 that still passed are the ones that do not depend on the durable set (first delivery, later epoch, wrong addressee), which is the expected split rather than a gap. Mutation reverted immediately; `git diff --stat` on the file was empty and the command returned 6 passed (6) before continuing."
       }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/bus-store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) reads back a domain event whose keys are exactly the CloudEvents attributes this epic adopted",
+        "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) delivers BOTH messages when two different sources emit the same id at the same epoch",
+        "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) still drops a redelivery from the SAME source, so widening the key did not disable dedup",
+        "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) keeps two sources apart in the inbox itself, not only in the key"
+      ],
+      "files": [
+        "packages/collaboration/intake-dedup/src/dedup.ts",
+        "packages/run/message-bus/src/bus-store.ts",
+        "packages/run/message-bus/src/inbox.ts",
+        "packages/collaboration/mailbox/src/index.ts",
+        "packages/run/message-bus/tests/bus-store.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T10:00:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 19 passed (19) in bus-store.spec.ts; packages/run + packages/collaboration together 131 passed, including P5-11's four live frozen mailbox cases.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) reverted `dedupKey` in packages/collaboration/intake-dedup/src/dedup.ts to the `(id, epoch)` form BLOCKED-140 found -- dropping the length-prefixed source from the front of the key -- then re-ran the frozen command.",
+        "failureSummary": "1 of 19 failed: `delivers BOTH messages when two different sources emit the same id at the same epoch`. Exactly one, and the right one: the other three do not depend on two sources being distinguishable, so a mutation that broke them too would mean the case was testing something wider than it claims. Mutation reverted immediately; the command returned 19 passed (19) before continuing."
+      },
+      "note": "§12.3 ownership, answered by evidence. P4-06 is the assigned shape owner of the CloudEvents attribute names, and NO frozen case named an attribute: the fields appeared only as fixture keys, so renaming `datacontenttype` in the type and the fixtures together left all eighty titles green. The first case asserts the attribute set on the object READ BACK out of the store, because a fixture asserts what the test itself wrote. The other three are BLOCKED-140: the standard this epic owns says uniqueness is `source` + `id`, the clause and the code both keyed on `(id, epoch)`, and two senders emitting the same id at the same epoch produced one key with the second dropped as a duplicate. Reworded under §12.9 as an A-class registry change.",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "P"
+      }
     }
   ]
 }

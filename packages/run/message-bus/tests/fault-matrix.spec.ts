@@ -29,6 +29,7 @@ import {
 } from '../src/outbox.ts'
 
 const TENANT = 'tenant-a' as TenantId
+const SOURCE = '/dsh/sender-a'
 
 function record(id: string, overrides: Partial<OutboxRecord> = {}): OutboxRecord {
   return {
@@ -139,7 +140,7 @@ const MATRIX: readonly FaultRow[] = [
   {
     boundary: '14 a duplicate arrival is dropped without a second effect',
     run: () => {
-      const message = { id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: TENANT }
+      const message = { source: SOURCE, id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: TENANT }
       expect(classifyIntake(message, new Set([dedupKey(message)]), TENANT).action).toBe('drop')
     },
   },
@@ -147,7 +148,7 @@ const MATRIX: readonly FaultRow[] = [
     boundary: '15 a foreign-tenant arrival is refused and records nothing',
     run: () => {
       const seen = new Set<string>()
-      const message = { id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: 'other' as TenantId }
+      const message = { source: SOURCE, id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: 'other' as TenantId }
       expect(classifyIntake(message, seen, TENANT)).toEqual({ action: 'refuse', reason: 'foreign-tenant' })
       expect(seen.size).toBe(0)
     },
@@ -155,7 +156,7 @@ const MATRIX: readonly FaultRow[] = [
   {
     boundary: '16 a foreign-tenant arrival is refused even when its key is already seen',
     run: () => {
-      const message = { id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: 'other' as TenantId }
+      const message = { source: SOURCE, id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: 'other' as TenantId }
       const seen = new Set([dedupKey(message)])
       expect(classifyIntake(message, seen, TENANT).action).toBe('refuse')
     },
@@ -163,7 +164,7 @@ const MATRIX: readonly FaultRow[] = [
   {
     boundary: '17 the same id at a different epoch is NOT a duplicate',
     run: () => {
-      const first = { id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: TENANT }
+      const first = { source: SOURCE, id: 'm' as BusMessageId, epoch: 1 as MessageEpoch, tenant: TENANT }
       const next = { ...first, epoch: 2 as MessageEpoch }
       expect(classifyIntake(next, new Set([dedupKey(first)]), TENANT).action).toBe('accept')
     },
