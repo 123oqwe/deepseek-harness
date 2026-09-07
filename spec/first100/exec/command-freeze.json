@@ -7833,6 +7833,53 @@
         "mutationDescription": "The structural gate's own five cases each add a real egress to a fixture closure and require it to be found, which is the mutation inlined as coverage. For the behavioural half: the `missing-from-disk` denial branch was removed from packages/plugin/plugin-lock/src/index.ts.",
         "failureSummary": "Removing `missing-from-disk` fails exactly one case, the absent-package refusal, leaving its admitted-control passing. The gate's cases fail whenever the scan cannot see an egress it is given; the scan additionally carries a positive control on its own patterns, so a silent zero cannot read as a clean closure."
       }
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "P"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/message-bus/tests/bus-store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim commits all three together, so a consumed message has both an outbox row and a domain event",
+        "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes NOTHING when the commit fails partway, rather than the domain event without its outbox row",
+        "P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim writes nothing when the commit fails AFTER the outbox rows, which a sequential writer could not survive",
+        "P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT rather than fail completes a commit that arrives while another process holds the write lock",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a crashed claim in `claimed`, not `consumed`",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) sweeps an expired claim to `released`, so the turn that never ran does not consume the message",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) leaves a CONSUMED row untouched when recovery sweeps, so a settled effect cannot be undone",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) lets a RELEASED message be claimed again, which is the restoration the previous rule forbade",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) refuses to re-claim a CONSUMED message, so the effect cannot run twice",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) treats the same id at a different EPOCH as a different message",
+        "P4-06 must[2]: the inbox state machine keeps a stale claim recoverable (BLOCKED-088) drops a second intake of the SAME id and epoch, so the epoch case is not just \"everything is new\"",
+        "P4-06: the seen-set classifyIntake reads is the consumed rows reports exactly the consumed keys, so the pure classifier and the durable state agree"
+      ],
+      "files": [
+        "packages/run/message-bus/src/bus-store.ts",
+        "packages/run/message-bus/tests/bus-store.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T06:00:00.000Z",
+      "dryRunProof": {
+        "treeSha": "9a1ac9252d5eeb5c70ac00882ad5c18e5b003fbe",
+        "testsDiscovered": 12
+      },
+      "note": "P4-06's durable store, frozen as a P supplement. The store is message-bus's OWN bus.sqlite: the reworded must[0] (C13) excludes the storage KV seam, and session-query-sqlite exists for session SEARCH with its schema owned by another package, so reusing either would put run-time message state under an owner that did not choose it. P4-01's append-only log stays the truth and stays OUT of the transaction — the JSONL append is the EFFECT of an outbox delivery, and the durable write is what that effect projects from. TWO failure points, not one: aborting only after the domain event is satisfied by a sequential writer that stops at its first error, so the after-outbox case is what requires already-executed statements to be rolled back. The inbox's three states are BLOCKED-088's fix: the previous rule treated `claimed` as terminal and forbade goal-round-driver's deliberate restoration of a stale claim; under claimed/consumed/released that restoration is a released row being re-claimed. The re-claim PAIR is load-bearing — without the consumed-refusal case, 'released is re-claimable' is satisfied by a store where everything is. NOT claimed: acceptance[0]'s exactly-once business effect through the transport. The reworded clause puts that on the consumer's (messageId, epoch) idempotence, so nothing at this layer unlocks it. must[2]'s PRODUCTION call site is also not claimed — `classifyIntake` still has no caller outside tests; that is the U stage's work, and this entry covers only the durable state it will read.",
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations to packages/run/message-bus/src/bus-store.ts, each applied alone and reverted: (1) the transaction removed entirely, leaving sequential writes; (2) the consumed-state refusal in claimRow disabled; (3) the recovery sweep widened to every row regardless of state; (4) BEGIN IMMEDIATE replaced by BEGIN DEFERRED. A fifth removed `PRAGMA busy_timeout`.",
+        "failureSummary": "(1) 2 failed; (2) 2 failed; (3) initially PASSED ALL TEN and is recorded as a gap the first pass missed — a consumed row swept back to `released` would be re-claimable and the effect would run twice; a case was added and it now fails 1. (4) initially PASSED ALL ELEVEN, because IMMEDIATE and DEFERRED leave the same end state in one process. Measured against a real second process holding the write lock for 400ms: IMMEDIATE with a busy timeout waits 407ms and succeeds, DEFERRED throws `database is locked` in 0ms because its read-to-write upgrade cannot wait, and IMMEDIATE with a zero timeout throws at BEGIN. The contended-commit case now fails both (4) and the busy_timeout removal. All four mutations fail against the frozen set.",
+        "probeCorrection": "The first contention probe was INVALID and its result was discarded: the IMMEDIATE trial waited out the holder, so the DEFERRED trial that followed faced no contention and 'passed' in 1ms. Trusting it would have concluded the two are indistinguishable and fallen back to a weaker structural check, on the strength of a measurement that measured nothing. Each trial now gets its own holder process."
+      }
     }
   ]
 }
