@@ -1867,7 +1867,7 @@
               "decidedBy": "delegate."
             }
           ],
-          "notClaimed": "No key material is generated or stored by this record. Nothing here proposes that the executor hold, generate outside a test, or transmit any private key.",
+          "notClaimed": "Signing does not make the ROOT trustworthy. It makes a token's issuer checkable against a root this deployment configured. Whether that root is the right one is P1-02's question, and its answer is under P1-02's own lock — this epic must not borrow it. Recorded because 'tokens are now signed' reads as a stronger claim than it is.",
           "constraintHonoured": "The user's standing rule that credentials belong only to them is untouched by this work: what P2-02 needs is code that MINTS a keypair inside the kernel at boot, never a key supplied to or held by the executor.",
           "ruling": {
             "decidedBy": "delegate, 2026-09-07",
@@ -1881,7 +1881,35 @@
               "a token still verifies after a restart"
             ],
             "keyHandlingInTests": "Every test mints its own keypair with `generateKeyPairSync` at run time; no key material is committed, and the executor holds no real private key. This is unchanged by the ruling and is recorded so the constraint is visible at the point someone would otherwise add a fixture key."
-          }
+          },
+          "plannedCases": [
+            {
+              "title": "a token signed by the kernel verifies, and the SAME token with one byte changed does not",
+              "why": "The positive control and the refusal together. Without the first, 'a forged token is refused' is satisfied by a verifier that refuses everything — which is what the marker path does in reverse today, accepting everything."
+            },
+            {
+              "title": "a token whose signature was produced by a DIFFERENT keypair is refused",
+              "why": "Separates 'the bytes were tampered with' from 'the signer was not this kernel'. The marker cannot tell these apart because it is the same constant for every process."
+            },
+            {
+              "title": "an attenuated child token verifies against the same root, and a child claiming a capability its parent lacks does not",
+              "why": "Attenuation may only narrow. Signing makes that checkable rather than declared: today a forged 'child' with widened capability carries the same marker as a real one."
+            },
+            {
+              "title": "after a non-root fiber's store is poisoned, verification still reaches the real kernel",
+              "why": "SLICE-fiber-A closed the forgery; this pins that the token path specifically benefits, rather than assuming it inherits the fix."
+            },
+            {
+              "title": "a token issued before a restart still verifies after it",
+              "why": "The per-install decision made observable. Per-process generation would fail exactly here, which is why the delegate ruled per-install."
+            },
+            {
+              "title": "`signatureRoots` carries the public key and NOT the private key",
+              "why": "The handle is passed across the plugin boundary. A case that reads its members is the only thing standing between 'the private key lives in the kernel' and a refactor that quietly puts it on the handle."
+            }
+          ],
+          "residual": "The token shape, narrowing-only attenuation, cascading revocation, the presence gate and log-safe redaction all stay this epic's. Adopting node:crypto supplies the signature primitive and nothing else — it does not decide what a token says, who may attenuate it, or when it stops being valid.",
+          "keyHandling": "Every case mints its own keypair with `generateKeyPairSync` at run time. No key material is committed, none is read from the environment, and the executor holds no real private key. Recorded at the point a fixture key would otherwise be added, because that is where the rule gets broken by convenience."
         }
       }
     }
