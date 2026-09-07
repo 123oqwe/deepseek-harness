@@ -644,6 +644,10 @@ importers:
         version: link:../../interaction/user-approval
 
   packages/action/action-ledger:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^
@@ -1112,6 +1116,9 @@ importers:
       '@deepseek-ai/cordis-plugin-timer':
         specifier: workspace:^
         version: link:../../../vendor/timer
+      '@deepseek-ai/dsh-action-ledger':
+        specifier: workspace:^
+        version: link:../../action/action-ledger
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../../core/agent
@@ -4369,6 +4376,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-intake-dedup':
+        specifier: workspace:^
+        version: link:../../collaboration/intake-dedup
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
@@ -4437,6 +4447,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-ledger':
+        specifier: workspace:^
+        version: link:../../action/action-ledger
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../action/action-manifest
@@ -8682,9 +8695,15 @@ importers:
       '@deepseek-ai/dsh-jobs':
         specifier: workspace:^
         version: link:../../jobs/jobs
+      '@deepseek-ai/dsh-lease':
+        specifier: workspace:^
+        version: link:../../run/lease
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-run':
+        specifier: workspace:^
+        version: link:../../run/run
       '@deepseek-ai/dsh-sandbox':
         specifier: workspace:^
         version: link:../../sandbox/sandbox

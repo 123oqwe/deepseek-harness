@@ -20,6 +20,7 @@
  * @module @deepseek-ai/dsh-action-ledger/store
  */
 
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { decideReservation } from './index.ts'
@@ -121,6 +122,12 @@ function transition(
  * @returns the store handle.
  */
 export function openLedgerStore(directory: string): LedgerStore {
+  // The directory is derived from the profile's storage root, which may not
+  // exist on a first run. SQLite reports a missing parent as "unable to open
+  // database file", which reads as corruption rather than as a path nobody
+  // created — and, mounted through the Loader, surfaces only as the whole
+  // plugin tree failing to load (BLOCKED-148 measured that detour once).
+  mkdirSync(directory, { recursive: true })
   const db = new DatabaseSync(join(directory, 'action-ledger.sqlite'))
   for (const statement of SCHEMA) db.exec(statement)
   // The connection is a closure variable, not a property and not a WeakMap

@@ -83,6 +83,40 @@ export interface TypeApiEntry {
 /** Every harness `ctx.<key>` service, sorted by key. */
 export const SERVICE_API: readonly ServiceApiEntry[] = [
   {
+    key: 'actionLedger',
+    summary: 'The mounted ledger, published as `ctx.actionLedger`.',
+    description: 'The mounted ledger, published as `ctx.actionLedger`.\n\nForwards LedgerStore rather than exposing the opened store, so a consumer reaches only the operations the contract names and cannot reach past them into this provider\'s own surface.',
+    methods: [
+      {
+        signature: 'reserve(request: ReserveRequest): ReserveDecision',
+        description: 'Take responsibility for one external effect before it is sent.',
+        parameters: [{ name: 'request', description: 'the scope, key, arguments hash and epoch to reserve under.' }],
+        returns: 'whether the caller may send, or why not.',
+      },
+      {
+        signature: 'markSent(scope: LedgerScope, key: string, epoch: LedgerEpoch): void',
+        description: 'Record that the request left the harness.',
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation.' }],
+      },
+      {
+        signature: 'confirm(scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest): void',
+        description: 'Record the provider\'s receipt, the evidence the effect committed.',
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation.' }, { name: 'receiptDigest', description: 'the digest of what the provider returned.' }],
+      },
+      {
+        signature: 'markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerEpoch): void',
+        description: 'Record that retrying cannot determine the outcome.',
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }, { name: 'epoch', description: 'the generation that holds the reservation.' }],
+      },
+      {
+        signature: 'entry(scope: LedgerScope, key: string): LedgerEntry | undefined',
+        description: 'The entry for one scoped key.',
+        parameters: [{ name: 'scope', description: 'the reservation\'s owning principal.' }, { name: 'key', description: 'the idempotency key.' }],
+        returns: 'the entry, or `undefined` when it was never reserved.',
+      },
+    ],
+  },
+  {
     key: 'agentDefaultModel',
     summary: 'Owns the default model selection independently of any Host or transport.',
     description: 'Owns the default model selection independently of any Host or transport. The composition entry remains usable without a settings provider; when one is mounted, its user layer is read live.',
@@ -3715,6 +3749,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ApprovalRequestEvent {\n    readonly agent: Agent;\n    readonly toolName: string;\n    readonly callId?: ToolCallId;\n    readonly reason?: string;\n    readonly signal?: AbortSignal;\n}',
   },
   {
+    name: 'ArgumentsHash',
+    declaration: 'export type ArgumentsHash = Branded<\'ArgumentsHash\'>;',
+  },
+  {
     name: 'AskUserQuestionAnswer',
     declaration: 'export interface AskUserQuestionAnswer {\n    answers: AskUserQuestionAnswerItem[];\n}',
   },
@@ -4387,6 +4425,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface GrantRecord {\n    readonly kind: \'grant\';\n    readonly payload: unknown;\n}',
   },
   {
+    name: 'IdempotencyKey',
+    declaration: 'export type IdempotencyKey = Branded<\'IdempotencyKey\'>;',
+  },
+  {
     name: 'IdentityContext',
     declaration: 'export interface IdentityContext {\n    readonly principal: Principal;\n    readonly runId: RunId;\n    readonly chain: DelegationChain;\n}',
   },
@@ -4549,6 +4591,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'Lease',
     declaration: 'export interface Lease {\n    readonly workItem: WorkItemId;\n    readonly holder: WorkerId;\n    readonly epoch: LeaseEpoch;\n    readonly expiresAtMs: number;\n}',
+  },
+  {
+    name: 'LedgerEntry',
+    declaration: 'export interface LedgerEntry {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly state: LedgerState;\n    readonly epoch: LedgerEpoch;\n    readonly receiptDigest?: ReceiptDigest;\n}',
+  },
+  {
+    name: 'LedgerEpoch',
+    declaration: 'export type LedgerEpoch = BrandedNumber<\'LedgerEpoch\'>;',
+  },
+  {
+    name: 'LedgerScope',
+    declaration: 'export type LedgerScope = PrincipalId;',
+  },
+  {
+    name: 'LedgerState',
+    declaration: 'export type LedgerState = \'prepared\' | \'sent\' | \'confirmed\' | \'ambiguous\' | \'compensated\';',
   },
   {
     name: 'LlmAdapter',
@@ -4991,6 +5049,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ReasoningEffortId = Branded<\'ReasoningEffortId\'>;',
   },
   {
+    name: 'ReceiptDigest',
+    declaration: 'export type ReceiptDigest = Branded<\'ReceiptDigest\'>;',
+  },
+  {
     name: 'RedactedSecret',
     declaration: 'export interface RedactedSecret {\n    path: string[];\n    set: boolean;\n}',
   },
@@ -5041,6 +5103,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'RequestRunOutcome',
     declaration: 'export type RequestRunOutcome = \'approved\' | \'completed\' | \'rejected\' | \'cancelled\' | \'failed\';',
+  },
+  {
+    name: 'ReserveDecision',
+    declaration: 'export type ReserveDecision = {\n    readonly action: \'reserved\';\n    readonly entry: LedgerEntry;\n} | {\n    readonly action: \'duplicate\';\n    readonly state: LedgerState;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'arguments-differ\';\n    readonly firstArgumentsHash: ArgumentsHash;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'stale-epoch\';\n    readonly currentEpoch: LedgerEpoch;\n} | {\n    readonly action: \'refused\';\n    readonly reason: \'ambiguous-needs-reconciliation\';\n};',
+  },
+  {
+    name: 'ReserveRequest',
+    declaration: 'export interface ReserveRequest {\n    readonly scope: LedgerScope;\n    readonly key: IdempotencyKey;\n    readonly argumentsHash: ArgumentsHash;\n    readonly epoch: LedgerEpoch;\n}',
   },
   {
     name: 'ResolvedAlwaysRetryPolicy',

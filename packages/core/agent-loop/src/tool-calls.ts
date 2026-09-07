@@ -16,12 +16,18 @@ import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-ll
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
+import { createHash } from 'node:crypto'
 import { computeArgumentsHash, classifySideEffect, createActionManifest, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
-import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
+import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import type { LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
+// The `actionLedger` service augmentation lives in the ledger package's runtime
+// face; a type-only import of the entry makes `ctx.get('actionLedger')` typed
+// here without this package depending on the plugin at run time.
+import type {} from '@deepseek-ai/dsh-action-ledger'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
-import { brandString } from '@deepseek-ai/dsh-brand'
+import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 
 /** One tool call after argument parsing, ready to schedule. */
 interface PlannedCall {
@@ -157,6 +163,8 @@ async function runGroup(
   const slots: (Slot | undefined)[] = group.map(() => undefined)
   // Started slots retain their `tool/call` seq so the result can cite it.
   const callSeqs: Array<SessionSeq | undefined> = group.map(() => undefined)
+  // And their reservation, so the ledger can be told what the effect returned.
+  const records: Array<ManifestRecord | undefined> = group.map(() => undefined)
   let nextToStart = 0
   let committed = 0
   let started = 0
@@ -178,6 +186,7 @@ async function runGroup(
         : ctx.tools[TOOL_RUNTIME_SCHEDULER].finish(slot.exec, slot.result)
       // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded index
       appendToolResult(session, turn, step, call!.block, result, callSeqs[committed]!)
+      confirmExternalEffect(ctx, agent, records[committed], result)
       for (const context of result.additionalContexts ?? []) acceptContext(context)
       concluded ||= result.concludesTurn === true
       committed++
@@ -189,8 +198,23 @@ async function runGroup(
   const startCall = async (index: number): Promise<void> => {
     // oxlint-disable-next-line typescript/no-non-null-assertion -- bounded index
     const call = group[index]!
-    callSeqs[index] = appendToolCall(agent, turn, step, call.block)
+    const appended = appendToolCall(agent, turn, step, call.block)
+    callSeqs[index] = appended.seq
+    records[index] = appended.record
     started++
+    // must[4]: the reservation is taken BEFORE the tool runs, so a crash
+    // between here and the tool's own commit leaves a durable record that this
+    // effect was already claimed. A refusal is a settled outcome, not an
+    // error: the first attempt's effect already happened, or the arguments
+    // disagree with the reservation, or the state needs a reconciler.
+    const refused = reserveExternalEffect(ctx, agent, appended.record)
+    if (refused !== undefined) {
+      // The prepared exec is what the slot carries; a refusal happens before
+      // `prepare`, so the scheduler's own context does not exist yet and the
+      // planned input stands in for it.
+      slots[index] = { exec: call.exec as unknown as ToolRunContext, result: refusedResult(refused), needsPost: false }
+      return
+    }
     const prepared = await ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(call.exec)
     throwSchedulerFailure()
     switch (prepared.kind) {
@@ -285,7 +309,7 @@ async function runGroup(
  */
 function appendFencedToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
   const { session } = agent
-  const callSeq = appendToolCall(agent, turn, step, block)
+  const { seq: callSeq } = appendToolCall(agent, turn, step, block)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: this run is no longer the owner of its work item' }],
     isError: true,
@@ -299,7 +323,7 @@ function appendFencedToolCall(agent: Agent, turn: number, step: number, block: T
 /** Append the durable call/result pair for a model call skipped after cancellation. */
 function appendSkippedToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
   const { session } = agent
-  const callSeq = appendToolCall(agent, turn, step, block)
+  const { seq: callSeq } = appendToolCall(agent, turn, step, block)
   appendToolResult(session, turn, step, block, {
     content: [{ type: 'text', text: 'Error: tool call aborted before dispatch' }],
     isError: true,
@@ -310,12 +334,19 @@ function appendSkippedToolCall(agent: Agent, turn: number, step: number, block: 
   }, callSeq)
 }
 
-/** Append a started call and return the event seq that its result must cite. */
-function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): SessionSeq {
+/**
+ * Append a started call's manifest and `tool/call` event.
+ * @param agent - the agent dispatching it.
+ * @param turn - the turn the call belongs to.
+ * @param step - the step the call belongs to.
+ * @param block - the model's call.
+ * @returns the event seq its result must cite, and the manifest's reservation inputs.
+ */
+function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): { seq: SessionSeq; record: ManifestRecord } {
   const { session } = agent
-  appendActionManifest(agent, block, 'native-tool-call')
+  const record = appendActionManifest(agent, block, 'native-tool-call')
   const event = session.append('tool/call', { turn, step, callId: block.id, name: block.name, arguments: block.arguments })
-  return event.seq
+  return { seq: event.seq, record }
 }
 
 
@@ -341,7 +372,7 @@ function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCal
  * @param origin - which of must[2]'s execution paths is dispatching it.
  */
 
-function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): void {
+function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): ManifestRecord {
   const { session } = agent
   const classification = classifySideEffect(undefined)
   const argumentsHash = computeArgumentsHash(block.arguments)
@@ -402,6 +433,104 @@ function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'nativ
     // current holder's afterwards.
     ...agent.lifecycle === undefined ? {} : { leaseEpoch: agent.lifecycle.epoch },
   })
+  return { key: manifest.idempotencyKey, argumentsHash, scope: attribution.actor.id }
+}
+
+/**
+ * The model-visible result of a refused reservation.
+ *
+ * Each refusal reads differently because each demands a different next move,
+ * and collapsing them into one message would make a caller defect
+ * (`arguments-differ`) look like an outcome to wait on. A duplicate says the
+ * effect already happened; an ambiguous entry says a human or a reconciler
+ * must settle it and that retrying cannot (acceptance[1]).
+ * @param decision - the ledger's refusal.
+ * @returns the tool result the model receives instead of an execution.
+ */
+function refusedResult(decision: Exclude<ReserveDecision, { action: 'reserved' }>): ToolExecutionResult {
+  const text = decision.action === 'duplicate'
+    ? `This action was already ${decision.state} under the same idempotency key; it was not performed again.`
+    : decision.reason === 'arguments-differ'
+      ? 'This idempotency key was first reserved with different arguments, so the action was refused.'
+      : decision.reason === 'stale-epoch'
+        ? 'A newer generation owns this action; this run has been fenced out and did not perform it.'
+        : 'This action\'s outcome is unknown and cannot be settled by retrying; it awaits reconciliation.'
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'LedgerRefusedError', code: TOOL_ABORTED_BEFORE_DISPATCH } },
+  }
+}
+
+/** The reservation inputs one appended manifest supplies to the ledger (P4-12 must[4]). */
+interface ManifestRecord {
+  readonly key: IdempotencyKey
+  readonly argumentsHash: ArgumentsHash
+  readonly scope: LedgerScope
+}
+
+/**
+ * Reserve one external effect before its tool runs (P4-12 must[4]).
+ *
+ * **The ledger is optional and its ABSENCE is not an approval.** A composition
+ * with no ledger mounted has no durable record of what it sent, so this returns
+ * `undefined` and the call proceeds — the harness behaves as it did before the
+ * ledger existed. What must never happen is a mounted ledger being consulted
+ * and its refusal ignored, which is why the refusal is returned to the caller
+ * rather than logged here.
+ *
+ * The reservation is taken with the LEASE epoch: must[5] refuses a stale epoch,
+ * and the generation that owns an action is the generation that owns its run.
+ * A composition with no Run Service has no epoch, so it reserves at 0 — the
+ * one generation, which is exactly right when there is only one holder.
+ * @param ctx - the mounting context, consulted for an optional ledger.
+ * @param agent - the agent whose run owns the action.
+ * @param record - the appended manifest's reservation inputs.
+ * @returns the ledger's refusal, or `undefined` when the call may proceed.
+ */
+function reserveExternalEffect(ctx: Context, agent: Agent, record: ManifestRecord): Exclude<ReserveDecision, { action: 'reserved' }> | undefined {
+  const ledger = ctx.get('actionLedger')
+  if (ledger === undefined) return undefined
+  const decision = ledger.reserve({
+    scope: record.scope,
+    key: record.key,
+    argumentsHash: record.argumentsHash,
+    epoch: brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0),
+  })
+  if (decision.action !== 'reserved') return decision
+  // `sent` BEFORE the tool runs, because the tool call IS the send. A crash
+  // between this line and the tool's own commit must read as "we may have sent
+  // it", which is what stops a retry from sending again; marking it after the
+  // fact would leave the crash window this ledger exists to close wide open.
+  ledger.markSent(record.scope, record.key, brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0))
+  return undefined
+}
+
+/**
+ * Record what the external effect returned (P4-12 must[4]).
+ *
+ * A failure is `ambiguous`, not a release: a tool that threw may or may not
+ * have committed its effect, and clearing the reservation would let a retry
+ * perform it a second time. acceptance[1] is exactly this — an ambiguous entry
+ * goes to reconciliation rather than being retried — so the honest record is
+ * the one that refuses the next attempt until a human or a reconciler settles
+ * it.
+ * @param ctx - the mounting context, consulted for an optional ledger.
+ * @param agent - the agent whose run owns the action.
+ * @param record - the reservation this result belongs to, absent when the call never reserved.
+ * @param result - what the tool returned.
+ */
+function confirmExternalEffect(ctx: Context, agent: Agent, record: ManifestRecord | undefined, result: ToolExecutionResult): void {
+  const ledger = ctx.get('actionLedger')
+  if (ledger === undefined || record === undefined) return
+  const epoch = brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0)
+  if (result.isError) {
+    ledger.markAmbiguous(record.scope, record.key, epoch)
+    return
+  }
+  ledger.confirm(record.scope, record.key, epoch, brandString<ReceiptDigest>(
+    createHash('sha256').update(JSON.stringify(result.content)).digest('hex'),
+  ))
 }
 
 /** Append a model-ordered result linked to its call event. */

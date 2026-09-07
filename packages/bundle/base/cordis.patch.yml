@@ -405,6 +405,15 @@
     # root. A path relative to the launch directory would let two cwds under
     # one session root hold separate lease databases — two masters over the
     # same run, which is the state this capability exists to prevent.
+    # The idempotency ledger the native tool dispatch reserves against before
+    # it runs an external effect (P4-12 must[4]). Under the same storage root as
+    # the lease store and for the same reason: two hosts that must not both
+    # perform one effect have to be pointed at one ledger.
+    - id: action-ledger
+      name: '@deepseek-ai/dsh-action-ledger'
+      config:
+        directory: !!js dshHomePath('action-ledger')
+
     - id: lease-store
       name: '@deepseek-ai/dsh-lease-sqlite'
       config:

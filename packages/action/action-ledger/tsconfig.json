@@ -16,6 +16,12 @@
     },
     {
       "path": "../../identity/principal"
+    },
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
     }
   ]
 }

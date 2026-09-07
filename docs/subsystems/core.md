@@ -335,6 +335,58 @@ The two core IDs are `ToolCallId` (correlates a tool call with its result; dsh-l
 
 Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
+<a id="ctxactionledger--actionledgerplugin"></a>
+
+### `ctx.actionLedger` — `ActionLedgerPlugin`
+
+The mounted ledger, published as `ctx.actionLedger`.
+
+Forwards LedgerStore rather than exposing the opened store, so a consumer reaches only the operations the contract names and cannot reach past them into this provider's own surface.
+
+```ts cordis-catalog
+/**
+ * Take responsibility for one external effect before it is sent.
+ * @param request - the scope, key, arguments hash and epoch to reserve under.
+ * @returns whether the caller may send, or why not.
+ */
+reserve(request: ReserveRequest): ReserveDecision
+
+/**
+ * Record that the request left the harness.
+ * @param scope - the reservation's owning principal.
+ * @param key - the idempotency key.
+ * @param epoch - the generation that holds the reservation.
+ */
+markSent(scope: LedgerScope, key: string, epoch: LedgerEpoch): void
+
+/**
+ * Record the provider's receipt, the evidence the effect committed.
+ * @param scope - the reservation's owning principal.
+ * @param key - the idempotency key.
+ * @param epoch - the generation that holds the reservation.
+ * @param receiptDigest - the digest of what the provider returned.
+ */
+confirm(scope: LedgerScope, key: string, epoch: LedgerEpoch, receiptDigest: ReceiptDigest): void
+
+/**
+ * Record that retrying cannot determine the outcome.
+ * @param scope - the reservation's owning principal.
+ * @param key - the idempotency key.
+ * @param epoch - the generation that holds the reservation.
+ */
+markAmbiguous(scope: LedgerScope, key: string, epoch: LedgerEpoch): void
+
+/**
+ * The entry for one scoped key.
+ * @param scope - the reservation's owning principal.
+ * @param key - the idempotency key.
+ * @returns the entry, or `undefined` when it was never reserved.
+ */
+entry(scope: LedgerScope, key: string): LedgerEntry | undefined
+```
+
+Source: [`packages/action/action-ledger/src/plugin.ts`](../../packages/action/action-ledger/src/plugin.ts)
+
 <a id="ctxagentdefaultmodel--agentdefaultmodelconfig"></a>
 
 ### `ctx.agentDefaultModel` — `AgentDefaultModelConfig`

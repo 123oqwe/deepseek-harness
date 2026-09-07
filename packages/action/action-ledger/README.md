@@ -45,8 +45,10 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **No transport, and no production caller yet.** The store is durable and the decisions are proven against a fake external service, but nothing in the harness reaches this package: passing `Idempotency-Key` to a real provider and reserving before a real tool call are the Usage stage, blocked on BLOCKED-143 — no production path constructs an ActionManifest, and the manifest event carries neither `idempotencyKey` nor `actor`, which are exactly the two fields this ledger keys on.
-- **`ambiguous` has no producer.** Nothing decides that an outcome is unknowable rather than merely unobserved; that judgement belongs with whatever queries target state, and until it exists the state is reachable only by a caller writing it directly.
+- **No transport.** Passing `Idempotency-Key` to a real provider is still unbuilt: `idempotencyHeader` names the header and no adapter sends it, so must[2]'s native pass-through is a decision with no caller. must[3]'s other half — querying target state to resolve an ambiguity — is likewise absent, which is why `ambiguous` refuses rather than reconciles.
+- **The production caller reserves; it does not yet resolve.** `packages/core/agent-loop/src/tool-calls.ts` reserves before every native tool call, marks it `sent` before the tool runs, and records a receipt digest or `ambiguous` from the result. A tool that throws leaves an `ambiguous` entry that refuses every later attempt at that key, and nothing clears it — deliberate, since clearing it would let a retry perform an effect that may already have committed, but it means a failed action is permanently blocked until a reconciler exists.
+- **The receipt digest is over the tool's own content**, which is what the harness observed rather than what the provider returned. Until a transport carries a real receipt, the digest proves the same outcome was recorded twice, not that the outside world committed once.
+- **`ambiguous` cannot tell unknowable from merely failed.** The dispatch path writes it for every errored tool result, which is the fail-closed reading: a tool that threw may or may not have committed. Distinguishing a request that never left from one whose outcome is genuinely unknown needs target-state queries this package does not have.
 - No runtime invariant companion is published: this package holds no state and observes nothing, so there is no owned relation two observers could disagree about.
 
 ### Dev Note

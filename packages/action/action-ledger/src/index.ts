@@ -9,6 +9,8 @@
  * @module @deepseek-ai/dsh-action-ledger
  */
 
+export { default } from './plugin.ts'
+export type { Config as ActionLedgerConfig } from './plugin.ts'
 export type {
   LedgerEntry,
   LedgerEpoch,
