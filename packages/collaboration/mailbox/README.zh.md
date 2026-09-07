@@ -1,5 +1,5 @@
 ---
-description: "Epic P5-11 的至多一次定向投递:先解析地址再去重,并以 (id, epoch) 作为身份,使重投被识别而不是被重复应用。"
+description: "Epic P5-11 的至多一次定向投递:先解析地址再去重,并以 (from, id, epoch) 作为身份,使重投被识别而不是被重复应用。"
 kind: "package-reference"
 ---
 
@@ -14,7 +14,7 @@ kind: "package-reference"
 ## 目录
 
 - [先地址,后去重](#address-before-dedup)
-- [身份是 (id, epoch)](#identity-is-id-epoch)
+- [身份是 (from, id, epoch)](#identity-is-from-id-epoch)
 - [Model Experience](#model-experience)
 - [已知限制与延后事项](#known-limitations-and-deferred-work)
 - [开发备注](#dev-note)
@@ -23,9 +23,9 @@ kind: "package-reference"
 
 收件人在去重检查**之前**被解析。先去重会让一条发给"无人"的消息被记为已投递,而这个错误随后不可见:发送方看到投递成功,而本该读到它的人从来没有一个可接收的地址。
 
-## 身份是 (id, epoch)
+## 身份是 (from, id, epoch)
 
-重投携带相同的 id 和更晚的 epoch。识别这个二元组,才把"又是这条消息"和"一条恰好长得像的新消息"分开——单靠 id,在发送方重启之后就无法区分二者。
+重投携带相同的发送方、id 和 epoch。识别这个三元组,才把"又是这条消息"和"一条恰好长得像的新消息"分开:单靠 id,在发送方重启并重用计数器之后就无法区分二者;而 `from` 让一个参与者的 id 不会闯进另一个参与者的 id 空间——一条消息 id 只在它的发送方内部唯一,BLOCKED-140 是用代价量出来的。
 
 ## Model Experience
 

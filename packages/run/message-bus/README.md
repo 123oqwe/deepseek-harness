@@ -7,7 +7,7 @@ kind: "package-reference"
 
 ## Summary
 
-`dsh-message-bus` owns Epic P4-06's two halves of effective-once effect handoff. The **outbox** keeps a record of every message a transaction committed, so a message is never lost: `src/outbox.ts` holds the `pending`/`sent`/`acked`/`dead-letter` state set and its legal-transition table, idempotent delivery receipts (must[1]), deadline and attempt-budget dead-lettering, a total dispatch order, and enqueue backpressure (must[3]). The **inbox** decides whether an arriving message produces a business effect: `src/inbox.ts` deduplicates on `(message id, epoch)` (must[2]) and refuses cross-tenant messages (acceptance[2]).
+`dsh-message-bus` owns Epic P4-06's two halves of effective-once effect handoff. The **outbox** keeps a record of every message a transaction committed, so a message is never lost: `src/outbox.ts` holds the `pending`/`sent`/`acked`/`dead-letter` state set and its legal-transition table, idempotent delivery receipts (must[1]), deadline and attempt-budget dead-lettering, a total dispatch order, and enqueue backpressure (must[3]). The **inbox** decides whether an arriving message produces a business effect: `src/inbox.ts` deduplicates on `(source, message id, epoch)` (must[2]) and refuses cross-tenant messages (acceptance[2]).
 
 Neither half is sufficient alone. The outbox guarantees a message survives a crash; the inbox guarantees a *lost acknowledgement* does not cost a second effect.
 
@@ -73,6 +73,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 This Dev Note is working context for maintainers: open questions and undecided directions. It is explicitly non-authoritative — shipped behavior and limits live in the sections above and in the package code.
 
-`MessageEpoch` is currently a bare branded number with no owner assigning it. Which component advances a producer's epoch, and whether it is durable across a restart or derived from something already durable, remains undecided — the decisions here only require that `(id, epoch)` be unique.
+`MessageEpoch` is currently a bare branded number with no owner assigning it. Which component advances a producer's epoch, and whether it is durable across a restart or derived from something already durable, remains undecided — the decisions here only require that `(source, id, epoch)` be unique — and `source` is what makes that requirement satisfiable at all, since a message id is unique only within its sender (BLOCKED-140).
 
 </details>

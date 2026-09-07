@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-intake-dedup",
-  "description": "The one (message id, epoch) deduplication rule for Epic P4-06: the key derivation and the seen-set decision that both the message bus and the mailbox apply, each keeping its own precedence check",
+  "description": "The single (source, message id, epoch) deduplication rule for Epic P4-06: key derivation and the seen-set decision, applied by both the message bus and the mailbox while each keeps its own precedence check",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"

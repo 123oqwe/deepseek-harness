@@ -1,5 +1,5 @@
 ---
-description: "At-most-once directed messaging for Epic P5-11: address resolution before deduplication, and (id, epoch) identity so a redelivered message is recognised rather than re-applied."
+description: "At-most-once directed messaging for Epic P5-11: address resolution before deduplication, and (from, id, epoch) identity so a redelivered message is recognised rather than re-applied."
 kind: "package-reference"
 ---
 
@@ -14,7 +14,7 @@ A mailbox delivers a message to one addressee at most once. `decideDelivery` dec
 ## Table of Contents
 
 - [Address before dedup](#address-before-dedup)
-- [Identity is (id, epoch)](#identity-is-id-epoch)
+- [Identity is (from, id, epoch)](#identity-is-from-id-epoch)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -23,9 +23,9 @@ A mailbox delivers a message to one addressee at most once. `decideDelivery` dec
 
 The addressee is resolved BEFORE the duplicate check. Checking dedup first would let a message addressed to nobody be recorded as delivered, and the mistake is then invisible: the sender sees a successful delivery and the intended reader never had an address to receive it at.
 
-## Identity is (id, epoch)
+## Identity is (from, id, epoch)
 
-A redelivery carries the same id and a later epoch. Recognising the pair is what separates "this message again" from "a new message that happens to look alike" — an id alone cannot tell them apart once a sender restarts.
+A redelivery carries the same sender, id and epoch. Recognising the triple is what separates "this message again" from "a new message that happens to look alike": an id alone cannot tell them apart once a sender restarts and reuses its counter, and `from` is what keeps one participant's ids out of another's — a message id is unique only within its sender, which BLOCKED-140 measured the hard way.
 
 ## Model Experience
 

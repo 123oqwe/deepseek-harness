@@ -1,5 +1,5 @@
 ---
-description: "Epic P4-06 唯一的 (message id, epoch) 去重规则：键推导与 seen 集判断，由消息总线与信箱共同应用，各自保留自己的前置检查。"
+description: "Epic P4-06 唯一的 (source, message id, epoch) 去重规则：键推导与 seen 集判断，由消息总线与信箱共同应用，各自保留自己的前置检查。"
 kind: "package-reference"
 ---
 
@@ -9,12 +9,12 @@ kind: "package-reference"
 
 ## 概述
 
-`classifyDedup` 根据消息的 `(id, epoch)` 身份和消费者已应用过的键集合，判断一次到达是首次到达还是重复到达。`dedupKey` 推导该键。此处再无其他内容。
+`classifyDedup` 根据消息的 `(source, id, epoch)` 身份和消费者已应用过的键集合，判断一次到达是首次到达还是重复到达。`dedupKey` 推导该键。此处再无其他内容。
 
 ## 目录
 
 - [为什么单独成包](#why-a-package)
-- [身份是这一对](#identity-is-the-pair)
+- [身份是这个三元组](#identity-is-the-triple)
 - [前置检查留在调用方](#the-precedence-check-stays-with-the-caller)
 - [Model Experience](#model-experience)
 - [已知限制与延后事项](#known-limitations-and-deferred-work)
@@ -26,11 +26,13 @@ kind: "package-reference"
 
 它独立成包而不是作为任一调用方的导出，原因是分层方向：`collaboration` 属于 capability-definitions，`run` 属于 orchestration-runtime，因此信箱 import 总线就是定义依赖运行时。放在这里，两条边都向下或同层。
 
-## 身份是这一对
+## 身份是这个三元组
 
-重投递携带相同的 id；发送方重启后重用计数器，同样携带相同的 id，而那条消息的效果并未发生。epoch 把两者区分开。
+一条消息 id 只在它的发送方内部唯一，所以 `source` 是身份的一部分：CloudEvents 也是这么定义的，而 BLOCKED-140 记录了本包忽略它期间发生的事——两个发送方各发 `('evt-1', 1)` 产生同一个键，第二条被当作第一条的重复丢弃，而且是静默的，因为丢弃正是去重工作时的样子。
 
-键带长度前缀——`${id.length}:${id}:${epoch}`——因此含有分隔符的 id 不会与另一对发生碰撞。没有该前缀时，`('a:1', 2)` 与 `('a', '1:2')` 产生同一个键，消费其中任意一条都会静默压制另一条。BLOCKED-138 记录了一个丢掉该前缀的持久存储，撞上的正是这一点。
+在同一个发送方内部，重投递携带相同的 id；发送方重启后重用计数器，同样携带相同的 id，而那条消息的效果并未发生。epoch 把这两者区分开。
+
+source 与 id **都**带长度前缀——`${source.length}:${source}:${id.length}:${id}:${epoch}`——因此两者内部无论怎样安排分隔符，都拼不出另一个三元组的键。没有前缀时，`('a:1', 2)` 与 `('a', '1:2')` 产生同一个键，消费其中任意一条都会静默压制另一条。BLOCKED-138 记录了一个丢掉前缀的持久存储，撞上的正是这一点。
 
 ## 前置检查留在调用方
 

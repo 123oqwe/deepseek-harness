@@ -1,5 +1,5 @@
 ---
-description: "The single (message id, epoch) deduplication rule for Epic P4-06: key derivation and the seen-set decision, applied by both the message bus and the mailbox while each keeps its own precedence check."
+description: "The single (source, message id, epoch) deduplication rule for Epic P4-06: key derivation and the seen-set decision, applied by both the message bus and the mailbox while each keeps its own precedence check."
 kind: "package-reference"
 ---
 
@@ -9,12 +9,12 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-`classifyDedup` decides whether an arriving message is a first arrival or a repeat, from the message's `(id, epoch)` identity and the set of keys the consumer has already applied. `dedupKey` derives that key. Nothing else is here.
+`classifyDedup` decides whether an arriving message is a first arrival or a repeat, from the message's `(source, id, epoch)` identity and the set of keys the consumer has already applied. `dedupKey` derives that key. Nothing else is here.
 
 ## Table of Contents
 
 - [Why a package](#why-a-package)
-- [Identity is the pair](#identity-is-the-pair)
+- [Identity is the triple](#identity-is-the-triple)
 - [The precedence check stays with the caller](#the-precedence-check-stays-with-the-caller)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -26,11 +26,13 @@ English | [中文](README.zh.md)
 
 It is a package of its own rather than an export of either caller because of the layer direction. `collaboration` is capability-definitions and `run` is orchestration-runtime, so a mailbox importing the bus would be a definition depending on a runtime. Here both edges point down or sideways.
 
-## Identity is the pair
+## Identity is the triple
 
-A redelivery carries the same id; a sender that restarts and reuses a counter also carries the same id, for a message whose effect has not happened. The epoch separates them.
+A message id is unique only within its sender, so `source` is part of the identity: CloudEvents says the same, and BLOCKED-140 records what happened while this package ignored it — two senders emitting `('evt-1', 1)` produced one key and the second message was dropped as a duplicate of the first, silently, because a drop is what dedup looks like when it works.
 
-The key is length-prefixed — `${id.length}:${id}:${epoch}` — so an id containing the separator cannot collide with a different pair. Without the prefix, `('a:1', 2)` and `('a', '1:2')` produce one key, and consuming either silently suppresses the other. BLOCKED-138 records a durable store that dropped the prefix and hit exactly that.
+Within one sender, a redelivery carries the same id; a sender that restarts and reuses a counter also carries the same id, for a message whose effect has not happened. The epoch separates those two.
+
+Both the source and the id are length-prefixed — `${source.length}:${source}:${id.length}:${id}:${epoch}` — so no arrangement of separators inside either can spell another triple's key. Without the prefixes, `('a:1', 2)` and `('a', '1:2')` produce one key, and consuming either silently suppresses the other. BLOCKED-138 records a durable store that dropped a prefix and hit exactly that.
 
 ## The precedence check stays with the caller
 

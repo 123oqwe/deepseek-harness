@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-mailbox",
-  "description": "At-most-once directed messaging for Epic P5-11: (id, epoch) deduplication and address-before-dedup ordering so a misdirected message cannot suppress a legitimate one",
+  "description": "At-most-once directed messaging for Epic P5-11: (from, id, epoch) deduplication and address-before-dedup ordering so a misdirected message cannot suppress a legitimate one",
   "version": "0.1.2-alpha.4",
   "publishConfig": {
     "access": "public"
