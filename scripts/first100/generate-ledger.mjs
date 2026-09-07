@@ -583,6 +583,32 @@ function recordFlakeOccurrences(absorbedFlakes, ciRunUrl, candidateSha, cell) {
   console.log(`BLOCKED-080: recorded ${String(appended)} flake occurrence(s) against ${cell}`)
 }
 
+/**
+ * What a re-green should record about the observation it is replacing.
+ *
+ * Re-greening OVERWRITES a cell, and with it every trace of the observation
+ * that was there. That is usually right — a cell records what currently proves
+ * it — but not when the replaced observation is itself the subject of a
+ * register entry. BLOCKED-137 measured 25 cells greened from runs whose
+ * conclusion was `failure`, admitted under an explanation that matched the
+ * failing case's NAME and never its reason. Re-greening them from a green run
+ * is the better repair, and it also deletes the only evidence that it
+ * happened; this keeps the fact on the row.
+ *
+ * Returns nothing when no reason is supplied, when the cell is new, or when
+ * the run is unchanged — a reason attached to a same-run re-green would record
+ * a replacement that did not occur.
+ * @param priorCell - the cell being overwritten, if any.
+ * @param ciRunUrl - the run the new observation comes from.
+ * @param reason - the caller's stated reason for re-attesting; undefined to record nothing.
+ * @param atUtc - the timestamp to stamp.
+ * @returns the `reattested` record, or undefined when there is nothing to record.
+ */
+export function reattestationOf(priorCell, ciRunUrl, reason, atUtc) {
+  if (reason === undefined || priorCell?.ciRunUrl === undefined || priorCell.ciRunUrl === ciRunUrl) return undefined
+  return { fromCiRunUrl: priorCell.ciRunUrl, fromCandidateSha: priorCell.candidateSha, reason, atUtc }
+}
+
 function cmdGreen() {
   const epic = opt('epic')
   const stage = opt('stage')
@@ -674,6 +700,7 @@ function cmdGreen() {
     )
     process.exit(1)
   }
+  const reattested = reattestationOf(rows[epic].cells[stage], ciRunUrl, opt('reattest-reason'), nowIso())
   rows[epic].cells[stage] = {
     status: 'GREEN',
     candidateSha,
@@ -682,6 +709,7 @@ function cmdGreen() {
     observationSha256,
     expectCasesMatched: frozen.expectCases,
     ...(absorbedFlakes.length > 0 ? { absorbedFlakes } : {}),
+    ...(reattested === undefined ? {} : { reattested }),
     capturedAtUtc: nowIso(),
   }
   rows[epic].candidateSha = candidateSha

@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T06:48:30.585Z",
-  "inputDigest": "809ef75438f3054152f07b4148e46f920e36bf07af8a8b4fb9b700d600f08da0",
+  "lastUpdatedUtc": "2026-09-07T06:50:48.674Z",
+  "inputDigest": "713d5c9c33c7ce7875f398f72834119ddc1aa2edf6ccc74a6b8a1b9f34dedb2d",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -65,17 +65,23 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "verify fails and names the tampered SDK protocol types file",
             "verify fails and names the tampered known-event-types file",
             "verify fails and names the tampered pnpm-lock.yaml",
             "captures a fingerprint that never leaks the fixture checkout's absolute path or backslash-spelled paths anywhere in its content"
           ],
-          "capturedAtUtc": "2026-09-06T22:58:21.815Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:36.071Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:36.072Z"
         }
       },
       "supplements": {
@@ -91,7 +97,7 @@
           "capturedAtUtc": "2026-09-01T05:50:37.084Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -134,10 +140,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "imports nothing: the kernel type surface depends on no other package",
             "has no runtime code: every top-level statement is a type/interface declaration or an ambient declare-const symbol",
@@ -178,7 +184,13 @@
             "documents the signatureRoots capability",
             "cross-references the boundary doc and this slice's own test file"
           ],
-          "capturedAtUtc": "2026-09-06T22:58:22.195Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:44.338Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:44.339Z"
         },
         "P": {
           "status": "N/A"
@@ -206,10 +218,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "leaves the kernel present after disposing an unrelated plugin, and shows the kernel is owned by the root fiber, not a plugin fiber",
             "rejects a plugin row applied to the root Include entry after boot exactly as it rejects one present at initial boot",
@@ -222,11 +234,17 @@
             "refuses the ancestor-store write and leaves a sibling mounted under that same ancestor unforged",
             "re-seals the pinned name when the store field is reassigned, so a later-mounted plugin still reads the real kernel"
           ],
-          "capturedAtUtc": "2026-09-06T22:58:22.991Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:44.562Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:44.562Z"
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -565,10 +583,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "declares exactly three states: off, shadow, enforce -- no more, no fewer",
             "rejects a fourth state at compile time",
@@ -603,7 +621,13 @@
             "src/types.ts hygiene (Epic P0-05 Contract stage: types-only, no plugin surface) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
             "has exactly one statement: a type-only `export type * from './types.ts'`"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:23.650Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:44.773Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:44.774Z"
         },
         "P": {
           "status": "GREEN",
@@ -710,7 +734,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -806,10 +830,10 @@
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "rejects an initialize handshake whose explicit schemaVersion major differs from the registered major",
             "accepts an initialize handshake whose explicit schemaVersion major matches the registered major",
@@ -825,7 +849,13 @@
             "commits a hot-reloaded section that declares a compatible major",
             "defaults an absent $schemaVersion to the registered version, leaving ordinary reloads unaffected"
           ],
-          "capturedAtUtc": "2026-09-06T22:58:24.514Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:44.981Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:44.982Z"
         },
         "F": {
           "status": "GREEN",
@@ -842,7 +872,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -886,10 +916,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "imports only a type-only Branded from @deepseek-ai/dsh-brand -- no other import, no runtime dependency edge",
             "GateEvidence type surface (Epic P0-07 must[0]) exports no Config schema and no apply(ctx, config) plugin entry -- nothing here is a Cordis plugin export",
@@ -921,7 +951,13 @@
             "is exactly one statement: `export type * from './types.ts'` -- zero runtime exports, zero Cordis registration, zero side effects",
             "has no default export and no Config/apply plugin exports"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:33.501Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:45.193Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:45.193Z"
         },
         "P": {
           "status": "GREEN",
@@ -958,10 +994,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "detects a completed gate's captured log file deleted entirely, distinct from a merely mutated log",
             "detects a gate-level --artifact file deleted entirely after collection",
@@ -973,7 +1009,13 @@
             "rejects a self-consistently forged package whose required gate has a nonzero exitCode while accepted still claims true",
             "rejects a self-consistently forged package whose required gate is explicitly SkippedGateEvidence while accepted still claims true"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:33.858Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:45.408Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:45.408Z"
         }
       },
       "supplements": {
@@ -989,7 +1031,7 @@
           "capturedAtUtc": "2026-09-02T06:20:02.606Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -1569,10 +1611,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
-          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "carries package, version, integrity, source commit, manifest digest, signature identity, dependencies and capabilities",
             "records the signature identity WITHOUT that recording implying it was verified",
@@ -1591,14 +1633,20 @@
             "reports drift when the registry has moved, without changing what boot loads",
             "refuses the drifted version even once it is what is installed"
           ],
-          "capturedAtUtc": "2026-09-07T03:42:38.415Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+            "fromCandidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:45.617Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:45.618Z"
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
-          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "marks integrity, source commit and signature identity when the package declares none",
             "records a declared provenance fact verbatim instead of marking it",
@@ -1622,14 +1670,20 @@
             "leaves no scratch file behind, so a reader never finds a partial lock",
             "writes a complete, re-readable lock when the target did not exist"
           ],
-          "capturedAtUtc": "2026-09-07T03:42:38.651Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+            "fromCandidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:45.831Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:45.832Z"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
-          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "admits a matching install and reports the boot as verified",
             "refuses a drifted install and does not soften admitBoot's verdict",
@@ -1637,14 +1691,20 @@
             "proceeds when the policy allows it, but marks the boot UNVERIFIED",
             "marks a locked, matching boot verified and an unlocked one not, on the same install"
           ],
-          "capturedAtUtc": "2026-09-07T03:42:38.906Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+            "fromCandidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:46.040Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:46.040Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-a093539442/vitest-report.json",
-          "observationSha256": "e5a78326c888fda5f5068ebd97d4523d9ee12f5e365cb5505fcf7431702c56a1",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P1-03 Fault — rejection-boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 a dangling dependency is refused",
@@ -1665,7 +1725,13 @@
             "fault boundary 16 an empty lock admits an empty install rather than refusing",
             "fault boundary 17 KNOWN GAP: a forged signature identity is recorded, and nothing refuses it"
           ],
-          "capturedAtUtc": "2026-09-07T03:42:39.132Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34079177586",
+            "fromCandidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:46.251Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:46.251Z"
         }
       },
       "supplements": {
@@ -1720,7 +1786,7 @@
           "capturedAtUtc": "2026-09-07T03:42:47.909Z"
         }
       },
-      "candidateSha": "a0935394421471cb95b28fb77ecfb2ffffe4f9e2",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -2504,10 +2570,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "fails closed with a clear Error, not an opaque crash, when supplied.chain has no entries (malformed/replayed data bypassing createChain/extendChain)",
             "fails closed with a clear Error, not an opaque crash, when recorded.chain (session-log replay) has no entries",
@@ -2517,7 +2583,13 @@
             "rootTenantId (built on rootPrincipal) also fails closed on an empty-entries chain",
             "a well-formed, non-empty chain is completely unaffected by the guard"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:34.600Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:46.472Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:46.473Z"
         }
       },
       "supplements": {
@@ -2534,7 +2606,7 @@
           "capturedAtUtc": "2026-09-02T16:05:22.186Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -2781,10 +2853,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P2-03 Contract — must clauses must[0]: a constructed manifest carries actionId/runId/actor/capability/target/argumentsHash/sideEffectClass/idempotencyKey/preconditions/expectedDiff/compensation/evidence requirements",
             "P2-03 Contract — must clauses must[1]: an execution attempt with no manifest appended for its actionId is refused before any policy/approval step could run",
@@ -2805,17 +2877,23 @@
             "P2-03 — differential conformance against the RFC 8785 reference implementation produces byte-identical output to `canonicalize` for every generated JSON value",
             "P2-03 — differential conformance against the RFC 8785 reference implementation canonicalizes at a depth every JS JCS library overflows on, which is why it is hand-written"
           ],
-          "capturedAtUtc": "2026-09-06T22:57:37.031Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:46.727Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:46.727Z"
         },
         "P": {
           "status": "N/A"
         },
         "U": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P2-03 — every appended manifest carries its own position the first manifest is 1, and a second call in the same session is 2",
             "P2-03 — every appended manifest carries its own position a manifest precedes the tool/call it describes, which is what the position is for",
@@ -2824,21 +2902,33 @@
             "P2-03 Usage — every dispatched call is preceded by its own manifest acceptance[2]: an unclassifiable action reaches the LOG as highest-risk and approval-requiring, not merely as a return value",
             "P2-03 Usage — every dispatched call is preceded by its own manifest validation[0]: a deliberately created bypass — a tool/call with no manifest — is DETECTED by the same reading"
           ],
-          "capturedAtUtc": "2026-09-06T22:57:37.374Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:46.944Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:46.944Z"
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion key order never changes the hash, over generated values rather than one example",
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion SECURITY: NFD and NFC never share a hash, over generated strings that have two forms",
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion two values that differ do NOT collide, which is the half a constant hash would satisfy",
             "P2-03 Fault — validation[2]: fuzzing the canonicalizer for hash confusion a key containing the separator does not collide with a value spelled to look like one"
           ],
-          "capturedAtUtc": "2026-09-06T22:57:37.704Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:47.159Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:47.160Z"
         }
       },
       "supplements": {
@@ -2856,7 +2946,7 @@
           "capturedAtUtc": "2026-09-06T22:57:58.559Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -3706,10 +3796,10 @@
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "lists a non-terminal Run reconstructed from the durable store by a fresh service",
             "lists every non-terminal Run, not just the most recently written one",
@@ -3731,7 +3821,13 @@
             "reports no Runs for a path that has never been written to, rather than failing",
             "writes the Run to the named path, not somewhere else"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:34.912Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:47.389Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:47.390Z"
         },
         "U": {
           "status": "GREEN",
@@ -3780,7 +3876,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -4400,10 +4496,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P4-08 Fault — resume boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 an in-flight step is re-run",
@@ -4425,11 +4521,17 @@
             "fault boundary 17 compacting an already-compacted journal changes nothing further",
             "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:35.827Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:47.603Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:47.604Z"
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": [],
       "status": "ACCEPTED",
@@ -5150,10 +5252,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "carries exactly the enumerated fields",
             "represents an unclaimed task with explicit nulls, not absent fields",
@@ -5176,7 +5278,13 @@
             "exposes exactly the coordination fields, so ANY added field must be justified here",
             "carries the claimant's id through UNCHANGED, deriving nothing from it"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:36.232Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:47.817Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:47.818Z"
         },
         "P": {
           "status": "GREEN",
@@ -5224,10 +5332,10 @@
         },
         "F": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "P5-11 Fault — claim and graph boundary matrix enumerates at least twelve boundaries, each named once",
             "fault boundary 01 an open task admits its first claim",
@@ -5250,11 +5358,17 @@
             "fault boundary 18 a diamond is accepted: a shared dependency is not a cycle",
             "fault boundary 19 an empty graph is valid"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:36.717Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:48.033Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:48.034Z"
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": [],
       "status": "ACCEPTED",
@@ -5335,10 +5449,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "conformance: fake provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId",
             "conformance: local reference provider (acceptance[0] + must[0]) propose() accepts a candidate record and resolves a new MemoryRecordId",
@@ -5360,7 +5474,13 @@
             "export() rejects a request whose access context is missing any of the four required fields",
             "docs/subsystems/memory.md exists, and a resolved memory record is structurally distinct from a Session Query transcript entry"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:37.454Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:48.248Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:48.248Z"
         },
         "P": {
           "status": "GREEN",
@@ -5451,7 +5571,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5765,10 +5885,10 @@
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "lists a lifecycle record reconstructed from the durable store by a fresh service",
             "walks every page of a restored listing, visiting each durable record exactly once with no omission or duplication",
@@ -5789,7 +5909,13 @@
             "does not resurrect an erased record for a fresh service over the same path",
             "refuses a store document written under an unsupported format version instead of reading it as empty"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:38.269Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:48.460Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:48.461Z"
         },
         "U": {
           "status": "GREEN",
@@ -5852,7 +5978,7 @@
         }
       },
       "supplements": {},
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",
@@ -6322,10 +6448,10 @@
       "cells": {
         "C": {
           "status": "GREEN",
-          "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-d4034a8f4c/vitest-report.json",
-          "observationSha256": "bf70f39f11be11224e23840d12b26e969583753bab4a5b690c3c41f7710a0045",
+          "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34088363628",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-b3186e6db9/vitest-report.json",
+          "observationSha256": "b36cb26e381027605fce650e15cd77a1bc133a861846d947adae179c59063308",
           "expectCasesMatched": [
             "contract: a new client against an old server agrees on the highest version both support",
             "contract: an old client against a new server reaches the same version as the reverse pairing",
@@ -6350,7 +6476,13 @@
             "contract: a method and an event with the same name are distinguished, so the two kinds cannot collide",
             "contract: names containing the field separator cannot forge another surface, because fields are length-prefixed"
           ],
-          "capturedAtUtc": "2026-09-06T23:03:38.609Z"
+          "reattested": {
+            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34063737869",
+            "fromCandidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+            "reason": "BLOCKED-137 §12.6: this cell was greened from a run whose conclusion was failure; replaced by a green observation rather than admitted under an exception.",
+            "atUtc": "2026-09-07T06:50:48.673Z"
+          },
+          "capturedAtUtc": "2026-09-07T06:50:48.673Z"
         },
         "P": {
           "status": "GREEN",
@@ -6470,7 +6602,7 @@
           "capturedAtUtc": "2026-09-06T07:57:23.583Z"
         }
       },
-      "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
+      "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "APPROVED",
       "openFindings": null,
       "status": "ACCEPTED",

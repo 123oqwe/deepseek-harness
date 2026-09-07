@@ -78,6 +78,20 @@ export interface DelegateSignoffResult {
 
 export function rowDigest(row: unknown): string
 
+export interface Reattestation {
+  fromCiRunUrl: string
+  fromCandidateSha?: string
+  reason: string
+  atUtc: string
+}
+
+export function reattestationOf(
+  priorCell: { ciRunUrl?: string; candidateSha?: string } | undefined,
+  ciRunUrl: string,
+  reason: string | undefined,
+  atUtc: string,
+): Reattestation | undefined
+
 export function checkDelegateSignoff(
   epicId: string,
   row: unknown,

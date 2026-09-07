@@ -34,6 +34,7 @@ import {
   findAmbiguousCaseMatches,
   findDuplicateFrozenCases,
   p9ItemsSettled,
+  reattestationOf,
   checkObservationDistinctness,
   rowDigest,
 } from './generate-ledger.mjs'
@@ -491,5 +492,35 @@ describe('the program gate counts a P9 item the goal admits', () => {
     // A gate reading an absent record as success would pass hardest when it
     // knew least.
     expect(p9ItemsSettled([])).toBe(false)
+  })
+})
+
+describe('reattestationOf (BLOCKED-137, 2026-09-07)', () => {
+  const prior = { ciRunUrl: 'https://ci/runs/1', candidateSha: 'a'.repeat(40) }
+
+  it('records what the re-green replaced, so a red-run admission is not deleted by its own repair', () => {
+    expect(reattestationOf(prior, 'https://ci/runs/2', 'replaced by a green observation', '2026-09-07T00:00:00.000Z'))
+      .toEqual({
+        fromCiRunUrl: 'https://ci/runs/1',
+        fromCandidateSha: 'a'.repeat(40),
+        reason: 'replaced by a green observation',
+        atUtc: '2026-09-07T00:00:00.000Z',
+      })
+  })
+
+  it('records nothing when the run is UNCHANGED, so a reason cannot claim a replacement that did not happen', () => {
+    // Without this, re-running the same greening command twice would stamp the
+    // cell as re-attested away from the run it is still on.
+    expect(reattestationOf(prior, 'https://ci/runs/1', 'replaced by a green observation', '2026-09-07T00:00:00.000Z'))
+      .toBeUndefined()
+  })
+
+  it('records nothing for a cell that was never green, which replaced no observation', () => {
+    expect(reattestationOf(undefined, 'https://ci/runs/2', 'a reason', '2026-09-07T00:00:00.000Z')).toBeUndefined()
+    expect(reattestationOf({}, 'https://ci/runs/2', 'a reason', '2026-09-07T00:00:00.000Z')).toBeUndefined()
+  })
+
+  it('records nothing without a stated reason, so the field never appears unexplained', () => {
+    expect(reattestationOf(prior, 'https://ci/runs/2', undefined, '2026-09-07T00:00:00.000Z')).toBeUndefined()
   })
 })
