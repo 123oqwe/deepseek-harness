@@ -7751,6 +7751,88 @@
         "epic": "P1-03",
         "stage": "U"
       }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "U",
+      "supplementSeq": 2,
+      "supplements": {
+        "epic": "P1-03",
+        "stage": "U"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/plugin/plugin-lock/tests/gate.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) refuses a package whose integrity is the `unavailable:` marker on BOTH sides, since two absences are not agreement",
+        "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) admits the same package once BOTH sides carry a real digest, so the refusal is caused by the marker",
+        "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) refuses when only the INSTALL side is unverifiable, so a lock with a real digest cannot be satisfied by an absence",
+        "P1-03 must[0]: an unverifiable integrity is not evidence (BLOCKED-135) admits a workspace link, whose integrity records the link target because there is no archive to hash"
+      ],
+      "files": [
+        "packages/plugin/plugin-lock/src/index.ts",
+        "packages/plugin/plugin-lock/src/lockfile-integrity.ts",
+        "packages/plugin/plugin-lock/tests/gate.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T03:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "6fe99f8d0d3a4846f0082385fa17cef61d1c4735",
+        "testsDiscovered": 4
+      },
+      "note": "BLOCKED-135's decision half, frozen as U supplement 2 rather than as a supersession: the primary U entry's five cases test `gateProductionBoot`'s policy behaviour, every one is still true, and none asserted that an `unavailable:` marker was a match. They are kept and these four added beside them. What they pin is that the marker no longer certifies itself — a lock recording `unavailable:` and a boot recomputing it compared EQUAL, so the integrity check passed while verifying nothing, for every real package, because nothing ever wrote the field it read. The workspace-link case pins the one narrow exemption: a link has no published archive, so its integrity records the target and is a real observation rather than a placeholder.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations to packages/plugin/plugin-lock/src, each applied alone and reverted: (1) the `integrity-unverifiable` branch removed so the marker compares equal to itself again; (2) WORKSPACE_LINK_PREFIX folded into the `unavailable:` namespace so a link reads as a marker.",
+        "failureSummary": "(1) 2 failed / 62 passed; (2) 1 failed / 63 passed. Restored: 64 passed. Each mutation fails the cases naming its behaviour and leaves the rest passing."
+      }
+    },
+    {
+      "epic": "P1-03",
+      "stage": "F",
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P1-03",
+        "stage": "F"
+      },
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "scripts/first100/verify-boot-path-offline.spec.ts",
+        "apps/cli/tests/plugin-lock.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P1-03 acceptance[0]: the profile-boot closure cannot reach the network passes a closure with no HTTP client and no egress call",
+        "P1-03 acceptance[0]: the profile-boot closure cannot reach the network REFUSES a closure whose package.json depends on an HTTP client",
+        "P1-03 acceptance[0]: the profile-boot closure cannot reach the network REFUSES a closure whose source calls fetch, with no such dependency declared",
+        "P1-03 acceptance[0]: the profile-boot closure cannot reach the network REFUSES an egress reached TRANSITIVELY, not only in the two roots",
+        "P1-03 acceptance[0]: the profile-boot closure cannot reach the network ignores a vendored Cordis dependency, which is the framework rather than a chosen dependency",
+        "P1-03 Fault — an offline cold start refuses a locked package that is not installed (acceptance[0]) acceptance[0]: a package the lock requires but the local install does not have is REFUSED, not treated as verified",
+        "P1-03 Fault — an offline cold start refuses a locked package that is not installed (acceptance[0]) acceptance[0]: the SAME lock with every package present is admitted, so the refusal is caused by the absence"
+      ],
+      "files": [
+        "scripts/first100/verify-boot-path-offline.mjs",
+        "scripts/first100/verify-boot-path-offline.spec.ts",
+        "apps/cli/tests/plugin-lock.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T03:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "6fe99f8d0d3a4846f0082385fa17cef61d1c4735",
+        "testsDiscovered": 7
+      },
+      "note": "acceptance[0]'s two halves, frozen as F supplement 1 under the delegate's ruling (A) — reusing apps/cli/tests/plugin-lock.spec.ts and listing only this stage's own additions, the P8-01 precedent for a shared spec file. STRUCTURAL half: the delegate first specified a `fetch` spy asserting zero calls. Measured before building, profile-boot has no fetch, no node:http(s), no net., and its whole closure is 7 workspace packages plus js-yaml and resolve.exports — so `calls === 0` is true of EVERY implementation, including one with no cache lookup at all, and the proposed reverse control could never fire. The delegate withdrew it. What replaces it can fail: the gate refuses an HTTP client in any manifest or an egress in any source of the closure, and four of its five cases exist to prove it goes red. BEHAVIOURAL half: `admitBoot`'s `missing-from-disk` branch, checked to exist before the case was written. NOT claimed: that a missing cache entry is refused rather than FETCHED. No such branch exists because no network path exists. acceptance[0] holds because there is nothing to omit, not because a fallback was exercised, and those are different evidence.",
+      "sensitivityProof": {
+        "mutationDescription": "The structural gate's own five cases each add a real egress to a fixture closure and require it to be found, which is the mutation inlined as coverage. For the behavioural half: the `missing-from-disk` denial branch was removed from packages/plugin/plugin-lock/src/index.ts.",
+        "failureSummary": "Removing `missing-from-disk` fails exactly one case, the absent-package refusal, leaving its admitted-control passing. The gate's cases fail whenever the scan cannot see an egress it is given; the scan additionally carries a positive control on its own patterns, so a silent zero cannot read as a clean closure."
+      }
     }
   ]
 }
