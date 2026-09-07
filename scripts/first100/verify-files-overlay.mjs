@@ -85,9 +85,14 @@ export function sourceEntriesWithoutReason(overlay) {
  * @returns hot-zone entries with no `git show <sha>` citation.
  */
 export function hotZoneEntriesWithoutCitation(overlay) {
+  // Anchored, for the reason `verify-adapt-dispositions` anchors its own
+  // label check: a reason that NAMES the label while explaining that it does
+  // not apply — "NOT labelled HOT ZONE: this file is not on §2.D's list" — is
+  // not claiming it, and forcing that sentence out to satisfy the check would
+  // delete the reasoning it exists to hold.
   return overlay.filter(entry =>
     typeof entry.reason === 'string'
-    && entry.reason.includes('HOT ZONE')
+    && /^\s*HOT ZONE\b/u.test(entry.reason)
     && !/git show [0-9a-f]{7,40}\b/u.test(entry.reason))
 }
 

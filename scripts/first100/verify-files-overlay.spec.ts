@@ -144,4 +144,13 @@ describe('hotZoneEntriesWithoutCitation', () => {
   it('leaves a non-hot-zone reason alone, so ordinary source entries are not forced to cite a diff', () => {
     expect(hotZoneEntriesWithoutCitation(hotZone('The seam the clause is about.'))).toEqual([])
   })
+
+  it('accepts a reason that NAMES the label while explaining it does not apply', () => {
+    // Found by the gate refusing its own author: a reason reading "NOT
+    // labelled HOT ZONE: this file is not on §2.D's list" was rejected for
+    // citing no sha, and satisfying the check would have meant deleting the
+    // sentence that explains the classification. Anchored for the same reason
+    // `verify-adapt-dispositions` anchors its read-only label.
+    expect(hotZoneEntriesWithoutCitation(hotZone('Two additions to a union. NOT labelled HOT ZONE: this file is not on the list.'))).toEqual([])
+  })
 })

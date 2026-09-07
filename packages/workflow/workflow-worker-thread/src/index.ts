@@ -12,6 +12,10 @@ import * as vm from 'node:vm'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import WorkflowEngine, { WorkflowError, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import { LeaseStore } from '@deepseek-ai/dsh-lease'
+import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease'
+import { acquireRunLease } from './run-lease.ts'
 import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import { WorkerRun } from './host.ts'
 import { validateMeta } from './meta.ts'
@@ -46,6 +50,17 @@ export interface Config {
    * 5000 ms); also bounds `dispose()`.
    */
   disposeGraceMs?: number
+  /**
+   * How long a run's lease is granted for, in milliseconds (default 30000).
+   *
+   * A deployment choice rather than a constant: the right value is a function
+   * of how long a host may be paused before another may take its work, which
+   * differs between a laptop and a scheduler with tight failover. `leaseMs`
+   * must exceed `heartbeatMs` by enough to survive one missed beat.
+   */
+  leaseMs?: number
+  /** How often a live run renews its lease, in milliseconds (default 10000). */
+  heartbeatMs?: number
 }
 
 type ResolvedConfig = Required<Config>
@@ -119,9 +134,21 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     maxItemsPerCall: z.natural().min(1).default(4096),
     syncTimeoutMs: z.natural().min(1).default(5000),
     disposeGraceMs: z.natural().default(5000),
+    leaseMs: z.natural().min(1).default(30_000),
+    heartbeatMs: z.natural().min(1).default(10_000),
   })
 
   private readonly config: ResolvedConfig
+  /**
+   * The lease store this engine owns work items in (P4-07 must[0]).
+   *
+   * One per engine instance: a store shared across engines would let two
+   * hosts in one process believe they hold the same run, which is the state a
+   * lease exists to make impossible. A deployment with two real hosts gives
+   * them two stores over shared durable state; that provider is not this
+   * epic's, and the seam is the same either way.
+   */
+  private readonly leases = new LeaseStore()
 
   constructor(ctx: Context, config: Config) {
     super(ctx)
@@ -169,6 +196,26 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
     // the now-inactive engine fiber and break the seam's holder-owned lifetime.
     const runCtx = this.ctx
     const subagents = runCtx.subagents
+    // must[0]: the run takes its lease BEFORE a worker exists. Acquiring after
+    // the thread starts would leave a window in which two hosts are both
+    // running the script, which no later fencing check can undo -- a refused
+    // WRITE does not un-send whatever the worker already did.
+    //
+    // acceptance[2]: a store that cannot answer stops new work. The denial is
+    // reported as a WorkflowError rather than by settling the run, because the
+    // run never began: there is nothing to settle.
+    const holder = brandString<WorkerId>(`workflow-engine:${process.pid}`)
+    const taken = acquireRunLease(this.leases, brandString<WorkItemId>(id), holder, Date.now(), this.config.leaseMs)
+    if ('denied' in taken) {
+      throw new WorkflowError(
+        taken.denied.reason === 'store-unavailable'
+          ? 'the lease store could not be reached, so no new workflow run may start'
+          : `workflow run ${id} is held by another host`,
+        taken.denied.reason === 'store-unavailable' ? 'LEASE_STORE_UNAVAILABLE' : 'RUN_HELD_BY_ANOTHER_HOST',
+      )
+    }
+    const { lease } = taken
+
     const workerRun = new WorkerRun(
       runCtx,
       subagents,
@@ -185,12 +232,24 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
         agentEnd: (agent) => { this.emitWorkflowEvent('workflow/agent-end', info, agent) },
       },
       request.signal,
+      lease,
     )
+    // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
+    // lifetime is the run's, and an engine-side timer would outlive the thing
+    // it describes.
+    workerRun.startHeartbeat(this.config.heartbeatMs)
 
     this.emitWorkflowEvent('workflow/start', info)
+
     // `workflow/end` fires as the (never-rejecting) result settles, with the
     // outcome DATA only — the value stays with the run's holder.
     void workerRun.result.then((settled) => {
+      // must[1]: the terminal state write carries the fencing token. A run
+      // reclaimed mid-flight must not report a result under an authority it no
+      // longer holds -- the reclaiming host owns that item's outcome now, and
+      // two `workflow/end` events for one run is the two-masters state this
+      // epic exists to prevent.
+      if (!workerRun.mayReportOutcome(Date.now())) return
       this.emitWorkflowEvent('workflow/end', info, {
         stopReason: settled.stopReason,
         ...settled.error !== undefined ? { error: settled.error } : {},

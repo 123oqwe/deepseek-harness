@@ -117,6 +117,10 @@ export type WorkflowErrorCode =
   | 'AGENT_RESULT'
   | 'RESULT_UNSERIALIZABLE'
   | 'CANCELLED'
+  /** The lease store could not be reached, so no new run may start (P4-07 acceptance[2]). */
+  | 'LEASE_STORE_UNAVAILABLE'
+  /** Another host holds this run's lease and it has not expired (P4-07 must[0]). */
+  | 'RUN_HELD_BY_ANOTHER_HOST'
 
 /**
  * Typed error for workflow-seam failures. Extends {@link HarnessError}, so the

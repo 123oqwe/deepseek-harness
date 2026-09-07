@@ -8262,6 +8262,45 @@
         "epic": "P2-03",
         "stage": "U"
       }
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/integration.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 Usage: a workflow run holds an epoch lease on the real stack must[0]: a run takes a lease, and a second host cannot take the same item while it is held",
+        "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[2]: no new run starts while the lease store is unavailable",
+        "P4-07 Usage: a workflow run holds an epoch lease on the real stack acceptance[0]: a reclaimed run cannot write its terminal state",
+        "P4-07 Usage: a workflow run holds an epoch lease on the real stack control: an unreclaimed run DOES report its outcome, so the refusal above is selective"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/run-lease.ts",
+        "packages/run/lease/src/index.ts",
+        "packages/workflow/workflow/src/index.ts",
+        "packages/workflow/workflow-worker-thread/tests/integration.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T16:30:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 6 passed (6) in integration.spec.ts — the four new cases plus the two pre-existing ones — and 307 passed across packages/workflow.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each in the production path and run separately. (1) Removed the `if (!lease.mayWrite(Date.now())) return` guard — now `workerRun.mayReportOutcome(...)` — before the terminal `workflow/end` write in packages/workflow/workflow-worker-thread/src/index.ts. (2) Disabled the acquisition refusal — `if (false && 'denied' in taken)` — so a run starts whatever the store says.",
+        "failureSummary": "Each reddens exactly the case that names it and nothing else: (1) `acceptance[0]: a reclaimed run cannot write its terminal state` fails, the fenced-out host reporting an outcome it no longer owns; (2) `acceptance[2]: no new run starts while the lease store is unavailable` fails, the run starting during an outage. The control (`an unreclaimed run DOES report its outcome`) stays green under both, which is what makes the first refusal selective rather than a run that never reports. Both reverted; 307 passed across packages/workflow before continuing."
+      },
+      "note": "§12.15-2: P4-07's U rebuilt around a REAL holder. Its sign-off was withdrawn because `LeaseStore.acquire`/`renew`, `checkFencing` and `advanceAgentLifecycleFenced` had ZERO production callers while the epic was ACCEPTED — a fencing rule nothing holds refuses nothing. A workflow run is the work item because it is the thing two hosts could both believe they own: durable id, state its parent reads, outliving individual messages. The lease is taken BEFORE the worker thread exists, since acquiring after it starts leaves a window no later fencing check can undo — a refused write does not un-send what the worker already did. The cases run on the real in-process stack (`integration.spec.ts`), where the scripted model is the only mocked boundary, per packages/AGENTS.md's real-composition requirement. `leaseMs` and `heartbeatMs` are Config fields rather than constants: the right values depend on how long a host may pause before another takes its work, which differs by deployment. PLACEMENT CORRECTED before freezing: the heartbeat and the write guard first went into the engine plugin, and gate (u) refused the entry because the registry names `host.ts` and `runtime.ts` as the stage-U consumers. It was right on the design as well as the rule — the lease lifetime IS the run lifetime, so `WorkerRun` owns the interval and answers `mayReportOutcome`, while the engine keeps only the acquisition that must precede the thread. The gate caught its author, hours after he wrote it. LAYER EDGE, reported rather than absorbed: `check-layer-deps` findings go 120 -> 121, the new one being `workflow-worker-thread -> dsh-lease: providers -> orchestration-runtime`. It is an UPWARD edge, the same class as the packages own pre-existing `-> dsh-agent` finding, and it is 0 violations / N findings rather than a failure. Not hidden and not silently accepted: the registry itself pairs these two packages, listing `packages/run/lease/src/index.ts` beside `workflow-worker-thread/src/{host,runtime}.ts` in P4-07 stage-U, so the plan intends a workflow host that holds leases. If the direction is to be fixed it is a placement decision about where a lease store belongs, which is wider than this epic.",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      }
     }
   ]
 }

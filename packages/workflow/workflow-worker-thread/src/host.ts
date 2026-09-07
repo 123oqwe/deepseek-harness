@@ -18,6 +18,7 @@ import type { SubagentRun } from '@deepseek-ai/dsh-subagent'
 import type { WorkflowAgentEndInfo, WorkflowAgentInfo, WorkflowMeta, WorkflowResult, WorkflowRun, WorkflowRunId } from '@deepseek-ai/dsh-workflow'
 import { renderThrown } from './realm.ts'
 import type { ExecutionObserver } from './runtime.ts'
+import type { RunLease } from './run-lease.ts'
 import { HostToWorkerType, WorkerToHostType } from './protocol.ts'
 import type { HostToWorkerPayloads, WorkerToHostMessage } from './protocol.ts'
 import type { ChildResult, ChildStartRequest, WorkerInit } from './types.ts'
@@ -127,6 +128,8 @@ export class WorkerRun implements WorkflowRun {
   private inputSignal: AbortSignal | undefined
   private inputSignalAbort: (() => void) | undefined
   private disposed: Promise<void> | undefined
+  /** Renews this run's lease while it is live; cleared at settlement (P4-07 must[2]). */
+  private heartbeat: NodeJS.Timeout | undefined
 
   constructor(
     private readonly ctx: Context,
@@ -139,6 +142,15 @@ export class WorkerRun implements WorkflowRun {
     private readonly disposeGraceMs: number,
     private readonly observer: ExecutionObserver,
     signal: AbortSignal | undefined,
+    /**
+     * The lease this run holds while it owns its work item (P4-07).
+     *
+     * Held by the RUN rather than by the engine, because the lease's lifetime
+     * is the run's: it is renewed while this run lives and it stops mattering
+     * when this run settles. An engine-side timer would outlive the thing it
+     * describes.
+     */
+    private readonly lease: RunLease,
   ) {
     this.result = new Promise<WorkflowResult>((resolve) => { this.settleResolve = resolve })
     // workerData rides the structured clone: args are plain JSON by the seam
@@ -608,7 +620,43 @@ export class WorkerRun implements WorkflowRun {
     this.settled = true
     this.detachInputSignal()
     clearTimeout(this.graceTimer)
+    clearInterval(this.heartbeat)
     this.settleResolve(result)
+  }
+
+  /**
+   * Whether this run still holds the authority to write its outcome
+   * (P4-07 must[1]).
+   *
+   * Asked at the moment of the write rather than remembered from the last
+   * heartbeat: a reclaim between the two is exactly the window the check
+   * exists for.
+   * @param nowMs - the caller's clock reading.
+   * @returns true while this host is still the item's holder.
+   */
+  mayReportOutcome(nowMs: number): boolean {
+    return this.lease.mayWrite(nowMs)
+  }
+
+  /**
+   * Renew the lease on a fixed interval, and stop the run when the store
+   * refuses (P4-07 must[2], acceptance[0]).
+   *
+   * `unref`'d: a live run holds the process open on its own, and a heartbeat
+   * that did so as well would keep a settled process alive for one more beat.
+   * @param heartbeatMs - how often to renew.
+   */
+  startHeartbeat(heartbeatMs: number): void {
+    this.heartbeat = setInterval(() => {
+      const denial = this.lease.renew(Date.now())
+      if (denial === undefined) return
+      clearInterval(this.heartbeat)
+      // A reclaimed host stops rather than racing the one that took over.
+      this.cancel(denial.reason === 'store-unavailable'
+        ? 'the lease store became unreachable, so this run stops writing'
+        : 'this run was reclaimed by another host and may no longer write')
+    }, heartbeatMs)
+    this.heartbeat.unref()
   }
 }
 
