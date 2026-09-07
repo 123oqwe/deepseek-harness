@@ -39,7 +39,8 @@
  *
  * @module scripts/first100/verify-make-vs-use
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -66,6 +67,16 @@ function declaredFiles(epic) {
 }
 
 /**
+ * The import pattern for one package name, escaped once in one place.
+ * @param pkg - the npm package name.
+ * @returns a regular expression matching an import or require of it.
+ */
+function importPattern(pkg) {
+  const escaped = pkg.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)
+  return new RegExp(`(?:from|require\\()\\s*['"]${escaped}(?:/[^'"]*)?['"]`, 'u')
+}
+
+/**
  * Whether any of `paths` that exists on disk imports `pkg`.
  *
  * Matches an import or require of the package name exactly or as a subpath, so
@@ -84,14 +95,43 @@ function findImport(pkg, paths) {
   // import a package P1-02 demonstrably imports — a scan that finds nothing
   // and a decision that was never acted on look identical in the output, which
   // is why this function ends with a positive control at the call site.
-  const escaped = pkg.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)
-  const pattern = new RegExp(`(?:from|require\\()\\s*['"]${escaped}(?:/[^'"]*)?['"]`, 'u')
+  const pattern = importPattern(pkg)
   for (const path of paths) {
     const full = join(REPO_ROOT, path)
-    if (!existsSync(full)) continue
+    // A declared path can be a DIRECTORY -- some epics name a package
+    // directory rather than a file. `existsSync` passes for it and
+    // `readFileSync` then throws EISDIR, which took the whole gate down
+    // rather than reporting anything.
+    if (!existsSync(full) || !statSync(full).isFile()) continue
     if (pattern.test(readFileSync(full, 'utf8'))) return path
   }
   return undefined
+}
+
+/**
+ * Whether any tracked source file in the repository imports `pkg`.
+ *
+ * The fallback for an adoption whose import lives outside the epic's declared
+ * files, which BLOCKED-134 showed is the norm rather than the exception.
+ * @param pkg - the npm package name.
+ * @returns the first importing path, or undefined.
+ */
+function findImportAnywhere(pkg) {
+  for (const path of trackedSources()) {
+    const full = join(REPO_ROOT, path)
+    if (!existsSync(full) || !statSync(full).isFile()) continue
+    if (importPattern(pkg).test(readFileSync(full, 'utf8'))) return path
+  }
+  return undefined
+}
+
+/** Every tracked source file, read once. Built with `git ls-files`, never a shell. */
+let trackedCache
+function trackedSources() {
+  trackedCache ??= execFileSync('git', ['ls-files', '*.ts', '*.mjs'], {
+    cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
+  }).split('\n').filter(path => path.length > 0 && !path.includes('/lib/'))
+  return trackedCache
 }
 
 /**
@@ -111,6 +151,7 @@ function main() {
 
   const findings = []
   const pending = []
+  const outside = []
   const states = []
   for (const [key, entry] of Object.entries(preFlight)) {
     const declared = entry.makeVsUse
@@ -142,13 +183,37 @@ function main() {
         state = 'MISMATCHED'
         continue
       }
+      // A Node builtin is adopted differently from an npm package: it cannot
+      // appear in a package.json, and the card's label for it is often not an
+      // importable specifier. It still has to be USED, so the entry names the
+      // real specifier and that is what the scan looks for.
+      if (form === 'builtin') {
+        const specifier = adopted.specifier
+        if (typeof specifier !== 'string' || specifier.length === 0) {
+          findings.push(`${key}: adopts ${pkg} as a builtin but names no importable specifier, so the claim cannot be checked`)
+          state = 'MISMATCHED'
+        } else if (findImportAnywhere(specifier) === undefined) {
+          findings.push(`${key}: adopts the builtin ${specifier}, but nothing in the repository imports it`)
+          state = 'MISMATCHED'
+        }
+      }
       if (form === 'runtime' && epic !== undefined && findImport(pkg, files) === undefined) {
         // An adoption DECIDED before the code that lands it is not the same as
         // an adoption claimed and never made. `landsIn` names the stage that
         // will import it, which makes the commitment checkable later instead
         // of indefinitely deferred — and an ACCEPTED epic may not hold one,
         // because acceptance would then rest on a promise.
-        if (typeof adopted.landsIn === 'string' && adopted.landsIn.length > 0) {
+        // BLOCKED-134 measured that a stage's declared `files` is a sketch of
+        // the principal deliverables, not the set of files the work touched:
+        // 79 of 116 live freeze entries cite something outside it. So "not in
+        // the declared files" does not mean "not adopted". The repository is
+        // searched as a second step and the answer is reported under its own
+        // name, because an adoption that lives outside the declared list is a
+        // different fact from one that does not exist.
+        const elsewhere = findImportAnywhere(pkg)
+        if (elsewhere !== undefined) {
+          outside.push(`${key}: ${pkg} imported at ${elsewhere}, outside this epic's declared files (BLOCKED-134)`)
+        } else if (typeof adopted.landsIn === 'string' && adopted.landsIn.length > 0) {
           if (rows.get(key)?.status === 'ACCEPTED' || execRows[key]?.status === 'ACCEPTED') {
             findings.push(`${key}: adopts ${pkg} as runtime with landsIn ${JSON.stringify(adopted.landsIn)}, but the epic is ACCEPTED — acceptance cannot rest on an adoption that has not landed`)
             state = 'MISMATCHED'
@@ -201,12 +266,18 @@ function main() {
 
   // The positive control for the import scan itself: a claim of "nothing
   // imports this" is worthless from a scan that finds nothing at all.
+  const wideControl = findImportAnywhere('vitest')
+  if (wideControl === undefined) {
+    console.error('verify-make-vs-use: the repository-wide import scan found no importer of `vitest`, which every spec imports — the scan is broken, and every OUTSIDE-DECLARED verdict above would be meaningless.')
+    process.exit(1)
+  }
   const control = findImport('canonicalize', ['packages/action/action-manifest/tests/manifest.spec.ts'])
   if (control === undefined) {
     console.error('verify-make-vs-use: the import scan found NOTHING where a known import exists — the scan is broken, and every "not imported" result above would be meaningless.')
     process.exit(1)
   }
 
+  for (const line of outside) console.log(`  OUTSIDE-DECLARED  ${line}`)
   for (const line of pending) console.log(`  PENDING  ${line}`)
   for (const [key, state] of states) console.log(`  ${key}: ${state}`)
   if (findings.length === 0) {

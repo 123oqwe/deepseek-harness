@@ -493,6 +493,369 @@
         "realized": null,
         "note": "Recorded AFTER the epic's C/P/U stages were built, not before. The fourth make-vs-use question became standard practice at P2-04, and P1-03 started earlier; gate (e) is what surfaced the omission. Versions read `pending-probe` because adoption requires the §8 step-3 re-verification on this tree (version, ESM, pnpm 11 coupling, behaviour) and that has not been run — recording a version here without it would be the same silence this record exists to end."
       }
+    },
+    "P0-01": {
+      "makeVsUse": {
+        "ledgerRow": "P0-01",
+        "card": {
+          "heading": "#### P0-01",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "node:crypto sha256",
+            "npm": "node:crypto sha256",
+            "form": "builtin",
+            "reason": "A Node builtin, not an npm dependency: it cannot appear in a package.json, so `form: runtime` would describe it wrongly. The card's label `node:crypto sha256` is not an importable specifier either, which is why `specifier` names the real one. Evidence is the call sites: scripts/release/baseline-fingerprint.mjs and scripts/release/collect-evidence.mjs both call createHash.",
+            "specifier": "node:crypto"
+          }
+        ],
+        "deviations": [
+          {
+            "name": "in-toto/attestation",
+            "npm": "in-toto/attestation",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The baseline fingerprint is a repository-local digest manifest, not an attestation published to any consumer, so the Statement schema had no reader."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The fingerprint format, its capture/verify pair, and the drift report.",
+        "probes": [
+          {
+            "claim": "node:crypto is genuinely used rather than nominally adopted",
+            "how": "grep createHash across the epic's release scripts",
+            "result": "CONFIRMED",
+            "evidence": "scripts/release/baseline-fingerprint.mjs and scripts/release/collect-evidence.mjs both call createHash."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-02": {
+      "makeVsUse": {
+        "ledgerRow": "P0-02",
+        "card": {
+          "heading": "#### P0-02",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "@noble/hashes",
+            "npm": "@noble/hashes",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: no import anywhere in packages/kernel/trust-kernel/src."
+          },
+          {
+            "name": "Node WebCrypto",
+            "npm": "Node WebCrypto",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: no `webcrypto` reference in the kernel source. The kernel's handles are branded empty objects; no hashing happens in it."
+          },
+          {
+            "standard": "SPIFFE-style URI ids",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The kernel's root identity is an opaque branded handle with no URI form, so the vocabulary has no subject here."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "Root identity, signature roots, the pin, and the fiber-store guard.",
+        "probes": [
+          {
+            "claim": "the trust kernel performs cryptography today",
+            "how": "grep for @noble and webcrypto in the kernel source",
+            "result": "REFUTED",
+            "evidence": "Zero hits. The kernel's members are inert by design (see its module doc); P1-02 owns real signature verification."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-03": {
+      "makeVsUse": {
+        "ledgerRow": "P0-03",
+        "card": {
+          "heading": "#### P0-03",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "dependency-cruiser",
+            "npm": "dependency-cruiser",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: absent from the tree. The architecture checks are hand-written scripts over the workspace graph (scripts/architecture/*), and they were accepted that way."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The layer/seam rules themselves and their reporting.",
+        "probes": [
+          {
+            "claim": "dependency-cruiser is used by the architecture gates",
+            "how": "grep the repository for the package name",
+            "result": "REFUTED",
+            "evidence": "Absent from every manifest and source file."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-04": {
+      "makeVsUse": {
+        "ledgerRow": "P0-04",
+        "card": {
+          "heading": "#### P0-04",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "dependency-cruiser",
+            "npm": "dependency-cruiser",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured: absent from the tree. The architecture checks are hand-written scripts over the workspace graph (scripts/architecture/*), and they were accepted that way."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The layer/seam rules themselves and their reporting.",
+        "probes": [
+          {
+            "claim": "dependency-cruiser is used by the architecture gates",
+            "how": "grep the repository for the package name",
+            "result": "REFUTED",
+            "evidence": "Absent from every manifest and source file."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-05": {
+      "makeVsUse": {
+        "ledgerRow": "P0-05",
+        "card": {
+          "heading": "#### P0-05",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "standard": "OpenFeature evaluation API (optional)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Carried as optional on the card. The feature-gate surface is a local typed table with no evaluation-provider seam, and no frozen case names OpenFeature."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The gate table, its typing, and the migration path.",
+        "probes": [
+          {
+            "claim": "an OpenFeature-shaped provider seam exists",
+            "how": "read the epic's frozen case titles for the vocabulary",
+            "result": "REFUTED",
+            "evidence": "105 live frozen cases, none naming OpenFeature."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-06": {
+      "makeVsUse": {
+        "ledgerRow": "P0-06",
+        "card": {
+          "heading": "#### P0-06",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "zod",
+            "npm": "zod",
+            "form": "runtime",
+            "reason": "Present and imported in the repository. Recorded as adopted at the repository level; this epic's own files do not import it directly, which is why the form is stated rather than assumed."
+          },
+          {
+            "name": "ajv",
+            "npm": "ajv",
+            "form": "runtime",
+            "reason": "Present and imported in the repository, used for JSON Schema validation of generated artifacts."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "schemastery (vendored)",
+            "npm": "schemastery (vendored)",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Vendored under vendor/, not adopted as an npm dependency by this epic; its use is the framework's, not this epic's."
+          },
+          {
+            "standard": "JSON Schema 2020-12 as interchange",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Used in practice by the generated schema artifacts, but no live frozen case of this epic names the version, so ownership is not claimed."
+          },
+          {
+            "standard": "Confluent compatibility vocabulary BACKWARD/FORWARD/FULL[_TRANSITIVE]",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. The registry's compatibility modes were written independently; no frozen case names the Confluent vocabulary."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The registry, its migration path, and the compatibility decision.",
+        "probes": [
+          {
+            "claim": "this epic's own files import zod or ajv",
+            "how": "grep the epic's src and tests",
+            "result": "REFUTED",
+            "evidence": "No direct import in packages/schema/schema-registry; the packages are present repository-wide, so they are recorded as adopted with that scope stated rather than claimed for this epic's files."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-07": {
+      "makeVsUse": {
+        "ledgerRow": "P0-07",
+        "card": {
+          "heading": "#### P0-07",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [],
+        "deviations": [
+          {
+            "name": "in-toto/attestation",
+            "npm": "in-toto/attestation",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "name": "secure-systems-lab/dsse",
+            "npm": "secure-systems-lab/dsse",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "name": "slsa-framework/slsa",
+            "npm": "slsa-framework/slsa",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "name": "@sigstore/sign",
+            "npm": "@sigstore/sign",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured absent; P1-02 adopted @sigstore/verify for the verification half, which is a different package and a different epic."
+          },
+          {
+            "standard": "in-toto Attestation Statement v1",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "standard": "DSSE envelope",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "standard": "in-toto test-result/v0.1 predicate",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          },
+          {
+            "standard": "SLSA Provenance v1",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The evidence package format, its collection, and offline verification.",
+        "probes": [
+          {
+            "claim": "the evidence package is a DSSE-enveloped in-toto statement",
+            "how": "grep the four package names across the tree",
+            "result": "REFUTED",
+            "evidence": "All four absent. The package is a repository-local JSON record with its own digest and signature fields."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
+    },
+    "P0-08": {
+      "makeVsUse": {
+        "ledgerRow": "P0-08",
+        "card": {
+          "heading": "#### P0-08",
+          "sheetCommit": null
+        },
+        "verdict": "PROVIDER_WRITE",
+        "verdictSecondary": null,
+        "adopted": [
+          {
+            "name": "fast-check",
+            "npm": "fast-check",
+            "form": "runtime",
+            "reason": "Present and imported in the repository's test suites; this epic's property-style coverage uses the same dependency."
+          }
+        ],
+        "deviations": [
+          {
+            "name": "laude-institute/harbor",
+            "npm": "laude-institute/harbor",
+            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded as a read-only disposition so the omission is visible rather than silent; it does NOT license hand-writing this in new work. Measured absent. The harness comparison this named was never built as a dependency."
+          }
+        ],
+        "rejectedAbsent": [],
+        "standardsOwned": [],
+        "standardsImported": [],
+        "residual": "The harness contract and its own checks.",
+        "probes": [
+          {
+            "claim": "fast-check is available and used",
+            "how": "grep for the import across packages and tests",
+            "result": "CONFIRMED",
+            "evidence": "Imported in the repository's test suites."
+          }
+        ],
+        "gapCheck": [],
+        "expectedDeletedPct": "0",
+        "recordedBeforeFirstLine": false,
+        "realized": null,
+        "note": "Backfilled 2026-09-07 under gate (e). The fourth make-vs-use question became standard practice at P2-04; this epic was accepted before it existed, so this record states what IS true of the tree today rather than reconstructing a decision nobody made. Every standard on the card is dispositioned as a deviation rather than as `standardsOwned`, because `verify-make-vs-use`'s fourth check requires an owned standard to be named by a live frozen case and none of this epic's frozen cases name one — claiming ownership would fail that check, and rightly."
+      }
     }
   },
   "methodCorrections": [
