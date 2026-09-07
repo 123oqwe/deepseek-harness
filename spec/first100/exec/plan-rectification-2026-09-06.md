@@ -784,3 +784,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 2. **形状**:`dsh-lease`(run 层)被 provider 层的 worker host 直接 `new`——上行边(121 号 finding)+ 引擎里写死的 provider。仓库规则:capability seam 三角色完整或不做;卡判决 **PROVIDER_WRITE** 说的正是"写 provider"。**裁**:纯契约(`checkFencing` / `isReclaimable` / `FencingToken` / `Lease` / `LeaseEpoch` / `LeaseStore` 接口)落 **definitions 层**新包(§12.7 intake-dedup 先例),**SQLite provider** 落 run 层,消费者经 ctx 取 store 不自己 `new`——上行边随之消失,不靠"记进 note"。
 3. **范围**:must[1] 是"**所有**状态写与 action execution",registry U [B] 文件是 `host.ts` / `runtime.ts` **和** `core/agent/src/dispatch.ts` / `consumed-work.ts`;这次只做了 workflow 侧。**agent run 也是 work item**:agent-loop dispatch 取/持 run 租约,fencing token 进 action execution(`advanceAgentLifecycleFenced` 得到它的第一个真调用者)——这同时是 **P4-06 的 epoch(子代理自己的 LeaseEpoch)与 P4-12 的 `LedgerEpoch`** 的唯一来源;不做这半,§12.15 的选项 3 等不到东西。
 **处置**:U 冻结的四条不 supersede(断言不依赖存储形态);supplement:(a) 两进程共享 sqlite store 的"第二 host 被拒"(P4-12 两进程握手同法);(b) store 不可用(文件不可写 / 锁死)→ 不起新 run,fail-closed;(c) agent dispatch 携 token 的真组合用例。**顺序**:P4-07 的这三处 → P4-06 U / P4-12 U(两者都消费 agent run 的 epoch)。`03132481c6` 可推(方向对,不回退),观测后绿它已有的四条。
+
+### 12.17 绿化的输入必须来自签名产物,不来自操作者(2026-09-07 13:05 EDT,P4-12.F 假 SHA 事故)
+
+**事实**:执行者给 P4-12.F 绿格时手打了一个 40 位合法但不存在的 SHA,工具收了(只查格式);已修为 `git cat-file -t` 存在性检查(`5efb4f585d`)。**根**:`generate-ledger.mjs` 的绿化与 supplement 两条路径都收操作者手打的 `--candidate-sha` 与 `--report <path>`,**从不读 `evidence-bundle.json`、从不看 `signature`**——"引签名副本"至今是纪律不是机制;假 SHA 只是第一种暴露方式,对的 SHA 配错的 report 是第二种。
+**裁决**:两条路径改收 `--evidence-dir <签名产物目录>`,`candidateSha` / `ciRunUrl` / vitest report 全部从包里取,操作者不输入任何一个;存在性检查留作底。签名先量产生方式:本地可验则读包时验,不可验则 BLOCKED 记"签名不可本地验证",不假装验。已绿格子不重绿(delegate 已逐个对过签名包)。**教训**:一个只查格式的输入,和不查一样;一个可以手打的证据引用,和没有引用一样。
