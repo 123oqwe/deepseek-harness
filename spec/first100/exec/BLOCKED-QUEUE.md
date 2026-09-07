@@ -252,6 +252,22 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-137 — five straight exact-SHA runs were red on two stale fixtures, so no cell could be greened at all
+
+**State: FIXED in `e783b1c0e9`, recorded because the fix is the small half.**
+
+Every exact-SHA run from `d4034a8f` (2026-09-06 22:20) through `afa84cd5` (2026-09-07 04:25) failed, all five on the same two cases and nothing else: `pwsh-tool-turn` and `persistent-pwsh-tool-turn`, one field, `action/manifest-appended`'s `sequence` — expected `0`, received `1`. The unit suite passed 1159 test files in the same runs.
+
+`0483973639` refreshed the fixtures that the 0-based-to-1-based `sequence` fix changed and measured the diff honestly: 302 changed lines across 126 fixtures, zero outside `action/manifest-appended`. It could not reach two of them. **pwsh is absent on this host, so `DSH_SNAPSHOT=refresh` skipped those scenarios and left them recording the constant the fix removed.**
+
+**The guard for exactly this already existed and did not stop it.** `790a42f0eb` added `refuses to look complete when it skipped a scenario this host cannot run` — an assertion, not a console line, and it landed *before* the refresh. Its failure message ends: *"Refresh again where they run (pwsh scenarios need a real pwsh), **or commit knowing these are stale**."* That second option is the hole. Nothing downstream requires the knowledge to be written anywhere, so "knowing" lasted until the next command and the stale pair reached CI unannounced.
+
+**What it cost is not two fixtures.** While it stood, **no exact-SHA run could go green, so no cell could be greened from an observation at all** — the program's only greening mechanism was down for five runs and six hours, and the reason was legible in the first run's log.
+
+The repair is two lines, one field per file, each file carrying exactly one `action/manifest-appended` (asserted before writing). It cannot be observed on this host, for the same reason the refresh could not: those two cases skip here. CI is the only place the fix is visible, which is also why the staleness survived.
+
+**Open question for the registry, not acted on:** whether the escape hatch should stay unrecorded. The cheap form is for a refresh that skips scenarios to write the skipped names into a file the exact-SHA workflow reads, so a stale fixture arrives at CI already named rather than as a red run someone has to diagnose.
+
 ### BLOCKED-136 — the consumer dedup rule is implemented TWICE, and P4-06's copy is the one with no caller
 
 **State: OPEN. Found while looking for must[2]'s production call site, before writing anything.**
