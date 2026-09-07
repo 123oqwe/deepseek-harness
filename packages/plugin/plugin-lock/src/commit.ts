@@ -10,7 +10,7 @@
  * @module @deepseek-ai/dsh-plugin-lock/commit
  */
 
-import { renameSync, writeFileSync } from 'node:fs'
+import { writeFileAtomic } from '@deepseek-ai/dsh-atomic-write'
 import { validateLock } from './types.ts'
 import type { PluginLockFile } from './types.ts'
 import type { InstallDecision } from './index.ts'
@@ -92,8 +92,13 @@ export function planLockCommit(
  * @param path - the lock file's final path.
  * @param lock - the lock to write.
  */
-export function writeLockAtomically(path: string, lock: PluginLockFile): void {
-  const scratch = `${path}.${process.pid}.tmp`
-  writeFileSync(scratch, serializeLock(lock), 'utf8')
-  renameSync(scratch, path)
+export async function writeLockAtomically(path: string, lock: PluginLockFile): Promise<void> {
+  // Delegates to this repository's own atomic writer rather than repeating
+  // temp-write-and-rename here. That writer now fsyncs the temp file before
+  // the rename and the parent directory after, which the hand-written pair
+  // did not: a rename is atomic against a concurrent reader but not against a
+  // crash. Adding `write-file-atomic` as a third implementation was rejected
+  // for the same reason -- two atomic writers in one repository is one too
+  // many, and the gap was durability rather than a missing package.
+  await writeFileAtomic(path, serializeLock(lock), { mode: 0o644 })
 }

@@ -49,12 +49,13 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-atomic-write": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@types/ssri": "^7.1.5"
   },
   "dependencies": {
+    "@deepseek-ai/dsh-atomic-write": "workspace:^",
     "@pnpm/lockfile.fs": "^1100.2.5",
-    "ssri": "^13.0.1",
-    "write-file-atomic": "^7.0.1"
+    "ssri": "^13.0.1"
   }
 }

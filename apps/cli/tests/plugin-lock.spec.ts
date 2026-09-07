@@ -95,16 +95,16 @@ function writeLockfile(dir: string, packages: readonly { name: string; integrity
 }
 
 /** Write a real lock for the given observations into the profile. */
-function lockProfile(dir: string, observed: readonly ObservedPackage[]): void {
+async function lockProfile(dir: string, observed: readonly ObservedPackage[]): Promise<void> {
   const lock = buildCandidateLock(observed)
   if (lock === undefined) throw new Error('test fixture: candidate lock could not be built')
-  writeLockAtomically(join(dir, 'plugins.lock.json'), lock)
+  await writeLockAtomically(join(dir, 'plugins.lock.json'), lock)
 }
 
 describe('P1-03 Usage — a production boot consults the lock (must[2])', () => {
   it('must[2]: a profile whose manifest digest has DRIFTED since the lock is refused at boot', async () => {
     const { dir, layerDirs } = profileWith([{ name: 'alpha', policy: 'warn-and-proceed' }])
-    lockProfile(dir, await observedFrom(dir, layerDirs))
+    await lockProfile(dir, await observedFrom(dir, layerDirs))
     // The installed package changes after the lock was written, exactly as a
     // tampered or silently-updated dependency would.
     writeFileSync(join(layerDirs[0]!, 'package.json'), JSON.stringify({
@@ -125,7 +125,7 @@ describe('P1-03 Usage — a production boot consults the lock (must[2])', () => 
     // The control. Without it, the drift case is satisfied by a gate that
     // refuses every profile, and "refused on drift" would say nothing.
     const { dir, layerDirs } = profileWith([{ name: 'alpha', policy: 'warn-and-proceed' }])
-    lockProfile(dir, await observedFrom(dir, layerDirs))
+    await lockProfile(dir, await observedFrom(dir, layerDirs))
     const outcome = await gateProfileAgainstLock(dir, layerDirs, 'warn-and-proceed')
     expect(outcome.admitted).toBe(true)
     expect(outcome.admitted ? outcome.verified : undefined).toBe(true)
@@ -138,7 +138,7 @@ describe('P1-03 Usage — a production boot consults the lock (must[2])', () => 
     // still pass -- which is exactly the defect this case was added to catch,
     // found while writing the call site.
     const { dir, layerDirs } = profileWith([{ name: 'alpha', policy: 'warn-and-proceed' }])
-    lockProfile(dir, (await observedFrom(dir, layerDirs)).map(observed => ({ ...observed, integrity: 'sha512-alpha-as-locked' })))
+    await lockProfile(dir, (await observedFrom(dir, layerDirs)).map(observed => ({ ...observed, integrity: 'sha512-alpha-as-locked' })))
     const outcome = await gateProfileAgainstLock(dir, layerDirs, 'warn-and-proceed')
     expect(outcome.admitted).toBe(false)
   })
@@ -196,7 +196,7 @@ describe('P1-03 Usage — the lock `dsh plugin` writes is the lock boot reads (m
     // Ties the two halves together: must[1] produces the file, must[2] reads
     // it, and nothing in between reinterprets it.
     const { dir, layerDirs } = profileWith([{ name: 'alpha', policy: 'warn-and-proceed' }, { name: 'beta', policy: 'warn-and-proceed' }])
-    lockProfile(dir, await observedFrom(dir, layerDirs))
+    await lockProfile(dir, await observedFrom(dir, layerDirs))
     const outcome = await gateProfileAgainstLock(dir, layerDirs, 'warn-and-proceed')
     expect(outcome.admitted).toBe(true)
     expect(outcome.admitted ? outcome.loadOrder : []).toHaveLength(2)
@@ -215,7 +215,7 @@ describe('P1-03 Fault — an offline cold start refuses a locked package that is
       { name: 'beta', policy: 'warn-and-proceed' },
     ])
     // Locked with BOTH packages, then only one is presented as installed.
-    lockProfile(dir, await observedFrom(dir, layerDirs))
+    await lockProfile(dir, await observedFrom(dir, layerDirs))
     const outcome = await gateProfileAgainstLock(dir, [layerDirs[0]!], 'warn-and-proceed')
     expect(outcome.admitted).toBe(false)
   })
@@ -227,7 +227,7 @@ describe('P1-03 Fault — an offline cold start refuses a locked package that is
       { name: 'alpha', policy: 'warn-and-proceed' },
       { name: 'beta', policy: 'warn-and-proceed' },
     ])
-    lockProfile(dir, await observedFrom(dir, layerDirs))
+    await lockProfile(dir, await observedFrom(dir, layerDirs))
     const outcome = await gateProfileAgainstLock(dir, layerDirs, 'warn-and-proceed')
     expect(outcome.admitted).toBe(true)
     expect(outcome.admitted ? outcome.verified : undefined).toBe(true)

@@ -125,19 +125,19 @@ describe('P1-03 acceptance[2]: replacement lands whole and leaves nothing behind
     rmSync(directory, { recursive: true, force: true })
   })
 
-  it('replaces an existing lock with the new content', () => {
+  it('replaces an existing lock with the new content', async () => {
     const path = join(directory, 'plugins.lock.json')
     writeFileSync(path, serializeLock(lock([entry('alpha')])), 'utf8')
 
     const next = lock([entry('alpha'), entry('beta')])
-    writeLockAtomically(path, next)
+    await writeLockAtomically(path, next)
 
     expect(readFileSync(path, 'utf8')).toBe(serializeLock(next))
   })
 
-  it('leaves no scratch file behind, so a reader never finds a partial lock', () => {
+  it('leaves no scratch file behind, so a reader never finds a partial lock', async () => {
     const path = join(directory, 'plugins.lock.json')
-    writeLockAtomically(path, lock([entry('alpha')]))
+    await writeLockAtomically(path, lock([entry('alpha')]))
 
     // A leftover temp file is what a concurrent reader would trip over. This
     // is the observable half of acceptance[2]; the unobservable half is that
@@ -145,10 +145,10 @@ describe('P1-03 acceptance[2]: replacement lands whole and leaves nothing behind
     expect(readdirSync(directory)).toEqual(['plugins.lock.json'])
   })
 
-  it('writes a complete, re-readable lock when the target did not exist', () => {
+  it('writes a complete, re-readable lock when the target did not exist', async () => {
     const path = join(directory, 'plugins.lock.json')
     const written = lock([entry('alpha', { dependencies: [name('beta')] }), entry('beta')])
-    writeLockAtomically(path, written)
+    await writeLockAtomically(path, written)
 
     expect(JSON.parse(readFileSync(path, 'utf8'))).toMatchObject({
       lockfileVersion: 1,

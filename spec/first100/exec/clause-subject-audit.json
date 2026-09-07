@@ -512,14 +512,6 @@
             "form": "runtime",
             "reason": "Parses and compares Subresource Integrity strings, which is the format pnpm-lock.yaml records. Hand-comparing `sha512-...` strings byte-for-byte works only while the algorithm and encoding never vary; ssri is the maintained implementation of that comparison. Step-3 re-verification: v13.0.1 pinned deliberately, NOT the latest v14. v14's engines are `^22.22.2 || ^24.15.0 || >=26.0.0`, which EXCLUDES part of this repository's declared range (22.19-22.22.1 and 24.0-24.14); adopting it would silently narrow the Node versions dsh supports. v13.0.1's `^20.17.0 || >=22.9.0` covers the whole range. CommonJS, which is fine for a dependency — the ESM-only rule governs this repository's own modules, and 19 of 36 sampled dependencies are already CJS.",
             "landsIn": "P supersession"
-          },
-          {
-            "name": "write-file-atomic",
-            "npm": "write-file-atomic",
-            "version": "7.0.1",
-            "form": "runtime",
-            "reason": "`writeLockAtomically` hand-rolls writeFileSync + renameSync with no fsync, and it duplicates this repository's own `@deepseek-ai/dsh-atomic-write`, whose source already carries `TODO(settings-atomic-durability): Use a replacement that fsyncs the file`. One adoption closes the duplication and the recorded TODO together, which is the case AGENTS.md's dependencies-over-hand-rolling rule is written for: it genuinely deletes owned code rather than adding a layer. Step-3 re-verification: v7.0.1 pinned for the same reason as ssri — v8 carries the same narrowed engines and would drop supported Node versions. CommonJS, which is acceptable for a dependency.",
-            "landsIn": "P supersession, alongside dsh-atomic-write's own TODO"
           }
         ],
         "rejectedAbsent": [
@@ -558,6 +550,18 @@
             "how": "read the rule, then classify the root manifest's dependencies by `type`",
             "result": "REFUTED",
             "evidence": "The rule governs modules the launcher REACHES in this repository, not third-party packages. 19 of 36 sampled root dependencies are CJS today, so ssri and write-file-atomic being CJS is not a constraint."
+          },
+          {
+            "claim": "`dsh-atomic-write`'s shape fits the lock write path",
+            "how": "read its signature and every caller of `writeLockAtomically`",
+            "result": "CONFIRMED, with a consequence",
+            "evidence": "`writeFileAtomic` is ASYNC and takes a required options object, so `writeLockAtomically` becomes async too and every caller awaits it — three cases in commit.spec.ts, the apps/cli fixture, and `commitProfileLock`, which this epic had already made async for the lockfile read. No caller sits on a synchronous boundary that cannot await."
+          },
+          {
+            "claim": "the fsync ordering can be observed from a test in this repository",
+            "how": "a `vi.mock('node:fs/promises')` wrapper recording sync and rename order, run against the real writer",
+            "result": "REFUTED",
+            "evidence": "The mock did not intercept: the recorder stayed EMPTY, so neither `open` nor `rename` reached it — the implementation's named ESM bindings are resolved before the mock applies. The case was REMOVED rather than weakened, because a durability assertion that observes nothing is precisely the defect BLOCKED-135 was about. The implementation change stands on its own; the observation of it does not exist yet and is not claimed."
           }
         ],
         "gapCheck": [
@@ -575,7 +579,14 @@
         "expectedDeletedPct": "10",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Recorded AFTER the epic's C/P/U stages were built, not before. The fourth make-vs-use question became standard practice at P2-04, and P1-03 started earlier; gate (e) is what surfaced the omission. Step-3 re-verification ran on 2026-09-07 and pinned versions accordingly; the two probes below record what it found, including the engine-range conflict that rules out the latest major of two of the three."
+        "note": "Recorded AFTER the epic's C/P/U stages were built, not before. The fourth make-vs-use question became standard practice at P2-04, and P1-03 started earlier; gate (e) is what surfaced the omission. Step-3 re-verification ran on 2026-09-07 and pinned versions accordingly; the two probes below record what it found, including the engine-range conflict that rules out the latest major of two of the three.",
+        "deviations": [
+          {
+            "name": "write-file-atomic",
+            "npm": "write-file-atomic",
+            "reason": "superseded-by-facts (delegate ruling, 2026-09-07): this repository ALREADY owns an atomic writer, `@deepseek-ai/dsh-atomic-write`. Adopting a third-party one would have made two atomic writers in one repository, which is the duplication the dependencies-over-hand-rolling rule exists to prevent rather than to create. The real gap was never a missing package: it was DURABILITY. `writeLockAtomically` hand-rolled write-then-rename beside the owned writer, and the owned writer's own source said `Crash durability (fsync) is out of scope` with a TODO naming the fix. Both are now closed by one change: the lock writer delegates to `dsh-atomic-write`, and that writer fsyncs the temp file before the rename and the parent directory after."
+          }
+        ]
       }
     },
     "P0-01": {
@@ -1304,7 +1315,53 @@
         "expectedDeletedPct": "0",
         "recordedBeforeFirstLine": false,
         "realized": null,
-        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it."
+        "note": "Backfilled 2026-09-07 under gate (e). A standard is dispositioned as a deviation rather than `standardsOwned` unless a LIVE FROZEN CASE of this epic names it — verify-make-vs-use's fourth check enforces that, and claiming ownership without a case would fail it.",
+        "designPreFlight": {
+          "recordedAtUtc": "2026-09-07T03:40:00.000Z",
+          "scope": "The durable inbox table, its same-transaction write, and the production call site for must[2]'s consumer dedup.",
+          "findings": [
+            {
+              "claim": "must[2]'s consumer dedup has a production call site",
+              "how": "grep every caller of `classifyIntake` across packages and apps, excluding lib/",
+              "result": "REFUTED",
+              "evidence": "Four callers, ALL in packages/run/message-bus/tests/fault-matrix.spec.ts. Zero in production. Its `seen` set is caller-supplied pure data and nothing durable holds it — so the decision is proven and the product path does not exist. This is the same shape P1-03's `gateProductionBoot` had before its Usage stage: 'the classifier decides correctly' and 'a real intake was deduplicated' are different claims and only the first is covered."
+            },
+            {
+              "claim": "`BEGIN IMMEDIATE` exists on a path this epic could reach",
+              "how": "grep the repository",
+              "result": "CONFIRMED, but not here",
+              "evidence": "One occurrence, `packages/session-query/session-query-sqlite/src/index.ts:450`, in the search-index write path. Nothing on the message-bus or session-persistence path uses it. The reworded must[0] (C13) names this mechanism, so the epic must bring it to its own path rather than reuse that one."
+            },
+            {
+              "claim": "session-persistence already offers a transaction the outbox row could join",
+              "how": "read coordinator.ts's durable write",
+              "result": "PARTIAL",
+              "evidence": "coordinator.ts:796 describes 'the durable write is the transaction' for materialization, but it is the JSONL append path, which BLOCKED-089 measured as batch-atomic against a write error and NOT against a crash. The reworded clause excludes the KV seam and names SQLite, so joining that path would not satisfy it."
+            }
+          ],
+          "openQuestions": [
+            {
+              "question": "Which durable store holds the inbox table?",
+              "options": [
+                "a new SQLite database owned by message-bus",
+                "the existing session-query-sqlite database, which already has BEGIN IMMEDIATE"
+              ],
+              "cost": "The second reuses a proven transaction path and an existing file, but puts run-time message state into a store whose stated job is session SEARCH, and whose schema version is owned by another package. The first keeps ownership clean and pays for a second database file plus its own migration story.",
+              "decidedBy": "delegate — this is a durable-format and ownership decision, not an implementation detail."
+            },
+            {
+              "question": "Does the turn-commitment signal for lock half (a) come from a new session event, a claim/commit pair, or explicit release on restoration?",
+              "options": [
+                "new session event",
+                "claim/commit pair",
+                "explicit release"
+              ],
+              "cost": "BLOCKED-088 records that the previous rule treated `claimed` as terminal and forbade goal-round-driver's deliberate restoration of a claimed message whose reservation went stale. Any option must keep that restoration legal.",
+              "decidedBy": "delegate — the queue deliberately left this unassigned rather than giving it to the party that misread the clause."
+            }
+          ],
+          "notClaimed": "Nothing here proposes to satisfy acceptance[0]'s exactly-once business effect through the transport. The reworded clause puts that on the consumer's (messageId, epoch) idempotence, so no transport-level work unlocks it."
+        }
       }
     },
     "P4-07": {

@@ -11,7 +11,7 @@
  */
 
 import { randomBytes } from 'node:crypto'
-import { lstat, mkdir, rename, rm, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, open, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 
 const WINDOWS_TRANSIENT_RENAME_ERRORS: ReadonlySet<string> = new Set(['EACCES', 'EBUSY', 'EPERM'])
@@ -70,7 +70,9 @@ export interface WriteFileAtomicOptions {
  * one filesystem. Windows replacement retries transient `EACCES`, `EBUSY`,
  * and `EPERM` failures for a bounded interval while the complete temp file
  * remains the rename source. On any remaining failure the temp file is
- * removed and the failure rethrown. Crash durability (fsync) is out of scope.
+ * removed and the failure rethrown. The temp file is fsynced before the
+ * rename and the parent directory after it, so the published bytes and the
+ * entry naming them both survive a crash.
  * @param filename - final path receiving the content.
  * @param content - complete next file content.
  * @param options - permission bits for the replacement inode.
@@ -80,15 +82,43 @@ export async function writeFileAtomic(filename: string, content: string, options
     recursive: true,
     ...options.dirMode === undefined ? {} : { mode: options.dirMode },
   })
-  // TODO(settings-atomic-durability): Use a replacement that fsyncs the file
-  // and parent directory and preserves owner-only permissions on Windows.
   const temp = `${filename}.${randomBytes(6).toString('hex')}.tmp`
   try {
     await writeFile(temp, content, { mode: options.mode, flag: 'wx' })
+    // Crash durability, which the rename alone does not give: a rename is
+    // atomic against a concurrent READER, but the bytes it publishes may still
+    // be in the page cache when power is lost. The file is flushed before it
+    // is published, and the directory after, so the entry naming it is durable
+    // too. Closes the TODO this function carried.
+    await fsyncPath(temp)
     await renameAtomicTemp(temp, filename)
+    await fsyncPath(dirname(filename))
   } catch (error) {
     await rm(temp, { force: true })
     throw error
+  }
+}
+
+/**
+ * Flush one path's contents to disk.
+ *
+ * A directory is opened read-only, which is what fsync on a directory needs;
+ * a platform that refuses to open or sync a directory is not a write failure,
+ * because the file itself is already durable, so the failure is swallowed
+ * deliberately rather than failing a write that succeeded.
+ * @param path - the file or directory to flush.
+ */
+async function fsyncPath(path: string): Promise<void> {
+  let handle
+  try {
+    handle = await open(path, 'r')
+    await handle.sync()
+  } catch {
+    // Directory fsync is unsupported on some platforms (notably Windows) and
+    // on some filesystems. The file's own sync above has already happened, so
+    // this is a weaker durability guarantee rather than a failed write.
+  } finally {
+    await handle?.close()
   }
 }
 

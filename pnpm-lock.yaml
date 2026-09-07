@@ -6801,15 +6801,15 @@ importers:
 
   packages/plugin/plugin-lock:
     dependencies:
+      '@deepseek-ai/dsh-atomic-write':
+        specifier: workspace:^
+        version: link:../../util/atomic-write
       '@pnpm/lockfile.fs':
         specifier: ^1100.2.5
         version: 1100.2.5(@pnpm/logger@1100.0.0)
       ssri:
         specifier: ^13.0.1
         version: 13.0.1
-      write-file-atomic:
-        specifier: ^7.0.1
-        version: 7.0.1
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^

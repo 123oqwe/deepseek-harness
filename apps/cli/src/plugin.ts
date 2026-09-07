@@ -198,7 +198,7 @@ async function commitProfileLock(profileDir: string): Promise<void> {
     return
   }
   if (serializeLock(current) === serializeLock(decision.lock)) return
-  writeLockAtomically(join(profileDir, LOCK_FILENAME), decision.lock)
+  await writeLockAtomically(join(profileDir, LOCK_FILENAME), decision.lock)
   const coverage = summarizeLockCoverage(decision.lock)
   if (coverage.unavailable > 0) {
     // Saying "locked" without saying how much of it is real would overstate
