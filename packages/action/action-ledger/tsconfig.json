@@ -13,6 +13,9 @@
     },
     {
       "path": "../action-manifest"
+    },
+    {
+      "path": "../../identity/principal"
     }
   ]
 }

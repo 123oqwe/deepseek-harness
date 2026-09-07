@@ -8088,6 +8088,77 @@
       },
       "note": "P4-12 Contract stage: types plus the pure reservation decision, no store and no wiring. The five case groups name the two standards this epic OWNS -- `Idempotency-Key` from draft-ietf-httpapi-idempotency-key-header-07, and Stripe's same-key-different-parameters rule -- because the pre-flight record claims ownership by EVIDENCE rather than by assignment, and P4-06 (BLOCKED-140) is the record of what assignment alone buys: it owned the CloudEvents shape with no case naming an attribute, and the standard it owned held the answer to the question its clause got wrong. The declared test path is `tests/idempotency.e2e.ts`; the file is `.e2e.spec.ts` because the greening observation collects `*.spec.ts` only, and an `.e2e.ts` file would be frozen against a command that never reports it.",
       "supplements": null
+    },
+    {
+      "epic": "P4-12",
+      "stage": "P",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/store.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent reports a SENT key as a duplicate after a restart, which is the crash this epic exists for",
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent still reserves a PREPARED key after a restart, because nothing was sent",
+        "P4-12 must[2]: the reservation is durable BEFORE the request is sent keeps the receipt digest across a restart, so a confirmed effect stays evidenced",
+        "P4-12 must[2]: two workers cannot both hold one reservation gives the reservation to ONE of two concurrent processes, and the other a duplicate",
+        "P4-12 must[3]: a fenced-out generation cannot write refuses a transition from an epoch the current holder has superseded",
+        "P4-12 must[3]: a fenced-out generation cannot write lets the CURRENT holder write, so fencing refuses only what is behind",
+        "P4-12 must[3]: a fenced-out generation cannot write refuses a transition for a key that was never reserved, rather than creating one",
+        "P4-12 must[3]: a fenced-out generation cannot write keeps the database off the handle, so nothing outside the store can run a statement",
+        "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) keeps one key reserved by two principals as two rows, neither visible to the other",
+        "P4-12 must[2]: the durable store keeps two principals apart (BLOCKED-142) refuses a transition presented under the WRONG principal, so a key cannot be moved from outside its scope"
+      ],
+      "files": [
+        "packages/action/action-ledger/src/store.ts",
+        "packages/action/action-ledger/tests/store.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T11:40:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 10 passed (10) in store.spec.ts, 25 passed (25) across the package.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) moved `decideReservation` OUTSIDE the `BEGIN IMMEDIATE` in packages/action/action-ledger/src/store.ts -- reading the entry and deciding first, then opening the transaction only to write. That is the arrangement a reader gets by treating the transaction as protecting the WRITE rather than the read-decide-write step. Re-ran the frozen command three times.",
+        "failureSummary": "1 of 8 failed on all three runs: `gives the reservation to ONE of two concurrent processes, and the other a duplicate` -- both children decided `reserved`, both marked sent, and the assertion that exactly one reserved failed. Three runs because the FIRST version of this case was not deterministic: without a start barrier the two children serialised by luck and the same mutation passed 8 of 8. A concurrency case that depends on timing tests nothing it claims, so the children now spin on a file barrier and start together. Mutation reverted; 21 passed (21) before continuing."
+      },
+      "note": "P4-12 Provider: the durable store, its own action-ledger.sqlite following dsh-message-bus's precedent. The reservation write is synchronous and precedes the send, because a batched write reopens the window the ledger closes. The read and the write are ONE transaction: deciding outside it lets two workers both read 'no entry', both decide `reserved`, and both send -- the duplicate the ledger exists to prevent, produced by the ledger itself. The registry also declares `packages/session/session-persistence/src/write-behind.ts` for this stage; it is NOT touched, and the reason is recorded as BLOCKED-141 rather than decided here.",
+      "supplements": null
+    },
+    {
+      "epic": "P4-12",
+      "stage": "C",
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally gives two principals presenting the SAME key two independent reservations",
+        "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
+      ],
+      "files": [
+        "packages/action/action-ledger/src/types.ts",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/action/action-ledger/tests/idempotency.e2e.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-07T12:10:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: 15 passed (15) in idempotency.e2e.spec.ts, 25 passed (25) across the package.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed) dropped `scope` from the reservation identity: `decideReservation` kept its entry lookup by key alone (the caller passes the entry, so the mutation is in the STORE's `readEntry`, which selected `WHERE key = ?` instead of `WHERE scope = ? AND key = ?`), and the table's PRIMARY KEY went back to `key`. Re-ran both frozen commands.",
+        "failureSummary": "The two store cases fail — `keeps one key reserved by two principals as two rows, neither visible to the other` (the second principal is told `duplicate`, which is the leak) and `refuses a transition presented under the WRONG principal`. The Contract cases still pass, because `decideReservation` is given the entry and a caller that looked it up without scope hands it the wrong one: the defect is in what the store retrieves, and the Contract-stage pair proves the TYPE carries the scope so the store has something to key on. Mutation reverted; 25 passed (25)."
+      },
+      "note": "Delegate ruling, 2026-09-07: draft-ietf-httpapi-idempotency-key-header-07 defines the key as unique PER CLIENT, and its security considerations give the reason — a server that does not scope by client lets one client learn another's key state. Stripe scopes per account. This is BLOCKED-140's shape caught in the Contract stage instead of after a green epic: the standard this epic owns contained the answer, and reading it as a specification rather than a label is what found it. The 13 primary cases are unchanged (their fixtures gained a scope), so this is a supplement rather than a supersede.",
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "C"
+      }
     }
   ]
 }

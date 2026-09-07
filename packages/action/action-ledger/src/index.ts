@@ -12,6 +12,7 @@
 export type {
   LedgerEntry,
   LedgerEpoch,
+  LedgerScope,
   LedgerState,
   ProviderIdempotency,
   ReceiptDigest,
@@ -37,7 +38,7 @@ import type { LedgerEntry, ProviderIdempotency, ReserveDecision, ReserveRequest 
  */
 export function decideReservation(request: ReserveRequest, existing: LedgerEntry | undefined): ReserveDecision {
   if (existing === undefined) {
-    return { action: 'reserved', entry: { key: request.key, argumentsHash: request.argumentsHash, state: 'prepared', epoch: request.epoch } }
+    return { action: 'reserved', entry: { scope: request.scope, key: request.key, argumentsHash: request.argumentsHash, state: 'prepared', epoch: request.epoch } }
   }
   if (existing.argumentsHash !== request.argumentsHash) {
     return { action: 'refused', reason: 'arguments-differ', firstArgumentsHash: existing.argumentsHash }

@@ -14,6 +14,7 @@
 
 import type { Branded, BrandedNumber } from '@deepseek-ai/dsh-brand'
 import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import type { PrincipalId } from '@deepseek-ai/dsh-principal'
 
 /**
  * The fencing generation of the worker holding a reservation.
@@ -46,8 +47,26 @@ export type LedgerState =
   /** The effect happened and was undone by its compensation, so the key is settled, not free. */
   | 'compensated'
 
+/**
+ * Who a key belongs to.
+ *
+ * An idempotency key is unique PER CLIENT, not globally:
+ * `draft-ietf-httpapi-idempotency-key-header-07` says so and gives the reason
+ * in its security considerations — a server that does not scope keys by client
+ * lets one client discover another's key state. Stripe scopes per account for
+ * the same reason. Two agents that pick the same key (easy, when a key is
+ * derived from an arguments hash or a counter) must get two reservations, and
+ * neither may learn the other exists.
+ *
+ * The scope is the manifest's `actor`, so the ledger's answer to "whose key is
+ * this" is the same as the rest of the harness's.
+ */
+export type LedgerScope = PrincipalId
+
 /** One ledger row: an external effect and what is known about it. */
 export interface LedgerEntry {
+  /** The principal this key belongs to; keys are unique within a scope, never across. */
+  readonly scope: LedgerScope
   readonly key: IdempotencyKey
   /** The arguments this key was first reserved with; a later mismatch is refused (acceptance[2]). */
   readonly argumentsHash: ArgumentsHash
@@ -60,6 +79,7 @@ export interface LedgerEntry {
 
 /** A caller asking to take responsibility for one external effect. */
 export interface ReserveRequest {
+  readonly scope: LedgerScope
   readonly key: IdempotencyKey
   readonly argumentsHash: ArgumentsHash
   readonly epoch: LedgerEpoch

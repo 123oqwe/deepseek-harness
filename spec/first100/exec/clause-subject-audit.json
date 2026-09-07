@@ -1939,7 +1939,7 @@
           {
             "standard": "IETF draft-ietf-httpapi-idempotency-key-header-07 Idempotency-Key passthrough",
             "evidenceTitleSubstring": "Idempotency-Key",
-            "reason": "Owned by EVIDENCE from the first frozen case, not by assignment. P4-06 is the record of what assignment alone buys: it was the assigned owner of the CloudEvents shape with no frozen case naming an attribute, and the standard it owned contained the answer to the question its clause got wrong (BLOCKED-140). The C-stage cases here name the header and the draft's passthrough rule directly, so the ownership is checkable before any of this is built."
+            "reason": "Owned by EVIDENCE from the first frozen case, not by assignment. The draft's own words are the load-bearing part and are quoted here because reading them as a specification is what found the scope defect: the key is unique PER CLIENT, and the security considerations say a server that does not scope keys by client identity lets one client discover another client's key state. The Contract stage therefore keys on `(scope, key)` with the scope being the manifest's `actor` principal, and a frozen case pins that two principals presenting one key get two reservations. P4-06 is the record of the alternative: assigned ownership of the CloudEvents shape, no case naming an attribute, and the answer to its clause error sitting unread in the standard (BLOCKED-140)."
           },
           {
             "standard": "Stripe same-key-different-params reject",
@@ -1959,20 +1959,30 @@
         ],
         "gapCheck": [
           {
-            "community": "Express idempotency middlewares",
-            "gap": "cache HTTP responses; no external-effect state machine, no fencing epoch, no compensation",
+            "community": "allinluna (51 stars), the card's named community project",
+            "gap": "no five-state ledger — no prepared/sent/confirmed/ambiguous/compensated distinction, so a crash cannot be told from a completion",
             "clause": "must[1]"
           },
           {
-            "community": "Stripe-style provider SDKs",
-            "gap": "native key passthrough only for that one provider; no local fencing for providers without native support",
+            "community": "allinluna (51 stars)",
+            "gap": "no native idempotency-key passthrough: the provider is never given the key, so its own deduplication is unused",
             "clause": "must[2]"
+          },
+          {
+            "community": "allinluna (51 stars)",
+            "gap": "no target-state query for an ambiguous outcome, which is what turns \"unknown\" into \"reconcilable\" rather than \"retry and hope\"",
+            "clause": "must[3] / acceptance[1]"
+          },
+          {
+            "community": "allinluna (51 stars)",
+            "gap": "no 10,000-iteration crash campaign, so duplicate-effect-free is asserted rather than measured",
+            "clause": "acceptance[0]"
           }
         ],
         "expectedDeletedPct": "3",
         "recordedBeforeFirstLine": true,
         "realized": null,
-        "note": "Recorded BEFORE the first line of P4-12, which is the point of the field — P4-06's record was written after the fact and its ownership claim then had to be corrected twice. Two lessons from that epic are applied here in advance: `standardsOwned` carries `evidenceTitleSubstring` from the start rather than `assignedBy`, so the first frozen case must name the standard; and the standards are read as SPECIFICATIONS to build against, not as labels, because the CloudEvents collision (BLOCKED-140) was in the standard's own text the whole time."
+        "note": "Recorded BEFORE the first line of P4-12, which is the point of the field — P4-06's record was written after the fact and its ownership claim then had to be corrected twice. Two lessons from that epic are applied here in advance: `standardsOwned` carries `evidenceTitleSubstring` from the start rather than `assignedBy`, so the first frozen case must name the standard; and the standards are read as SPECIFICATIONS to build against, not as labels, because the CloudEvents collision (BLOCKED-140) was in the standard's own text the whole time. CORRECTED 2026-09-07 on the delegate's review: the first gapCheck listed \"Express idempotency middlewares\" and \"Stripe-style provider SDKs\", which are the REJECT row's content rather than the card's own \"gap:\" entries. §1.6 asks for the card's gaps mapped one by one to clauses, and the card names allinluna with four; they are now recorded against must[1], must[2], must[3]/acceptance[1] and acceptance[0]."
       }
     }
   },
