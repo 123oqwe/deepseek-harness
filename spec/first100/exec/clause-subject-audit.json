@@ -1643,25 +1643,25 @@
           {
             "name": "w3c/prov",
             "npm": "w3c/prov",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. A specification, not a package; measured absent."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names P6-09 the owner of the W3C PROV-DM family and marks P6-02 `notAdoptedHere`. This epic's records carry no PROV relation and none of its cases names one, so the omission is a scope fact rather than a shortfall: the vocabulary arrives with its owner. Not a read-only disposition — the earlier `accepted-unadopted` rested on this row being ACCEPTED, which §12.19-1 withdrew."
           },
           {
             "name": "w3c/dpv",
             "npm": "w3c/dpv",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. Same."
+            "reason": "family-owned-elsewhere: `standards-ownership.json` names P6-10 the owner of the W3C DPV family and marks P6-02 `notAdoptedHere`. No purpose or personal-data vocabulary exists in this epic's record shape, and adding one here would put the family in two places. Not a read-only disposition — the earlier `accepted-unadopted` rested on an ACCEPTED status this epic no longer has."
           },
           {
             "standard": "W3C PROV-DM relations wasDerivedFrom/wasGeneratedBy/wasAttributedTo",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. None of 47 frozen cases names a PROV relation."
+            "reason": "family-owned-elsewhere: owner P6-09 per `standards-ownership.json`, which records `thisEpicOwns: false` and `notAdoptedHere: true` for P6-02. None of this epic's frozen cases names a PROV relation, which is consistent with the assignment rather than evidence against it."
           },
           {
             "standard": "W3C DPV for purpose & personal-data categories",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED, its hand-written implementation is running, and nothing propagates from it. Recorded read-only so the omission is visible; it does NOT license hand-writing this in new work. No purpose or personal-data vocabulary exists in the record shape."
+            "reason": "family-owned-elsewhere: owner P6-10 per `standards-ownership.json`, which marks P6-02 `notAdoptedHere`. The record shape carries no purpose or personal-data vocabulary at all."
           },
           {
             "name": "fast-check",
             "npm": "fast-check",
-            "reason": "accepted-unadopted (R6/§7.9): this epic is ACCEPTED and nothing propagates from it. Measured with the epic's REALITY SET — files[] plus its live frozen entries' files — rather than a repository-wide scan: the package IS present in the repository, but not in anything this epic wrote. The earlier record read the wide scan as adoption, which made 'the repository has it' pass as 'this epic took it on'. `fast-check` remains the right tool if this epic later wants property coverage; recording the deviation states that its current cases do not."
+            "reason": "real-gap: this epic's cases are example-based, and its subjects — a conflict rule, a retrieval filter, a cross-scope merge decision — are exactly the shape property testing is for. `fast-check` is present in the repository and absent from everything this epic wrote, measured over the REALITY SET (files[] plus its live frozen entries' files) rather than a repository-wide scan, which is how an earlier record read 'the repository has it' as 'this epic took it on'. Recorded as an owed gap and not as a settled deviation: §12.19-1 withdrew this epic and reopens it at U, so the property coverage is due with that rework rather than deferred past it. Closing condition: at least one property case over `recordConflict` or `decideCrossScopeMerge`, or a ruling that the example set is sufficient."
           }
         ],
         "rejectedAbsent": [],
@@ -1670,7 +1670,7 @@
             "standard": "Graphiti-style bitemporal fields created_at/valid_at/invalid_at/expired_at",
             "assignedBy": "standards-ownership.json (generated from the plan's shape-ownership marking)",
             "basis": "assignment",
-            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. This epic is ACCEPTED, so the claim is PENDING-BACKFILL: its owner owes one schema/vocabulary case, due before P2-05 starts."
+            "reason": "Owned by ASSIGNMENT, not yet by evidence. The earlier record made this a deviation because no live frozen case names the vocabulary — but that read the frozen-case check as authority over the plan it was built from, which was an executor settling a rule. The plan assigns the shape; the check grades the evidence. The claim's status changed with §12.19-1: this epic is no longer ACCEPTED but withdrawn and reopening at U, so the owed schema/vocabulary case is due WITH that rework rather than backfilled after it — the U redo is the first moment the vocabulary reaches a production path at all."
           }
         ],
         "standardsImported": [],
