@@ -610,6 +610,29 @@ export function reattestationOf(priorCell, ciRunUrl, reason, atUtc) {
   return { fromCiRunUrl: priorCell.ciRunUrl, fromCandidateSha: priorCell.candidateSha, reason, atUtc }
 }
 
+
+/**
+ * Refuse a candidate SHA no commit in this repository has.
+ *
+ * The format check alone accepted `2aa43619f3d0b0b8...` — forty valid hex
+ * characters naming nothing — and greened a cell with it. Predicate (ii)
+ * compares candidate SHAs for ancestry and would have reported the divergence
+ * eventually, as a confusing conflict rather than as the typo it was; the cell
+ * meanwhile pointed at no observable tree, which is the one thing a candidate
+ * SHA exists to do.
+ * @param candidateSha - the SHA the caller supplied.
+ */
+function assertCommitExists(candidateSha) {
+  const found = spawnSync('git', ['cat-file', '-t', candidateSha], { cwd: REPO_ROOT, encoding: 'utf8' })
+  if (found.status !== 0 || found.stdout.trim() !== 'commit') {
+    console.error(
+      `--candidate-sha ${candidateSha} is well-formed but names no commit in this repository.\n`
+      + 'A cell recording a SHA nobody can check out points at no observable tree.',
+    )
+    process.exit(1)
+  }
+}
+
 function cmdGreen() {
   const epic = opt('epic')
   const stage = opt('stage')
@@ -628,6 +651,7 @@ function cmdGreen() {
     console.error(`--candidate-sha must be a 40-hex SHA (got ${candidateSha})`)
     process.exit(1)
   }
+  assertCommitExists(candidateSha)
 
   const freeze = loadJson(COMMAND_FREEZE_PATH)
   const live = freeze.entries.filter((e) => e.epic === epic && e.stage === stage && !e.supplements && !e.supersededBy)
@@ -756,6 +780,7 @@ function cmdGreenSupplement() {
     console.error(`--candidate-sha must be a 40-hex SHA (got ${candidateSha})`)
     process.exit(1)
   }
+  assertCommitExists(candidateSha)
 
   const freeze = loadJson(COMMAND_FREEZE_PATH)
   const frozen = freeze.entries.find(
