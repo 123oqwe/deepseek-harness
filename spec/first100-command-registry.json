@@ -239,8 +239,8 @@
           "status": "LANE_RUNNER"
         },
         "U": {
-          "command": "pnpm first100:issue --id P1-03 --lane composition",
-          "status": "LANE_RUNNER"
+          "command": "pnpm vitest run apps/cli/tests/plugin-lock.spec.ts",
+          "status": "DERIVED_FROM_FILES"
         },
         "F": {
           "command": "pnpm vitest run packages/plugin/plugin-lock/tests/lock.spec.ts",

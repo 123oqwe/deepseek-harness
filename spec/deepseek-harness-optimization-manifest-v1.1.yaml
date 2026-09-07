@@ -1297,9 +1297,9 @@ remainingPending:
   pendingLayerAdjudication: 0
   unapprovedThresholds: 0
 fileOwnership:
-  writtenFiles: 433
+  writtenFiles: 434
   statusCounts:
-    sole: 406
+    sole: 407
     sequential: 23
     serialized: 4
     conflict: 0
@@ -1857,7 +1857,7 @@ epics:
       kind: "B"
     - path: "apps/cli/src/profile-boot.ts"
       kind: "B"
-    - path: "packages/bundle/base/cordis.patch.yml"
+    - path: "packages/bundle/base/package.json"
       kind: "B"
     - path: ".dsh/plugins.lock.json"
       kind: "N"
@@ -1866,6 +1866,8 @@ epics:
     - path: "packages/plugin/plugin-lock/src/types.ts"
       kind: "N"
     - path: "packages/plugin/plugin-lock/tests/lock.spec.ts"
+      kind: "N"
+    - path: "apps/cli/tests/plugin-lock.spec.ts"
       kind: "N"
     stages:
     C:
@@ -1878,8 +1880,8 @@ epics:
       count: 2
     U:
       nOf: null
-      files: ["apps/cli/src/profile-boot.ts", "packages/bundle/base/cordis.patch.yml", "apps/cli/src/plugin.ts"]
-      count: 3
+      files: ["apps/cli/src/profile-boot.ts", "packages/bundle/base/package.json", "apps/cli/src/plugin.ts", "apps/cli/tests/plugin-lock.spec.ts"]
+      count: 4
     F:
       nOf: null
       files: ["packages/plugin/plugin-lock/tests/lock.spec.ts"]

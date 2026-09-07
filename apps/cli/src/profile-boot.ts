@@ -11,7 +11,7 @@
  * @module @deepseek-ai/dsh/profile-boot
  */
 
-import { writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { FiberState, type Context } from '@deepseek-ai/cordis'
@@ -34,6 +34,8 @@ import {
   type Profile,
 } from '@deepseek-ai/dsh-app-boot'
 import { DSH_RUNTIME_API_VERSION } from '@deepseek-ai/dsh-plugin-compat'
+import { computeManifestDigest, gateProductionBoot, UNAVAILABLE_PREFIX } from '@deepseek-ai/dsh-plugin-lock'
+import type { GateOutcome, InstalledPlugin, PluginLockFile, UnlockedProfilePolicy } from '@deepseek-ai/dsh-plugin-lock'
 import { resolveHostCompatContext } from '@deepseek-ai/dsh-plugin-compat/solver'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { DSH_LAUNCH_ENVIRONMENT_KEY, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
@@ -590,4 +592,107 @@ export async function runProfile(options: RunProfileOptions): Promise<{ ctx: Con
     appReady.commit()
   }
   return { ctx, shutdown }
+}
+
+/** The lock file a profile keeps beside its `package.json`. */
+const PROFILE_LOCK_FILENAME = 'plugins.lock.json'
+
+/** The bundle `package.json` key each shipped bundle declares its boot policy under. */
+const UNLOCKED_POLICY_KEY = 'dsh.pluginLock.unlockedProfilePolicy'
+
+/**
+ * The unlocked-profile policy in force for a composed profile (P1-03 must[2]).
+ *
+ * Each shipped bundle declares its own under `dsh.pluginLock.unlockedProfilePolicy`
+ * in its `package.json`, beside the bundle metadata `readPluginDeclaration`
+ * already reads. It lives there rather than in `cordis.patch.yml` because that
+ * file is a LIST of patch operations validated as an entry list — a top-level
+ * key in it is not merely unconventional, it fails validation.
+ *
+ * **Most restrictive wins.** A profile composing a `production-controlled`
+ * preset beside an ordinary bundle enforces the preset: any layer declaring
+ * `refuse` makes the whole boot refuse. The opposite rule would let adding one
+ * bundle silently relax a deployment's own hardening.
+ *
+ * **Required, with no default.** A profile whose layers declare nothing at all
+ * throws rather than picking one: the choice is a product-visible boot policy,
+ * and this repository's rule is that defaulting is an explicit resolve step
+ * and never a hidden fallback.
+ * @param layerDirs - the admitted bundle package directories.
+ * @returns the effective policy.
+ * @throws Error when no layer declares one, or a layer declares an unknown value.
+ */
+export function resolveUnlockedProfilePolicy(layerDirs: readonly string[]): UnlockedProfilePolicy {
+  const declared: UnlockedProfilePolicy[] = []
+  for (const packageDir of layerDirs) {
+    const manifestPath = join(packageDir, 'package.json')
+    if (!existsSync(manifestPath)) continue
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      dsh?: { pluginLock?: { unlockedProfilePolicy?: unknown } }
+    }
+    const value = manifest.dsh?.pluginLock?.unlockedProfilePolicy
+    if (value === undefined) continue
+    if (value !== 'refuse' && value !== 'warn-and-proceed') {
+      throw new Error(
+        `${NAME}: plugin lock: ${packageDir} declares ${UNLOCKED_POLICY_KEY} as ${JSON.stringify(value)}; `
+        + 'the only values are "refuse" and "warn-and-proceed"',
+      )
+    }
+    declared.push(value)
+  }
+  if (declared.length === 0) {
+    throw new Error(
+      `${NAME}: plugin lock: no composed bundle declares ${UNLOCKED_POLICY_KEY}. `
+      + 'It is required and has no default, because what a production boot does with an unlocked profile is a '
+      + 'product decision rather than one this code may make silently.',
+    )
+  }
+  return declared.includes('refuse') ? 'refuse' : 'warn-and-proceed'
+}
+
+/**
+ * Gate a production boot against the profile's lock (P1-03 must[2]).
+ *
+ * The Contract stage proved `gateProductionBoot` decides correctly; this is
+ * the call site that makes a real boot ask it. A drifted manifest digest is
+ * refused whatever the policy says — the policy governs only what happens when
+ * there is NO lock, never whether a lock that exists is honoured.
+ * @param profileDir - the profile directory holding the lock file.
+ * @param layerDirs - the admitted bundle package directories.
+ * @param policy - the effective unlocked-profile policy.
+ * @returns the gate's outcome.
+ */
+export function gateProfileAgainstLock(
+  profileDir: string,
+  layerDirs: readonly string[],
+  policy: UnlockedProfilePolicy,
+): GateOutcome {
+  const lockPath = join(profileDir, PROFILE_LOCK_FILENAME)
+  const lock = existsSync(lockPath)
+    ? JSON.parse(readFileSync(lockPath, 'utf8')) as PluginLockFile
+    : undefined
+  const installed: InstalledPlugin[] = []
+  for (const packageDir of layerDirs) {
+    const manifestPath = join(packageDir, 'package.json')
+    if (!existsSync(manifestPath)) continue
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      name: string
+      version?: string
+      dsh?: { provenance?: { integrity?: string } }
+    }
+    installed.push({
+      // Every field is recomputed from what is on disk right now, never read
+      // back from the lock: comparing a lock against itself would admit any
+      // profile. `integrity` comes from the installer-recorded provenance and
+      // falls back to the SAME unavailable marker `buildCandidateLock` writes
+      // when a package declares none, so a package with no provenance matches
+      // its own lock entry instead of failing every boot -- and a package that
+      // HAS provenance is compared against the real recorded value.
+      name: manifest.name,
+      version: manifest.version ?? '0.0.0',
+      integrity: manifest.dsh?.provenance?.integrity ?? `${UNAVAILABLE_PREFIX}installer-recorded-no-integrity`,
+      manifestDigest: computeManifestDigest(manifest),
+    } as InstalledPlugin)
+  }
+  return gateProductionBoot(lock, installed, policy)
 }

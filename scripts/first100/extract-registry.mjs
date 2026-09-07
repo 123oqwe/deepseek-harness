@@ -241,6 +241,46 @@ const FILES_REDUCED = {
  * the next reader needs to see that it was found and decided rather than
  * quietly patched.
  */
+/**
+ * Files REPLACED in an epic's list, because the declared path cannot hold what
+ * the clause needs.
+ *
+ * Distinct from a reduction (the file is unnecessary) and from an addition
+ * (the list was short): here the registry named a real file that is the wrong
+ * KIND of file, so the work has to land somewhere else. Recorded with the
+ * mechanical reason, because "we put it elsewhere" and "the declared place
+ * could not hold it" are different claims and only the second justifies
+ * editing a pinned list.
+ */
+/**
+ * Apply an epic's recorded file replacements to its epic-level list.
+ * @param id - the epic id.
+ * @param files - the list parsed from the pinned matrix, plus any additions.
+ * @returns the list with each replacement applied in place.
+ */
+function applyFileReplacements(id, files) {
+  const replacements = FILES_REPLACED[id]?.replacements ?? []
+  if (replacements.length === 0) return files
+  return files.map((file) => {
+    const replacement = replacements.find(entry => entry.from === file.path)
+    return replacement === undefined ? file : { path: replacement.to, kind: replacement.kind }
+  })
+}
+
+const FILES_REPLACED = {
+  'P1-03': {
+    replacements: [{
+      from: 'packages/bundle/base/cordis.patch.yml',
+      to: 'packages/bundle/base/package.json',
+      kind: 'B',
+      stage: 'U',
+      reason: "must[2]'s call site reads `unlockedProfilePolicy` per bundle, and `cordis.patch.yml` cannot declare it: that file is a YAML LIST of patch operations (its top level is `- insert:`), validated as an entry list, and vendored modification 8 makes a non-array parse invalid. A top-level scalar key there fails Include validation outright. `ProfileLayer` exposes only `{packageName, packageDir, patchPath, patches}`, so the layer carries no other channel either. The key lands at `dsh.pluginLock.unlockedProfilePolicy` in the bundle's package.json -- the same per-bundle, boot-time metadata `readPluginDeclaration(layer.packageDir)` already reads for pre-mount admission, and boot precedes the Cordis context so no plugin Config instance exists to read instead.",
+      consequence: 'The key becomes part of a shipped bundle\'s published package.json, so later changes to it are a release-surface change rather than internal configuration.',
+    }],
+    authorization: 'delegate ruling, 2026-09-06, §10.3-1 (g) as revised (BLOCKED-133 follow-up).',
+  },
+}
+
 const TEST_FILES_ADDED = {
   'P1-03': {
     added: [{ path: 'apps/cli/tests/plugin-lock.spec.ts', kind: 'N', stage: 'U' }],
@@ -690,7 +730,7 @@ for (const id of ids) {
     layerSource: isNewGap ? 'base-align-v2/new-gap-matrix.md (delegate-confirmed)' : 'r0-decision-package.md §2 full mapping (Agent A)',
     layerStatus: isNewGap ? 'DELEGATE_CONFIRMED' : ambiguous.has(id) ? 'PENDING_MAINTAINER_ADJUDICATION' : 'AGENT_A_PROPOSED',
     canonicalOwner: specOwnerEpics.has(id) ? id : 'UNASSIGNED_UNTIL_APPROVAL',
-    files: [...parseFiles(fields.files || ''), ...(TEST_FILES_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind }))],
+    files: applyFileReplacements(id, [...parseFiles(fields.files || ''), ...(TEST_FILES_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind }))]),
     must,
     acceptance,
     nonGoals,
@@ -725,6 +765,13 @@ for (const id of ids) {
         }
       : {}),
     ...(clauseProvenanceFor(id).length > 0 ? { clauseProvenance: clauseProvenanceFor(id) } : {}),
+  }
+  for (const replacement of FILES_REPLACED[id]?.replacements ?? []) {
+    const stage = epic.stages[replacement.stage]
+    if (stage?.files === undefined || !stage.files.includes(replacement.from)) {
+      throw new Error(`${id}: file replacement expects ${replacement.from} in stage ${replacement.stage}, which does not declare it`)
+    }
+    stage.files = stage.files.map(path => path === replacement.from ? replacement.to : path)
   }
   for (const addition of TEST_FILES_ADDED[id]?.added ?? []) {
     const stage = epic.stages[addition.stage]
@@ -899,6 +946,11 @@ const registry = {
             epicIds: Object.keys(FILES_REDUCED).sort(),
             order: 'spec/first100/exec/plan-rectification-2026-09-06.md §C',
             entries: FILES_REDUCED,
+          },
+          filesReplaced: {
+            epicIds: Object.keys(FILES_REPLACED).sort(),
+            note: 'Files whose DECLARED path cannot hold what the clause needs, replaced with the path that can. Each entry states the mechanical reason, because only "the declared place could not hold it" justifies editing a pinned list.',
+            entries: FILES_REPLACED,
           },
           testFilesAdded: {
             epicIds: Object.keys(TEST_FILES_ADDED).sort(),
