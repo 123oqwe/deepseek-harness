@@ -1,0 +1,1 @@
+{"schema":{"name":"first100-usage-subject-exemptions","version":"1.0"},"note":"Gate (u): a U-stage freeze entry that touches none of its registry stage-U [B] files needs an entry here naming the BLOCKED record and the ruling. An empty object is the correct state until a ruling exists — silence is not an exemption.","exemptions":{}}
