@@ -990,3 +990,11 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **(iii) acc[0] 结构成立**:全仓两个派发点共享 `external-effect.ts`,三表面无各自派发——结构门冻结即可,不是延期。
 
 **12.48-B 修订(2026-09-08 08:05 EDT,按挂载点实测)**:策略轴不是"表面",是**权限 preset**——base 的 `permission` 条目(`cordis.patch.yml:235`)已有 `read-only` / `workspace-write` / `danger-full-access` 三档,各带 `approval: ask|never`,由 `DSH_PERMISSION_MODE` 选,默认 `workspace-write`;`acp-app` / `headless` / `sdk-*` 不另挂 permission-presets(web 只多 UI 件)。而 `user-approval` 的 `ask` 在无 answerer 时**fail-closed 为 `unavailable`**(headless 立场,设计如此)。于是:门落地时若出货工具仍全部 unknown,headless 每次调用都被拒——不是"没人想要的红",是把整个 headless 打坏。**改裁**:(a) `approvalThreshold` 写在**每个 preset** 上:`read-only` / `workspace-write` → `destructive`,`danger-full-access` → `safety-critical`;bundle 无表面覆盖;两个测试 overlay 继承。(b) **依赖反过来**:出货工具**先声明** domain tags(P2-04 registry U 文件 `core/tools/src/types.ts` = 工具定义带 tags;各工具包填真值,沙箱内常规操作须落在 `destructive` 之下,沙箱逃逸本就走 `ask`),**再**接门;"声明作后续"作废。(c) 结构门:出货工具集合里 unknown = 0,既是 P2-04 U 冻结用例也是 GO 条件。(d) 顺序:tags → 门 → 观测;headless 语料预期不变(声明对的话),acp/web 只在声明类 ≥ 阈值时出现审批。§6:向用户报告——默认 preset 的阈值是产品默认,可改。
+
+### 12.49 P4-09 加载器的登记面;P5-11 签五条、must[1] 定向延期;P2-04 顺序(2026-09-08 08:40 EDT,`8be7368d74`)
+
+1. **登记不上 seam,保持加载器的结构化命名 + 大声拒绝**:`RegisteredDefinition` 下移并让 seam 声明 `registerDefinition` 会强制每个引擎实现登记——seam 语义扩张,而当前消费者只有一个("Design Service Definitions for all current Consumers");结构方式命名唯一需要的操作、缺则拒,正确。Dev Note 记未定项即可。acc[0] 由构造证明(body = `process.exit(1)`,求值即带走进程)对;`RecordingEngine` 包真 registry 而非重写检查,对。
+2. **P5-11**:签 taskboard/mailbox 五条;must[1](blackboard facts)记**定向延期** `landsIn: P6-02.U`,门控于 BLOCKED-156(用户对 memory 线的产品裁决)——与 §12.27-3、§12.46-B 同形。
+3. **P5-10 可签**(七条子句单一消费者 `ChildControlRouter`,`controlFor` 按子构造缓存,无旁路)。
+4. **P2-04 顺序**:preset 三个 `approvalThreshold` 值先写进 base(门未接,零行为变更)→ 工具定义 `riskDomainTags` + 出货工具填真值 → 结构门 unknown = 0 → 接门 → 观测。
+5. `core.zh.md` 的 `Agent` 块失同步早于本程序,不伪造配对,归 BLOCKED-124 的 20 对——对。
