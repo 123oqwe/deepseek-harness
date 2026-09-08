@@ -210,6 +210,21 @@ function promptEpoch(requestId: string): number {
 
 /** Named provider registry with one-shot runs, durable discovery, and continuable-child operations. */
 export class SubagentRuntime extends TypertRemoteService {
+  /**
+   * The durable bus, declared as a dependency rather than read with
+   * `ctx.get` (§12.40).
+   *
+   * The reason is TEARDOWN ORDER, not availability. A settlement is committed
+   * to the bus before anyone tries to deliver it, and the settlements that most
+   * need that are produced while the process is going away — measured, with
+   * `ctx.get` the bus service was already disposed by then, so exactly those
+   * commits reached nothing. Cordis disposes a dependent before what it
+   * depends on, so declaring the dependency is what puts the manager's drain
+   * ahead of the bus's teardown. Hand-ordering the two would be a second
+   * statement of the same fact, free to drift from this one.
+   */
+  static inject = ['messageBus']
+
   private providers = new Map<string, SubagentProvider>()
   /**
    * Per-child control state for Epic P5-10's browser-facing surface: which

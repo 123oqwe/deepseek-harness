@@ -5,6 +5,7 @@ import SubagentRuntime, { type SubagentStartRequest } from '@deepseek-ai/dsh-sub
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import * as scripted from './scripted-provider.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /** A minimal parent; the scripted provider only reads its id. */
 function fakeParent(id = 'parent-1'): Agent {
@@ -23,6 +24,7 @@ function baseRequest(over: Partial<SubagentStartRequest> = {}): SubagentStartReq
 async function mount(config: Partial<scripted.Config> = {}): Promise<Context> {
   const ctx = new Context()
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await scripted.mountScriptedProvider(ctx, { name: 'mock', ...config })
   return ctx
@@ -92,6 +94,7 @@ describe('scripted subagent provider fixture', () => {
   it('unregisters with its owning fixture fiber', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const fiber = await scripted.mountScriptedProvider(ctx, { name: 'mock' })
     expect(ctx.subagents.list()).toEqual(['mock'])

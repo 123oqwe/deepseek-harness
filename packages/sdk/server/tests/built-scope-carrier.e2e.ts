@@ -22,6 +22,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const load = (path) => import(pathToFileURL(resolve(path)).href);
 const [
@@ -50,6 +51,7 @@ try {
   await mountAgentLoopTestDependencies(ctx);
   await ctx.plugin(SessionProjectionRegistry);
   await ctx.plugin(AgentLoop, { agents: [] });
+  await ctx.plugin(MessageBusPlugin);
   await ctx.plugin(SubagentRuntime);
   await ctx.plugin(JsonlSessionPersistence, { root: storageRoot });
   await new Promise((ready) => setTimeout(ready, 50));

@@ -36,6 +36,7 @@ import JsonlSessionPersistence from '@deepseek-ai/dsh-session-persistence-jsonl'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import type { WorkerRun } from '../src/host.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const persistenceRoots: string[] = []
 afterEach(() => { for (const root of persistenceRoots.splice(0)) rmSync(root, { recursive: true, force: true }) })
@@ -53,6 +54,7 @@ async function setup(replies: number, options: { persistence?: boolean } = {}) {
     await ctx.plugin(JsonlSessionPersistence, { root })
   }
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
   await ctx.plugin(InMemoryLeaseStorePlugin)

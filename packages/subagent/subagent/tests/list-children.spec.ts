@@ -29,6 +29,7 @@ import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import * as SubagentFork from '@deepseek-ai/dsh-subagent-fork-in-process'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { TestSessionQuery } from './test-session-query.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -63,6 +64,7 @@ async function setup(
     await ctx.plugin(SessionProjectionCache, { writeEveryEvents: 100, writeIntervalMs: 60_000 })
   }
   await ctx.plugin(TestSessionQuery)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   await ctx.plugin(SubagentFork, { providerName: 'fork' })
@@ -177,6 +179,7 @@ describe('SubagentRuntime.listChildren', () => {
     await ctx.plugin(SessionStore)
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(TestSessionQuery)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     expect(ctx.get('jobs')).toBeUndefined()
     expect(ctx.get('agents')).toBeUndefined()
@@ -211,6 +214,7 @@ describe('SubagentRuntime.listChildren', () => {
   it('fails loud when the session store is not mounted', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await expect(ctx.subagents.listChildren(SessionId('no-store-parent'))).rejects.toThrow(
       expect.objectContaining({ code: 'SUBAGENT_CONTROL_SESSION_STORE_UNAVAILABLE' }) as Error,
@@ -221,6 +225,7 @@ describe('SubagentRuntime.listChildren', () => {
     const ctx = new Context()
     await ctx.plugin(SessionStore)
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
 
     await expect(ctx.subagents.listChildren(SessionId('no-query-parent'))).rejects.toThrow(

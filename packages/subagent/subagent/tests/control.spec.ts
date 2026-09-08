@@ -14,6 +14,7 @@ import SubagentRuntime, {
   type SubagentPromptRequestId,
 } from '@deepseek-ai/dsh-subagent'
 import { queueSubagentPrompt, type HostPromptQueue } from '@deepseek-ai/dsh-subagent/internal'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const PARENT = SessionId('parent')
 const CHILD = SessionId('child')
@@ -27,6 +28,7 @@ const IMAGE_REF = { attachmentId: 'att', mediaType: 'image/png', bytes: 2, width
 /** The runtime plus a programmable live-Agent registry, omitted to compose none. */
 async function bench(live?: Record<string, { status: 'running' | 'idle' }>) {
   const ctx = new Context()
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   if (live !== undefined) {
     ctx.provide('agents', { get: (id: SessionId) => live[id] } as never)

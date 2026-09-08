@@ -5,6 +5,7 @@ import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '../src/index.ts'
 import { subagentTimingProjectionDefinition, type TimingState } from '../src/projection.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 function event(type: SessionEvent['type'], seq: number, time: number): SessionEvent {
   return { type, seq, time, data: {} } as SessionEvent
@@ -21,7 +22,8 @@ describe('subagent timing projection', () => {
     const ctx = new Context()
     await ctx.plugin(SessionStore)
     await ctx.plugin(SessionProjectionRegistry)
-    const serviceFiber = await ctx.plugin(SubagentRuntime)
+    const serviceFiber = await ctx.plugin(MessageBusPlugin)
+    await ctx.plugin(SubagentRuntime)
 
     const before = ctx.sessionProjections.snapshot(ctx.sessions.create()).values
     expect(before.subagentTiming).toEqual({ settledMs: 0 })

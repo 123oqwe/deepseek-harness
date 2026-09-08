@@ -356,6 +356,16 @@
     - id: command-compact
       name: '@deepseek-ai/dsh-command-compact'
 
+    # P4-06's durable bus. Under the same storage root as the lease store and
+    # the taskboard, and for the same reason: two hosts hand messages to each
+    # other only when a profile pointed them at one `bus.sqlite`. The store is
+    # mounted here; nothing schedules delivery yet, so a row it holds waits for
+    # a dispatcher rather than being lost.
+    - id: message-bus
+      name: '@deepseek-ai/dsh-message-bus'
+      config:
+        directory: !!js dshHomePath('bus')
+
     - id: subagent
       name: '@deepseek-ai/dsh-subagent'
 
@@ -426,16 +436,6 @@
       name: '@deepseek-ai/dsh-taskboard-sqlite'
       config:
         directory: !!js dshHomePath('taskboard')
-
-    # P4-06's durable bus. Under the same storage root as the lease store and
-    # the taskboard, and for the same reason: two hosts hand messages to each
-    # other only when a profile pointed them at one `bus.sqlite`. The store is
-    # mounted here; nothing schedules delivery yet, so a row it holds waits for
-    # a dispatcher rather than being lost.
-    - id: message-bus
-      name: '@deepseek-ai/dsh-message-bus'
-      config:
-        directory: !!js dshHomePath('bus')
 
     # The claim lease outlives an ordinary delegated child by a wide margin: a
     # claim that lapses while its child is still running would show a live task

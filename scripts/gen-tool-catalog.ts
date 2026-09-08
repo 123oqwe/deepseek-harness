@@ -32,6 +32,7 @@ import PlanModeController from '@deepseek-ai/dsh-plan-mode'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import * as WebSearchExa from '@deepseek-ai/dsh-web-search-exa'
 import * as WebFetchLocal from '@deepseek-ai/dsh-web-fetch-http'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
 import * as ToolSubagentControl from '@deepseek-ai/dsh-tool-subagent-control'
@@ -416,6 +417,7 @@ const TOOL_PACKAGES: ToolPackage[] = [
     requires: ['ctx.tools', 'ctx.workflowEngine', 'ctx.leaseStore', 'ctx.subagents', 'ctx.systemPrompt', 'a calling Agent (exec.agent parents every fresh round)'],
     writes: ['tool/call', 'tool/result', 'workflow and child session events during execution'],
     async mount(ctx) {
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       registerCatalogSubagentProvider(ctx, 'mock')
       // The engine injects `leaseStore`; without a provider it stays PENDING
@@ -469,6 +471,7 @@ const TOOL_PACKAGES: ToolPackage[] = [
     writes: ['tool/call', 'tool/result', 'child session events through the chosen provider'],
     shippedNames: ['subagent', 'subagent_fork'],
     async mount(ctx) {
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LlmRuntime)
       registerCatalogSubagentProvider(ctx, 'mock')
@@ -489,6 +492,7 @@ const TOOL_PACKAGES: ToolPackage[] = [
     requires: ['ctx.tools', 'ctx.subagents', 'ctx.agents and ctx.sessionProjections (list_agents only)'],
     writes: ['tool/call', 'tool/result', 'child session events through ctx.subagents'],
     async mount(ctx) {
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalJobRegistry)
       await ctx.plugin(AgentRegistry)
@@ -572,6 +576,7 @@ const TOOL_PACKAGES: ToolPackage[] = [
       // The tool injects `workflows`; boot the vm engine over a scripted
       // subagent provider to satisfy it. The schema does not depend on which
       // provider backs the engine.
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       registerCatalogSubagentProvider(ctx, 'mock')
       // The engine injects `leaseStore`; without a provider it stays PENDING

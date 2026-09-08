@@ -7,6 +7,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import { Context } from '@deepseek-ai/cordis'
 import { existsSync, mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -85,6 +86,7 @@ function request(text = 'p', signal = new AbortController().signal, agentOptions
 async function setup(fakeEnv: Record<string, string> = {}, config: Partial<sdk.Config> = {}) {
   const ctx = new Context()
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   // The Config type models the post-validation shape, so the default registry
   // name is stated here; the Loader-composition fixture omits providerName and
@@ -801,6 +803,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
   it('registers under the configured provider name and unregisters on fiber dispose (HMR safety)', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const fiber = await ctx.plugin(sdk, {
       providerName: 'sdk-hmr',
@@ -828,6 +831,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
   it('rejects non-positive timing bounds at load', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const base = { providerName: 'sdk', profile: 'sdk', patches: [], dshHome: process.cwd(), provider: 'p', model: 'm', env: {} }
     await expect(ctx.plugin(sdk, { ...base, shutdownTimeoutMs: 0 })).rejects.toThrow('shutdownTimeoutMs must be a positive finite number')
@@ -838,6 +842,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
 
   it('requires an explicit absolute Harness home for nested dsh runtimes', async () => {
     const ctx = new Context()
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await expect(ctx.plugin(sdk, {
       providerName: 'sdk',
@@ -857,6 +862,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
     { field: 'patches[0]', override: { patches: ['./missing-child-patch.yml'] } },
   ])('rejects an invalid $field at load', async ({ field, override }) => {
     const ctx = new Context()
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await expect(ctx.plugin(sdk, {
       providerName: 'sdk',
@@ -876,6 +882,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
     async (maxTokens) => {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await expect(ctx.plugin(sdk, {
         providerName: 'sdk',
@@ -896,6 +903,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
     async (maxTokens) => {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       expect(() => { sdk.apply(ctx, {
         providerName: 'sdk',
@@ -917,6 +925,7 @@ describe('dsh-subagent-dsh-sdk provider', () => {
   it('rejects an empty config cwd at load', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await expect(ctx.plugin(sdk, {
       providerName: 'sdk',

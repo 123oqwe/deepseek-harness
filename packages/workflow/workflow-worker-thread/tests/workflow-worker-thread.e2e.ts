@@ -13,6 +13,7 @@ import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as Spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /**
  * With-key e2e: a REAL script in a REAL worker thread
@@ -40,6 +41,7 @@ async function harness(): Promise<Context> {
   await built.plugin(AgentRegistry)
   await built.plugin(AgentLoop, { agents: [] })
   await built.plugin(LlmDeepSeek)
+  await built.plugin(MessageBusPlugin)
   await built.plugin(SubagentRuntime)
   await built.plugin(Spawn, { providerName: 'spawn' })
   await built.plugin(InMemoryLeaseStorePlugin)

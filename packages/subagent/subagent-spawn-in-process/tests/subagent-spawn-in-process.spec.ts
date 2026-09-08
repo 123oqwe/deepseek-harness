@@ -16,6 +16,7 @@ import { MockAdapter, maxTokensResponse, textResponse, toolCallResponse } from '
 import * as spawn from '../src/index.ts'
 import { STRUCTURED_OUTPUT_TOOL } from '@deepseek-ai/dsh-subagent-in-process-driver'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -40,6 +41,7 @@ async function setup(script: Script) {
   await mountInvariants(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
   ctx.llm.registerAdapter(['mock'], adapter)
@@ -299,6 +301,7 @@ describe('dsh-subagent-spawn-in-process', () => {
   it('unregisters the provider when its fiber is disposed (HMR safety)', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(AgentRegistry)
     const fiber = await ctx.plugin(spawn, { providerName: 'spawn' })
@@ -331,6 +334,7 @@ describe('dsh-subagent-spawn-in-process', () => {
     await mountInvariants(ctx)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const fiber = await ctx.plugin(spawn, { providerName: 'spawn' })
     ctx.llm.registerAdapter(['mock'], adapter)
@@ -360,6 +364,7 @@ describe('dsh-subagent-spawn-in-process', () => {
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const fiber = await ctx.plugin(spawn, { providerName: 'spawn' })
     const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })

@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import {
   existsSync,
   mkdirSync,
@@ -193,6 +194,7 @@ async function realRuntime(): Promise<RealRuntime> {
   const ctx = new Context()
   contexts.push(ctx)
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(LocalSubprocessRuntime)
   const handles: SubprocessHandle[] = []

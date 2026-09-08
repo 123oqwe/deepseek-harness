@@ -27,6 +27,7 @@ import ApprovalService from '@deepseek-ai/dsh-user-approval'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import SubagentRuntime from '../src/index.ts'
 import { TestSessionQuery } from './test-session-query.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -50,6 +51,7 @@ async function setup(script: Script) {
   await ctx.plugin(ApprovalService)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(TestSessionQuery)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   await ctx.plugin(SubagentFork, { providerName: 'fork' })

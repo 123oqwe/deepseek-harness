@@ -24,6 +24,7 @@ import {
   subagentModelSelectionProjectionDefinition,
 } from '../src/model-selection-state.ts'
 import { text } from './harness.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const ALLOWED_MODELS = [{ provider: 'alpha', model: 'fast-model' }]
 
@@ -63,6 +64,7 @@ async function boot(): Promise<Context> {
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   return ctx
@@ -328,6 +330,7 @@ describe('SubagentModelSelectionConfig', () => {
     const withoutSettings = new Context()
     await mountAgentLoopTestDependencies(withoutSettings)
     await withoutSettings.plugin(SessionProjectionRegistry)
+    await withoutSettings.plugin(MessageBusPlugin)
     await withoutSettings.plugin(SubagentRuntime)
     expect(() => {
       tool.apply(withoutSettings, {

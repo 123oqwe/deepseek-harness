@@ -21,20 +21,27 @@ import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { commitIntake, openBusStore, recoverStaleClaims } from './bus-store.ts'
+import { commitMemoryIntake, openMemoryBusStore, recoverMemoryStaleClaims } from './memory-store.ts'
 import type { BusMessage, BusStore, InboxRow, IntakeCommit, RecoveryWindow, StoredOutboxRow } from './bus-store.ts'
 import type { OutboxRecord } from './outbox.ts'
 
 /** Where this mount keeps its messages. */
 export interface Config {
   /**
-   * Directory holding `bus.sqlite`.
+   * Directory holding `bus.sqlite`, or absent for an in-memory bus.
    *
    * Deployment-varying, and it decides whether the bus connects anything: two
    * hosts exchanging messages need one directory, while a single-process
-   * harness keeps its own beside the workspace. Only the profile knows which
-   * arrangement it is in.
+   * composition needs none at all. Only the profile knows which arrangement it
+   * is in.
+   *
+   * **Absent means in-memory, not "no bus".** A composition that mounts this
+   * plugin has consumers depending on a bus being there — settlement commits
+   * before it delivers — so the choice is between a durable bus and a
+   * process-local one, never between a bus and nothing. The same split
+   * `@deepseek-ai/dsh-lease` makes against `@deepseek-ai/dsh-lease-sqlite`.
    */
-  directory: string
+  directory?: string
 }
 
 /**
@@ -50,10 +57,13 @@ export interface Config {
 export default class MessageBusPlugin extends Service implements BusStore {
   /** Runtime configuration schema, validated at mount from the profile's `cordis.yml` row. */
   static Config = z.object({
-    directory: z.string().required(),
+    directory: z.string(),
   })
 
   private opened: BusStore | undefined
+
+  /** Which pair of module operations this mount's store belongs to. */
+  private durable = false
 
   /**
    * @param ctx - the mounting context; the plugin registers itself as `ctx.messageBus`.
@@ -76,7 +86,8 @@ export default class MessageBusPlugin extends Service implements BusStore {
    * @yields the teardown that releases the store handle.
    */
   * [Service.init](): Generator<() => void, void, void> {
-    this.opened = openBusStore(this.config.directory)
+    this.durable = this.config.directory !== undefined
+    this.opened = this.durable ? openBusStore(this.config.directory as string) : openMemoryBusStore()
     yield () => { this.opened = undefined }
   }
 
@@ -149,7 +160,12 @@ export default class MessageBusPlugin extends Service implements BusStore {
    * @param commit - the message, the claiming turn, and the rows it owes.
    */
   commitIntake(commit: IntakeCommit): void {
-    commitIntake(this.store, commit)
+    // Dispatched on the store this mount opened rather than on a method the
+    // contract carries: the transaction is the STORE's property — one
+    // `BEGIN IMMEDIATE` for SQLite, one synchronous block in memory — and a
+    // contract method would invite a third implementation of the same commit.
+    if (this.durable) commitIntake(this.store, commit)
+    else commitMemoryIntake(this.store, commit)
   }
 
   /**
@@ -159,7 +175,7 @@ export default class MessageBusPlugin extends Service implements BusStore {
    * @returns how many rows were released.
    */
   recoverStaleClaims(window: RecoveryWindow): number {
-    return recoverStaleClaims(this.store, window)
+    return this.durable ? recoverStaleClaims(this.store, window) : recoverMemoryStaleClaims(this.store, window)
   }
 }
 

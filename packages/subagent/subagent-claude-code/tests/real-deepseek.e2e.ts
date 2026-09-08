@@ -18,6 +18,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import type { SubprocessHandle } from '@deepseek-ai/dsh-subprocess'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import * as claudeCode from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const execFileAsync = promisify(execFile)
 const OFFICIAL_DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
@@ -115,6 +116,7 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)(
       const ctx = new Context()
       contexts.push(ctx)
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       const handles: SubprocessHandle[] = []

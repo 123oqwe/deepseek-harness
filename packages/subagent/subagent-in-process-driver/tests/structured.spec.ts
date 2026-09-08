@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import { Context } from '@deepseek-ai/cordis'
 import { createUserMessage, ToolCallId, type ContentBlock, type GenerateOptions } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
@@ -70,6 +71,7 @@ async function setup(script: Script, options: SetupOptions = {}) {
   await mountInvariants(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   const disposeProvider = ctx.subagents.registerProvider({
     name: 'spawn',

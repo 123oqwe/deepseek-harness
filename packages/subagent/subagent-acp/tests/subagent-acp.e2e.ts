@@ -10,6 +10,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import { resolveExampleLaunch } from '@deepseek-ai/dsh-loader-smoke'
 import * as acp from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /**
  * With-key cross-process boundary proof: the backend spawns the real dsh ACP profile, speaks ACP over
@@ -59,6 +60,7 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('ACP backend with-key e2e (drive 
     const childLaunch = resolveChildLaunch(join(workdir, '.dsh-child'))
     ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     await ctx.plugin(acp, {
@@ -91,6 +93,7 @@ describe.skipIf(!process.env.DEEPSEEK_API_KEY)('ACP backend with-key e2e (drive 
     const childLaunch = resolveChildLaunch(join(workdir, '.dsh-child'))
     ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     await ctx.plugin(acp, {

@@ -15,6 +15,7 @@ import * as acp from '../src/index.ts'
 import { acpStopReason, acpContentText, DEFAULT_DISPOSE_EOF_GRACE_MS, DEFAULT_DISPOSE_GRACE_MS, disposeAcpChild, startAcpRun, toAcpPrompt, type AcpRunSpec } from '../src/run.ts'
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local'
 import { spawnSubprocess } from '@deepseek-ai/dsh-subprocess-local/src/spawn.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /**
  * Keyless integration tests for the ACP subagent backend. Each spawns a REAL
@@ -46,6 +47,7 @@ interface SetupEnv {
 async function setup(mockEnv: SetupEnv = {}, permission: 'allow' | 'reject' = 'reject') {
   const ctx = new Context()
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(LocalSubprocessRuntime)
   await ctx.plugin(acp, {
@@ -331,6 +333,7 @@ describe('cwd resolution', () => {
     try {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       // A command that would create the sentinel if the child were ever spawned.
@@ -351,6 +354,7 @@ describe('cwd resolution', () => {
     try {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       await ctx.plugin(acp, {
@@ -380,6 +384,7 @@ describe('cwd resolution', () => {
     const absolute = resolve(relative)
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     await ctx.plugin(acp, {
@@ -401,6 +406,7 @@ describe('cwd resolution', () => {
     // reintroduce the launch-directory fallback this resolution removed.
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     await expect(ctx.plugin(acp, {
@@ -423,6 +429,7 @@ describe('cwd resolution', () => {
     try {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       await expect(ctx.plugin(acp, {
@@ -443,6 +450,7 @@ describe('cwd resolution', () => {
   it('rejects a config cwd that is not an accessible directory at load', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     await expect(ctx.plugin(acp, {
@@ -486,6 +494,7 @@ describe('cwd resolution', () => {
     try {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       await ctx.plugin(acp, { providerName: 'acp', command: 'touch', args: [sentinel], permission: 'reject', env: {} })
@@ -1137,6 +1146,7 @@ describe('dsh-subagent-acp', () => {
     try {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       await ctx.plugin(acp, {
@@ -1171,6 +1181,7 @@ describe('dsh-subagent-acp', () => {
     ]) {
       const ctx = new Context()
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       await expect(ctx.plugin(acp, { providerName: 'acp', command: 'true', args: [], permission: 'reject', env: {}, ...bad }))
@@ -1182,6 +1193,7 @@ describe('dsh-subagent-acp', () => {
   it('rejects a startup failure via the provider load path', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     await ctx.plugin(acp, {
@@ -1419,6 +1431,7 @@ describe('dsh-subagent-acp', () => {
   it('unregisters the provider when its fiber is disposed (HMR safety)', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     const fiber = await ctx.plugin(acp, { providerName: 'acp', command: 'x', args: [], permission: 'reject', env: {} })

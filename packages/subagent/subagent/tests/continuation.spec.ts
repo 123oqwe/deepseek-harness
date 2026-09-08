@@ -27,6 +27,7 @@ import { TestSessionQuery } from './test-session-query.ts'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
 import RunPlugin from '@deepseek-ai/dsh-run'
 import { DuplicateArrivalError } from '@deepseek-ai/dsh-agent'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -93,6 +94,7 @@ async function setupWith(
   }
   await ctx.plugin(AgentLoop, { agents: [] })
   if (options.sessionQuery !== false) await ctx.plugin(TestSessionQuery)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   await ctx.plugin(SubagentFork, { providerName: 'fork' })
@@ -481,6 +483,7 @@ describe('SubagentRuntime.startContinuable', () => {
     cleanups.push(async () => { await freshPersistence.dispose() })
     await fresh.plugin(AgentLoop, { agents: [] })
     await fresh.plugin(TestSessionQuery)
+    await fresh.plugin(MessageBusPlugin)
     await fresh.plugin(SubagentRuntime)
     await fresh.plugin(SubagentSpawn, { providerName: 'spawn' })
     const freshParent = fresh.agentLoop.create(SessionId('routeless-resume'), {})
@@ -2789,7 +2792,8 @@ describe('continuable errors', () => {
       rmSync(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 })
     })
     await ctx.plugin(AgentLoop, { agents: [] })
-    const serviceFiber = await ctx.plugin(SubagentRuntime)
+    const serviceFiber = await ctx.plugin(MessageBusPlugin)
+    await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     ctx.llm.registerAdapter(['mock'], adapter)
     const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })

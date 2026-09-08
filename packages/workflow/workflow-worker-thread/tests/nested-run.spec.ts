@@ -26,6 +26,7 @@ import * as spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import type { DefinitionDigest, DefinitionName, SignerIdentity } from '@deepseek-ai/dsh-workflow-registry'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const META = { name: 'parent', description: 'nests another definition', phases: [] }
 
@@ -34,6 +35,7 @@ async function setup(options: { maxNestingDepth?: number } = {}) {
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
   await ctx.plugin(InMemoryLeaseStorePlugin)

@@ -20,6 +20,7 @@ import SubagentRuntime, {
 } from '@deepseek-ai/dsh-subagent'
 import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 function fakeParent(id = 'parent-1'): Agent {
   return { id: SessionId(id) } as unknown as Agent
@@ -68,6 +69,7 @@ async function service(): Promise<{ ctx: Context; subagents: SubagentRuntime }> 
   // The registry is a required injection of SubagentRuntime (its projection
   // units register in the constructor).
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   return { ctx, subagents: ctx.subagents }
 }

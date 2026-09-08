@@ -17,6 +17,7 @@ import * as toolWorkflow from '../src/index.ts'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const testToolSignal = new AbortController().signal
 
@@ -432,6 +433,7 @@ describe('dsh-tool-workflow', () => {
       await ctx.plugin(SystemPrompt)
       await ctx.plugin(ToolRuntime)
       await ctx.plugin(SessionProjectionRegistry)
+      await ctx.plugin(MessageBusPlugin)
       await ctx.plugin(SubagentRuntime)
       ctx.subagents.registerProvider({
         name: 'spawn',

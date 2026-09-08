@@ -13,6 +13,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 // A fresh thread compiles the source runtime. Leave contention headroom on
 // shared CI runners without weakening any engine-level timeout assertion.
@@ -21,7 +22,8 @@ vi.setConfig({ testTimeout: 30_000 })
 it('runs the default config through the source worker', async () => {
   const ctx = new Context()
   await ctx.plugin(SessionProjectionRegistry)
-  const subagents = await ctx.plugin(SubagentRuntime)
+  const subagents = await ctx.plugin(MessageBusPlugin)
+  await ctx.plugin(SubagentRuntime)
   const provider: SubagentProvider = {
     name: 'spawn',
     capabilities: { agentOptions: true, outputSchema: true, depthLimit: true, toolFilter: true, persona: true },

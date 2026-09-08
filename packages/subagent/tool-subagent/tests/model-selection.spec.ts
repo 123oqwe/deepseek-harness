@@ -17,6 +17,7 @@ import {
   preflightChildLlmRoute,
 } from '../src/model-selection.ts'
 import { callSubagent, modelSelectionSetupAgent, setup, text } from './harness.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const REASONING = {
   efforts: [
@@ -392,6 +393,7 @@ describe('dsh-tool-subagent model selection', () => {
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await mock.mountScriptedProvider(ctx, { name: 'mock' })
     await ctx.plugin(tool, {
@@ -415,6 +417,7 @@ describe('dsh-tool-subagent model selection', () => {
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await mock.mountScriptedProvider(ctx, { name: 'mock', onStart: () => { starts += 1 } })
     await ctx.plugin(tool, { provider: 'mock' })

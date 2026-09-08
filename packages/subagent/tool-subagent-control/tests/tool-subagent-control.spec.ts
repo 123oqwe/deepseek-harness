@@ -19,6 +19,7 @@ import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-a
 import * as tool from '../src/index.ts'
 import { parkParent } from './park-parent.ts'
 import { TestSessionQuery } from './test-session-query.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /** One scripted response that may wait on a caller-released gate before streaming. */
 interface GatedEntry {
@@ -62,6 +63,7 @@ async function setupWith(adapter: MockAdapter | GatedAdapter, park = true) {
   await ctx.plugin(TestSessionQuery)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   await ctx.plugin(SubagentFork, { providerName: 'fork' })
@@ -333,6 +335,7 @@ describe('dsh-tool-subagent-control', () => {
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(AgentLoop, { agents: [] })
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const fiber = await ctx.plugin(tool)
     expect(ctx.tools.schemas().some(schema => schema.name === 'send_message')).toBe(true)

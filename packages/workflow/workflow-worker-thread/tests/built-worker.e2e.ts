@@ -26,9 +26,11 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import WorkerThreadWorkflowEngine from '@deepseek-ai/dsh-workflow-worker-thread'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const ctx = new Context()
 await ctx.plugin(SessionProjectionRegistry)
+await ctx.plugin(MessageBusPlugin)
 await ctx.plugin(SubagentRuntime)
 let selectedStarts = 0
 ctx.subagents.registerProvider({

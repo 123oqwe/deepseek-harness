@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import { dirname, resolve } from 'node:path'
 import { PassThrough } from 'node:stream'
 import { fileURLToPath } from 'node:url'
@@ -415,6 +416,7 @@ describe('task admission and package contracts', () => {
   it('registers the default descriptor, validates config, and unregisters on HMR', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     const fiber = await ctx.plugin(claudeCode, {})
@@ -447,6 +449,7 @@ describe('task admission and package contracts', () => {
   it('keeps named instances, runs, and HMR ownership isolated', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     const safeChild = fakeChild()
@@ -545,6 +548,7 @@ describe('task admission and package contracts', () => {
   it('rejects duplicate provider names without replacing the first instance', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     const firstFiber = await ctx.plugin(claudeCode, {
@@ -583,6 +587,7 @@ describe('task admission and package contracts', () => {
   it('resolves the safe permission default when apply is called directly', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     const child = fakeChild()
@@ -607,6 +612,7 @@ describe('task admission and package contracts', () => {
   it('starts through the registered provider with its resolved config and diagnostics', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(LocalSubprocessRuntime)
     const child = fakeChild()

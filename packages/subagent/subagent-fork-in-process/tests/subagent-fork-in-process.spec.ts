@@ -16,6 +16,7 @@ import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent
 import type { StreamChunk } from '@deepseek-ai/dsh-llm'
 import * as fork from '../src/index.ts'
 import { STRUCTURED_OUTPUT_TOOL } from '@deepseek-ai/dsh-subagent-in-process-driver'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -46,6 +47,7 @@ async function setup(script: Script) {
   await mountInvariants(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(fork, { providerName: 'fork' })
   ctx.llm.registerAdapter(['mock'], new MockAdapter(script))
@@ -211,6 +213,7 @@ describe('dsh-subagent-fork-in-process', () => {
   it('unregisters the provider when its fiber is disposed (HMR safety)', async () => {
     const ctx = new Context()
     await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(AgentRegistry)
     const fiber = await ctx.plugin(fork, { providerName: 'fork' })

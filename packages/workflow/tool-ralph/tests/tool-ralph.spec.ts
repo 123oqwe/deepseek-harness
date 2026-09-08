@@ -13,6 +13,7 @@ import type { ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import { WorkflowRunId, WorkflowEngine } from '@deepseek-ai/dsh-workflow'
 import type { WorkflowResult, WorkflowRun, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import * as toolRalph from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const testToolSignal = new AbortController().signal
 
@@ -86,6 +87,7 @@ async function setup(options?: SetupOptions) {
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   const provider = options?.provider === false ? undefined : options?.provider ?? new StubProvider()
   if (provider !== undefined) ctx.subagents.registerProvider(provider)

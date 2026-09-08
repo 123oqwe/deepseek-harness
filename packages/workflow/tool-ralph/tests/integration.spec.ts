@@ -13,6 +13,7 @@ import WorkerThreadWorkflowEngine from '@deepseek-ai/dsh-workflow-worker-thread'
 import { MockAdapter, maxTokensResponse, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as toolRalph from '../src/index.ts'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type MockScript = ConstructorParameters<typeof MockAdapter>[0]
 const testToolSignal = new AbortController().signal
@@ -24,6 +25,7 @@ async function mountRalph(script: MockScript, config: toolRalph.Config) {
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
   await ctx.plugin(InMemoryLeaseStorePlugin)
@@ -63,6 +65,7 @@ describe('dsh-tool-ralph over the real spawn and worker-thread stack', () => {
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(spawn, { providerName: 'spawn' })
     await ctx.plugin(InMemoryLeaseStorePlugin)

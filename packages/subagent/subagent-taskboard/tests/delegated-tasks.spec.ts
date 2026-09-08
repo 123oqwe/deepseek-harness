@@ -28,6 +28,7 @@ import TaskStorePlugin, { openTaskStore } from '@deepseek-ai/dsh-taskboard-sqlit
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { TestSessionQuery } from '../../subagent/tests/test-session-query.ts'
 import * as SubagentTaskboard from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 const CLAIM_LEASE_MS = 60_000
 
@@ -45,6 +46,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0]) {
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(JsonlSessionPersistence, { root: join(root, 'sessions') })
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   await ctx.plugin(TestSessionQuery)
@@ -207,6 +209,7 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     await ctx.plugin(TaskStorePlugin, { directory: root })
@@ -226,6 +229,7 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     const applied = vi.spyOn(SubagentTaskboard, 'apply')

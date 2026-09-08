@@ -19,6 +19,7 @@ import LeaseStorePlugin from '@deepseek-ai/dsh-lease-sqlite'
 import WorkerThreadWorkflowEngine from '../src/index.ts'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import type { LeaseStoreContract, WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -47,6 +48,7 @@ async function setup(script: Script) {
   await mountInvariants(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(spawn, { providerName: 'spawn' })
   // The engine INJECTS its lease store, so the stack must mount a provider

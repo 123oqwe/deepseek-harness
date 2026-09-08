@@ -13,6 +13,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as Spawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as fork from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -39,6 +40,7 @@ async function setup(script: Script) {
   await mountInvariants(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(Spawn, { providerName: 'spawn' })
   await ctx.plugin(fork, { providerName: 'fork' })

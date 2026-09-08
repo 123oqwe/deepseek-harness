@@ -11,6 +11,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as mock from './scripted-provider.ts'
 import * as tool from '../src/index.ts'
 import SubagentModelSelectionConfig from '../src/model-selection-settings.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /** Shared non-aborted tool signal for package-local integration tests. */
 export const testToolSignal = new AbortController().signal
@@ -52,6 +53,7 @@ export async function setup(toolConfig: SetupConfig, mockConfig: Partial<mock.Co
     await mountAgentLoopTestDependencies(ctx)
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const provider = await mock.mountScriptedProvider(ctx, { name: 'mock', ...mockConfig })
     setupProviders.set(ctx, provider)
@@ -68,6 +70,7 @@ export async function setup(toolConfig: SetupConfig, mockConfig: Partial<mock.Co
   await ctx.plugin(LlmRuntime)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SessionProjectionRegistry)
   const provider = await mock.mountScriptedProvider(ctx, { name: 'mock', ...mockConfig })

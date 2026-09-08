@@ -103,19 +103,18 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // The live parent took it, so the row is `acked`. Put it back to `pending`
     // to stand for a settlement committed while nobody could receive it.
     //
-    // **Set directly, and the reason is a finding rather than convenience.**
-    // Two end-to-end routes to that state were measured and neither works:
-    // disposing the parent mid-settlement races the handoff under test, and
-    // disposing the whole context commits NOTHING — the bus service is torn
-    // down before the manager drains its children, so `ctx.get('messageBus')`
-    // is already undefined at exactly the moment acceptance[1] cares about.
-    // That ordering is recorded for the delegate; until it changes, what this
-    // case can honestly exercise is the DRAIN, which is what it does.
+    // **Set directly, and that is a recorded finding rather than convenience.**
+    // The end-to-end route — dispose the context so the manager's own drain
+    // settles the child while the tree tears down — still commits NOTHING:
+    // measured after §12.40, `ctx.get('messageBus')` is undefined at that
+    // moment even with `SubagentRuntime` injecting it. `drain()` is async and
+    // continues past the point where the bus fiber has gone, so declaring the
+    // dependency orders the FIBERS without ordering this await. Reported; until
+    // it is closed, what this case can honestly exercise is the drain.
     const owed = ctx.messageBus.outboxRows()[0]
     expect(owed?.record.state).toBe('acked')
     ctx.messageBus.persistOutbox({ ...owed!.record, state: 'pending', attempts: 0, receipt: null })
     await ctx.fiber.dispose()
-
     // A second process over the same bus directory: the row is still owed.
     const second = await setup([textResponse('parent done')], busDirectory)
     expect(second.ctx.messageBus.outboxRows().map(row => row.record.state)).toEqual(['pending'])

@@ -19,6 +19,7 @@ import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek'
 import SubagentRuntime, { type SubagentResult, type SubagentRunEndInfo } from '@deepseek-ai/dsh-subagent'
 import type { JsonRpcTransportPeer } from '@deepseek-ai/dsh-sdk-protocol'
 import { HarnessSdkJsonRpcServer } from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 class FakeTransport implements JsonRpcTransportPeer {
   notifications: { method: string; params?: Record<string, unknown> }[] = []
@@ -68,6 +69,7 @@ async function makeHarness(storageDir: string) {
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(JsonlSessionPersistence, { root: storageDir })
   await new Promise(resolve => setTimeout(resolve, 50))

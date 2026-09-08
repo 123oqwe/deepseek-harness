@@ -14,6 +14,7 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import { maxTokensResponse, MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { startInProcessRun } from '../src/index.ts'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 type Script = ConstructorParameters<typeof MockAdapter>[0]
 
@@ -30,6 +31,7 @@ async function setup(script: Script, parentOptions: Partial<AgentOptions> = {}) 
   await mountInvariants(ctx)
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(SessionProjectionRegistry)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   const adapter = new MockAdapter(script)
   ctx.llm.registerAdapter(['mock'], adapter)

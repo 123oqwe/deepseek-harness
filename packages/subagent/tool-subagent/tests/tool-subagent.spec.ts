@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -196,6 +197,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await mock.mountScriptedProvider(ctx, { name: 'spawn', reply: 'from spawn' })
     await mock.mountScriptedProvider(ctx, { name: 'acp', reply: 'from acp' })
@@ -217,6 +219,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'weird',
@@ -306,6 +309,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'bare',
@@ -341,6 +345,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     // Tool first: no provider yet — the tool must be absent, not broken.
     // Direct apply (schema bypass): also covers the waiting-note's default
@@ -358,6 +363,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     tool.apply(ctx, {
       provider: 'later-continuable',
@@ -374,6 +380,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     const backend = await mock.mountScriptedProvider(ctx, { name: 'mock' }) // fresh conversation (descriptor: false)
     await ctx.plugin(tool, { provider: 'mock' })
@@ -393,6 +400,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
 
     // Arm 1: a mounted tool and its prompt section die with the plugin fiber;
@@ -429,6 +437,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await mock.mountScriptedProvider(ctx, { name: 'mock' })
     await ctx.plugin(tool, { provider: 'mock' })
@@ -469,6 +478,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'spy',
@@ -492,6 +502,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'spy',
@@ -516,6 +527,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'spy',
@@ -544,6 +556,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'spy',
@@ -571,6 +584,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'spy',
@@ -610,6 +624,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'spy',
@@ -674,6 +689,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'capture2',
@@ -731,6 +747,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'capture3',
@@ -761,6 +778,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'capture4',
@@ -786,6 +804,7 @@ describe('dsh-tool-subagent', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'p',
@@ -1187,6 +1206,7 @@ describe('dsh-tool-subagent continuable background mode', () => {
     roots.push(root)
     await ctx.plugin(JsonlSessionPersistence, { root })
     await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     await ctx.plugin(LocalJobRegistry)
@@ -1393,6 +1413,7 @@ describe('depth budget configuration', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'capture',
@@ -1431,6 +1452,7 @@ describe('depth budget configuration', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'no-depth',
@@ -1447,6 +1469,7 @@ describe('depth budget configuration', () => {
     const ctx = await projectedContext()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
+    await ctx.plugin(MessageBusPlugin)
     await ctx.plugin(SubagentRuntime)
     ctx.subagents.registerProvider({
       name: 'external',

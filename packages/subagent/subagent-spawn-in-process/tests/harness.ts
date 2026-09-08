@@ -11,6 +11,7 @@ import * as LlmDeepSeek from '@deepseek-ai/dsh-llm-deepseek'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as Spawn from '../src/index.ts'
 import * as ToolSubagent from '@deepseek-ai/dsh-tool-subagent'
+import MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 
 /**
  * Shared harness for the spawn-backend e2e: the full real stack (DeepSeek
@@ -35,6 +36,7 @@ export async function spawnHarness(workdir: string): Promise<Context> {
   await ctx.plugin(BashEnvPlugin)
   await ctx.plugin(LocalBashExecutor, { cwd: workdir, timeoutMs: 30_000 })
   await ctx.plugin(ToolBash)
+  await ctx.plugin(MessageBusPlugin)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(Spawn, { providerName: 'spawn' })
   // The model-facing subagent tool, bound to the spawn backend.
