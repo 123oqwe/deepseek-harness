@@ -268,6 +268,14 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 Reading (2) is smaller and removes the duplication; reading (1) is what §12.24-2's own wording points at. They are not equivalent, which is why this is reported rather than picked.
 
+**Follow-up under §12.25, which ruled both and (2) first: (2) does not drop in, and the obstacle is a real behaviour difference rather than a shape one.**
+
+`ChildControlRouter` holds a live `Agent` and its `dispatch` calls that agent's operations. `SubagentRuntime`'s `controlState` holds `{ phase, appliedEpochs }` keyed by session id in a map that is **never cleaned up**, and that outliving is load-bearing: `appliedEpochs` is what refuses a redelivered prompt, and a redelivery can arrive after the child is gone. Replacing the map with a router tied to a live Agent would lose that, and the property is pinned — `control.spec.ts`'s "acceptance[2]: the same request id delivered twice opens one turn, not two" and "a redelivery is refused as a DUPLICATE, not as a child that cannot resume".
+
+So mounting the router means first deciding what it does with no live agent: hold the epoch ledger anyway and dispatch nothing, or split the ledger out of it. Either is a change to the router's own contract, which is P5-10's Contract-stage surface. Not done, and not guessed at the end of a long session on a live control path.
+
+**Still owed for (2):** the epoch ledger's lifetime, then the mount.
+
 ### BLOCKED-152 — the workflow engine imports `dsh-agent`, a `providers -> orchestration-runtime` edge older than this program
 
 **State: OPEN, placement only, now two edges.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently.
