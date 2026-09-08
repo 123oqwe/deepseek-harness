@@ -959,3 +959,10 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **规则(双方)**:(a) delegate 的提交一律 **pathspec 限定**:`git commit -m … -- spec/first100/exec/<file>`,只提交点名的路径,不碰索引里别人的东西;(b) 执行者 `git add <明确路径>`、提交前 `git status` 看索引(已有);(c) 谁发现索引里有对方的文件,先说再动。`e8a1025886` / `2bae824b8e` 的实际内容以本条为准。
 **§12.42 结果**:acc[1] 端到端闭合,两个方向的变异各红(写的位置也被断言);`commitSettlement` 跳过已欠行的守卫,对。
 **12.43 续 · 规则(2026-09-08 05:20 EDT,执行者提出,采纳)**:改一个包的 `inject`/依赖后,受影响面按**导入来源**枚举(`grep -rl "from '@deepseek-ai/dsh-<pkg>'"` → 逐文件解析默认导入的别名 → 找 `.plugin(<别名>)`),不按调用点的局部名——默认导入可叫任何名字,按名字扫会给出"看起来完整"的假结果(agent-team 三个文件用 `SubagentService` 别名,按 `plugin(SubagentRuntime` 扫零命中)。**先枚举对,再谈范围对。** P2-04 的 `risk-taxonomy` README 两道门已过(model-experience 282/282 本会话首次全绿);`verify-package-invariants` 剩 6 条不归本批。
+
+### 12.44 BLOCKED-158:P4-08 must[2] 的对账经 ledger;acc[2] 的压缩在 run 完成时(2026-09-08 04:05 EDT)
+
+**事实**:`reusableSteps` 只读 `outcome`/`output`/`childReceipts`,不读 `sideEffectReceipts`、不调返回 `reconcile` 的决策;`receiptsToReconcile` / `compactJournal` / `retainsAllReceipts` 生产调用者全 0;生产里 `sideEffectReceipts` 只被 recorder 写。must[2]"有副作用步骤先 reconciliation"与 acc[2] 压缩保留只在函数里成立。执行者判"不需要产品裁决、是消费者忽略字段"——对。
+**裁决:取 (2)**。(1) 写的是"带未对账回执的步骤拒绝复用、让它重跑"——**重跑一个副作用步骤正是 P4-12 要防的重复效果**;"先对账"的含义是查该效果的**durable 状态**,而 harness 里外部效果唯一的 durable 状态就是 action ledger(P4-12)。语义:恢复时对每条 `sideEffectReceipt` 查 ledger——`confirmed` → 效果已发生,步骤输出可复用、不重跑;`ambiguous` → 需要对账,**不自动恢复**,以 `ambiguous-reconciliation-required` 结束 resume 并把条目暴露给操作者(P4-12 本来就把 ambiguous 交给对账);无记录 → 该效果从未预留,按未发生重跑。耦合是 registry 已有的(P4-08 must[0] 列了 side-effect receipts,P4-12 是它们的账本);层向下(providers → definitions)。今天没有步骤产生副作用回执,故零行为变更,但子句变真且有真消费者;冻结:confirmed 复用 / ambiguous 拒恢复 / 无记录重跑,变异去掉 ledger 查询 → 红。
+**acc[2]**:`compactJournal` 在 **run 完成时**由 `WorkerRun` 调(完成的 run 的 journal 压缩、原始回执保留——`retainsAllReceipts` 在同一点断言),由此有生产调用者;resume 读压缩后的 journal。
+**更正**:`recordStep`/`startStep` 在此树非导出,我那句作废。
