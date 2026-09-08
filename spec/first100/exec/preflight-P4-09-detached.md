@@ -29,7 +29,27 @@ The clause is about a workflow run that leaves its turn, so the consumer must be
 
 - **Producer**: `tool-workflow`'s run entry, which today notes "background collection remains deferred" (`tool-workflow/src/index.ts:7`) — that deferral is the gap this closes.
 - **Owner**: `RunPlugin`, mounted in `packages/bundle/base/cordis.patch.yml:529` with a real `storePath`, and therefore reached by every shipped bundle that inherits base — `acp-app`, `headless`, `sdk-app`, `sdk-minimal`, `web-app`. This answers §12.20's third question: the path is reached on launched profiles, not merely present.
-- **Re-attach**: `WorkflowRunRegistry.resume(runId, request)` already exists (`workflow/workflow/src/index.ts:197`), so re-attachment has a surface rather than needing one invented.
+- **Re-attach**: `resume(runId, request)` exists, but §12.66 asked whether it attaches to a LIVE run or only restores a stopped one, and the answer is the second — with a hazard attached.
+
+**Measured** (`workflow-worker-thread/src/index.ts:298`): `resume` calls `reusableSteps(...)` to reconcile the journal and then `this.launch(request, runId, reconciled)`. It **starts a new worker**. It does not attach to anything.
+
+So calling `resume` on a live detached run would spawn a SECOND worker under one run id — two masters for one run, which is the hazard P4-07's lease exists to prevent and which this epic must not reintroduce through its own re-attach path. The two routes are therefore genuinely different mechanisms, not one with two entry points:
+
+| launcher | route | mechanism |
+| --- | --- | --- |
+| still alive | observe / await / cancel a LIVE run | the registry's observation surface, NOT `resume` |
+| gone | collect the result later | the settlement outbox, drained on the next `agent/session-start` or `agent/pre-step` |
+
+`resume` keeps its own meaning — continuing an INTERRUPTED run — and a detached run that outlived its launcher and then died is exactly what it is for. What it must never be handed is a run that is still executing.
+
+## Cancellation boundary (§12.66)
+
+Two arms, and the negative one is what distinguishes detached from nested:
+
+- `cancel(parent run)` → nested children cancel, **detached children do NOT**. This is the negative control; without it "detached" is just a word for a nested run.
+- `cancel(detached id)` → it terminates.
+
+The launcher (session id + parent run id) is RECORDED on the detached run, but recording is not ownership: the launcher is who started it, and the Run service is who owns it. A cancel that reached a detached child because its launcher went away would make "disconnect is not cancellation" false in the one case it exists for.
 
 ## Semantics to freeze (§12.61)
 
@@ -40,7 +60,7 @@ The clause is about a workflow run that leaves its turn, so the consumer must be
 5. It can be re-attached by run id to observe, await, or cancel.
 6. It carries a capability token derived at start, attenuated from the parent's — the same mechanism as P4-09's other open finding, and the reason it still has authority after the turn that authorized it is gone.
 
-Frozen cases: start detached → turn ends → the run is still alive with its lease renewed → re-attach by id retrieves the result; explicit cancel → it terminates. **Mutation: "the turn ending cancels the run" must go red**, which is the one that distinguishes this from the current behaviour.
+Frozen cases: start detached → turn ends → the run is still alive with its lease renewed → re-attach by id retrieves the result; explicit cancel → it terminates; `cancel(parent)` leaves the detached child running while cancelling a nested sibling; launcher alive → observation surface, launcher gone → settlement outbox. **Mutation: "the turn ending cancels the run" must go red**, which is the one that distinguishes this from current behaviour.
 
 ## Dependency on the other open finding
 
