@@ -96,3 +96,21 @@ Two further facts belong in the sign-off decision rather than in this measuremen
 
 1. All three cells were observed **before** §12.16-3 changed this epic's own subject. Whatever is decided about the clauses, the observations describe a tree that no longer exists.
 2. The same shape has now been found in P4-08 must[2], P4-09's registry, P5-11 must[1], P4-12 must[2] and P2-03 acceptance[2]: a complete, tested decision module with no consumer. That it recurs suggests the plan generated Contract stages faster than Usage stages, which is a program-level observation and not P4-05's fault.
+
+## U supplement progress (§12.57 item 2)
+
+Measured above, then acted on. This section records what has landed, not what is planned.
+
+### `failed` — CLOSED
+
+`RunPlugin.finish` advanced every run to `completed`, including one whose work ended in an error. Half of `TERMINAL_STATES` was therefore unreachable, and the lifecycle told a supervisor the opposite of what happened.
+
+`RunPlugin` now tracks the last unrecovered failure per Run from the existing `agent/error` event and, at `agent/disposed`, advances to `failed` instead of `completed`. The entry is cleared on the next `agent/pre-step`: an error the agent recovered from and continued past is not how the run ENDED, and `failed` is a statement about the end.
+
+Covered in `packages/run/run/tests/fenced-dispatch.spec.ts` by a real agent session whose adapter script is exhausted — the failure arrives through the production `agent/error` path, not an injected state write. A negative control asserts a successful run still ends `completed`, so a `finish` changed to always report `failed` would not pass. Mutation-checked: forcing the failure branch off reports `expected 'completed' to be 'failed'`.
+
+`packages/run/run/README.md`'s lifecycle bullet was stale independently of this change — it claimed nothing reached `cancelling` or `completed`, which `finish` had been doing all along. It now states the reached and unreached sets exactly.
+
+### `waiting_human`, `orphaned` + reclaim, `consumesNoResources`, `paused` — NOT YET DONE
+
+Still open from §12.57 item 2, and not signed. `waiting_human` has a real producer available now that P2-04's approval request exists; `orphaned` needs P4-07's lease-expiry-without-release and the reclaim path this epic owns; acceptance[1] needs a real consumer of `consumesNoResources`; `paused` needs either a producer or a recorded directed deferral.

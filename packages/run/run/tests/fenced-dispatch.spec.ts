@@ -454,3 +454,40 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     expect(executed).toBe(2)
   })
 })
+
+describe('P4-05 must[0]: `failed` is a state a run can actually reach', () => {
+  it('ends a run whose last activity was an unrecovered error in `failed`, not `completed`', async () => {
+    // The gap this closes: `finish` advanced EVERY run to `completed`, so half
+    // of `TERMINAL_STATES` was unreachable and an agent whose work ended badly
+    // reported the same terminal state as one that succeeded. A supervisor
+    // reading the lifecycle could not tell them apart.
+    const ctx = await harness()
+    // An exhausted script makes the adapter throw on the first request, so the
+    // failure arrives through the real `agent/error` path rather than through
+    // an injected state write.
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([]))
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-fails'), agentOptions: { provider: 'mock', model: 'mock' } })
+    const { agent } = handle
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    await handle.dispose()
+
+    expect(agent.lifecycle?.state).toBe('failed')
+  })
+
+  it('still ends a run that did its work in `completed`, so the failure path is not simply the new default', async () => {
+    // The negative control: without it, a `finish` changed to always report
+    // `failed` would pass the case above.
+    const ctx = await harness()
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-succeeds'), agentOptions: { provider: 'mock', model: 'mock' } })
+    const { agent } = handle
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    await handle.dispose()
+
+    expect(agent.lifecycle?.state).toBe('completed')
+  })
+})

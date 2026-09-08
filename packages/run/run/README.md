@@ -207,12 +207,13 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `@deepseek-ai/dsh-lease`'s in-memory provider, that ownership holds only
   inside one process — a deployment where two hosts must not both own a Run
   mounts `@deepseek-ai/dsh-lease-sqlite`.
-- **The lifecycle is driven from `agent/pre-step` only.** `queued → starting →
-  running` and the return from `waiting_tool` happen where the run is actually
-  about to do work. Nothing yet moves a Run to `paused`, `waiting_human`,
-  `cancelling`, `completed`, `failed` or `orphaned`, so those states are legal
-  and unreached: a Run that ends leaves its lifecycle wherever the last step
-  left it, and no sweep reclaims an abandoned one.
+- **`paused`, `waiting_human` and `orphaned` are legal and unreached.** The
+  advancing paths are `agent/pre-step` (`queued → starting → running`, and the
+  return from `waiting_tool`) and `agent/disposed`, which ends the run:
+  `cancelling` for a run that had not reached `running`, then `failed` when the
+  run's last reported activity was an unrecovered `agent/error`, otherwise
+  `completed`. No sweep reclaims an abandoned Run, so nothing produces
+  `orphaned` and nothing reclaims one.
 - **Concurrent Run writers are serialized within one process only.**
   `createFileRunStore` chains every read and write on the store's resolved
   path, shared by every store instance over that path in this process, and

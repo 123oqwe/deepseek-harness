@@ -237,6 +237,15 @@ interface RunStoreDocument {
 }
 
 /**
+ * One line naming an unrecovered failure, for the lifecycle transition reason.
+ * @param error - whatever the agent reported; `agent/error` types it `unknown`.
+ * @returns the error's message, or its stringification when it is not an Error.
+ */
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+/**
  * Epic P4-01's first-class Run Service: the owner of every Run's identity,
  * state, and event log (must[2]), backed by a {@link RunStore} so the
  * registry survives the process that created it (acceptance[0]).
@@ -576,6 +585,17 @@ export default class RunPlugin extends Service {
   private readonly heartbeats = new Map<RunId, NodeJS.Timeout>()
 
   /**
+   * Runs whose agent reported a failure that was never followed by more work
+   * (P4-05 must[0]).
+   *
+   * Keyed by Run rather than by Agent so a disposed agent's entry is dropped
+   * with its Run. Cleared when the agent takes another step: an error the
+   * agent recovered from and continued past is not how the run ENDED, and
+   * `failed` is a statement about the end.
+   */
+  private readonly failures = new Map<RunId, unknown>()
+
+  /**
    * The durable registry this plugin restored at mount, for a caller that
    * needs the Run Service's full surface rather than this plugin's
    * agent-shaped lookups.
@@ -705,7 +725,17 @@ export default class RunPlugin extends Service {
     if (state !== undefined && state !== 'running') {
       advanceLeasedAgent(agent, 'cancelling', 'the agent session ended before its work finished')
     }
-    advanceLeasedAgent(agent, 'completed', 'the agent session ended')
+    // `failed` is reachable exactly here (P4-05 must[0]): a run whose last
+    // reported activity was an unrecovered error did not complete, and
+    // reporting it as `completed` would make half of `TERMINAL_STATES` dead
+    // and tell a supervisor the opposite of what happened.
+    const failure = agent.runId === undefined ? undefined : this.failures.get(agent.runId)
+    if (failure !== undefined) {
+      advanceLeasedAgent(agent, 'failed', `the agent session ended after an unrecovered error: ${errorText(failure)}`)
+    } else {
+      advanceLeasedAgent(agent, 'completed', 'the agent session ended')
+    }
+    if (agent.runId !== undefined) this.failures.delete(agent.runId)
     const lease = agent.runLease
     if (lease !== undefined) this.ctx.leaseStore.release(lease.token)
   }
@@ -776,7 +806,13 @@ export default class RunPlugin extends Service {
     const undispose = this.ctx.on('agent/disposed', ({ agent }) => {
       this.finish(agent)
     })
+    const unfail = this.ctx.on('agent/error', ({ agent, error }) => {
+      if (agent.runId !== undefined) this.failures.set(agent.runId, error)
+    })
     const unstep = this.ctx.on('agent/pre-step', ({ agent }, next) => {
+      // A further step means the agent carried on past whatever it reported,
+      // so the failure is no longer how this run ends.
+      if (agent.runId !== undefined) this.failures.delete(agent.runId)
       this.ensureRunning(agent)
       // Waterfall: delegating is mandatory. Returning without `next()` would
       // short-circuit every listener after this one, and this listener has no
@@ -793,6 +829,7 @@ export default class RunPlugin extends Service {
       unsubscribe()
       unstep()
       undispose()
+      unfail()
       // Every renewal timer stops with the mount. A Run whose host is unloading
       // is not a Run whose lease should keep being asserted.
       for (const runId of [...this.heartbeats.keys()]) this.stopHeartbeat(runId)
