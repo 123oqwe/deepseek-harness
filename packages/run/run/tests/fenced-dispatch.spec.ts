@@ -313,4 +313,85 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     expect(agent.runId).toBeUndefined()
     expect(agent.lifecycle).toBeUndefined()
   })
+
+  it('executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)', async () => {
+    // The gap this closes: a refused lease left the agent with no lifecycle,
+    // which is also what a composition with no Run Service has — and that one
+    // must dispatch normally. Measured before `leaseRefused` existed: the
+    // refused agent ran every tool, because `advanceLeasedAgent` answered
+    // `no-run` and the dispatcher treats `no-run` as capability absence.
+    const ctx = await harness()
+    let executed = 0
+    ctx.tools.register(defineContentToolFixture({
+      name: 'noop',
+      description: 'records that it ran',
+      parameters: {},
+      execute() {
+        executed += 1
+        return Promise.resolve([{ type: 'text' as const, text: 'ran' }])
+      },
+    }))
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: {} }, { id: 'c2', name: 'noop', args: {} }]),
+      textResponse('done'),
+    ]))
+    ctx.leaseStore.setAvailable(false)
+    const agent = ctx.agentLoop.create(SessionId('session-refused'), { provider: 'mock', model: 'mock' })
+    expect(agent.leaseRefused).toBe(true)
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(executed).toBe(0)
+    const results = agent.session.snapshotEvents().filter(event => event.type === 'tool/result')
+    expect(results).toHaveLength(2)
+    for (const result of results) {
+      // `LeaseRefusedError`, not `FencedError`. A fenced run held the item and
+      // lost it, so another host is already doing the work; this one never
+      // held it. An operator sent to look for a takeover that never happened
+      // is looking in the wrong place.
+      expect(result.data.error?.name).toBe('LeaseRefusedError')
+      const block = result.data.message.content[0]
+      expect(block?.type === 'tool-result' && block.content[0]?.type === 'text' && block.content[0].text)
+        .toBe('Error: this run was refused ownership of its work item')
+    }
+  })
+
+  it('EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal', async () => {
+    // The positive control the case above needs, and the reason a marker was
+    // required rather than reusing absence: this agent also has no lifecycle,
+    // and it must run. A dispatcher that refused on absence would stop every
+    // composition that mounts no Run Service.
+    const ctx = new Context()
+    await ctx.plugin(LlmRuntime)
+    await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(SystemPrompt, { persona: '' })
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(AgentRegistry)
+    await ctx.plugin(AgentLoop, { agents: [] })
+    mounted.push(ctx)
+    let executed = 0
+    ctx.tools.register(defineContentToolFixture({
+      name: 'noop',
+      description: 'records that it ran',
+      parameters: {},
+      execute() {
+        executed += 1
+        return Promise.resolve([{ type: 'text' as const, text: 'ran' }])
+      },
+    }))
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: {} }, { id: 'c2', name: 'noop', args: {} }]),
+      textResponse('done'),
+    ]))
+    const agent = ctx.agentLoop.create(SessionId('session-no-run-service'), { provider: 'mock', model: 'mock' })
+    expect(agent.lifecycle).toBeUndefined()
+    expect(agent.leaseRefused).toBeUndefined()
+
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    expect(executed).toBe(2)
+  })
 })

@@ -89,11 +89,16 @@ export async function executeToolCalls(
   // into it would be a cycle. An agent with no lease answers `no-run`, which
   // is what a composition without a Run Service gets, and dispatches normally.
   const fencing = advanceLeasedAgent(agent, 'waiting_tool', `dispatching ${String(toolCalls.length)} tool call(s)`)
-  if (fencing === 'fenced') {
+  if (fencing === 'fenced' || fencing === 'lease-refused') {
     // Every call gets its ordered synthetic result: the model must see that
     // its calls did not run, and a silent drop would leave the turn's log
     // claiming calls that neither executed nor failed.
-    for (const block of toolCalls) appendFencedToolCall(agent, turn, step, block)
+    //
+    // The two refusals are named apart because the operator's next step
+    // differs: a fenced run HELD its work item and lost it, so another host is
+    // already doing the work; a lease-refused run never held it, so this host
+    // simply lost the race and its own start is the thing to look at.
+    for (const block of toolCalls) appendUnauthorizedToolCall(agent, turn, step, block, fencing)
     return { concluded: false }
   }
 
@@ -295,27 +300,43 @@ async function runGroup(
 }
 
 /**
- * Append the durable call/result pair for a call refused because this host was
- * fenced out of its Run (P4-07 must[1]/must[3]).
+ * Append the durable call/result pair for a call this run had no authority to
+ * make (P4-07 must[0], must[1], must[3], acceptance[1]).
  *
  * Distinct from the cancellation path below: an aborted call was this run's own
- * decision, while a fenced one means another holder owns this Run now. The
- * texts differ because the model's next move differs — a cancelled turn may be
- * retried, a fenced one must not be.
+ * decision, while these two mean this host may not act on its work item at all.
+ * The texts differ because the model's next move differs — a cancelled turn may
+ * be retried, neither of these may.
+ *
+ * `fenced` and `lease-refused` are also named apart from each other. A fenced
+ * run HELD the item and lost it, so another host is already doing the work; a
+ * lease-refused run never held it, so this host lost the race at its own start.
+ * An operator sent to look for a takeover that never happened is looking in the
+ * wrong place.
  * @param agent - the agent the call belonged to; its session is appended to.
  * @param turn - the turn the call belonged to.
  * @param step - the step the call belonged to.
  * @param block - the model call that will not run.
+ * @param reason - whether this run lost the item or was never granted it.
  */
-function appendFencedToolCall(agent: Agent, turn: number, step: number, block: ToolCallBlock): void {
+function appendUnauthorizedToolCall(
+  agent: Agent,
+  turn: number,
+  step: number,
+  block: ToolCallBlock,
+  reason: 'fenced' | 'lease-refused',
+): void {
   const { session } = agent
   const { seq: callSeq } = appendToolCall(agent, turn, step, block)
+  const message = reason === 'fenced'
+    ? 'this run is no longer the owner of its work item'
+    : 'this run was refused ownership of its work item'
   appendToolResult(session, turn, step, block, {
-    content: [{ type: 'text', text: 'Error: this run is no longer the owner of its work item' }],
+    content: [{ type: 'text', text: `Error: ${message}` }],
     isError: true,
     error: {
-      message: 'this run is no longer the owner of its work item',
-      info: { name: 'FencedError', code: TOOL_ABORTED_BEFORE_DISPATCH },
+      message,
+      info: { name: reason === 'fenced' ? 'FencedError' : 'LeaseRefusedError', code: TOOL_ABORTED_BEFORE_DISPATCH },
     },
   }, callSeq)
 }

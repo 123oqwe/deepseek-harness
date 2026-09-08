@@ -1429,10 +1429,10 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when no Run was opened for it — a subagent session started outside the agent registry this plugin observes, for instance.',
       },
       {
-        signature: 'advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenialReason | \'fenced\' | \'no-run\' | undefined',
+        signature: 'advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | \'fenced\' | \'lease-refused\' | \'no-run\' | undefined',
         description: 'Advance one agent\'s lifecycle under the Run\'s lease (P4-05 must[1], P4-07 must[1]).\n\nThe production caller `advanceAgentLifecycleFenced` did not have. The token and the current lease both come from the lease this plugin took, so a caller cannot present authority it was not granted, and an agent whose Run was reclaimed by another host is refused here rather than allowed to write on a stale epoch.',
         parameters: [{ name: 'agent', description: 'the agent whose lifecycle is proposed to move.' }, { name: 'to', description: 'the state proposed.' }, { name: 'reason', description: 'why, recorded on the transition (must[1] requires it non-empty).' }],
-        returns: 'the refusal, or `undefined` when the agent advanced.',
+        returns: 'the refusal, or `undefined` when the agent advanced. `lease-refused` names an agent this plugin declined to open a Run for, which is a different fact from `no-run`: a live store said no, rather than nothing tracking ownership at all.',
       },
     ],
   },
@@ -3687,7 +3687,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'Agent',
-    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n}',
+    declaration: 'export interface Agent {\n    readonly id: SessionId;\n    readonly identity?: IdentityContext;\n    runId?: RunId;\n    lifecycle?: AgentLifecycle;\n    runLease?: RunLease;\n    leaseRefused?: true;\n}',
   },
   {
     name: 'AgentCancelCause',

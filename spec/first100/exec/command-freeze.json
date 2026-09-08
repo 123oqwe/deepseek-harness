@@ -8690,6 +8690,59 @@
         "failureSummary": "M5 reddens exactly the stale-attempt case out of 58 in the taskboard and producer suites -- the fencing is the only thing that case rests on, and the other 57 stay green, which says the release still works for a current holder. M6 reddens 3 of 8: the claim is not given back, the same-host case sees an owned task, and the contention case's SECOND half fails because a second worker can no longer claim after settlement. That second half is why it is in the same case as the refusal: a refusal with no admission beside it passes against a board that refuses everything."
       },
       "note": "\u00a712.29-1 supersedes P5-11.U.1. That entry's two claim cases read the board AFTER the child settled, which was the only moment available while a claim could not be given back; \u00a712.29-1 opened `release` on the contract as a C-stage supplement, the producer now releases at settlement, and those two observations are no longer true of the same moment. Superseded rather than edited: an entry is a pre-commitment, and an expectation changed after the fact is a different commitment. The replacement observes a live claim at `subagent/start`, which is the window a claim now occupies, and adds the two halves the ruling named -- a release fenced by the attempt, refusing a lapsed holder that would otherwise strip its successor, and a task claimable again once its holder gives it back. `decideRelease` returns a task to `open` only from `claimed`: a task whose work was submitted keeps that status and merely loses its owner, because a holder letting go does not un-submit its work."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/fenced-dispatch.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) starts the lifecycle at queued, so a run that never steps is never running",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) REFUSES a state write once another holder has taken the Run, naming it fenced",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) ADMITS the same write while this holder is still current, so the refusal is about authority and not about the transition",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) refuses an ILLEGAL transition with the state machine's own reason, not with fenced",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) refuses a transition with an empty reason, so must[1]'s reason cannot be satisfied by whitespace",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) reports no-run for an agent with no lifecycle, rather than inventing one at its initial state",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) REFUSES every tool call in a step once this host was fenced out, and says so in the log",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) EXECUTES the same calls while this host still owns its Run, so the refusal is about the lease",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) RENEWS the lease while the run is alive, so a long run does not fence itself out",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) stops renewing once the run is finished, so a second host can take the item",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) RELEASES the lease and completes the lifecycle when the session ends",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) ends a run disposed before its first step through cancelling, not as if it had completed its work",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) opens NO Run when the lease store refuses, so an unauthorized agent gets no Run rather than an unowned one",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (\u00a712.31-A)",
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
+      ],
+      "files": [
+        "packages/core/agent/src/types.ts",
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/run/run/src/index.ts",
+        "packages/run/run/tests/fenced-dispatch.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T04:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "81aa9aad81112e417937939de45447f569f8b091",
+        "testsDiscovered": 16
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each restored byte-identical: (M7) `advanceLeasedAgent` drops the `leaseRefused` branch, so a refused agent answers `no-run` as before; (M8) the dispatcher intercepts only `fenced`, treating `lease-refused` as dispatchable.",
+        "failureSummary": "Each reddens exactly one case of 157 in this package: the refused agent executes its tools. The other 156 stay green under both -- including the no-Run-Service control, which is what says the new refusal is selective rather than a blanket stop on every agent without a lifecycle. That control is the case the marker exists for: before it, the two states were the same state."
+      },
+      "note": "\u00a712.31-A, and it also closes a freeze gap. This suite is what \u00a712.19-3's Agent Note cites as P4-07's evidence -- the production holder the fencing rule did not have -- and NO freeze entry covered any of its cases; P4-07.U.1 froze the workflow integration suite instead. So this entry pins all 16, not only the two added today. The new pair closes a measured hole in must[0]/acceptance[1]: a host whose lease was refused kept dispatching tools, because a refused lease left the agent with no lifecycle and that is also what a composition with no Run Service has -- and that one must dispatch normally. `Agent.leaseRefused` makes the two distinguishable, `advanceLeasedAgent` reports `lease-refused` BEFORE it reports absence, and the dispatcher refuses both while naming them apart: a fenced run HELD the item and lost it, a lease-refused run never held it, and an operator sent to look for a takeover that never happened is looking in the wrong place. Frozen at stage U rather than C: what these cases observe is a mounted composition doing the work, which is a Usage observation, and P4-07's sign-off is withdrawn so U is no more locked than C is."
     }
   ]
 }

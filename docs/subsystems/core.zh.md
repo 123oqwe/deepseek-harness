@@ -989,9 +989,12 @@ runFor(agent: Agent): Run | undefined
  * @param agent - the agent whose lifecycle is proposed to move.
  * @param to - the state proposed.
  * @param reason - why, recorded on the transition (must[1] requires it non-empty).
- * @returns the refusal, or `undefined` when the agent advanced.
+ * @returns the refusal, or `undefined` when the agent advanced. `lease-refused`
+ *   names an agent this plugin declined to open a Run for, which is a
+ *   different fact from `no-run`: a live store said no, rather than nothing
+ *   tracking ownership at all.
  */
-advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenialReason | 'fenced' | 'no-run' | undefined
+advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | undefined
 ```
 
 Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)

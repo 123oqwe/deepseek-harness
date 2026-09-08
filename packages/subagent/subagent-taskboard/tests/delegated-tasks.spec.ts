@@ -22,6 +22,8 @@ import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import * as SubagentSpawn from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import type { TaskId, WorkerId } from '@deepseek-ai/dsh-taskboard'
+import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import RunPlugin from '@deepseek-ai/dsh-run'
 import TaskStorePlugin, { openTaskStore } from '@deepseek-ai/dsh-taskboard-sqlite'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import { TestSessionQuery } from '../../subagent/tests/test-session-query.ts'
@@ -46,6 +48,11 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0]) {
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
   await ctx.plugin(TestSessionQuery)
+  // The Run Service and a lease provider, because a claim is made only for a
+  // child that HOLDS its lease (§12.31-A). A composition without them records
+  // nothing, which is the point of the rule and is asserted below.
+  await ctx.plugin(InMemoryLeaseStorePlugin)
+  await ctx.plugin(RunPlugin, { storePath: join(root, 'runs.json'), leaseMs: 60_000 })
   await ctx.plugin(TaskStorePlugin, { directory: root })
   await ctx.plugin(SubagentTaskboard, { claimLeaseMs: CLAIM_LEASE_MS })
   ctx.llm.registerAdapter(['mock'], new MockAdapter(script))
@@ -188,6 +195,28 @@ describe('P5-11: a delegated child IS a task on the board', () => {
     expect(row).toMatchObject({ kind: 'child', activity: 'running', taskStatus: 'submitted' })
     await run.result
     await run.dispose()
+  })
+
+  it('claims NOTHING for a child that holds no lease, so a claim on the board means that host owns the work (§12.31-A)', async () => {
+    // Enforcement is the lease's, not the board's, and the two are kept
+    // consistent by existence: no lease, no claim. This composition mounts the
+    // board but no Run Service, so its children hold nothing.
+    const root = mkdtempSync(join(tmpdir(), 'dsh-subagent-taskboard-'))
+    roots.push(root)
+    const ctx = new Context()
+    await mountAgentLoopTestDependencies(ctx)
+    await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(AgentLoop, { agents: [] })
+    await ctx.plugin(SubagentRuntime)
+    await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
+    await ctx.plugin(TaskStorePlugin, { directory: root })
+    await ctx.plugin(SubagentTaskboard, { claimLeaseMs: CLAIM_LEASE_MS })
+    ctx.llm.registerAdapter(['mock'], new MockAdapter([textResponse('done')]))
+    const parent = ctx.agentLoop.create(SessionId('parent'), { provider: 'mock', model: 'mock' })
+
+    await delegate(ctx, parent)
+
+    expect(openTaskStore(root).list()).toEqual([])
   })
 
   it('records NOTHING when no board is mounted, because the producer never activates', async () => {

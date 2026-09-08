@@ -627,6 +627,12 @@ export default class RunPlugin extends Service {
         agent.id,
         taken.denied.reason,
       )
+      // Marked, not merely left empty. An agent with no lifecycle is either
+      // running without a Run Service — which must dispatch normally — or one
+      // a live store refused, which must not dispatch at all; leaving both as
+      // absence let the second host of a contended work item keep executing
+      // tools against it (§12.31-A).
+      agent.leaseRefused = true
       return
     }
     const opened = this.service.openForSession(runId, agent.id, Date.now())
@@ -730,9 +736,16 @@ export default class RunPlugin extends Service {
    * @param agent - the agent whose lifecycle is proposed to move.
    * @param to - the state proposed.
    * @param reason - why, recorded on the transition (must[1] requires it non-empty).
-   * @returns the refusal, or `undefined` when the agent advanced.
+   * @returns the refusal, or `undefined` when the agent advanced. `lease-refused`
+   *   names an agent this plugin declined to open a Run for, which is a
+   *   different fact from `no-run`: a live store said no, rather than nothing
+   *   tracking ownership at all.
    */
-  advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenialReason | 'fenced' | 'no-run' | undefined {
+  advance(
+    agent: Agent,
+    to: AgentLifecycleState,
+    reason: string,
+  ): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | undefined {
     return advanceLeasedAgent(agent, to, reason)
   }
 

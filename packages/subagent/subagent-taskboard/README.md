@@ -13,7 +13,7 @@ kind: "package-reference"
 
 - [Why delegation is the moment](#why-delegation-is-the-moment)
 - [What a task means here](#what-a-task-means-here)
-- [The board records; it does not gate](#the-board-records-it-does-not-gate)
+- [The board records; the lease enforces](#the-board-records-the-lease-enforces)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -32,13 +32,11 @@ The receipt is the child's own terminal stop reason: `completed` submits the wor
 
 `dependsOn` is empty and stays empty. A delegation is ordered by whoever issued it, and inventing dependencies between children here would be this plugin deciding a shape the taskboard deliberately leaves to its caller.
 
-## The board records; it does not gate
+## The board records; the lease enforces
 
-A refused claim is logged, not enforced: a child still starts when another worker holds its task.
+A refused claim is logged, not acted on. Enforcement belongs to the lease: P4-07 refuses a second host at `acquire`, before its Run opens, and a board that also refused would be a second rule deciding one question — the two would disagree the first time either changed.
 
-The mechanical obstacle is gone. Until §12.29-1 the contract had no `release`, so a host resuming its own child would have been refused by its own finished, unexpired claim; the contract now has one and this plugin gives the claim back at settlement.
-
-What is left is a decision about behaviour rather than a missing mechanism. Refusing to start a child is a real failure a caller sees, and nobody has ruled that a contended board should stop a delegation — so the condition is reported and the delegation proceeds.
+The two are kept consistent by existence rather than by a copied number. A claim is made only for a child that holds its Run lease, so a claim on the board means that host really owns the work, and a host that lost the race leaves the board showing the holder that won. A task carrying its own epoch beside the lease's would be a second generation for one piece of work.
 
 ## Model Experience
 

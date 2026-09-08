@@ -15,14 +15,16 @@
  * owner is the parent that delegated it, its attempt is the activation epoch,
  * and its receipt is the child's terminal stop reason.
  *
- * **The board RECORDS; it does not decide whether a child may run.** A refused
- * claim is reported, not enforced. The obstacle that made that the only honest
- * option is now gone — §12.29-1 opened `release` on the contract, and this
- * plugin gives the claim back at settlement, so a host is no longer refused by
- * its own finished attempt. What remains is a decision about behaviour rather
- * than a missing mechanism: refusing to start a child is a real failure a
- * caller sees, and nobody has ruled that a contended board should stop a
- * delegation. Until someone does, the condition is observed and reported.
+ * **The board RECORDS; the LEASE enforces.** A refused claim is reported, not
+ * acted on, and that is deliberate rather than unfinished: P4-07 already
+ * refuses a second host at the lease, before the Run opens, and a second
+ * enforcement point deciding the same question is the shape BLOCKED-136
+ * records — two rules that disagree the first time either changes.
+ *
+ * The two are kept consistent by EXISTENCE rather than by a copied number: a
+ * claim is made only for a child that holds its lease, so a claim on the board
+ * means that host really owns the work. A task carrying its own epoch would be
+ * a second generation for one piece of work, and the two would drift.
  *
  * @module @deepseek-ai/dsh-subagent-taskboard
  */
@@ -88,6 +90,14 @@ export function apply(ctx: Context, config: Config): void {
   ctx.on('subagent/start', function (this: Scoped<SubagentRuntime>, info: SubagentRunInfo) {
     const worker = workerOf(this)
     if (worker === undefined) return
+    // A claim is made ONLY for a child that actually holds its Run lease, so
+    // "the board shows a claim" and "this host holds the lease" are one fact
+    // rather than two that can disagree (§12.31-A). No epoch is copied onto
+    // the task: a second number would be a second generation for one piece of
+    // work, and the two would drift the first time either was written alone.
+    // A child with no lease is a host that lost the race or a composition with
+    // no Run Service; neither owns the work, so neither claims it.
+    if (ctx.get('agents')?.get(info.id)?.lifecycle === undefined) return
     const taskId = brandString<TaskId>(info.id)
     // Submitted on first sight only. A cold resume re-activates a child this
     // board already holds, and `submit` reports that as `duplicate-task` —

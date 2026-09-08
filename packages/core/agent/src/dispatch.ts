@@ -286,8 +286,14 @@ export function advanceLeasedAgent(
   agent: Agent,
   to: AgentLifecycleState,
   reason: string,
-): TransitionDenialReason | 'fenced' | 'no-run' | undefined {
+): TransitionDenialReason | 'fenced' | 'lease-refused' | 'no-run' | undefined {
   const { lifecycle, runLease } = agent
+  // A refusal is reported BEFORE absence, because the two look identical on
+  // the agent and mean opposite things: a live store said this agent may not
+  // own its work item, while absence says nothing is tracking ownership at
+  // all. Reporting the refusal as absence let a second host keep dispatching
+  // against an item another host held.
+  if (agent.leaseRefused === true) return 'lease-refused'
   // Absence is its own answer, never a lifecycle at its initial state: an
   // agent with no Run holds no authority, and treating it as `queued` would
   // let it advance through a state machine no store backs.
