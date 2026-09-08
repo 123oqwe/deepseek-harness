@@ -226,6 +226,19 @@ jobs:
         # run turns "expected 0 to be 1 in pwsh-tool-turn" into "that fixture is
         # known stale on the host that refreshed it" -- the diagnosis that took
         # five red runs to reach by hand.
+        #
+        # §12.65: `lib` mode, matching `snapshotGate()` in scripts/run-gates.ts.
+        # The web scenarios live in `apps/web/tests/**/*.snapshot.ts`, which the
+        # runner includes ONLY under this mode because they execute generated
+        # client bundles; source mode is the zero-build path. Without it this
+        # workflow observed 4 files and the main `ci.yml` observed 6, and since
+        # `ci.yml` does not run on the fork branch, the web corpus was invisible
+        # to every signal this program consumes -- which is how
+        # `snapshots/web/minimal-preset` sat stale from P2-03's manifest work
+        # until a local lib-mode run found it. The Build step above is the
+        # prerequisite this mode needs.
+        env:
+          DSH_EXAMPLE_MODE: lib
         run: |
           if [ -f snapshots/.refresh-skipped.json ]; then
             echo "::warning::a refresh left fixtures unobserved; a failure in one of these is stale-on-host, not a regression:"
