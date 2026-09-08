@@ -907,3 +907,5 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 3. **P4-12**:预留只在原生派发,**code-mode 子派发不经 ledger**——acc[0] 的"零重复外部效应"对 code-mode 工具不成立(manifest 层拦了绕过,ledger 层没有)。**裁**:`ptc.ts` 子派发同样 reserve → 执行 → confirm,与 manifest 同点;冻结 code-mode 同键第二次不执行。
 **`classified: boolean` 上 `ActionManifest`**:接受——"风险是被声明的还是被默认的"是关于这条 manifest 的事实,不是写日志那一刻的事实;acc[2] 说的就是它。P2-03 C supplement(已撤签,C 不在锁下):`classified` 未声明为 false、声明为 true,变异 → 红。
 **顺序**:本次观测绿 → P4-09 / P5-10 / P5-11(/P4-08)签;P2-03 U.4 + P4-06 发送侧 + P4-07 session 键 + P4-12 code-mode 预留 → 下一次观测。
+
+**12.33 补记(2026-09-08 00:20 EDT,`01c04d00ff`)**:两处落地——事件内联十二字段(常量照落:日志形状不能等内容出现才变),两条路径经 `appendManifestThenGate` + `createSessionManifestAppender`(会话日志作真正的 appender,放 `dsh-tools` 不放 manifest 包:能力定义去够 session 是 136 那条边);变异去五字段红 29、`classified` 写死红精确 2,不对称即"被读非被假定"。**Standing(执行者提出,delegate 采纳)**:凡改动进入**持久事件负载**的字段,`test:snapshot:refresh` 前必须先构建受影响包——sdk 语料回放的是构建后 `lib/`,不重建则旧代码产出旧 payload 与旧夹具匹配,"某语料没变"是**假阴性**;证据的前提条件不满足时绿无意义(与"没冻结的测试不是证据"同族)。
