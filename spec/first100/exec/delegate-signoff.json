@@ -233,6 +233,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T15:22:51.921Z",
       "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: C/U/F GREEN @ 434408a47c, P=N/A (contract epic), 0 open findings. 4.4a: ActionManifest constructed on both dispatch paths (native + ptc) via appendManifestThenGate, event inlines every must[0] field; acc[2] enforcement half deferred to P2-04.U per §12.46-B (BLOCKED-159)."
+    },
+    {
+      "epic": "P4-07",
+      "rowDigestSha256": "dfaa50120d97600cc5ea5a5bde150a1e9805520fbf412ba6da94e4f9faa511c6",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T15:23:14.497Z",
+      "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: C/P/U/F and every supplement GREEN @ 434408a47c, 0 open findings. 4.4a: advanceLeasedAgent is the sole entry with four production call sites, epochs issued by the lease store (dsh-lease-sqlite enabled in bundle/base), unfenced export removed; LeaseRefusedError vs FencedError distinct; heartbeat leaseMs/3; release on completion."
     }
   ]
 }
