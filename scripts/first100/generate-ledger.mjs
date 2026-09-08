@@ -409,7 +409,36 @@ export function checkFailureSetAgainstFlakeRegistry(failedFullNames, registry) {
   return { valid: unregisteredFailures.length === 0 && failedFullNames.size > 0, unregisteredFailures, absorbedFlakes }
 }
 
+/**
+ * Stamp every ledger supplement whose freeze entry has been superseded.
+ *
+ * The freeze is the authority on which supplements are live; the ledger row is
+ * a record of observations and can outlive the entry it observed. P4-06.P.1
+ * sat `GREEN@b3186e6db9` after freeze #173 was superseded by P.3, so the row
+ * asserted a live green for an entry the freeze had already retired — two
+ * files disagreeing, with the stale one reading as the stronger claim.
+ *
+ * Derived on write rather than corrected by hand: a hand-edit is the one thing
+ * the ledger's own rules forbid, and a derivation cannot drift back.
+ * @param rows - the ledger rows about to be written, mutated in place.
+ * @param freezeEntries - the command-freeze entries, the authority on liveness.
+ */
+export function deriveSupplementLiveness(rows, freezeEntries) {
+  const freeze = { entries: freezeEntries }
+  for (const row of Object.values(rows)) {
+    for (const [key, supplement] of Object.entries(row.supplements ?? {})) {
+      const [stage, seq] = key.split('.')
+      const frozen = freeze.entries.find((e) =>
+        e.epic === row.id && e.stage === stage && e.supplementSeq === Number(seq))
+      if (frozen?.supersededBy === undefined) continue
+      supplement.supersededBy = frozen.supersededBy
+      if (supplement.status === 'GREEN') supplement.status = 'SUPERSEDED'
+    }
+  }
+}
+
 function writeLedgerHeader(rows, inputsConsumed) {
+  deriveSupplementLiveness(rows, loadJson(COMMAND_FREEZE_PATH).entries)
   const header = {
     schema: { name: 'first100-program-ledger', version: '1.0' },
     generatedBy: 'scripts/first100/generate-ledger.mjs',
@@ -945,7 +974,17 @@ export function checkCoverageClosure(epicId, registry, freeze, coverage, row) {
     for (const citation of entry.coveredBy) {
       const frozenMatch = freeze.entries.find((f) => {
         if (f.epic !== epicId || f.stage !== citation.stage) return false
-        if (citation.supplementSeq !== undefined) return f.supplementSeq === citation.supplementSeq && f.supplements?.epic === epicId
+        // A SUPERSEDED supplement is not evidence, for the same reason a
+        // superseded stage entry is not: superseding an entry says the
+        // property moved to its replacement, so counting the old one would
+        // credit an epic twice for work that is now described once. The
+        // liveness of a supplement is derived from the freeze, never from the
+        // ledger row, which can be stale — P4-06.P.1 sat GREEN@b3186e6db9
+        // after freeze #173 was superseded by P.3, and without this guard the
+        // stale row still satisfied a citation.
+        if (citation.supplementSeq !== undefined) {
+          return f.supplementSeq === citation.supplementSeq && f.supplements?.epic === epicId && !f.supersededBy
+        }
         return f.supplements === undefined && !f.supersededBy
       })
       const observedTitles =

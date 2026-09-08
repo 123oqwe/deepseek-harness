@@ -3,7 +3,7 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-08T15:25:33.899Z",
+  "lastUpdatedUtc": "2026-09-08T15:28:05.036Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
@@ -14,7 +14,7 @@
     "detail": "Run 34225817745 at 645317b839 is the observation for the four revoked cells and P2-04 C/P/U/F; it was still in_progress with 0 artifacts when last checked. P9-08.P was built and WITHDRAWN per §12.55 — P9-08 is W21 and its predecessor P7-09 (W16) is NOT_RUN, so building it skipped a wave."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
-  "ledgerDigest": "94bfc2cc8051540a148a7706e4f7764813e6167eb20e0e746c685418640dcbc8",
+  "ledgerDigest": "5db09d403708c7f42c495a45bf2858fcfe49c2908d7bef462cc00866b6fdc633",
   "blockedQueueRef": "spec/first100/exec/BLOCKED-QUEUE.md",
   "totals": {
     "acceptedEpics": 24,
