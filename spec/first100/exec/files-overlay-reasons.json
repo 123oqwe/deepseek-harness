@@ -97,6 +97,10 @@
     "P4-09 packages/workflow/workflow-filesystem/tsconfig.json": "The new package's compiler face and project references.",
     "P2-04 packages/core/tools/src/index.ts": "§12.48-B(b). The registry's U list names `core/tools/src/types.ts`, but the tool DEFINITION lives here — `types.ts` in that package holds only PTC event payloads. `riskDomainTags` is declared on `ToolDefinition`, which is what the dispatch gate will classify from.",
     "P2-04 packages/core/tools/src/schema.ts": "§12.48-B(b). `defineTool` is here, and a declared tag that the builder drops would satisfy the textual structural gate while reaching no runtime.",
-    "P2-04 packages/bundle/base/cordis.patch.yml": "§12.48-B(a), §12.49(4) step 1. The three preset approval thresholds. Zero behaviour change while the dispatch gate is unwired, and landing it first keeps the gate slice from carrying a profile change too."
+    "P2-04 packages/bundle/base/cordis.patch.yml": "§12.48-B(a), §12.49(4) step 1. The three preset approval thresholds. Zero behaviour change while the dispatch gate is unwired, and landing it first keeps the gate slice from carrying a profile change too.",
+    "P2-04 packages/core/tools/src/external-effect.ts": "§12.50. The Consumer role: the gate must sit where both dispatch paths reach it, and this module already holds the reserve/confirm pair for that reason (§12.35-2).",
+    "P2-04 packages/core/agent-loop/src/tool-calls.ts": "§12.50. The native dispatch path calls the gate before taking a ledger reservation.",
+    "P2-04 packages/core/tools/src/ptc.ts": "§12.50. The code-mode dispatch path calls the SAME gate, which is what makes acceptance[0]'s cross-surface consistency hold by construction.",
+    "P2-04 packages/interaction/permission-presets/tests/risk-gate.spec.ts": "§12.50. The gate's cases live with the policy package because the core reads the policy through a structural port; a test inside the core could only mount a fake."
   }
 }

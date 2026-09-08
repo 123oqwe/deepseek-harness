@@ -93,6 +93,137 @@ export function reserveExternalEffect(
 }
 
 /**
+ * Why the risk gate refused an action before it ran (P2-04 must[1], §12.50).
+ *
+ * `hard-deny` is the kernel band, which no organisation policy may switch
+ * off; `approval-refused` is a question that was asked and not answered yes.
+ * They are distinct because they demand different responses — a hard deny is
+ * never worth re-asking, and a refused approval may be granted next turn.
+ */
+/**
+ * The policy operations this gate needs, named structurally.
+ *
+ * Declared here rather than imported from `@deepseek-ai/dsh-permission-presets`
+ * because that package sits above this one: a value or type dependency would
+ * be an upward layer edge, and this module is reached from both dispatch
+ * paths in the core. The port is three read-only operations, so a second
+ * policy provider satisfies it by implementing them under the same names.
+ */
+interface RiskPolicyPort {
+  /**
+   * Classify one action under the deployment's organisation policy.
+   * @param subject - the action id and the domain tags it declares.
+   * @returns the class, whether it is hard-denied, and how it was reached.
+   */
+  classifyAction(subject: { readonly actionId: string; readonly domainTags: readonly string[] }): {
+    readonly riskClass: string
+    readonly hardDenied: boolean
+  }
+  /**
+   * Whether a classification reaches the named preset's approval threshold.
+   * @param classification - the classifier's verdict.
+   * @param preset - the preset in force.
+   * @returns whether approval is required first.
+   */
+  requiresApproval(classification: { readonly riskClass: string }, preset: string): boolean
+  /**
+   * The preset in force for one session.
+   * @param session - the agent's session.
+   * @returns a preset table key, or the derived custom state.
+   */
+  current(session: Agent['session']): string
+}
+
+/**
+ * The approval operation this gate needs, named structurally for the same
+ * reason as {@link RiskPolicyPort}.
+ *
+ * `request` is total: `@deepseek-ai/dsh-user-approval` normalizes an
+ * unanswered or rogue result to `'unavailable'`, so this gate reads an
+ * outcome rather than handling an absence.
+ */
+interface ApprovalPort {
+  /**
+   * Ask composed answerers for one decision.
+   * @param request - the agent, the tool and the reason to show.
+   * @returns the settled outcome; `'allowed-once'` is the only one that permits the action.
+   */
+  request(request: { agent: Agent; toolName: string; reason: string }): Promise<string>
+}
+
+export type RiskRefusal =
+  | { readonly kind: 'hard-deny'; readonly riskClass: string; readonly undeclared: boolean }
+  | { readonly kind: 'approval-refused'; readonly riskClass: string; readonly outcome: string; readonly undeclared: boolean }
+
+/**
+ * Decide whether one action may run under this deployment's risk policy
+ * (P2-04 must[1], P2-03 acceptance[2]).
+ *
+ * Three outcomes, in this order: an action in a hard-deny band never runs; an
+ * action at or above the preset's approval threshold runs only if approval is
+ * granted; anything else runs. The order matters — asking about an action the
+ * kernel refuses would offer a choice that does not exist.
+ *
+ * **An UNDECLARED tool is the case this gate is really for.** A tool that
+ * declares no domain tags classifies by the unknown default, the highest
+ * policy-adjustable class, so it needs approval on an interactive preset and
+ * is refused where nothing can answer. That is P2-03's acceptance[2] read
+ * literally, and it is why the refusal text names the undeclared tags rather
+ * than only the class: an operator seeing it should learn that a tool did not
+ * say what it touches, not merely that something scored high.
+ *
+ * Absent policy service means no gate: a composition with no
+ * `permissionPresets` has no organisation policy to enforce, which is
+ * capability absence rather than an action nobody vouched for.
+ * @param ctx - the mounting context, consulted for an optional policy service.
+ * @param agent - the agent dispatching the action; its session carries the preset in force.
+ * @param toolName - the action's capability, used as its identity to the classifier.
+ * @param riskDomainTags - what the tool declares it touches, empty when it declares nothing.
+ * @returns the refusal, or `undefined` when the action may run.
+ */
+export async function gateActionRisk(
+  ctx: Context,
+  agent: Agent,
+  toolName: string,
+  riskDomainTags: readonly string[],
+): Promise<RiskRefusal | undefined> {
+  const presets = ctx.get('permissionPresets') as RiskPolicyPort | undefined
+  if (presets === undefined) return undefined
+  const undeclared = riskDomainTags.length === 0
+  const classification = presets.classifyAction({ actionId: toolName, domainTags: riskDomainTags })
+  if (classification.hardDenied) {
+    return { kind: 'hard-deny', riskClass: classification.riskClass, undeclared }
+  }
+  if (!presets.requiresApproval(classification, presets.current(agent.session))) return undefined
+  const approval = ctx.get('approval') as ApprovalPort | undefined
+  // Unreachable in a real composition: `permission-presets` declares
+  // `static inject = ['shell', 'approval', ...]`, so reaching this line at all
+  // means a policy service is mounted, which means an approval service is too.
+  // Kept because the type admits absence and the fail-closed direction must be
+  // stated where a reader looks for it — silence is not consent. A mutation
+  // flipping it to `allowed-once` reddens nothing, and that null result is
+  // recorded rather than presented as coverage.
+  /* v8 ignore next 3 -- see above: presets inject approval, so absence cannot occur here */
+  const outcome = approval === undefined
+    ? 'unavailable'
+    : await approval.request({ agent, toolName, reason: riskRefusalReason(classification.riskClass, undeclared) })
+  if (outcome === 'allowed-once') return undefined
+  return { kind: 'approval-refused', riskClass: classification.riskClass, outcome, undeclared }
+}
+
+/**
+ * The sentence an operator sees when the gate stops an action.
+ * @param riskClass - the class the action was classified into.
+ * @param undeclared - whether the tool declared no domain tags at all.
+ * @returns a reason naming the cause rather than only the score.
+ */
+function riskRefusalReason(riskClass: string, undeclared: boolean): string {
+  return undeclared
+    ? `this tool declares no risk domain tags, so it classifies at "${riskClass}" by the unknown default`
+    : `this action classifies at "${riskClass}"`
+}
+
+/**
  * Record what the external effect returned (must[4]).
  *
  * A failure is `ambiguous`, not a release: a tool that threw may or may not
@@ -149,5 +280,31 @@ export function refusedReservationResult(decision: Exclude<ReserveDecision, { ac
     content: [{ type: 'text', text: `Error: ${text}` }],
     isError: true,
     error: { message: text, info: { name: 'LedgerRefusedError', code: ABORTED_BEFORE_DISPATCH } },
+  }
+}
+
+/**
+ * Render a risk refusal as a settled tool result (P2-04 must[1]).
+ *
+ * A refusal is an outcome, not a thrown error, for the same reason a ledger
+ * refusal is: the model asked for something the deployment does not permit,
+ * and it needs to read that and choose differently rather than see a crash.
+ * The text names WHY — an undeclared tool says so, because "this scored high"
+ * and "this never said what it touches" call for different fixes.
+ * @param refusal - what the gate decided.
+ * @param toolName - the action refused, named so a multi-call turn is readable.
+ * @returns the tool result to record in place of an execution.
+ */
+export function refusedRiskResult(refusal: RiskRefusal, toolName: string): ToolExecutionResult {
+  const cause = refusal.undeclared
+    ? `it declares no risk domain tags, so it classifies at "${refusal.riskClass}" by the unknown default`
+    : `it classifies at "${refusal.riskClass}"`
+  const text = refusal.kind === 'hard-deny'
+    ? `The action "${toolName}" was refused outright: ${cause}, which this deployment hard-denies. No approval can permit it.`
+    : `The action "${toolName}" needs approval before it runs: ${cause}. The request ended "${refusal.outcome}", so it was not performed.`
+  return {
+    content: [{ type: 'text', text: `Error: ${text}` }],
+    isError: true,
+    error: { message: text, info: { name: 'RiskRefusedError', code: ABORTED_BEFORE_DISPATCH } },
   }
 }

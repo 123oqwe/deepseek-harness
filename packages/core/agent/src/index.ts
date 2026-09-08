@@ -22,7 +22,13 @@ export * from './inbox.ts'
 export * from './consumed-work.ts'
 export * from './model-selection.ts'
 export {
-  advanceAgentLifecycle,
+  // `advanceAgentLifecycle` is deliberately NOT re-exported (§12.16-3, P4-07
+  // must[1]). It decides a transition without checking authority, so a
+  // consumer reaching it would move a lifecycle without presenting a fencing
+  // token — the unauthorized write this epic exists to remove. It stays
+  // module-private to `./dispatch.ts`, where the fenced entry point calls it
+  // after the fencing check; a caller outside this package uses
+  // `advanceAgentLifecycleFenced` or `advanceLeasedAgent`.
   advanceAgentLifecycleFenced,
   advanceLeasedAgent,
   agentCarrier,

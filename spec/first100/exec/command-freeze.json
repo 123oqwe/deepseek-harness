@@ -4325,7 +4325,9 @@
       "sensitivityProof": {
         "mutationDescription": "Two mutations on dispatch.ts: (1) the fencing check removed entirely, falling through to the unfenced path; (2) the fencing check moved AFTER the lifecycle decision. Both restored byte-identical.",
         "failureSummary": "(1) reddens 3 cases; (2) reddens exactly the order case. Against the first draft (2) reddened ZERO, because no case could distinguish the orders -- both return the same verdict except when a token is simultaneously fenced and illegal."
-      }
+      },
+      "supersededBy": "2026-09-09T01:20:00.000Z",
+      "supersessionReason": "§12.16-3 / P4-07 openFinding. Both entries froze a CHARACTERIZATION whose passing was the defect: `advanceAgentLifecycle` decides a transition without checking authority and was a public export of `@deepseek-ai/dsh-agent`, so any consumer — a third-party plugin included, in a product whose premise is that everything is a plugin — reached the unfenced path by importing it. Each case said so in its own body and named its failure as the unlock signal rather than a regression. The export is now withdrawn and the cases assert the ABSENCE instead, which is a property change and therefore a supersession."
     },
     {
       "epic": "P4-07",
@@ -5772,7 +5774,9 @@
         "mutationDescription": "Four mutations: (1) the audit record omits the current holder; (2) the audit record spreads the whole lease into itself, leaking fields; (3) checkFencing's epoch equality relaxed to a less-than comparison, admitting a forged-high epoch; (4) the expiry boundary relaxed to greater-or-equal. All restored byte-identical.",
         "failureSummary": "Reddens 2, 2, 2 and 1 cases respectively. Mutation (2) is caught by the case asserting the record's exact key set, which exists precisely because 'carries no credential material' is otherwise unfalsifiable."
       },
-      "supersedes": "2026-09-05T23:50:00.000Z"
+      "supersedes": "2026-09-05T23:50:00.000Z",
+      "supersededBy": "2026-09-09T01:20:00.000Z",
+      "supersessionReason": "§12.16-3 / P4-07 openFinding. Both entries froze a CHARACTERIZATION whose passing was the defect: `advanceAgentLifecycle` decides a transition without checking authority and was a public export of `@deepseek-ai/dsh-agent`, so any consumer — a third-party plugin included, in a product whose premise is that everything is a plugin — reached the unfenced path by importing it. Each case said so in its own body and named its failure as the unlock signal rather than a regression. The export is now withdrawn and the cases assert the ABSENCE instead, which is a property change and therefore a supersession."
     },
     {
       "epic": "P1-03",
@@ -8093,8 +8097,7 @@
         "mutationDescription": "Locally (never committed) reordered `decideReservation` so the STATE check runs before the arguments check -- moving the `existing.state === 'ambiguous'` and duplicate branches above the `argumentsHash` comparison in packages/action/action-ledger/src/index.ts -- then re-ran the frozen command. This is the order a reader would write by following the clause order rather than the failure modes.",
         "failureSummary": "1 of 13 failed: `refuses on arguments BEFORE reporting a duplicate, so a changed request is never answered by the old one` -- AssertionError, the decision came back `{action: 'duplicate', state: 'sent'}` where the case requires `{action: 'refused', reason: 'arguments-differ'}`. That is the defect the case exists for: a caller sending a DIFFERENT request under a reused key is told its request was already carried out. The other twelve stayed green, which is what makes the failure specific to check order rather than to the comparison itself. Mutation reverted immediately; 13 passed (13) before continuing."
       },
-      "note": "P4-12 Contract stage: types plus the pure reservation decision, no store and no wiring. The five case groups name the two standards this epic OWNS -- `Idempotency-Key` from draft-ietf-httpapi-idempotency-key-header-07, and Stripe's same-key-different-parameters rule -- because the pre-flight record claims ownership by EVIDENCE rather than by assignment, and P4-06 (BLOCKED-140) is the record of what assignment alone buys: it owned the CloudEvents shape with no case naming an attribute, and the standard it owned held the answer to the question its clause got wrong. The declared test path is `tests/idempotency.e2e.ts`; the file is `.e2e.spec.ts` because the greening observation collects `*.spec.ts` only, and an `.e2e.ts` file would be frozen against a command that never reports it.",
-      "supplements": null
+      "note": "P4-12 Contract stage: types plus the pure reservation decision, no store and no wiring. The five case groups name the two standards this epic OWNS -- `Idempotency-Key` from draft-ietf-httpapi-idempotency-key-header-07, and Stripe's same-key-different-parameters rule -- because the pre-flight record claims ownership by EVIDENCE rather than by assignment, and P4-06 (BLOCKED-140) is the record of what assignment alone buys: it owned the CloudEvents shape with no case naming an attribute, and the standard it owned held the answer to the question its clause got wrong. The declared test path is `tests/idempotency.e2e.ts`; the file is `.e2e.spec.ts` because the greening observation collects `*.spec.ts` only, and an `.e2e.ts` file would be frozen against a command that never reports it."
     },
     {
       "epic": "P4-12",
@@ -8130,8 +8133,7 @@
         "mutationDescription": "Locally (never committed) moved `decideReservation` OUTSIDE the `BEGIN IMMEDIATE` in packages/action/action-ledger/src/store.ts -- reading the entry and deciding first, then opening the transaction only to write. That is the arrangement a reader gets by treating the transaction as protecting the WRITE rather than the read-decide-write step. Re-ran the frozen command three times.",
         "failureSummary": "1 of 8 failed on all three runs: `gives the reservation to ONE of two concurrent processes, and the other a duplicate` -- both children decided `reserved`, both marked sent, and the assertion that exactly one reserved failed. Three runs because the FIRST version of this case was not deterministic: without a start barrier the two children serialised by luck and the same mutation passed 8 of 8. A concurrency case that depends on timing tests nothing it claims, so the children now spin on a file barrier and start together. Mutation reverted; 21 passed (21) before continuing."
       },
-      "note": "P4-12 Provider: the durable store, its own action-ledger.sqlite following dsh-message-bus's precedent. The reservation write is synchronous and precedes the send, because a batched write reopens the window the ledger closes. The read and the write are ONE transaction: deciding outside it lets two workers both read 'no entry', both decide `reserved`, and both send -- the duplicate the ledger exists to prevent, produced by the ledger itself. The registry also declares `packages/session/session-persistence/src/write-behind.ts` for this stage; it is NOT touched, and the reason is recorded as BLOCKED-141 rather than decided here.",
-      "supplements": null
+      "note": "P4-12 Provider: the durable store, its own action-ledger.sqlite following dsh-message-bus's precedent. The reservation write is synchronous and precedes the send, because a batched write reopens the window the ledger closes. The read and the write are ONE transaction: deciding outside it lets two workers both read 'no entry', both decide `reserved`, and both send -- the duplicate the ledger exists to prevent, produced by the ledger itself. The registry also declares `packages/session/session-persistence/src/write-behind.ts` for this stage; it is NOT touched, and the reason is recorded as BLOCKED-141 rather than decided here."
     },
     {
       "epic": "P4-12",
@@ -8230,8 +8232,7 @@
         "mutationDescription": "Locally (never committed) removed the ledger's authority from the attempt: `if (decision.action !== 'reserved') return` deleted from `attempt()` in the fault-matrix suite, so every attempt sends regardless of what the ledger decided. That is the product WITHOUT this epic.",
         "failureSummary": "2 of 4 failed: the 10,000-crash campaign (duplicate commits counted at the fake service) and the batch case (items resent after a partial failure). The two that stayed green are the ones that do not depend on a duplicate being prevented -- the at-least-once control and the ambiguous-timeout case, whose single commit happens before any retry. Mutation reverted; 29 passed (29) before continuing."
       },
-      "note": "P4-12 Fault: acceptance[0]'s crash campaign plus the two validation lines. The duplicate count comes from a fake external service that RECORDS every request, not from the ledger -- asking the ledger whether it prevented a duplicate is asking the defendant. The campaign is deterministic (a fixed LCG seed) rather than clock-seeded, so a failure is reproducible instead of being a story about which run it was; one ledger directory per key is reused across that key's attempts, which is what a restart is, and a fresh directory per attempt would have measured nothing. The campaign also asserts 250 commits, without which it passes when nothing was ever sent.",
-      "supplements": null
+      "note": "P4-12 Fault: acceptance[0]'s crash campaign plus the two validation lines. The duplicate count comes from a fake external service that RECORDS every request, not from the ledger -- asking the ledger whether it prevented a duplicate is asking the defendant. The campaign is deterministic (a fixed LCG seed) rather than clock-seeded, so a failure is reproducible instead of being a story about which run it was; one ledger directory per key is reused across that key's attempts, which is what a restart is, and a fresh directory per attempt would have measured nothing. The campaign also asserts 250 commits, without which it passes when nothing was ever sent."
     },
     {
       "epic": "P2-03",
@@ -8342,7 +8343,11 @@
         "mutationDescription": "Locally (never committed), reverted each dispatch path in turn to the defect this supplement pins -- `runId: brandString<RunId>(session.id)` in packages/core/agent-loop/src/tool-calls.ts, then the same in packages/core/tools/src/ptc.ts -- leaving every other field, the manifest construction and the event payload unchanged.",
         "failureSummary": "The agent-loop mutation reddened TWO cases: this supplement's own case, and the pre-existing 'logs a real tool call whose manifest carries a non-empty idempotencyKey, actor and runId', whose expectation is now `anonymous-run:manifest-fields`. Both are assertions about the mutated value, so the second red is coverage rather than noise, and neither case was weakened to make the count match a prediction. The ptc mutation reddened exactly one: this supplement's code-mode case. Restored from a copy taken before each mutation; 125 passed (125) again."
       },
-      "note": "The subject is the VALUE, not the field. P2-03's delegate re-verify found the field must[0] mandates present and its content something else: `RunId` is the invocation a principal acts inside and P4-01 mints `run-<uuid>`, while both paths branded the session id. Two runs of one session therefore shared a runId, and P4-12 keys a reservation scope on it. Ruling: §12.19 reading 2 and §12.19-4. This supplement does not supersede U.1 or U.2; it adds the value assertion neither made."
+      "note": "The subject is the VALUE, not the field. P2-03's delegate re-verify found the field must[0] mandates present and its content something else: `RunId` is the invocation a principal acts inside and P4-01 mints `run-<uuid>`, while both paths branded the session id. Two runs of one session therefore shared a runId, and P4-12 keys a reservation scope on it. Ruling: §12.19 reading 2 and §12.19-4. This supplement does not supersede U.1 or U.2; it adds the value assertion neither made.",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      }
     },
     {
       "epic": "P4-06",
@@ -8377,7 +8382,11 @@
         "mutationDescription": "Locally (never committed), two mutations in turn. (a) In packages/core/agent/src/inbox.ts, replaced the epoch component of the dedup key with the constant 0, leaving the source and id components and the consumed-set machinery unchanged. (b) In packages/subagent/subagent/src/continuation.ts, removed the `senderEpoch` field from the settlement notice's source, leaving the notice and its delivery unchanged.",
         "failureSummary": "(a) reddened exactly one case, 'ADMITS a settlement from the same child in a LATER epoch' — a second activation was suppressed as a duplicate. (b) reddened exactly one case, the composition case in continuation.spec.ts. Also measured and recorded in the spec itself: replacing the SOURCE component with a constant reddens nothing here, because every sender reaching this inbox with an epoch is a `subagent-settled` notice today; the case that reads as covering it varies the id, and both the case name and the module doc now say so rather than implying coverage the assertion does not have."
       },
-      "note": "Reaches the registry's declared consumer `packages/core/agent/src/inbox.ts` (§12.24-3). Does not supersede U or U.2: those observations recorded the bus and dedup library at the SHAs they were frozen against, and remain true."
+      "note": "Reaches the registry's declared consumer `packages/core/agent/src/inbox.ts` (§12.24-3). Does not supersede U or U.2: those observations recorded the bus and dedup library at the SHAs they were frozen against, and remain true.",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "U"
+      }
     },
     {
       "epic": "P4-08",
@@ -8417,7 +8426,11 @@
         "mutationDescription": "Locally (never committed), two mutations in turn. (a) In packages/workflow/workflow-worker-thread/src/host.ts, removed the `journaling.onAgentStart` call so nothing recorded a step. (b) In packages/workflow/workflow-worker-thread/src/runtime.ts, removed the reuse check so a resumed run always started a child.",
         "failureSummary": "(a) reddened two cases, 'records one entry per agent() call' and 'classes every agent() step SIDE-EFFECTING'. (b) reddened exactly one, 'RESUMES without starting the completed children again' — the resumed run started both children again. The count that fails is taken at `workflow/agent-start`, one event per child actually started, not from the journal, which could only report that it recorded a skip."
       },
-      "note": "Reaches the registry's declared consumer `packages/workflow/workflow-worker-thread/src/host.ts` (§12.24-3). must[1]'s skip and must[2]'s reconciliation reach the world through `sessionPersistence`; the journal alone never authorizes reuse. The live-run cases live in `journal-live-run.spec.ts`, NOT in `journal-host.spec.ts`: that file is P4-08.U's own frozen target and an earlier draft of this supplement overwrote it, deleting eight frozen cases in the commit that added new ones. `verify-frozen-titles-resolvable` is what caught it."
+      "note": "Reaches the registry's declared consumer `packages/workflow/workflow-worker-thread/src/host.ts` (§12.24-3). must[1]'s skip and must[2]'s reconciliation reach the world through `sessionPersistence`; the journal alone never authorizes reuse. The live-run cases live in `journal-live-run.spec.ts`, NOT in `journal-host.spec.ts`: that file is P4-08.U's own frozen target and an earlier draft of this supplement overwrote it, deleting eight frozen cases in the commit that added new ones. `verify-frozen-titles-resolvable` is what caught it.",
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "U"
+      }
     },
     {
       "epic": "P4-08",
@@ -8465,7 +8478,11 @@
         "mutationDescription": "Six mutations. types.ts: (1) side-effecting steps skipped when verified and holding receipts -- the double-charge bug; (2) the verified flag ignored; (3) the digest-mismatch refusal removed. replay.ts: (4) resumeAt counts skippable steps instead of finding the first non-skippable, so it skips PAST a rerun; (5) compaction drops receipts along with inputs; (6) receipts collected only up to resumeAt. All restored byte-identical.",
         "failureSummary": "Reddens 2, 1, 1, 1, 1 and 1 cases respectively. (1) is the targeted mutation in BLOCKED-085's sense: skipping a completed-and-verified step is the natural implementation, and it is precisely how a resumed workflow charges twice."
       },
-      "supplementSeq": 1
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "C"
+      }
     },
     {
       "epic": "P4-08",
@@ -8505,7 +8522,11 @@
         "mutationDescription": "Five mutations on src/recorder.ts: (1) no entry written until a step settles; (2) a settlement for an unstarted step back-fills an invented entry; (3) verification accepts any outcome; (4) entries emitted in insertion order rather than by seq; (5) a settlement appends a second entry instead of replacing the first. All restored byte-identical.",
         "failureSummary": "Reddens 11, 1, 2, 1 and 7 cases respectively. (4) reddened ZERO before a case was added that starts steps out of order -- the suite, not the mutation, was incomplete."
       },
-      "supplementSeq": 1
+      "supplementSeq": 1,
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "P"
+      }
     },
     {
       "epic": "P4-08",
@@ -8552,7 +8573,11 @@
         "failureSummary": "Reddens exactly 1 case each, and each is a boundary that exists for it: (1) boundary 17, which no other case covers; (2) boundary 14; (3) boundary 10."
       },
       "supersedes": "2026-09-06T09:50:00.000Z",
-      "supplementSeq": 2
+      "supplementSeq": 2,
+      "supplements": {
+        "epic": "P4-08",
+        "stage": "F"
+      }
     },
     {
       "epic": "P4-09",
@@ -8905,11 +8930,6 @@
     {
       "epic": "P4-06",
       "stage": "P",
-      "supplements": {
-        "epic": "P4-06",
-        "stage": "P"
-      },
-      "supplementSeq": 5,
       "supersedes": "2026-09-08T09:20:00.000Z",
       "argv": [
         "pnpm",
@@ -8949,7 +8969,7 @@
         "mutationDescription": "None taken: this entry removes four cases and changes no behaviour of the ones that remain. The write-behind cases carry the mutation record of the entry this supersedes.",
         "failureSummary": "Not applicable — the surviving cases and their subject are unchanged; what changed is that the entry no longer pins a function that was deleted."
       },
-      "note": "§12.35-2(a). `commitWithOutbox` and `AtomicBatchSink` are deleted, so the four cases that pinned them are dropped from this entry and the remaining thirteen — the session write-behind's own batching — are re-frozen against the file that owns them. The deleted pair offered must[0]'s 'domain event and outbox record in one transaction' over a sink interface NOTHING implemented, and could only ever promise one BATCH: its own documentation said so, and BLOCKED-089 recorded the gap. `commitIntake` does it inside one `BEGIN IMMEDIATE`, which is the clause. Two commit paths for one clause is the arrangement where the weaker one gets used by accident, and the weaker one was the one with no implementation behind it."
+      "note": "§12.35-2(a). `commitWithOutbox` and `AtomicBatchSink` are deleted, so the four cases that pinned them are dropped from this entry and the remaining thirteen — the session write-behind's own batching — are re-frozen against the file that owns them. The deleted pair offered must[0]'s 'domain event and outbox record in one transaction' over a sink interface NOTHING implemented, and could only ever promise one BATCH: its own documentation said so, and BLOCKED-089 recorded the gap. `commitIntake` does it inside one `BEGIN IMMEDIATE`, which is the clause. Two commit paths for one clause is the arrangement where the weaker one gets used by accident, and the weaker one was the one with no implementation behind it. FILED AS BASE, not as a supplement: this entry declares `supersedes` the base P entry's `frozenAtUtc`, so it is that entry's successor and carries stage P's identity. Recorded as `supplementSeq: 5` it left P with no live base entry, and `checkObservationDistinctness` reports a conflict for any stage whose frozen entry it cannot resolve — which surfaced as \"shared observation file(s) between [C,P]\" and reads as an observation problem rather than a missing entry."
     },
     {
       "epic": "P4-06",
@@ -9382,6 +9402,178 @@
       },
       "note": "§12.47(i). `Config` gains `riskRules`, `addedHardDenyClasses`, `removedHardDenyClasses` and `approvalThreshold`, all schematised, and the service gains `classifyAction` and `requiresApproval`. `removedHardDenyClasses` exists so a deployment can SAY it and be refused where it says it: `classify` refuses such a policy on every call, so without the mount-time check the misconfiguration would surface as a runtime error per action in a profile already serving. The threshold is a validated config field rather than a constant because which band is worth interrupting a user for differs between an interactive session and an unattended one. Superseded at §12.48-B(a): `approvalThreshold` moved from the service to `PresetSpec` and is resolved by the NAMED preset in force, with a preset the table does not carry — `custom` is by definition no bundle — falling back to the strictest configured threshold. Fail-closed, and it invents no tunable, since the strictest value is one the deployment already chose; falling back to the most permissive would make an unrecognised knob combination the way to avoid approval.",
       "supersedes": "2026-09-08T16:40:00.000Z"
+    },
+    {
+      "epic": "P2-04",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-04",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/interaction/permission-presets",
+        "packages/policy/risk-taxonomy",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 must[1]: the default policy does not ask about sandboxed work runs a declared filesystem write and a declared shell command without asking",
+        "P2-03 acceptance[2]: an undeclared tool is the case the gate is for ASKS about a tool that declares no domain tags, naming the undeclared tags as the cause",
+        "P2-03 acceptance[2]: an undeclared tool is the case the gate is for REFUSES an undeclared tool when nothing can answer, rather than proceeding on silence",
+        "P2-03 acceptance[2]: an undeclared tool is the case the gate is for lets an undeclared tool run under a preset whose threshold is above the unknown default",
+        "P2-04 must[1]: a declared high band asks, and the kernel band never does asks about a declared security-sensitive action, and refuses it when approval is declined",
+        "P2-04 must[1]: a declared high band asks, and the kernel band never does HARD-DENIES a declared safety-critical action under EVERY preset, without asking",
+        "P2-04: a composition with no policy service has no gate runs an undeclared tool when no permission service is composed, which is capability absence"
+      ],
+      "files": [
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/bundle/base/cordis.patch.yml",
+        "packages/interaction/permission-presets/tests/risk-gate.spec.ts",
+        "packages/interaction/permission-presets/package.json"
+      ],
+      "filesOverlayReason": "§12.50. The gate is the Consumer role of P2-04's seam and must sit where BOTH dispatch paths reach it, which is `core/tools/src/external-effect.ts` — the module that already holds the reserve/confirm pair for exactly that reason (§12.35-2). The registry's U list named `core/tools/src/types.ts` and `permission-presets/src/types.ts`. The cases live in `permission-presets/tests/` because the policy package sits ABOVE the core: the core reads the policy through a structural port, so a test inside the core could only mount a fake and would prove the port is called rather than that the policy decides.",
+      "frozenAtUtc": "2026-09-08T23:55:00.000Z",
+      "dryRunProof": {
+        "treeSha": "b9107deac1fc66c3d03eb4595e83aafa0c7c356e",
+        "testsDiscovered": 64
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations of `gateActionRisk`, each restored byte-identical: (M43) a hard-denied action is asked about instead of refused; (M44) a missing approval service is read as `allowed-once`; (M45) the preset threshold is ignored and only `read` passes; (M46) an undeclared tool is reported as declared.",
+        "failureSummary": "M43 reddens the kernel-band case, M45 reddens 2 (both sandboxed-work cases start asking), M46 reddens 2 (the refusal text and the refusal record both carry the cause). M44 reddens NOTHING, and the reason is recorded in the code rather than presented as coverage: `permission-presets` declares `static inject = ['shell', 'approval', ...]`, so reaching that line means a policy service is mounted and therefore an approval service is too. The branch is unreachable in any real composition, not untested; it is kept because the type admits absence and the fail-closed direction belongs where a reader looks for it."
+      },
+      "note": "§12.50, step 4. The gate runs BEFORE the ledger reservation on both paths: a reservation claims an effect, and claiming one for an action the deployment refuses would leave a `sent` row for something that never happened. Three outcomes in order — hard-deny never runs and is never asked about (offering a choice that does not exist is worse than refusing, because granting it would imply the choice was real); at or above the preset's threshold needs approval; otherwise run. Under the shipped rules a sandboxed read, write or command runs WITHOUT asking, because the sandbox is that boundary's enforcer; what the gate stops is an undeclared tool (unknown default), a declared high band, and the kernel band. The refusal text names whether the tool declared nothing, because 'it scored high' and 'it never said what it touches' call for different fixes."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/fenced-dispatch.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the unfenced entry point is NOT on the package surface, so the composition is the only way in",
+        "fenced, that same self-asserted epoch is refused",
+        "admits the holder's real token, so the check is not refusing everything",
+        "refuses the previous holder after the item is reclaimed",
+        "still applies the lifecycle rules once fencing admits the token",
+        "reports `fenced` for a token that is BOTH fenced and proposing an illegal edge",
+        "refuses when the item holds no lease at all"
+      ],
+      "files": [
+        "packages/core/agent/src/dispatch.ts",
+        "packages/core/agent/src/index.ts",
+        "packages/run/lease/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-09T01:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2a209ea7f16eab00c72a81ecdee5967acc0eacc1",
+        "testsDiscovered": 7
+      },
+      "note": "P4-07 U-stage. First freeze for this cell. dispatch.ts is a REAL subject here, unlike P4-06's use of the same file -- see the C-stage freeze note.\n\nTHE GAP THIS STAGE CLOSES WAS MEASURED, NOT ASSUMED. advanceAgentLifecycle cannot enforce authority, and the reason is structural: NOTHING ISSUES THE LIFECYCLE'S EPOCH. decideTransition refuses only a strictly OLDER epoch and then adopts whatever the proposal carried, so the epoch a lifecycle holds is only ever the last one a caller asserted. A worker proposing epoch 9999 against a lifecycle at 1 is admitted AND becomes the new authority. A CHARACTERIZATION case pins that behaviour directly, so the fenced entry point is measured against a real hole rather than an imagined one.\n\nP4-05'S CONTRACT WAS NOT EDITED. The gap is closed from outside: checkFencing runs against the store's current lease first, so the epoch reaching decideTransition is one the STORE issued rather than one the caller chose. The two staleness rules stay deliberately different and this is not a contradiction -- decideTransition compares against a lifecycle that LEARNS its epoch from transitions, so it must admit a newer one; checkFencing compares against a store that ISSUES epochs, so anything but the current one is a forgery. Running the issuer's check first makes the lifecycle's more permissive rule unreachable by an attacker.\n\nORDER IS PART OF THE CONTRACT, and one case exists only to pin it. A token that is BOTH fenced and proposing an illegal edge must report 'fenced'. This applies the principle already stated in decideTransition's own JSDoc -- ordering authority first means 'a stale worker never learns whether its proposed edge would have been legal'. Running fencing after the lifecycle decision leaks exactly that to a worker with no authority to ask. The first draft of this suite had no such case and the reordering mutation reddened ZERO; the case was added rather than the mutation dismissed as equivalent.\n\nP4-05's lifecycle types were internal to dsh-agent and are now exported, because P4-07's fenced entry point takes them as parameters and an outside caller could not otherwise name what it must pass. Same shape as P8-01's Provider stage, where a missing re-export WAS the stage's substance. SUPERSEDED-INTO: the characterization is replaced by an assertion that the export is absent. `advanceAgentLifecycle` stays module-private to `./dispatch.ts`, where the fenced entry calls it after the fencing check; consumers use `advanceAgentLifecycleFenced` or `advanceLeasedAgent`. The fenced refusal is asserted alongside the absence because \"the door is gone\" and \"the lock works\" are different claims and P4-07 needs both.",
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, restored byte-identical: (M47) `advanceAgentLifecycle` is re-added to `@deepseek-ai/dsh-agent`'s export list, which is exactly the state these entries characterized before the finding was closed.",
+        "failureSummary": "M47 reddens the absence assertion in both files and nothing else — the fenced refusal keeps passing, which is the point: the lock always worked, and what changed is that the unfenced door is gone. A case asserting only the refusal would have passed throughout the defect's lifetime."
+      },
+      "supersedes": "2026-09-05T23:00:00.000Z"
+    },
+    {
+      "epic": "P4-07",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/lease/tests/fault-matrix.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-07 validation[0]: systematic fault matrix enumerates at least twelve boundaries, each named once",
+        "fault boundary 01 a strictly older epoch is refused as stale",
+        "fault boundary 02 an epoch above the current one is refused, not treated as newer authority",
+        "fault boundary 03 the exact current epoch is admitted, so the check is not refusing everything",
+        "fault boundary 04 a token for another work item is refused",
+        "fault boundary 05 a token from another holder at the current epoch is refused",
+        "fault boundary 06 no lease at all refuses rather than admits",
+        "fault boundary 07 a lease is still held AT its expiry instant",
+        "fault boundary 08 a lease one millisecond past expiry is reclaimable",
+        "fault boundary 09 acquiring is refused while another holder's lease is live",
+        "fault boundary 10 renewing an expired lease is refused rather than resurrecting it",
+        "fault boundary 11 renewing on a superseded token is refused",
+        "fault boundary 12 an unavailable store refuses acquisition instead of reporting the item free",
+        "fault boundary 13 an unavailable store offers nothing reclaimable",
+        "fault boundary 14 an unavailable store refuses renewal",
+        "fault boundary 15 a delayed packet from a reclaimed holder is refused on arrival",
+        "fault boundary 16 split brain: two holders across a reclaim, only the later one writes",
+        "names who was refused, who was current, and why",
+        "records the absence of a lease rather than omitting the fields",
+        "carries no field capable of holding key or signature material",
+        "KNOWN GAP (validation[2]): producing the record is reachable, appending it is not",
+        "refuses the forged proposal when fenced, and the unfenced path is not importable to admit it"
+      ],
+      "files": [
+        "packages/core/agent/src/index.ts",
+        "packages/run/lease/src/store.ts",
+        "packages/run/lease/tests/fault-matrix.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-09T01:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2a209ea7f16eab00c72a81ecdee5967acc0eacc1",
+        "testsDiscovered": 22
+      },
+      "note": "P4-07 F-stage. 16 boundaries enumerated as data with the count asserted against validation[0]'s floor of 12, including its two named scenarios: a delayed packet from a reclaimed holder refused on arrival, and split brain across a reclaim where only the later holder writes.\n\nPRE-FLIGHT on validation[2] ('stale token rejection is written to audit'). The subject is HALF present, measured rather than assumed: TrustKernel.auditAppend is literally `(_entry: TrustKernelAuditEntry): void => {}` and the kernel exposes NO read member at all -- by design, since a function type with that signature cannot expose one. So an appended entry is unobservable to anything, a test included. The producible half is real and is built: describeFencingRejection returns a complete record naming who was refused, who was current, and why. It deliberately carries no signature, key, or secret material -- the record describes an authorization DECISION, and quoting the token's credentials would leak them into whatever backs the audit chain. A KNOWN GAP case states plainly which half is proved.\n\nRESIDUAL PINNED AS A MEASURED FACT, per the delegate's ruling, and it is TWO facts kept apart. decideTransition adopting a proposal's epoch is permissive but harmless alone; what makes it REACHABLE is that advanceAgentLifecycle is a PUBLIC EXPORT of dsh-agent, so any consumer -- including a third-party plugin, in a product whose premise is that everything is a plugin -- reaches the unfenced path by importing it. The unfenced function's JSDoc already says it cannot enforce authority, and documentation is not a gate: a consumer need not read it and the compiler will not object. The characterization case therefore asserts BOTH outcomes on one forged proposal -- refused through the fenced entry, ADMITTED through the public one. That case PASSING is the defect; it starts failing when the unfenced export is withdrawn or gated, which is a P4-05 supersession and not P4-07's to make.\n\nSuperseded 2026-09-05T23:50:00.000Z: this entry's expectCases named a BARE TITLE that six live freezes across different epics also name, and generate-ledger.mjs matches expectCases against one flat per-observation set holding both `title` and `fullName`. A bare shared title is therefore satisfied by any same-named passing case, so deleting THIS epic's case would leave the cell green on another epic's evidence -- BLOCKED-018's 'one proof greens several cells' arriving through a second door. The ambiguous reference is replaced by the case's fullName, whose describe block carries the epic number and is unique. This is a REPLACEMENT of a frozen case string, so BLOCKED-103 requires a supersession rather than a supplement. No source file, no test case and no observation changed -- only which string the freeze uses to point at the same case -- so dryRunProof is carried over unchanged and no acceptance signature is reopened. SUPERSEDED-INTO: the characterization is replaced by an assertion that the export is absent. `advanceAgentLifecycle` stays module-private to `./dispatch.ts`, where the fenced entry calls it after the fencing check; consumers use `advanceAgentLifecycleFenced` or `advanceLeasedAgent`. The fenced refusal is asserted alongside the absence because \"the door is gone\" and \"the lock works\" are different claims and P4-07 needs both.",
+      "sensitivityProof": {
+        "mutationDescription": "One mutation, restored byte-identical: (M47) `advanceAgentLifecycle` is re-added to `@deepseek-ai/dsh-agent`'s export list, which is exactly the state these entries characterized before the finding was closed.",
+        "failureSummary": "M47 reddens the absence assertion in both files and nothing else — the fenced refusal keeps passing, which is the point: the lock always worked, and what changed is that the unfenced door is gone. A case asserting only the refusal would have passed throughout the defect's lifetime."
+      },
+      "supersedes": "2026-09-06T22:00:00.000Z"
+    },
+    {
+      "epic": "P4-12",
+      "stage": "U",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/ledger-reservation.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
+        "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
+        "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
+        "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
+      ],
+      "files": [
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/action/action-ledger/src/index.ts",
+        "packages/core/agent-loop/tests/ledger-reservation.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-09T02:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "2a209ea7f16eab00c72a81ecdee5967acc0eacc1",
+        "testsDiscovered": 4
+      },
+      "note": "P4-12's BASE U entry, which was missing: the epic had a greened supplement U.1 (the code-mode half, §12.35-2) but no entry for the stage it supplements, so the U cell stayed NOT_RUN and `--accept` reported \"still pending: U\". The subject is the registry's own U file list — `agent-loop/src/tool-calls.ts` reserving against `action-ledger` on the native dispatch path. The four cases were written with that path and have been passing; what was absent is the freeze, not the coverage. The last case is the one that keeps the other three honest: with no ledger mounted the tool RUNS, so a refusal is the ledger deciding rather than the path failing closed on absence.",
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations of `agent-loop/src/tool-calls.ts`, each restored byte-identical: (M48) no reservation is taken before dispatch; (M49) the outcome is never confirmed, so a reserved key never settles.",
+        "failureSummary": "M48 reddens 2 of 4 — the duplicate refusal and the ledger-absent control both depend on a reservation existing. M49 reddened NOTHING when first run, and that null result found a real defect in the frozen set rather than in the code: the first case is titled \"RUNS the tool once and confirms the reservation\" and asserted only that the tool ran, so a dispatch path that reserved and never confirmed passed it, leaving every key stuck at `sent` — the state a crash cannot be told apart from, and the one this epic exists to settle. The case now reads the ledger entry through the public `entry(scope, key)`, taking scope and key from the manifest the dispatch appended rather than recomputing them, and M49 reddens it."
+      }
     }
   ]
 }

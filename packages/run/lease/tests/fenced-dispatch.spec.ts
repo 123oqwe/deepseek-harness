@@ -2,13 +2,15 @@
  * P4-07 Usage stage: a state write is admitted only when a fencing token
  * issued by the store authorizes it (must[1]).
  *
- * The subject is the composition, not either half: `advanceAgentLifecycle`
- * alone admits any epoch at or above the lifecycle's, because nothing issues
- * that epoch. These cases prove the store's check runs first and closes it.
+ * The subject is the composition, not either half: the unfenced decision
+ * admits any epoch at or above the lifecycle's, because nothing issues that
+ * epoch. These cases prove the store's check runs first and closes it — and
+ * that the unfenced half is no longer reachable from outside its package.
  */
 
 import { describe, expect, it } from 'vitest'
-import { advanceAgentLifecycle, advanceAgentLifecycleFenced } from '@deepseek-ai/dsh-agent'
+import * as agentPackage from '@deepseek-ai/dsh-agent'
+import { advanceAgentLifecycleFenced } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycle, AgentRunId, AgentTransition } from '@deepseek-ai/dsh-agent'
 import { LeaseStore } from '../src/store.ts'
 import type { WorkerId, WorkItemId } from '../src/types.ts'
@@ -27,16 +29,21 @@ function move(epoch: number): AgentTransition {
 }
 
 describe('P4-07 must[1]: a state write needs a token the store issued', () => {
-  it('CHARACTERIZATION: unfenced, a self-asserted high epoch is admitted and becomes the authority', () => {
-    // The gap this stage closes. Nothing issues the lifecycle's epoch --
-    // decideTransition refuses only a strictly OLDER one and then adopts
-    // whatever the proposal carried. This case exists so the composition below
-    // is measured against a real hole rather than an imagined one.
-    const result = advanceAgentLifecycle(at(1), move(9_999))
-
-    expect(result.ok).toBe(true)
-    if (!result.ok) throw new Error('unreachable: asserted ok above')
-    expect(result.next.epoch).toBe(9_999)
+  it('the unfenced entry point is NOT on the package surface, so the composition is the only way in', () => {
+    // This case replaces a characterization that asserted the opposite. The
+    // gap was real: `advanceAgentLifecycle` decides a transition without
+    // checking authority — it refuses only a strictly OLDER epoch and then
+    // adopts whatever the proposal carried — and it was a public export, so
+    // any consumer, including a third-party plugin in a product whose premise
+    // is that everything is a plugin, reached the unfenced path by importing
+    // it. A JSDoc saying it cannot enforce authority is not a gate.
+    //
+    // It is now module-private to `@deepseek-ai/dsh-agent`'s `./dispatch.ts`,
+    // where the fenced entry calls it AFTER the fencing check. Asserting the
+    // absence rather than deleting the case keeps the closure measured: if the
+    // export returns, this fails.
+    expect('advanceAgentLifecycle' in agentPackage).toBe(false)
+    expect('advanceAgentLifecycleFenced' in agentPackage).toBe(true)
   })
 
   it('fenced, that same self-asserted epoch is refused', () => {

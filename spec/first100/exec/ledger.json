@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-07T15:53:27.920Z",
-  "inputDigest": "1a94eb4be134b97981e1a52c3c31bb052764e3034fb226f7b1fdc93d90300ade",
+  "lastUpdatedUtc": "2026-09-08T10:50:27.522Z",
+  "inputDigest": "ab7de91dcdf09746af339f32f1bb19ff4018caed71865cf068361f6f62d641ee",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4156,15 +4156,11 @@
         },
         "P": {
           "status": "GREEN",
-          "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
-          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34116551360",
-          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-02938ccfc3/vitest-report.json",
-          "observationSha256": "1d83c94137a2a800bdb89f9e5d7c0e276d94beb0f39c70d87c596fd7650ac0ee",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
           "expectCasesMatched": [
-            "hands the event and its record to the sink in a single call",
-            "keeps a multi-record commit together and preserves its order",
-            "refuses a commit with no records rather than appending a lone event",
-            "does not retain the caller's array, so a later mutation cannot reach the sink",
             "splits two separate enqueue calls across batches when a write starts between them",
             "keeps an enqueueAll group in one batch under that same interleaving",
             "owns its copy of every event in a group, and ignores an empty group",
@@ -4179,13 +4175,7 @@
             "surfaces a barrier failure without detached logging and retains its batch",
             "retains a failed batch larger than the engine call-argument limit"
           ],
-          "reattested": {
-            "fromCiRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34101734274",
-            "fromCandidateSha": "9cb21a872a95e56db5aaa2b30edb769f5cf86c4a",
-            "reason": "Re-observed at the SHA carrying §12.9's (source, id, epoch) key change; the previous observation at 9cb21a872a predates it and cannot stand for the current code.",
-            "atUtc": "2026-09-07T11:58:22.295Z"
-          },
-          "capturedAtUtc": "2026-09-07T11:58:22.296Z"
+          "capturedAtUtc": "2026-09-08T10:50:27.522Z"
         },
         "U": {
           "status": "GREEN",
@@ -4325,9 +4315,50 @@
             "P4-06 owns the CloudEvents attribute names, and the key is (source, id, epoch) (BLOCKED-140) keeps two sources apart in the inbox itself, not only in the key"
           ],
           "capturedAtUtc": "2026-09-07T11:58:11.576Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "P4-06 must[2]: an inbox consumes one (source, id, epoch) once REFUSES a settlement redelivered after the parent already ran it",
+            "P4-06 must[2]: an inbox consumes one (source, id, epoch) once SURVIVES a restart, which is the only reason the rule means anything",
+            "P4-06 must[2]: an inbox consumes one (source, id, epoch) once ADMITS a settlement from the same child in a LATER epoch, so a second activation is not suppressed",
+            "continuable settlement delivery carries the child run's LEASE EPOCH, and a redelivery of that notice is refused (P4-06 must[2])"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:43.184Z"
+        },
+        "U.4": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "P4-06: a settlement is committed to the bus before anyone tries to deliver it WAKES an idle parent once when its child settles, through the committed row",
+            "P4-06: a settlement is committed to the bus before anyone tries to deliver it KEEPS a settlement whose parent is gone, and delivers it when that parent next starts",
+            "P4-06: a settlement is committed to the bus before anyone tries to deliver it delivers ONCE even though three triggers drain, so a redelivery is not a second effect"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:51.770Z"
+        },
+        "P.6": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "P4-06 Provider: the bus is a mounted service publishes ctx.messageBus, and a commit through it is durable in the configured directory",
+            "P4-06 Provider: the bus is a mounted service gives every committed row the store-owned delivery fields, not the caller-supplied ones",
+            "P4-06 Provider: the bus is a mounted service REFUSES a bus file an older format wrote, naming the path and both versions",
+            "P4-06 Provider: the bus is a mounted service opens a directory that does not exist yet, so a first boot is not a failure"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:52.009Z"
         }
       },
-      "candidateSha": "02938ccfc31c4ce3288f27bf60898fb862f82746",
+      "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
       "independentVerdict": "WITHHELD_LIVE_LOCK",
       "openFindings": null,
       "status": "BLOCKED_ON_ACCEPTANCE",
@@ -4473,7 +4504,45 @@
           }
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) takes a lease for every Run it opens, so the Run has an owner before it has work",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) starts the lifecycle at queued, so a run that never steps is never running",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES a state write once another holder has taken the Run, naming it fenced",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) ADMITS the same write while this holder is still current, so the refusal is about authority and not about the transition",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) refuses an ILLEGAL transition with the state machine's own reason, not with fenced",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) refuses a transition with an empty reason, so must[1]'s reason cannot be satisfied by whitespace",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) reports no-run for an agent with no lifecycle, rather than inventing one at its initial state",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES every tool call in a step once this host was fenced out, and says so in the log",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES the same calls while this host still owns its Run, so the refusal is about the lease",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) RENEWS the lease while the run is alive, so a long run does not fence itself out",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) stops renewing once the run is finished, so a second host can take the item",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) RELEASES the lease and completes the lifecycle when the session ends",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) ends a run disposed before its first step through cancelling, not as if it had completed its work",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) opens NO Run when the lease store refuses, so an unauthorized agent gets no Run rather than an unowned one",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) executes ZERO tools for an agent whose lease was REFUSED, and names the refusal apart from a fencing (§12.31-A)",
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:52.251Z"
+        },
+        "U.3": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "the Run lease is an authority the harness presents (P4-07 must[1], §12.19-3) REFUSES the SECOND host that opens the same session, and that host executes zero tools (§12.35-2, acceptance[1])"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:52.482Z"
+        }
+      },
       "candidateSha": "d4034a8f4caff428b70dd2d047756be97e62ef62",
       "independentVerdict": "PENDING",
       "openFindings": [
@@ -4784,7 +4853,26 @@
           "capturedAtUtc": "2026-09-06T07:57:23.373Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "installs a `workflow` global, and it is GATED rather than merely present",
+            "REFUSES a bare name, because a name alone cannot pin the version a run used",
+            "P4-09 must[3]: a script nests another definition runs the nested definition and hands its value back to the parent script",
+            "P4-09 must[3]: a script nests another definition REFUSES a digest that resolves under a different name, so a run cannot execute what it does not claim",
+            "P4-09 must[3]: a script nests another definition REFUSES an unregistered digest without starting a worker (acceptance[0])",
+            "P4-09 must[3]: a script nests another definition REFUSES a definition that nests ITSELF, structurally rather than by waiting for the depth limit",
+            "P4-09 must[3]: a script nests another definition REFUSES nesting past the configured depth (acceptance[3])",
+            "P4-09 must[3]: a script nests another definition CANCELS the nested run when the parent is cancelled (acceptance[1])"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:52.709Z"
+        }
+      },
       "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
       "independentVerdict": "WITHHELD_INCOMPLETE_EPIC",
       "openFindings": [
@@ -4912,7 +5000,49 @@
           "capturedAtUtc": "2026-09-07T11:58:12.253Z"
         },
         "U": {
-          "status": "NOT_RUN"
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool RUNS the tool once and confirms the reservation, so an ordinary call is unaffected",
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool REFUSES a second call whose key was already reserved, and the tool does NOT run",
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool runs BOTH calls when the arguments differ, so the key identifies the action and not the tool",
+            "P4-12 must[4]: the dispatch path reserves before it runs a tool runs the tool when NO ledger is mounted, because absence is not an approval to record"
+          ],
+          "capturedAtUtc": "2026-09-08T10:44:00.907Z",
+          "admittedUnderRedRun": {
+            "runId": "34201756084",
+            "redSteps": [
+              {
+                "step": "lint (scoped)",
+                "failingCases": [
+                  "oxlint typescript/no-unnecessary-type-assertion"
+                ],
+                "evidence": "packages/core/tools/src/manifest-log.ts:105:33: error typescript(no-unnecessary-type-assertion): This assertion is unnecessary since it does not change the type of the expression.",
+                "subjectPaths": [
+                  "packages/core/tools/src/manifest-log.ts"
+                ]
+              },
+              {
+                "step": "snapshots",
+                "failingCases": [
+                  "replays pwsh-tool-turn",
+                  "replays persistent-pwsh-tool-turn"
+                ],
+                "evidence": "FAIL  snapshots/session/session-snapshots.spec.ts > replays pwsh-tool-turn\nFAIL  snapshots/session/session-snapshots.spec.ts > replays persistent-pwsh-tool-turn",
+                "subjectPaths": [
+                  "snapshots/session/pwsh-tool-turn",
+                  "snapshots/session/persistent-pwsh-tool-turn"
+                ]
+              }
+            ],
+            "diagnosedCause": "The run's conclusion is failure, and both red steps are unrelated to these cells: the lint error is in packages/core/tools/src/manifest-log.ts (P2-03's U.4 file, which is why P2-03 is NOT admitted here), and the two snapshot failures are pwsh session fixtures whose expected event shape moved when the manifest event gained its fifth field. Neither subject path is in this epic's reality set, which the admission recomputes rather than takes on assertion.",
+            "unrelatedBecause": "the epic's reality set (16 path(s): declaration plus live freeze entries, per BLOCKED-134) is disjoint from the failing subject [\"packages/core/tools/src/manifest-log.ts\",\"snapshots/session/pwsh-tool-turn\",\"snapshots/session/persistent-pwsh-tool-turn\"]",
+            "admittedBy": "delegate guanjieqiao-92, §12.6-B(c) explicit ack 2026-09-09",
+            "diagnosedAtUtc": "2026-09-08T10:44:39.870Z"
+          }
         },
         "F": {
           "status": "GREEN",
@@ -4941,9 +5071,22 @@
             "P4-12 must[2]: an idempotency key is unique PER CLIENT, never globally still refuses a second reservation WITHIN one principal, so scoping did not disable dedup"
           ],
           "capturedAtUtc": "2026-09-07T11:58:12.026Z"
+        },
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one",
+            "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect",
+            "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:53.389Z"
         }
       },
-      "candidateSha": "2aa43619f3f9b3d4c0a1835a39f402200129abdd",
+      "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
       "independentVerdict": "PENDING",
       "openFindings": null,
       "status": "NOT_RUN",
@@ -5393,7 +5536,21 @@
           "capturedAtUtc": "2026-09-06T07:57:22.538Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.1": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a CANCEL over everything and leaves the rest in arrival order (§12.37)",
+            "P5-10 must[1]: a claimed batch leaves the queue by control priority keeps a message with NO control kind in arrival order beside the control messages (§12.37)",
+            "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a cancel PAST ordinary input too, so a stop is never queued behind a prompt"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:52.933Z"
+        }
+      },
       "candidateSha": "00815e8acc4d839f66ce7bec504274c855a664ba",
       "independentVerdict": "PENDING",
       "openFindings": null,
@@ -5528,7 +5685,26 @@
           "capturedAtUtc": "2026-09-07T06:50:48.034Z"
         }
       },
-      "supplements": {},
+      "supplements": {
+        "U.2": {
+          "status": "GREEN",
+          "candidateSha": "82df08491ff0c6693298784e7aa1e5331ae67956",
+          "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34201756084",
+          "observationReportPath": "/private/tmp/claude-501/-Users-guanjieqiao-dsh-first100-clean/1e4c7bab-c5f8-4f47-a4ff-0869e378ee5e/scratchpad/obs-82df08491f/vitest-report.json",
+          "observationSha256": "c64640da4976528ae7995ea13fdfde8a8b4e68b5e69463a94cabf020ee7d9325",
+          "expectCasesMatched": [
+            "P5-11: a delegated child IS a task on the board CLAIMS the child for the delegating parent while it runs, at the attempt the claim granted",
+            "P5-11: a delegated child IS a task on the board REFUSES a second worker while the child is running, and ADMITS one after it settles (acceptance[0], §12.29-1)",
+            "P5-11: a delegated child IS a task on the board GIVES THE CLAIM BACK when the child settles, so the same host is not refused by its own finished attempt",
+            "P5-11: a delegated child IS a task on the board ADVANCES the task from the child settling, with nothing model-facing touching it (acceptance[1])",
+            "P5-11: a delegated child IS a task on the board advances a FAILED child to failed, so a task nobody finished is not left looking claimed",
+            "P5-11: a delegated child IS a task on the board REFUSES a release presenting a stale attempt, so a lapsed holder cannot strip its successor (§12.29-1)",
+            "P5-11: a delegated child IS a task on the board reports the task status through listChildren, which projections alone cannot answer",
+            "P5-11: a delegated child IS a task on the board records NOTHING when no board is mounted, because the producer never activates"
+          ],
+          "capturedAtUtc": "2026-09-08T10:42:53.158Z"
+        }
+      },
       "candidateSha": "b3186e6db982e79a7c933b3326ee3a908bdf7385",
       "independentVerdict": "PENDING",
       "openFindings": [],

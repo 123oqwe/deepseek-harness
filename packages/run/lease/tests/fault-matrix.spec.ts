@@ -9,7 +9,8 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { advanceAgentLifecycle, advanceAgentLifecycleFenced } from '@deepseek-ai/dsh-agent'
+import * as agentPackage from '@deepseek-ai/dsh-agent'
+import { advanceAgentLifecycleFenced } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycle, AgentRunId, AgentTransition } from '@deepseek-ai/dsh-agent'
 import { describeFencingRejection, LeaseStore } from '../src/store.ts'
 import { checkFencing, isReclaimable, type FencingToken, type Lease, type LeaseEpoch, type WorkerId, type WorkItemId } from '../src/types.ts'
@@ -208,23 +209,18 @@ describe('P4-07 validation[2]: a refused write produces an audit record', () => 
   })
 })
 
-describe('P4-07 residual: the unfenced entry point is public and still reachable', () => {
-  it('CHARACTERIZATION: the same forged proposal is refused when fenced and ADMITTED when not', () => {
-    // Two facts, deliberately separated. `decideTransition` adopting the
-    // proposal's epoch is permissive but harmless on its own; what makes it
-    // REACHABLE is that `advanceAgentLifecycle` is a public export of
-    // `@deepseek-ai/dsh-agent`, so any consumer — including a third-party
-    // plugin, in a product whose premise is that everything is a plugin —
-    // reaches the unfenced path by importing it.
+describe('P4-07 residual CLOSED: the unfenced entry point is no longer public', () => {
+  it('refuses the forged proposal when fenced, and the unfenced path is not importable to admit it', () => {
+    // This case replaces a characterization whose PASSING was the defect. Two
+    // facts were separated there and both still hold: `decideTransition`
+    // adopting the proposal's epoch is permissive but harmless alone, and what
+    // made it REACHABLE was `advanceAgentLifecycle` being a public export of
+    // `@deepseek-ai/dsh-agent`. The export is withdrawn (§12.16-3), which the
+    // old case named as its own unlock signal rather than a regression.
     //
-    // A JSDoc on the unfenced function already says it cannot enforce
-    // authority. Documentation is not a gate: a consumer need not read it and
-    // the compiler will not object. So the reachability is pinned here as a
-    // measured fact instead.
-    //
-    // This case PASSING is the defect. It starts failing when the unfenced
-    // export is withdrawn or gated — a P4-05 supersession, not P4-07's to
-    // make — and that failure is the unlock signal, not a regression.
+    // The fenced refusal is asserted alongside the absence, because "the door
+    // is gone" and "the lock works" are different claims and the epic needs
+    // both.
     const store = new LeaseStore()
     const acquired = store.acquire(ITEM, WORKER_A, 0, 1_000)
     if (!acquired.acquired) throw new Error('unreachable')
@@ -235,10 +231,6 @@ describe('P4-07 residual: the unfenced entry point is public and still reachable
 
     expect(advanceAgentLifecycleFenced(lifecycle, forgedMove, forgedToken, store.get(ITEM)))
       .toEqual({ ok: false, reason: 'fenced' })
-
-    const unfenced = advanceAgentLifecycle(lifecycle, forgedMove)
-    expect(unfenced.ok).toBe(true)
-    if (!unfenced.ok) throw new Error('unreachable: asserted ok above')
-    expect(unfenced.next.epoch).toBe(9_999)
+    expect('advanceAgentLifecycle' in agentPackage).toBe(false)
   })
 })

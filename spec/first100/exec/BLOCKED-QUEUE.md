@@ -9,6 +9,68 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-161 — three ledger-shape defects, each of which made a real check silently unenforceable
+
+**State: FIXED, recorded because each was invisible in a different way and the same shapes will recur.**
+
+Found while bringing P4-06 / P4-07 / P4-09 / P4-12 / P5-10 / P5-11 to predicate (iv). None was a wrong verdict; each made a check *unable to reach* the thing it verifies, which reads as a passing row rather than an error.
+
+## 1. A superseded BASE entry whose successor was filed as a supplement (§12.53)
+
+P4-06's base `P` entry was superseded, and its successor — which correctly declares `supersedes: 2026-09-08T09:20:00.000Z`, the superseded entry's own `frozenAtUtc` — was written as **supplement P.5**. Stage P was then left with no live base entry.
+
+`checkObservationDistinctness` resolves a frozen entry per stage and records a conflict when `!frozenEntry`, so the failure surfaced as `predicate (iii) observation mutual-distinctness: shared observation file(s) between [["C","P"]]`. **The message names observations, and the cause was a missing entry.** Acting on the message would have produced separate observation files for C and P and left stage P with no live freeze — the row would then pass (iii) while pre-committing to nothing.
+
+Rule, per §12.53: a superseded base entry's successor is a BASE entry. A supplement supplements a stage that exists.
+
+## 2. `"supplements": null` where every other base entry omits the key
+
+P4-12's `C`, `P` and `F` base entries carried the key with a null value; the other 169 base entries omit it. `checkCoverageClosure` selects a base entry with `f.supplements === undefined`, which `null` fails, so **every coverage citation naming a P4-12 base stage was unverifiable regardless of how correct the title was** — reported as "acceptance[] index(es) 0, 1, 2 have no verified covering case", which reads as missing coverage.
+
+Fixed by deleting the three null keys, NOT by relaxing the predicate to `== null`. The two spellings mean the same thing, and a predicate that accepted both would have made the inconsistency permanently invisible; the next such entry would simply work, and nobody would learn the file has two shapes for one fact.
+
+## 3. Six supplement entries missing the `supplements` field entirely
+
+`P2-03.U.3`, `P4-06.U.3`, `P4-08.U.1`, `P4-08.C.1`, `P4-08.P.1`, `P4-08.F.2`. `--supplement` matches on `e.supplements?.epic === epic && e.supplements?.stage === stage`, so these could not be greened at all: `BLOCKED: no frozen command-freeze.json supplement entry for (...)`. The field is wholly redundant with the entry's own `epic`/`stage`, so adding it asserts nothing new.
+
+## Why these are filed together
+
+All three are the same failure mode at the data layer that this program keeps finding at the code layer: a check that cannot reach its subject reports something else, and the something else is plausible enough to act on. (iii) said "shared observation", (i) said "no covering case", and `--supplement` said "no frozen entry" — three true statements, none of them the cause.
+
+### BLOCKED-160 — P9-08 and P9-09 have decision modules with zero callers, and their acceptance clauses need a credential and spend the executor may not supply
+
+**State: OPEN, measured. These are the two P9 items the terminal condition still lacks a record for — `p9-verification.json` reports both as `PREMATURE`, which is neither VERIFIED nor scheduled-BLOCKED.**
+
+## What exists, and what calls it
+
+| subject | file | production callers outside its own file |
+| --- | --- | --- |
+| `judgeTask`, `judgeTaskWithIntegrity`, `scoreSuite`, `resolveSuiteStatus` | `benchmarks/judge/verdict.ts` (167 lines) | **0** |
+| `decidePromotion`, `decidePromotionFromReport`, `admitGuidelineChange` | `benchmarks/ab/promotion.ts` (147 lines) | **0** |
+
+Both are complete, tested decision modules that nothing runs — the same shape §12.44 rejected for P4-08's must[2] and §12.48-A found in P4-09's registry. P9-08's C stage is frozen and green (11/11); P9-08 has no P, U or F freeze entry, and **P9-09 has no freeze entry at all**.
+
+## Which clauses need a credential, and which do not
+
+Separating these is the point of this entry: "needs a key" is true of the epics as a whole and false of most of their clauses, and treating the whole thing as blocked would defer work that can be done now.
+
+**Buildable keyless** — a runner that assembles a suite, the report shape carrying per-task raw output and scoring grounds (P9-08 must[1]), the anti-cheat controls (must[5], acceptance[1]: a forged output or an edited judge file must FAIL), and the keyless path itself (must[3]: no credential reports `BLOCKED`, never a rate — `resolveSuiteStatus` already decides this and nothing calls it). P9-09's guideline-v1 declaration (must[0]) and the challenger-declaration discipline (must[1]) are likewise files and checks, not runs.
+
+**Needs a real credential and real spend** — P9-08 acceptance[0] (a ≥20-task baseline at a fixed SHA and route, with double-run variance inside the frozen threshold), acceptance[2] (nightly on a fork actually executing once), and P9-09 acceptance[1] (one real champion–challenger round with both arms' scores and a significance decision). P9-09's must[2] and must[4] are gates over those numbers, so they cannot be exercised before the numbers exist.
+
+## Why this is an authority limit rather than a capability limit
+
+The same shape as BLOCKED-107: the harness can run these, and the executor may not supply what they consume. A benchmark run needs `DEEPSEEK_API_KEY` and spends real money against it. The standing instruction is explicit that keys and money belong to the user alone, so the executor neither holds nor asks for one — a key pasted into this lane would be a credential the user never chose to expose, and the spend would be committed without the person paying for it deciding to.
+
+P9-08's own design anticipates exactly this: must[3] requires the suite to report `BLOCKED` rather than fabricate a rate when no credential resolves, and acceptance[2] names "success **or** explicit BLOCKED-no-key" as equally legal nightly outcomes. So the keyless state is a first-class result of this epic, not a failure of it.
+
+## What is being asked
+
+1. Whether to build the keyless half now — the runner, report, anti-cheat controls and guideline declaration — leaving only the numbers blocked. That is real work with no product question in it, and it would move both epics from `PREMATURE` to a partial verification with a named remainder.
+2. Whether the credential-dependent clauses are recorded as **scheduled-BLOCKED** against a user-supplied run, which is the terminal state the program's condition already permits for a P9 item.
+
+Neither is decided here. What is recorded is that the gap is two acceptance clauses' worth of real-API measurement, not two unbuilt epics.
+
 ### BLOCKED-159 — P2-03 acceptance[2]'s "requires approval" half has no enforcing consumer; deferred to P2-04.U
 
 **State: RULED §12.46-B. Targeted deferral — `landsIn: P2-04.U`. P2-03 signs on its declaration half; the enforcement half is P2-04's Usage subject and P2-04's readiness gate carries this entry.**

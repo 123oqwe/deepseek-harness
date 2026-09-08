@@ -16,7 +16,7 @@ import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
-import { confirmExternalEffect, refusedReservationResult, reserveExternalEffect } from './external-effect.ts'
+import { confirmExternalEffect, gateActionRisk, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from './external-effect.ts'
 import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
@@ -629,6 +629,21 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // at most once" held for a tool called natively and not for the
               // same tool called from a code-mode program — must[2]'s bypass,
               // one layer below the manifest where it was already closed.
+              // The risk gate runs first here too, for the reason it does on
+              // the native path: a reservation claims an effect, and claiming
+              // one for an action the deployment refuses would leave a `sent`
+              // row for something that never happened. Both paths reach the
+              // SAME gate, which is what makes P2-04's acceptance[0] hold by
+              // construction rather than by two implementations agreeing.
+              const riskRefusal = exec.agent === undefined
+                ? undefined
+                : await gateActionRisk(options.ledgerContext(), exec.agent, name, registry.get(name)?.riskDomainTags ?? [])
+              if (riskRefusal !== undefined) {
+                reservation = undefined
+                this.settled = true
+                settle(refusedRiskResult(riskRefusal, name))
+                return
+              }
               const refused = exec.agent === undefined || reservation === undefined
                 ? undefined
                 : reserveExternalEffect(options.ledgerContext(), exec.agent, reservation)

@@ -235,6 +235,33 @@
     - id: permission
       name: '@deepseek-ai/dsh-permission-presets'
       config:
+        # P2-04 must[1]: the organisation decides what a declared tag costs.
+        # A plugin declares tags and never a class, so this table is the only
+        # place a risk band is assigned. A tag no rule names contributes
+        # nothing, and an action whose tags are all unnamed falls to the
+        # unknown default — the highest policy-adjustable class.
+        riskRules:
+          # Reads change nothing.
+          - { domainTag: filesystem-read, riskClass: read }
+          - { domainTag: catalog-read, riskClass: read }
+          - { domainTag: session-state-read, riskClass: read }
+          - { domainTag: process-observe, riskClass: read }
+          # Effects the actor can undo alone, inside its own session.
+          - { domainTag: session-state-write, riskClass: local-reversible }
+          - { domainTag: context-inject, riskClass: local-reversible }
+          # Durable state inside the trust boundary. The SANDBOX is the file
+          # boundary's enforcer, so writing and running commands inside it are
+          # one trust domain; a sandbox escape is a separate question and
+          # already goes through approval.
+          - { domainTag: filesystem-write, riskClass: internal-write }
+          - { domainTag: shell-execute, riskClass: internal-write }
+          - { domainTag: process-control, riskClass: internal-write }
+          - { domainTag: agent-spawn, riskClass: internal-write }
+          - { domainTag: agent-control, riskClass: internal-write }
+          - { domainTag: orchestration, riskClass: internal-write }
+          # Leaves the trust boundary.
+          - { domainTag: network-fetch, riskClass: external-communication }
+          - { domainTag: network-search, riskClass: external-communication }
         presets:
           read-only:
             sandbox: read-only

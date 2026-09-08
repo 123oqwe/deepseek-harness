@@ -88,6 +88,20 @@ describe('P4-12 must[4]: the dispatch path reserves before it runs a tool', () =
 
     expect(runs).toEqual(['10'])
     expect(resultTexts(ctx, SessionId('ledger-ok'))).toEqual(['charged 10'])
+    // The title says "and confirms the reservation", so the ledger is READ.
+    // Without this the case asserted only that the tool ran: a dispatch path
+    // that reserved and never confirmed passed it, leaving every key stuck at
+    // `sent` — the state a crash cannot be told apart from, and the one this
+    // epic exists to settle. Measured: deleting `confirmExternalEffect`
+    // reddened nothing here before this assertion existed.
+    // Scope and key come from the manifest the dispatch appended, which is the
+    // same pair production reserved under — computing them here a second way
+    // would test this test's arithmetic rather than the path's.
+    const appended = ctx.sessions.get(SessionId('ledger-ok'))
+      ?.snapshotEvents().find(event => event.type === 'action/manifest-appended')
+    expect(appended).toBeDefined()
+    const { actor, idempotencyKey } = appended?.data as { actor: string; idempotencyKey: string }
+    expect(ctx.actionLedger.entry(actor as never, idempotencyKey)?.state).toBe('confirmed')
   })
 
   it('REFUSES a second call whose key was already reserved, and the tool does NOT run', async () => {

@@ -856,9 +856,29 @@
       "path": "packages/bundle/base/cordis.patch.yml",
       "kind": "manifest",
       "stages": [
-        "U.1"
+        "U.1",
+        "P",
+        "U.2"
       ],
       "reason": "§12.48-B(a), §12.49(4) step 1. The three preset approval thresholds. Zero behaviour change while the dispatch gate is unwired, and landing it first keeps the gate slice from carrying a profile change too."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/core/agent-loop/src/tool-calls.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "§12.50. The native dispatch path calls the gate before taking a ledger reservation."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/core/tools/src/external-effect.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "§12.50. The Consumer role: the gate must sit where both dispatch paths reach it, and this module already holds the reserve/confirm pair for that reason (§12.35-2)."
     },
     {
       "epic": "P2-04",
@@ -868,6 +888,15 @@
         "U.1"
       ],
       "reason": "§12.48-B(b). The registry's U list names `core/tools/src/types.ts`, but the tool DEFINITION lives here — `types.ts` in that package holds only PTC event payloads. `riskDomainTags` is declared on `ToolDefinition`, which is what the dispatch gate will classify from."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/core/tools/src/ptc.ts",
+      "kind": "source",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "§12.50. The code-mode dispatch path calls the SAME gate, which is what makes acceptance[0]'s cross-surface consistency hold by construction."
     },
     {
       "epic": "P2-04",
@@ -891,7 +920,8 @@
       "path": "packages/interaction/permission-presets/package.json",
       "kind": "manifest",
       "stages": [
-        "P"
+        "P",
+        "U.2"
       ],
       "reason": "The dependency edge the Provider role adds: permission-presets on risk-taxonomy."
     },
@@ -900,18 +930,27 @@
       "path": "packages/interaction/permission-presets/src/index.ts",
       "kind": "source",
       "stages": [
-        "P",
-        "U.1"
+        "U.1",
+        "P"
       ],
       "reason": "§12.47(i). The registry's P-stage list named only `risk-taxonomy/src/index.ts`, which makes the Provider stage a barrel edit and leaves the capability seam without a Provider: `classify` takes the organisation policy as a PARAMETER, so nothing classifies anything until a mount binds it. The binding belongs where the deployment's other permission knobs live — `permission-presets` already owns `approval/policy` — giving Definition (risk-taxonomy vocabulary + `classify`) / Provider (this file, holding and validating the `RiskPolicy`) / Consumer (the dispatch gate, U stage). The plan listed one file because it had not applied the capability-seam rule, not because the Provider role was meant to be absent."
+    },
+    {
+      "epic": "P2-04",
+      "path": "packages/interaction/permission-presets/tests/risk-gate.spec.ts",
+      "kind": "test",
+      "stages": [
+        "U.2"
+      ],
+      "reason": "§12.50. The gate's cases live with the policy package because the core reads the policy through a structural port; a test inside the core could only mount a fake."
     },
     {
       "epic": "P2-04",
       "path": "packages/interaction/permission-presets/tests/risk-policy.spec.ts",
       "kind": "test",
       "stages": [
-        "P",
-        "U.1"
+        "U.1",
+        "P"
       ],
       "reason": "The Provider stage's own cases. They test the BINDING — that the mounted policy is what classifies, that the threshold is the deployment's, and that a policy switching off a kernel hard-deny is refused at mount — rather than re-testing `classify`'s rules, which are the Contract stage's."
     },

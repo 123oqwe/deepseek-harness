@@ -29,7 +29,7 @@ import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
 // The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
 // reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
-import { confirmExternalEffect, refusedReservationResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
+import { confirmExternalEffect, gateActionRisk, refusedReservationResult, refusedRiskResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandString } from '@deepseek-ai/dsh-brand'
 
@@ -216,6 +216,18 @@ async function runGroup(
     // effect was already claimed. A refusal is a settled outcome, not an
     // error: the first attempt's effect already happened, or the arguments
     // disagree with the reservation, or the state needs a reconciler.
+    // The RISK gate runs before the reservation: a reservation is a claim on
+    // an effect, and claiming one for an action the deployment will not permit
+    // would leave a `sent` row for something that never happened.
+    const riskRefusal = await gateActionRisk(ctx, agent, call.block.name, ctx.tools.get(call.block.name)?.riskDomainTags ?? [])
+    if (riskRefusal !== undefined) {
+      slots[index] = {
+        exec: call.exec as unknown as ToolRunContext,
+        result: refusedRiskResult(riskRefusal, call.block.name),
+        needsPost: false,
+      }
+      return
+    }
     const refused = reserveExternalEffect(ctx, agent, appended.record)
     if (refused !== undefined) {
       // The prepared exec is what the slot carries; a refusal happens before
