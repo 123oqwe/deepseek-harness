@@ -211,3 +211,140 @@ describe('P2-04 P — the barrel publishes the classifier and nothing that execu
     expect(source).toContain('classify,')
   })
 })
+
+/**
+ * P2-04 Fault stage: the boundaries where a classification decision flips.
+ *
+ * Enumerated as data with the count asserted against a floor, so a boundary
+ * cannot be deleted while every remaining case still passes — the same shape
+ * P4-08's resume matrix uses, and for the same reason.
+ *
+ * The boundaries worth pinning here are the ones where being wrong is not
+ * merely a wrong label: an action that should have been refused running, an
+ * action that should have run being refused, or a plugin moving its own band.
+ */
+describe('P2-04 Fault — risk classification boundary matrix', () => {
+  interface RiskFault {
+    readonly boundary: string
+    readonly run: () => void
+  }
+
+  const FAULTS: readonly RiskFault[] = [
+    {
+      boundary: '01 an unmatched tag takes the unknown default, not the lowest class',
+      run: () => { expect(classify({ actionId: 'a', domainTags: ['nope'] }, policy([])).ground).toBe('unknown-default') },
+    },
+    {
+      boundary: '02 the unknown default stops BELOW the kernel band, so unknown is asked about and not refused',
+      run: () => {
+        const decided = classify({ actionId: 'a', domainTags: ['nope'] }, policy([]))
+        expect(decided.hardDenied).toBe(false)
+        expect(KERNEL_HARD_DENY_CLASSES).not.toContain(decided.riskClass)
+      },
+    },
+    {
+      boundary: '03 an EMPTY tag list is the same unknown as an unmatched tag',
+      run: () => { expect(classify({ actionId: 'a', domainTags: [] }, policy([])).ground).toBe('unknown-default') },
+    },
+    {
+      boundary: '04 a composite action takes the maximum, so a low tag cannot dilute a high one',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: ['r', 'w'] }, policy([
+          { domainTag: 'r', riskClass: 'read' },
+          { domainTag: 'w', riskClass: 'destructive' },
+        ])).riskClass).toBe('destructive')
+      },
+    },
+    {
+      boundary: '05 tag ORDER does not change the maximum',
+      run: () => {
+        const rules: RiskPolicy['rules'] = [
+          { domainTag: 'r', riskClass: 'read' },
+          { domainTag: 'w', riskClass: 'destructive' },
+        ]
+        expect(classify({ actionId: 'a', domainTags: ['w', 'r'] }, policy(rules)).riskClass)
+          .toBe(classify({ actionId: 'a', domainTags: ['r', 'w'] }, policy(rules)).riskClass)
+      },
+    },
+    {
+      boundary: '06 one unrecognised tag beside a matched one does not escalate to the unknown default',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: ['r', 'nope'] }, policy([{ domainTag: 'r', riskClass: 'read' }])).riskClass)
+          .toBe('read')
+      },
+    },
+    {
+      boundary: '07 a duplicate rule for one tag does not change the outcome',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: ['r'] }, policy([
+          { domainTag: 'r', riskClass: 'read' },
+          { domainTag: 'r', riskClass: 'read' },
+        ])).riskClass).toBe('read')
+      },
+    },
+    {
+      boundary: '08 two rules for one tag take the HIGHER, so a second rule cannot lower the first',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: ['r'] }, policy([
+          { domainTag: 'r', riskClass: 'destructive' },
+          { domainTag: 'r', riskClass: 'read' },
+        ])).riskClass).toBe('destructive')
+      },
+    },
+    {
+      boundary: '09 the kernel band is reached by DECLARATION and is hard-denied',
+      run: () => {
+        const decided = classify({ actionId: 'a', domainTags: ['fire'] }, policy([{ domainTag: 'fire', riskClass: 'safety-critical' }]))
+        expect(decided).toMatchObject({ riskClass: 'safety-critical', hardDenied: true, ground: 'kernel-hard-deny' })
+      },
+    },
+    {
+      boundary: '10 an organisation may ADD a hard-deny class of its own',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: ['m'] }, policy(
+          [{ domainTag: 'm', riskClass: 'financial' }],
+          { addedHardDenyClasses: ['financial'] },
+        )).hardDenied).toBe(true)
+      },
+    },
+    {
+      boundary: '11 a policy that switches off a KERNEL hard-deny class is refused, naming it',
+      run: () => {
+        expect(() => classify({ actionId: 'a', domainTags: [] }, policy([], { removedHardDenyClasses: ['safety-critical'] })))
+          .toThrow(/safety-critical/u)
+      },
+    },
+    {
+      boundary: '12 removing a class the kernel does NOT pin removes nothing and is not an error',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: [] }, policy([], { removedHardDenyClasses: ['financial'] })).ground)
+          .toBe('unknown-default')
+      },
+    },
+    {
+      boundary: '13 confidence separates a ruled class from the same class reached by default',
+      run: () => {
+        const byRule = classify({ actionId: 'a', domainTags: ['k'] }, policy([{ domainTag: 'k', riskClass: 'security-sensitive' }]))
+        const byDefault = classify({ actionId: 'b', domainTags: [] }, policy([]))
+        expect(byRule.riskClass).toBe(byDefault.riskClass)
+        expect([byRule.confidence, byDefault.confidence]).toEqual([1, 0])
+      },
+    },
+    {
+      boundary: '14 the deciding tag is NAMED when a rule decided, and absent when nothing did',
+      run: () => {
+        expect(classify({ actionId: 'a', domainTags: ['r'] }, policy([{ domainTag: 'r', riskClass: 'read' }])).decidedBy).toBe('r')
+        expect(classify({ actionId: 'a', domainTags: [] }, policy([])).decidedBy).toBeUndefined()
+      },
+    },
+  ]
+
+  it('enumerates at least twelve boundaries, each named once', () => {
+    expect(FAULTS.length).toBeGreaterThanOrEqual(12)
+    expect(new Set(FAULTS.map(fault => fault.boundary)).size).toBe(FAULTS.length)
+  })
+
+  for (const fault of FAULTS) {
+    it(`fault boundary ${fault.boundary}`, fault.run)
+  }
+})

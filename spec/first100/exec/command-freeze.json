@@ -9574,6 +9574,50 @@
         "mutationDescription": "Two mutations of `agent-loop/src/tool-calls.ts`, each restored byte-identical: (M48) no reservation is taken before dispatch; (M49) the outcome is never confirmed, so a reserved key never settles.",
         "failureSummary": "M48 reddens 2 of 4 — the duplicate refusal and the ledger-absent control both depend on a reservation existing. M49 reddened NOTHING when first run, and that null result found a real defect in the frozen set rather than in the code: the first case is titled \"RUNS the tool once and confirms the reservation\" and asserted only that the tool ran, so a dispatch path that reserved and never confirmed passed it, leaving every key stuck at `sent` — the state a crash cannot be told apart from, and the one this epic exists to settle. The case now reads the ledger entry through the public `entry(scope, key)`, taking scope and key from the manifest the dispatch appended rather than recomputing them, and M49 reddens it."
       }
+    },
+    {
+      "epic": "P2-04",
+      "stage": "F",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/policy/risk-taxonomy",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-04 Fault — risk classification boundary matrix enumerates at least twelve boundaries, each named once",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 01 an unmatched tag takes the unknown default, not the lowest class",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 02 the unknown default stops BELOW the kernel band, so unknown is asked about and not refused",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 03 an EMPTY tag list is the same unknown as an unmatched tag",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 04 a composite action takes the maximum, so a low tag cannot dilute a high one",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 05 tag ORDER does not change the maximum",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 06 one unrecognised tag beside a matched one does not escalate to the unknown default",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 07 a duplicate rule for one tag does not change the outcome",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 08 two rules for one tag take the HIGHER, so a second rule cannot lower the first",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 09 the kernel band is reached by DECLARATION and is hard-denied",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 10 an organisation may ADD a hard-deny class of its own",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 11 a policy that switches off a KERNEL hard-deny class is refused, naming it",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 12 removing a class the kernel does NOT pin removes nothing and is not an error",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 13 confidence separates a ruled class from the same class reached by default",
+        "P2-04 Fault — risk classification boundary matrix fault boundary 14 the deciding tag is NAMED when a rule decided, and absent when nothing did"
+      ],
+      "files": [
+        "packages/policy/risk-taxonomy/tests/classify.spec.ts",
+        "packages/policy/risk-taxonomy/src/classify.ts"
+      ],
+      "frozenAtUtc": "2026-09-09T04:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "24658402c7391a0f9735dbc35873ddf79a1448ca",
+        "testsDiscovered": 31
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Four mutations of `classify.ts`, each restored byte-identical: (M50) the FIRST matching rule wins instead of the maximum; (M51) the unknown default goes back into the kernel hard-deny band; (M52) the kernel-hard-deny removal check is deleted; (M53) `decidedBy` is reported even when nothing decided.",
+        "failureSummary": "M50 reddens 3 (the composite maximum, tag order, and two-rules-take-the-higher), M51 reddens 4, M52 reddens 2, M53 reddens 2 — four disjoint-ish sets, so no single boundary is carrying the matrix. The count assertion is what stops a boundary being deleted while every remaining case still passes."
+      },
+      "note": "P2-04's Fault stage, in the shape P4-08's resume matrix uses: boundaries enumerated as data with the count asserted against a floor. The boundaries chosen are the ones where being wrong is not merely a wrong label — an action that should have been refused running, one that should have run being refused, or a plugin moving its own band. Boundary 02 pins §12.47(ii)'s correction: the unknown default is the highest POLICY-ADJUSTABLE class, so an action nobody classified is asked about rather than refused outright; boundary 12 is its positive control, since removing a class the kernel does not pin must remove nothing rather than throw."
     }
   ]
 }
