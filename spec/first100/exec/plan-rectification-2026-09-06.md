@@ -891,3 +891,9 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 1. **"默认开启跨会话记忆"是产品/数据决定,归用户**(§6:数据/不可逆);delegate 不替用户开。**推荐**:**(2) 现在 + (1) 有门**——P6 线的到达条件定为"**P6-02 的敏感字段准入(must[2])与 P6-08 的驻留/KMS 落地后**,base bundle 启用 `memory` 与 `memory-context`,provider = durable-file 于 `dshHomePath('memory')`"。在此之前默认开启等于把无敏感控制、无驻留控制的跨会话持久化交给每个用户。
 2. **在用户裁定前**:§12.31-B 的 seam 记录扩展照做(任何读法都需要);P6-01 / P6-02 的 U 在**显式启用的组合**上验(fixture 已诚实这么做),行上标 `reach: pending P6-line enablement (BLOCKED-156)`;**两条的验收等到达条件裁定**——不是不能验收,是验收的意义要由用户定;程序 GO 前 156 必须关闭。
 3. 顺带:P4-05 同样"全绿未验收",按同一三问量后再议。
+
+### 12.33 P2-03 证据包核:两处未达 §12.11-3,再等一次观测(2026-09-08 07:40 EDT)
+
+**过的部分**:must[0] 十二字段全在类型上、全由两条生产路径构造(`tool-calls.ts:411-423`、`ptc.ts:213-220`);`createActionManifest` 等五个主语各 2 个生产调用者,正是 must[1]/[2] 的两条路径;到达:`action/manifest-appended` 在 85 个出货语料日志里,`native-tool-call` 140 / `code-mode-embedded` 12(后者在 `profile: headless` 场景),`classified:false + destructive + requiresApproval:true` 是 acc[2] 的日志证据,`sequence` 是 acc[0] 的先后序证据。
+**不过的部分**:(1) 事件只记 11 字段 + `leaseEpoch`,`target` / `preconditions` / `expectedDiff` / `compensation` / `evidenceRequirements` 不落日志——**§12.11-3 明裁"事件内联 manifest 全部 must[0] 字段,'可重建'的理由作废"**;审计者拿日志答不出"这个动作承诺了什么补偿"。三个字段今天是常量(`preconditions: []`、`compensation: {reversible:false,…}`、`target: {kind:'other'}`)——常量也要落日志,它记的是"这条路径今天声明了什么",内容由工具自己声明时补(P2-04 起)。(2) `appendManifestThenGate` / `gateExecution` / `createMemoryManifestAppender` 零生产调用者:两条路径各自手写 append→gate 顺序,旁边放着为此存在的封装——136 形。**裁**:两条路径经 `appendManifestThenGate`(一处实现顺序),门面若仍无人用则删;不留"库里有个没人用的门面"。
+**处置**:P2-03 U supplement(事件补五字段 + 路径走封装),模型可见面变了 → 同批四语料回放刷新并报计数;再观测一次,签。**P4-06 / P4-07 / P4-09 / P5-10 / P5-11 的证据包照发**,它们不受此影响,本次观测绿即可签。
