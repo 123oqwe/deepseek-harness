@@ -57,15 +57,18 @@ mechanism tag to obtain a lower risk band.
 <a id="model-experience"></a>
 ## Model Experience
 
-This package is pure types and a pure function. It contributes no tool, no
-prompt text, and no session event, so it adds no tokens to a model request and
-has no KV-cache effect. What reaches a model is whatever a consuming
-Consumer chooses to say about a classification; that choice belongs to the
-consumer, not here.
+None, as this package registers no tool, prompt text, or session event, so nothing it owns reaches a model request.
 
-<a id="known-limitations-and-deferred-work"></a>
+#### KV Cache effect
+
+Nothing here enters a request, so provider cache reuse is unaffected. What a model eventually reads about a classification is whatever a consuming Consumer chooses to say, and that choice belongs to the consumer.
+
 ## Known Limitations and Deferred Work
 
+- No runtime invariant companion is published: this package holds no state and
+  observes nothing — one frozen table and one pure function over caller-supplied
+  values — so a checker would compare a value against itself rather than
+  reconcile two independent observations.
 - **The mechanism-to-risk mapping is not declared.** Nothing here maps
   `ActionSideEffectClass` onto a `RiskClass`, so an action carrying only a
   mechanism tag classifies under the unknown default. The mapping belongs with

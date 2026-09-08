@@ -4819,6 +4819,9 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
+      '@deepseek-ai/dsh-message-bus':
+        specifier: workspace:^
+        version: link:../../run/message-bus
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
@@ -5017,6 +5020,9 @@ importers:
       '@deepseek-ai/dsh-experimental-agent-team':
         specifier: workspace:^
         version: link:../agent-team
+      '@deepseek-ai/dsh-message-bus':
+        specifier: workspace:^
+        version: link:../../run/message-bus
       '@deepseek-ai/dsh-scope':
         specifier: workspace:^
         version: link:../../core/scope

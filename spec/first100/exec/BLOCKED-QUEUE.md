@@ -306,6 +306,29 @@ The bundle's own comment states why — `dsh-memory` registers no provider on it
 
 **Not chosen.** Reading 1 changes what every user's harness stores without being asked; 2 admits an unadopted capability at the top of a ten-epic memory line; 3 has no candidate. §12.11 records the executor picking as the mistake, and this one decides whether the P6 line has a floor.
 
+### BLOCKED-157 — a case measures peak buffer residual by replacing a process global, so its verdict depends on what else the worker was doing
+
+**State: OPEN, diagnosed. Owner: P3-13 (code-runtime). Not blocking: `packages/experimental/` ships in no bundle.**
+
+`packages/experimental/code-runtime-python/tests/runtime.spec.ts`'s case *charges a structurally-valid but illegal UTF-8 sequence its U+FFFD-decoded cost* replaces the global `Buffer.concat` with an instrumented wrapper, restores it in `finally`, and asserts `maxConcat < 2048`.
+
+Vitest runs other cases in the same worker process concurrently. While the patch is live, **every** `Buffer.concat` anywhere in that process feeds `maxConcat` — so the assertion's subject is not the code under test but how much unrelated merging happened to overlap the window.
+
+**Measured.** Red inside a full `experimental` + `subagent` + `run` + `core` + fixed-set run (5688 of 5719 passing). Green run alone. Green again across `experimental` + `core` + `subagent` under a JSON reporter — `failed total 0`. The verdict tracks concurrency, not behaviour.
+
+**Why it is filed separately rather than as another flake.** "Passes alone, fails under load" has had four distinct causes in this program, and each needed a different response:
+
+| case | cause | response |
+| --- | --- | --- |
+| `layer-deps` whole-repo scans | a real 285-package scan against vitest's 5s default | an explicit 30s budget (§12.35-1) |
+| `py-types` linear-time cases | the shared 5s default used deliberately AS the regression signal | measure scaling, assert a ratio (§12.38) |
+| `experimental/agent-team` | a real ordering regression from the five-rank priority table | fix the rule (§12.37) |
+| this one | a test mutates a process global whose window overlaps concurrent work | fix the measurement |
+
+Filing any of them by resemblance to the others would have hidden a real defect twice over — which is BLOCKED-137's lesson applied to a list that now has four entries.
+
+**The fix is the measurement, not the isolation (delegate, §12.44).** The runtime exposes an observable residual/peak hook and the case asserts against that. `singleFork` or `describe.sequential` would isolate a wrong measurement so it can keep being used; a case that mutates a process global and restores it is an intermittent false red in any concurrent suite, and the next such case would repeat it.
+
 ### BLOCKED-155 — P6-02 defined a memory record the memory capability does not store, so neither half of its Usage has anywhere to land
 
 **State: OPEN, measured. This blocks P6-02's U redo and, with it, §12.27-3's fold of the blackboard into the memory line.**
