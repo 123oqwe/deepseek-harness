@@ -998,3 +998,12 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 3. **P5-10 可签**(七条子句单一消费者 `ChildControlRouter`,`controlFor` 按子构造缓存,无旁路)。
 4. **P2-04 顺序**:preset 三个 `approvalThreshold` 值先写进 base(门未接,零行为变更)→ 工具定义 `riskDomainTags` + 出货工具填真值 → 结构门 unknown = 0 → 接门 → 观测。
 5. `core.zh.md` 的 `Agent` 块失同步早于本程序,不伪造配对,归 BLOCKED-124 的 20 对——对。
+
+### 12.50 P2-04 步骤 4:tag → class 映射与接门三分支(2026-09-08 09:35 EDT)
+
+**裁**(八级升序 `read < local-reversible < internal-write < external-communication < destructive < financial < security-sensitive < safety-critical`;默认档阈值 `destructive`):
+- 执行者草案**除一条外照准**:`filesystem-read` / `catalog-read` / `session-state-read` / `process-observe` → `read`;`session-state-write` / `context-inject` → `local-reversible`;`filesystem-write` / `process-control` / `agent-spawn` / `agent-control` / `orchestration` → `internal-write`;`network-search` / `network-fetch` → `external-communication`。
+- **`shell-execute` → `internal-write`,不是 `destructive`**。理由与 `filesystem-write` 同一条:**沙箱是边界的执法者**,沙箱内的 shell 与沙箱内的写文件是同一信任域(它能做的破坏 = 写文件 + 起进程,都在 workspace-write 已授予的范围内);沙箱逃逸本就走 `approval: ask`。把 shell 抬到阈值上会在交互档每次 bash 都审批、在 headless 每次 bash 被拒(`ask` 无 answerer fail-closed)——打坏 headless,这正是 §12.48-B 修订避开的坑。
+- **"表在默认档一个都不拦" 不是缺陷,是沙箱在工作**:默认档的风险门真正门住的三样是 (1) **未声明 tags 的工具**(unknown → `security-sensitive` ≥ 阈值:交互档审批、headless 拒——第三方插件工具"不声明就不在 headless 跑",fail-closed 是 P2-03 acc[2] 的意图,模型可见拒绝文本写明"undeclared risk",Known Limitations 记);(2) **声明 `security-sensitive`/`financial`** 的动作(今天出货集合无);(3) **声明 `safety-critical`** → 所有档 hard-deny。U 的真门用例正是这三条(测试组合里放一个未声明工具、一个声明 security-sensitive 的工具、一个声明 safety-critical 的),不需要把 bash 抬上去制造"有东西被拦"的假象。
+- (a) 表写在 base `permission` 条目 `riskRules` 下,全部 bundle 继承,对;(b) 门在 `core/tools/src/external-effect.ts`(两派发器共享),三分支 `hardDenied` 直接拒 / 达阈值走 `ctx.approval` / 其余放行,对;(c) 由上,headless 出货行为不变(shell、写文件都在阈值下),变的只是未声明工具与声明高危动作。snapshot 语料预期不变。
+**§6 报用户**:默认档下"未声明风险的插件工具在 headless 被拒"是产品默认,可用 `DSH_PERMISSION_MODE=danger-full-access` 整体退出,或在 preset 里调阈值。
