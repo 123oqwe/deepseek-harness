@@ -257,6 +257,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T15:23:16.216Z",
       "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: all cells and supplements GREEN @ 434408a47c, 0 open findings. 4.4a: dsh-control-priority consumed in production by core/agent-loop/agent.ts, core/agent/inbox.ts and subagent/control-convergence.ts (every profile); ChildControlRouter mounted in subagent/index.ts; applied-epoch ledger read from the child session log."
+    },
+    {
+      "epic": "P5-11",
+      "rowDigestSha256": "b21675e651b5bcc878487ba3fd57ff2958c4357aff7fc1efaf6153784074c5f1",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T15:23:17.192Z",
+      "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: all cells and supplements (C.1, U.2) GREEN @ 434408a47c, 0 open findings. 4.4a: dsh-taskboard-sqlite + dsh-subagent-taskboard rows enabled in bundle/base; claim atomic at P, release with attempt fencing, delegated-tasks consumer CLAIMS while running and ADMITS a second worker after settle (§12.29-1). U.1 superseded by U.2 — no rename registration (a superseded entry is not observed)."
     }
   ]
 }
