@@ -1,5 +1,5 @@
 ---
-description: "Workflow journal and step-level resume for Epic P4-08: the per-step record of script digest, program counter, artifact refs, child and side-effect receipts and phase; the pure/side-effecting split that decides what a resume may skip; digest-change refusal; and compaction that retains every receipt."
+description: "Workflow journal and step-level resume for Epic P4-08: the per-step record of script digest, program counter, artifact refs, child and side-effect receipts and phase; the reconciliation that decides what a resume may reuse; digest-change refusal; and compaction that retains every receipt."
 kind: "package-reference"
 ---
 
@@ -35,7 +35,9 @@ Step ids are positions in a script. Against a *different* script they name diffe
 
 ## Compaction keeps what cannot be regenerated
 
-A completed, verified, pure step's **inputs** are recomputable from the steps that produced them, so compaction drops them. Its output ref is kept — that is what a resume reuses.
+A completed and **verified** step's inputs are recomputable from the steps that produced them, so compaction drops them. Its output ref is kept — that is what a resume reuses.
+
+Purity is deliberately not the gate. Every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction could never fire on a real journal. `verified` carries the meaning instead: a step is verified when a resume RECONCILED it — its effects confirmed in the effect ledger and every child it started accounted for — which is the same check that authorizes reusing its output.
 
 **Receipts are never dropped, from any entry.** A receipt is evidence that something happened outside this process, and nothing inside it can regenerate that. `retainsAllReceipts` is exported so a caller can check the property rather than take this page's word for it.
 
@@ -53,8 +55,9 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **A journal is written; nothing READS one back.** `@deepseek-ai/dsh-workflow-worker-thread`'s `WorkerRun` records an entry per `agent()` call through `journalingObserver`, and `WorkerRun.journalSnapshot()` returns it. Nothing persists it and no run resumes from one, so `planResume`, `admitResume` and `receiptsToReconcile` still have no production caller: must[1]'s skip and must[2]'s reconciliation are decisions the harness can make and does not yet make.
-- **Every recorded step is `side-effecting`.** The class is the script's declaration and the DSL has no syntax for it, so the host supplies the fail-closed default. That is correct for `agent()` — a child may have written files or spent money — but it means a genuinely pure step cannot be marked skippable, and must[1]'s optimisation is unreachable until the DSL can say so.
+- **Compaction has a caller but no observable saving.** `WorkerRun` compacts at settlement and refuses to persist a compaction that failed `retainsAllReceipts`, but the only thing compaction drops is a verified entry's `inputs`, and nothing populates `inputs`: `stepStarted` always writes `[]`. So the rule is live and its effect is nil until a producer records input refs.
+- **`receiptsToReconcile` has no production caller.** The resume reconciles receipts against the effect ledger directly (`workflow-worker-thread/src/resume.ts`) rather than through this helper, so the helper states the decision and nothing consults it.
+- **Every recorded step is `side-effecting`.** The class is the script's declaration and the DSL has no syntax for it, so the host supplies the fail-closed default. That is correct for `agent()` — a child may have written files or spent money — but it means `decideResume`'s `skip` branch, which requires a pure step, cannot fire on a real journal. Reuse is decided by reconciliation instead, so must[1]'s behaviour is reached by a different route than that branch.
 - **Reconciliation is named, not performed.** `decideResume` returns `reconcile` with the receipts to check; deciding whether an effect actually landed requires the system that produced it and is outside this package.
 - **The script digest is a SHA-256 of the script body**, computed by the host that records the journal. It changes with whitespace and comments, so a cosmetic edit refuses a resume that would have been safe; refusing too often is the right direction for acceptance[1], but it is a bluntness worth naming.
 

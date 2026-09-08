@@ -74,10 +74,20 @@ export function receiptsToReconcile(plan: ResumePlan): readonly SideEffectReceip
 /**
  * Compact a journal while retaining its original evidence (acceptance[2]).
  *
- * Compaction drops what can be recomputed and keeps what cannot. A completed,
- * verified, pure step's INPUTS are recomputable from the steps that produced
+ * Compaction drops what can be recomputed and keeps what cannot. A completed
+ * and VERIFIED step's INPUTS are recomputable from the steps that produced
  * them, so they are dropped; its output ref is kept, because that ref is what
  * a resume reuses.
+ *
+ * Purity is deliberately NOT the gate (§12.46-A). Every step this DSL journals
+ * is an `agent()` call and every one is classed `side-effecting`, so a
+ * pure-only compaction was the identity function on every journal a run could
+ * produce — a rule that could not fire is not a safety property. `verified` is
+ * the gate that carries the meaning instead: a step is verified when a resume
+ * RECONCILED it, meaning its effects were confirmed in the ledger and every
+ * child it started was accounted for. Dropping the recomputable inputs of a
+ * step that has been reconciled is safe for the same reason reusing its output
+ * is, and both rest on the same check.
  *
  * Receipts are never dropped, from any entry. A receipt is evidence that
  * something happened outside this process, and nothing inside it can
@@ -89,7 +99,7 @@ export function receiptsToReconcile(plan: ResumePlan): readonly SideEffectReceip
  */
 export function compactJournal(journal: WorkflowJournal): WorkflowJournal {
   const entries: JournalEntry[] = journal.entries.map((entry) => {
-    const compactable = entry.outcome === 'completed' && entry.verified && entry.effectClass === 'pure'
+    const compactable = entry.outcome === 'completed' && entry.verified
     if (!compactable) return entry
     return { ...entry, inputs: [] as readonly ArtifactRef[] }
   })

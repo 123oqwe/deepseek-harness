@@ -20,8 +20,9 @@ import { renderThrown } from './realm.ts'
 import type { ExecutionObserver } from './runtime.ts'
 import { createHash } from 'node:crypto'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import { createJournalRecorder, journalingObserver, writeJournal } from '@deepseek-ai/dsh-workflow-journal'
+import { compactJournal, createJournalRecorder, journalingObserver, retainsAllReceipts, writeJournal } from '@deepseek-ai/dsh-workflow-journal'
 import type { JournalRecorder, ScriptDigest, WorkflowJournal } from '@deepseek-ai/dsh-workflow-journal'
+import type { Reconciled } from './resume.ts'
 import { applyChildFailure, cancelPropagationForNested } from '@deepseek-ai/dsh-workflow-registry'
 import type { ChildFailurePolicy } from '@deepseek-ai/dsh-workflow-registry'
 import type { RunLease } from '@deepseek-ai/dsh-lease-contract'
@@ -195,10 +196,22 @@ export class WorkerRun implements WorkflowRun {
     private readonly journalDirectory: string,
     /** Starts nested runs for this run's `workflow()` calls (P4-09 must[3]). */
     private readonly nesting: NestingPort,
+    /** What a resume reconciled: the journal to continue and the steps it settled. */
+    reconciled: Reconciled = { reusable: {}, journal: undefined },
   ) {
+    // Seeded with the journal a resume reconciled, so the record this run
+    // continues is the one that already knows what happened (§12.46-A). A
+    // fresh recorder would overwrite the file on its first persist and a
+    // further crash would re-run the steps this resume just settled.
     this.journal = createJournalRecorder(brandString<ScriptDigest>(
       createHash('sha256').update(init.body).digest('hex'),
-    ))
+    ), reconciled.journal)
+    // Reconciliation IS the verification must[1] names: a step whose effects
+    // the ledger confirmed and whose every child was accounted for has been
+    // checked against the world, which is more than re-reading its own record.
+    // Marking it here is what gives `verified` a producer, and compaction
+    // something it can act on.
+    for (const seq of Object.keys(reconciled.reusable)) this.journal.stepVerified(Number(seq))
     // Every step is `effectful`. The class is the SCRIPT's declaration and the
     // DSL has no syntax for it yet, so the honest default is the one that
     // forces reconciliation rather than the one that permits a silent skip:
@@ -704,12 +717,42 @@ export class WorkerRun implements WorkflowRun {
    * resume of THIS run will find a stale journal or none, which `planResume`
    * and `admitResume` already handle as their ordinary refusals.
    */
-  private persistJournal(): void {
+  private persistJournal(journal: WorkflowJournal = this.journal.journal()): void {
     try {
-      writeJournal(this.journalDirectory, this.id, this.journal.journal())
+      writeJournal(this.journalDirectory, this.id, journal)
     } catch (error: unknown) {
       this.ctx.logger.warn(`workflow run ${this.id}: journal not persisted (${renderThrown(error)})`)
     }
+  }
+
+  /**
+   * Compact this run's journal as it settles, keeping its evidence
+   * (P4-08 acceptance[2], §12.46-A).
+   *
+   * Run completion is the only point where compaction is safe: until then a
+   * step's inputs may still be read by a step that has not run. What it drops
+   * is the recomputable inputs of steps a resume already RECONCILED, and what
+   * it keeps is every receipt — evidence of something that happened outside
+   * this process, which nothing inside it can regenerate.
+   *
+   * Retention is checked here rather than trusted, and a compaction that shed
+   * a receipt is discarded: the raw journal is strictly better than a smaller
+   * one missing the only record that an effect occurred.
+   */
+  private persistCompactedJournal(): void {
+    const raw = this.journal.journal()
+    const compacted = compactJournal(raw)
+    // No input can make `compactJournal` drop a receipt, so this branch is not
+    // reachable from outside; `retainsAllReceipts`'s own false case is covered
+    // in the journal package. The check stays because it guards the WRITE, and
+    // a future compaction rule that did shed evidence must fail here loudly
+    // rather than silently replace the record on disk.
+    /* v8 ignore next 4 -- unreachable while compaction is correct; see above */
+    if (!retainsAllReceipts(raw, compacted)) {
+      this.ctx.logger.warn(`workflow run ${this.id}: journal left uncompacted (compaction dropped receipt evidence)`)
+      return
+    }
+    this.persistJournal(compacted)
   }
 
   /**
@@ -786,6 +829,9 @@ export class WorkerRun implements WorkflowRun {
     this.detachInputSignal()
     clearTimeout(this.graceTimer)
     clearInterval(this.heartbeat)
+    // Before the result resolves, so a caller that resumes on it reads the
+    // compacted journal rather than racing the write that produces it.
+    this.persistCompactedJournal()
     this.settleResolve(result)
   }
 

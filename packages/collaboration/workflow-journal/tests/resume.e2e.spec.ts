@@ -177,15 +177,25 @@ describe('P4-08 acceptance[1]: a changed script digest refuses the resume', () =
 })
 
 describe('P4-08 acceptance[2]: a journal compacts without losing its evidence', () => {
-  it('drops recomputable inputs from a completed, verified, pure step', () => {
-    const compacted = compactJournal(journal([entry('s1')]))
+  it('drops recomputable inputs from a completed, verified step, whatever its effect class', () => {
+    // Verified is the whole gate (§12.46-A): a side-effecting step that a
+    // resume RECONCILED is as safe to compact as a pure one, and gating on
+    // purity made this function the identity on every journal a real run can
+    // produce, because every journalled step in this DSL is side-effecting.
+    const compacted = compactJournal(journal([entry('s1', { effectClass: 'side-effecting' })]))
     expect(compacted.entries[0]?.inputs).toEqual([])
     // The output ref is kept: it is what a resume reuses.
     expect(compacted.entries[0]?.output).toBe('s1-out')
   })
 
-  it('leaves an unverified or side-effecting step untouched', () => {
-    const before = journal([entry('s1', { verified: false }), entry('s2', { effectClass: 'side-effecting' })])
+  it('leaves an UNVERIFIED step untouched, whether or not it completed', () => {
+    // Unverified means no resume reconciled it, so its inputs may still be
+    // needed to run it again — the one thing compaction must not take away.
+    const before = journal([
+      entry('s1', { verified: false }),
+      entry('s2', { verified: false, effectClass: 'side-effecting' }),
+      entry('s3', { verified: true, outcome: 'in-flight' }),
+    ])
     expect(compactJournal(before).entries).toEqual(before.entries)
   })
 
@@ -297,9 +307,9 @@ describe('P4-08 Fault — resume boundary matrix', () => {
         .toEqual([]) },
     },
     {
-      boundary: '15 compaction leaves a side-effecting entry untouched',
+      boundary: '15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class',
       run: () => {
-        const before = journal([entry('s', { effectClass: 'side-effecting' })])
+        const before = journal([entry('s', { effectClass: 'side-effecting', verified: false })])
         expect(compactJournal(before).entries).toEqual(before.entries)
       },
     },

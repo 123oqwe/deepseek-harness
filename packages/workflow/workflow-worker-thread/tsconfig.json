@@ -52,6 +52,12 @@
     },
     {
       "path": "../workflow-registry"
+    },
+    {
+      "path": "../../action/action-ledger"
+    },
+    {
+      "path": "../../identity/principal"
     }
   ]
 }

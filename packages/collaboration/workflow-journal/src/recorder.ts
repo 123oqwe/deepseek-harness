@@ -69,11 +69,20 @@ export interface JournalRecorder {
  * A step that settles replaces its own entry rather than appending a second.
  * Two entries for one `seq` would make the program counter ambiguous, and a
  * later compaction could not tell which one was authoritative.
+ * A RESUMED run seeds its recorder with the journal it resumed from. Without
+ * that seed the second run starts empty and its first persist overwrites the
+ * file, so the steps the resume reconciled disappear and a further crash would
+ * run them again — the journal would forget exactly the work it exists to
+ * remember. Seeding is by step sequence, so a step the resumed run re-runs
+ * replaces its own prior entry rather than appending a duplicate.
  * @param scriptDigest - the digest of the script being run.
- * @returns a recorder over a fresh journal.
+ * @param seed - a prior journal to continue, for a resumed run; absent for a fresh one.
+ * @returns a recorder over the seeded or fresh journal.
  */
-export function createJournalRecorder(scriptDigest: ScriptDigest): JournalRecorder {
-  const entries = new Map<number, JournalEntry>()
+export function createJournalRecorder(scriptDigest: ScriptDigest, seed?: WorkflowJournal): JournalRecorder {
+  const entries = new Map<number, JournalEntry>(
+    (seed?.entries ?? []).map(entry => [Number(entry.stepId.replace(/^step-/u, '')), entry]),
+  )
 
   const phaseOf = (phase: string | undefined): PhaseName =>
     brandString<PhaseName>(phase ?? 'unphased')

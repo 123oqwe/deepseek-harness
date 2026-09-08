@@ -25,8 +25,11 @@ import type {
   RegisteredDefinition,
   RunBudget,
 } from '@deepseek-ai/dsh-workflow-registry'
+import type { Agent } from '@deepseek-ai/dsh-agent'
+import { currentPrincipal } from '@deepseek-ai/dsh-principal'
 import type { NestedStartRequest } from './types.ts'
 import { reusableSteps } from './resume.ts'
+import type { EffectStateLookup, Reconciled } from './resume.ts'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkflowRun, WorkflowRunInfo, WorkflowStartRequest } from '@deepseek-ai/dsh-workflow'
 import { WorkerRun } from './host.ts'
@@ -250,6 +253,27 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
   }
 
   /**
+   * How this run asks the effect ledger about a recorded side-effect receipt
+   * (P4-08 must[2]).
+   *
+   * Absent — not a function answering "no row" — when there is no ledger
+   * mounted or the parent carries no identity, because a receipt's state and
+   * the inability to look one up authorize opposite decisions: the first can
+   * clear a step to rerun, the second never can. The scope is the parent's own
+   * principal, the same scope the ledger reserved the effect under; a resume
+   * that queried some other scope would be reading another principal's keys.
+   * @param parent - the agent the resumed run executes on behalf of.
+   * @returns the lookup, or undefined when no ledger can be queried for it.
+   */
+  private effectStateLookup(parent: Agent): EffectStateLookup | undefined {
+    const ledger = this.ctx.get('actionLedger')
+    const chain = parent.identity?.chain
+    if (ledger === undefined || chain === undefined) return undefined
+    const scope = currentPrincipal(chain).id
+    return receipt => ledger.entry(scope, receipt)?.state
+  }
+
+  /**
    * Continue an interrupted run from its journal (§12.23).
    *
    * The asynchronous step is the reconciliation: each recorded step's children
@@ -263,17 +287,18 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * @returns the live run.
    */
   async resume(runId: WorkflowRunId, request: WorkflowStartRequest): Promise<WorkflowRun> {
-    const reusable = await reusableSteps(
+    const reconciled = await reusableSteps(
       this.journalDirectory,
       runId,
       request.script,
       childId => this.childFinished(childId),
+      this.effectStateLookup(request.parent),
     )
-    return this.launch(request, runId, reusable)
+    return this.launch(request, runId, reconciled)
   }
 
   start(request: WorkflowStartRequest): WorkflowRun {
-    return this.launch(request, undefined, {})
+    return this.launch(request, undefined, { reusable: {}, journal: undefined })
   }
 
   /**
@@ -341,7 +366,11 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       meta: { name: resolved.definition.name, description: `nested run of ${resolved.definition.name}`, phases: [] },
       parent: parent.parentAgent,
       ...request.args === undefined ? {} : { args: request.args },
-    }, undefined, {}, { budget: planned.budget, ancestors: [...budget.ancestors, digest], limits: planned.workerLimits })
+    }, undefined, { reusable: {}, journal: undefined }, {
+      budget: planned.budget,
+      ancestors: [...budget.ancestors, digest],
+      limits: planned.workerLimits,
+    })
     return Promise.resolve({ started: true, run, failurePolicy: 'fail-parent' as const })
   }
 
@@ -353,13 +382,13 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
    * their id and in what they may reuse.
    * @param request - the caller's start request.
    * @param resumeRunId - the run being continued, or `undefined` for a fresh one.
-   * @param reusable - recorded outputs a resumed run may reuse, by step sequence.
+   * @param reconciled - what a resume concluded: reusable outputs and the journal to continue; empty for a fresh run.
    * @returns the live run.
    */
   private launch(
     request: WorkflowStartRequest,
     resumeRunId: WorkflowRunId | undefined,
-    reusable: Record<number, string>,
+    reconciled: Reconciled,
     nested?: { budget: RunBudget; ancestors: readonly DefinitionDigest[]; limits: InheritedWorkerLimits },
   ): WorkflowRun {
     const meta = validateMeta(request.meta)
@@ -390,7 +419,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       body: request.script,
       ...request.args !== undefined ? { args: request.args } : {},
       limits,
-      ...Object.keys(reusable).length === 0 ? {} : { reusable },
+      ...Object.keys(reconciled.reusable).length === 0 ? {} : { reusable: reconciled.reusable },
     }
     // Capture the dependency while this service call is still traced through
     // the start() holder. Cordis strips the engine-provider shadow when it
@@ -439,6 +468,7 @@ class WorkerThreadWorkflowEngine extends WorkflowEngine {
       lease,
       this.journalDirectory,
       this,
+      reconciled,
     )
     // must[2]/acceptance[0] live with the RUN, not with the engine: the lease's
     // lifetime is the run's, and an engine-side timer would outlive the thing

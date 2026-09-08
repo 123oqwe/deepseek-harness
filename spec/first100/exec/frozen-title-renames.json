@@ -1,5 +1,8 @@
 {
-  "schema": { "name": "first100-frozen-title-renames", "version": "1.0" },
+  "schema": {
+    "name": "first100-frozen-title-renames",
+    "version": "1.0"
+  },
   "entries": [
     {
       "epic": "P0-05",
@@ -10,6 +13,36 @@
       "note": "P0-05's own later P-stage work renamed this it() block's title. C-stage's frozen observation (run 33562243795 @ 92174bb734) genuinely captured the old title passing at the time it greened -- predicate (iii) binds to that observation, not live-tree resolvability, so the C-stage cell's ACCEPTED status is unaffected. Recorded per BLOCKED-040.",
       "registeredAtUtc": "2026-09-02T21:00:00Z",
       "registeredBy": "Supervisor, per delegate requirement (BLOCKED-040)"
+    },
+    {
+      "epic": "P4-08",
+      "stage": "C",
+      "oldTitle": "drops recomputable inputs from a completed, verified, pure step",
+      "newTitle": "drops recomputable inputs from a completed, verified step, whatever its effect class",
+      "renamedInCommit": "PENDING-LOCAL-COMMIT",
+      "note": "§12.46-A dropped `pure` from compaction's gate, leaving `completed && verified`. Purity could not be the gate: every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction was the identity function on every journal a real run can produce. The renamed cases assert the rule that now holds; the OLD titles' frozen observations genuinely captured the old rule passing when they greened, and predicate (iii) binds to that observation rather than to live-tree resolvability, so the affected cells' status is unchanged. Registered by the Executor with the measurement in BLOCKED-158.",
+      "registeredAtUtc": "2026-09-08T14:20:00Z",
+      "registeredBy": "Executor, per §12.46-A"
+    },
+    {
+      "epic": "P4-08",
+      "stage": "C",
+      "oldTitle": "leaves an unverified or side-effecting step untouched",
+      "newTitle": "leaves an UNVERIFIED step untouched, whether or not it completed",
+      "renamedInCommit": "PENDING-LOCAL-COMMIT",
+      "note": "§12.46-A dropped `pure` from compaction's gate, leaving `completed && verified`. Purity could not be the gate: every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction was the identity function on every journal a real run can produce. The renamed cases assert the rule that now holds; the OLD titles' frozen observations genuinely captured the old rule passing when they greened, and predicate (iii) binds to that observation rather than to live-tree resolvability, so the affected cells' status is unchanged. Registered by the Executor with the measurement in BLOCKED-158.",
+      "registeredAtUtc": "2026-09-08T14:20:00Z",
+      "registeredBy": "Executor, per §12.46-A"
+    },
+    {
+      "epic": "P4-08",
+      "stage": "F",
+      "oldTitle": "fault boundary 15 compaction leaves a side-effecting entry untouched",
+      "newTitle": "fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class",
+      "renamedInCommit": "PENDING-LOCAL-COMMIT",
+      "note": "§12.46-A dropped `pure` from compaction's gate, leaving `completed && verified`. Purity could not be the gate: every step this DSL journals is an `agent()` call classed `side-effecting`, so a pure-only compaction was the identity function on every journal a real run can produce. The renamed cases assert the rule that now holds; the OLD titles' frozen observations genuinely captured the old rule passing when they greened, and predicate (iii) binds to that observation rather than to live-tree resolvability, so the affected cells' status is unchanged. Registered by the Executor with the measurement in BLOCKED-158.",
+      "registeredAtUtc": "2026-09-08T14:20:00Z",
+      "registeredBy": "Executor, per §12.46-A"
     }
   ]
 }

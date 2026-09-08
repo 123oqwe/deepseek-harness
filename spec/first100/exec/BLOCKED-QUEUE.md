@@ -9,6 +9,23 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-159 — P2-03 acceptance[2]'s "requires approval" half has no enforcing consumer; deferred to P2-04.U
+
+**State: RULED §12.46-B. Targeted deferral — `landsIn: P2-04.U`. P2-03 signs on its declaration half; the enforcement half is P2-04's Usage subject and P2-04's readiness gate carries this entry.**
+
+Measured on the P4-08 U supplement's tree (`git ls-files`, excluding `tests/`, `*.spec.ts`, `lib/`, `scripts/`):
+
+| half of acceptance[2] | subject | production consumers | verdict |
+| --- | --- | --- | --- |
+| unclassifiable defaults to high risk | `classifySideEffect(undefined)` → `{ sideEffectClass: 'destructive', classified: false, requiresApproval: true }` (`canonicalize.ts:154`) | reached on **every** native tool call — the registry carries no declared class at dispatch (`tool-calls.ts:389`), so this is the standing behaviour, not an edge case | **closes** |
+| and requires approval | `manifest.requiresApproval` | **0** — read at `core/tools/src/manifest-log.ts:48` and `:87`, both copying it into the `action/manifest-appended` event, and nowhere else; no `packages/interaction/*` or `packages/policy/*` source names it | **does not close** |
+
+So an unclassifiable action is durably recorded as requiring approval and then executed without one. The gate that does run, `assertManifestPrecedesExecution`, asks whether a manifest preceded the call — a different question from whether the approval that manifest demands was obtained.
+
+**Why not enforce it inside P2-03.** The obvious owner is P2-04's classifier (`classify`, `KERNEL_HARD_DENY_CLASSES` in `packages/policy/risk-taxonomy/`, itself **0** production consumers outside its package), but P2-04 is W5 and depends on P2-03, so P2-03 cannot be signed on a consumer a later wave builds. Enforcing through the W4 approval capability instead would gate the entire native tool path behind an approval prompt, because today every call is unclassifiable. §12.46-B refuses that and takes the deferral.
+
+**Recorded where it cannot be lost.** The product fact — recorded as requiring approval, executed without one — is in `packages/action/action-manifest/README.md`'s Known Limitations, not only here. P2-04's Usage subject is fixed by this entry: consume `sideEffectClass` / `requiresApproval` and make "requires approval" a real gate.
+
 ### BLOCKED-128 — RULED 2026-09-06: every JavaScript RFC 8785 implementation is recursive, so the canonicalizer stays hand-written with the reference library as a differential ORACLE
 
 **The rectification order's §7.4 says to replace the hand-written canonicalizer with a standard JCS library. Doing that reintroduces BLOCKED-077's symptom**, by a different mechanism: last time a stale build artifact shadowed the iterative source, this time **the library itself recurses**.
@@ -329,7 +346,7 @@ Six freeze supplements are written, mutation-proved, and green locally, and none
 
 ### BLOCKED-158 — P4-08's must[2] and acceptance[2] decide nothing in production: reconciliation and compaction have no caller
 
-**State: OPEN, measured. This is predicate (i)'s answer for P4-08: the coverage does not close, so the epic is not signable as it stands.**
+**State: RESOLVED. must[2] by §12.44 option 2, acceptance[2] by §12.46-A — both implemented and mutation-proved. One residual is recorded below: compaction's saving is still unobservable because `inputs` has no producer.**
 
 Measured over `git ls-files`, excluding every `tests/` path, `lib/`, and the owning package `packages/collaboration/workflow-journal/`:
 
@@ -353,7 +370,37 @@ acceptance[2]'s compaction is the same shape one level over: `compactJournal` an
 2. **Reconcile through the ledger.** The receipts are settled against `ctx.actionLedger` (P4-12's), so "reconciled" means the effect's entry is `confirmed` rather than `ambiguous`. Stronger, and couples two epics.
 3. **Record that nothing produces side-effect receipts yet**, exempt must[2]'s usage, and sign the rest — which says plainly that a clause about reconciliation ships with no reconciliation.
 
-**Not chosen.** (1) and (2) differ in what "reconciled" means, and (3) is the honest version of the status quo. `recordStep` and `startStep` do not exist as exports at all — the recorder's surface is `createJournalRecorder`, so the earlier note about a dead `recordStep` export does not match this tree.
+**Chosen: (2), per §12.44.** (1) was refused inside its own wording: re-running a step that carries a side-effect receipt is the repeated effect P4-12 exists to prevent, so "refuse to reuse, let it re-run" is not reconciliation, it is the failure with an extra step. Reconciling an external effect means reading that effect's durable state, and the only such record in this harness is the action ledger.
+
+**What now happens.** `reusableSteps` takes an `EffectStateLookup` and, for any completed step whose journal entry carries side-effect receipts, settles them before the child count is taken:
+
+| ledger answer for the step's receipts | resume | why |
+| --- | --- | --- |
+| all `confirmed` | reuse the recorded output | the effects happened; re-running repeats them |
+| all absent or `prepared` | re-run | nothing left the harness, so nothing can be repeated |
+| any `sent`, `ambiguous` or `compensated`, or a mix of confirmed and unreserved | throws `ambiguous-reconciliation-required` naming the step and its receipts | undecidable in both directions: the rerun repeats a committed effect, the reuse drops an uncommitted one — P4-12's reconciliation case, not a retry case |
+
+The effect check runs BEFORE the child confirmation because every failure answer below it is "run it again", which a committed effect forbids; a confirmed step whose children cannot be confirmed therefore also ends in `ambiguous-reconciliation-required` rather than in the old rerun.
+
+`ctx.actionLedger`'s absence, and a parent agent with no identity to scope the query by, are NOT answered as "no row". A lookup that cannot be made is passed as absent, and any recorded receipt then takes the ambiguous path: "unable to ask" and "never reserved" authorize opposite decisions, and only the second clears a step to run again.
+
+**Behaviour today is unchanged and that is checked, not assumed.** No producer writes a side-effect receipt, so every shipped journal entry carries an empty list and skips the reconciliation entirely; the empty-list path is byte-identical to the old one, and the six pre-existing cases still pass unmodified but for the new explicit argument. Both facts are now in the engine's Known Limitations rather than left for a reader to infer. The clause is true of a path production runs, and the mutation proof (M25–M27, recorded on the freeze entry) shows each of the three branches is separately load-bearing: removing the ledger query alone reddens 5 of 12.
+
+**acceptance[2] now has a real subject, after §12.46-A relocated it.** The first attempt was written and reverted: compaction dropped inputs only from a `completed && verified && pure` entry, and purity could never hold — `journalingObserver(this.journal, () => 'side-effecting')` is a constant (`host.ts:206`) and the DSL has no syntax for a script to declare a step pure — while `stepVerified` had **0** production callers. Compaction was the identity function on every journal a run could produce, so calling it would have been a call site no mutation could redden.
+
+§12.46-A re-seated the subjects on mechanisms that exist rather than changing the clause:
+
+| subject | before | after |
+| --- | --- | --- |
+| `verified` | set only by two spec files | set by the resume, for every step it RECONCILED — effects confirmed in the ledger, every child accounted for |
+| compaction's gate | `completed && verified && pure` | `completed && verified`; purity is dropped because it could not fire, and reconciliation carries the same safety the pure gate was standing in for |
+| `compactJournal` caller | none | `WorkerRun` at settlement, before the result resolves, discarding any compaction that failed `retainsAllReceipts` |
+
+**A defect surfaced while implementing it, and is fixed here.** A resumed run built a FRESH recorder, so its first persist overwrote the journal file and the steps the resume had just reconciled disappeared from it; a second crash would have re-run them. `createJournalRecorder` now takes the journal to continue, and the resume hands over the one it reconciled.
+
+**What still does not close, stated rather than hidden.** Mutating settlement to persist the raw journal instead of the compacted one reddens **nothing** (M30). Compaction's only saving is dropping a completed, verified step's `inputs`, and `inputs` has no production producer either — `stepStarted` always writes `[]`. So the compaction is no longer structurally dead (its gate reads a flag with a live producer, and its retention check guards a real write) but its observable effect waits on a third missing producer. Three renamed frozen titles are registered in `frozen-title-renames.json`; the old titles' observations captured the old rule passing when they greened, which is what predicate (iii) binds to.
+
+The earlier `recordStep` framing is withdrawn: `recordStep`/`startStep` do not exist as exports at all — the recorder's surface is `createJournalRecorder`.
 
 ### BLOCKED-157 — a case measures peak buffer residual by replacing a process global, so its verdict depends on what else the worker was doing
 
@@ -376,7 +423,7 @@ Vitest runs other cases in the same worker process concurrently. While the patch
 
 Filing any of them by resemblance to the others would have hidden a real defect twice over — which is BLOCKED-137's lesson applied to a list that now has four entries.
 
-**The fix is the measurement, not the isolation (delegate, §12.44).** The runtime exposes an observable residual/peak hook and the case asserts against that. `singleFork` or `describe.sequential` would isolate a wrong measurement so it can keep being used; a case that mutates a process global and restores it is an intermittent false red in any concurrent suite, and the next such case would repeat it.
+**The fix is the measurement, not the isolation (delegate, §12.45).** The runtime exposes an observable residual/peak hook and the case asserts against that. `singleFork` or `describe.sequential` would isolate a wrong measurement so it can keep being used; a case that mutates a process global and restores it is an intermittent false red in any concurrent suite, and the next such case would repeat it.
 
 ### BLOCKED-155 — P6-02 defined a memory record the memory capability does not store, so neither half of its Usage has anywhere to land
 

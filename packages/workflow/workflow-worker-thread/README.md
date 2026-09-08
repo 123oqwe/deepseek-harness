@@ -169,6 +169,9 @@ These limits define when the engine is a poor fit or needs special operational c
 - **No ambient timers, filesystem, or network are injected, but escaped code can still reach Node** — the missing globals are a portability API, not containment.
 - **Termination can only report host-observed starts** — `agentsStarted` excludes worker-side calls still queued behind concurrency when a forced termination makes them unknowable.
 - **Cross-realm errors fail `instanceof Error` inside scripts** — workflow authors must branch on stable fields such as `name` and `code`.
+- **A resume stops rather than decide an unresolved external effect** — when a journalled step's side-effect receipts are not all `confirmed` in `ctx.actionLedger` and not all unreserved, `resume` throws `ambiguous-reconciliation-required` naming the step and its receipts, for an operator to reconcile. A run with no ledger mounted, or whose parent agent carries no identity to scope the query by, takes that path for any recorded receipt: being unable to ask is not the same answer as "never reserved", and only the latter clears a step to run again.
+- **No recorder writes side-effect receipts yet** — the reconciliation above is reached only once a producer records one, so in the shipped composition every journalled step reconciles vacuously and resume behaves as it did before the ledger was consulted.
+- **Compaction at settlement saves nothing yet** — a settled run compacts its journal and refuses to persist a compaction that lost a receipt, but the only thing compaction drops is a verified step's `inputs`, and nothing populates `inputs`. The rule and its evidence check are live; the saving waits on a producer of input refs.
 
 <a id="dev-note"></a>
 ### Dev Note

@@ -21,6 +21,7 @@
  * the two cases a resume has to tell apart.
  */
 import { afterEach, describe, expect, it } from 'vitest'
+import { readJournal } from '@deepseek-ai/dsh-workflow-journal'
 import { Context } from '@deepseek-ai/cordis'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -148,5 +149,46 @@ describe('P4-08 must[0]: a real run keeps a journal', () => {
     await run.result
 
     expect(run.journalSnapshot().entries.map(entry => entry.effectClass)).toEqual(['side-effecting'])
+  })
+})
+
+describe('P4-08 acceptance[2]: a settled run persists a journal that keeps its evidence', () => {
+  it('CONTINUES the journal it resumed from instead of overwriting it', async () => {
+    // The defect this pins: a resumed run used to build a fresh recorder, so
+    // its first persist replaced the file and the steps the resume had just
+    // reconciled vanished. A second crash would then re-run them — the journal
+    // forgetting exactly the work it exists to remember.
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const body = "const a = await agent('first'); const b = await agent('second'); return [a, b]"
+    const first = ctx.workflowEngine.start({ script: body, meta: META, parent }) as WorkerRun
+    await first.result
+    await first.dispose()
+
+    const resumed = await ctx.workflowEngine.resume(first.id, { script: body, meta: META, parent })
+    await resumed.result
+
+    const persisted = readJournal(first.journalRoot, first.id)
+    expect(persisted?.entries.map(entry => entry.stepId)).toEqual(['step-1', 'step-2'])
+  })
+
+  it('marks a RECONCILED step verified, which is what compaction acts on', async () => {
+    // `verified` had no production producer at all: the flag compaction and
+    // must[1] both read was set only by tests. Reconciliation is the check
+    // that earns it — the ledger confirmed the effects and every child was
+    // accounted for, which is more than re-reading the step's own record.
+    const { ctx, parent } = await setup(2, { persistence: true })
+    const body = "const a = await agent('first'); const b = await agent('second'); return [a, b]"
+    const first = ctx.workflowEngine.start({ script: body, meta: META, parent }) as WorkerRun
+    await first.result
+    await first.dispose()
+
+    const resumed = await ctx.workflowEngine.resume(first.id, { script: body, meta: META, parent })
+    await resumed.result
+
+    const persisted = readJournal(first.journalRoot, first.id)
+    expect(persisted?.entries.every(entry => entry.verified)).toBe(true)
+    // Every receipt survives the compaction the settlement performed, which is
+    // the half of acceptance[2] that is a safety property rather than a saving.
+    expect(persisted?.entries.flatMap(entry => entry.childReceipts)).toHaveLength(2)
   })
 })
