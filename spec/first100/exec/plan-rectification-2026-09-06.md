@@ -966,3 +966,12 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **裁决:取 (2)**。(1) 写的是"带未对账回执的步骤拒绝复用、让它重跑"——**重跑一个副作用步骤正是 P4-12 要防的重复效果**;"先对账"的含义是查该效果的**durable 状态**,而 harness 里外部效果唯一的 durable 状态就是 action ledger(P4-12)。语义:恢复时对每条 `sideEffectReceipt` 查 ledger——`confirmed` → 效果已发生,步骤输出可复用、不重跑;`ambiguous` → 需要对账,**不自动恢复**,以 `ambiguous-reconciliation-required` 结束 resume 并把条目暴露给操作者(P4-12 本来就把 ambiguous 交给对账);无记录 → 该效果从未预留,按未发生重跑。耦合是 registry 已有的(P4-08 must[0] 列了 side-effect receipts,P4-12 是它们的账本);层向下(providers → definitions)。今天没有步骤产生副作用回执,故零行为变更,但子句变真且有真消费者;冻结:confirmed 复用 / ambiguous 拒恢复 / 无记录重跑,变异去掉 ledger 查询 → 红。
 **acc[2]**:`compactJournal` 在 **run 完成时**由 `WorkerRun` 调(完成的 run 的 journal 压缩、原始回执保留——`retainsAllReceipts` 在同一点断言),由此有生产调用者;resume 读压缩后的 journal。
 **更正**:`recordStep`/`startStep` 在此树非导出,我那句作废。
+
+### 12.45 BLOCKED-157(补编号):`code-runtime-python` 的全局 `Buffer.concat` 补丁是隔离缺陷(2026-09-08 04:00 EDT,原以消息裁定)
+
+真修取注入点(runtime 暴露可观测的 residual/peak 钩子),不取 `singleFork`/`describe.sequential`(把错误的测量方式隔离起来继续用);归 P3-13 lane;四形状对照(预算不足 / 故意用共享预算当断言 / 真回归 / 隔离缺陷)各需不同处置,作产物保留。BLOCKED-157 引用改为本条。
+
+### 12.46 P4-08 acc[2] 与 must[1] 的主语;P2-03 acc[2] 后半归 P2-04(2026-09-08 05:40 EDT)
+
+**A. P4-08**。must[2] 经 ledger 结账已落地(三分支、M25–M27 各自承重、查不到 ≠ 未预留——对)。acc[2] 压缩与 must[1] 的 pure-skip 在这棵树上无主语:`journalingObserver` 常量 `side-effecting`、DSL 无 purity 语法、`stepVerified` 零生产调用者——而**这个 DSL 里被 journal 的步骤只有 `agent()` 调用,没有一个是纯的**;"纯步骤跳过"在此 DSL 由构造即空。**裁(解释,带 provenance 记入 registry 注记,不改字面)**:(1) **verified := 经 §12.44 结账通过**(效果 confirmed + child receipts 核过)——`stepVerified` 在 resume 结账成功处被调用,由此有生产调用者;(2) **skip := 结账后的复用**(§12.44 已做,且比 pure-only 更强:它对副作用步骤也成立,前提是效果已确认);(3) **compaction 作用于 completed+verified 的条目**——丢 inputs、保留全部 receipts(`retainsAllReceipts` 同点断言),不以 `pure` 为门槛;在 run 完成点由 `WorkerRun` 调,由此非恒等、变异可红。DSL 的 purity 声明是工作流语言的产品决定,不在 P4-08 内,记 BLOCKED-158 尾注。
+**B. P2-03 acc[2] 后半("要求审批")取 (2)**:P2-03 拥有**声明**(manifest 记 `requiresApproval`,今天每次原生调用都如此,不是边角);**执行**归审批/策略 seam——P2-04(分类)与 P2-05(策略/审批)的 U。签 P2-03 时 acc[2] 后半记**定向延期**:P2-03 行上 BLOCKED 条目 `landsIn: P2-04.U`,P2-04 的 readiness gate 含它、丢不掉;不留在散文里。(1) 会把整条工具路径挂在审批后面(今天所有调用都不可分类),拒。**但记清一句产品事实**:今天一个不可分类的动作被持久记为需审批、然后无审批执行——这是 P2-04/P2-05 落地前的真实状态,进 Known Limitations。
