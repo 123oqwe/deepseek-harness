@@ -1112,6 +1112,27 @@ On mount it restores the durable registry from Config.storePath (acceptance[0]'s
 runFor(agent: Agent): Run | undefined
 
 /**
+ * Reclaim a run whose lease lapsed, recording it as `orphaned` (Epic P4-05
+ * acceptance[2], §12.60).
+ *
+ * **The reclaimer writes this, never the orphaned host.** A host that lost
+ * its lease must not write at all — from its own side a reclaim and a pause
+ * are indistinguishable, so it cannot establish its own orphaning, and
+ * `advanceLeasedAgent` refuses it as `fenced`. The party that OBSERVED the
+ * loss is the one that acquired the item, and it records the state under the
+ * epoch the store just issued it. No fencing bypass exists or is needed.
+ *
+ * `orphaned` leads to `starting` or `failed`, so a caller resumes the work
+ * under its new epoch or fails it safely — acceptance[2]'s two arms.
+ * @param agent - the agent whose work item is being reclaimed.
+ * @param nowMs - the caller's clock reading, against which the lapse is judged.
+ * @returns `'reclaimed'` when this host took the item and recorded the state,
+ * `'held'` when the item is still validly owned, `'no-run'` when the agent
+ * has no lifecycle to record against.
+ */
+reclaim(agent: Agent, nowMs: number = Date.now()): 'reclaimed' | 'held' | 'no-run'
+
+/**
  * Advance one agent's lifecycle under the Run's lease (P4-05 must[1], P4-07
  * must[1]).
  *

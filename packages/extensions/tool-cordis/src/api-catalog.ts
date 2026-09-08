@@ -1493,6 +1493,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'the {@link Run} that agent\'s session is doing work inside, or `undefined` when no Run was opened for it — a subagent session started outside the agent registry this plugin observes, for instance.',
       },
       {
+        signature: 'reclaim(agent: Agent, nowMs: number = Date.now()): \'reclaimed\' | \'held\' | \'no-run\'',
+        description: 'Reclaim a run whose lease lapsed, recording it as `orphaned` (Epic P4-05 acceptance[2], §12.60).\n\n**The reclaimer writes this, never the orphaned host.** A host that lost its lease must not write at all — from its own side a reclaim and a pause are indistinguishable, so it cannot establish its own orphaning, and `advanceLeasedAgent` refuses it as `fenced`. The party that OBSERVED the loss is the one that acquired the item, and it records the state under the epoch the store just issued it. No fencing bypass exists or is needed.\n\n`orphaned` leads to `starting` or `failed`, so a caller resumes the work under its new epoch or fails it safely — acceptance[2]\'s two arms.',
+        parameters: [{ name: 'agent', description: 'the agent whose work item is being reclaimed.' }, { name: 'nowMs', description: 'the caller\'s clock reading, against which the lapse is judged.' }],
+        returns: '`\'reclaimed\'` when this host took the item and recorded the state, `\'held\'` when the item is still validly owned, `\'no-run\'` when the agent has no lifecycle to record against.',
+      },
+      {
         signature: 'advance( agent: Agent, to: AgentLifecycleState, reason: string, ): TransitionDenialReason | \'fenced\' | \'lease-refused\' | \'no-run\' | undefined',
         description: 'Advance one agent\'s lifecycle under the Run\'s lease (P4-05 must[1], P4-07 must[1]).\n\nThe production caller `advanceAgentLifecycleFenced` did not have. The token and the current lease both come from the lease this plugin took, so a caller cannot present authority it was not granted, and an agent whose Run was reclaimed by another host is refused here rather than allowed to write on a stale epoch.',
         parameters: [{ name: 'agent', description: 'the agent whose lifecycle is proposed to move.' }, { name: 'to', description: 'the state proposed.' }, { name: 'reason', description: 'why, recorded on the transition (must[1] requires it non-empty).' }],
