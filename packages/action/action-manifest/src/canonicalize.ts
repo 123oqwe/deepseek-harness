@@ -227,6 +227,7 @@ export function createActionManifest(request: CreateActionManifestRequest): Acti
     target: request.target,
     argumentsHash: computeArgumentsHash(request.args),
     sideEffectClass: classification.sideEffectClass,
+    classified: classification.classified,
     requiresApproval: classification.requiresApproval,
     idempotencyKey: request.idempotencyKey,
     preconditions: request.preconditions,

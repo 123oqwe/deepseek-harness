@@ -985,6 +985,59 @@ describe('P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not
     expect(manifest?.data.idempotencyKey).toMatch(/^[0-9a-f]{64}$/u)
   })
 
+  it('logs EVERY must[0] field, so a reader with only the log can say what the action declared (§12.33)', async () => {
+    // The five fields this pins were constructed and then dropped, on the
+    // reasoning that they were "reconstructable from these fields plus the
+    // package's own construction" — a rule that lives in code, not in the log.
+    // An auditor holding the log could not answer what compensation the action
+    // declared or what diff it expected.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: { a: 1 } }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-complete'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
+    expect(manifest?.data.target).toEqual({ kind: 'other', ref: 'noop' })
+    expect(manifest?.data.expectedDiff).toEqual({ description: 'tool noop executes with the manifested arguments' })
+    // Asserted as the concrete declaration rather than as "some compensation":
+    // `reversible: false` with a stated reason is what this path CLAIMS, and a
+    // later path that becomes reversible must change this case to say so.
+    expect(manifest?.data.compensation).toMatchObject({ reversible: false })
+    expect(manifest?.data.evidenceRequirements).toEqual([
+      { kind: 'external-receipt', description: 'the tool/result event for call c1' },
+    ])
+    // Empty, and logged empty on purpose: "this path asserted no precondition"
+    // is a fact, and an absent field could not be told from one nobody wrote.
+    expect(manifest?.data.preconditions).toEqual([])
+  })
+
+  it('records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])', async () => {
+    // `classifySideEffect('destructive')` and `classifySideEffect(undefined)`
+    // produce the same class and the same requiresApproval. Only `classified`
+    // separates an action whose risk was stated from one whose risk nobody
+    // knew, so it is a field on the manifest rather than something the writing
+    // path knows and the record does not.
+    const adapter = new MockAdapter([
+      multiCall([{ id: 'c1', name: 'noop', args: { a: 1 } }]),
+      textResponse('done'),
+    ])
+    const ctx = await harness(adapter, 1)
+    ctx.tools.register(manifestEchoTool())
+    const agent = ctx.agentLoop.create(SessionId('manifest-classified'), { provider: 'mock', model: 'mock' })
+    agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await agent.whenIdle()
+
+    const manifest = events(agent).find(event => event.type === 'action/manifest-appended')
+    expect(manifest?.data.classified).toBe(false)
+    expect(manifest?.data.sideEffectClass).toBe('destructive')
+    expect(manifest?.data.requiresApproval).toBe(true)
+  })
+
   it('logs the ATTACHED identity\'s run, not the session id wearing a RunId brand', async () => {
     // The defect this pins: `runId: brandString<RunId>(session.id)` produced a
     // manifest whose mandated field was present and whose value was something

@@ -8743,6 +8743,47 @@
         "failureSummary": "Each reddens exactly one case of 157 in this package: the refused agent executes its tools. The other 156 stay green under both -- including the no-Run-Service control, which is what says the new refusal is selective rather than a blanket stop on every agent without a lifecycle. That control is the case the marker exists for: before it, the two states were the same state."
       },
       "note": "\u00a712.31-A, and it also closes a freeze gap. This suite is what \u00a712.19-3's Agent Note cites as P4-07's evidence -- the production holder the fencing rule did not have -- and NO freeze entry covered any of its cases; P4-07.U.1 froze the workflow integration suite instead. So this entry pins all 16, not only the two added today. The new pair closes a measured hole in must[0]/acceptance[1]: a host whose lease was refused kept dispatching tools, because a refused lease left the agent with no lifecycle and that is also what a composition with no Run Service has -- and that one must dispatch normally. `Agent.leaseRefused` makes the two distinguishable, `advanceLeasedAgent` reports `lease-refused` BEFORE it reports absence, and the dispatcher refuses both while naming them apart: a fenced run HELD the item and lost it, a lease-refused run never held it, and an operator sent to look for a takeover that never happened is looking in the wrong place. Frozen at stage U rather than C: what these cases observe is a mounted composition doing the work, which is a Usage observation, and P4-07's sign-off is withdrawn so U is no more locked than C is."
+    },
+    {
+      "epic": "P2-03",
+      "stage": "U",
+      "supplements": {
+        "epic": "P2-03",
+        "stage": "U"
+      },
+      "supplementSeq": 4,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent-loop/tests/tool-calls.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) logs EVERY must[0] field, so a reader with only the log can say what the action declared (\u00a712.33)",
+        "P2-03 must[0]: the manifest is CONSTRUCTED on the production path, not assembled beside it (BLOCKED-143) records whether the side-effect class was DECLARED, which the class alone cannot say (acceptance[2])"
+      ],
+      "files": [
+        "packages/core/tools/src/manifest-log.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/action/action-manifest/src/types.ts",
+        "packages/action/action-manifest/src/canonicalize.ts",
+        "packages/core/agent-loop/tests/tool-calls.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T06:10:00.000Z",
+      "dryRunProof": {
+        "treeSha": "61d1c1e5abad079cec2ecca0702541dc849923b1",
+        "testsDiscovered": 32
+      },
+      "sensitivityProof": {
+        "mutationDescription": "Two mutations, each restored byte-identical: (M9) the event drops `target`, `preconditions`, `expectedDiff`, `compensation` and `evidenceRequirements` again; (M10) `classified` is written as a literal `true` instead of read from the manifest.",
+        "failureSummary": "M9 reddens 29 of 32 -- the payload type refuses the write, so every case that dispatches a tool fails, which is the strongest form of the check: the five fields cannot be dropped without the log refusing to accept the event at all. M10 reddens exactly the 2 new cases and leaves the other 30 green, which is what says `classified` is read rather than assumed: every other assertion about this manifest holds identically whether the class was declared or defaulted, and that is the whole reason the field must exist."
+      },
+      "note": "\u00a712.33. Two findings from P2-03's own evidence package, both raised before signing. (1) The event carried 7 of must[0]'s 12 fields and called the rest reconstructable 'from these fields plus the package's own construction' -- a rule that lives in code, not in the log, so a reader holding the log could not say what compensation an action declared. All five are inlined; three are constants on today's two paths and are logged anyway, because what the record states is what THIS path declared, and a field that gains content later must not change the log's shape when it does. (2) `appendManifestThenGate` -- the shared implementation of must[1]'s construct-append-gate order, and the whole of must[2]'s no-bypass argument -- had zero production callers while both paths wrote that order out for themselves. Both now go through it, over `createSessionManifestAppender`: the session log as a real `ManifestAppender`, which inlining the fields is what makes possible, since `appended()` must rebuild a full manifest from one event. The appender lives in `dsh-tools` rather than in the manifest package, because a capability definition reaching for a session is BLOCKED-136's edge. `ActionManifest` gained `classified`: a declared `destructive` and a defaulted one produce the same class AND the same `requiresApproval`, so once the event is derived from the manifest the acceptance[2] fact is unrecoverable -- it is a fact about the manifest, not about the moment of writing."
     }
   ]
 }

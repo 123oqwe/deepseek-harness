@@ -9,6 +9,9 @@ import type { Fiber } from '@deepseek-ai/cordis'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { claimCapability, requestReplace, revokeByOwnershipToken } from '@deepseek-ai/dsh-plugin-ownership'
 import type {
+  ActionTarget, Compensation, EvidenceRequirement, ExpectedDiff, Precondition,
+} from '@deepseek-ai/dsh-action-manifest'
+import type {
   CapabilityOrigin, CapabilityRegistration, Namespace, OwnershipToken, PluginIdentity,
   RegistrationDenialReason, RegistryPolicy, RevocationResult, StableCapabilityId,
 } from '@deepseek-ai/dsh-plugin-ownership'
@@ -2415,13 +2418,26 @@ function toolAbortedBeforeDispatchResult(prior?: ToolExecutionResult): ToolExecu
 export default ToolRuntime
 
 /**
- * Payload of `action/manifest-appended` (Epic P2-03 must[1], acceptance[0]).
+ * Payload of `action/manifest-appended` (Epic P2-03 must[0], must[1],
+ * acceptance[0]).
  *
- * The manifest itself is not inlined: it is reconstructable from these fields
- * plus the action-manifest package's own construction, and a session event
- * carries what a reader needs to answer "did a manifest precede this
- * execution, and did it describe these arguments" without re-deriving the
- * whole record.
+ * **Every must[0] field is inlined.** An earlier version carried a subset and
+ * called the rest reconstructable "from these fields plus the action-manifest
+ * package's own construction" — which is a rule that lives in code, not in the
+ * log, so a reader holding the log could not answer what compensation an action
+ * declared or what diff it expected. `target`, `preconditions`, `expectedDiff`,
+ * `compensation` and `evidenceRequirements` are here for that reason (§12.33).
+ *
+ * Several of them are constants on today's two execution paths — no tool
+ * declares a precondition or a compensation yet. They are logged anyway,
+ * because what the record states is what THIS path declared at the time, and a
+ * field that starts carrying real content later must not change the log's
+ * shape when it does.
+ *
+ * Inlining them is also what makes the log a `ManifestAppender`: a full
+ * manifest can be reconstructed from one event, which is what
+ * `assertManifestPrecedesExecution` reads when it decides whether an execution
+ * was preceded by its own manifest.
  */
 export interface ActionManifestAppendedEventData {
   /** The action this manifest describes. */
@@ -2453,6 +2469,16 @@ export interface ActionManifestAppendedEventData {
   idempotencyKey: string
   /** The monotonic append position this manifest occupies in the durable log. */
   sequence: number
+  /** What the action acts on (must[0]'s `target`). */
+  target: ActionTarget
+  /** Conditions the issuer asserted before execution (must[0]); empty when it asserted none. */
+  preconditions: readonly Precondition[]
+  /** The state change the issuer expected (must[0]). */
+  expectedDiff: ExpectedDiff
+  /** How to undo the effect, or the explicit statement that it cannot be undone (must[0]). */
+  compensation: Compensation
+  /** What a later stage must capture to prove the action ran as manifested (must[0]). */
+  evidenceRequirements: readonly EvidenceRequirement[]
   /**
    * The lease epoch under which this action was manifested (P4-07 must[1]),
    * absent when the run holds no lease.

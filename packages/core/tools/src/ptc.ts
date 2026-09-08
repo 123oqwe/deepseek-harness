@@ -11,8 +11,10 @@ import { createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, ToolCallId } from '@deepseek-ai/dsh-llm'
 import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
-import { classifySideEffect, computeArgumentsHash, createActionManifest, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
+import type { Principal } from '@deepseek-ai/dsh-principal'
+import { createSessionManifestAppender } from './manifest-log.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
@@ -193,45 +195,38 @@ function appendCodeModeManifest(
 ): void {
   const agent = exec.agent
   if (agent === undefined) return
-  const classification = classifySideEffect(undefined)
-  const sequence = agent.session.countEventsOfType('action/manifest-appended') + 1
   const argumentsHash = computeArgumentsHash(loggedArguments as JsonValue)
-  // A real manifest, exactly as the native path builds one. must[2]'s "code
-  // mode cannot bypass" is about this path producing the SAME record, not a
-  // similar event: BLOCKED-143 found both paths hand-assembling a payload and
-  // neither constructing the manifest whose mandate must[0] describes.
   // The run and the actor come from the attached identity TOGETHER. An earlier
   // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
   // present and its value was something else, so two runs of one session shared
   // a "runId" and P4-12 would have keyed a scope on it.
   const attribution = manifestAttribution(attachedIdentity(agent.session), agent.session.id)
-  const manifest = createActionManifest({
-    actionId: brandString<ActionId>(subCallId),
-    runId: attribution.runId,
-    actor: attribution.actor,
-    capability: brandString<CapabilityRef>(name),
-    origin: 'code-mode-embedded',
-    target: { kind: 'other', ref: name },
-    args: loggedArguments as JsonValue,
-    idempotencyKey: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
-    preconditions: [],
-    expectedDiff: { description: `code-mode sub-dispatch of ${name} executes with the manifested arguments` },
-    compensation: { reversible: false, reason: 'the code-mode path declares no compensation; a tool that has one states it in its own manifest contribution' },
-    evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/code-dispatch-end event for sub-call ${subCallId}` }],
-  })
-  agent.session.append('action/manifest-appended', {
-    actionId: manifest.actionId,
-    origin: manifest.origin,
-    capability: manifest.capability,
-    argumentsHash: manifest.argumentsHash,
-    sideEffectClass: manifest.sideEffectClass,
-    classified: classification.classified,
-    requiresApproval: manifest.requiresApproval,
-    runId: manifest.runId,
-    actor: manifest.actor.id,
-    idempotencyKey: manifest.idempotencyKey,
-    sequence,
-  })
+  // The SAME entry point the native path uses. must[2]'s "code mode cannot
+  // bypass" is about this path producing the same record through the same
+  // order, not a similar event written beside it: while each path wrote
+  // construct-append-gate out for itself, "cannot bypass" rested on two copies
+  // staying identical, and the shared implementation had no caller (§12.33).
+  appendManifestThenGate(
+    createSessionManifestAppender(
+      agent.session,
+      (actorId: string): Principal => ({ ...attribution.actor, id: actorId as Principal['id'] }),
+      () => agent.lifecycle?.epoch,
+    ),
+    {
+      actionId: brandString<ActionId>(subCallId),
+      runId: attribution.runId,
+      actor: attribution.actor,
+      capability: brandString<CapabilityRef>(name),
+      origin: 'code-mode-embedded',
+      target: { kind: 'other', ref: name },
+      args: loggedArguments as JsonValue,
+      idempotencyKey: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
+      preconditions: [],
+      expectedDiff: { description: `code-mode sub-dispatch of ${name} executes with the manifested arguments` },
+      compensation: { reversible: false, reason: 'the code-mode path declares no compensation; a tool that has one states it in its own manifest contribution' },
+      evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/code-dispatch-end event for sub-call ${subCallId}` }],
+    },
+  )
 }
 
 /** Two-space JSON presentation, matching the existing shallow `run_code` text contract. */

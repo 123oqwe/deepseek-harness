@@ -229,6 +229,17 @@ export interface ActionManifest {
   readonly target: ActionTarget
   readonly argumentsHash: ArgumentsHash
   readonly sideEffectClass: ActionSideEffectClass
+  /**
+   * Whether {@link ActionManifest.sideEffectClass} was DECLARED by the
+   * capability, or reached by the unclassifiable default (acceptance[2]).
+   *
+   * Recorded rather than derived, because it cannot be derived: a declared
+   * `destructive` and a defaulted one produce an identical class and an
+   * identical `requiresApproval`, so a reader holding only those two cannot
+   * tell an action whose risk was stated from one whose risk nobody knew.
+   * Those are different facts about how much the harness understood.
+   */
+  readonly classified: boolean
   readonly requiresApproval: boolean
   readonly idempotencyKey: IdempotencyKey
   readonly preconditions: readonly Precondition[]

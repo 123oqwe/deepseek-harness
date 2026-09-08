@@ -78,6 +78,7 @@ function fixtureManifest(overrides: Partial<ActionManifest> = {}): ActionManifes
     target,
     argumentsHash: brandString<ArgumentsHash>('hash-1'),
     sideEffectClass: 'write',
+    classified: true,
     requiresApproval: false,
     idempotencyKey: brandString<IdempotencyKey>('idem-1'),
     preconditions,

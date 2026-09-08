@@ -17,7 +17,7 @@ import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
 import { createHash } from 'node:crypto'
-import { computeArgumentsHash, classifySideEffect, createActionManifest, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
+import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
@@ -27,6 +27,8 @@ import type {} from '@deepseek-ai/dsh-action-ledger'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
+import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
+import type { Principal } from '@deepseek-ai/dsh-principal'
 import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
 
 /** One tool call after argument parsing, ready to schedule. */
@@ -395,66 +397,41 @@ function appendToolCall(agent: Agent, turn: number, step: number, block: ToolCal
 
 function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'native-tool-call'): ManifestRecord {
   const { session } = agent
-  const classification = classifySideEffect(undefined)
   const argumentsHash = computeArgumentsHash(block.arguments)
-  // A REAL ActionManifest, built through the package that owns the record and
-  // then appended, rather than an event assembled beside it. BLOCKED-143
-  // measured what the old arrangement cost: `createActionManifest` had zero
-  // production callers, so must[0]'s "the manifest mandates idempotencyKey"
-  // held over a record the product never constructed, and the event carried
-  // neither the key nor the actor -- the two fields P4-12's ledger keys on.
   // The run and the actor come from the attached identity TOGETHER. An earlier
   // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
   // present and its value was something else, so two runs of one session shared
   // a "runId" and P4-12 would have keyed a scope on it.
   const attribution = manifestAttribution(attachedIdentity(session), session.id)
-  const manifest = createActionManifest({
-    actionId: brandString<ActionId>(block.id),
-    runId: attribution.runId,
-    actor: attribution.actor,
-    capability: brandString<CapabilityRef>(block.name),
-    origin,
-    target: { kind: 'other', ref: block.name },
-    args: block.arguments,
-    idempotencyKey: manifestIdempotencyKey(session.id, brandString<ActionId>(block.id), argumentsHash),
-    preconditions: [],
-    expectedDiff: { description: `tool ${block.name} executes with the manifested arguments` },
-    compensation: { reversible: false, reason: 'the native tool path declares no compensation; a tool that has one states it in its own manifest contribution' },
-    evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/result event for call ${block.id}` }],
-  })
-  session.append('action/manifest-appended', {
-    actionId: manifest.actionId,
-    origin: manifest.origin,
-    capability: manifest.capability,
-    argumentsHash: manifest.argumentsHash,
-    sideEffectClass: manifest.sideEffectClass,
-    classified: classification.classified,
-    requiresApproval: manifest.requiresApproval,
-    // must[0]'s remaining fields, INLINED rather than left reconstructable.
-    // `idempotencyKey` is minted by this path from caller-supplied values, so
-    // an event without it cannot be rebuilt from anything else in the log
-    // (BLOCKED-143).
-    runId: manifest.runId,
-    actor: manifest.actor.id,
-    idempotencyKey: manifest.idempotencyKey,
-    // The manifest's own position among this session's manifests. It was the
-    // literal `0` on every manifest ever written, which made a field documented
-    // as "the monotonic append position" a constant -- acceptance[0] asks
-    // whether a manifest PRECEDES its execution, and a position that never
-    // advances cannot answer that.
-    //
-    // Read from the session rather than taken from the event's own `seq`: the
-    // payload is built before the append that assigns one. The session owns the
-    // counter so that this path and the PTC code-mode path read one number; each
-    // counting for itself made the same field mean two things and cost a log
-    // scan per call.
-    sequence: session.countEventsOfType('action/manifest-appended') + 1,
-    // The authority is RECORDED, not only presented: an epoch that lived only
-    // in memory leaves a fenced-out host's actions indistinguishable from the
-    // current holder's afterwards.
-    ...agent.lifecycle === undefined ? {} : { leaseEpoch: agent.lifecycle.epoch },
-  })
-  return { key: manifest.idempotencyKey, argumentsHash, scope: attribution.actor.id }
+  // Through `appendManifestThenGate`, which is must[1]'s order in ONE
+  // implementation: construct, durably append, and only then decide whether
+  // execution may proceed. Both dispatch paths reached that order by writing
+  // it out themselves until §12.33; two copies of a sequence is the shape that
+  // lets one of them drift, and the package shipped the shared one with no
+  // caller at all.
+  //
+  // No declared side-effect class is available here: the tool registry carries
+  // none for a native call at this point, and `classifySideEffect` inside the
+  // construction defaults an unclassifiable action to the highest-risk class
+  // requiring approval (acceptance[2]) rather than to a convenient guess.
+  const { appended } = appendManifestThenGate(
+    createSessionManifestAppender(session, (actorId: string): Principal => ({ ...attribution.actor, id: actorId as Principal['id'] }), () => agent.lifecycle?.epoch),
+    {
+      actionId: brandString<ActionId>(block.id),
+      runId: attribution.runId,
+      actor: attribution.actor,
+      capability: brandString<CapabilityRef>(block.name),
+      origin,
+      target: { kind: 'other', ref: block.name },
+      args: block.arguments,
+      idempotencyKey: manifestIdempotencyKey(session.id, brandString<ActionId>(block.id), argumentsHash),
+      preconditions: [],
+      expectedDiff: { description: `tool ${block.name} executes with the manifested arguments` },
+      compensation: { reversible: false, reason: 'the native tool path declares no compensation; a tool that has one states it in its own manifest contribution' },
+      evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/result event for call ${block.id}` }],
+    },
+  )
+  return { key: appended.manifest.idempotencyKey, argumentsHash, scope: attribution.actor.id }
 }
 
 /**
