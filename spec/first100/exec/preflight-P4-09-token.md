@@ -21,9 +21,13 @@ This slice closes the middle row only. `trace`'s owner is P7-07, which has not s
 §12.66 rules the derivation reuses what P2-02 already ships, and it is a real production path rather than a surface:
 
 - `CapabilityTokenService.attenuate(parent, request)` (`policy/capability-token/src/index.ts:330`) delegates to `attenuateToken`, records the child, and appends its redacted audit record **only when the decision accepts** — a refusal writes nothing at all.
-- `subagent/subagent/src/child-agent.ts:17,286+` already calls it to mint the token a child agent runs under. Its own doc states the discipline this slice inherits: the function **computes a request and never a grant**, so the two ways a child could widen — a filter naming a tool the parent lacks, or a request raising budget or expiry — are refused by the same checked path, "not by a second copy of the rule here".
+- `subagent/subagent/src/child-agent.ts:306` DEFINES `attenuateDelegatedToken`, whose doc states the discipline this slice inherits: it **computes a request and never a grant**, so the two ways a child could widen — a filter naming a tool the parent lacks, or a request raising budget or expiry — are refused by the same checked path, "not by a second copy of the rule here".
 
-A nested run and a detached run therefore go through **one** derivation, the same one a child agent uses. A second attenuation path would be the `circuit.ts` mistake in the security layer, where it is least affordable.
+> **CORRECTION.** An earlier revision of this section said `child-agent.ts` "already calls it to mint the token a child agent runs under", and that a nested run would therefore reuse "the same derivation a child agent uses". **False, and measured false.** `child-agent.ts` DEFINES that function; every reference to it outside its own module is in `subagent/tests/capability-token-delegation.spec.ts`, and `.attenuate(` has **zero** production callers anywhere in `packages/`. I read the function's JSDoc — "mint the Capability Token one child agent runs under" — as evidence of a caller. That doc states INTENT, and intent is not reach: it is the precise error 4.4a exists to catch, made while writing a document whose own purpose is to apply 4.4a.
+
+**What this changes.** This slice is not "add another consumer beside the subagent one". It would be the **FIRST production consumer of P2-02's attenuation path**, which makes it more valuable and also leaves it no precedent to copy — the discipline above comes from a doc comment, not from a working call site to imitate.
+
+**And it raises a question about P2-02 that is not mine to answer.** P2-02 is ACCEPTED with zero open findings. Its VERIFICATION half genuinely has a production consumer — `core/tools/src/index.ts:28` imports `assertTokenPresented` for the `requireCapabilityToken` path. Its ATTENUATION half does not. Whether P2-02's delegation clauses were signed against a subject with no production caller is a question for the delegate, and it is recorded here rather than assumed either way.
 
 ## What this slice adds
 
