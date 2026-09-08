@@ -25,6 +25,16 @@ return Math.min(exponential * jitter, config.maxDelayMs)
 
 Its jitter is **symmetric** — it may raise as well as lower, then clamps. The withdrawn `classify.ts` used subtract-only jitter, which would have been a **third** spelling of the same decision. P4-11 must reuse this one, and any change to it is a change to `llm-retry`, not a new module beside it.
 
+## `Retry-After` already has a parser — I missed it, §12.64 caught it
+
+My first draft assigned `Retry-After` parsing to the P stage "at the wire boundary", which would have been a SECOND implementation. Measured after §12.64 named it:
+
+`providerRetryAfterMs` (`packages/llm/llm-deepseek/src/adapter.ts:311`) already handles both wire forms — a delta-seconds integer and an HTTP-date — and returns `undefined` for a non-positive or unparseable value. It is **module-private**, and its result is carried on `LlmError.providerRetryAfterMs`, a field the LLM service already validates (`llm/tests/service.spec.ts:1231` pins that it rejects `NaN`).
+
+So the P stage **lifts** that function to where both providers can reach it and consumes the existing `LlmError` field. It does not write a parser, and `backoffDelayMs` takes the already-parsed milliseconds rather than a header string.
+
+The reason I missed it is worth recording, because it is the same shape as the withdrawn `circuit.ts`: I searched `jitter|backoff|delay` and retry keywords and never searched `retryAfter`, then declared the tree needed new code. **Before claiming the tree lacks something, search by the problem domain and not only by the name I would have given it.**
+
 ## 4.4a — the layers must[1] names, counted before signing
 
 "所有层消费同一 RunRetryBudget" is a statement about callers, so the layers are enumerated here rather than assumed. Measured across `packages/*/*/src`:
@@ -36,7 +46,11 @@ Its jitter is **symmetric** — it may raise as well as lower, then clamps. The 
 | Message bus outbox | `packages/run/message-bus/src/outbox.ts:169` | `decideDelivery(record, nowMs, maxAttempts)` — its own dead-letter budget |
 | Subagent | `packages/subagent/subagent/src` | `maxAttempts`, `retryable` |
 
-**Four independent budgets that can multiply**, which is exactly the registry's problem statement ("多个有限 budget 可叠加"). must[1] closes only when these four account against one run total; a `RunRetryBudget` type with no consumer would satisfy the noun and not the clause, which is why must[1] is assigned to **U** and not to C.
+**Four independent budgets that can multiply**, which is exactly the registry's problem statement ("多个有限 budget 可叠加"). must[1] closes only when the layers in scope account against one run total; a `RunRetryBudget` type with no consumer would satisfy the noun and not the clause, which is why must[1] is assigned to **U** and not to C.
+
+**Scope ruling (§12.64), recorded as a clause-scope decision rather than a deviation.** The message-bus outbox is **NOT** one of the layers must[1] names. `decideDelivery` is a per-MESSAGE dead-letter policy belonging to the accepted P4-06, and it answers "when do we stop trying to deliver this message", not "how much may this run spend redoing failed work". Folding it in would let a chatty outbox exhaust a run's model retries, and would change an accepted epic's semantics from outside it. The layers in scope are: LLM retry, MCP retries taken FOR a run action, subagent attempts made on behalf of a parent run, and any tool/web retry the tree holds. A background reconnect with no run attached spends no run budget and keeps its own `cockatiel` policy.
+
+**hedge exclusion is split under §12.46-B.** The tree has no hedging producer; hedging belongs to P5-04 (with P5-02). P4-11 owns the RULE half — the decision layer defines and freezes that a hedged attempt does not stack retries and is counted once against the budget — and P5-04 owns the producer half. A readiness BLOCKED entry is recorded for P5-04 now, in the BLOCKED-159 form, so that the requirement "a hedged attempt must be tagged such that P4-11's rule fires" is on record before P5-04 starts rather than discovered by it.
 
 ## must[3] — the subject is P4-12's ledger, already ACCEPTED
 
@@ -49,13 +63,13 @@ Frozen intent: an **unreconciled** side-effecting action is refused a retry even
 | subtask | files | contents |
 | --- | --- | --- |
 | **C** | `classify.ts`, `budget.ts`, tests | The failure taxonomy and retryability, and the budget's accounting. **No `circuit.ts`** — the circuit is `cockatiel`'s, and the Definition side declares only the decision interface the Provider implements. Both remain C candidates subject to the clause-subject audit below. |
-| **P** | provider module, `llm/llm/src/adapter-failure.ts`, `llm/llm/src/retry-policy.ts` | Adopts `cockatiel` behind the C-stage interface, and translates real adapter failures into the taxonomy. `Retry-After` parsing lives here, at the wire boundary. |
-| **U** | `llm-retry/src/index.ts`, `mcp-client/src/connection.ts`, `message-bus/src/outbox.ts`, `subagent/src` | The four layers above consuming ONE budget. This is where must[1] and acceptance[1] close. |
+| **P** | provider module, `llm/llm/src/adapter-failure.ts`, `llm/llm/src/retry-policy.ts` | Adopts `cockatiel` behind the C-stage interface, and translates real adapter failures into the taxonomy. **Lifts** the existing `providerRetryAfterMs` rather than writing a parser. |
+| **U** | `llm-retry/src/index.ts`, `mcp-client/src/connection.ts`, `subagent/src` | The in-scope layers consuming ONE budget. `message-bus/src/outbox.ts` is NOT here — §12.64 ruled the outbox out of must[1]'s scope. This is where must[1] and acceptance[1] close. |
 
-## Open question for the delegate
+## Rulings received (§12.64)
 
-`message-bus`'s `decideDelivery` budget is a **dead-letter** policy for durable delivery, not an LLM retry. Folding it into `RunRetryBudget` may be wrong: a run's model-retry budget and an outbox's redelivery budget answer different questions, and merging them could let a chatty outbox exhaust a run's model retries. I have not assumed either way — must[1]'s "所有层" needs a ruling on whether the outbox is one of the layers it names.
+Every question this document opened has been answered, and the answers are folded in above rather than left as a list: `cockatiel` ADOPT with no `circuit.ts`; `llm-retry`'s symmetric jitter kept as-is, because symmetric jitter is legitimate jitter and the epic's job is to make it consume the shared classifier and budget; `providerRetryAfterMs` lifted rather than rewritten; the outbox ruled OUT of must[1]'s scope; hedge split under §12.46-B with P5-04 carrying the producer half.
 
 ## Status
 
-**No code written.** Awaiting confirmation of the adopt/reuse decisions and the outbox question before the C subtask begins.
+**No code written yet.** The C subtask is `classify.ts` + `budget.ts` + tests, with no `circuit.ts`, and may begin once the `detached` preFlight is with the delegate (§12.64 ordering).

@@ -9,6 +9,16 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-166 — P5-04 readiness: a hedged attempt must be TAGGED, or P4-11's hedge-exclusion rule can never fire
+
+Recorded before P5-04 starts, in the BLOCKED-159 form, per §12.64 and the §12.46-B split. This is not a blocker on P5-04's own clauses; it is a requirement P5-04 inherits from an epic that will land first, written down now so P5-04 discovers it at its preFlight rather than at its Usage stage.
+
+**The split.** P4-11 must[2] names hedge exclusion, and the tree has **no hedging producer** — hedging belongs to P5-04 (with P5-02). Under §12.46-B, P4-11 owns the RULE half: its decision layer defines and freezes that a hedged attempt does not stack retries on top of the attempt it hedges, and that the pair is counted ONCE against the run's retry budget. P4-11 is signable on that half.
+
+**What P5-04 must supply for the rule to have a subject.** A hedged attempt has to arrive at the classifier distinguishable from an ordinary retry. Without a tag, two in-flight attempts for one logical call are indistinguishable from one call retried once, and P4-11's rule cannot fire — it would be a decision function with a live caller and no reachable input, which is the shape 4.4a exists to catch, one level subtler than a zero-caller module.
+
+**Closing condition.** P5-04's hedging producer marks each hedged attempt such that P4-11's classifier can tell it from a retry, and a frozen case shows two hedged attempts consuming one budget unit rather than two. Until then P4-11's hedge-exclusion rule is proven only against constructed input, and the evidence package must say so rather than claim the clause closes end to end.
+
 ### BLOCKED-165 — the program goal's P9 arm cannot be satisfied until Phase 7 lands, and the shortcut is refused by the tool itself
 
 Measured because the standing goal is repeatedly evaluated against "P9 九项全部 VERIFIED 或 scheduled-BLOCKED 在案", and the honest answer is a scheduling fact rather than an omission.
