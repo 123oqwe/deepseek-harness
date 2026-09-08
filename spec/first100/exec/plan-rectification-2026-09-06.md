@@ -946,3 +946,9 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **事实**:§12.40 的 `inject` 落地后实测 `bus? false` 不变。原因:`SubagentContinuationManager.drain()` 是 async,以 `ctx.effect(function*(){ … yield () => this.drain() })` 注册;Cordis 的拆卸顺序管纤程先后,**不等待 async disposer**——drain 第一个 `await` 之后的段落在总线纤程消失后继续跑,提交落空。执行者没把它当成功报,对。
 **裁决**:**durable 提交在 teardown 路径上必须是同步的**——`commitIntake` 基于 `DatabaseSync` 本来就是同步 `BEGIN IMMEDIATE`;问题只是它被放在 drain 的 await 之后。改:disposer 的**第一个同步段**完成每个未提交 settlement 的 `commitIntake`(子 run 的 `subagent/end` 域事件 + 指向父的 outbox 行),**然后**才进入 async 的投递/唤醒段;teardown 中投递不做(行留 pending,这正是要覆盖的那条分支),下次启动 drain。不改 Cordis 拆卸语义(vendored、影响面全仓),不用越过服务边界的句柄。冻结:父 dispose 时子 settle → 行已提交(pending)→ 重启 → 投递一次(acc[1] 端到端);"teardown 中不投递"分支由此可断言。**规则**:任何"进程消失前必须持久化"的写,不得位于 disposer 的 await 之后。
 **操作教训采纳**:跨几十文件的脚本编辑必须让编译器确认(`.e2e.ts` 不在单测配置里,`tsc -b` 才看见);`inject` 的影响面含非测试的消费者(`gen-tool-catalog` 挂 `SubagentRuntime`)。
+
+### 12.42 拆卸期服务注册表已空:持 inject 交付的引用,不在拆卸期重 `get`(2026-09-08 04:20 EDT)
+
+**事实**(执行者三种方式测得一致):inject 之后、同步前段、倒转挂载顺序——disposer 开始运行前 `ctx.get('messageBus')` 已为 undefined。`ctx.get` 读全局服务存储,不是可见性问题:**服务注销发生在任何 disposer 之前**,§12.40/§12.41 的前提在这一层不成立。执行者把同步前段留在树里并写明不可达,对——那是这笔写该在的位置。
+**裁决:取 (1) 的合法形态。** 我在 §12.40 拒的是"越过服务边界捕获裸 store"。`inject` 交付的**服务值本身**在激活时就交给了插件——把它持在 `SubagentRuntime` 上、拆卸期用它而不是重 `ctx.get`,**这就是 inject 的用法,不是绕过边界**;纤程顺序(依赖者先拆)保证总线的 DB 在管理器 disposer 运行时仍开着。区别只在:被持有的是服务值(边界),不是它背后的 store(边界之内)。若实测 DB 仍被先关(纤程顺序不成立),再回来量。(2) 让板上出现未结束子代理的行,语义变了;(3) 把 acc[1] 砍成"进程还在"的情形——都不取。冻结不变:父 dispose 时子 settle → 行已提交 pending → 重启 → 投递一次。
+**推送**:先推已完成的(三触发 + 内存总线 + §12.39/12.40 部分),acc[1] 闭合单独一批——同意,不让架构裁决压着已完成的部分。
