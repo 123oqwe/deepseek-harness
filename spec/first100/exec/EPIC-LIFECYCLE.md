@@ -49,6 +49,7 @@
 | 2.9 | 撞到库的硬约束 → 停手,BLOCKED 记实测数字,两条路都实测,等裁决(不自选) | 先例 BLOCKED-128 |
 | 2.9a | **U 阶段冻结**的 `files` 必须含 ≥1 个 registry stage-U 的 [B] 文件("谁用"是 registry 写死的),否则先 BLOCKED 等裁决;门 (u) 机械校验 | 整改令 §12.13(P4-06 / P5-11 / P4-08) |
 | 2.10 | 冻结引用了 `files[]` 之外的文件 → 记 `filesOverlay`(机械生成,`kind=source` 附一句 reason);共享/热区文件的 reason **从 `git show <commit> -- <file>` 写起**(先说改了什么,带 commit 短 hash),delegate 逐条对 diff | 整改令 §12 / §12.8;`verify-files-overlay` |
+| 2.11 | supplement 的 **live 性以冻结的 `supersededBy` 为准**:被 supersede 的冻结条目不被观测、不进 4.4b、不登记改名(改名机制只用于仍 live 的条目标题挪位而观测含义要保住);账本行不得与冻结矛盾(GREEN@旧 SHA 的已 supersede 行是陈旧数据,先修再签) | 整改令 §12.61(BLOCKED-164:四条零登记;P4-06.P.1 陈旧行) |
 
 ## 3. 观测
 
@@ -68,6 +69,7 @@
 | 4.4 | delegate 跑四谓词 → `--record-signoff` → 提交只含 `delegate-signoff.json` → 执行者 `--accept` | BLOCKED-036 / 068 |
 | 4.4a | 签字前 delegate **重做 1.2 第一问并量化**:子句名词的构造函数在生产路径上的调用者数(grep,排除 tests),为零不签;事件名 / 文件名与子句名词同名不算 | 整改令 §12.11(BLOCKED-143,P2-03 #22 撤回);同族 BLOCKED-091 / 136 |
 | 4.4b | 签字前 delegate 核每个格子与 supplement 的 `candidateSha`/run **是重建后的观测**;`--accept` 只报 (iv) 是必要条件不是签字依据(2026-09-08 P4-07 误签:cells 仍是重建前观测,已撤) | 整改令 §12.52 |
+| 4.4c | **关一条 finding 必须逐名词给量**:finding 记几个名词就答几个,消息里带表;一个名词的证据不关整条(2026-09-08 P4-09 must[3]:三名词只答"有调用者",capability token / trace 零出现,重开)。`--accept` 与绿格路径口径一致:任一 open finding 存在即拒 | 整改令 §12.61 |
 | 4.5 | 用户级确认门:P0-02 / P0-07 / P2-01 的最终 ACCEPT;钱 / 钥匙 / 不可逆触点 | BLOCKED-022 / 024;C7 |
 
 ## 5. 跨 epic 的固定顺序(现行)
