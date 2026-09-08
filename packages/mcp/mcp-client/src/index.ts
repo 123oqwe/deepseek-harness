@@ -68,6 +68,27 @@ export interface StdioConfig {
   toolCallTimeoutMs: number
   /** Fail plugin activation when the initial connection or tool synchronization fails. */
   failOnStartupError: boolean
+  /**
+   * Risk domain tags every tool from this server declares (P2-04 must[1]).
+   *
+   * The OPERATOR's declaration for a server whose tools this deployment
+   * understands. Empty by default, which leaves each tool undeclared and so
+   * classified by the unknown default — the strictest policy-adjustable class,
+   * and the right floor for a server nobody has vouched for.
+   */
+  riskDomainTags: string[]
+  /**
+   * Whether this server's own annotations may LOWER the risk assigned to its
+   * tools (§12.61(b)).
+   *
+   * False by default and for every server the operator has not vouched for.
+   * MCP's specification states a client must not make tool-use decisions from
+   * an untrusted server's annotations, so `readOnlyHint` is ignored until a
+   * deployment says otherwise. Raising hints (`destructiveHint`,
+   * `openWorldHint`) are believed from any server: a server can only make its
+   * own tools more restricted by lying that way.
+   */
+  trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
 }
@@ -90,6 +111,27 @@ export interface StreamableHttpConfig {
   toolCallTimeoutMs: number
   /** Fail plugin activation when the initial connection or tool synchronization fails. */
   failOnStartupError: boolean
+  /**
+   * Risk domain tags every tool from this server declares (P2-04 must[1]).
+   *
+   * The OPERATOR's declaration for a server whose tools this deployment
+   * understands. Empty by default, which leaves each tool undeclared and so
+   * classified by the unknown default — the strictest policy-adjustable class,
+   * and the right floor for a server nobody has vouched for.
+   */
+  riskDomainTags: string[]
+  /**
+   * Whether this server's own annotations may LOWER the risk assigned to its
+   * tools (§12.61(b)).
+   *
+   * False by default and for every server the operator has not vouched for.
+   * MCP's specification states a client must not make tool-use decisions from
+   * an untrusted server's annotations, so `readOnlyHint` is ignored until a
+   * deployment says otherwise. Raising hints (`destructiveHint`,
+   * `openWorldHint`) are believed from any server: a server can only make its
+   * own tools more restricted by lying that way.
+   */
+  trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
 }
@@ -97,10 +139,10 @@ export interface StreamableHttpConfig {
 /** Configuration for one stdio or Streamable HTTP MCP server. */
 export type Config = StdioConfig | StreamableHttpConfig
 
-type StdioConfigInput = Omit<StdioConfig, 'args' | 'env' | 'cwd' | 'toolCallTimeoutMs' | 'failOnStartupError'>
-  & Partial<Pick<StdioConfig, 'args' | 'env' | 'cwd' | 'toolCallTimeoutMs' | 'failOnStartupError'>>
-type StreamableHttpConfigInput = Omit<StreamableHttpConfig, 'headers' | 'toolCallTimeoutMs' | 'failOnStartupError'>
-  & Partial<Pick<StreamableHttpConfig, 'headers' | 'toolCallTimeoutMs' | 'failOnStartupError'>>
+type StdioConfigInput = Omit<StdioConfig, 'args' | 'env' | 'cwd' | 'toolCallTimeoutMs' | 'failOnStartupError' | 'riskDomainTags' | 'trustAnnotations'>
+  & Partial<Pick<StdioConfig, 'args' | 'env' | 'cwd' | 'toolCallTimeoutMs' | 'failOnStartupError' | 'riskDomainTags' | 'trustAnnotations'>>
+type StreamableHttpConfigInput = Omit<StreamableHttpConfig, 'headers' | 'toolCallTimeoutMs' | 'failOnStartupError' | 'riskDomainTags' | 'trustAnnotations'>
+  & Partial<Pick<StreamableHttpConfig, 'headers' | 'toolCallTimeoutMs' | 'failOnStartupError' | 'riskDomainTags' | 'trustAnnotations'>>
 type ConfigInput = StdioConfigInput | StreamableHttpConfigInput
 
 const Reconnect: z<ReconnectConfig> = z.object({
@@ -120,6 +162,8 @@ export const Config = z.union([
     cwd: z.string().default(''),
     toolCallTimeoutMs: z.number().default(DEFAULT_TOOL_CALL_TIMEOUT_MS),
     failOnStartupError: z.boolean().default(false),
+    riskDomainTags: z.array(String).default([]),
+    trustAnnotations: z.boolean().default(false),
     reconnect: Reconnect,
   }),
   z.object({
@@ -129,6 +173,8 @@ export const Config = z.union([
     headers: z.dict(String).default({}),
     toolCallTimeoutMs: z.number().default(DEFAULT_TOOL_CALL_TIMEOUT_MS),
     failOnStartupError: z.boolean().default(false),
+    riskDomainTags: z.array(String).default([]),
+    trustAnnotations: z.boolean().default(false),
     reconnect: Reconnect,
   }),
 ]) as unknown as z<ConfigInput, Config>

@@ -105,7 +105,7 @@ describe('fixture server — controlled scenarios', () => {
     env: {},
     cwd: packageDir,
     toolCallTimeoutMs: 15_000,
-    failOnStartupError: false,
+    failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
   }
 
   beforeAll(async () => {
@@ -204,7 +204,7 @@ describe('fixture server — duplicate serverName', () => {
       env: {},
       cwd: packageDir,
       toolCallTimeoutMs: 15_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     await apply(ctx, config)
 
@@ -226,7 +226,7 @@ describe('fixture server — disposal', () => {
       env: {},
       cwd: packageDir,
       toolCallTimeoutMs: 15_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     })
 
     // Tools are registered before dispose.
@@ -249,7 +249,7 @@ describe('fixture server — crash recovery', () => {
       env: {},
       cwd: packageDir,
       toolCallTimeoutMs: 15_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
       reconnect,
     }
   }
@@ -333,7 +333,7 @@ describe('server-everything — official test server', () => {
     env: {},
     cwd: '',
     toolCallTimeoutMs: 30_000,
-    failOnStartupError: false,
+    failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
   }
 
   beforeAll(async () => {
@@ -402,7 +402,7 @@ describe('server-filesystem — real filesystem operations', () => {
       env: {},
       cwd: '',
       toolCallTimeoutMs: 30_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     await apply(ctx, config)
   }, 60_000)
@@ -519,7 +519,7 @@ describe('streamable-http — in-process MCP server', () => {
       url: baseUrl,
       headers: { Authorization: 'Bearer e2e-test-token' },
       toolCallTimeoutMs: 15_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     await apply(ctx, config)
   }, 30_000)

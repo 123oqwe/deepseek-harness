@@ -115,3 +115,28 @@ export interface RedStep {
 }
 
 export function redStepComplaints(steps: unknown): string[]
+
+/** One ledger supplement row, as the liveness derivation reads and stamps it. */
+export interface LedgerSupplementRow {
+  status: string
+  supersededBy?: string
+}
+
+/** One command-freeze entry, as the liveness derivation reads it. */
+export interface FreezeLivenessEntry {
+  epic: string
+  stage: string
+  supplementSeq?: number
+  supersededBy?: string
+}
+
+/**
+ * Stamp every ledger supplement whose freeze entry has been superseded, so the
+ * row cannot outlive the entry it observed (§12.61).
+ * @param rows - the ledger rows about to be written, mutated in place.
+ * @param freezeEntries - the command-freeze entries, the authority on liveness.
+ */
+export function deriveSupplementLiveness(
+  rows: Record<string, { id: string; supplements?: Record<string, LedgerSupplementRow> }>,
+  freezeEntries: readonly FreezeLivenessEntry[],
+): void

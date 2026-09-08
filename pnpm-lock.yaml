@@ -6747,6 +6747,9 @@ importers:
 
   packages/mcp/mcp-client:
     dependencies:
+      '@deepseek-ai/dsh-risk-taxonomy':
+        specifier: workspace:^
+        version: link:../../policy/risk-taxonomy
       '@deepseek-ai/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery

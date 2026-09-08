@@ -582,6 +582,11 @@ describe('realitySetOverlap (BLOCKED-134/137)', () => {
 })
 
 describe('deriveSupplementLiveness (§12.61: the freeze is the authority on which supplements are live)', () => {
+  /** One ledger supplement, widened so a case can read the stamp the derivation adds. */
+  type SupplementRow = { status: string; supersededBy?: string }
+  /** Ledger rows in the shape the derivation mutates. */
+  type Rows = Record<string, { id: string; supplements: Record<string, SupplementRow> }>
+
   const superseded = [
     { epic: 'P4-06', stage: 'P', supplementSeq: 1, supersededBy: 'P4-06.P.3 (BLOCKED-138 key-format correction)' },
     { epic: 'P4-06', stage: 'P', supplementSeq: 3 },
@@ -592,32 +597,32 @@ describe('deriveSupplementLiveness (§12.61: the freeze is the authority on whic
     // superseded by P.3, so the ledger asserted a live green for an entry the
     // freeze had already retired — two files disagreeing, with the stale one
     // reading as the stronger claim.
-    const rows = {
+    const rows: Rows = {
       'P4-06': { id: 'P4-06', supplements: { 'P.1': { status: 'GREEN' }, 'P.3': { status: 'GREEN' } } },
     }
     deriveSupplementLiveness(rows, superseded)
 
-    expect(rows['P4-06'].supplements['P.1'].status).toBe('SUPERSEDED')
-    expect(rows['P4-06'].supplements['P.1'].supersededBy).toContain('P4-06.P.3')
+    expect(rows['P4-06']?.supplements['P.1']?.status).toBe('SUPERSEDED')
+    expect(rows['P4-06']?.supplements['P.1']?.supersededBy).toContain('P4-06.P.3')
     // The live sibling is untouched, so this is a derivation and not a sweep.
-    expect(rows['P4-06'].supplements['P.3'].status).toBe('GREEN')
-    expect('supersededBy' in rows['P4-06'].supplements['P.3']).toBe(false)
+    expect(rows['P4-06']?.supplements['P.3']?.status).toBe('GREEN')
+    expect('supersededBy' in (rows['P4-06']?.supplements['P.3'] ?? {})).toBe(false)
   })
 
   it('leaves a supplement alone when NO frozen entry matches, rather than guessing it is dead', () => {
     // Absence of a freeze entry is a different fact from a retired one, and
     // treating them alike would silently retire a supplement whose freeze
     // simply has not been written yet.
-    const rows = { 'P4-06': { id: 'P4-06', supplements: { 'U.9': { status: 'GREEN' } } } }
+    const rows: Rows = { 'P4-06': { id: 'P4-06', supplements: { 'U.9': { status: 'GREEN' } } } }
     deriveSupplementLiveness(rows, superseded)
-    expect(rows['P4-06'].supplements['U.9'].status).toBe('GREEN')
+    expect(rows['P4-06']?.supplements['U.9']?.status).toBe('GREEN')
   })
 
   it('does not resurrect a non-GREEN supplement into SUPERSEDED, so a RED entry keeps saying RED', () => {
-    const rows = { 'P4-06': { id: 'P4-06', supplements: { 'P.1': { status: 'RED' } } } }
+    const rows: Rows = { 'P4-06': { id: 'P4-06', supplements: { 'P.1': { status: 'RED' } } } }
     deriveSupplementLiveness(rows, superseded)
     // The retirement is still recorded, but the observation's own verdict stands.
-    expect(rows['P4-06'].supplements['P.1'].status).toBe('RED')
-    expect(rows['P4-06'].supplements['P.1'].supersededBy).toContain('P4-06.P.3')
+    expect(rows['P4-06']?.supplements['P.1']?.status).toBe('RED')
+    expect(rows['P4-06']?.supplements['P.1']?.supersededBy).toContain('P4-06.P.3')
   })
 })

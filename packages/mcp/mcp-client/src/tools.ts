@@ -22,6 +22,7 @@ import { isImageAdmissionError } from '@deepseek-ai/dsh-attachment'
 import type { AttachmentStore, ImageAttachmentRef, ImageMediaType, SaveImageAttachment } from '@deepseek-ai/dsh-attachment'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { ToolDefinition, ToolExecution, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
+import { riskDomainTagsFor, validateAnnotations } from './annotations.ts'
 import { assertSupportedJsonSchema } from '@deepseek-ai/dsh-tools'
 import type { JsonSchemaNode } from '@deepseek-ai/dsh-tools'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
@@ -32,6 +33,21 @@ export interface ToolBridgeOptions {
   registrationFailure: 'contain' | 'throw'
   serverName: string
   toolCallTimeoutMs: number
+  /**
+   * Risk domain tags the OPERATOR declares for every tool this server exposes
+   * (P2-04 must[1]). Unconditional: they come from this deployment's config,
+   * never from the server, so a server cannot remove them.
+   */
+  riskDomainTags: readonly string[]
+  /**
+   * Whether this server's own annotations may LOWER the risk it is assigned.
+   *
+   * False by default and for every server the operator has not vouched for.
+   * MCP's specification states a client must not make tool-use decisions from
+   * an untrusted server's annotations, so `readOnlyHint` is ignored until a
+   * deployment says otherwise; raising hints are always believed.
+   */
+  trustAnnotations: boolean
 }
 
 /** State for one sync generation: the current set of disposers keyed by public name. */
@@ -159,6 +175,19 @@ export async function syncTools(
           `mcp-client(${opts.serverName}): server listed tool "${tool.name}" more than once — invalid tool list`,
         )
       }
+      // §12.61(a): a malformed annotation refuses THIS TOOL, not the server.
+      // One bad entry among forty is one tool's defect, and refusing the whole
+      // list would let it deny every other tool the operator configured.
+      const verdict = validateAnnotations((tool as { annotations?: unknown }).annotations)
+      if (!verdict.ok) {
+        ctx.logger.warn(
+          'mcp-client(%s): tool "%s" was NOT registered — %s',
+          opts.serverName,
+          tool.name,
+          verdict.reason,
+        )
+        continue
+      }
       definitions.set(publicName, createDefinition(
         client,
         ctx,
@@ -169,6 +198,7 @@ export async function syncTools(
         supportedOutputSchema(tool.outputSchema),
         tool.execution?.taskSupport === 'required',
         opts,
+        riskDomainTagsFor(verdict.annotations, opts.riskDomainTags, opts.trustAnnotations),
       ))
     }
     cursor = response.nextCursor
@@ -252,12 +282,17 @@ function createDefinition(
   structuredSchema: JsonSchemaNode | undefined,
   taskRequired: boolean,
   opts: ToolBridgeOptions,
+  riskDomainTags: readonly string[],
 ): ToolDefinition {
   const projections = new WeakMap<ToolExecution, PreparedProjection>()
   return {
     name: publicName,
     description,
     parameters,
+    // Empty stays empty rather than becoming absent: an MCP tool that declared
+    // nothing must reach `gateActionRisk` as undeclared, which is the unknown
+    // default and the strictest policy-adjustable class.
+    riskDomainTags,
     output: createOutput(rawName, structuredSchema),
     execute: createExecutor(client, ctx, rawName, taskRequired, opts, projections),
     finalizeContent(exec: Readonly<ToolExecution>, result: Readonly<ToolExecutionResult>) {

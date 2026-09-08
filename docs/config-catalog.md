@@ -1516,6 +1516,27 @@ export interface StdioConfig {
   toolCallTimeoutMs: number
   /** Fail plugin activation when the initial connection or tool synchronization fails. */
   failOnStartupError: boolean
+  /**
+   * Risk domain tags every tool from this server declares (P2-04 must[1]).
+   *
+   * The OPERATOR's declaration for a server whose tools this deployment
+   * understands. Empty by default, which leaves each tool undeclared and so
+   * classified by the unknown default — the strictest policy-adjustable class,
+   * and the right floor for a server nobody has vouched for.
+   */
+  riskDomainTags: string[]
+  /**
+   * Whether this server's own annotations may LOWER the risk assigned to its
+   * tools (§12.61(b)).
+   *
+   * False by default and for every server the operator has not vouched for.
+   * MCP's specification states a client must not make tool-use decisions from
+   * an untrusted server's annotations, so `readOnlyHint` is ignored until a
+   * deployment says otherwise. Raising hints (`destructiveHint`,
+   * `openWorldHint`) are believed from any server: a server can only make its
+   * own tools more restricted by lying that way.
+   */
+  trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
 }
@@ -1538,6 +1559,27 @@ export interface StreamableHttpConfig {
   toolCallTimeoutMs: number
   /** Fail plugin activation when the initial connection or tool synchronization fails. */
   failOnStartupError: boolean
+  /**
+   * Risk domain tags every tool from this server declares (P2-04 must[1]).
+   *
+   * The OPERATOR's declaration for a server whose tools this deployment
+   * understands. Empty by default, which leaves each tool undeclared and so
+   * classified by the unknown default — the strictest policy-adjustable class,
+   * and the right floor for a server nobody has vouched for.
+   */
+  riskDomainTags: string[]
+  /**
+   * Whether this server's own annotations may LOWER the risk assigned to its
+   * tools (§12.61(b)).
+   *
+   * False by default and for every server the operator has not vouched for.
+   * MCP's specification states a client must not make tool-use decisions from
+   * an untrusted server's annotations, so `readOnlyHint` is ignored until a
+   * deployment says otherwise. Raising hints (`destructiveHint`,
+   * `openWorldHint`) are believed from any server: a server can only make its
+   * own tools more restricted by lying that way.
+   */
+  trustAnnotations: boolean
   /** Automatic reconnect policy after a lost connection; omission uses the defaults. */
   reconnect?: ReconnectConfig
 }
@@ -1555,7 +1597,7 @@ export interface ReconnectConfig {
 }
 ```
 
-Source: [`packages/mcp/mcp-client/src/index.ts:98`](../packages/mcp/mcp-client/src/index.ts)
+Source: [`packages/mcp/mcp-client/src/index.ts:140`](../packages/mcp/mcp-client/src/index.ts)
 
 <a id="deepseek-aidsh-memory"></a>
 
@@ -1880,7 +1922,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/run/run/src/index.ts:503`](../packages/run/run/src/index.ts)
+Source: [`packages/run/run/src/index.ts:512`](../packages/run/run/src/index.ts)
 
 <a id="deepseek-aidsh-sandbox-local"></a>
 

@@ -4,8 +4,8 @@
     "version": "1.0"
   },
   "generatedBy": "scripts/first100/generate-ledger.mjs",
-  "lastUpdatedUtc": "2026-09-08T15:28:05.028Z",
-  "inputDigest": "4c98f7335653df94b38c9b44b9a2f94a081cfb3bc617ec3b14c85d9c89b43155",
+  "lastUpdatedUtc": "2026-09-08T15:43:29.263Z",
+  "inputDigest": "4e5ec86080bcaeae2248028f837f448a9fd49ddb22a7929c3d914f8f1715316a",
   "legend": {
     "A": "C-stage (Contract: service definition/schema/typed error)",
     "B": "P-stage (Provider implementation; N/A for kernel/consumer-only epics per registry)",
@@ -4450,10 +4450,40 @@
         }
       },
       "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980",
-      "independentVerdict": "PENDING",
+      "independentVerdict": "APPROVED",
       "openFindings": null,
-      "status": "NOT_RUN",
-      "acceptedEvidence": null,
+      "status": "ACCEPTED",
+      "acceptedEvidence": {
+        "acceptedAtUtc": "2026-09-08T15:43:29.251Z",
+        "cells": {
+          "C": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "P": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "U": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          },
+          "F": {
+            "ciRunUrl": "https://github.com/123oqwe/deepseek-harness/actions/runs/34238203263",
+            "candidateSha": "434408a47ca7635fb1076baeb43efecb33bce980"
+          }
+        },
+        "coverageClosure": {
+          "valid": true,
+          "missingIndices": [],
+          "unverifiedCitations": []
+        },
+        "delegateSignoff": {
+          "delegateSession": "guanjieqiao-92",
+          "signedAtUtc": "2026-09-08T15:42:53.916Z",
+          "userConfirmationRef": null
+        }
+      },
       "closedFindings": [
         {
           "finding": "BLOCKED-088",

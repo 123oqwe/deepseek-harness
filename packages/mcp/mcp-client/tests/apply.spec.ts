@@ -83,7 +83,7 @@ const stdioConfig: Config = {
   env: {},
   cwd: '',
   toolCallTimeoutMs: 60_000,
-  failOnStartupError: false,
+  failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
 }
 
 // ---- Tests ----
@@ -269,7 +269,7 @@ describe('apply (plugin lifecycle)', () => {
     mockConnect.mockRejectedValue(cause)
     await expect(apply(ctx, {
       ...stdioConfig,
-      failOnStartupError: true,
+      failOnStartupError: true, riskDomainTags: [], trustAnnotations: false,
     })).rejects.toMatchObject({
       message: 'mcp-client(srv): initial connection or tool synchronization failed',
       cause,
@@ -295,7 +295,7 @@ describe('apply (plugin lifecycle)', () => {
 
     await expect(apply(ctx, {
       ...stdioConfig,
-      failOnStartupError: true,
+      failOnStartupError: true, riskDomainTags: [], trustAnnotations: false,
     })).rejects.toThrow('initial connection or tool synchronization failed')
 
     expect(ctx.tools.get('mcp__srv__remote')).toBeDefined()
@@ -321,7 +321,7 @@ describe('apply (plugin lifecycle)', () => {
 
     await expect(apply(ctx, {
       ...stdioConfig,
-      failOnStartupError: true,
+      failOnStartupError: true, riskDomainTags: [], trustAnnotations: false,
     })).rejects.toThrow('initial connection or tool synchronization failed')
 
     expect(mockListTools).toHaveBeenCalledTimes(2)
@@ -403,7 +403,7 @@ describe('apply (plugin lifecycle)', () => {
       url: 'http://localhost:3000/mcp',
       headers: { Authorization: 'Bearer x' },
       toolCallTimeoutMs: 30_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
 
     await apply(ctx, httpConfig)

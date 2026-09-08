@@ -145,7 +145,7 @@ function textAt(content: readonly ContentBlock[], index = 0): string {
 }
 
 const defaultOpts: ToolBridgeOptions = {
-  registrationFailure: 'contain',
+  registrationFailure: 'contain', riskDomainTags: [], trustAnnotations: false,
   serverName: 'srv',
   toolCallTimeoutMs: 60_000,
 }
@@ -1128,7 +1128,7 @@ describe('createTransport', () => {
       env: {},
       cwd: '/tmp',
       toolCallTimeoutMs: 60_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     const transport = createTransport(config)
     expect(transport).toBeDefined()
@@ -1143,7 +1143,7 @@ describe('createTransport', () => {
       url: 'http://localhost:3000/mcp',
       headers: {},
       toolCallTimeoutMs: 60_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     const transport = createTransport(config)
     expect(transport).toBeDefined()
@@ -1158,7 +1158,7 @@ describe('createTransport', () => {
       url: 'http://localhost:3000/mcp',
       headers: { Authorization: 'Bearer token' },
       toolCallTimeoutMs: 60_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     const transport = createTransport(config)
     expect(transport).toBeDefined()
@@ -1182,7 +1182,7 @@ describe('createTransport', () => {
         env: { EXTRA: 'injected' },
         cwd: '',
         toolCallTimeoutMs: 60_000,
-        failOnStartupError: false,
+        failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
       }
       // StdioClientTransport keeps its env private; the observable contract is
       // that createTransport(config) returns a transport without throwing.
@@ -1208,7 +1208,7 @@ describe('createTransport', () => {
       env: { CUSTOM: 'value' },
       cwd: '',
       toolCallTimeoutMs: 60_000,
-      failOnStartupError: false,
+      failOnStartupError: false, riskDomainTags: [], trustAnnotations: false,
     }
     const transport = createTransport(config)
     expect(transport).toBeDefined()

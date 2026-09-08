@@ -119,12 +119,16 @@ Sources: [`packages/core/session/src/types.ts:396`](../packages/core/session/src
  * @param sideEffectClass - the classified class, or the destructive default.
  * @param classified - false when no declared class was available.
  * @param requiresApproval - whether approval is required before execution.
+ * @param runId - the run the action belongs to.
+ * @param actor - the principal the action is attributed to.
+ * @param idempotencyKey - the manifest's idempotency key, minted by the execution path.
  * @param sequence - the monotonic append position in the durable log.
+ * @param leaseEpoch - the lease epoch the action was authorized under, absent when the run holds no lease.
  */
 'action/manifest-appended': ActionManifestAppendedEventData
 ```
 
-Source: [`packages/core/tools/src/index.ts:2467`](../packages/core/tools/src/index.ts)
+Source: [`packages/core/tools/src/index.ts:2544`](../packages/core/tools/src/index.ts)
 
 ### `agent/*`
 
@@ -147,7 +151,7 @@ Source: [`packages/core/tools/src/index.ts:2467`](../packages/core/tools/src/ind
 }
 ```
 
-Source: [`packages/core/agent/src/types.ts:81`](../packages/core/agent/src/types.ts)
+Source: [`packages/core/agent/src/types.ts:136`](../packages/core/agent/src/types.ts)
 
 ### `agent-preset/*`
 
@@ -637,7 +641,7 @@ Source: [`packages/api/session-controller/src/types.ts:41`](../packages/api/sess
 'permission/preset': { preset: string }
 ```
 
-Source: [`packages/interaction/permission-presets/src/index.ts:53`](../packages/interaction/permission-presets/src/index.ts)
+Source: [`packages/interaction/permission-presets/src/index.ts:55`](../packages/interaction/permission-presets/src/index.ts)
 
 ### `plan/*`
 
