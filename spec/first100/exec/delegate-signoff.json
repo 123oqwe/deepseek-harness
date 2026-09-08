@@ -217,6 +217,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T10:34:03.656Z",
       "note": "Re-signed under lifecycle 4.4a after §12.15/§12.16/§12.20/§12.31/§12.34: acquireRunLease 2 production callers (core agent run via RunPlugin, workflow run), advanceLeasedAgent 4; run + lease-sqlite rows enabled in the base bundle; lease keyed on session id so a second host is actually refused (LeaseRefusedError, zero tool executions); heartbeat leaseMs/3 and release on completion; leaseEpoch present in shipped-profile session logs. Predicates (i)(ii)(iii)(v)(e) pass at candidate 82df08491f (signed bundle, admission recorded per §12.6-B with log-derived evidence)."
+    },
+    {
+      "epic": "P4-07",
+      "rowDigestSha256": "f052357ef23088ee02416d33b1fe92372dee9ac306c35d4af82f3e328a4d9ccb",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T10:34:46.509Z",
+      "reason": "Delegate error (2026-09-08 06:45 EDT): the PASS recorded minutes earlier bound the row digest while the cells still cite the pre-rebuild observations (C/P/U at 82d5e81122 run 33959624760, F at d4034a8f4c admitted); the rebuilt U (U.2/U.3, session-keyed lease, lease-refused) observed green at 82df08491f in run 34201756084 was never greened into the U cell. Also openFindings still lists the unfenced advanceAgentLifecycle export, which packages/core/agent/src/index.ts:25 still publishes. Re-sign after the cells are re-greened at 82df08491f and the finding is closed by removing the export."
     }
   ]
 }
