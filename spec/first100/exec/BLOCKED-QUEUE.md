@@ -258,6 +258,54 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 2. **Mailbox** — folded into `@deepseek-ai/dsh-message-bus`. Its only part beyond `dsh-intake-dedup`'s rule was a recipient-address check, now `decideMailboxArrival` beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site. `@deepseek-ai/dsh-mailbox` is retired; P5-11's mailbox clause is satisfied cross-epic by the bus.
 3. **Blackboard** — still open. It goes with the P6 memory line under §12.27-3, landing with P6-02's Usage.
 
+### BLOCKED-156 — P6-01's four green cells are green on a capability no shipped profile mounts
+
+**State: OPEN, measured on request before §12.31-B (delegate: "不要在没量的绿上叠新工作"). The three questions, asked of every P6-01 clause subject.**
+
+**Question 1 — does the subject exist?** Yes, for all of them. `MemoryRuntime` implements `propose`/`query`/`get`/`revise`/`forget`/`export`; `registerProvider` swaps providers and three exist (`local-reference`, `fake`, `durable-file`); `requireCompleteAccessContext` enforces must[3]'s four dimensions; `docs/subsystems/memory.md` exists and acceptance[2]'s boundary case reads it.
+
+**Question 2 — production callers (4.4a).** Measured over `git ls-files`, excluding every `tests/` path and `lib/`:
+
+| subject | production callers |
+| --- | --- |
+| `ctx.memory.query` | 1 — `packages/context/memory-context/src/index.ts:153` |
+| `ctx.memory.propose` | 0 |
+| `ctx.memory.get` | 0 |
+| `ctx.memory.revise` | 0 |
+| `ctx.memory.forget` | 0 |
+| `ctx.memory.export` | 0 |
+| `registerProvider` | 1, and it is the runtime's own constructor self-registering the durable provider when `durableFileDirectory` is configured |
+
+Five of the six seam methods the epic's must[0] enumerates have no production caller. The only outside caller of any of them is the recall consumer, and it only reads.
+
+**Question 3 — is it reached on a launched profile? No, and this is the finding.** `packages/bundle/base/cordis.patch.yml` is the ONLY yml in the repository that names either package, and both rows carry `disabled: true`:
+
+```
+    - id: memory
+      name: '@deepseek-ai/dsh-memory'
+      disabled: true
+
+    - id: memory-context
+      name: '@deepseek-ai/dsh-memory-context'
+      disabled: true
+```
+
+The bundle's own comment states why — `dsh-memory` registers no provider on its own, so an enabled row would fail `MEMORY_PROVIDER_UNAVAILABLE` on every pre-step — and it is a coherent reason. It is also §12.20's exact shape: a capability disabled in every shipped bundle has callers nothing reaches.
+
+**The U stage's own fixture says so in as many words.** `packages/context/memory-context/tests/fixtures/memory-context.patch.yml` opens with: "`memory` and `memory-context` ship `disabled: true` in the base bundle … so this fixture is also the proof that those two rows are real and opt-in." The frozen case named "boots the shipped profile with the base bundle memory rows enabled" enables them itself. It is honest about what it does; what it cannot do is show the rows enabled anywhere a user's `dsh` run would find them.
+
+**What this does NOT say.** The greens are not false. Every one of those cases asserts something real about the seam, the providers, the scoping and the log, and P6-01's Fault stage in particular is unusually thorough (28 cases, tenant isolation across both providers with a same-tenant control). The claim they cannot carry is REACH: on a shipped profile nothing mounts this capability, so must[3]'s scoping bounds no read a user performs, and acceptance[1]'s "no bypass for the model writing durable memory" is true the way it is true of a capability that is not there.
+
+**Not the same defect as BLOCKED-155, and the two interact.** 155 is about P6-02 defining a record the seam does not store. This is about the seam not being mounted at all. Fixing 155 by growing the seam's record (reading 1, §12.31-B) would extend a capability that no profile enables — the work would be correct and still unreached, which is the position P5-11 was in before delegation gave it a producer.
+
+**Decision needed (delegate's):**
+
+1. **Enable the rows with a default provider.** `MemoryRuntime` already self-registers `durable-file` when `durableFileDirectory` is set, so a base-bundle row naming `dshHomePath('memory')` would make the capability real on every `dsh` run — the same move the lease store and the taskboard took. This turns on cross-session memory for every user by default, which is a product decision about what the harness remembers, not a wiring one.
+2. **Leave it opt-in and record the reach limit** on P6-01's cells, so the ledger says what the greens cover: the seam works, and no shipped profile uses it.
+3. **Re-scope P6-01's Usage** to a consumer that is reached, if one exists — measured: none does, since `memory-context` is the only consumer and it is disabled with the seam.
+
+**Not chosen.** Reading 1 changes what every user's harness stores without being asked; 2 admits an unadopted capability at the top of a ten-epic memory line; 3 has no candidate. §12.11 records the executor picking as the mistake, and this one decides whether the P6 line has a floor.
+
 ### BLOCKED-155 — P6-02 defined a memory record the memory capability does not store, so neither half of its Usage has anywhere to land
 
 **State: OPEN, measured. This blocks P6-02's U redo and, with it, §12.27-3's fold of the blackboard into the memory line.**
