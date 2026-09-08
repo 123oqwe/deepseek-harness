@@ -9,6 +9,25 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-168 — P2-02's delegation half has no production caller, and P2-02 is ACCEPTED
+
+Found while measuring for P4-09's capability-token slice, and recorded here rather than left in a preFlight aside, because it concerns an epic that is already signed.
+
+**The measurement.** `.attenuate(` has ZERO production callers across `packages/` (excluding `lib/`, `tests/` and `*.spec.ts`). `attenuateDelegatedToken` is DEFINED at `subagent/subagent/src/child-agent.ts:306`, and every reference to it outside its own module is in `subagent/tests/capability-token-delegation.spec.ts`. Nothing in the shipped tree derives a child token from a parent's.
+
+**Where it lands in P2-02's own evidence.** The epic is titled 可衰减 Capability Token 与子 Agent 委托 — delegation is half its name — and its U stage froze two files:
+
+| frozen file | subject | production consumer |
+| --- | --- | --- |
+| `core/tools/tests/capability-token.spec.ts` | `assertTokenPresented` / `requireCapabilityToken` | **yes** — `core/tools/src/index.ts:28` |
+| `subagent/tests/capability-token-delegation.spec.ts` | `attenuateDelegatedToken` | **no** |
+
+So the verification half of P2-02 is genuinely wired and the delegation half is proven in unit tests only. That is the shape §12.13 withdrew P5-11's sign-off over — "must[0]/acc[0] hold only in unit tests" — and the shape §12.11 withdrew P2-03's over.
+
+**Not a claim that P2-02 should be withdrawn.** Two readings exist and choosing between them is the delegate's: either the delegation clauses were signed against a subject with no caller, or delegation is legitimately a capability the harness offers and nothing has yet needed — a Definition whose first consumer is allowed to arrive later. The second reading is weaker here than usual, because the epic's own title names delegation rather than treating it as an optional surface.
+
+**Why it surfaced now.** P4-09's token slice was planned as reusing "the derivation a child agent already uses". It does not exist. That claim was mine, made by reading `attenuateDelegatedToken`'s JSDoc — "mint the Capability Token one child agent runs under" — as evidence of a call site; intent is not reach. §12.66's ruling to reuse that path rests on the same false premise, since I supplied it. The slice would become attenuation's FIRST production consumer, which is a better outcome, but it does not retroactively give P2-02 the caller its U stage was signed against.
+
 ### BLOCKED-167 — P4-05's `paused` has no producer, and its producer is P2-12's pause control (`landsIn: P2-12.U`)
 
 Recorded in the BLOCKED-159 form, per §12.67. This is not a blocker on P2-12's own clauses; it is a requirement P2-12 inherits, written down now so it is met by design rather than discovered afterwards.
