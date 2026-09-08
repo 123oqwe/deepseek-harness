@@ -9,6 +9,33 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-164 — four frozen supplement titles do not resolve in the live tree, and they are NOT all the same kind of mismatch
+
+Found while greening the candidates from run `34238203263` @ `434408a47c`. Each was measured under its OWN frozen command rather than the shared full-suite report, so "not found" here means the title genuinely does not exist, not that I read the wrong observation.
+
+**P5-11.U.1 — a plain rename, both cases live and passing.**
+
+| frozen | live |
+| --- | --- |
+| `…records the child as CLAIMED by the delegating parent, with the attempt the claim granted` | `…CLAIMS the child for the delegating parent while it runs, at the attempt the claim granted` |
+| `…REFUSES a second worker claiming the child this host is driving (acceptance[0])` | `…REFUSES a second worker while the child is running, and ADMITS one after it settles (acceptance[0], §12.29-1)` |
+
+Same block, same property; the second also widened to cover the admit-after-settle half under §12.29-1. `pnpm exec vitest run packages/subagent/subagent-taskboard/tests/delegated-tasks.spec.ts` is 9/9 green.
+
+**P4-12.C.1 — NOT a rename: the property changed.**
+
+| frozen | live |
+| --- | --- |
+| `…gives two principals presenting the SAME key two independent reservations` | `…carries the requesting principal into the reservation, which is what the store persists` |
+
+The frozen title asserts an OUTCOME two principals observe; the live one asserts a FIELD is persisted. The second does not establish the first — a stored principal that no scoping consults would satisfy the live title and not the frozen one. Registering this as a rename would record continuity that does not hold. The sibling case (`still refuses a second reservation WITHIN one principal`) is unchanged and passing.
+
+**P4-09.U.1 — the frozen case was deliberately superseded, and was never greened.** `TRIPWIRE: a script has no \`workflow\` global, so nesting cannot be started` recorded a vacuum, and `nested-budget.spec.ts` states in-line that it "supersedes the tripwire this case used to be" with `REFUSES a nested run the host did not admit`. The rename mechanism does not fit: it exists to preserve a PRIOR observation's meaning (BLOCKED-040, P0-05), and this supplement has no prior observation to preserve.
+
+**P4-06.P.1 — 1 of 12 titles absent**: `the seen-set classifyIntake reads is the consumed rows reports exactly the consumed keys, so the pure classifier and the durable state agree`. The supplement stays at its old SHA.
+
+**Not registered by me.** The one precedent in `frozen-title-renames.json` carries `registeredBy: "Supervisor, per delegate requirement (BLOCKED-040)"`, so rename registration is not the executor's to perform — and P4-12.C.1 should not be registered as a rename at all.
+
 ### BLOCKED-163 — P4-05 acceptance[1]'s two sanctioned consumers both fail on measurement, and the one real mechanism belongs to another epic
 
 §12.57 item 2 directed: "acc[1] 给 `consumesNoResources` 一个真消费者——租约续租/预算记账在非消耗态跳过(有机制才是 harness 属性)". Both named options were measured before implementing, and neither is honest.
