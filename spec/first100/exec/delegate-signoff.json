@@ -281,6 +281,15 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T18:38:05.053Z",
       "note": "Observation run 34253568004 @ 224d2ac867 (signed bundle, vitest 20510/0; job red only at the lint step on P2-04's annotations.spec.ts — admitted for P4-05 per §12.67, reality set disjoint). 4.4b: C/U/F and supplements C.1/U.2/F.3 GREEN @ 224d2ac867, P=N/A, 0 open findings. 4.4a: failed produced by RunPlugin.finish; waiting_human by the approval request in core/tools external-effect; slot release/resume priority/step admission in workflow-worker-thread runtime.ts (A-class consumer per §12.59) and agent/pre-step; orphaned written by the reclaimer under its own epoch (RunPlugin.reclaim) with the fenced host refused; RunPlugin mounted in bundle/base. paused: directed deferral BLOCKED-167 landsIn P2-12.U (LEGAL_TRANSITIONS already admits both edges)."
+    },
+    {
+      "epic": "P2-02",
+      "rowDigestSha256": "88fe172d0a711e6f741422fe035934fe54df763a1500ad1d765610a9483a749a",
+      "conclusion": "WITHDRAWN",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T20:36:45.319Z",
+      "reason": "The 2026-09-07 PASS rested on five green cells (run 34088363628 @ b3186e6db9) and on (ii)(iii)(v); it did not ask 4.4a's third question. Measured 2026-09-08 at d19b70e6a0 (packages/*/src, excluding tests and lib): CapabilityTokenService.issue has 0 production callers, tools.requireCapabilityToken() has 0 production callers (assertTokenPresented is imported by core/tools but never armed), CapabilityTokenService.attenuate and attenuateDelegatedToken (subagent/child-agent.ts:306) have 0 production callers, no spawn path attaches a token to a child, and the capability-token plugin is not mounted in bundle/base. must[1] issuance, must[3] 'tools/plugin RPC/external agents/ExecutionWorld require a token', acceptance[0] 'child never wider than parent' and acceptance[1] 'revoking the parent invalidates descendants' therefore have no production subject on any launched profile; the sign-off asserted a security property the shipped product does not enforce.",
+      "note": "Rebuild as P2-02 U supplement(s) per §12.69: kernel-issued session root token on launched profiles; requireCapabilityToken armed by a mounted plugin; subagent spawn derives the child token through one shared attenuation path (to be consumed again by P4-09's nested/detached runs); plugin RPC / external agent / ExecutionWorld halves of must[3] split per §12.46-B to their owning epics."
     }
   ]
 }
