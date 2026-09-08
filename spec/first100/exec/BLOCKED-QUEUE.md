@@ -252,6 +252,33 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-154 — P5-11's boards have no producer: nothing in the harness creates a task or a fact
+
+**State: OPEN, measured. The last epic gate (u) reports, and the gap is a missing producer rather than a missing wiring.**
+
+Measured over `git ls-files`, excluding the owning packages, every `tests/` path, this program's own JSON and the notes archive:
+
+| subject | clause | production callers |
+| --- | --- | --- |
+| `decideClaim` | must[0] | 0 |
+| `validateTaskGraph` | acceptance[2] | 0 |
+| `admitFact` | must[1] | 0 |
+| `traceToObservations` | must[1] provenance | 0 |
+| `TaskStore` / `openTaskStore` | must[0], acceptance[0] | 0 |
+| `decideMailboxDelivery` | mailbox | only `dsh-message-bus`'s own barrel |
+
+**This is not the shape the other epics had.** P4-06's dedup, P4-07's lease, P4-08's journal and P4-12's ledger each had a real event to attach to — a message arriving, a run starting, a step settling, an action dispatching — so the Usage stage was wiring an existing moment to an existing rule. P5-11's boards have no such moment: **nothing in the harness ever submits a task graph, claims a task, or records a fact.** There is no producer to wire, and the U stage's declared consumers (`core/agent/src/inbox.ts`, `subagent/src/list-children.ts`) have nothing to consume.
+
+acceptance[0] and acceptance[2] were the two clauses that could be satisfied without one — a durable store where a `Map` could not hold multi-process contention, and cycle rejection inside `submit` — and both now are (`@deepseek-ai/dsh-taskboard-sqlite`, §12.25 work). What remains needs the harness to have tasks.
+
+**Decision needed (delegate's), and it is a product question rather than a wiring one:** what, in this harness, IS a task?
+
+1. **A delegated subagent.** `list-children.ts` is a declared consumer, which points here: a task per continuable child, claimed when the child starts, advanced from the settlement receipt (acceptance[1]'s "the runtime advances state from receipts when the model did not"). This gives the boards a real producer and makes `list-children` show task state — but it invents a task-per-child model nobody has asked for, and P5-11's must[2] deliberately keeps roles and org-charts in the plugin layer.
+2. **A workflow step.** P4-08's journal already records step starts and settlements with receipts; a task per `agent()` call would reuse an existing producer rather than invent one. But the journal is that record already, and two records of one thing is the shape this program keeps finding.
+3. **Nothing yet.** The boards are primitives a later epic or a plugin composes, `list-children.ts` is the wrong declared consumer, and P5-11's Usage is exempted with that ruling — which says plainly that this epic ships three libraries the harness does not use.
+
+**Not chosen.** Reading (1) adds a product concept, (2) duplicates a durable record, (3) admits an unadopted capability. Each is a different promise about what the harness is, and §12.11 records the executor picking one as the mistake.
+
 ### BLOCKED-153 — P5-10's `orderByPriority` belongs at the inbox dequeue point, and `core/agent` cannot import it from where it lives
 
 **State: OPEN, measured, not built.** §12.24-2 ruled that must[1]'s ordering happens at the control-message dequeue point — `packages/core/agent/src/inbox.ts`, the file the registry names. Two things are in the way, and neither is a judgement call I should make alone.
