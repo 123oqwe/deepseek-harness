@@ -918,3 +918,9 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
  (b) `MessageBusPlugin` 提供 `ctx.messageBus`(store + dispatcher),base bundle 行在 session storage root 下(lease / taskboard 同法)。
  (c) settlement 发送侧:子代理结束 → `commitIntake`(`subagent/end` 域事件 + 指向父会话的 outbox 行,一个事务)→ dispatcher 投递进父 inbox,**复用现有插入规则**(idle → followup、busy → steer);teardown 中 → 行保持 pending,父下次启动时投递——这不是时序副作用,这就是 acc[1] 与 P4-06 存在的理由。三条 U 冻结用例在 inbox 侧,仍成立。真组合冻结:父在"子提交后、投递前"被 kill → 重启 → settlement 恰好投递一次(acc[0] 在生产组合里的形态)。
 **顺序**:P4-07 session 键、P4-12 code-mode 预留先做(不依赖此);P4-06 (a)→(b)→(c)。
+
+### 12.36 code-mode 动作身份:`actionId` 由 root call id + 发起序号确定性铸造(2026-09-08 01:20 EDT)
+
+**事实**:原生路径 `actionId` = 模型给的 call id,崩溃重放原样重现;code-mode 的 `actionId` 是每次派发新铸的 `subCallId`,同一程序两次 `charge({amount:'10'})` 得两个键,duplicate 分支不可达——执行者把假用例换成两条真可达断言,对。
+**裁决:取 (2),但改在身份铸造处而不是键公式处**:code-mode 的 `actionId = <rootCallId>#<发起序号>`(程序调用工具的**发起顺序**,不是完成顺序——并发调度改变的是完成序,发起序由程序决定,确定性成立);键公式 `(sessionId, actionId, argumentsHash)` 不变,原生与 code-mode 一个公式。(1) 会误拒同一程序里故意重复的两次调用(循环扣两次款是合法意图),拒;(3) 让 acc[0] 对 code-mode 只成立一半,拒。Stripe 的模型就是 (2):每个意图一个键、同一请求的重试复用。冻结:同一程序两次相同 sub-call **都执行**(键不同);同一 rootCallId 重放同一序列 → 第二轮 sub-call **命中 duplicate 不执行**;变异序号改随机 → 红。
+**P4-07 session 键**:争用用例带正对照、变异红 6——过;两 host 共享租约只能靠共享 sqlite 目录、内存插件各持各的 map——这正是 §12.16-1 要 SQLite provider 的理由,不是缺陷。**操作教训采纳**:对未跟踪新文件做变异先 `cp` 备份,`git checkout --` 恢复不了。
