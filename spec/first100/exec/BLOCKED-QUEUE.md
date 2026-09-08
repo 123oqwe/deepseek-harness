@@ -327,6 +327,34 @@ Six freeze supplements are written, mutation-proved, and green locally, and none
 
 **Also waiting, and genuinely undecided:** BLOCKED-155 and BLOCKED-156 need the user's product call on the P6 memory line — whether the harness enables cross-session memory by default, and whether P6-02's record replaces the one the seam stores. Those park that lane rather than the frontier.
 
+### BLOCKED-158 — P4-08's must[2] and acceptance[2] decide nothing in production: reconciliation and compaction have no caller
+
+**State: OPEN, measured. This is predicate (i)'s answer for P4-08: the coverage does not close, so the epic is not signable as it stands.**
+
+Measured over `git ls-files`, excluding every `tests/` path, `lib/`, and the owning package `packages/collaboration/workflow-journal/`:
+
+| subject | clause | production callers |
+| --- | --- | --- |
+| `receiptsToReconcile` | must[2] | **0** |
+| `compactJournal` | acceptance[2] | **0** |
+| `retainsAllReceipts` | acceptance[2] | **0** |
+| `planStep`'s `{ action: 'reconcile' }` | must[2] | **0** — no caller reads the action at all |
+| `planResume` | acceptance[1] | 2 — `host.ts`, `resume.ts` |
+
+**The resume path decides reuse without ever consulting the side-effect classification.** `reusableSteps` (`workflow-worker-thread/src/resume.ts`) reads `entry.outcome`, `entry.output` and `entry.childReceipts`, confirms every child, and reuses the step. It never reads `entry.sideEffectReceipts`, and it never calls the decision that would return `reconcile`. In production, `sideEffectReceipts` is written only by the journal's own recorder and read by nobody; the only places it carries a value are tests, where it is always `[]`.
+
+So must[2] — "a side-effecting step is reconciled first" — is true of a function and of nothing the harness runs. A step that both started a child and recorded a side effect would be reused on the strength of the child receipt alone, which is the exact skip the clause forbids.
+
+acceptance[2]'s compaction is the same shape one level over: `compactJournal` and its evidence-retention check are a complete, tested pair that no shipped path calls, so no journal is ever compacted and the retention property guards nothing.
+
+**Why this is not the P5-11 remedy again.** There the gap was a missing producer and delegation supplied one that already existed. Here the producer exists — the journal records side-effect receipts — and the CONSUMER ignores the field. Wiring is genuinely the gap, which makes it smaller than 154/155/156 and, unlike them, decidable without a product ruling. What it needs is a decision about behaviour:
+
+1. **Reconcile before reuse.** `reusableSteps` consults the plan's action and refuses to reuse a step carrying unreconciled side-effect receipts, leaving it to re-run. Faithful to must[2]; changes resume behaviour for any step that records one, which today is none — so the clause becomes real without changing any current run.
+2. **Reconcile through the ledger.** The receipts are settled against `ctx.actionLedger` (P4-12's), so "reconciled" means the effect's entry is `confirmed` rather than `ambiguous`. Stronger, and couples two epics.
+3. **Record that nothing produces side-effect receipts yet**, exempt must[2]'s usage, and sign the rest — which says plainly that a clause about reconciliation ships with no reconciliation.
+
+**Not chosen.** (1) and (2) differ in what "reconciled" means, and (3) is the honest version of the status quo. `recordStep` and `startStep` do not exist as exports at all — the recorder's surface is `createJournalRecorder`, so the earlier note about a dead `recordStep` export does not match this tree.
+
 ### BLOCKED-157 — a case measures peak buffer residual by replacing a process global, so its verdict depends on what else the worker was doing
 
 **State: OPEN, diagnosed. Owner: P3-13 (code-runtime). Not blocking: `packages/experimental/` ships in no bundle.**
