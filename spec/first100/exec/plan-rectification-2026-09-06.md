@@ -1017,3 +1017,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 
 **事实**:`--accept --epic P4-07` 只报 (iv),我随即签 PASS;核 cells 才见 C/P/U 在 `82d5e81122`(run 33959624760,重建前)、F 在 `d4034a8f4c`(admitted),**无任何 supplement**——U.2 / U.3 冻结并在 CI 绿过,但从未记进 ledger;openFinding(barrel 仍导出 `advanceAgentLifecycle`)也仍为真。已 WITHDRAWN。五条候选**没有一条**在 `82df08491f` 有格子或 supplement——执行者的"绿格"是意向不是完成态,我没核就签。
 **规则(4.4b)**:签字前核每个格子与 supplement 的 `candidateSha` / run 是**重建后的观测**;`--accept` 的输出是必要条件不是签字依据。**顺序**:admit 绿格(两红步原文)→ 修谓词红(P5-10 coverage 缺、P5-11 acc[0] 引用被 supersede 标题、P4-06 C/P 共享观测文件、P4-12 U 未绿)→ P4-07 删导出关 finding → `--accept` 各只剩 (iv) → 核 SHA → 签。
+
+### 12.53 谓词修正的三条规则;(v) 4 MISSING 等下一次观测(2026-09-08 07:40 EDT)
+
+1. **被 supersede 的 base 冻结条目,其继任者必须也是 base**(P4-06 的 P 被写成 supplement P.5 → stage 无 live base → `checkObservationDistinctness` 对无条目的格子报"shared observation file",读起来像观测问题实为缺条目)。2. `supplements: null` 与键不存在语义相同,数据统一为键不存在,**不改判据**(改 `=== undefined` 为 `== null` 会让真实不一致隐身)。3. coverage 引用为 AND 语义,每条带"为何是独立子事实"。
+**(v) 4 MISSING**:P4-12.U(base U 冻于观测之后却从该观测绿——冻结先于观测,不可)、P4-06.P(P.5 改 base 后未观测)、P4-07.U / F(继任者不在其格引用的树)。四格等下一次 run 的观测;**(v) 不为 0 之前不签任何一条**。`--admit-red-run` 正确拒绝了六格"观测在更早 run"的 admit 请求——工具守住了 §12.52 那条。
