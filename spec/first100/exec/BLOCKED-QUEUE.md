@@ -252,6 +252,22 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+### BLOCKED-153 — P5-10's `orderByPriority` belongs at the inbox dequeue point, and `core/agent` cannot import it from where it lives
+
+**State: OPEN, measured, not built.** §12.24-2 ruled that must[1]'s ordering happens at the control-message dequeue point — `packages/core/agent/src/inbox.ts`, the file the registry names. Two things are in the way, and neither is a judgement call I should make alone.
+
+**1. The function is on the wrong side of a dependency.** `orderByPriority` lives in `packages/subagent/subagent/src/control-convergence.ts`, and `dsh-subagent` depends on `dsh-agent`. So `core/agent`'s inbox cannot import it: the edge only runs the other way. The same shape §12.22-1 fixed for the journal, but the fix is not the same — the journal moved with its whole package, while this is one function inside a file P5-10's registry row declares, sitting beside `decideControl` and `decideConvergence`, which DO belong to the subagent runtime and have their callers there.
+
+**2. The pending messages carry no control kind.** Ordering a claimed batch needs each message's kind, and `UserMessage.source` has none. `Agent.steer` / `inject` / `followup` each know their own kind at the call site — the operation, not the message, is what says which it is — so the kind would be recorded by the inbox operation that inserts, the way `senderEpoch` is recorded by the sender that emits it (P4-06).
+
+**Measured, so the shape of the gap is not guessed:** `ChildControlRouter.submitBatch` DOES call `orderByPriority`, and `ChildControlRouter` has no production constructor — nothing outside its own file and tests builds one. So the ordering has a caller inside a class nothing mounts, and `subagent/src/index.ts` hand-rolls `{ phase, appliedEpochs }` beside it rather than using the router. That duplication is its own finding: one rule, two implementations, and the version with the ordering is the one nothing reaches.
+
+**Decision needed (delegate's):** either
+1. the ordering primitive moves to a package `core/agent` may import (a capability-definitions home, as the lease contract and the journal both got), with the A-class `files[]` change that implies for P5-10; or
+2. the dequeue point is `ChildControlRouter` after all — mount it from `subagent/src/index.ts`, replacing the hand-rolled control state, and the inbox stays out of it. This makes the router's existing `submitBatch` reachable but leaves `core/agent/src/inbox.ts` — the file the registry names — untouched, so gate (u) would still report P5-10.
+
+Reading (2) is smaller and removes the duplication; reading (1) is what §12.24-2's own wording points at. They are not equivalent, which is why this is reported rather than picked.
+
 ### BLOCKED-152 — the workflow engine imports `dsh-agent`, a `providers -> orchestration-runtime` edge older than this program
 
 **State: OPEN, placement only, now two edges.** `@deepseek-ai/dsh-workflow-worker-thread -> @deepseek-ai/dsh-agent` is a layer finding of the same kind §12.22-1 removed for the journal, and it predates this program. Recorded on the delegate's instruction so the two are not treated differently — one moved, one left silently.
