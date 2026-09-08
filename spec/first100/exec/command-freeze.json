@@ -5081,7 +5081,8 @@
       "sensitivityProof": {
         "mutationDescription": "One mutation on packages/workflow/workflow-worker-thread/src/runtime.ts: a `workflow:` hook added to the `globals` object beside agent/parallel/pipeline/phase/log. Restored byte-identical, confirmed by an empty git diff.",
         "failureSummary": "Reddens exactly this supplemental case and no other, so the tripwire observes the seam it names rather than something adjacent to it."
-      }
+      },
+      "supersededBy": "P4-09.U.2"
     },
     {
       "epic": "P4-09",
@@ -8549,6 +8550,52 @@
       },
       "supersedes": "2026-09-06T09:50:00.000Z",
       "supplementSeq": 2
+    },
+    {
+      "epic": "P4-09",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-09",
+        "stage": "U"
+      },
+      "supplementSeq": 2,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "installs a `workflow` global, and it is GATED rather than merely present",
+        "REFUSES a bare name, because a name alone cannot pin the version a run used",
+        "P4-09 must[3]: a script nests another definition runs the nested definition and hands its value back to the parent script",
+        "P4-09 must[3]: a script nests another definition REFUSES a digest that resolves under a different name, so a run cannot execute what it does not claim",
+        "P4-09 must[3]: a script nests another definition REFUSES an unregistered digest without starting a worker (acceptance[0])",
+        "P4-09 must[3]: a script nests another definition REFUSES a definition that nests ITSELF, structurally rather than by waiting for the depth limit",
+        "P4-09 must[3]: a script nests another definition REFUSES nesting past the configured depth (acceptance[3])",
+        "P4-09 must[3]: a script nests another definition CANCELS the nested run when the parent is cancelled (acceptance[1])"
+      ],
+      "files": [
+        "packages/workflow/workflow-worker-thread/src/runtime.ts",
+        "packages/workflow/workflow-worker-thread/src/session.ts",
+        "packages/workflow/workflow-worker-thread/src/host.ts",
+        "packages/workflow/workflow-worker-thread/src/index.ts",
+        "packages/workflow/workflow-worker-thread/src/protocol.ts",
+        "packages/workflow/workflow-worker-thread/src/types.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-budget.spec.ts",
+        "packages/workflow/workflow-worker-thread/tests/nested-run.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T01:40:00.000Z",
+      "dryRunProof": "Ran locally at the candidate tree: nested-budget.spec.ts + nested-run.spec.ts, 15 passed; packages/workflow, 273 passed.",
+      "note": "Supersedes P4-09.U.1's tripwire under §12.24-1. That entry asserted `typeof workflow === 'undefined'` and was written to fail on the day a nesting hook appeared; this is that day. The replacement asserts what the tripwire was protecting: the hook exists AND is gated. The superseded entry is kept — its observation was true at the SHA it was frozen against.",
+      "sensitivityProof": {
+        "mutationDescription": "Locally (never committed), three mutations in turn. (a) In packages/workflow/workflow-worker-thread/src/index.ts, made `startNested` ignore the admission decision and start the run regardless. (b) In src/host.ts, removed the `cancelPropagationForNested` block so a parent's cancel did not reach nested runs. (c) Earlier, before the hook existed, the superseded tripwire asserted the absence this supplement replaces.",
+        "failureSummary": "(a) reddened exactly two cases, the recursion and depth refusals. This is the mutation that CHANGED the cases: the first draft asserted only that the outer script had caught something, and (a) passed against it, because the outer script catches any error the nested run produces whatever caused it. The assertions now name the reason -- `recursive-definition`, `max-depth-exceeded` -- which is also what an operator needs, since a self-calling definition and a merely deep composition demand different responses. (b) reddened exactly one, the cancellation case."
+      }
     }
   ]
 }
