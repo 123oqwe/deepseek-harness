@@ -213,6 +213,21 @@ interface SubagentSettledMessageSource {
   readonly summary: string
   /** Session id of the child that settled. */
   readonly senderSessionId: SessionId
+  /**
+   * The lease epoch of the child run this settlement reports (P4-06 must[2],
+   * P4-07).
+   *
+   * The sender's GENERATION, which is what separates a redelivered settlement
+   * from a real second one: one child session may be activated more than once,
+   * and each activation holds its own lease. Without it the parent's inbox
+   * cannot tell "this notice again" from "the same child settled again", and
+   * must[2]'s triple has only two thirds of its identity.
+   *
+   * Absent when the child held no lease — a composition with no Run Service
+   * mounted. That is recorded rather than defaulted: an invented epoch would
+   * make two unrelated activations share a key and silently suppress one.
+   */
+  readonly senderEpoch?: number
 }
 ```
 

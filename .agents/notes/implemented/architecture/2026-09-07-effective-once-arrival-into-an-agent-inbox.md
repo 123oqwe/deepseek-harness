@@ -10,7 +10,7 @@ The `Inbox` did refuse a duplicate *pending* identity, and that is not the same 
 
 The third of the key that was missing until now is the epoch. It is the SENDER's generation, and no sender had one: agent runs acquired no lease until §12.19-3 and no shipped profile mounted the Run Service until §12.20.
 
-## Decision (§12.21)
+## Decision
 
 - **The consumer is the agent inbox, and the sender is a settling subagent.** `Inbox` keeps a `consumed` set keyed by `dedupKey({ source, id, epoch })` and refuses an insertion whose key it has already run, throwing `DuplicateArrivalError`.
 - **`id` is the SENDER's stable identity, not the message's.** `createUserMessage` mints a fresh message id per delivery, so keying on it would give a redelivery a different key from the delivery it repeats and refuse nothing. The id is the child session, which outlives each of its activations; the epoch says which activation spoke.
@@ -37,3 +37,11 @@ Mutations, each measured:
 - `senderEpoch` is model-visible through the session log, so every snapshot corpus was refreshed.
 - `dsh-agent` now depends on `@deepseek-ai/dsh-intake-dedup` (capability-definitions → capability-definitions). `check-layer-deps` findings unchanged at 120.
 - Five of gate (u)'s six integration gaps remain.
+
+## Alternatives considered
+
+- **Key on the message id.** The obvious identity and the one that refuses nothing: `createUserMessage` mints a fresh id per delivery, so a redelivery carries a different key from the delivery it repeats. The sender's own identity is what survives a redelivery.
+- **Keep the seen-set in memory.** Free, and empty after exactly the event it exists to survive. Rebuilding from the session log is the only version of this rule that holds across a restart.
+- **Record a new session event marking a claim.** Considered and rejected because the log already distinguishes one — a splice that removes messages, inserts none, and is not marked `canceled` — and a second marker could disagree with the first about what was consumed.
+- **Treat a cancellation as consuming.** It removes messages the same way and they never ran, so keying them would refuse a legitimate resend of work that never happened: the opposite failure, arrived at by pattern-matching on the mutation rather than on the meaning.
+- **Deduplicate a source that carries no epoch.** Would make every later message from that source collide with an earlier one and be silently dropped. Leaving it undeduplicated is stated in the contract rather than left as a gap.

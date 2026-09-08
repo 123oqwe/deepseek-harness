@@ -8,7 +8,7 @@ P4-07's fencing rule had no holder. `checkFencing`, `isReclaimable`, the lease s
 
 The workflow engine was made a holder first, and that was not enough. `dsh-subagent` does not depend on `workflow-worker-thread`; P4-06's settlement sender is a subagent, an agent run; P4-12's `LedgerEpoch` sits on the core tool path. None of those pass through a workflow host, so the epoch they wait on could never arrive from there.
 
-## Decision (§12.19-3)
+## Decision
 
 **The core agent run is the work item.** `RunPlugin` (`@deepseek-ai/dsh-run`) already opens exactly one Run per agent session and owns `Agent.runId`; that is where ownership is decided, so that is where the lease is taken.
 
@@ -38,3 +38,11 @@ The workflow engine was made a holder first, and that was not enough. `dsh-subag
 - `dsh-agent` no longer depends on `@deepseek-ai/dsh-lease` (the in-memory provider) — only on the contract. `check-layer-deps` findings stay at 120 and the runtime-closure list stays at 16 entries.
 - Six of gate (u)'s findings remain (BLOCKED-147); P4-06's two name `core/agent/src/dispatch.ts`, which this change modifies, but a supplement citing it must wait until P4-06 actually consumes the epoch — citing it now would be name-matching, the defect the gate exists to catch.
 - Nothing yet moves a Run to `paused`, `waiting_human`, `cancelling`, `completed`, `failed` or `orphaned`. Those states are legal and unreached, and no sweep reclaims an abandoned Run; recorded in the package's Known Limitations.
+
+## Alternatives considered
+
+- **Leave the workflow run as the only holder.** It was the first holder and it is a real one, but `dsh-subagent` does not depend on `workflow-worker-thread`, so a settlement sender and a tool dispatch could never receive an epoch from there. The rule would have held for one kind of work and been unreachable for the rest.
+- **Take the lease after registering the Run.** Simpler to write and it leaves exactly the window this epic closes: a Run that exists without an owner is one a second host can open work against, and no later fencing check can undo a write made inside that window.
+- **Put the lease behind the Run Service instead of on the Agent.** The natural home for it, and a cycle: the agent loop dispatches tool calls and `dsh-run` already depends on the agent loop, so a dispatcher asking the service for authority would close the loop. Putting it on the Agent also gives a composition with no Run Service a coherent answer (`no-run`) rather than a missing dependency.
+- **Warn on a refused lease and continue.** Rejected because an agent proceeding without a lease makes state writes nothing can refuse, which is the failure the capability exists to prevent; a warning would record it after the damage.
+- **Cache the current lease in the holder.** Cheaper per check and wrong in the only case that matters: a holder that has LOST its lease is exactly the caller being fenced, and a cache reports the authority it wishes it still had.

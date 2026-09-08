@@ -32,3 +32,11 @@ Its declared Usage consumer, `packages/core/agent-loop/src/tool-calls.ts`, is th
 - `dsh-agent-loop` depends on `@deepseek-ai/dsh-action-ledger` (orchestration-runtime → capability-definitions, downward). `check-layer-deps` findings unchanged at 120.
 - The base bundle mounts the ledger under the same storage root as the lease store, for the same reason: two hosts that must not both perform one effect have to be pointed at one ledger.
 - must[2]'s native `Idempotency-Key` pass-through and must[3]'s target-state query remain unbuilt, and the receipt digest is over the tool's own content rather than a provider receipt. All three are now stated in the package's Known Limitations rather than implied by the ledger's existence.
+
+## Alternatives considered
+
+- **Mark the action sent after the tool returns.** The obvious order, and it leaves open the window the ledger exists to close: a crash between the tool committing its effect and the ledger learning about it reads as "never sent", and the retry sends again.
+- **Release the reservation when a tool errors.** Kinder to the caller and unsafe: a tool that threw may already have committed, so releasing lets a retry perform the effect twice. Refusing the key until a reconciler exists is the fail-closed direction, and the cost is stated as a limitation rather than hidden.
+- **One refusal reason for all four cases.** Smaller surface, wrong for the reader: a duplicate, an argument mismatch, a stale epoch and an ambiguous entry each demand a different next move, and collapsing them makes a caller defect look like something to wait on.
+- **Treat an absent ledger as a refusal.** Fail-closed in the abstract, and here it would stop every composition that has not opted into the capability from dispatching at all. The invariant that matters is narrower: a MOUNTED ledger's refusal must never be ignored, which is what the cases pin.
+- **Key the reservation on the tool name.** Would have passed the duplicate case and failed the one that matters — two calls with different arguments are different actions, and a tool-keyed ledger refuses the second.

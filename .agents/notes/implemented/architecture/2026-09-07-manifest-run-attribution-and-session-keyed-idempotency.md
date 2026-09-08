@@ -33,3 +33,10 @@ Two cases, one per dispatch path, plus their mutations:
 - Anything that read `action/manifest-appended`'s `runId` as a session id is now wrong. Nothing did: the field had no reader, which is how the defect survived.
 - `manifestActor` is gone from the public surface, replaced by `manifestAttribution`. Pre-release stance: no shim.
 - If a session identity ever moves into a definitions package, `IdempotencyScope` aliases that instead and nothing else changes.
+
+## Alternatives considered
+
+- **Keep `manifestActor` and pass a `runId` in from the call site.** That is the arrangement the defect grew in: the call site asked the identity for an actor and its caller for a run, and the caller had only a session, so it branded one. One function answering both from one source is what makes the wrong answer unavailable.
+- **Key the idempotency scope on the run.** It reads as the more precise scope and it defeats the purpose: `run-<uuid>` is minted per invocation, so a replayed action after a restart presents a key nothing recognizes and the external effect happens a second time.
+- **Import `SessionId` from `dsh-session` instead of restating the brand.** Structurally identical and measured to add a `capability-definitions -> providers` edge, putting a definition above its own consumers for a type that carries no behaviour. The restated brand is the judgment call this note flags; it collapses to an alias the moment a session identity lands in a definitions package.
+- **Leave the anonymous fallback as the bare session id.** It was already the value that hid the defect — a session and a run reading as the same string is what nobody noticed for two stages.
