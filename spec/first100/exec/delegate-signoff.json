@@ -225,6 +225,14 @@
       "delegateSession": "guanjieqiao-92",
       "signedAtUtc": "2026-09-08T10:34:46.509Z",
       "reason": "Delegate error (2026-09-08 06:45 EDT): the PASS recorded minutes earlier bound the row digest while the cells still cite the pre-rebuild observations (C/P/U at 82d5e81122 run 33959624760, F at d4034a8f4c admitted); the rebuilt U (U.2/U.3, session-keyed lease, lease-refused) observed green at 82df08491f in run 34201756084 was never greened into the U cell. Also openFindings still lists the unfenced advanceAgentLifecycle export, which packages/core/agent/src/index.ts:25 still publishes. Re-sign after the cells are re-greened at 82df08491f and the finding is closed by removing the export."
+    },
+    {
+      "epic": "P2-03",
+      "rowDigestSha256": "c48ef1981ded8df224e93fd9ad1fcb293331c2903180f455d1e9b93d3d3a853a",
+      "conclusion": "PASS",
+      "delegateSession": "guanjieqiao-92",
+      "signedAtUtc": "2026-09-08T15:22:51.921Z",
+      "note": "Observation run 34238203263 @ 434408a47c (signed bundle, 20490/0). 4.4b: C/U/F GREEN @ 434408a47c, P=N/A (contract epic), 0 open findings. 4.4a: ActionManifest constructed on both dispatch paths (native + ptc) via appendManifestThenGate, event inlines every must[0] field; acc[2] enforcement half deferred to P2-04.U per §12.46-B (BLOCKED-159)."
     }
   ]
 }
