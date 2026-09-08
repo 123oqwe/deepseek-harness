@@ -56,6 +56,7 @@ import { SubagentError } from './error.ts'
 import { isAdjacentAgentSendMessageTool } from './internal.ts'
 import { decideConvergence } from './control-convergence.ts'
 import { commitSettlement, drainSettlements } from './settlement-outbox.ts'
+import type MessageBusPlugin from '@deepseek-ai/dsh-message-bus'
 import type { PendingSettlement } from './settlement-outbox.ts'
 
 /** Durable attribution for one model-authored message between adjacent Agents. */
@@ -468,10 +469,29 @@ export class SubagentContinuationManager {
   private readonly closingScopes = new Map<Agent, Set<Agent>>()
   private draining = false
 
+  /**
+   * The bus service, captured at construction (§12.42).
+   *
+   * Held rather than re-read with `ctx.get` at settlement time, and the reason
+   * is teardown: measured three ways — with `SubagentRuntime` injecting the
+   * service, in this manager's synchronous drain prologue, and with the mount
+   * order reversed — the service registry no longer answers for `messageBus`
+   * by the time a disposer runs. `ctx.get` is correct and simply has nothing
+   * to return there.
+   *
+   * What is held is the SERVICE value `inject` already delivered at activation,
+   * not the store behind it: the boundary is the service, and reaching past it
+   * for the store would be the thing §12.40 refused. Fiber order (a dependent
+   * disposes before what it depends on) is what keeps the service's database
+   * open while this manager's drain runs.
+   */
+  private readonly bus: MessageBusPlugin | undefined
+
   constructor(
     private readonly ctx: Context,
     private readonly host: ContinuationHost,
   ) {
+    this.bus = ctx.get('messageBus')
     // Ordinary Cordis owner effects unwind in reverse registration order, which
     // cannot express the dynamic child graph. Register the private scope's
     // structural disposer FIRST and the drain SECOND, so reverse unwind invokes
@@ -851,6 +871,19 @@ export class SubagentContinuationManager {
     // already past that cutoff remain tracked until their handle is installed
     // or rollback completes, producing a stable forest for the later snapshot.
     this.draining = true
+    // Every live child's settlement is committed HERE, in the synchronous
+    // prologue, before the first `await` (§12.41).
+    //
+    // Cordis orders fiber teardown, not the segments of an async disposer: past
+    // this function's first await the bus service can already be gone, and
+    // measured, it was — a settlement produced during shutdown reached nothing
+    // even with `SubagentRuntime` injecting `messageBus`. `commitIntake` is
+    // synchronous (`BEGIN IMMEDIATE` on a `DatabaseSync`), so the write that
+    // must survive the process simply has to happen before the first
+    // suspension point. Delivery stays in the async section below, where it
+    // belongs: a tearing-down tree receives nothing, and the rows it leaves
+    // pending are what the next start drains.
+    this.commitSettlementsForShutdown()
     await Promise.all([...this.materializations].map(materialization => materialization.settled))
     // Snapshot roots after closing admission: a root is an Activation no live
     // Activation owns, so disposing roots recurses child-first into the forest.
@@ -1618,6 +1651,54 @@ export class SubagentContinuationManager {
   }
 
   /**
+   * Commit a settlement row for every live child, synchronously (§12.41).
+   *
+   * Called from the drain's prologue. The stop reason is the one this teardown
+   * is about to produce — the harness is going away, and that is what happened
+   * to these children — rather than a terminal nobody has captured yet: the
+   * capture happens later in the same drain, past the await where the bus is
+   * no longer reachable.
+   *
+   * Idempotent against the normal path: when a child then settles inside this
+   * same drain, `commitSettlement` finds the row already owed and does not add
+   * a second. Nothing is delivered here; a tearing-down parent receives
+   * nothing, which is what leaves the rows for the next start.
+   *
+   * **Why the write is here and not later.** `ctx.get('messageBus')` answers
+   * `undefined` during any teardown — measured with `SubagentRuntime` injecting
+   * the service (§12.40), in this synchronous prologue rather than past an
+   * await (§12.41), and with the mount order reversed — because the service
+   * registry is already emptied before a disposer runs. The manager therefore
+   * holds the service value `inject` delivered at activation (§12.42), and
+   * writes through it before the first suspension point, while fiber order
+   * still guarantees the bus's database is open. Removing either half reddens
+   * acceptance[1]'s case.
+   */
+  private commitSettlementsForShutdown(): void {
+    const bus = this.bus
+    if (bus === undefined) return
+    for (const activation of this.activations.values()) {
+      const epoch = activation.handle.agent.lifecycle?.epoch
+      if (epoch === undefined || !activation.announced) continue
+      const summary = settlementSummary(activation.childId, 'aborted')
+      try {
+        commitSettlement(bus, {
+          childId: activation.childId,
+          parentSessionId: activation.parentSession,
+          epoch,
+          payload: { summary, content: settlementContent({ stopReason: 'aborted' }, summary), epoch },
+          tenant: activation.parentSession,
+          deadlineMs: Number.MAX_SAFE_INTEGER,
+        })
+      } catch (error: unknown) {
+        // Logged, never thrown: a bus that cannot take this write must not stop
+        // a teardown. The child's own session log remains the durable record.
+        this.ctx.logger.warn(`subagent "${activation.childId}" settlement was not committed at shutdown: ${errorChain(error)}`)
+      }
+    }
+  }
+
+  /**
    * Deliver every settlement the durable bus owes one parent (§12.39).
    *
    * The single implementation behind all three triggers: a commit signalling
@@ -1637,7 +1718,7 @@ export class SubagentContinuationManager {
    * @param parent - the live parent to deliver to.
    */
   private drainSettlementOutbox(parent: Agent): void {
-    const bus = this.ctx.get('messageBus')
+    const bus = this.bus
     if (bus === undefined) return
     try {
       drainSettlements(bus, parent.id, Date.now(), SETTLEMENT_MAX_ATTEMPTS, (settlement) => {
@@ -1693,7 +1774,7 @@ export class SubagentContinuationManager {
       // failure, a cancellation, a teardown — are the ones where the parent may
       // already be gone, and until §12.35-2(c) exactly those were logged and
       // dropped (acceptance[1]).
-      const bus = this.ctx.get('messageBus')
+      const bus = this.bus
       if (bus !== undefined && epoch !== undefined) {
         const content = settlementContent(terminal, summary)
         commitSettlement(bus, {

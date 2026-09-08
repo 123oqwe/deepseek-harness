@@ -98,22 +98,14 @@ describe('P4-06: a settlement is committed to the bus before anyone tries to del
     // survives the process that could not deliver it.
     const { ctx, busDirectory } = await setup([textResponse('child done')])
     const parent = ctx.agentLoop.create(SessionId('lonely-parent'), { provider: 'mock', model: 'mock' })
-    const started = await ctx.subagents.startContinuable(startSpec(parent))
-    await waitGone(ctx, started.childId)
-    // The live parent took it, so the row is `acked`. Put it back to `pending`
-    // to stand for a settlement committed while nobody could receive it.
-    //
-    // **Set directly, and that is a recorded finding rather than convenience.**
-    // The end-to-end route — dispose the context so the manager's own drain
-    // settles the child while the tree tears down — still commits NOTHING:
-    // measured after §12.40, `ctx.get('messageBus')` is undefined at that
-    // moment even with `SubagentRuntime` injecting it. `drain()` is async and
-    // continues past the point where the bus fiber has gone, so declaring the
-    // dependency orders the FIBERS without ordering this await. Reported; until
-    // it is closed, what this case can honestly exercise is the drain.
-    const owed = ctx.messageBus.outboxRows()[0]
-    expect(owed?.record.state).toBe('acked')
-    ctx.messageBus.persistOutbox({ ...owed!.record, state: 'pending', attempts: 0, receipt: null })
+    await ctx.subagents.startContinuable(startSpec(parent))
+    // Disposed with the child still RESIDENT. The manager commits every live
+    // child's settlement in its synchronous drain prologue and delivers none,
+    // because the tree is tearing down — so the row is committed and left
+    // owed, which is acceptance[1]'s case end to end. It works because the
+    // manager holds the bus SERVICE captured at construction (§12.42): three
+    // measurements showed the registry no longer answers `ctx.get` by the time
+    // a disposer runs.
     await ctx.fiber.dispose()
     // A second process over the same bus directory: the row is still owed.
     const second = await setup([textResponse('parent done')], busDirectory)

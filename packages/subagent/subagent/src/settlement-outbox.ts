@@ -72,6 +72,12 @@ export function commitSettlement(
   // Already consumed means the parent ran this settlement in an earlier
   // process; committing again would owe a second delivery of one event.
   if (bus.inboxRow(SETTLEMENT_SOURCE, childId, epoch)?.state === 'consumed') return false
+  // Already owed means this settlement was committed and not yet delivered.
+  // Two callers reach here for one child: the teardown prologue commits what a
+  // dying process must not lose, and `notifySettlement` commits when the child
+  // settles normally — so during a teardown both run for the same child. A
+  // second row would owe the parent two deliveries of one ending.
+  if (bus.outboxRows().some(row => String(row.record.id) === String(childId) && row.record.epoch === epoch)) return false
   bus.commitIntake({
     message: {
       id: childId,
