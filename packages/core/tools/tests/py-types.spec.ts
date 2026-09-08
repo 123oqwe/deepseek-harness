@@ -112,6 +112,26 @@ describe('jsonSchemaToPy', () => {
   })
 })
 
+/** Depth of the smaller oneOf chain; the case renders this and twice this. */
+const BASE_DEPTH = 50_000
+
+/**
+ * Ratio bound separating linear from quadratic growth when the depth doubles.
+ * Linear predicts about 2x and quadratic about 4x; 3x sits between them with
+ * margin on both sides, and holds on any machine because both measurements
+ * scale with the same clock.
+ */
+const QUADRATIC_SEPARATION = 3
+
+/** Depth of the smaller class-naming chain; the case renders this and twice this. */
+const NAMING_BASE_DEPTH = 30_000
+
+/** Below this the base measurement is noise, and any ratio would pass. */
+const MEASURABLE_FLOOR_MS = 1
+
+/** This case renders two chains of 50k and 100k levels; the 5s default is a unit-case budget. */
+const LINEARITY_TIMEOUT_MS = 60_000
+
 describe('renderToolsSdkPy', () => {
   const bash: ToolSdkSchema = {
     name: 'bash',
@@ -936,42 +956,95 @@ describe('renderToolsSdkPy', () => {
 
   it('renders a deeply nested oneOf chain in linear time (no per-level re-materialization)', () => {
     // Each level is a two-branch oneOf whose first branch recurses; joining the
-    // accumulated union string at every level would be Theta(depth^2). At this
-    // depth the quadratic path (~100,000^2 char copies) blows past vitest's 5s
-    // default, so this fails loud on a regression; the `+`/ConsString path is
-    // milliseconds. (Guard the depth explicitly so the assertions stay exact.)
+    // accumulated union string at every level would be Theta(depth^2), while
+    // the `+`/ConsString path materializes once at the root.
+    //
+    // **Measured by SCALING, not by a wall-clock budget (§12.35-1).** This case
+    // used to rely on vitest's shared 5s default: the quadratic path would blow
+    // past it, so a regression failed loud. That makes the assertion an
+    // implicit one owned by the runner — under parallel load the LINEAR path
+    // also exceeded 5s and the case false-reddened, and on a fast idle machine
+    // a quadratic regression could slip under it. Doubling the depth is
+    // self-normalizing: linear predicts about 2x, quadratic about 4x, and the
+    // 3x bound separates them on any machine because both terms scale together.
+    //
     // The resulting chain is intentionally uncapped, unlike list nesting: it is
     // grammatically valid Python at any length, and only CPython's `compile()`
     // recursion would reject it — see the `oneOf` arm in py-types.ts.
-    const depth = 100000
-    let deep: Record<string, unknown> = { type: 'string' }
-    for (let i = 0; i < depth; i++) deep = { oneOf: [deep, { type: 'null' }] }
-    const type = jsonSchemaToPy(deep)
-    expect(type.startsWith('str | None')).toBe(true)
-    expect(type.endsWith(' | None')).toBe(true)
-    expect(type.length).toBe('str'.length + ' | None'.length * depth)
-  })
+    const chain = (depth: number): Record<string, unknown> => {
+      let deep: Record<string, unknown> = { type: 'string' }
+      for (let i = 0; i < depth; i++) deep = { oneOf: [deep, { type: 'null' }] }
+      return deep
+    }
+    const timed = (depth: number): { type: string; elapsedMs: number } => {
+      const schema = chain(depth)
+      const started = performance.now()
+      const type = jsonSchemaToPy(schema)
+      return { type, elapsedMs: performance.now() - started }
+    }
+    // Warm the compiler on the smaller shape so the first measurement is not
+    // paying for optimization the second one benefits from.
+    timed(BASE_DEPTH)
+
+    const base = timed(BASE_DEPTH)
+    const doubled = timed(BASE_DEPTH * 2)
+
+    // The exact output, unchanged: the scaling claim is worthless if the render
+    // is wrong, so both depths assert their full shape.
+    for (const [depth, result] of [[BASE_DEPTH, base], [BASE_DEPTH * 2, doubled]] as const) {
+      expect(result.type.startsWith('str | None')).toBe(true)
+      expect(result.type.endsWith(' | None')).toBe(true)
+      expect(result.type.length).toBe('str'.length + ' | None'.length * depth)
+    }
+    // Guard against dividing by a measurement too small to mean anything: at
+    // this depth the linear path still takes milliseconds, and a base below the
+    // floor would make any ratio pass.
+    expect(base.elapsedMs).toBeGreaterThan(MEASURABLE_FLOOR_MS)
+    expect(doubled.elapsedMs / base.elapsedMs).toBeLessThan(QUADRATIC_SEPARATION)
+  }, LINEARITY_TIMEOUT_MS)
 
   it('names a deep oneOf-of-object chain in linear time (bounded propagated class names)', () => {
     // Every level is a oneOf whose SECOND branch is a named object (a closed
     // empty TypedDict) and whose first branch recurses — so every level has an
     // object node, each propagating a class name one segment longer. Without a
     // propagation cap, allocateClassName slices an ever-longer rope at every
-    // level → Theta(depth^2) (~9.5s at this depth, past the 5s default);
-    // childClassName caps the base so it stays linear (~ms). Assertions are
-    // shape-based but the depth is the tripwire: a regression times out.
-    const depth = 60000
-    let deep: Record<string, unknown> = { type: 'object', additionalProperties: false, properties: {} }
-    for (let i = 0; i < depth; i++) {
-      deep = { oneOf: [deep, { type: 'object', additionalProperties: false, properties: {} }] }
+    // level, which is Theta(depth^2); `childClassName` caps the base so it
+    // stays linear.
+    //
+    // Measured by SCALING for the same reason as the oneOf chain above: this
+    // case's own comment used to say "a regression times out", which hands the
+    // assertion to the runner's shared budget — it false-reddens under load and
+    // can let a regression through on a fast idle machine.
+    const chain = (depth: number): ToolSdkSchema => {
+      let deep: Record<string, unknown> = { type: 'object', additionalProperties: false, properties: {} }
+      for (let i = 0; i < depth; i++) {
+        deep = { oneOf: [deep, { type: 'object', additionalProperties: false, properties: {} }] }
+      }
+      return { name: 'deep', description: 'Deep oneOf-object chain.', parameters: { type: 'object', additionalProperties: false, properties: { root: deep }, required: ['root'] }, output: { type: 'string' } }
     }
-    const tool: ToolSdkSchema = { name: 'deep', description: 'Deep oneOf-object chain.', parameters: { type: 'object', additionalProperties: false, properties: { root: deep }, required: ['root'] }, output: { type: 'string' } }
-    const text = renderToolsSdkPy([tool])
-    // No emitted class name exceeds the cap (plus a short collision suffix).
-    const longest = [...text.matchAll(/^class (\w+)\(TypedDict\):/gm)].reduce((max, m) => Math.max(max, m[1]?.length ?? 0), 0)
-    expect(longest).toBeLessThanOrEqual(140)
-    expect(text).toContain('class Tools(Protocol):')
-  })
+    const timed = (depth: number): { text: string; elapsedMs: number } => {
+      const tool = chain(depth)
+      const started = performance.now()
+      const text = renderToolsSdkPy([tool])
+      return { text, elapsedMs: performance.now() - started }
+    }
+    timed(NAMING_BASE_DEPTH)
+
+    const base = timed(NAMING_BASE_DEPTH)
+    const doubled = timed(NAMING_BASE_DEPTH * 2)
+
+    // No emitted class name exceeds the cap (plus a short collision suffix),
+    // at either depth: the cap is what makes the naming linear, so asserting
+    // the scaling without it would leave the cause untested.
+    for (const result of [base, doubled]) {
+      const longest = [...result.text.matchAll(/^class (\w+)\(TypedDict\):/gm)]
+        .reduce((max, m) => Math.max(max, m[1]?.length ?? 0), 0)
+      expect(longest).toBeLessThanOrEqual(140)
+      expect(result.text).toContain('class Tools(Protocol):')
+    }
+    expect(base.elapsedMs).toBeGreaterThan(MEASURABLE_FLOOR_MS)
+    expect(doubled.elapsedMs / base.elapsedMs).toBeLessThan(QUADRATIC_SEPARATION)
+  }, LINEARITY_TIMEOUT_MS)
 
   it('caps the class name for a tool whose name exceeds the base length limit', () => {
     // The root class base is `${CamelCase(name)}Args`; a very long tool name

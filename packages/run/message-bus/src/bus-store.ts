@@ -33,6 +33,7 @@ import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { dedupKey } from '@deepseek-ai/dsh-intake-dedup'
+import type { BusMessageId, DeliveryReceipt, MessageEpoch, OutboxRecord, OutboxState, TenantId } from './outbox.ts'
 
 /** One arriving message, in CloudEvents attribute names plus this bus's epoch. */
 export interface BusMessage {
@@ -66,8 +67,37 @@ export interface InboxRow {
   readonly state: InboxState
 }
 
-/** One row the outbox owes a peer. */
+/**
+ * One row the outbox owes a peer, as a caller submits it.
+ *
+ * The dispatch POLICY is supplied here — the tenant the message belongs to,
+ * how urgent it is, and when it stops being worth sending — because only the
+ * caller knows them. Everything the dispatcher then maintains (`state`,
+ * `attempts`, `receipt`) is the store's to initialise and to advance, so a
+ * caller cannot submit a row that claims to have already been sent.
+ */
 export interface OutboxRow {
+  readonly target: string
+  readonly payload: unknown
+  readonly tenant: TenantId
+  /** Higher dispatches first; equal priorities fall back to deadline. */
+  readonly priority: number
+  /** Epoch milliseconds after which the message is worthless to send. */
+  readonly deadlineMs: number
+}
+
+/**
+ * A stored outbox row: the delivery record the dispatcher decides against,
+ * plus where it goes and what it carries.
+ *
+ * The record half is `OutboxRecord` verbatim rather than a copy of its fields.
+ * Until §12.35, the store persisted `{target, payload}` and the decisions ran
+ * over an `OutboxRecord` nothing persisted — so `attempts`, `deadlineMs`,
+ * `state` and `receipt` had nowhere to live, and must[1]'s retry budget and
+ * dead-lettering were true of a type and of no stored message.
+ */
+export interface StoredOutboxRow {
+  readonly record: OutboxRecord
   readonly target: string
   readonly payload: unknown
 }
@@ -80,8 +110,14 @@ export interface BusStore {
   inboxRow: (source: string, messageId: string, epoch: number) => InboxRow | undefined
   /** Every committed domain event, in commit order. */
   domainEvents: () => readonly BusMessage[]
-  /** Every outbox row awaiting delivery. */
-  outboxRows: () => readonly OutboxRow[]
+  /** Every stored outbox row, in commit order. */
+  outboxRows: () => readonly StoredOutboxRow[]
+  /**
+   * Persist one record's advanced state, which is what `dispatchOnce` calls
+   * through its `persist` dependency after each pass.
+   * @param record - the record as the dispatch decision left it.
+   */
+  persistOutbox: (record: OutboxRecord) => void
   /** The dedup keys of consumed messages, which is the seen-set `classifyIntake` reads. */
   consumedKeys: () => ReadonlySet<string>
 }
@@ -115,6 +151,18 @@ export interface RecoveryWindow {
  */
 const CONNECTIONS = new WeakMap<BusStore, DatabaseSync>()
 
+/**
+ * The on-disk format this module writes.
+ *
+ * Bumped to 2 when every `OutboxRecord` field became a column (§12.35). A
+ * version-1 file has an outbox table without them, and the pre-release stance
+ * is that a backend REFUSES an old format rather than migrating it — but the
+ * refusal has to exist to be a refusal: the version row was written and never
+ * read, so a stale file would have failed later with a SQL error naming a
+ * missing column rather than the format.
+ */
+const SCHEMA_VERSION = 2
+
 /** The schema this module owns; `bus.sqlite` carries its own version. */
 const SCHEMA = [
   // Contention must WAIT, not fail. Without a busy timeout, a second consumer
@@ -124,9 +172,13 @@ const SCHEMA = [
   // deadlock, while IMMEDIATE takes the lock up front and the timeout applies.
   'PRAGMA busy_timeout = 5000',
   'CREATE TABLE IF NOT EXISTS schema_version (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), version INTEGER NOT NULL)',
-  'INSERT OR IGNORE INTO schema_version (singleton, version) VALUES (1, 1)',
+  `INSERT OR IGNORE INTO schema_version (singleton, version) VALUES (1, ${String(SCHEMA_VERSION)})`,
   'CREATE TABLE IF NOT EXISTS domain_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, source TEXT NOT NULL, type TEXT NOT NULL, time TEXT NOT NULL, subject TEXT, datacontenttype TEXT, data TEXT NOT NULL, digest TEXT NOT NULL)',
-  'CREATE TABLE IF NOT EXISTS outbox (seq INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, target TEXT NOT NULL, payload TEXT NOT NULL)',
+  // Every `OutboxRecord` field is a column. A row the dispatcher can decide
+  // about must carry its own state, budget and deadline; while those lived
+  // only in the type, a restarted dispatcher rebuilt them from nothing and the
+  // retry budget bounded nothing (§12.35).
+  'CREATE TABLE IF NOT EXISTS outbox (seq INTEGER PRIMARY KEY AUTOINCREMENT, message_id TEXT NOT NULL, epoch INTEGER NOT NULL, target TEXT NOT NULL, payload TEXT NOT NULL, tenant TEXT NOT NULL, state TEXT NOT NULL, priority INTEGER NOT NULL, deadline_ms INTEGER NOT NULL, attempts INTEGER NOT NULL, receipt TEXT)',
   // `source` is part of the PRIMARY KEY, not a passenger column: a message id
   // is unique only within its sender, so two senders emitting the same id at
   // the same epoch are two messages and must occupy two rows (BLOCKED-140).
@@ -210,8 +262,21 @@ function claimRow(db: DatabaseSync, message: BusMessage, turn: number): void {
  * @returns the store handle.
  */
 export function openBusStore(directory: string): BusStore {
-  const db = new DatabaseSync(join(directory, 'bus.sqlite'))
+  const path = join(directory, 'bus.sqlite')
+  const db = new DatabaseSync(path)
   for (const statement of SCHEMA) db.exec(statement)
+  // Read back rather than assumed: `INSERT OR IGNORE` leaves an existing row
+  // alone, so a file written by an older format keeps its own version and this
+  // is where that is noticed. Refused, never migrated — the pre-release stance
+  // is that a backend rejects an old on-disk format, and a silent migration
+  // would rewrite messages nobody has delivered.
+  const found = (db.prepare('SELECT version FROM schema_version WHERE singleton = 1').get() as { version: number } | undefined)?.version
+  if (found !== SCHEMA_VERSION) {
+    throw new Error(
+      `bus store at ${path} is format version ${String(found ?? 'unknown')}, and this build writes ${String(SCHEMA_VERSION)}; `
+      + 'the outbox gained its dispatch columns in version 2, so an older file cannot be read. Remove it to start a fresh bus.',
+    )
+  }
   const store: BusStore = {
     claim: (message, turn) => { claimRow(db, message, turn) },
     inboxRow: (source, messageId, epoch) => readInbox(db, source, messageId, epoch),
@@ -226,8 +291,28 @@ export function openBusStore(directory: string): BusStore {
         epoch: Number(row.epoch),
         data: JSON.parse(String(row.data)) as unknown,
       })),
-    outboxRows: () => (db.prepare('SELECT target, payload FROM outbox ORDER BY seq').all() as { target: string; payload: string }[])
-      .map(row => ({ target: row.target, payload: JSON.parse(row.payload) as unknown })),
+    outboxRows: () => (db.prepare('SELECT message_id, epoch, target, payload, tenant, state, priority, deadline_ms, attempts, receipt FROM outbox ORDER BY seq').all() as Record<string, string | number | null>[])
+      .map(row => ({
+        record: {
+          id: String(row.message_id) as BusMessageId,
+          epoch: Number(row.epoch) as MessageEpoch,
+          tenant: String(row.tenant) as TenantId,
+          state: String(row.state) as OutboxState,
+          priority: Number(row.priority),
+          deadlineMs: Number(row.deadline_ms),
+          attempts: Number(row.attempts),
+          receipt: row.receipt === null ? null : JSON.parse(String(row.receipt)) as DeliveryReceipt,
+        },
+        target: String(row.target),
+        payload: JSON.parse(String(row.payload)) as unknown,
+      })),
+    persistOutbox: (record) => {
+      // Keyed on `(message_id, epoch)`, which is the record's identity: a
+      // message id is unique only within its sender generation, and keying on
+      // the id alone would let one epoch's dispatch overwrite another's.
+      db.prepare('UPDATE outbox SET state = ?, attempts = ?, receipt = ? WHERE message_id = ? AND epoch = ?')
+        .run(record.state, record.attempts, record.receipt === null ? null : JSON.stringify(record.receipt), record.id, record.epoch)
+    },
     consumedKeys: () => new Set((db.prepare("SELECT source, message_id, epoch FROM inbox WHERE state = 'consumed'").all() as { source: string; message_id: string; epoch: number }[])
       .map(row => keyOf(row.source, row.message_id, row.epoch))),
   }
@@ -259,8 +344,11 @@ export function commitIntake(store: BusStore, commit: IntakeCommit): void {
       throw new Error('bus store: injected failure after the domain event, before the outbox rows')
     }
     for (const row of commit.outbox) {
-      db.prepare('INSERT INTO outbox (message_id, epoch, target, payload) VALUES (?, ?, ?, ?)')
-        .run(message.id, message.epoch, row.target, JSON.stringify(row.payload))
+      // `pending`, no attempts, no receipt: the store owns the delivery state
+      // from here, so a caller cannot commit a row that claims to have been
+      // sent already.
+      db.prepare('INSERT INTO outbox (message_id, epoch, target, payload, tenant, state, priority, deadline_ms, attempts, receipt) VALUES (?, ?, ?, ?, ?, \'pending\', ?, ?, 0, NULL)')
+        .run(message.id, message.epoch, row.target, JSON.stringify(row.payload), row.tenant, row.priority, row.deadlineMs)
     }
     if (commit.failAt === 'after-outbox') {
       throw new Error('bus store: injected failure after the outbox rows, before the inbox transition')

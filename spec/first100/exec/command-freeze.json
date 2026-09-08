@@ -4071,7 +4071,8 @@
       "sensitivityProof": {
         "mutationDescription": "Four mutations. (1) commitWithOutbox splits its one enqueueAll into two calls, restoring the straddle hazard; (2) removed its empty-records refusal; (3) enqueueAll drops its structuredClone defensive copy; (4) enqueueAll appends one entry at a time instead of in a single push. All restored byte-identical.",
         "failureSummary": "Reddens 3, 1, 2 and 0 cases respectively. (4) is an equivalent mutant by construction -- see the note; the guarantee is the absence of an await, not the shape of the append -- and is recorded rather than papered over with an assertion that would only pin an implementation detail."
-      }
+      },
+      "supersededBy": "2026-09-08T09:20:00.000Z"
     },
     {
       "epic": "P4-06",
@@ -8898,6 +8899,55 @@
         "failureSummary": "M14 reddens 5 of 622 and M15 reddens 4 of 1387 \u2014 both directions, which is what says 'only cancel is promoted' is asserted rather than incidental. M14's reds include the two `dsh-experimental-agent-team` cases the old table broke; M15's include the cancel promotion itself."
       },
       "note": "\u00a712.37. The inbox's dequeue ordering was never frozen: \u00a712.25-1 put the shared table at the claim boundary and froze nothing there, which is why reversing it broke two cases in `@deepseek-ai/dsh-experimental-agent-team` \u2014 a consumer of the inbox, in the full suite and not in the packages I ran \u2014 and CI found it rather than a freeze. This entry is that missing freeze, taken at the corrected rule. must[1]'s per-kind priority governs conflicts between control DECISIONS, not the order of content inside a batch: an `inject` is context, and moving a later-arriving instruction ahead of context that preceded it changes what that instruction means. Only `cancel` is promoted; `human-answer` is positioned by the wait point it answers; everything else, including ordinary input carrying no kind, keeps arrival order, supplied by the comparator's explicit index tiebreak rather than by sort stability. The two earlier cases stated the overturned rule in their own TITLES ('orders a MIXED-SOURCE batch by kind, not by arrival'), so they were renamed rather than re-asserted: a title that names a reversed rule would freeze it again."
+    },
+    {
+      "epic": "P4-06",
+      "stage": "P",
+      "supplements": {
+        "epic": "P4-06",
+        "stage": "P"
+      },
+      "supplementSeq": 5,
+      "supersedes": "2026-09-08T09:20:00.000Z",
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/session/session-persistence/tests/write-behind.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "splits two separate enqueue calls across batches when a write starts between them",
+        "keeps an enqueueAll group in one batch under that same interleaving",
+        "owns its copy of every event in a group, and ignores an empty group",
+        "uses one fixed window from the first queued event and owns its copy",
+        "coalesces twenty events admitted ten milliseconds apart into one 200 ms batch",
+        "makes concurrent flushes one immediate barrier that drains admitted tails",
+        "starts a new window for work admitted after an already-quiescent barrier",
+        "starts an over-budget tail immediately after the active write",
+        "keeps a tail deadline that has not expired when the active write finishes",
+        "pauses automatic retries after failure and preserves order for new work",
+        "observes an overlapping background failure and retries it inside flush",
+        "surfaces a barrier failure without detached logging and retains its batch",
+        "retains a failed batch larger than the engine call-argument limit"
+      ],
+      "files": [
+        "packages/session/session-persistence/src/write-behind.ts",
+        "packages/session/session-persistence/tests/write-behind.spec.ts",
+        "packages/run/message-bus/src/index.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T09:20:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e767b456ad4d0d6879c37376e78e48c85ace9940",
+        "testsDiscovered": 13
+      },
+      "sensitivityProof": {
+        "mutationDescription": "None taken: this entry removes four cases and changes no behaviour of the ones that remain. The write-behind cases carry the mutation record of the entry this supersedes.",
+        "failureSummary": "Not applicable \u2014 the surviving cases and their subject are unchanged; what changed is that the entry no longer pins a function that was deleted."
+      },
+      "note": "\u00a712.35-2(a). `commitWithOutbox` and `AtomicBatchSink` are deleted, so the four cases that pinned them are dropped from this entry and the remaining thirteen \u2014 the session write-behind's own batching \u2014 are re-frozen against the file that owns them. The deleted pair offered must[0]'s 'domain event and outbox record in one transaction' over a sink interface NOTHING implemented, and could only ever promise one BATCH: its own documentation said so, and BLOCKED-089 recorded the gap. `commitIntake` does it inside one `BEGIN IMMEDIATE`, which is the clause. Two commit paths for one clause is the arrangement where the weaker one gets used by accident, and the weaker one was the one with no implementation behind it."
     }
   ]
 }

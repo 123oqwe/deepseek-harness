@@ -13,7 +13,7 @@ Neither half is sufficient alone. The outbox guarantees a message survives a cra
 
 It also carries the **mailbox**: a directed message arriving for one recipient, in `src/mailbox-delivery.ts`. That was `@deepseek-ai/dsh-mailbox` until this package absorbed it — see below.
 
-The decisions themselves perform no I/O and own no clock. `commitWithOutbox` is the one place they meet durable storage, through a structural sink interface rather than a mounted capability seam.
+The decisions themselves perform no I/O and own no clock. `commitIntake` in `src/bus-store.ts` is the one place they meet durable storage, and it is a real transaction: the domain event, the outbox rows and the inbox transition to `consumed` all commit inside one `BEGIN IMMEDIATE`.
 
 ## Table of Contents
 
@@ -34,10 +34,11 @@ That window is also the only place deduplication is the sole protection: at ever
 
 ## Committing an event with its outbox records
 
-`commitWithOutbox` hands a domain event and the outbox records derived from it to a durable sink in **one** call. That matters because the session write controller takes its whole pending queue when a write begins: two separate `enqueue` calls with a write starting between them land in different batches, leaving an event durable whose outgoing message no record explains. The indivisibility comes from the sink's `enqueueAll` never awaiting — a write can only begin at a suspension point, and there is none inside the group.
+`commitIntake` writes the domain event, every outbox row it owes, and the inbox row's transition to `consumed` inside one `BEGIN IMMEDIATE` transaction. A crash anywhere inside it rolls the whole group back, so there is no state in which an event is durable and the outgoing message no record explains.
 
-**One batch is not one transaction, and the difference is measured rather than assumed.** The JSONL backend rolls a batch back to its pre-batch size on a write *error*, so that path is atomic. A *crash* mid-batch is not: recovery truncates to the last complete record, so the earlier entries of a batch can survive while later ones are dropped. See `Known Limitations` below and BLOCKED-089.
+`BEGIN IMMEDIATE` rather than a deferred `BEGIN`: the write lock is taken up front, so two consumers racing for one message fail fast on the lock instead of at `COMMIT` after both believed they held it.
 
+A second entry point, `commitWithOutbox`, used to offer the same promise over an `AtomicBatchSink` — an interface nothing in the repository implemented. It could only ever guarantee one *batch*, which a torn write can still split, and its own documentation said so. It was deleted rather than kept beside the transaction: two commit paths for one clause is the arrangement where the weaker one gets used by accident.
 ## Ordering rules that are load-bearing
 
 Two decisions depend on the order of their checks, not only on the checks themselves:
@@ -71,7 +72,6 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 
 ## Known Limitations and Deferred Work
 
-- **`commitWithOutbox` guarantees one batch, not one transaction.** must[0] asks for a single transaction. A crash inside a batch can leave the domain event durable and drop the outbox record, because recovery truncates to the last complete record rather than to the batch boundary. Ordering the records first would make the survivor the recoverable direction, but the batch is written in `seq` order and the log requires contiguity. Closing this needs backend atomicity or a change to seq assignment; neither belongs to this package.
 - **The dispatcher is a loop, not a service.** `dispatchOnce` runs one pass and returns what it did; scheduling passes and retry backoff belong to a caller that does not exist yet. It reports a dead-letter through `onDeadLetter`, but nothing is wired to that channel — the alert has a producer and no consumer.
 - **No Cordis plugin or service registration yet.** The decisions are bound to a durable sink through a structural interface, not mounted as a capability seam.
 - **The crash points are simulated, not real process kills.** `tests/crash.e2e.spec.ts` drives them through a local durable-state harness. It proves the decision sequence survives each crash point; it does not prove a real process does, which the Fault stage owns.

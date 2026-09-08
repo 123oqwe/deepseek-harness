@@ -26,7 +26,16 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { classifyDedup, dedupKey } from '@deepseek-ai/dsh-intake-dedup'
+import { brandString } from '@deepseek-ai/dsh-brand'
+import type { TenantId } from '../src/outbox.ts'
 import { commitIntake, openBusStore, recoverStaleClaims } from '../src/bus-store.ts'
+
+/**
+ * The dispatch policy every case in this file commits with. The values are
+ * arbitrary and identical across cases on purpose: what these cases assert is
+ * the transaction, not the policy, and varying it would suggest otherwise.
+ */
+const DISPATCH_POLICY = { tenant: brandString<TenantId>('tenant-a'), priority: 0, deadlineMs: 9_999_999_999_999 }
 import type { BusStore } from '../src/bus-store.ts'
 
 const SOURCE = '/dsh/test'
@@ -55,7 +64,7 @@ const message = (id: string, epoch = 1) => ({
 describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox row and the inbox claim', () => {
   it('commits all three together, so a consumed message has both an outbox row and a domain event', () => {
     const bus = store()
-    commitIntake(bus, { message: message('m1'), claimedByTurn: 7, outbox: [{ target: 'peer', payload: { n: 1 } }] })
+    commitIntake(bus, { message: message('m1'), claimedByTurn: 7, outbox: [{ target: 'peer', payload: { n: 1 }, ...DISPATCH_POLICY }] })
     expect(bus.domainEvents()).toHaveLength(1)
     expect(bus.outboxRows()).toHaveLength(1)
     expect(bus.inboxRow(SOURCE, 'm1', 1)?.state).toBe('consumed')
@@ -70,7 +79,7 @@ describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox
       commitIntake(bus, {
         message: message('m2'),
         claimedByTurn: 7,
-        outbox: [{ target: 'peer', payload: { n: 1 } }],
+        outbox: [{ target: 'peer', payload: { n: 1 }, ...DISPATCH_POLICY }],
         failAt: 'after-domain-event',
       })
     }).toThrow()
@@ -89,7 +98,7 @@ describe('P4-06 must[0]: one BEGIN IMMEDIATE covers the domain event, the outbox
       commitIntake(bus, {
         message: message('m2b'),
         claimedByTurn: 7,
-        outbox: [{ target: 'peer', payload: { n: 1 } }],
+        outbox: [{ target: 'peer', payload: { n: 1 }, ...DISPATCH_POLICY }],
         failAt: 'after-outbox',
       })
     }).toThrow()
@@ -125,7 +134,7 @@ describe('P4-06 must[0]: BEGIN IMMEDIATE is what makes a contended commit WAIT r
     ].join('\n')], { stdio: ['ignore', 'pipe', 'pipe'] })
     try {
       await new Promise(resolve => holder.stdout.once('data', resolve))
-      commitIntake(bus, { message: message('contended'), claimedByTurn: 3, outbox: [{ target: 'peer', payload: { n: 1 } }] })
+      commitIntake(bus, { message: message('contended'), claimedByTurn: 3, outbox: [{ target: 'peer', payload: { n: 1 }, ...DISPATCH_POLICY }] })
       expect(bus.inboxRow(SOURCE, 'contended', 1)?.state).toBe('consumed')
       expect(bus.outboxRows()).toHaveLength(1)
     } finally {
