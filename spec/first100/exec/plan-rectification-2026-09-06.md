@@ -924,3 +924,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **事实**:原生路径 `actionId` = 模型给的 call id,崩溃重放原样重现;code-mode 的 `actionId` 是每次派发新铸的 `subCallId`,同一程序两次 `charge({amount:'10'})` 得两个键,duplicate 分支不可达——执行者把假用例换成两条真可达断言,对。
 **裁决:取 (2),但改在身份铸造处而不是键公式处**:code-mode 的 `actionId = <rootCallId>#<发起序号>`(程序调用工具的**发起顺序**,不是完成顺序——并发调度改变的是完成序,发起序由程序决定,确定性成立);键公式 `(sessionId, actionId, argumentsHash)` 不变,原生与 code-mode 一个公式。(1) 会误拒同一程序里故意重复的两次调用(循环扣两次款是合法意图),拒;(3) 让 acc[0] 对 code-mode 只成立一半,拒。Stripe 的模型就是 (2):每个意图一个键、同一请求的重试复用。冻结:同一程序两次相同 sub-call **都执行**(键不同);同一 rootCallId 重放同一序列 → 第二轮 sub-call **命中 duplicate 不执行**;变异序号改随机 → 红。
 **P4-07 session 键**:争用用例带正对照、变异红 6——过;两 host 共享租约只能靠共享 sqlite 目录、内存插件各持各的 map——这正是 §12.16-1 要 SQLite provider 的理由,不是缺陷。**操作教训采纳**:对未跟踪新文件做变异先 `cp` 备份,`git checkout --` 恢复不了。
+
+### 12.37 观测 34184070348 红:P5-10 的优先级表把上下文排到了后到的指令之后(2026-09-08 01:40 EDT)
+
+**事实**:20420/2 failed,两条都在 `experimental/agent-team`(mailbox FIFO):inbox 出队按 §12.25-1 的五级全序,后到的 `followup`("do another turn")被排到先到的 `inject`("quiet info")之前;执行者改过 P5-10 自己的一条用例("steer 排在更早到达的 inject 前面"),没跑 agent-team。另 scoped lint 1 错(`subagent-taskboard/src/index.ts:66` 多余类型断言)。
+**裁决(定表的内容,§12.25 只定了表的位置)**:must[1]"每类定义优先级"管的是**控制决定之间的冲突**,不是批内内容顺序。**`inject` 是上下文,不是决定**——把先到的上下文排到后到的指令之后会改变那条指令的含义。表:`cancel` 提到最前(必须先于一切应用);`human-answer` 按其等待点定位,不参与排序;`steer` / `continue` / `inject` **按到达顺序**(steer 作用于 continue 打开的那一轮,FIFO 本身就是确定的胜者——"两个非 cancel 种类之间需要确定胜者"的确定性由到达序给出,不需要发明第二个序)。router 侧同表。P5-10 那条被改的用例改回到达序;agent-team 两条不改。冻结:混合批(inject → followup → cancel 到达)出队 = cancel、inject、followup;变异表改成把 followup 提到 inject 前 → 红。**教训**:改共享出队规则的一批,固定集要含所有 inbox 的消费者(experimental/agent-team 在全量里,不在触及包里)。
