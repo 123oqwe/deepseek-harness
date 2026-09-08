@@ -3,14 +3,15 @@
     "name": "first100-exec-state",
     "version": "1.0"
   },
-  "lastUpdatedUtc": "2026-09-08T07:40:42.000Z",
+  "lastUpdatedUtc": "2026-09-08T22:30:00.000Z",
   "activeWorktree": "/Users/guanjieqiao/dsh-first100-clean",
   "activeBranch": "first100-exec",
   "currentWave": 4,
   "currentSlice": {
-    "epic": "P4-06",
+    "epic": "P2-04",
     "stage": "U",
-    "step": "GREENING"
+    "step": "BLOCKED_ON_RULING",
+    "detail": "§12.49(4) steps 1-3 landed at 53864d10ad (tags declared, structural gate green). Step 4 — the dispatch gate — cannot land before a tag-to-class mapping exists: with no riskRules configured every action classifies by the unknown default, so wiring the gate first would put every tool call behind approval. The mapping is a product judgment and is with the delegate."
   },
   "registryDigest": "5c75260e96c9db1ca045c1bf4a013a5a1f356651c23baef924066bec627ef4f7",
   "ledgerDigest": "24f75cab342a929e259bb33cbe0e1042a6140730f8a098927a7222fe30537fed",
