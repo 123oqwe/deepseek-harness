@@ -131,6 +131,18 @@ Frozen exactly as §12.59 specified, at `maxConcurrentAgents: 1`: A waits, B sta
 
 **Item 3 does not fit, and is not forced.** `holdsDispatchSlot` cannot become the dispatch-layer check at tool dispatch: `tool-calls.ts:95` advances the run to `waiting_tool` — itself a member of `NON_CONSUMING_STATES` — immediately BEFORE dispatching, so a "no slot, no dispatch" guard there would refuse every tool call in the harness. Nor can it be the check inside the slot machinery, because that machinery holds slot counts and has no `AgentLifecycle` to pass it. `holdsDispatchSlot` therefore still has zero production callers; the predicate it wraps now has a real consumer, but the wrapper does not.
 
-### `orphaned` + reclaim, `paused` — NOT YET DONE
+### `orphaned` + reclaim — CLOSED
 
-Still open from §12.57 item 2, and not signed. `orphaned` needs P4-07's lease-expiry-without-release and the reclaim path this epic owns; `paused` needs either a producer or a recorded directed deferral.
+I first read this as a contradiction between two frozen clauses: P4-07 must[1] requires every lifecycle write to carry a current fencing token, while `orphaned` describes a run that has LOST its lease, so the orphaning write looked like exactly the write fencing must refuse — and §12.16-3 had withdrawn the unfenced entry point. §12.60 corrected it, and the correction is right: **fencing is correct and I had the wrong writer.**
+
+A host that lost its lease must not write anything, including the fact of its own orphaning, which it cannot establish — from its side a reclaim and a pause are indistinguishable. `orphaned` is recorded by the party that OBSERVED the loss: the reclaimer, under the epoch the store just issued it. No bypass exists and none is needed.
+
+`RunPlugin.reclaim` acquires the lapsed work item and records `orphaned` through `advanceAgentLifecycleFenced` with the NEW token. `acquire` is the judge of the lapse rather than a clock comparison, so a run whose holder is still renewing cannot be taken from it. From `orphaned`, `LEGAL_TRANSITIONS` leads to `starting` or `failed` — acceptance[2]'s two arms, both reachable.
+
+Frozen as §12.60 specified, over two real hosts sharing one SQLite lease store: the first host's renewals are stopped WITHOUT releasing (a host that died still holding the item, which is the shape the clause is about — disposing would release it and leave nothing to reclaim), the second reclaims, and the state carries the reclaimer's strictly greater epoch. A negative control refuses to reclaim an item whose holder is still current.
+
+The case caught a real defect in the first implementation: the transition proposed `epoch: lifecycle.epoch`, the LAPSED host's epoch, and `decideTransition` adopts whatever the proposal names — so the orphaning would have been recorded under the authority of the host that no longer had any. It now proposes the reclaimer's token epoch.
+
+### `paused` — DIRECTED DEFERRAL
+
+Recorded per §12.57's "`paused` 若无 producer 记定向延期并写明". No production path produces it, and this is a genuine absence rather than an omission: the harness exposes no suspend control, and every wait it does have is already named by a more specific state — `waiting_tool` while a tool runs, `waiting_human` while an operator is asked. `paused` would mean "suspended by an operator who has not asked for anything", and nothing in the product offers that. It stays declared, legal, and unreached until a suspend control exists to produce it.

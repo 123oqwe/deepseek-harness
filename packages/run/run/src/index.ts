@@ -47,7 +47,7 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { Service } from '@deepseek-ai/cordis'
 import type { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
-import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
+import { advanceAgentLifecycleFenced, advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
 import type { AgentLifecycleState, AgentRunId, TransitionDenialReason } from '@deepseek-ai/dsh-agent'
 import { acquireRunLease } from '@deepseek-ai/dsh-lease-contract'
 import type { WorkItemId, WorkerId } from '@deepseek-ai/dsh-lease-contract'
@@ -691,6 +691,56 @@ export default class RunPlugin extends Service {
     const denial = agent.runLease?.renew(Date.now())
     if (denial === undefined) return
     this.stopHeartbeat(agent.runId)
+  }
+
+  /**
+   * Reclaim a run whose lease lapsed, recording it as `orphaned` (Epic P4-05
+   * acceptance[2], §12.60).
+   *
+   * **The reclaimer writes this, never the orphaned host.** A host that lost
+   * its lease must not write at all — from its own side a reclaim and a pause
+   * are indistinguishable, so it cannot establish its own orphaning, and
+   * `advanceLeasedAgent` refuses it as `fenced`. The party that OBSERVED the
+   * loss is the one that acquired the item, and it records the state under the
+   * epoch the store just issued it. No fencing bypass exists or is needed.
+   *
+   * `orphaned` leads to `starting` or `failed`, so a caller resumes the work
+   * under its new epoch or fails it safely — acceptance[2]'s two arms.
+   * @param agent - the agent whose work item is being reclaimed.
+   * @param nowMs - the caller's clock reading, against which the lapse is judged.
+   * @returns `'reclaimed'` when this host took the item and recorded the state,
+   * `'held'` when the item is still validly owned, `'no-run'` when the agent
+   * has no lifecycle to record against.
+   */
+  reclaim(agent: Agent, nowMs: number = Date.now()): 'reclaimed' | 'held' | 'no-run' {
+    const { lifecycle } = agent
+    if (lifecycle === undefined) return 'no-run'
+    const workItem = brandString<WorkItemId>(agent.id)
+    // `acquire` is the judge of the lapse, not a clock comparison here: the
+    // store refuses while the current lease is live, so a run whose holder is
+    // still renewing cannot be reclaimed out from under it.
+    const taken = acquireRunLease(this.ctx.leaseStore, workItem, this.worker, nowMs, this.config.leaseMs)
+    if ('denied' in taken) return 'held'
+    const decided = advanceAgentLifecycleFenced(
+      lifecycle,
+      // The RECLAIMER's epoch, which the store just issued, not the one the
+      // lapsed lifecycle still carries: `decideTransition` adopts whatever the
+      // proposal names, so proposing the old epoch would record the orphaning
+      // under the authority of the host that no longer has any.
+      { runId: lifecycle.runId, from: lifecycle.state, to: 'orphaned', epoch: taken.lease.token.epoch, reason: 'its lease lapsed and this host reclaimed the work item' },
+      taken.lease.token,
+      taken.lease.currentLease(),
+    )
+    if (!decided.ok) {
+      // The item is ours and the transition was still refused, which means the
+      // run had already reached a terminal state. Releasing keeps the reclaim
+      // from holding an item it will not work.
+      taken.lease.release()
+      return 'held'
+    }
+    agent.lifecycle = decided.next
+    agent.runLease = taken.lease
+    return 'reclaimed'
   }
 
   /**

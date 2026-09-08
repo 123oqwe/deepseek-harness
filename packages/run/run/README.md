@@ -207,15 +207,22 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
   `@deepseek-ai/dsh-lease`'s in-memory provider, that ownership holds only
   inside one process — a deployment where two hosts must not both own a Run
   mounts `@deepseek-ai/dsh-lease-sqlite`.
-- **`paused` and `orphaned` are legal and unreached.** The advancing paths are
-  `agent/pre-step` (`queued → starting → running`, and the return from
-  `waiting_tool`), the dispatch risk gate in `@deepseek-ai/dsh-tools`
-  (`waiting_human` for as long as an operator is being asked, then back to
-  `running`), and `agent/disposed`, which ends the run: `cancelling` for a run
-  that had not reached `running`, then `failed` when the run's last reported
-  activity was an unrecovered `agent/error`, otherwise `completed`. No sweep
-  reclaims an abandoned Run, so nothing produces `orphaned` and nothing
-  reclaims one.
+- **`paused` is legal and unreached.** The advancing paths are `agent/pre-step`
+  (`queued → starting → running`, and the return from `waiting_tool`), the
+  dispatch risk gate in `@deepseek-ai/dsh-tools` (`waiting_human` for as long as
+  an operator is being asked, then back to `running`), `agent/disposed`, which
+  ends the run (`cancelling` for a run that had not reached `running`, then
+  `failed` when its last reported activity was an unrecovered `agent/error`,
+  otherwise `completed`), and `reclaim`, which records `orphaned`. Nothing
+  produces `paused`: the harness has no suspend control, and a run waiting on a
+  tool or an operator is already in a state that says so.
+- **`reclaim` is called by the host that TAKES a lapsed item, never by the one
+  that lost it.** A host whose lease lapsed cannot establish its own orphaning
+  — from its side a reclaim and a pause are indistinguishable — and
+  `advanceLeasedAgent` refuses its writes as `fenced`. The reclaimer acquires
+  the item, and records `orphaned` under the epoch the store issued it, so the
+  write carries current authority rather than bypassing the check. From
+  `orphaned` a caller resumes through `starting` or fails safely.
 - **Concurrent Run writers are serialized within one process only.**
   `createFileRunStore` chains every read and write on the store's resolved
   path, shared by every store instance over that path in this process, and

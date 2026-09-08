@@ -535,3 +535,98 @@ describe('P4-05 must[0]: `waiting_human` is a state a run can actually reach', (
     await handle.dispose()
   })
 })
+
+describe('P4-05 acceptance[2]: the orphaned host is not the one that records it', () => {
+  it('REFUSES the orphaning write from the host that LOST the lease, because it no longer speaks for the run', async () => {
+    // Read once as a contradiction between two epics and corrected by §12.60:
+    // fencing is right and the writer was wrong. A host that lost its lease
+    // must not write anything — including the fact of its own orphaning, which
+    // it cannot establish, since from its side a reclaim and a network pause
+    // look identical. `orphaned` is recorded by the party that OBSERVED the
+    // loss: the reclaimer, under its own valid epoch, in the case below.
+    const ctx = await harness()
+    const agent = ctx.agentLoop.create(SessionId('session-orphaned'))
+    const workItem = brandString<WorkItemId>(agent.id)
+
+    const stolen = ctx.leaseStore.acquire(
+      workItem,
+      brandString<WorkerId>('the-host-that-reclaimed-it'),
+      Date.now() + 5_000,
+      1_000,
+    )
+    expect(stolen.acquired).toBe(true)
+
+    // `orphaned` is a LEGAL target from `queued` (`state-machine.ts`'s
+    // `LEGAL_TRANSITIONS`), so this refusal is about authority and not about
+    // the transition table — the positive control below shows the same write
+    // succeeds while this holder is still current.
+    expect(advanceLeasedAgent(agent, 'orphaned', 'the run lost its work item')).toBe('fenced')
+    expect(agent.lifecycle?.state).toBe('queued')
+
+    await ctx.fiber.dispose()
+    mounted.splice(mounted.indexOf(ctx), 1)
+  })
+})
+
+describe('P4-05 acceptance[2]: an orphaned run is reclaimed, or safely failed, by the host that took it', () => {
+  it('lets a second host take a LAPSED item, record `orphaned` under its own epoch, and fences the first host afterwards', async () => {
+    // §12.60's frozen case, over two real hosts sharing one SQLite lease
+    // store. `leaseMs` is short so the first host's lease lapses without it
+    // releasing — the crash-and-never-come-back shape acceptance[2] is about,
+    // rather than an orderly handover.
+    const leaseDirectory = await mkdtemp(join(tmpdir(), 'dsh-run-orphan-'))
+    roots.push(leaseDirectory)
+    const first = await harness({ leaseDirectory, leaseMs: 40 })
+    const second = await harness({ leaseDirectory, leaseMs: 1_000 })
+    const shared = SessionId('lapsed-session')
+
+    const stranded = first.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
+    expect(stranded.lifecycle?.state).toBe('queued')
+    const firstEpoch = stranded.lifecycle?.epoch
+
+    // Stop the first host's renewals WITHOUT releasing: that is the shape
+    // acceptance[2] is about — a host that died still holding the item, not
+    // one that handed it back. Disposing the plugin would release the lease
+    // and there would be nothing to reclaim.
+    const firstPlugin = first.runs as unknown as { heartbeats: Map<unknown, NodeJS.Timeout> }
+    for (const timer of firstPlugin.heartbeats.values()) clearInterval(timer)
+    firstPlugin.heartbeats.clear()
+
+    // Past the lease it last renewed, which nothing will renew again.
+    await new Promise<void>((resolve) => { setTimeout(resolve, 80) })
+
+    expect(second.runs.reclaim(stranded, Date.now())).toBe('reclaimed')
+    expect(stranded.lifecycle?.state).toBe('orphaned')
+    // Under the RECLAIMER's epoch, which the store issued it — the whole point
+    // is that this write carries current authority rather than bypassing the
+    // check the first host would have failed.
+    expect(stranded.lifecycle?.epoch).toBeGreaterThan(firstEpoch ?? 0)
+
+    // acceptance[2]'s two arms are both reachable from here.
+    expect(second.runs.advance(stranded, 'failed', 'the reclaimer could not resume this work')).toBeUndefined()
+    expect(stranded.lifecycle?.state).toBe('failed')
+
+    for (const ctx of [first, second]) {
+      await ctx.fiber.dispose()
+      mounted.splice(mounted.indexOf(ctx), 1)
+    }
+  })
+
+  it('REFUSES to reclaim an item whose holder is still current, so a live run is never taken from it', async () => {
+    // The negative control. Without it the case above would pass against a
+    // `reclaim` that seized any item it was handed.
+    const leaseDirectory = await mkdtemp(join(tmpdir(), 'dsh-run-live-'))
+    roots.push(leaseDirectory)
+    const first = await harness({ leaseDirectory, leaseMs: 10_000 })
+    const second = await harness({ leaseDirectory, leaseMs: 10_000 })
+
+    const working = first.agentLoop.create(SessionId('live-session'), { provider: 'mock', model: 'mock' })
+    expect(second.runs.reclaim(working, Date.now())).toBe('held')
+    expect(working.lifecycle?.state).toBe('queued')
+
+    for (const ctx of [first, second]) {
+      await ctx.fiber.dispose()
+      mounted.splice(mounted.indexOf(ctx), 1)
+    }
+  })
+})
