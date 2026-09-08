@@ -861,3 +861,8 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 3. **Blackboard:程序里没有消费者,不能由库满足 must[1]**——而且 P6-02 的 `withProvenance` 是第二个带 provenance 的 fact 存储,同样零调用者。**裁**:一个 fact 存储——blackboard 并入 P6 memory 线(P6-09 拥有 PROV-DM 词汇,memory-context 是现成消费者);P5-11 must[1] 在 P6-02 U 落地后记跨 epic 满足;`dsh-blackboard` 退役。**这是范围裁决,已向用户报告**(§6:范围/发布级由用户最终确认);在用户否决前按此执行。
 4. **agent-team 的三份重复**:不在程序范围(experimental、未出货、registry 不提),单开 BLOCKED 记"若 agent-team 出货,必须消费 P5-11 原语,不得保留第二份";不归 P5-11。
 **顺序**:1 → 2 → (3 随 P6-02 U)。
+
+### 12.28 delegate 误取消一次观测的签名 job(2026-09-08 01:35 EDT,run 34171963564)
+
+**事实**:run 级状态 "queued" 75 分钟;delegate 按该标签取消并试图重跑。实际 job 级:主 job **已跑完**(单测 20393/0;snapshot 步唯二红 = 两个 pwsh 夹具,`.refresh-skipped.json` 先被打印——137 机制按设计工作),等 runner 的是**产签名 bundle 的第二个 job**。取消挂在它上,这次的签名副本多半没了。**读了标签没读 job 状态**——与 §12.6 禁的"按名字对表"同族,长在 delegate 自己身上。
+**处置**:不用 raw report 绿格(§12.17:只引签名副本);执行者 admit pwsh refresh 产物并提交,下一次 run 全绿 + 签名即观测。**规则(进 C14)**:判断一个 run 是否卡住,看 `actions/runs/<id>/jobs` 的 job 级状态与 runner 分配,不看 run 级标签;取消一个 run 之前列出它已经产出的 artifact。
