@@ -11,6 +11,8 @@ kind: "package-reference"
 
 Neither half is sufficient alone. The outbox guarantees a message survives a crash; the inbox guarantees a *lost acknowledgement* does not cost a second effect.
 
+It also carries the **mailbox**: a directed message arriving for one recipient, in `src/mailbox-delivery.ts`. That was `@deepseek-ai/dsh-mailbox` until this package absorbed it — see below.
+
 The decisions themselves perform no I/O and own no clock. `commitWithOutbox` is the one place they meet durable storage, through a structural sink interface rather than a mounted capability seam.
 
 ## Table of Contents
@@ -19,6 +21,7 @@ The decisions themselves perform no I/O and own no clock. `commitWithOutbox` is 
 - [Committing an event with its outbox records](#committing-an-event-with-its-outbox-records)
 - [Ordering rules that are load-bearing](#ordering-rules-that-are-load-bearing)
 - [The dispatch loop](#the-dispatch-loop)
+- [Why the mailbox is here and not its own package](#why-the-mailbox-is-here-and-not-its-own-package)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
 - [Dev Note](#dev-note)
@@ -50,6 +53,14 @@ Two decisions depend on the order of their checks, not only on the checks themse
 - **A failed send returns the record to `pending`, not to dead-letter.** The spent attempt is the entire record of that failure, and the budget is what separates a transient failure from a permanent one.
 - **The clock is read once per pass.** Re-reading it per record would let a slow transport expire a later record, making a record's fate depend on its position in the batch.
 
+## Why the mailbox is here and not its own package
+
+A mailbox carries directed messages between agents that do not share a call stack, and its one guarantee is that a message delivered twice produces one effect. That is this bus's own guarantee, and `@deepseek-ai/dsh-intake-dedup` is the rule both applied. What the separate package held beyond it was a recipient-address check and a set of type names — a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136).
+
+The address check is now `decideMailboxArrival`, and it still runs BEFORE the duplicate check, for the same reason the tenant check does: consulting the seen-set for a message addressed elsewhere would let a misdirected message suppress a later legitimate one sharing its key.
+
+The mailbox names carry a `Mailbox` prefix. This package also exports the outbox's `decideDelivery` and `DeliveryDecision`, which decide something else about a different record; two functions of that name one import apart is the confusion that made a separate package look necessary.
+
 ## Model Experience
 
 None, as this package exports outbox and inbox decisions, a dispatch loop, and types only and registers nothing model-facing.
@@ -64,6 +75,7 @@ Nothing here enters a model request, so provider cache reuse is unaffected.
 - **The dispatcher is a loop, not a service.** `dispatchOnce` runs one pass and returns what it did; scheduling passes and retry backoff belong to a caller that does not exist yet. It reports a dead-letter through `onDeadLetter`, but nothing is wired to that channel — the alert has a producer and no consumer.
 - **No Cordis plugin or service registration yet.** The decisions are bound to a durable sink through a structural interface, not mounted as a capability seam.
 - **The crash points are simulated, not real process kills.** `tests/crash.e2e.spec.ts` drives them through a local durable-state harness. It proves the decision sequence survives each crash point; it does not prove a real process does, which the Fault stage owns.
+- No runtime invariant companion is published: every export here is a decision over caller-supplied state, and the one durable relation — a consumed key and the row that wrote it — is read back from the same store that wrote it, so a checker would compare a value against itself rather than reconcile two independent observations.
 - **No clock, no I/O.** Every decision takes `nowMs` as a parameter. A caller that passes an inconsistent clock gets inconsistent dead-lettering, and nothing here detects that.
 
 ### Dev Note

@@ -32,7 +32,14 @@ export type {
 } from './outbox.ts'
 export { classifyIntake, dedupKey } from './inbox.ts'
 export { dispatchOnce } from './dispatcher.ts'
-export { decideMailboxDelivery } from './mailbox-delivery.ts'
+export { decideMailboxArrival, decideMailboxDelivery, mailboxDeliveryKey } from './mailbox-delivery.ts'
+export type {
+  MailboxDeliveryDecision,
+  MailboxMessage,
+  MailboxMessageId,
+  ParticipantId,
+  SenderEpoch,
+} from './mailbox-delivery.ts'
 export type { DispatchDeps, DispatchReport, SendOutcome } from './dispatcher.ts'
 export type { IncomingMessage, IntakeDecision } from './inbox.ts'
 

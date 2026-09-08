@@ -3927,9 +3927,9 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
-      '@deepseek-ai/dsh-mailbox':
+      '@deepseek-ai/dsh-message-bus':
         specifier: workspace:^
-        version: link:../mailbox
+        version: link:../../run/message-bus
       '@deepseek-ai/dsh-taskboard':
         specifier: workspace:^
         version: link:../taskboard
@@ -3954,18 +3954,6 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:^
         version: link:../../util/brand
-
-  packages/collaboration/mailbox:
-    devDependencies:
-      '@deepseek-ai/cordis':
-        specifier: workspace:^
-        version: link:../../../vendor/cordis
-      '@deepseek-ai/dsh-brand':
-        specifier: workspace:^
-        version: link:../../util/brand
-      '@deepseek-ai/dsh-intake-dedup':
-        specifier: workspace:^
-        version: link:../intake-dedup
 
   packages/collaboration/taskboard:
     devDependencies:
@@ -7089,9 +7077,6 @@ importers:
       '@deepseek-ai/dsh-intake-dedup':
         specifier: workspace:^
         version: link:../../collaboration/intake-dedup
-      '@deepseek-ai/dsh-mailbox':
-        specifier: workspace:^
-        version: link:../../collaboration/mailbox
 
   packages/run/run:
     dependencies:

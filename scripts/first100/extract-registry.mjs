@@ -268,6 +268,14 @@ function applyFileReplacements(id, files) {
 }
 
 const FILES_REPLACED = {
+  'P5-11': {
+    replacements: [
+      { from: 'packages/collaboration/mailbox/src/index.ts', to: 'packages/run/message-bus/src/mailbox-delivery.ts', kind: 'N', stage: 'U' },
+    ],
+    reason: "`@deepseek-ai/dsh-mailbox` was retired into `@deepseek-ai/dsh-message-bus`, and the declared path named the package that no longer exists. What the mailbox held beyond `dsh-intake-dedup`'s rule was a recipient-address check and a set of type names -- a package for a seam that does not exist, and the split had already produced one rule with two implementations, the copy P4-06's clause was about being the one nothing called (BLOCKED-136). The address check is now `decideMailboxArrival` in the bus, beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site, and P5-11's mailbox clause is satisfied there rather than in a package of its own.",
+    consequence: 'The published `@deepseek-ai/dsh-mailbox` package is gone; an installed consumer importing it breaks, and nothing in this repository does. Pre-release stance: no shim.',
+    authorization: 'delegate ruling, 2026-09-08, §12.27-2 (BLOCKED-154).',
+  },
   'P4-08': {
     replacements: [
       { from: 'packages/workflow/workflow-journal/src/index.ts', to: 'packages/collaboration/workflow-journal/src/index.ts', kind: 'N', stage: 'P' },

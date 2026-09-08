@@ -2629,6 +2629,30 @@ export interface Config {
 
 Source: [`packages/subagent/subagent-spawn-in-process/src/index.ts:25`](../packages/subagent/subagent-spawn-in-process/src/index.ts)
 
+<a id="deepseek-aidsh-subagent-taskboard"></a>
+
+## `@deepseek-ai/dsh-subagent-taskboard`
+
+Requires: `subagents` · `taskStore`
+
+```ts config-catalog
+/** How long a delegation's claim holds. */
+export interface Config {
+  /**
+   * How long the claim on a delegated child holds, in milliseconds.
+   *
+   * Deployment-varying because it is a bet on how long a child runs: a claim
+   * shorter than the work lets a second host see the task as reclaimable while
+   * the first is still driving it, and one much longer leaves a crashed host's
+   * task looking owned. A profile whose children are one-shot tool calls and
+   * one whose children run for an hour need different answers.
+   */
+  claimLeaseMs: number
+}
+```
+
+Source: [`packages/subagent/subagent-taskboard/src/index.ts:50`](../packages/subagent/subagent-taskboard/src/index.ts)
+
 <a id="deepseek-aidsh-subprocess-e2b"></a>
 
 ## `@deepseek-ai/dsh-subprocess-e2b`
@@ -2671,6 +2695,27 @@ export interface Config {
 ```
 
 Source: [`packages/core/system-prompt/src/index.ts:237`](../packages/core/system-prompt/src/index.ts)
+
+<a id="deepseek-aidsh-taskboard-sqlite"></a>
+
+## `@deepseek-ai/dsh-taskboard-sqlite`
+
+```ts config-catalog
+/** Where this mount keeps its tasks. */
+export interface Config {
+  /**
+   * Directory holding `taskboard.sqlite`.
+   *
+   * Deployment-varying, and it is the setting that decides whether the board
+   * coordinates anything: two hosts that must not both drive one delegated
+   * child need the same directory, while a laptop keeps its board beside the
+   * workspace. Only the profile knows which arrangement it is in.
+   */
+  directory: string
+}
+```
+
+Source: [`packages/run/taskboard-sqlite/src/index.ts:34`](../packages/run/taskboard-sqlite/src/index.ts)
 
 <a id="deepseek-aidsh-terminal-bash"></a>
 
@@ -3686,6 +3731,7 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-client-ui-slots` ([`packages/client/ui-slots/src/index.ts`](../packages/client/ui-slots/src/index.ts))
 - `@deepseek-ai/dsh-client-web` ([`packages/client/web/src/index.ts`](../packages/client/web/src/index.ts))
 - `@deepseek-ai/dsh-cmdline` ([`packages/boot/cmdline/src/index.ts`](../packages/boot/cmdline/src/index.ts))
+- `@deepseek-ai/dsh-control-priority` ([`packages/collaboration/control-priority/src/index.ts`](../packages/collaboration/control-priority/src/index.ts))
 - `@deepseek-ai/dsh-deque` ([`packages/util/deque/src/index.ts`](../packages/util/deque/src/index.ts))
 - `@deepseek-ai/dsh-evidence-format` ([`packages/assurance/evidence-format/src/index.ts`](../packages/assurance/evidence-format/src/index.ts))
 - `@deepseek-ai/dsh-experimental-agent-team-profile` ([`packages/experimental/agent-team-profile/src/index.ts`](../packages/experimental/agent-team-profile/src/index.ts))
@@ -3701,7 +3747,6 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-lease-contract` ([`packages/collaboration/lease-contract/src/index.ts`](../packages/collaboration/lease-contract/src/index.ts))
 - `@deepseek-ai/dsh-llm-mock-server` ([`packages/test-support/llm-mock-server/src/index.ts`](../packages/test-support/llm-mock-server/src/index.ts))
 - `@deepseek-ai/dsh-loader-smoke` ([`packages/test-support/loader-smoke/src/index.ts`](../packages/test-support/loader-smoke/src/index.ts))
-- `@deepseek-ai/dsh-mailbox` ([`packages/collaboration/mailbox/src/index.ts`](../packages/collaboration/mailbox/src/index.ts))
 - `@deepseek-ai/dsh-message-bus` ([`packages/run/message-bus/src/index.ts`](../packages/run/message-bus/src/index.ts))
 - `@deepseek-ai/dsh-native-command` ([`packages/util/native-command/src/index.ts`](../packages/util/native-command/src/index.ts))
 - `@deepseek-ai/dsh-output-retention` ([`packages/util/output-retention/src/index.ts`](../packages/util/output-retention/src/index.ts))
@@ -3724,7 +3769,6 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 - `@deepseek-ai/dsh-session-title-llm` ([`packages/session/session-title-llm/src/index.ts`](../packages/session/session-title-llm/src/index.ts))
 - `@deepseek-ai/dsh-subagent-in-process-driver` ([`packages/subagent/subagent-in-process-driver/src/index.ts`](../packages/subagent/subagent-in-process-driver/src/index.ts))
 - `@deepseek-ai/dsh-taskboard` ([`packages/collaboration/taskboard/src/index.ts`](../packages/collaboration/taskboard/src/index.ts))
-- `@deepseek-ai/dsh-taskboard-sqlite` ([`packages/run/taskboard-sqlite/src/index.ts`](../packages/run/taskboard-sqlite/src/index.ts))
 - `@deepseek-ai/dsh-timeout` ([`packages/util/timeout/src/index.ts`](../packages/util/timeout/src/index.ts))
 - `@deepseek-ai/dsh-trust-kernel` ([`packages/kernel/trust-kernel/src/index.ts`](../packages/kernel/trust-kernel/src/index.ts))
 - `@deepseek-ai/dsh-typert-generator` ([`packages/typert/generator/src/index.ts`](../packages/typert/generator/src/index.ts))

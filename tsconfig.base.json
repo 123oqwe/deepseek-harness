@@ -354,7 +354,6 @@
       "@deepseek-ai/dsh-loader-smoke": ["./packages/test-support/loader-smoke/src"],
       "@deepseek-ai/dsh-lsp": ["./packages/lsp/lsp/src"],
       "@deepseek-ai/dsh-lsp-stdio": ["./packages/lsp/lsp-stdio/src"],
-      "@deepseek-ai/dsh-mailbox": ["./packages/collaboration/mailbox/src"],
       "@deepseek-ai/dsh-mcp-client": ["./packages/mcp/mcp-client/src"],
       "@deepseek-ai/dsh-memory": ["./packages/memory/memory/src"],
       "@deepseek-ai/dsh-memory-context": ["./packages/context/memory-context/src"],

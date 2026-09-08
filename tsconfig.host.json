@@ -206,7 +206,6 @@
     { "path": "./packages/collaboration/control-priority" },
     { "path": "./packages/collaboration/lease-contract" },
     { "path": "./packages/collaboration/workflow-journal" },
-    { "path": "./packages/collaboration/mailbox" },
     { "path": "./packages/collaboration/taskboard" },
     { "path": "./packages/core/agent" },
     { "path": "./packages/core/agent-default-model" },

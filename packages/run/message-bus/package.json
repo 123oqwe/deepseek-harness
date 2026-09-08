@@ -42,13 +42,11 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-intake-dedup": "workspace:^",
-    "@deepseek-ai/dsh-mailbox": "workspace:^"
+    "@deepseek-ai/dsh-intake-dedup": "workspace:^"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-intake-dedup": "workspace:^",
-    "@deepseek-ai/dsh-mailbox": "workspace:^"
+    "@deepseek-ai/dsh-intake-dedup": "workspace:^"
   }
 }

@@ -1042,6 +1042,71 @@ advance(agent: Agent, to: AgentLifecycleState, reason: string): TransitionDenial
 
 Source: [`packages/run/run/src/index.ts`](../../packages/run/run/src/index.ts)
 
+<a id="ctxtaskstore--taskstorecontract"></a>
+
+### `ctx.taskStore` — `TaskStoreContract`
+
+What a taskboard must do, independent of where it keeps the tasks.
+
+Declared away from the in-memory class so a consumer depends on the RULE rather than on the storage. acceptance[0] is about MULTI-PROCESS contention, and a `Map` cannot hold that property at all: two processes each hold their own and both claim the same task. `@deepseek-ai/dsh-taskboard-sqlite` is the provider that can.
+
+```ts cordis-catalog
+/**
+ * Submit a task graph, refusing cycles before anything is stored.
+ *
+ * The whole submission is validated against the tasks already held, not
+ * against the batch alone: a cycle can close across two separately-valid
+ * submissions, and an implementation that serializes writers must do this
+ * check under the same lock as the write.
+ * @param tasks - the tasks to add; ids must not already be held.
+ * @returns whether the submission was accepted, and why it was not.
+ */
+submit(tasks: readonly Task[]): SubmitOutcome
+
+/**
+ * The task with this id.
+ * @param id - the task to look up.
+ * @returns the task, or `undefined` when this store holds none with that id.
+ */
+get(id: TaskId): Task | undefined
+
+/**
+ * Claim a task for one worker, atomically against every other claimer of
+ * this store.
+ *
+ * The read, the decision and the write admit no interleaving: two callers
+ * reaching this together must not both be told they hold the task. On
+ * success the store already holds the claimed task, so a caller never writes
+ * the decision back.
+ * @param id - the task to claim.
+ * @param worker - the claiming worker.
+ * @param nowMs - the instant to judge the incumbent claim's expiry against.
+ * @param leaseMs - how long the new claim should hold from `nowMs`.
+ * @returns the claimed task, or why the claim was refused.
+ */
+claim(id: TaskId, worker: WorkerId, nowMs: number, leaseMs: number): ClaimDecision
+
+/**
+ * Advance a task from a receipt, without the model touching it.
+ *
+ * The receipt must come from the task's current owner at its current
+ * attempt, and must name a legal transition; a lapsed holder that finished
+ * its work and reported is refused rather than allowed to overwrite the new
+ * holder's task.
+ * @param receipt - the evidence being applied.
+ * @returns the advanced task, or why the receipt was refused.
+ */
+applyReceipt(receipt: TaskReceipt): ReceiptOutcome
+
+/**
+ * Every task this store currently holds.
+ * @returns the tasks, in submission order.
+ */
+list(): readonly Task[]
+```
+
+Source: [`packages/collaboration/taskboard/src/store.ts`](../../packages/collaboration/taskboard/src/store.ts)
+
 <a id="agent-events"></a>
 
 ### `agent/*` events

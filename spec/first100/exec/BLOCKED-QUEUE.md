@@ -252,6 +252,12 @@ These are NOT open questions. They live here because `## Open` means "waiting on
 
 **Decision needed (registry authority, delegate's):** either C's file list gains `packages/policy/risk-taxonomy/src/index.ts`, or the package's creation moves wholly to P and C declares only the two files it can own. Until one is chosen, P2-04 cannot start, and `check-ready` will keep reporting it startable — the gate reads predecessors and file overlap, not buildability.
 
+**RESOLVED for the taskboard and the mailbox (§12.27, 2026-09-08); the blackboard half remains open under §12.27-3.**
+
+1. **Taskboard** — a delegated subagent child IS the task. `subagent/start` / `subagent/end` bracket both child shapes and carry the child id and the delegating parent, so the board gets a producer without a new product concept. `@deepseek-ai/dsh-subagent-taskboard`, mounted in the base bundle over `@deepseek-ai/dsh-taskboard-sqlite`; `list-children` is the read side. Gate (u) now passes for every epic.
+2. **Mailbox** — folded into `@deepseek-ai/dsh-message-bus`. Its only part beyond `dsh-intake-dedup`'s rule was a recipient-address check, now `decideMailboxArrival` beside the store-backed `decideMailboxDelivery` that was already P4-06's production call site. `@deepseek-ai/dsh-mailbox` is retired; P5-11's mailbox clause is satisfied cross-epic by the bus.
+3. **Blackboard** — still open. It goes with the P6 memory line under §12.27-3, landing with P6-02's Usage.
+
 ### BLOCKED-154 — P5-11's boards have no producer: nothing in the harness creates a task or a fact
 
 **State: OPEN, measured. The last epic gate (u) reports, and the gap is a missing producer rather than a missing wiring.**

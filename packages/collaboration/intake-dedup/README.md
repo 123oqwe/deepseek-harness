@@ -22,7 +22,7 @@ English | [中文](README.zh.md)
 
 ## Why a package
 
-`dsh-message-bus` and `dsh-mailbox` had each written this rule, with the same key derivation, the same caller-supplied seen-set and the same ordering — the second citing the first in a comment rather than importing it (BLOCKED-136). One rule with two implementations can drift, and the copy P4-06's clause is about was the one nothing called.
+`dsh-message-bus` and the then-separate `dsh-mailbox` had each written this rule, with the same key derivation, the same caller-supplied seen-set and the same ordering — the second citing the first in a comment rather than importing it (BLOCKED-136). One rule with two implementations can drift, and the copy P4-06's clause is about was the one nothing called.
 
 It is a package of its own rather than an export of either caller because of the layer direction. `collaboration` is capability-definitions and `run` is orchestration-runtime, so a mailbox importing the bus would be a definition depending on a runtime. Here both edges point down or sideways.
 

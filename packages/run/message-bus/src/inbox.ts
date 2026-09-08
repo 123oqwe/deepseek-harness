@@ -25,7 +25,7 @@ export interface IncomingMessage {
 
 /**
  * The deduplication key for one message: this epic's name for
- * `dsh-intake-dedup`'s rule, which `dsh-mailbox` applies under a name of its
+ * `dsh-intake-dedup`'s rule, which `./mailbox-delivery.ts` applies under a name of its
  * own.
  * @param message - the message to key.
  * @returns a string key unique to this `(source, id, epoch)` triple.

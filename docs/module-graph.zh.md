@@ -72,6 +72,7 @@ flowchart TD
     pkg_subagent_fork_in_process["subagent-fork-in-process"]
     pkg_subagent_in_process_driver["subagent-in-process-driver"]
     pkg_subagent_spawn_in_process["subagent-spawn-in-process"]
+    pkg_subagent_taskboard["subagent-taskboard"]
     pkg_tool_subagent["tool-subagent"]
     pkg_tool_subagent_control["tool-subagent-control"]
   end
@@ -193,7 +194,6 @@ flowchart TD
     pkg_control_priority["control-priority"]
     pkg_intake_dedup["intake-dedup"]
     pkg_lease_contract["lease-contract"]
-    pkg_mailbox["mailbox"]
     pkg_taskboard["taskboard"]
     pkg_workflow_journal["workflow-journal"]
   end
@@ -418,8 +418,6 @@ flowchart TD
   pkg_attachment --> pkg_brand
   pkg_blackboard --> pkg_brand
   pkg_lease_contract --> pkg_brand
-  pkg_mailbox --> pkg_brand
-  pkg_mailbox --> pkg_intake_dedup
   pkg_taskboard --> pkg_brand
   pkg_workflow_journal --> pkg_brand
   pkg_credentials --> pkg_invariants
@@ -456,6 +454,8 @@ flowchart TD
   pkg_plugin_manifest --> pkg_invariants
   pkg_plugin_manifest --> pkg_util_values
   pkg_plugin_ownership --> pkg_brand
+  pkg_message_bus --> pkg_brand
+  pkg_message_bus --> pkg_intake_dedup
   pkg_storage_domain --> pkg_invariants
   pkg_storage_domain --> pkg_storage
   pkg_storage_json --> pkg_storage
@@ -497,9 +497,6 @@ flowchart TD
   pkg_lease --> pkg_lease_contract
   pkg_lease_sqlite --> pkg_brand
   pkg_lease_sqlite --> pkg_lease_contract
-  pkg_message_bus --> pkg_brand
-  pkg_message_bus --> pkg_intake_dedup
-  pkg_message_bus --> pkg_mailbox
   pkg_taskboard_sqlite --> pkg_brand
   pkg_taskboard_sqlite --> pkg_taskboard
   pkg_workspace_trust --> pkg_principal
@@ -1100,6 +1097,7 @@ flowchart TD
   pkg_subagent --> pkg_session_projection_cache
   pkg_subagent --> pkg_session_query
   pkg_subagent --> pkg_system_prompt
+  pkg_subagent --> pkg_taskboard
   pkg_subagent --> pkg_tools
   pkg_subagent --> pkg_trust_kernel
   pkg_subagent --> pkg_typert_protocol
@@ -1165,6 +1163,11 @@ flowchart TD
   pkg_subagent_in_process_driver --> pkg_subagent
   pkg_subagent_in_process_driver --> pkg_system_prompt
   pkg_subagent_in_process_driver --> pkg_tools
+  pkg_subagent_taskboard --> pkg_agent
+  pkg_subagent_taskboard --> pkg_brand
+  pkg_subagent_taskboard --> pkg_scope
+  pkg_subagent_taskboard --> pkg_subagent
+  pkg_subagent_taskboard --> pkg_taskboard
   pkg_tool_subagent --> pkg_agent
   pkg_tool_subagent --> pkg_invariants
   pkg_tool_subagent --> pkg_jobs
@@ -1392,7 +1395,6 @@ flowchart TD
 | [`attachment`](../packages/attachment/attachment) | `attachment` | [`brand`](../packages/util/brand) |
 | [`blackboard`](../packages/collaboration/blackboard) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`lease-contract`](../packages/collaboration/lease-contract) | `collaboration` | [`brand`](../packages/util/brand) |
-| [`mailbox`](../packages/collaboration/mailbox) | `collaboration` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup) |
 | [`taskboard`](../packages/collaboration/taskboard) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`workflow-journal`](../packages/collaboration/workflow-journal) | `collaboration` | [`brand`](../packages/util/brand) |
 | [`credentials`](../packages/credentials/credentials) | `credentials` | [`invariants`](../packages/runtime-diagnostics/invariants) |
@@ -1411,6 +1413,7 @@ flowchart TD
 | [`plugin-lock`](../packages/plugin/plugin-lock) | `plugin` | [`brand`](../packages/util/brand) |
 | [`plugin-manifest`](../packages/plugin/plugin-manifest) | `plugin` | [`invariants`](../packages/runtime-diagnostics/invariants), [`util-values`](../packages/util/values) |
 | [`plugin-ownership`](../packages/plugin/plugin-ownership) | `plugin` | [`brand`](../packages/util/brand) |
+| [`message-bus`](../packages/run/message-bus) | `run` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup) |
 | [`storage-domain`](../packages/storage/storage-domain) | `storage` | [`invariants`](../packages/runtime-diagnostics/invariants), [`storage`](../packages/storage/storage) |
 | [`storage-json`](../packages/storage/storage-json) | `storage` | [`storage`](../packages/storage/storage) |
 | [`storage-sqlite`](../packages/storage/storage-sqlite) | `storage` | [`storage`](../packages/storage/storage) |
@@ -1431,7 +1434,6 @@ flowchart TD
 | [`capability-token`](../packages/policy/capability-token) | `policy` | [`brand`](../packages/util/brand), [`principal`](../packages/identity/principal), [`trust-kernel`](../packages/kernel/trust-kernel) |
 | [`lease`](../packages/run/lease) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
 | [`lease-sqlite`](../packages/run/lease-sqlite) | `run` | [`brand`](../packages/util/brand), [`lease-contract`](../packages/collaboration/lease-contract) |
-| [`message-bus`](../packages/run/message-bus) | `run` | [`brand`](../packages/util/brand), [`intake-dedup`](../packages/collaboration/intake-dedup), [`mailbox`](../packages/collaboration/mailbox) |
 | [`taskboard-sqlite`](../packages/run/taskboard-sqlite) | `run` | [`brand`](../packages/util/brand), [`taskboard`](../packages/collaboration/taskboard) |
 | [`workspace-trust`](../packages/workspace/workspace-trust) | `workspace` | [`principal`](../packages/identity/principal) |
 | [`skill-badge`](../packages/skill/skill-badge) | `skill` | [`skill`](../packages/skill/skill) |
@@ -1553,7 +1555,7 @@ flowchart TD
 | [`tool-bash`](../packages/shell/tool-bash) | `shell` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`shell`](../packages/shell/shell), [`shell-env`](../packages/shell/shell-env), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`user-approval`](../packages/interaction/user-approval) |
 | [`tool-pwsh`](../packages/shell/tool-pwsh) | `shell` | [`agent`](../packages/core/agent), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`shell`](../packages/shell/shell), [`shell-env`](../packages/shell/shell-env), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`user-approval`](../packages/interaction/user-approval) |
 | [`webhook`](../packages/webhook/webhook) | `webhook` | [`agent`](../packages/core/agent), [`agent-default-model`](../packages/core/agent-default-model), [`agent-presets`](../packages/preset/agent-presets), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`permission-presets`](../packages/interaction/permission-presets), [`session`](../packages/core/session), [`session-title`](../packages/session/session-title), [`workspace`](../packages/workspace/workspace) |
-| [`subagent`](../packages/subagent/subagent) | `subagent` | [`agent`](../packages/core/agent), [`agent-presets`](../packages/preset/agent-presets), [`attachment`](../packages/attachment/attachment), [`capability-token`](../packages/policy/capability-token), [`control-priority`](../packages/collaboration/control-priority), [`invariants`](../packages/runtime-diagnostics/invariants), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`session-projection-cache`](../packages/session/session-projection-cache), [`session-query`](../packages/session-query/session-query), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools), [`trust-kernel`](../packages/kernel/trust-kernel), [`typert-protocol`](../packages/typert/protocol), [`user-approval`](../packages/interaction/user-approval), [`util-time`](../packages/util/time) |
+| [`subagent`](../packages/subagent/subagent) | `subagent` | [`agent`](../packages/core/agent), [`agent-presets`](../packages/preset/agent-presets), [`attachment`](../packages/attachment/attachment), [`capability-token`](../packages/policy/capability-token), [`control-priority`](../packages/collaboration/control-priority), [`invariants`](../packages/runtime-diagnostics/invariants), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`session-projection-cache`](../packages/session/session-projection-cache), [`session-query`](../packages/session-query/session-query), [`system-prompt`](../packages/core/system-prompt), [`taskboard`](../packages/collaboration/taskboard), [`tools`](../packages/core/tools), [`trust-kernel`](../packages/kernel/trust-kernel), [`typert-protocol`](../packages/typert/protocol), [`user-approval`](../packages/interaction/user-approval), [`util-time`](../packages/util/time) |
 | [`session-query-sqlite`](../packages/session-query/session-query-sqlite) | `session-query` | [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-query`](../packages/session-query/session-query) |
 | [`tool-session-query`](../packages/session-query/tool-session-query) | `session-query` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`session-query`](../packages/session-query/session-query), [`system-prompt`](../packages/core/system-prompt), [`timeout`](../packages/util/timeout), [`tools`](../packages/core/tools) |
 | [`compaction-basic`](../packages/compaction/compaction-basic) | `compaction` | [`agent`](../packages/core/agent), [`commands`](../packages/interaction/commands), [`compaction`](../packages/compaction/compaction), [`compaction-tool-result-pruner`](../packages/compaction/compaction-tool-result-pruner), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`token-meter`](../packages/llm/token-meter) |
@@ -1564,6 +1566,7 @@ flowchart TD
 | [`subagent-claude-code`](../packages/subagent/subagent-claude-code) | `subagent` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |
 | [`subagent-codex`](../packages/subagent/subagent-codex) | `subagent` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`subprocess`](../packages/subprocess/subprocess), [`timeout`](../packages/util/timeout) |
 | [`subagent-in-process-driver`](../packages/subagent/subagent-in-process-driver) | `subagent` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
+| [`subagent-taskboard`](../packages/subagent/subagent-taskboard) | `subagent` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`scope`](../packages/core/scope), [`subagent`](../packages/subagent/subagent), [`taskboard`](../packages/collaboration/taskboard) |
 | [`tool-subagent`](../packages/subagent/tool-subagent) | `subagent` | [`agent`](../packages/core/agent), [`invariants`](../packages/runtime-diagnostics/invariants), [`jobs`](../packages/jobs/jobs), [`llm`](../packages/llm/llm), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`session-projection`](../packages/session/session-projection), [`settings`](../packages/settings/settings), [`subagent`](../packages/subagent/subagent), [`system-prompt`](../packages/core/system-prompt), [`tools`](../packages/core/tools) |
 | [`tool-subagent-control`](../packages/subagent/tool-subagent-control) | `subagent` | [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools) |
 | [`hooks-claude-code`](../packages/hooks/hooks-claude-code) | `hooks` | [`agent`](../packages/core/agent), [`hook-protocol`](../packages/hooks/hook-protocol), [`llm`](../packages/llm/llm), [`session`](../packages/core/session), [`session-persistence`](../packages/session/session-persistence), [`session-projection`](../packages/session/session-projection), [`subagent`](../packages/subagent/subagent), [`tools`](../packages/core/tools) |

@@ -1018,15 +1018,6 @@
       ],
       "status": "SOLE"
     },
-    "packages/collaboration/mailbox/src/index.ts": {
-      "owners": [
-        "P5-11"
-      ],
-      "waves": [
-        7
-      ],
-      "status": "SOLE"
-    },
     "packages/collaboration/taskboard/src/index.ts": {
       "owners": [
         "P5-11"
@@ -3043,6 +3034,15 @@
       ],
       "waves": [
         5
+      ],
+      "status": "SOLE"
+    },
+    "packages/run/message-bus/src/mailbox-delivery.ts": {
+      "owners": [
+        "P5-11"
+      ],
+      "waves": [
+        7
       ],
       "status": "SOLE"
     },

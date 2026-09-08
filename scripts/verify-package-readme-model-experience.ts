@@ -79,7 +79,6 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/subagent/subagent-taskboard': { kind: 'none', reason: 'Epic P5-11 producer: records delegated children on the taskboard from lifecycle edges, registering no prompt, schema, tool, or session event; task state reaches no model request.' },
   'packages/collaboration/taskboard': { kind: 'none', reason: 'Epic P5-11 coordination primitive: pure claim and graph decisions over caller-supplied state, registering no prompt, schema, tool, or session event.' },
   'packages/collaboration/intake-dedup': { kind: 'none', reason: 'Epic P4-06 dedup rule: a pure decision over a caller-supplied seen-set, registering no prompt, schema, tool, or session event.' },
-  'packages/collaboration/mailbox': { kind: 'none', reason: 'Epic P5-11 coordination primitive: a delivery decision over caller-supplied state, registering no prompt, schema, tool, or session event.' },
   'packages/collaboration/blackboard': { kind: 'none', reason: 'Epic P5-11 fact board: facts reach a model only when a consumer renders them, and this package registers no prompt, schema, tool, or session event of its own.' },
   'packages/identity/principal': { kind: 'none', reason: 'Epic P2-01 identity contract: types plus a tenant-policy assertion, registering no prompt, schema, tool, or session event.' },
   'packages/util/deque': { kind: 'none', reason: 'In-process collection primitive; registers nothing model-facing.' },

@@ -1,7 +1,7 @@
 /**
  * The one deduplication rule two consumers share (Epic P4-06 must[2]).
  *
- * BLOCKED-136 measured the alternative: `dsh-message-bus` and `dsh-mailbox`
+ * BLOCKED-136 measured the alternative: `dsh-message-bus` and the then-separate `dsh-mailbox`
  * had each written this rule, with the same key derivation, the same
  * caller-supplied seen-set and the same load-bearing ordering — the second
  * citing the first in prose rather than importing it. One rule with two

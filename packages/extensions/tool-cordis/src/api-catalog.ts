@@ -2512,6 +2512,43 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'taskStore',
+    summary: 'What a taskboard must do, independent of where it keeps the tasks.',
+    description: 'What a taskboard must do, independent of where it keeps the tasks.\n\nDeclared away from the in-memory class so a consumer depends on the RULE rather than on the storage. acceptance[0] is about MULTI-PROCESS contention, and a `Map` cannot hold that property at all: two processes each hold their own and both claim the same task. `@deepseek-ai/dsh-taskboard-sqlite` is the provider that can.',
+    methods: [
+      {
+        signature: 'submit(tasks: readonly Task[]): SubmitOutcome',
+        description: 'Submit a task graph, refusing cycles before anything is stored.\n\nThe whole submission is validated against the tasks already held, not against the batch alone: a cycle can close across two separately-valid submissions, and an implementation that serializes writers must do this check under the same lock as the write.',
+        parameters: [{ name: 'tasks', description: 'the tasks to add; ids must not already be held.' }],
+        returns: 'whether the submission was accepted, and why it was not.',
+      },
+      {
+        signature: 'get(id: TaskId): Task | undefined',
+        description: 'The task with this id.',
+        parameters: [{ name: 'id', description: 'the task to look up.' }],
+        returns: 'the task, or `undefined` when this store holds none with that id.',
+      },
+      {
+        signature: 'claim(id: TaskId, worker: WorkerId, nowMs: number, leaseMs: number): ClaimDecision',
+        description: 'Claim a task for one worker, atomically against every other claimer of this store.\n\nThe read, the decision and the write admit no interleaving: two callers reaching this together must not both be told they hold the task. On success the store already holds the claimed task, so a caller never writes the decision back.',
+        parameters: [{ name: 'id', description: 'the task to claim.' }, { name: 'worker', description: 'the claiming worker.' }, { name: 'nowMs', description: 'the instant to judge the incumbent claim\'s expiry against.' }, { name: 'leaseMs', description: 'how long the new claim should hold from `nowMs`.' }],
+        returns: 'the claimed task, or why the claim was refused.',
+      },
+      {
+        signature: 'applyReceipt(receipt: TaskReceipt): ReceiptOutcome',
+        description: 'Advance a task from a receipt, without the model touching it.\n\nThe receipt must come from the task\'s current owner at its current attempt, and must name a legal transition; a lapsed holder that finished its work and reported is refused rather than allowed to overwrite the new holder\'s task.',
+        parameters: [{ name: 'receipt', description: 'the evidence being applied.' }],
+        returns: 'the advanced task, or why the receipt was refused.',
+      },
+      {
+        signature: 'list(): readonly Task[]',
+        description: 'Every task this store currently holds.',
+        parameters: [],
+        returns: 'the tasks, in submission order.',
+      },
+    ],
+  },
+  {
     key: 'terminals',
     summary: 'In-process registry for replaceable PTY backends and exact-Agent sessions.',
     description: 'In-process registry for replaceable PTY backends and exact-Agent sessions.',
@@ -3811,6 +3848,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type AttachmentId = Branded<\'AttachmentId\'>;',
   },
   {
+    name: 'Attempt',
+    declaration: 'export type Attempt = number;',
+  },
+  {
     name: 'AuthorizationEntry',
     declaration: 'export interface AuthorizationEntry {\n    key: CredentialKey;\n    label: string;\n    methods: readonly AuthorizationMethod[];\n    inFlight: boolean;\n}',
   },
@@ -3931,6 +3972,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ChunkRowEvent = {\n    [Kind in ChunkRow[\'type\']]: {\n        readonly type: `chunkrow/${Kind}`;\n        readonly seq: number;\n        readonly time: number;\n        readonly data: Extract<ChunkRow, {\n            readonly type: Kind;\n        }>[\'data\'];\n    };\n}[ChunkRow[\'type\']];',
   },
   {
+    name: 'ClaimDecision',
+    declaration: 'export type ClaimDecision = {\n    readonly claimed: true;\n    readonly task: Task;\n} | {\n    readonly claimed: false;\n    readonly reason: ClaimDenialReason;\n};',
+  },
+  {
+    name: 'ClaimDenialReason',
+    declaration: 'export type ClaimDenialReason = \'already-claimed\' | \'not-claimable\' | \'dependency-unmet\';',
+  },
+  {
     name: 'ClientArtifactBaseline',
     declaration: 'export interface ClientArtifactBaseline {\n    readonly path: string;\n    readonly mtimeMs: number;\n    readonly size: number;\n}',
   },
@@ -4029,6 +4078,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ContentBlockType',
     declaration: 'export type ContentBlockType = keyof ContentBlockMap;',
+  },
+  {
+    name: 'ContextFormed',
+    declaration: 'export type ContextFormed = {\n    readonly form?: never;\n} | {\n    readonly form: \'instructions\';\n} | {\n    readonly form: \'catalog\';\n} | {\n    readonly form: \'snapshot\';\n    readonly sections: readonly ContextSnapshotSection[];\n} | {\n    readonly form: \'notice\';\n    readonly summary: string;\n} | {\n    readonly form: \'relay\';\n} | {\n    readonly form: \'recall\';\n};',
+  },
+  {
+    name: 'ContextSnapshotSection',
+    declaration: 'export interface ContextSnapshotSection {\n    readonly name: string;\n    readonly text: string;\n}',
   },
   {
     name: 'ContinuableCreateRequest',
@@ -4783,6 +4840,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface MemoryScope {\n    readonly tenantId: TenantId;\n    readonly sessionId?: string;\n}',
   },
   {
+    name: 'Message',
+    declaration: 'export interface Message {\n    readonly id: MessageId;\n    readonly role: \'system\' | \'user\' | \'assistant\';\n    readonly content: ContentBlock[];\n    readonly source: MessageSource;\n}',
+  },
+  {
     name: 'MessageEpoch',
     declaration: 'export type MessageEpoch = BrandedNumber<\'MessageEpoch\'>;',
   },
@@ -4861,6 +4922,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'MessageFeedbackVersionConflict',
     declaration: 'export interface MessageFeedbackVersionConflict {\n    readonly code: \'version-conflict\';\n    readonly current: MessageFeedbackItem | null;\n}',
+  },
+  {
+    name: 'MessageId',
+    declaration: 'export type MessageId = Branded<\'MessageId\'>;',
+  },
+  {
+    name: 'MessageSource',
+    declaration: 'export type MessageSource = MessageSourceMap[keyof MessageSourceMap];',
+  },
+  {
+    name: 'MessageSourceMap',
+    declaration: 'export interface MessageSourceMap {\n    user: {\n        kind: \'user\';\n    };\n    plugin: {\n        kind: \'plugin\';\n        plugin: string;\n    } & ContextFormed;\n    model: ModelMessageSource;\n    tool: ToolMessageSource;\n}',
   },
   {
     name: 'ModelCatalog',
@@ -5057,6 +5130,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ReceiptDigest',
     declaration: 'export type ReceiptDigest = Branded<\'ReceiptDigest\'>;',
+  },
+  {
+    name: 'ReceiptOutcome',
+    declaration: 'export type ReceiptOutcome = {\n    readonly advanced: true;\n    readonly task: Task;\n} | {\n    readonly advanced: false;\n    readonly reason: ReceiptRejectionReason;\n};',
+  },
+  {
+    name: 'ReceiptRejectionReason',
+    declaration: 'export type ReceiptRejectionReason = \'unknown-task\' | \'stale-attempt\' | \'not-owner\' | \'illegal-advance\';',
   },
   {
     name: 'RedactedSecret',
@@ -5940,7 +6021,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SubagentListEntry',
-    declaration: 'export type SubagentListEntry = {\n    readonly kind: \'child\';\n    readonly id: SessionId;\n    readonly activity: \'running\' | \'inactive\';\n    readonly hasChildren: boolean;\n} & ({\n    readonly mode: \'one-shot\';\n    readonly label?: string;\n} | {\n    readonly mode: \'continuable\';\n    readonly label: string;\n}) | {\n    readonly kind: \'diagnostic\';\n    readonly id: SessionId;\n    readonly reason: \'corrupt\' | \'unsupported\' | \'unavailable\';\n};',
+    declaration: 'export type SubagentListEntry = {\n    readonly kind: \'child\';\n    readonly id: SessionId;\n    readonly activity: \'running\' | \'inactive\';\n    readonly hasChildren: boolean;\n    readonly taskStatus?: TaskStatus;\n} & ({\n    readonly mode: \'one-shot\';\n    readonly label?: string;\n} | {\n    readonly mode: \'continuable\';\n    readonly label: string;\n}) | {\n    readonly kind: \'diagnostic\';\n    readonly id: SessionId;\n    readonly reason: \'corrupt\' | \'unsupported\' | \'unavailable\';\n};',
   },
   {
     name: 'SubagentPromptReceipt',
@@ -6081,6 +6162,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'TableValueOf',
     declaration: 'export type TableValueOf<S extends DomainSpec, N extends keyof S[\'tables\']> = S[\'tables\'][N] extends DomainTableSpec<string, infer V> ? V : never;',
+  },
+  {
+    name: 'Task',
+    declaration: 'export interface Task {\n    readonly id: TaskId;\n    readonly status: TaskStatus;\n    readonly owner: WorkerId | null;\n    readonly attempt: Attempt;\n    readonly claimExpiresAtMs: number | null;\n    readonly outputs: readonly ArtifactRef[];\n    readonly verification: VerificationStatus;\n    readonly dependsOn: readonly TaskId[];\n}',
+  },
+  {
+    name: 'TaskId',
+    declaration: 'export type TaskId = Branded<\'TaskId\'>;',
+  },
+  {
+    name: 'TaskReceipt',
+    declaration: 'export interface TaskReceipt {\n    readonly taskId: TaskId;\n    readonly worker: WorkerId;\n    readonly attempt: number;\n    readonly kind: \'submitted\' | \'verified\' | \'failed\';\n    readonly outputs?: readonly ArtifactRef[];\n}',
+  },
+  {
+    name: 'TaskStatus',
+    declaration: 'export type TaskStatus = \'open\' | \'claimed\' | \'submitted\' | \'verified\' | \'failed\';',
   },
   {
     name: 'TeamId',
@@ -6485,6 +6582,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'VerificationRef',
     declaration: 'export type VerificationRef = Branded<\'VerificationRef\'>;',
+  },
+  {
+    name: 'VerificationStatus',
+    declaration: 'export type VerificationStatus = \'unverified\' | \'passed\' | \'failed\';',
   },
   {
     name: 'VerifiedWebhookDelivery',

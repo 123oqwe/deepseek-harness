@@ -4903,7 +4903,7 @@ epics:
       kind: "N"
     - path: "packages/collaboration/taskboard/src/store.ts"
       kind: "N"
-    - path: "packages/collaboration/mailbox/src/index.ts"
+    - path: "packages/run/message-bus/src/mailbox-delivery.ts"
       kind: "N"
     - path: "packages/collaboration/blackboard/src/index.ts"
       kind: "N"
@@ -4920,7 +4920,7 @@ epics:
       count: 2
     U:
       nOf: null
-      files: ["packages/collaboration/mailbox/src/index.ts", "packages/collaboration/blackboard/src/index.ts", "packages/core/agent/src/inbox.ts", "packages/subagent/subagent/src/list-children.ts", "packages/collaboration/taskboard/src/index.ts"]
+      files: ["packages/run/message-bus/src/mailbox-delivery.ts", "packages/collaboration/blackboard/src/index.ts", "packages/core/agent/src/inbox.ts", "packages/subagent/subagent/src/list-children.ts", "packages/collaboration/taskboard/src/index.ts"]
       count: 5
     F:
       nOf: null

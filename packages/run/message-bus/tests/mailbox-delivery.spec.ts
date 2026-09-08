@@ -5,10 +5,10 @@
  * BLOCKED-136 recorded why this file exists. `classifyIntake` had no
  * production caller, so "the classifier decides correctly" was provable while
  * "a real arrival was deduplicated" was not, and the rule itself had two
- * implementations — this package's and `dsh-mailbox`'s, the second citing the
+ * implementations — this package's and the retired `dsh-mailbox`'s, the second citing the
  * first in a comment instead of importing it.
  *
- * The join lives here rather than in `dsh-mailbox` because the store is
+ * The join lives here because the store is
  * orchestration-runtime and the mailbox is a capability definition: a mailbox
  * reaching for the store would be a definition depending on a runtime.
  */
@@ -18,7 +18,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { brandString } from '@deepseek-ai/dsh-brand'
-import type { MessageId, ParticipantId, SenderEpoch } from '@deepseek-ai/dsh-mailbox'
+import type { MailboxMessageId as MessageId, ParticipantId, SenderEpoch } from '../src/index.ts'
 import { commitIntake, openBusStore } from '../src/bus-store.ts'
 import type { BusStore } from '../src/bus-store.ts'
 import { decideMailboxDelivery } from '../src/mailbox-delivery.ts'

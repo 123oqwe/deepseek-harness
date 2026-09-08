@@ -33,7 +33,7 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
     "@deepseek-ai/dsh-brand": "workspace:^",
-    "@deepseek-ai/dsh-mailbox": "workspace:^",
+    "@deepseek-ai/dsh-message-bus": "workspace:^",
     "@deepseek-ai/dsh-taskboard": "workspace:^"
   }
 }
