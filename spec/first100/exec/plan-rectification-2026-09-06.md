@@ -1027,3 +1027,7 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 
 **事实**(执行者实测,6 次/版本):原样 1/6 红;按我 §12.53 后裁的"事件等待"改法 **4/6 红**;回退 0/6。把等待超时压到 3 s 后失败原文:`CDP event never arrived; saw 3 event(s): Runtime.executionContextCreated ×3`——**零条 `Runtime.consoleAPICalled`**。`client.log()` await 的是 fixture 的 request/response(worker 确认收到指令),不是"inspector 已把事件投递到 CDP socket";中间的窗口没有任何东西保证。**这是 inspector 转发路径的产品竞态**,不是 `vi.waitFor` 的问题;我的"改成等事件"裁决前提不成立,**撤回**,执行者回退并报数据是对的。
 **裁决**:(1) `experimental/inspector` 不在 110 项内、不出货("private prototypes excluded from official releases"),修它的转发竞态是跨项偷做——**不修**。(2) 但 §12.6(a) 让每次观测为它的竞态背书,不可持续:**这一条用例 `it.skip`,理由字符串引 BLOCKED-145 与上面三行原文**,包的 Known Limitations 记"console 转发在 log 确认后可能不投递(竞态,未修)"。这**不是** flake 名单:它是有原文、有根因、有归属的已知产品缺陷,skip 在报告里可见(skipped 计数),不是静默。与 A2"禁止 skip"的区别:A2 针对**在程序范围内的**基线红产品缺陷(要真修);此处缺陷在范围外、且已按缺陷登记。若 inspector 日后进入程序范围,先修它再取消 skip。**用户可推翻**(改为现在修,预算另议)。(3) py-types 中位数修法保留。
+
+### 12.55 BLOCKED-160:P9-08 / P9-09 保持 PREMATURE;keyless 半边等前置(2026-09-08 09:05 EDT)
+
+执行者把两条 P9 拆成"keyless 可建"(runner、报告形状、反作弊、promotion 决策)与"需真凭据与真花费"(基线 ≥20 任务、nightly 真跑一次、真实 promotion),拆分正确;凭据半边是**权限限制不是能力限制**,归 R10(用户:外部 key + 预算 + 三夜窗)。**裁**:两条的前置(P7-09 W16、P9-06 等)未落,**现在不建 keyless 半边**——在前置未定义的接口上先建下游正是 P6-02 先于 P6-01 的错;`judgeTask` 等零调用者的现状在前置落地前是**预期**而非缺陷。状态保持 `PREMATURE`(§12.10 已裁 (a)),到 W21/W22:先 keyless 半边、再向用户要凭据。
