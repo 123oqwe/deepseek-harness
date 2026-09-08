@@ -8784,6 +8784,120 @@
         "failureSummary": "M9 reddens 29 of 32 -- the payload type refuses the write, so every case that dispatches a tool fails, which is the strongest form of the check: the five fields cannot be dropped without the log refusing to accept the event at all. M10 reddens exactly the 2 new cases and leaves the other 30 green, which is what says `classified` is read rather than assumed: every other assertion about this manifest holds identically whether the class was declared or defaulted, and that is the whole reason the field must exist."
       },
       "note": "\u00a712.33. Two findings from P2-03's own evidence package, both raised before signing. (1) The event carried 7 of must[0]'s 12 fields and called the rest reconstructable 'from these fields plus the package's own construction' -- a rule that lives in code, not in the log, so a reader holding the log could not say what compensation an action declared. All five are inlined; three are constants on today's two paths and are logged anyway, because what the record states is what THIS path declared, and a field that gains content later must not change the log's shape when it does. (2) `appendManifestThenGate` -- the shared implementation of must[1]'s construct-append-gate order, and the whole of must[2]'s no-bypass argument -- had zero production callers while both paths wrote that order out for themselves. Both now go through it, over `createSessionManifestAppender`: the session log as a real `ManifestAppender`, which inlining the fields is what makes possible, since `appended()` must rebuild a full manifest from one event. The appender lives in `dsh-tools` rather than in the manifest package, because a capability definition reaching for a session is BLOCKED-136's edge. `ActionManifest` gained `classified`: a declared `destructive` and a defaulted one produce the same class AND the same `requiresApproval`, so once the event is derived from the manifest the acceptance[2] fact is unrecoverable -- it is a fact about the manifest, not about the moment of writing."
+    },
+    {
+      "epic": "P4-07",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-07",
+        "stage": "U"
+      },
+      "supplementSeq": 3,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/run/run/tests/fenced-dispatch.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the Run lease is an authority the harness presents (P4-07 must[1], \u00a712.19-3) REFUSES the SECOND host that opens the same session, and that host executes zero tools (\u00a712.35-2, acceptance[1])"
+      ],
+      "files": [
+        "packages/run/run/src/index.ts",
+        "packages/run/run/tests/fenced-dispatch.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T08:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e28898e149500f7e6e2b49ff23a3e3577d339697",
+        "testsDiscovered": 17
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M11) the lease's work item goes back to the per-open `run-<uuid>`, each restored byte-identical.",
+        "failureSummary": "Reddens 6 of 158: the contention case, plus the five that read the lease back by work item. The contention case is the one that matters \u2014 with a per-open id the second host asks for a different item and is granted it, which is the state acceptance[1] forbids and which no case could observe while the key was minted per open."
+      },
+      "note": "\u00a712.35-2. The work item is the SESSION, not the Run. `run-<uuid>` is minted on every open, so two hosts driving one session asked for two different items and neither `acquire` could refuse the other \u2014 measured with two processes over one SQLite lease store, both producing a granted lease at epoch 0. acceptance[1]'s 'does not produce two masters' therefore held vacuously: the thing two hosts actually open at once is a durable session. The Run keeps its own identity; what it holds a lease ON is the session whose work it does. This also makes \u00a712.31-A's `lease-refused` reachable in production for the first time: until now the only refusal a real deployment could produce was an unavailable store. Two hosts share a store only by sharing a DIRECTORY \u2014 the in-memory plugin owns its own map, which is the same shape that let this defect survive."
+    },
+    {
+      "epic": "P4-12",
+      "stage": "U",
+      "supplements": {
+        "epic": "P4-12",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/tools/tests/ptc.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] \u2014 a code-mode sub-dispatch reserves against the ledger like a native call (\u00a712.35-2) RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one",
+        "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] \u2014 a code-mode sub-dispatch reserves against the ledger like a native call (\u00a712.35-2) REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect",
+        "the sub-dispatch scheduler (native concurrency contract) P4-12 must[4] \u2014 a code-mode sub-dispatch reserves against the ledger like a native call (\u00a712.35-2) records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened"
+      ],
+      "files": [
+        "packages/core/tools/src/external-effect.ts",
+        "packages/core/tools/src/ptc.ts",
+        "packages/core/tools/src/index.ts",
+        "packages/core/agent-loop/src/tool-calls.ts",
+        "packages/core/tools/tests/ptc.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T08:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e28898e149500f7e6e2b49ff23a3e3577d339697",
+        "testsDiscovered": 98
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M12) the code-mode path neither reserves nor confirms; (M13) an erroring sub-call confirms instead of marking ambiguous. Each restored byte-identical \u2014 by `cp`, since `external-effect.ts` is a new file and `git checkout --` cannot restore an untracked one.",
+        "failureSummary": "M12 reddens 2 of 422 and M13 exactly 1 of 830. The split is the point: M13 leaves every other ledger assertion green, so `ambiguous` is asserted as its own outcome rather than as a side effect of the call having failed."
+      },
+      "note": "\u00a712.35-2. The bypass one layer below the manifest: P2-03's must[2] was closed for the manifest and left open for the ledger, so an external effect performed from a code-mode program took no reservation at all. `reserveExternalEffect`, `confirmExternalEffect` and the refusal text moved from the agent loop into `@deepseek-ai/dsh-tools/external-effect`, which both dispatch paths can reach; writing them a second time in `ptc.ts` is BLOCKED-136's shape. The context comes from the registry through a closure rather than from `exec.agent.ctx`: a sub-dispatch's agent handle need not have one, and reading it threw inside `commit` where the rejection surfaced as four cases hanging to their timeout rather than as an error \u2014 the failure mode this file's own comments already warned about. On identity (\u00a712.36): the sub-call id is `<run_code callId>:code:<ordinal>`, so two identical calls INSIDE one program are two actions and both run, while a replay of the same `run_code` call reproduces the same ids and the same keys and the second is refused. That is the code-mode analogue of the native path replaying a model call id, and it corrects an earlier report of mine that concluded the key could never collide. A refusal reaches the program as a THROW rather than a return: a refused sub-call produced no result, and handing one back would let a program read 'already performed' as a fresh success."
+    },
+    {
+      "epic": "P5-10",
+      "stage": "U",
+      "supplements": {
+        "epic": "P5-10",
+        "stage": "U"
+      },
+      "supplementSeq": 1,
+      "argv": [
+        "pnpm",
+        "exec",
+        "vitest",
+        "run",
+        "packages/core/agent/tests/arrival-dedup.spec.ts",
+        "--reporter=json"
+      ],
+      "expectExit": 0,
+      "expectCases": [
+        "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a CANCEL over everything and leaves the rest in arrival order (\u00a712.37)",
+        "P5-10 must[1]: a claimed batch leaves the queue by control priority keeps a message with NO control kind in arrival order beside the control messages (\u00a712.37)",
+        "P5-10 must[1]: a claimed batch leaves the queue by control priority promotes a cancel PAST ordinary input too, so a stop is never queued behind a prompt"
+      ],
+      "files": [
+        "packages/collaboration/control-priority/src/index.ts",
+        "packages/core/agent/src/inbox.ts",
+        "packages/core/agent/tests/arrival-dedup.spec.ts",
+        "packages/core/agent-loop/tests/interception.spec.ts"
+      ],
+      "frozenAtUtc": "2026-09-08T08:30:00.000Z",
+      "dryRunProof": {
+        "treeSha": "e28898e149500f7e6e2b49ff23a3e3577d339697",
+        "testsDiscovered": 14
+      },
+      "sensitivityProof": {
+        "mutationDescription": "(M14) `steer` and `continue` rejoin the promoted set, which is the table this supersedes; (M15) nothing is promoted at all.",
+        "failureSummary": "M14 reddens 5 of 622 and M15 reddens 4 of 1387 \u2014 both directions, which is what says 'only cancel is promoted' is asserted rather than incidental. M14's reds include the two `dsh-experimental-agent-team` cases the old table broke; M15's include the cancel promotion itself."
+      },
+      "note": "\u00a712.37. The inbox's dequeue ordering was never frozen: \u00a712.25-1 put the shared table at the claim boundary and froze nothing there, which is why reversing it broke two cases in `@deepseek-ai/dsh-experimental-agent-team` \u2014 a consumer of the inbox, in the full suite and not in the packages I ran \u2014 and CI found it rather than a freeze. This entry is that missing freeze, taken at the corrected rule. must[1]'s per-kind priority governs conflicts between control DECISIONS, not the order of content inside a batch: an `inject` is context, and moving a later-arriving instruction ahead of context that preceded it changes what that instruction means. Only `cancel` is promoted; `human-answer` is positioned by the wait point it answers; everything else, including ordinary input carrying no kind, keeps arrival order, supplied by the comparator's explicit index tiebreak rather than by sort stability. The two earlier cases stated the overturned rule in their own TITLES ('orders a MIXED-SOURCE batch by kind, not by arrival'), so they were renamed rather than re-asserted: a title that names a reversed rule would freeze it again."
     }
   ]
 }

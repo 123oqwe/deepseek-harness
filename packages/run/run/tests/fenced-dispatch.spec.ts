@@ -22,6 +22,7 @@ import AgentRegistry from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
+import LeaseStoreSqlite from '@deepseek-ai/dsh-lease-sqlite'
 import type { WorkerId, WorkItemId } from '@deepseek-ai/dsh-lease-contract'
 import LlmRuntime, { createUserMessage, StreamChunk, ToolCallId } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
@@ -60,7 +61,7 @@ function multiCall(calls: { id: string; name: string; args: object }[]): StreamC
   return chunks
 }
 
-async function harness(options: { leaseMs?: number } = {}): Promise<Context> {
+async function harness(options: { leaseMs?: number; leaseDirectory?: string } = {}): Promise<Context> {
   const root = await mkdtemp(join(tmpdir(), 'dsh-run-fenced-'))
   roots.push(root)
   const ctx = new Context()
@@ -71,7 +72,12 @@ async function harness(options: { leaseMs?: number } = {}): Promise<Context> {
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(AgentLoop, { agents: [] })
-  await ctx.plugin(InMemoryLeaseStorePlugin)
+  // Two hosts share a store by sharing a DIRECTORY, which is the only way they
+  // can: the in-memory plugin owns its own map, so mounting it twice produces
+  // the arrangement that cannot contend at all — the same shape that let the
+  // old work item's defect survive unnoticed.
+  if (options.leaseDirectory === undefined) await ctx.plugin(InMemoryLeaseStorePlugin)
+  else await ctx.plugin(LeaseStoreSqlite, { directory: options.leaseDirectory })
   await ctx.plugin(RunPlugin, { storePath: join(root, 'runs.json'), leaseMs: options.leaseMs ?? 1000 })
   mounted.push(ctx)
   return ctx
@@ -86,8 +92,12 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // The store, not the agent, is asked. A lifecycle carrying an epoch nobody
     // issued is exactly what this epic refuses, so the assertion reads the
     // issuer.
-    const held = ctx.leaseStore.get(brandString<WorkItemId>(runId!))
-    expect(held?.workItem).toBe(runId)
+    // The work item is the SESSION, not the Run (§12.35-2): a `run-<uuid>` is
+    // minted per open, so two hosts driving one session would have asked for
+    // two different items and never contended. The Run keeps its identity; the
+    // lease is on the session whose work it does.
+    const held = ctx.leaseStore.get(brandString<WorkItemId>(agent.id))
+    expect(held?.workItem).toBe(agent.id)
     expect(agent.lifecycle?.epoch).toBe(held?.epoch)
   })
 
@@ -104,7 +114,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // current. Nothing tells the old holder — it finds out here.
     const ctx = await harness()
     const agent = ctx.agentLoop.create(SessionId('session-alpha'))
-    const workItem = brandString<WorkItemId>(agent.runId!)
+    const workItem = brandString<WorkItemId>(agent.id)
 
     const stolen = ctx.leaseStore.acquire(
       workItem,
@@ -182,7 +192,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
 
     // Another host takes the Run before the model's calls are dispatched.
     ctx.leaseStore.acquire(
-      brandString<WorkItemId>(agent.runId!),
+      brandString<WorkItemId>(agent.id),
       brandString<WorkerId>('a-different-host'),
       Date.now() + 5_000,
       1_000,
@@ -241,7 +251,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // having it.
     const ctx = await harness({ leaseMs: 90 })
     const agent = ctx.agentLoop.create(SessionId('session-long'))
-    const workItem = brandString<WorkItemId>(agent.runId!)
+    const workItem = brandString<WorkItemId>(agent.id)
     const granted = ctx.leaseStore.get(workItem)?.expiresAtMs
 
     await new Promise<void>((resolve) => { setTimeout(resolve, 120) })
@@ -259,7 +269,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     // ownership of work nobody is doing, and the item would never come back.
     const ctx = await harness({ leaseMs: 90 })
     const handle = await ctx.agents.create({ sessionId: SessionId('session-short') })
-    const workItem = brandString<WorkItemId>(handle.agent.runId!)
+    const workItem = brandString<WorkItemId>(handle.agent.id)
     await handle.dispose()
 
     await new Promise<void>((resolve) => { setTimeout(resolve, 120) })
@@ -275,7 +285,7 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
     const ctx = await harness()
     const handle = await ctx.agents.create({ sessionId: SessionId('session-ending') })
     const { agent } = handle
-    const workItem = brandString<WorkItemId>(agent.runId!)
+    const workItem = brandString<WorkItemId>(agent.id)
     expect(ctx.leaseStore.get(workItem)).toBeDefined()
 
     await handle.dispose()
@@ -355,6 +365,55 @@ describe('the Run lease is an authority the harness presents (P4-07 must[1], §1
       expect(block?.type === 'tool-result' && block.content[0]?.type === 'text' && block.content[0].text)
         .toBe('Error: this run was refused ownership of its work item')
     }
+  })
+
+  it('REFUSES the SECOND host that opens the same session, and that host executes zero tools (§12.35-2, acceptance[1])', async () => {
+    // The case the old work item made unwritable. While the lease was keyed on
+    // `run-<uuid>`, two hosts driving one session asked for two different
+    // items and both were granted — acceptance[1]'s "does not produce two
+    // masters" held because nothing could ever contend. Keyed on the session,
+    // the second host is refused by the first host's live lease, which is the
+    // condition §12.31-A's `lease-refused` exists to answer.
+    let executed = 0
+    const leaseDirectory = await mkdtemp(join(tmpdir(), 'dsh-run-contended-'))
+    roots.push(leaseDirectory)
+    const first = await harness({ leaseDirectory })
+    const second = await harness({ leaseDirectory })
+    for (const ctx of [first, second]) {
+      ctx.tools.register(defineContentToolFixture({
+        name: 'noop',
+        description: 'records that it ran',
+        parameters: {},
+        execute() {
+          executed += 1
+          return Promise.resolve([{ type: 'text' as const, text: 'ran' }])
+        },
+      }))
+      ctx.llm.registerAdapter(['mock'], new MockAdapter([
+        multiCall([{ id: 'c1', name: 'noop', args: {} }]),
+        textResponse('done'),
+      ]))
+    }
+    const shared = SessionId('contended-session')
+
+    const held = first.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
+    const loser = second.agentLoop.create(shared, { provider: 'mock', model: 'mock' })
+
+    // The first host owns the session; the second was refused and knows it.
+    expect(held.lifecycle).toBeDefined()
+    expect(held.leaseRefused).toBeUndefined()
+    expect(loser.runId).toBeUndefined()
+    expect(loser.leaseRefused).toBe(true)
+
+    loser.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await loser.whenIdle()
+    expect(executed).toBe(0)
+
+    // The positive control in the same case: the holder runs its call. Without
+    // it, a dispatch that refused everything would satisfy the refusal above.
+    held.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    await held.whenIdle()
+    expect(executed).toBe(1)
   })
 
   it('EXECUTES normally with NO Run Service mounted, so capability absence is not read as a refusal', async () => {

@@ -65,7 +65,7 @@ export interface Config {
 /** Runtime configuration schema, validated at mount from the profile's `cordis.yml` row. */
 export const Config: z<Config> = z.object({
   claimLeaseMs: z.number().required(),
-}) as z<Config>
+})
 
 /**
  * Which board attempt each live run holds, keyed by the run id both lifecycle

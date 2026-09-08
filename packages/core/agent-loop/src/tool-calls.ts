@@ -16,10 +16,9 @@ import { createToolResultMessage, type ToolCallBlock } from '@deepseek-ai/dsh-ll
 import type { Session, SessionSeq, UserMessage } from '@deepseek-ai/dsh-session'
 import { TOOL_ABORTED_BEFORE_DISPATCH, TOOL_RUNTIME_SCHEDULER, type ToolExecutionInput, type ToolExecutionMode, type ToolExecutionResult, type ToolRunContext } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-util-values'
-import { createHash } from 'node:crypto'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, ArgumentsHash, CapabilityRef, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
-import type { LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
+import type { LedgerScope } from '@deepseek-ai/dsh-action-ledger'
 // The `actionLedger` service augmentation lives in the ledger package's runtime
 // face; a type-only import of the entry makes `ctx.get('actionLedger')` typed
 // here without this package depending on the plugin at run time.
@@ -28,8 +27,11 @@ import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent/types'
 import { createSessionManifestAppender } from '@deepseek-ai/dsh-tools/manifest-log'
+// The reserve/confirm pair lives in `dsh-tools` so the code-mode dispatch can
+// reach it too: a second copy here is what left code-mode unreserved (§12.35-2).
+import { confirmExternalEffect, refusedReservationResult, reserveExternalEffect } from '@deepseek-ai/dsh-tools/external-effect'
 import type { Principal } from '@deepseek-ai/dsh-principal'
-import { brandNumber, brandString } from '@deepseek-ai/dsh-brand'
+import { brandString } from '@deepseek-ai/dsh-brand'
 
 /** One tool call after argument parsing, ready to schedule. */
 interface PlannedCall {
@@ -219,7 +221,7 @@ async function runGroup(
       // The prepared exec is what the slot carries; a refusal happens before
       // `prepare`, so the scheduler's own context does not exist yet and the
       // planned input stands in for it.
-      slots[index] = { exec: call.exec as unknown as ToolRunContext, result: refusedResult(refused), needsPost: false }
+      slots[index] = { exec: call.exec as unknown as ToolRunContext, result: refusedReservationResult(refused), needsPost: false }
       return
     }
     const prepared = await ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(call.exec)
@@ -434,101 +436,11 @@ function appendActionManifest(agent: Agent, block: ToolCallBlock, origin: 'nativ
   return { key: appended.manifest.idempotencyKey, argumentsHash, scope: attribution.actor.id }
 }
 
-/**
- * The model-visible result of a refused reservation.
- *
- * Each refusal reads differently because each demands a different next move,
- * and collapsing them into one message would make a caller defect
- * (`arguments-differ`) look like an outcome to wait on. A duplicate says the
- * effect already happened; an ambiguous entry says a human or a reconciler
- * must settle it and that retrying cannot (acceptance[1]).
- * @param decision - the ledger's refusal.
- * @returns the tool result the model receives instead of an execution.
- */
-function refusedResult(decision: Exclude<ReserveDecision, { action: 'reserved' }>): ToolExecutionResult {
-  const text = decision.action === 'duplicate'
-    ? `This action was already ${decision.state} under the same idempotency key; it was not performed again.`
-    : decision.reason === 'arguments-differ'
-      ? 'This idempotency key was first reserved with different arguments, so the action was refused.'
-      : decision.reason === 'stale-epoch'
-        ? 'A newer generation owns this action; this run has been fenced out and did not perform it.'
-        : 'This action\'s outcome is unknown and cannot be settled by retrying; it awaits reconciliation.'
-  return {
-    content: [{ type: 'text', text: `Error: ${text}` }],
-    isError: true,
-    error: { message: text, info: { name: 'LedgerRefusedError', code: TOOL_ABORTED_BEFORE_DISPATCH } },
-  }
-}
-
 /** The reservation inputs one appended manifest supplies to the ledger (P4-12 must[4]). */
 interface ManifestRecord {
   readonly key: IdempotencyKey
   readonly argumentsHash: ArgumentsHash
   readonly scope: LedgerScope
-}
-
-/**
- * Reserve one external effect before its tool runs (P4-12 must[4]).
- *
- * **The ledger is optional and its ABSENCE is not an approval.** A composition
- * with no ledger mounted has no durable record of what it sent, so this returns
- * `undefined` and the call proceeds — the harness behaves as it did before the
- * ledger existed. What must never happen is a mounted ledger being consulted
- * and its refusal ignored, which is why the refusal is returned to the caller
- * rather than logged here.
- *
- * The reservation is taken with the LEASE epoch: must[5] refuses a stale epoch,
- * and the generation that owns an action is the generation that owns its run.
- * A composition with no Run Service has no epoch, so it reserves at 0 — the
- * one generation, which is exactly right when there is only one holder.
- * @param ctx - the mounting context, consulted for an optional ledger.
- * @param agent - the agent whose run owns the action.
- * @param record - the appended manifest's reservation inputs.
- * @returns the ledger's refusal, or `undefined` when the call may proceed.
- */
-function reserveExternalEffect(ctx: Context, agent: Agent, record: ManifestRecord): Exclude<ReserveDecision, { action: 'reserved' }> | undefined {
-  const ledger = ctx.get('actionLedger')
-  if (ledger === undefined) return undefined
-  const decision = ledger.reserve({
-    scope: record.scope,
-    key: record.key,
-    argumentsHash: record.argumentsHash,
-    epoch: brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0),
-  })
-  if (decision.action !== 'reserved') return decision
-  // `sent` BEFORE the tool runs, because the tool call IS the send. A crash
-  // between this line and the tool's own commit must read as "we may have sent
-  // it", which is what stops a retry from sending again; marking it after the
-  // fact would leave the crash window this ledger exists to close wide open.
-  ledger.markSent(record.scope, record.key, brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0))
-  return undefined
-}
-
-/**
- * Record what the external effect returned (P4-12 must[4]).
- *
- * A failure is `ambiguous`, not a release: a tool that threw may or may not
- * have committed its effect, and clearing the reservation would let a retry
- * perform it a second time. acceptance[1] is exactly this — an ambiguous entry
- * goes to reconciliation rather than being retried — so the honest record is
- * the one that refuses the next attempt until a human or a reconciler settles
- * it.
- * @param ctx - the mounting context, consulted for an optional ledger.
- * @param agent - the agent whose run owns the action.
- * @param record - the reservation this result belongs to, absent when the call never reserved.
- * @param result - what the tool returned.
- */
-function confirmExternalEffect(ctx: Context, agent: Agent, record: ManifestRecord | undefined, result: ToolExecutionResult): void {
-  const ledger = ctx.get('actionLedger')
-  if (ledger === undefined || record === undefined) return
-  const epoch = brandNumber<LedgerEpoch>(agent.lifecycle?.epoch ?? 0)
-  if (result.isError) {
-    ledger.markAmbiguous(record.scope, record.key, epoch)
-    return
-  }
-  ledger.confirm(record.scope, record.key, epoch, brandString<ReceiptDigest>(
-    createHash('sha256').update(JSON.stringify(result.content)).digest('hex'),
-  ))
 }
 
 /** Append a model-ordered result linked to its call event. */

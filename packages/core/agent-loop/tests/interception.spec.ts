@@ -304,15 +304,17 @@ describe('agent/pre-step', () => {
     ])
     expect(staged[1]?.type === 'user/message' && staged[1].data.content)
       .toEqual([{ type: 'text', text: 'entered prompt' }])
-    // STEER before INJECT, though the inject arrived first: P5-10 must[1]
-    // ranks steer above inject, and §12.25-1 put that ordering at the claim
-    // boundary because it is where every source converges. Before that, the
-    // batch was staged in arrival order, which made the model's reading order
-    // a property of whichever producer happened to run first.
+    // ARRIVAL order between an inject and a steer, and the inject arrived
+    // first (§12.37). P5-10 must[1]'s priority governs conflicts between
+    // control DECISIONS; an inject is context, and moving a later instruction
+    // ahead of context that preceded it changes what the instruction means.
+    // Only a cancel is promoted, which is what §12.25-1's claim boundary is
+    // for — one place where every source converges and a stop cannot be
+    // queued behind the work it stops.
     expect(staged[2]?.type === 'user/message' && staged[2].data.content)
-      .toEqual([{ type: 'text', text: 'pre-step steering' }])
-    expect(staged[3]?.type === 'user/message' && staged[3].data.content)
       .toEqual([{ type: 'text', text: 'attached context' }])
+    expect(staged[3]?.type === 'user/message' && staged[3].data.content)
+      .toEqual([{ type: 'text', text: 'pre-step steering' }])
     const firstRequest = JSON.stringify(adapter.requests[0]?.messages)
     expect(firstRequest).toContain('entered prompt')
     expect(firstRequest).not.toContain('attached context')

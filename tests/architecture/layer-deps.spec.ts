@@ -340,6 +340,20 @@ describe('findShortestCycle (must[3], acceptance[0], acceptance[2])', () => {
   })
 })
 
+/**
+ * Each case below runs a COMPLETE repository scan — 285 packages and ~1700
+ * edges, 1.1-1.4s on an idle machine. Vitest's 5s default is a budget for an
+ * ordinary unit case, and under the parallel load of a full run these exceeded
+ * it: measured, a different one of them timed out on each run while every one
+ * passed 44/44 in isolation, which reads as flakiness and is not — the cause is
+ * deterministic CPU contention against a fixed budget.
+ *
+ * Raised rather than filed as a flake, and raised rather than the scan being
+ * made cheaper: the scan's cost IS the subject, since these cases exist to
+ * prove the checker runs against the real repository rather than a fixture.
+ */
+const WHOLE_REPO_SCAN_TIMEOUT_MS = 30_000
+
 describe('P0-04 Fault: the escape hatch\'s own validator (must[3], layering.md rule 5)', () => {
   // layering.md rule 5 calls the exemption store "a data store the checker
   // reads and never writes, so a gate cannot widen its own escape hatch." That
@@ -457,7 +471,7 @@ describe('P0-04 Fault: calibrating the real-repository verdict before trusting i
     expect(result.scanned.packages).toBeGreaterThan(200)
     expect(result.scanned.edges).toBeGreaterThan(1000)
     expect(result.unclassified).toEqual([])
-  })
+  }, WHOLE_REPO_SCAN_TIMEOUT_MS)
 
   it('calibration: the reporting path is live on real input, so an empty violations list is a measurement and not a dead path', () => {
     const result = runLayerDepsCheck(root)
@@ -468,7 +482,7 @@ describe('P0-04 Fault: calibrating the real-repository verdict before trusting i
     // its own.
     expect(result.findings.length).toBeGreaterThan(0)
     expect(result.violations).toEqual([])
-  })
+  }, WHOLE_REPO_SCAN_TIMEOUT_MS)
 
   it('calibration: the same entry point reports a violation when one exists, so zero distinguishes this repository from a broken check', () => {
     // Same function, same code path, different root. Without this, the case
@@ -477,7 +491,7 @@ describe('P0-04 Fault: calibrating the real-repository verdict before trusting i
     const fixture = join(root, 'tests/architecture/__fixtures__/p0-04-calibration')
     const result = runLayerDepsCheck(fixture)
     expect(result.violations.length).toBeGreaterThan(0)
-  })
+  }, WHOLE_REPO_SCAN_TIMEOUT_MS)
 })
 
 describe('P0-04 Fault: rule 8, the spawn-target exception, and the condition that closes it', () => {
@@ -488,7 +502,7 @@ describe('P0-04 Fault: rule 8, the spawn-target exception, and the condition tha
     // without the declaration. Rule 8 admits it because no symbol crosses.
     const result = runLayerDepsCheck(root)
     expect(result.violations.map(v => v.rule)).not.toContain('composition-root-inbound-dependency')
-  })
+  }, WHOLE_REPO_SCAN_TIMEOUT_MS)
 
   it('control: the exception is withdrawn the moment a symbol is imported, so condition (i) is a criterion and not a declaration', () => {
     // The whole safety of rule 8 rests on "zero imported bindings". A rule

@@ -43,11 +43,18 @@ describe('P5-10 must[1]: a claimed batch leaves the queue by control priority', 
   /** One ordinary message, as `steer`/`inject`/`followup` each carry. */
   const input = (text: string) => createUserMessage({ content: [{ type: 'text', text }], source: { kind: 'user' } })
 
-  it('orders a MIXED-SOURCE batch by kind, not by arrival', () => {
+  it('promotes a CANCEL over everything and leaves the rest in arrival order (§12.37)', () => {
     // The dequeue point is where every producer converges — a user steering, a
     // team injecting, a driver continuing — and each inserted through a
     // different call. A router only ever orders what was routed through it,
     // which is why §12.25-1 put this here.
+    //
+    // Only the cancel moves. An earlier version of this case ranked all five
+    // kinds and expected `steer` ahead of an `inject` that had already
+    // arrived; that is a claim about CONTENT order rather than about a
+    // conflict between decisions, and it reversed two real cases in
+    // `dsh-experimental-agent-team` whose reading — context first, then the
+    // follow-up that wakes on it — is the correct one.
     const session = Session.create(SessionId('agent'))
     const inbox = new Inbox(session, SILENT)
     inbox.append('next-step', input('injected'), 'inject')
@@ -57,8 +64,8 @@ describe('P5-10 must[1]: a claimed batch leaves the queue by control priority', 
     expect(inbox.claim('next-step', 1).map(message => message.content[0]))
       .toEqual([
         { type: 'text', text: 'cancelling' },
-        { type: 'text', text: 'steered' },
         { type: 'text', text: 'injected' },
+        { type: 'text', text: 'steered' },
       ])
   })
 
@@ -72,10 +79,11 @@ describe('P5-10 must[1]: a claimed batch leaves the queue by control priority', 
       .toEqual([{ type: 'text', text: 'first steer' }, { type: 'text', text: 'second steer' }])
   })
 
-  it('leaves a message with NO control kind after every control message, in arrival order', () => {
-    // Ordinary input is not a control message. Ranking it would mean deciding
-    // that some user text outranks a cancel, which is a decision nobody asked
-    // for and one this table must not make silently.
+  it('keeps a message with NO control kind in arrival order beside the control messages (§12.37)', () => {
+    // Ordinary input is not a control message, and it is not demoted either:
+    // a prompt that arrived before a steer is still the earlier message, and
+    // moving it after would change what the model reads without any decision
+    // having been made. Only a cancel is promoted.
     const session = Session.create(SessionId('agent'))
     const inbox = new Inbox(session, SILENT)
     inbox.append('next-step', input('plain one'))
@@ -84,9 +92,24 @@ describe('P5-10 must[1]: a claimed batch leaves the queue by control priority', 
 
     expect(inbox.claim('next-step', 1).map(message => message.content[0]))
       .toEqual([
-        { type: 'text', text: 'steered' },
         { type: 'text', text: 'plain one' },
+        { type: 'text', text: 'steered' },
         { type: 'text', text: 'plain two' },
+      ])
+  })
+
+  it('promotes a cancel PAST ordinary input too, so a stop is never queued behind a prompt', () => {
+    // The half that says "arrival order for everything else" is not the same
+    // as "no ordering at all".
+    const session = Session.create(SessionId('agent'))
+    const inbox = new Inbox(session, SILENT)
+    inbox.append('next-step', input('plain one'))
+    inbox.append('next-step', input('cancelling'), 'cancel')
+
+    expect(inbox.claim('next-step', 1).map(message => message.content[0]))
+      .toEqual([
+        { type: 'text', text: 'cancelling' },
+        { type: 'text', text: 'plain one' },
       ])
   })
 })

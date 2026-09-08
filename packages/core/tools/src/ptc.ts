@@ -13,8 +13,11 @@ import type { CodeBindingFunction, CodeRunResult, CodeRuntime } from '@deepseek-
 import { snapshotJsonValue, type JsonValue } from '@deepseek-ai/dsh-util-values'
 import { appendManifestThenGate, computeArgumentsHash, manifestAttribution, manifestIdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { ActionId, CapabilityRef } from '@deepseek-ai/dsh-action-manifest'
+import type { Context } from '@deepseek-ai/cordis'
 import type { Principal } from '@deepseek-ai/dsh-principal'
 import { createSessionManifestAppender } from './manifest-log.ts'
+import { confirmExternalEffect, refusedReservationResult, reserveExternalEffect } from './external-effect.ts'
+import type { ExternalEffectRecord } from './external-effect.ts'
 import { attachedIdentity } from '@deepseek-ai/dsh-session'
 import { defineTool, parameterSchemaSpecToJsonSchema } from './schema.ts'
 import { TOOL_RUNTIME_SCHEDULER } from './index.ts'
@@ -192,9 +195,9 @@ function appendCodeModeManifest(
   subCallId: ToolCallId,
   name: string,
   loggedArguments: unknown,
-): void {
+): ExternalEffectRecord | undefined {
   const agent = exec.agent
-  if (agent === undefined) return
+  if (agent === undefined) return undefined
   const argumentsHash = computeArgumentsHash(loggedArguments as JsonValue)
   // The run and the actor come from the attached identity TOGETHER. An earlier
   // draft branded the SESSION id as a `RunId`: the field must[0] mandates was
@@ -227,6 +230,11 @@ function appendCodeModeManifest(
       evidenceRequirements: [{ kind: 'external-receipt', description: `the tool/code-dispatch-end event for sub-call ${subCallId}` }],
     },
   )
+  return {
+    scope: attribution.actor.id,
+    key: manifestIdempotencyKey(agent.session.id, brandString<ActionId>(subCallId), argumentsHash),
+    argumentsHash,
+  }
 }
 
 /** Two-space JSON presentation, matching the existing shallow `run_code` text contract. */
@@ -341,6 +349,17 @@ export interface RunCodeBridgeOptions {
   maxParallel: number
   /** Runs the contained `tools/ptc-dispatch-log` waterfall over one settled sub-dispatch (the registry's private invoker). */
   shapeDispatchLog: (dispatch: PtcDispatchLog) => Promise<ContentBlock[]>
+  /**
+   * The registry's own context, for reading the optional idempotency ledger a
+   * sub-dispatch reserves against (P4-12 must[4]).
+   *
+   * Passed as a closure rather than read from `exec.agent.ctx`: the agent
+   * handle a sub-dispatch carries need not have one — measured, a fake agent
+   * in the code-mode suites has no `ctx`, and reading it threw inside `commit`
+   * where the rejection surfaced as four cases hanging to their timeout rather
+   * than as an error. The registry's context is the one that always exists.
+   */
+  ledgerContext: () => Context
 }
 
 /**
@@ -547,6 +566,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
           let parked:
             | { kind: 'post-result' | 'final-result'; exec: ToolRunContext; result: ToolExecutionResult }
             | undefined
+          let reservation: ExternalEffectRecord | undefined
           const settle = (result: ToolExecutionResult): void => {
             // The program gets its value NOW: the log-content listener (for
             // example, a spill backend) must never delay the binding or occupy
@@ -602,7 +622,26 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // because this is where the call actually begins — a queued entry
               // abandoned by run settlement never executes, and a manifest for
               // it would record an action that never happened.
-              appendCodeModeManifest(exec, subCallId, name, normalized.logged)
+              reservation = appendCodeModeManifest(exec, subCallId, name, normalized.logged)
+              // The reservation is taken before the sub-call runs, exactly as
+              // the native path takes one (P4-12 must[4]). Until §12.35-2 this
+              // path took none, so acceptance[0]'s "an external write happens
+              // at most once" held for a tool called natively and not for the
+              // same tool called from a code-mode program — must[2]'s bypass,
+              // one layer below the manifest where it was already closed.
+              const refused = exec.agent === undefined || reservation === undefined
+                ? undefined
+                : reserveExternalEffect(options.ledgerContext(), exec.agent, reservation)
+              if (refused !== undefined) {
+                // `settled` before returning, or the ordered driver waits for
+                // an entry that will never dispatch. `parked` stays undefined
+                // so `commit()` is a no-op: there is no scheduler result to
+                // finalize, and nothing to confirm — the call did not run.
+                reservation = undefined
+                this.settled = true
+                settle(refusedReservationResult(refused))
+                return
+              }
               exec.agent?.session.append('tool/code-dispatch-start', {
                 rootCallId: exec.rootCallId,
                 parentCallId: exec.callId,
@@ -645,6 +684,7 @@ export function createRunCodeTool(registry: ToolRuntime, options: RunCodeBridgeO
               // (ToolExecutionFailure types it never), so a policy-converted
               // failure cannot stop the turn through a recovering program.
               if (result.concludesTurn) exec.concludeTurn()
+              if (exec.agent !== undefined) confirmExternalEffect(options.ledgerContext(), exec.agent, reservation, result)
               settle(result)
               // Backpressure on pending event-append tasks: each task retains
               // a full result while a slow backend stores it, so the pool cap

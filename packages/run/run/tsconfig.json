@@ -31,6 +31,9 @@
     },
     {
       "path": "../../collaboration/lease-contract"
+    },
+    {
+      "path": "../lease-sqlite"
     }
   ]
 }

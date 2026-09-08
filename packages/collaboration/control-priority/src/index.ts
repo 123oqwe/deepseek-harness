@@ -17,29 +17,37 @@
 export type ControlKind = 'continue' | 'steer' | 'inject' | 'cancel' | 'human-answer'
 
 /**
- * Relative urgency when several messages arrive together (must[1]).
+ * Which kinds are PROMOTED ahead of arrival order (must[1]).
  *
- * `cancel` outranks everything. The race acceptance[0] names — a `steer` or
- * `continue` arriving at the same moment as a `cancel` — is decided here
- * rather than by arrival order, because arrival order is a property of the
- * transport and would make the outcome depend on scheduling.
+ * **Only `cancel`.** must[1]'s "each kind defines a priority" governs conflicts
+ * between control DECISIONS — two instructions that cannot both be obeyed —
+ * and a cancel is the only kind that must win one regardless of when it
+ * arrived: a stop that waited its turn behind the work it stops has not
+ * stopped anything.
  *
- * A total order over all five, not a cancel-first special case: two messages
- * of different non-cancel kinds also need a defined winner, and a comparator
- * that only knew about `cancel` would leave the rest to sort stability, which
- * is the same scheduling dependence one level down.
+ * **Everything else keeps arrival order, and `inject` is why (§12.37).**
+ * Injected content is not a decision, it is CONTEXT, and moving a
+ * later-arriving instruction ahead of context that arrived before it changes
+ * what that instruction means. An earlier table ranked all five and reordered
+ * a `continue` ahead of an already-arrived `inject`; measured, that reversed
+ * two cases in `@deepseek-ai/dsh-experimental-agent-team`, whose expectation —
+ * quiet context first, then the follow-up that wakes on it — is the correct
+ * reading of both messages.
+ *
+ * `human-answer` is absent for a different reason: it is positioned by the
+ * wait point it answers, so sorting it against unrelated traffic would move an
+ * answer away from its question.
+ *
+ * Arrival order IS the defined winner between two non-cancel kinds. An earlier
+ * note argued a total order was needed so two such kinds would not be left to
+ * sort stability; that is answered by the comparator's explicit arrival
+ * tiebreak, without inventing a second ordering nobody asked for.
  */
-const PRIORITY_BY_KIND: Record<ControlKind, number> = {
-  cancel: 0,
-  'human-answer': 1,
-  steer: 2,
-  continue: 3,
-  inject: 4,
-}
+const PROMOTED: ReadonlySet<ControlKind> = new Set<ControlKind>(['cancel'])
 
 /**
- * Order items by the urgency of the control kind each carries, keeping arrival
- * order within one kind.
+ * Order items so a promoted kind leads, and everything else keeps the order it
+ * arrived in.
  *
  * Generic over the item because the two consumers carry different things: the
  * router orders `ControlMessage`s, the inbox orders queued user messages whose
@@ -47,10 +55,11 @@ const PRIORITY_BY_KIND: Record<ControlKind, number> = {
  * order, and neither should have to convert its item into the other's shape to
  * get it.
  *
- * An item whose kind is `undefined` sorts AFTER every control message and
- * keeps its arrival position among the others. Ordinary input is not a control
- * message, and giving it a rank would mean deciding that some user text
- * outranks a cancel.
+ * An item whose kind is `undefined` is ordinary input rather than a control
+ * message, and keeps its arrival position like every unpromoted kind. It is
+ * not pushed to the back: a queued prompt that arrived before an `inject` is
+ * still the earlier message, and reordering the two would change what the
+ * model reads without any decision having been made.
  * @param items - the items that arrived together.
  * @param kindOf - the control kind an item carries, or `undefined` for none.
  * @returns the same items, most urgent first; stable within one kind.
@@ -70,10 +79,11 @@ export function orderByControlPriority<T>(
 }
 
 /**
- * The sort rank of one kind, with `undefined` after every control kind.
- * @param kind - the item's control kind, or `undefined`.
+ * The sort rank of one kind: promoted kinds first, everything else at one
+ * rank so the comparator's arrival tiebreak decides between them.
+ * @param kind - the item's control kind, or `undefined` for ordinary input.
  * @returns a rank; lower sorts first.
  */
 function rankOf(kind: ControlKind | undefined): number {
-  return kind === undefined ? Number.MAX_SAFE_INTEGER : PRIORITY_BY_KIND[kind]
+  return kind !== undefined && PROMOTED.has(kind) ? 0 : 1
 }

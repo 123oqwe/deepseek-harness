@@ -1143,6 +1143,7 @@ export class ToolRuntime extends Service {
       peekRuntime: () => this.ctx.get('codeRuntime'),
       maxParallel: this.maxParallelSubCalls,
       shapeDispatchLog: dispatch => this.shapeDispatchLog(dispatch),
+      ledgerContext: () => this.ctx,
     })
     return this.ptcTransport
   }

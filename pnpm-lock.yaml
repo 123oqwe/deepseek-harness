@@ -4610,6 +4610,9 @@ importers:
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-action-ledger':
+        specifier: workspace:^
+        version: link:../../action/action-ledger
       '@deepseek-ai/dsh-action-manifest':
         specifier: workspace:^
         version: link:../../action/action-manifest
@@ -7102,6 +7105,9 @@ importers:
       '@deepseek-ai/dsh-lease-contract':
         specifier: workspace:^
         version: link:../../collaboration/lease-contract
+      '@deepseek-ai/dsh-lease-sqlite':
+        specifier: workspace:^
+        version: link:../lease-sqlite
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm

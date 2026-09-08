@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { createUserMessage, ToolCallId  } from '@deepseek-ai/dsh-llm'
 import { createScope } from '@deepseek-ai/dsh-scope'
@@ -13,6 +13,16 @@ import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import type { SessionEventMap } from '@deepseek-ai/dsh-session'
 import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { createChain, createUserPrincipal, PrincipalId, RunId, TenantId } from '@deepseek-ai/dsh-principal'
+import ActionLedgerPlugin from '@deepseek-ai/dsh-action-ledger'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+/** Ledger directories this file created, removed after each case. */
+const ledgerRoots: string[] = []
+afterEach(() => {
+  for (const root of ledgerRoots.splice(0)) rmSync(root, { recursive: true, force: true })
+})
 
 const testToolSignal = new AbortController().signal
 
@@ -831,6 +841,126 @@ describe('the sub-dispatch scheduler (native concurrency contract)', () => {
  * BLOCKED-077, which turned out to be a stale `canonicalize.js` shadowing its
  * own source rather than anything about this transport.
  */
+  describe('P4-12 must[4] — a code-mode sub-dispatch reserves against the ledger like a native call (§12.35-2)', () => {
+    it('RESERVES and CONFIRMS each sub-call, so the ledger records a code-mode effect as it records a native one', async () => {
+      // The bypass one layer below the manifest. P2-03's must[2] was closed for
+      // the manifest and left open for the ledger: the native path reserved
+      // before running and confirmed after, and this one did neither, so an
+      // external effect performed from a code-mode program left no reservation
+      // at all.
+      const root = mkdtempSync(join(tmpdir(), 'dsh-ptc-ledger-'))
+      ledgerRoots.push(root)
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      await ctx.plugin(ActionLedgerPlugin, { directory: root })
+      const runs: unknown[] = []
+      ctx.tools.register(defineTool({
+        name: 'charge',
+        description: 'Performs an external effect.',
+        parameters: { amount: { type: 'string', required: true } },
+        output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+        execute(args) {
+          runs.push(args.amount)
+          return Promise.resolve(`charged ${args.amount}`)
+        },
+      }))
+      const { agent, events } = fakeAgent()
+      runtime.behavior = async (request) => {
+        const tools = request.bindings[0]!.functions
+        await tools.charge!({ amount: '10' })
+        return { logs: [], value: 'done' }
+      }
+
+      await runCode(ctx, 'program', { agent })
+
+      expect(runs).toEqual(['10'])
+      // Read through the LEDGER, keyed by what the manifest recorded: the
+      // reservation and the manifest must agree on the key, or the ledger is
+      // recording something other than the action that ran.
+      const manifest = events.find(event => event.type === 'action/manifest-appended')
+      const data = manifest?.data as { idempotencyKey: string; actor: string } | undefined
+      const entry = ctx.actionLedger.entry(data!.actor as never, data!.idempotencyKey)
+      expect(entry?.state).toBe('confirmed')
+      expect(entry?.receiptDigest).toMatch(/^[0-9a-f]{64}$/u)
+    })
+
+    it('REFUSES a sub-call replayed by the SAME run_code call, so a retried program cannot repeat its effect', async () => {
+      // The reachable duplicate, and the one that matters: a crash-and-retry
+      // replays the model's `run_code` call with the same id, the program runs
+      // again, and its sub-dispatches take the same ids in the same order
+      // (`<callId>:code:<n>`) with the same arguments — so the same key. That
+      // is the code-mode analogue of the native path replaying a tool call id.
+      const root = mkdtempSync(join(tmpdir(), 'dsh-ptc-ledger-'))
+      ledgerRoots.push(root)
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      await ctx.plugin(ActionLedgerPlugin, { directory: root })
+      const runs: unknown[] = []
+      ctx.tools.register(defineTool({
+        name: 'charge',
+        description: 'Performs an external effect.',
+        parameters: { amount: { type: 'string', required: true } },
+        output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+        execute(args) {
+          runs.push(args.amount)
+          return Promise.resolve(`charged ${args.amount}`)
+        },
+      }))
+      const { agent } = fakeAgent()
+      const outcomes: string[] = []
+      runtime.behavior = async (request) => {
+        const tools = request.bindings[0]!.functions
+        try {
+          outcomes.push(`ok:${JSON.stringify(await tools.charge!({ amount: '10' }))}`)
+        } catch (error) {
+          // The refusal reaches the PROGRAM as a thrown binding error, not as
+          // a returned value: a refused sub-call never produced a result, and
+          // handing one back would let a program treat "already performed" as
+          // a fresh success.
+          outcomes.push(`threw:${String(error)}`)
+        }
+        return { logs: [], value: 'done' }
+      }
+
+      await runCode(ctx, 'program', { agent })
+      await runCode(ctx, 'program', { agent })
+
+      // Once, across two runs of the same program.
+      expect(runs).toEqual(['10'])
+      expect(outcomes[0]).toContain('ok:')
+      expect(outcomes[1]).toContain('not performed again')
+    })
+
+    it('records an ERRORING sub-call as ambiguous, so a retry cannot repeat an effect that may have happened', async () => {
+      // acceptance[1]. A tool that threw may or may not have committed, so the
+      // entry must refuse the next attempt rather than be cleared — the same
+      // rule the native path follows, now reached from code mode too.
+      const root = mkdtempSync(join(tmpdir(), 'dsh-ptc-ledger-'))
+      ledgerRoots.push(root)
+      const { ctx, runtime } = await setup({ mode: 'ptc' })
+      await ctx.plugin(ActionLedgerPlugin, { directory: root })
+      ctx.tools.register(defineTool({
+        name: 'charge',
+        description: 'Performs an external effect.',
+        parameters: { amount: { type: 'string', required: true } },
+        output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+        execute() {
+          throw new Error('the external service refused')
+        },
+      }))
+      const { agent, events } = fakeAgent()
+      runtime.behavior = async (request) => {
+        const tools = request.bindings[0]!.functions
+        try { await tools.charge!({ amount: '10' }) } catch { /* the program sees the failure */ }
+        return { logs: [], value: 'done' }
+      }
+
+      await runCode(ctx, 'program', { agent })
+
+      const manifest = events.find(event => event.type === 'action/manifest-appended')
+      const data = manifest?.data as { idempotencyKey: string; actor: string } | undefined
+      expect(ctx.actionLedger.entry(data!.actor as never, data!.idempotencyKey)?.state).toBe('ambiguous')
+    })
+  })
+
   describe('P2-03 must[2] — every code-mode sub-dispatch is preceded by its manifest', () => {
     it('a manifest precedes each dispatch-start, and each names the sub-call that follows it', async () => {
       const { ctx, runtime } = await setup({ mode: 'ptc' })

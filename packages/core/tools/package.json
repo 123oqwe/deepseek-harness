@@ -22,6 +22,10 @@
       "types": "./lib/types/manifest-log.d.ts",
       "default": "./lib/types/manifest-log.js"
     },
+    "./external-effect": {
+      "types": "./lib/types/external-effect.d.ts",
+      "default": "./lib/types/external-effect.js"
+    },
     "./invariant": {
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
@@ -46,6 +50,7 @@
   "license": "MIT",
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-action-ledger": "workspace:^",
     "@deepseek-ai/dsh-action-manifest": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-code-runtime": "workspace:^",
@@ -65,6 +70,7 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:^",
+    "@deepseek-ai/dsh-action-ledger": "workspace:^",
     "@deepseek-ai/dsh-action-manifest": "workspace:^",
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-code-runtime": "workspace:^",

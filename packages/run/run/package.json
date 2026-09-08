@@ -58,6 +58,7 @@
     "@deepseek-ai/dsh-brand": "workspace:^",
     "@deepseek-ai/dsh-lease": "workspace:^",
     "@deepseek-ai/dsh-lease-contract": "workspace:^",
+    "@deepseek-ai/dsh-lease-sqlite": "workspace:^",
     "@deepseek-ai/dsh-llm": "workspace:^",
     "@deepseek-ai/dsh-principal": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",

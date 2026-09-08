@@ -611,9 +611,19 @@ export default class RunPlugin extends Service {
     // without an owner is a Run a second host can also open work against, and
     // the window between registering and acquiring is exactly the window
     // P4-07 exists to close (§12.19-3: the core agent run is the holder).
+    //
+    // **The work item is the SESSION, not this Run (§12.35-2).** A `run-<uuid>`
+    // is minted fresh on every open, so two hosts driving one session asked
+    // for two different items and neither `acquire` could ever refuse the
+    // other — measured: two processes over one SQLite lease store, both
+    // creating an agent for the same session id, produced two run ids and two
+    // granted leases at epoch 0. acceptance[1]'s "does not produce two
+    // masters" held vacuously, because the thing two hosts actually open at
+    // once is a durable SESSION. The Run keeps its own identity; what it
+    // holds a lease ON is the session it is doing the work of.
     const taken = acquireRunLease(
       this.ctx.leaseStore,
-      brandString<WorkItemId>(runId),
+      brandString<WorkItemId>(agent.id),
       this.worker,
       Date.now(),
       this.config.leaseMs,
