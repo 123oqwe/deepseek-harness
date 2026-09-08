@@ -306,6 +306,27 @@ The bundle's own comment states why — `dsh-memory` registers no provider on it
 
 **Not chosen.** Reading 1 changes what every user's harness stores without being asked; 2 admits an unadopted capability at the top of a ten-epic memory line; 3 has no candidate. §12.11 records the executor picking as the mistake, and this one decides whether the P6 line has a floor.
 
+### WAITING — the wave-5 frontier is at GREENING and needs one observation run
+
+**Not a BLOCKED item: nothing is undecided. Recorded because the 24x7 clause requires the waiting reason on record before a session ends with the frontier idle.**
+
+Six freeze supplements are written, mutation-proved, and green locally, and none can enter the ledger yet:
+
+| entry | subject |
+| --- | --- |
+| P4-06 P.6 | the bus mounted as `ctx.messageBus` |
+| P4-06 U.4 | settlement committed before delivery, three triggers, delivered once |
+| P4-07 U.3 | the lease keyed on the session, so two hosts can contend at all |
+| P4-12 U.1 | code-mode reserves against the ledger like a native call |
+| P5-10 U.1 | only a cancel is promoted; everything else keeps arrival order |
+| P2-03 U.4 | every must[0] field inlined; both paths share one append-then-gate |
+
+`generate-ledger --supplement` requires `--ci-run-url` and `--candidate-sha`, which only `first100-exact-sha.yml` at a candidate SHA can supply, and under C14 the push is the delegate's. So the greening step is theirs, not a decision anyone owes.
+
+**Handed over:** `82df08491f`, gate set 22 passed / 1 held, fixed set 5688/5719 with the single red diagnosed as BLOCKED-157 (an `experimental/` test that mutates a process global; ships in no bundle).
+
+**Also waiting, and genuinely undecided:** BLOCKED-155 and BLOCKED-156 need the user's product call on the P6 memory line — whether the harness enables cross-session memory by default, and whether P6-02's record replaces the one the seam stores. Those park that lane rather than the frontier.
+
 ### BLOCKED-157 — a case measures peak buffer residual by replacing a process global, so its verdict depends on what else the worker was doing
 
 **State: OPEN, diagnosed. Owner: P3-13 (code-runtime). Not blocking: `packages/experimental/` ships in no bundle.**
