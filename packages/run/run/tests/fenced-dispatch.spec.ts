@@ -18,7 +18,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import AgentRegistry from '@deepseek-ai/dsh-agent'
+import AgentRegistry, { advanceLeasedAgent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import InMemoryLeaseStorePlugin from '@deepseek-ai/dsh-lease'
@@ -29,6 +29,7 @@ import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
+import { gateActionRisk } from '@deepseek-ai/dsh-tools/external-effect'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import RunPlugin from '../src/index.ts'
@@ -489,5 +490,48 @@ describe('P4-05 must[0]: `failed` is a state a run can actually reach', () => {
     await handle.dispose()
 
     expect(agent.lifecycle?.state).toBe('completed')
+  })
+})
+
+describe('P4-05 must[0]: `waiting_human` is a state a run can actually reach', () => {
+  it('holds the run in `waiting_human` WHILE an operator is being asked, and returns it to `running`', async () => {
+    // Observed from inside the approval request, because the state during the
+    // wait is the whole claim: a case that only looked afterwards would pass
+    // against a gate that never moved the lifecycle at all.
+    //
+    // `gateActionRisk` reads its policy through a structural port, so the
+    // stub here is the port and not a fake of the shipped table — what this
+    // case owns is the LIFECYCLE, and the classification only has to reach
+    // the approval branch.
+    const ctx = await harness()
+    const handle = await ctx.agents.create({ sessionId: SessionId('session-asks') })
+    const { agent } = handle
+    // `waiting_human` is legal only from `running`, which production reaches
+    // through `agent/pre-step`. Walked explicitly here so the case does not
+    // depend on a model turn it is not testing.
+    advanceLeasedAgent(agent, 'starting', 'test drives the run to running')
+    advanceLeasedAgent(agent, 'running', 'test drives the run to running')
+
+    let observed: string | undefined
+    ctx.provide('approval', {
+      request: () => {
+        observed = agent.lifecycle?.state
+        return Promise.resolve('allowed-once')
+      },
+    } as never)
+    ctx.provide('permissionPresets', {
+      classifyAction: () => ({ riskClass: 'security-sensitive', hardDenied: false }),
+      requiresApproval: () => true,
+      current: () => 'workspace-write',
+    } as never)
+
+    const refusal = await gateActionRisk(ctx, agent, 'untagged', [])
+
+    expect(observed).toBe('waiting_human')
+    // Allowed, so the action proceeds and the run is working again.
+    expect(refusal).toBeUndefined()
+    expect(agent.lifecycle?.state).toBe('running')
+
+    await handle.dispose()
   })
 })

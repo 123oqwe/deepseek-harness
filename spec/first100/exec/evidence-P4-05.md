@@ -111,6 +111,20 @@ Covered in `packages/run/run/tests/fenced-dispatch.spec.ts` by a real agent sess
 
 `packages/run/run/README.md`'s lifecycle bullet was stale independently of this change — it claimed nothing reached `cancelling` or `completed`, which `finish` had been doing all along. It now states the reached and unreached sets exactly.
 
-### `waiting_human`, `orphaned` + reclaim, `consumesNoResources`, `paused` — NOT YET DONE
+### `waiting_human` — CLOSED
 
-Still open from §12.57 item 2, and not signed. `waiting_human` has a real producer available now that P2-04's approval request exists; `orphaned` needs P4-07's lease-expiry-without-release and the reclaim path this epic owns; acceptance[1] needs a real consumer of `consumesNoResources`; `paused` needs either a producer or a recorded directed deferral.
+The producer is P2-04's approval request, which is the harness's one wait that cannot end without an operator — exactly the distinction must[0]'s JSDoc gives for keeping `waiting_human` separate from `waiting_tool`. `gateActionRisk` now advances to `waiting_human` before asking and back to `running` after, whatever the operator answered; the caller decides whether the action proceeds. Both dispatch paths reach that gate, so both report the state.
+
+The advance's return value is deliberately ignored: `advanceLeasedAgent` reports `no-run` when no Run Service is mounted, and an action must not be refused because its lifecycle could not be recorded.
+
+This is the first RUNTIME import of `@deepseek-ai/dsh-agent` by `core/tools` — every previous reference was type-only. `dsh-agent` is already a declared peerDependency, and `architecture:layers` reports **0 violations** with it, so this was measured rather than assumed.
+
+Covered in `packages/run/run/tests/fenced-dispatch.spec.ts` against a real Run-backed leased agent, asserting the state observed FROM INSIDE the approval request: a case that only looked afterwards would pass against a gate that never moved the lifecycle. Mutation-checked: removing the advance reports `expected 'running' to be 'waiting_human'`.
+
+### `consumesNoResources` — BLOCKED-163, not closed
+
+Both consumers §12.57 named were measured and neither is honest: skipping lease renewal in non-consuming states would drop the lease during ordinary `waiting_tool` tool calls longer than `leaseMs`, and budget accounting is turns and USD, which a wait consumes none of — gating it would change no outcome for any input. The one real worker-slot mechanism, `maxConcurrentAgents` in the workflow runtime, belongs to P4-09 and releasing a slot mid-wait is a scheduling policy decision with a starvation failure mode. `holdsDispatchSlot` already exists as the intended consumer surface with zero production callers. Recorded rather than manufactured.
+
+### `orphaned` + reclaim, `paused` — NOT YET DONE
+
+Still open from §12.57 item 2, and not signed. `orphaned` needs P4-07's lease-expiry-without-release and the reclaim path this epic owns; `paused` needs either a producer or a recorded directed deferral.

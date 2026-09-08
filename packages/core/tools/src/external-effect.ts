@@ -20,7 +20,7 @@
 
 import { createHash } from 'node:crypto'
 import type { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+import { advanceLeasedAgent, type Agent } from '@deepseek-ai/dsh-agent'
 import type { ArgumentsHash, IdempotencyKey } from '@deepseek-ai/dsh-action-manifest'
 import type { LedgerEpoch, LedgerScope, ReceiptDigest, ReserveDecision } from '@deepseek-ai/dsh-action-ledger'
 import type {} from '@deepseek-ai/dsh-action-ledger'
@@ -216,9 +216,20 @@ export async function gateActionRisk(
   // flipping it to `allowed-once` reddens nothing, and that null result is
   // recorded rather than presented as coverage.
   /* v8 ignore next 3 -- see above: presets inject approval, so absence cannot occur here */
+  // `waiting_human` is produced exactly here (P4-05 must[0]): asking an
+  // operator is the harness's one wait that cannot end on its own, and a
+  // supervisor deciding whether to reclaim the run has to tell it from a tool
+  // wait. Both dispatch paths reach this gate, so both report the state.
+  // A denied advance is not this gate's business: `advanceLeasedAgent`
+  // already reports `no-run` when no Run Service is mounted, and an action
+  // must not be refused because its lifecycle could not be recorded.
+  advanceLeasedAgent(agent, 'waiting_human', `awaiting approval for "${toolName}"`)
   const outcome = approval === undefined
     ? 'unavailable'
     : await approval.request({ agent, toolName, reason: riskRefusalReason(classification.riskClass, undeclared) })
+  // Back to `running` whatever the operator said: the wait is over, and the
+  // caller decides whether the action proceeds.
+  advanceLeasedAgent(agent, 'running', `approval for "${toolName}" ended "${outcome}"`)
   if (outcome === 'allowed-once') return undefined
   return { kind: 'approval-refused', riskClass: classification.riskClass, outcome, undeclared }
 }

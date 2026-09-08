@@ -9,6 +9,22 @@ responds; append-only.
 
 ## Open
 
+### BLOCKED-163 — P4-05 acceptance[1]'s two sanctioned consumers both fail on measurement, and the one real mechanism belongs to another epic
+
+§12.57 item 2 directed: "acc[1] 给 `consumesNoResources` 一个真消费者——租约续租/预算记账在非消耗态跳过(有机制才是 harness 属性)". Both named options were measured before implementing, and neither is honest.
+
+**Lease renewal — actively harmful, not merely wrong.** `NON_CONSUMING_STATES` contains `waiting_tool`, and `tool-calls.ts:95` puts the run there for the duration of every tool call. Skipping renewal in non-consuming states would therefore let the lease lapse during an ORDINARY tool call longer than `leaseMs`, and another host could take a work item that is actively being worked. That is a new defect, not a closed clause.
+
+**Budget accounting — a no-op, which is the worse failure.** `LoopBudget` is `maxTurns` and `maxSpendUsd`. Waiting consumes neither a turn nor a dollar, so gating budget admission on `consumesNoResources` would change no outcome for any input. It would produce a "consumer" that reads well, passes, and proves nothing — the same shape as M39, M44 and M49, where a check that could not reach its subject reported something else plausible.
+
+**The one real mechanism is `maxConcurrentAgents` in the workflow runtime.** `WorkflowRuntime.acquireSlot`/`releaseSlot` (`workflow-worker-thread/src/runtime.ts:241`) is a genuine worker-slot limiter with a FIFO queue, and it holds a slot for a nested agent's whole run — including while that run waits. Releasing the slot on entry to a non-consuming state, and re-acquiring on the way out, is exactly what acceptance[1] claims and it has a real mechanism behind it.
+
+**Why this is not taken unilaterally.** It is a change to P4-09's runtime made from P4-05's epic, and release/re-acquire around a wait introduces starvation and reordering risk that the current code deliberately avoids by holding one slot for one run: a run that released its slot to wait may not get it back promptly, so a "non-consuming" wait could become a much longer queued wait. That is a scheduling policy decision with a real failure mode, not an implementation detail.
+
+For the record, `holdsDispatchSlot` (`core/agent/src/dispatch.ts:219`) already exists as the intended consumer surface and has **zero** production callers — tests only. The predicate and its dispatch-layer wrapper are both waiting for the same scheduler.
+
+**Not guessed.** The measurement contradicts the ruling's premise: acceptance[1] cannot be closed by either sanctioned option, and the option that would close it is cross-epic scheduling policy.
+
 ### BLOCKED-162 — the §12.50 risk gate makes every untagged tool need approval, which kills `subagent` on any profile without an approver
 
 Found while diagnosing CI run `34225817745`'s `sdk/subagent-dsh-sdk-dynamic-route` failure. The reported symptom was `ENOENT: no such file or directory, scandir '.child-dsh/sessions'`, and the working assumption (§1.11) was that it did not reproduce locally and needed the child's stderr captured. **Both halves of that assumption were wrong.** It reproduces locally on this tree, and the cause is in the parent's own session log, not in any stderr.
