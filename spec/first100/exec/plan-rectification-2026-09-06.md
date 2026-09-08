@@ -851,3 +851,13 @@ P2-03 撤签后门 (e) 正确地红了五条(`@modelcontextprotocol/sdk`、`open
 **裁决:账本从 router 里拆出去,归 manager(`SubagentRuntime`,与父会话同寿),router 只借用。** (a) `ChildControlRouter(ledger, agent?)`:决策读账本;dispatch 需要活 agent;**无 agent 且非重复 → `no-child`,不是 `duplicate`**——两条冻结用例区分的正是这个。(b) must[2] 说的是 **durable**:账本不是"内存里活得久",是**从父会话日志重建**(控制消息的派发本来就进父日志;子代理消失后父日志仍在)——与 P4-06 `consumed` 从日志重建同形,不加新事件、不加第二存储。(c) 由此 (2) 挂 router 不丢性质:重启后重投递仍拒。冻结:父重启 → 同 request id 重投 → DUPLICATE;子代理已结束、新 request → `no-child`。然后做 (1)。
 
 **12.26 修订(21:55 EDT)**:"从父会话日志重建"在这棵树上**不成立**——`SubagentRuntime` 对生命周期只 `ctx.emit`,对父会话零 `append`;delegate 没量就写了来源,执行者量了再动。真 durable 来源是**投递出去的消息本身**:它进子代理 inbox、带 `source.rpcId`(epoch 由它派生),而子代理的 session 比 Agent 活得久。账本在**提问时**读子会话日志(不是构造时快照),`decideControl` 第三参收窄为 `AppliedEpochs{has}`;`phase` 留内存(描述此刻,不是日志写下时)。5 条用例含真重启(全新账本读死进程日志仍拒)+ 正对照(日志没有的 epoch 放行)。性质一条不少、不加新事件——**比我裁的更对**;裁决其余不变。
+
+### 12.27 BLOCKED-154:P5-11 的三个原语,三个不同的答案(2026-09-08 01:20 EDT)
+
+**事实**:`decideClaim` / `validateTaskGraph` / `admitFact` / `traceToObservations` / `TaskStore` 生产调用者全 0;`decideMailboxDelivery` 只被 message-bus 的 barrel 引用。**`experimental/agent-team` 有自己的 `TeamTaskBoard`、`task-graph`(含环检测)、`mailbox`——P5-11 三个原语的第二份实现**,不 import P5-11、不在任何出货 bundle,registry 110 条里零次提及。acceptance[0](sqlite 多进程认领)与 [2](环拒绝)已成立。
+**裁决(按原语分,不按 epic 一刀切)**:
+1. **Taskboard:取读法 (1),按 registry 写的做,不是发明**——registry 点名 `subagent/src/list-children.ts` 为 consumer,意思就是"被委派的子代理是 task":owner = 父会话,attempt / lease = 子代理 run 的租约(P4-07,已在),artifact outputs = settlement 输出,verification status = 回执;认领发生在委派处(spawn),`list-children` 从板上列;acc[1]"模型不手动更新时 runtime 按 receipts 推进"= P4-06 的 settlement 路径推进状态。must[2] 说的"角色/组织图/captain 留插件层"不禁止这个——task-per-child 是运行时原语,不是组织图。
+2. **Mailbox:并入 message-bus,一份实现**——进 inbox 的路径就是总线(P4-06 U.3),`dsh-mailbox` 剩下的唯一独有部分(收件人地址检查)进 `message-bus/mailbox-delivery.ts`,`dsh-mailbox` 包退役(pre-release 立场,无兼容承诺);P5-11 的 mailbox 子句由总线路径满足,记跨 epic 满足。
+3. **Blackboard:程序里没有消费者,不能由库满足 must[1]**——而且 P6-02 的 `withProvenance` 是第二个带 provenance 的 fact 存储,同样零调用者。**裁**:一个 fact 存储——blackboard 并入 P6 memory 线(P6-09 拥有 PROV-DM 词汇,memory-context 是现成消费者);P5-11 must[1] 在 P6-02 U 落地后记跨 epic 满足;`dsh-blackboard` 退役。**这是范围裁决,已向用户报告**(§6:范围/发布级由用户最终确认);在用户否决前按此执行。
+4. **agent-team 的三份重复**:不在程序范围(experimental、未出货、registry 不提),单开 BLOCKED 记"若 agent-team 出货,必须消费 P5-11 原语,不得保留第二份";不归 P5-11。
+**顺序**:1 → 2 → (3 随 P6-02 U)。
