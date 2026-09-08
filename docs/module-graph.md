@@ -724,6 +724,7 @@ flowchart TD
   pkg_workspace_trust_local --> pkg_principal
   pkg_workspace_trust_local --> pkg_workspace
   pkg_workspace_trust_local --> pkg_workspace_trust
+  pkg_tools --> pkg_action_ledger
   pkg_tools --> pkg_action_manifest
   pkg_tools --> pkg_agent
   pkg_tools --> pkg_code_runtime
@@ -1491,7 +1492,7 @@ flowchart TD
 | [`loader-smoke`](../packages/test-support/loader-smoke) | `test-support` | [`agent`](../packages/core/agent), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`workflow`](../packages/workflow/workflow) | `workflow` | [`agent`](../packages/core/agent), [`brand`](../packages/util/brand), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`workspace-trust-local`](../packages/workspace/workspace-trust-local) | `workspace` | [`principal`](../packages/identity/principal), [`workspace`](../packages/workspace/workspace), [`workspace-trust`](../packages/workspace/workspace-trust) |
-| [`tools`](../packages/core/tools) | `core` | [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`code-runtime`](../packages/code-runtime/code-runtime), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`plugin-ownership`](../packages/plugin/plugin-ownership), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`user-approval`](../packages/interaction/user-approval) |
+| [`tools`](../packages/core/tools) | `core` | [`action-ledger`](../packages/action/action-ledger), [`action-manifest`](../packages/action/action-manifest), [`agent`](../packages/core/agent), [`code-runtime`](../packages/code-runtime/code-runtime), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`plugin-ownership`](../packages/plugin/plugin-ownership), [`scope`](../packages/core/scope), [`session`](../packages/core/session), [`system-prompt`](../packages/core/system-prompt), [`user-approval`](../packages/interaction/user-approval) |
 | [`command-goal`](../packages/goal/command-goal) | `goal` | [`commands`](../packages/interaction/commands), [`goal`](../packages/goal/goal), [`llm`](../packages/llm/llm) |
 | [`goal-round-driver`](../packages/goal/goal-round-driver) | `goal` | [`agent`](../packages/core/agent), [`goal`](../packages/goal/goal), [`invariants`](../packages/runtime-diagnostics/invariants), [`llm`](../packages/llm/llm), [`session`](../packages/core/session) |
 | [`fs-sandbox`](../packages/fs/fs-sandbox) | `fs` | [`fs`](../packages/fs/fs), [`fs-local`](../packages/fs/fs-local), [`sandbox`](../packages/sandbox/sandbox), [`sandbox-policy`](../packages/sandbox/sandbox-policy) |

@@ -1206,6 +1206,9 @@ importers:
       '@deepseek-ai/dsh-memory-context':
         specifier: workspace:^
         version: link:../../context/memory-context
+      '@deepseek-ai/dsh-message-bus':
+        specifier: workspace:^
+        version: link:../../run/message-bus
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:^
         version: link:../../interaction/permission-presets
@@ -7070,6 +7073,10 @@ importers:
         version: link:../../collaboration/lease-contract
 
   packages/run/message-bus:
+    dependencies:
+      '@deepseek-ai/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
     devDependencies:
       '@deepseek-ai/cordis':
         specifier: workspace:^

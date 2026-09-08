@@ -30,6 +30,7 @@
  * @module @deepseek-ai/dsh-message-bus/bus-store
  */
 import { createHash } from 'node:crypto'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { dedupKey } from '@deepseek-ai/dsh-intake-dedup'
@@ -262,6 +263,12 @@ function claimRow(db: DatabaseSync, message: BusMessage, turn: number): void {
  * @returns the store handle.
  */
 export function openBusStore(directory: string): BusStore {
+  // Created, not assumed: a profile points this at a path under the session
+  // storage root, and on a fresh install nothing has made it yet. The lease
+  // and taskboard stores both do this; without it the first boot of a
+  // composition that mounts the bus fails with `unable to open database file`,
+  // which names neither the directory nor the reason.
+  mkdirSync(directory, { recursive: true })
   const path = join(directory, 'bus.sqlite')
   const db = new DatabaseSync(path)
   for (const statement of SCHEMA) db.exec(statement)

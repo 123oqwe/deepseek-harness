@@ -45,3 +45,7 @@ export type {
 } from './mailbox-delivery.ts'
 export type { DispatchDeps, DispatchReport, SendOutcome } from './dispatcher.ts'
 export type { IncomingMessage, IntakeDecision } from './inbox.ts'
+export { default } from './plugin.ts'
+export type { Config } from './plugin.ts'
+export { commitIntake, openBusStore, recoverStaleClaims } from './bus-store.ts'
+export type { BusMessage, BusStore, InboxRow, InboxState, IntakeCommit, OutboxRow, RecoveryWindow, StoredOutboxRow } from './bus-store.ts'

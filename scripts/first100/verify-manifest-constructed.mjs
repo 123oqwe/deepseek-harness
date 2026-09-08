@@ -13,6 +13,15 @@
  * purpose: a clause subject exercised only by its own tests is exactly the
  * condition this check exists to refuse.
  *
+ * **Construction through the façade counts (§12.39).** §12.33 routed both
+ * dispatch paths through `appendManifestThenGate`, which constructs the
+ * manifest inside the owning package — so a scan for direct
+ * `createActionManifest` callers went to zero while the manifest was being
+ * built on every native and code-mode dispatch. Read literally the gate was
+ * right; read for its purpose it was wrong, and the purpose is what BLOCKED-143
+ * is about. Either entry point counts, because calling either one is what makes
+ * a real record exist on a production path.
+ *
  * Usage: `node scripts/first100/verify-manifest-constructed.mjs`
  *
  * @module scripts/first100/verify-manifest-constructed
@@ -28,6 +37,13 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const OWNER = 'packages/action/action-manifest/'
 
 /**
+ * The entry points that construct a manifest. Calling EITHER builds the record:
+ * the façade's whole job is to construct it and then gate on it, so a caller
+ * reaching the façade has built one just as surely as a direct caller.
+ */
+const BUILDERS = ['createActionManifest', 'appendManifestThenGate']
+
+/**
  * Production files calling `createActionManifest`.
  *
  * `git ls-files` rather than a shell glob, and the same positive control the
@@ -41,29 +57,34 @@ export function manifestBuilderCallers() {
     !path.startsWith(OWNER)
     && !/(?:^|\/)tests?\//u.test(path)
     && !/\.(?:spec|e2e)\.[cm]?tsx?$/u.test(path))
-  const callers = production.filter(path => /\bcreateActionManifest\s*\(/u.test(readFileSync(resolve(REPO_ROOT, path), 'utf8')))
-  // The control: the owner's own source must contain the definition, so a zero
-  // here means the scan is broken rather than that the callers are gone.
-  const ownerDefines = tracked.some(path =>
-    path.startsWith(OWNER) && /export function createActionManifest/u.test(readFileSync(resolve(REPO_ROOT, path), 'utf8')))
+  const calls = new RegExp(`\\b(?:${BUILDERS.join('|')})\\s*\\(`, 'u')
+  const callers = production.filter(path => calls.test(readFileSync(resolve(REPO_ROOT, path), 'utf8')))
+  // The control: the owner's own source must define EVERY builder this scan
+  // accepts, so a zero means the scan is broken rather than that the callers
+  // are gone. Both are checked, not just one — a renamed façade would
+  // otherwise leave the gate quietly counting a name nothing declares.
+  const ownerSources = tracked.filter(path => path.startsWith(OWNER))
+    .map(path => readFileSync(resolve(REPO_ROOT, path), 'utf8'))
+  const ownerDefines = BUILDERS.every(builder =>
+    ownerSources.some(source => new RegExp(`export function ${builder}`, 'u').test(source)))
   return { callers, ownerDefines, scanned: production.length }
 }
 
 function main() {
   const { callers, ownerDefines, scanned } = manifestBuilderCallers()
   if (!ownerDefines) {
-    console.error('verify-manifest-constructed: the scan found no `export function createActionManifest` in its owning package, so it is broken rather than reporting a real result.')
+    console.error(`verify-manifest-constructed: the scan did not find every builder (${BUILDERS.join(', ')}) declared in ${OWNER}, so it is broken rather than reporting a real result.`)
     process.exit(1)
   }
   if (callers.length === 0) {
     console.error(
-      'verify-manifest-constructed: `createActionManifest` has NO production caller.\n'
+      `verify-manifest-constructed: no production caller of ${BUILDERS.join(' or ')}.\n`
       + `Scanned ${String(scanned)} tracked non-test files outside ${OWNER}.\n`
       + 'must[0] says the ActionManifest mandates an idempotency key; a manifest nothing builds mandates nothing (BLOCKED-143).',
     )
     process.exit(1)
   }
-  console.log(`verify-manifest-constructed: ${String(callers.length)} production caller(s) of createActionManifest — ${callers.join(', ')}.`)
+  console.log(`verify-manifest-constructed: ${String(callers.length)} production caller(s) of ${BUILDERS.join(' or ')} — ${callers.join(', ')}.`)
 }
 
 if (process.argv[1] !== undefined && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main()
