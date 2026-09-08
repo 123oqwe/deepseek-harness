@@ -8482,7 +8482,8 @@
    "supplements": {
     "epic": "P4-08",
     "stage": "C"
-   }
+   },
+   "supersededBy": "P4-08.C.4 (\u00a712.46-A removed the unreachable `pure` gate; guard is now verification)"
   },
   {
    "epic": "P4-08",
@@ -8577,7 +8578,8 @@
    "supplements": {
     "epic": "P4-08",
     "stage": "F"
-   }
+   },
+   "supersededBy": "P4-08.F.5 (\u00a712.46-A removed the unreachable `pure` gate; guard is now verification)"
   },
   {
    "epic": "P4-09",
@@ -9777,6 +9779,156 @@
     "failureSummary": "Mutation (1): 3 cases red, including AssertionError: expected [ 'catalog-read', 'destructive' ] to deeply equal [ 'destructive' ] \u2014 a hostile server successfully lowered a tool the operator had declared destructive \u2014 and AssertionError: expected [ 'catalog-read' ] to deeply equal [] for the untrusted-server case. Mutation (2): AssertionError: expected true to be false // Object.is equality, in 'names the offending field so an operator can fix the server' \u2014 a non-boolean hint was accepted as valid."
    },
    "note": "\u00a712.61(a)(b)(c) landed. Before this slice mcp-client/src contained zero occurrences of `annotations` and the repo zero occurrences of all four hint names, so every MCP tool reached gateActionRisk undeclared and a server declaring destructiveHint was indistinguishable from one declaring nothing. Upgrade-only mapping: destructiveHint/openWorldHint believed from any server; readOnlyHint only under the validated `trustAnnotations` Config field (default false) and never able to remove an operator-declared tag, since the tags are a union. This entry pins the `MCP ToolAnnotations` ownership recorded PENDING in the make-vs-use ledger: the hostile-server case is the one that fixes hints as INPUT and never as trusted output."
+  },
+  {
+   "epic": "P4-08",
+   "stage": "C",
+   "supplementSeq": 4,
+   "supplements": {
+    "epic": "P4-08",
+    "stage": "C"
+   },
+   "argv": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+    "--reporter=json"
+   ],
+   "expectExit": 0,
+   "expectCases": [
+    "carries step id, phase, effect class, outcome, inputs, output, both receipt kinds and verification",
+    "keeps `verified` separate from `outcome`",
+    "records artifact REFS, never inline content",
+    "skips it and reuses its recorded output",
+    "re-runs a step that never completed",
+    "re-runs a completed step that recorded no output",
+    "reconciles it even when completed AND verified",
+    "reconciles a side-effecting step that recorded no receipts at all",
+    "collects every side-effect receipt in the journal, not only those before the restart point",
+    "resumes at the first step that is not skippable, not past it",
+    "resumes at the end when every step completed and was verified",
+    "resumes at zero when the first step is unskippable, whatever follows it",
+    "does not repeat a completed child agent call: its receipt is retained and its step skipped",
+    "refuses the WHOLE resume rather than degrading to a partial one",
+    "admits an unchanged digest, so the refusal is not unconditional",
+    "P4-08 acceptance[2]: a journal compacts without losing its evidence drops recomputable inputs from a completed, verified step, whatever its effect class",
+    "P4-08 acceptance[2]: a journal compacts without losing its evidence leaves an UNVERIFIED step untouched, whether or not it completed",
+    "retains EVERY receipt, which is the evidence nothing can regenerate",
+    "reports a compaction that dropped a receipt as NOT retaining evidence"
+   ],
+   "files": [
+    "packages/collaboration/workflow-journal/src/replay.ts",
+    "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts"
+   ],
+   "frozenAtUtc": "2026-09-08T14:30:00.000Z",
+   "dryRunProof": {
+    "treeSha": "da0414760d24096104136827399253c9e9e8d5e5",
+    "testsDiscovered": 38
+   },
+   "sensitivityProof": {
+    "mutationDescription": "Two mutations in packages/collaboration/workflow-journal/src/replay.ts:102, each locally applied, run, and reverted with `git diff` empty before continuing. (1) Restored the retired conjunct: `entry.outcome === 'completed' && entry.verified && entry.effectClass === 'pure'`. (2) Removed the guard that replaced it: `entry.outcome === 'completed'` alone.",
+    "failureSummary": "Mutation (1) reddens exactly ONE case \u2014 `drops recomputable inputs from a completed, verified step, whatever its effect class`, with `AssertionError: expected [ 's1-in' ] to deeply equal []`: the side-effecting step's recomputable input survived compaction because the restored `pure` conjunct excluded it. Mutation (2) reddens the other TWO \u2014 `leaves an UNVERIFIED step untouched, whether or not it completed` and `fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class` \u2014 because dropping the verification guard compacts an unverified entry. Recorded as measured rather than as predicted: my first draft of this proof claimed all three cases redden under mutation (1), and running it showed one. The two mutations are both needed because the three cases guard two different halves of the same rule."
+   },
+   "note": "\u00a712.67 item 4. SUPERSEDED, not renamed \u2014 the property changed. \u00a712.46-A removed the `pure` gate from compaction because it could never fire: `replay.ts` gated on `completed && verified && pure`, and a step is classed side-effecting whenever it may have left the harness, so the pure conjunct excluded every step the gate was written for. The guard is now VERIFICATION, and the ledger reconciles the effect. So a completed, verified step is compacted WHATEVER its effect class, and what stays untouched is an UNVERIFIED step rather than a side-effecting one. The old titles assert the opposite guard and cannot be satisfied by the current code, which is why registering them as renames would record a continuity that does not hold (the \u00a712.61 reading applied to P4-12.C.1). Boundary 15 still exists and still guards, on a different predicate; boundary 16 (compaction retains every receipt) is new, so the matrix grew rather than shrank and its 'at least twelve boundaries' assertion is unaffected."
+  },
+  {
+   "epic": "P4-08",
+   "stage": "F",
+   "supplementSeq": 5,
+   "supplements": {
+    "epic": "P4-08",
+    "stage": "F"
+   },
+   "argv": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts",
+    "--reporter=json"
+   ],
+   "expectExit": 0,
+   "expectCases": [
+    "P4-08 Fault \u2014 resume boundary matrix enumerates at least twelve boundaries, each named once",
+    "fault boundary 01 an in-flight step is re-run",
+    "fault boundary 02 a failed step is re-run",
+    "fault boundary 03 a completed but unverified step is re-run",
+    "fault boundary 04 a completed, verified step with no output is re-run",
+    "fault boundary 05 a completed, verified, pure step is skipped",
+    "fault boundary 06 a side-effecting step is reconciled even when completed and verified",
+    "fault boundary 07 a side-effecting step that never completed is re-run, not reconciled",
+    "fault boundary 08 a side-effecting step with NO receipts is still reconciled",
+    "fault boundary 09 a changed script digest refuses the whole resume",
+    "fault boundary 10 an empty journal is resumable and resumes at zero",
+    "fault boundary 11 a fully completed journal resumes past its last step",
+    "fault boundary 12 resume stops at the first non-skippable step, not past it",
+    "fault boundary 13 receipts are collected from AFTER the restart point too",
+    "fault boundary 14 a refused plan yields no receipts to reconcile",
+    "P4-08 Fault \u2014 resume boundary matrix fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class",
+    "fault boundary 16 compaction retains every receipt",
+    "fault boundary 17 compacting an already-compacted journal changes nothing further",
+    "fault boundary 18 validation[2]: a resumed run reaches the same outputs as an uninterrupted one"
+   ],
+   "files": [
+    "packages/collaboration/workflow-journal/src/replay.ts",
+    "packages/collaboration/workflow-journal/tests/resume.e2e.spec.ts"
+   ],
+   "frozenAtUtc": "2026-09-08T14:30:00.000Z",
+   "dryRunProof": {
+    "treeSha": "da0414760d24096104136827399253c9e9e8d5e5",
+    "testsDiscovered": 38
+   },
+   "sensitivityProof": {
+    "mutationDescription": "Two mutations in packages/collaboration/workflow-journal/src/replay.ts:102, each locally applied, run, and reverted with `git diff` empty before continuing. (1) Restored the retired conjunct: `entry.outcome === 'completed' && entry.verified && entry.effectClass === 'pure'`. (2) Removed the guard that replaced it: `entry.outcome === 'completed'` alone.",
+    "failureSummary": "Mutation (1) reddens exactly ONE case \u2014 `drops recomputable inputs from a completed, verified step, whatever its effect class`, with `AssertionError: expected [ 's1-in' ] to deeply equal []`: the side-effecting step's recomputable input survived compaction because the restored `pure` conjunct excluded it. Mutation (2) reddens the other TWO \u2014 `leaves an UNVERIFIED step untouched, whether or not it completed` and `fault boundary 15 compaction leaves an UNVERIFIED entry untouched, whatever its effect class` \u2014 because dropping the verification guard compacts an unverified entry. Recorded as measured rather than as predicted: my first draft of this proof claimed all three cases redden under mutation (1), and running it showed one. The two mutations are both needed because the three cases guard two different halves of the same rule."
+   },
+   "note": "\u00a712.67 item 4. SUPERSEDED, not renamed \u2014 the property changed. \u00a712.46-A removed the `pure` gate from compaction because it could never fire: `replay.ts` gated on `completed && verified && pure`, and a step is classed side-effecting whenever it may have left the harness, so the pure conjunct excluded every step the gate was written for. The guard is now VERIFICATION, and the ledger reconciles the effect. So a completed, verified step is compacted WHATEVER its effect class, and what stays untouched is an UNVERIFIED step rather than a side-effecting one. The old titles assert the opposite guard and cannot be satisfied by the current code, which is why registering them as renames would record a continuity that does not hold (the \u00a712.61 reading applied to P4-12.C.1). Boundary 15 still exists and still guards, on a different predicate; boundary 16 (compaction retains every receipt) is new, so the matrix grew rather than shrank and its 'at least twelve boundaries' assertion is unaffected."
+  },
+  {
+   "epic": "P4-11",
+   "stage": "C",
+   "argv": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "packages/reliability/retry",
+    "--reporter=json"
+   ],
+   "expectExit": 0,
+   "expectCases": [
+    "P4-11 acceptance[0]: a permanent failure is not retried refuses a 4xx, a policy denial and a malformed request, naming a DIFFERENT reason for each",
+    "P4-11 acceptance[0]: a permanent failure is not retried RETRIES 408 and 429, so \"4xx\" is not read as \"never\"",
+    "P4-11 must[3]: a side effect is retryable only under the ledger's guarantee REFUSES `sent`, which is the state must[3] exists for",
+    "P4-11 must[3]: a side effect is retryable only under the ledger's guarantee REFUSES `confirmed` and `ambiguous` too, for opposite reasons",
+    "P4-11 must[3]: a side effect is retryable only under the ledger's guarantee REFUSES a side-effecting attempt with NO ledger verdict, because absence is not a guarantee",
+    "P4-11 must[3]: a side effect is retryable only under the ledger's guarantee ADMITS `prepared` and `compensated`, the two states that ARE safe",
+    "P4-11 must[3]: a side effect is retryable only under the ledger's guarantee leaves a NON side-effecting failure alone, so the ledger gate is scoped to effects",
+    "P4-11 must[2]: a hedged attempt does not spend a retry (the rule half, \u00a712.46-B) charges a retry but NOT a hedge",
+    "P4-11 must[2]: a hedged attempt does not spend a retry (the rule half, \u00a712.46-B) does not confuse \"hedged\" with \"retryable\"",
+    "P4-11 acceptance[1]: one run budget, however many layers spend it counts retries from DIFFERENT layers against the same total",
+    "P4-11 acceptance[1]: one run budget, however many layers spend it returns NO usage on refusal, so a refused attempt cannot be recorded as a spent one",
+    "P4-11 acceptance[1]: one run budget, however many layers spend it charges the delay ON ADMISSION, so a run cannot begin a wait it cannot finish",
+    "P4-11 acceptance[1]: one run budget, however many layers spend it forbids retrying at all at maxRetries 0, rather than treating 0 as unlimited"
+   ],
+   "files": [
+    "packages/reliability/retry/src/classify.ts",
+    "packages/reliability/retry/src/budget.ts",
+    "packages/reliability/retry/src/index.ts",
+    "packages/reliability/retry/tests/retry.spec.ts"
+   ],
+   "frozenAtUtc": "2026-09-08T14:45:00.000Z",
+   "dryRunProof": {
+    "treeSha": "da0414760d24096104136827399253c9e9e8d5e5",
+    "testsDiscovered": 13
+   },
+   "sensitivityProof": {
+    "mutationDescription": "Two mutations in packages/reliability/retry/src/classify.ts, each applied locally, run, and reverted with `git diff` empty before continuing. (1) Treated an absent ledger verdict as safe, by changing the must[3] guard from `(facts.ledger === undefined || !RETRY_SAFE_LEDGER_STATES.includes(facts.ledger))` to `(facts.ledger !== undefined && !RETRY_SAFE_LEDGER_STATES.includes(facts.ledger))`. (2) Charged a hedge to the budget, by changing `spendsRetryBudget` to `return true`.",
+    "failureSummary": "Mutation (1): `AssertionError: expected { retryable: true } to deeply equal { retryable: false, \u2026(1) }` in 'REFUSES a side-effecting attempt with NO ledger verdict, because absence is not a guarantee' \u2014 the case written specifically because reading 'no ledger consulted' as safe would make must[3] hold only where P4-12 is mounted. Mutation (2): two cases red, both `AssertionError: expected true to be false`, in 'charges a retry but NOT a hedge' and 'does not confuse \"hedged\" with \"retryable\"'."
+   },
+   "note": "P4-11's Contract stage under \u00a712.64. Contains NO backoff and NO Retry-After parsing: `llm-retry` computes backoff with symmetric jitter and `providerRetryAfterMs` parses the header at the provider boundary, so `admitRetry` takes an already-computed delay and this package never sees a header. No `circuit.ts` either \u2014 the breaker is `cockatiel`, adopted in the Provider stage. must[3] reads the action ledger's real five-state vocabulary: `prepared` and `compensated` admit for opposite reasons, while `sent`, `confirmed`, `ambiguous` and an ABSENT verdict all refuse. must[1] is NOT frozen here \u2014 'all layers consume the same budget' is a statement about callers and closes at U; the hedge rule is the \u00a712.46-B rule half, whose producer is P5-04 (BLOCKED-166)."
   }
  ]
 }
