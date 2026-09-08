@@ -303,6 +303,38 @@ const TEST_FILES_ADDED = {
   },
 }
 
+/**
+ * CONSUMER files added to an epic's list, because the plan named no consumer
+ * its Usage stage could reach.
+ *
+ * Distinct from {@link TEST_FILES_ADDED} and the difference is who the addition
+ * is about. A test file is the epic's own work, added because the list was
+ * wrong about what PROVING a clause requires. A consumer is the thing the
+ * clause is about being USED by — added because the list was wrong about where
+ * the capability lands, which gate (u) reports as a Usage stage that never
+ * reaches anything.
+ *
+ * Every entry carries the ruling that authorized it. An executor deciding for
+ * itself which consumer an epic should have is the executor choosing the
+ * stage's scope, which §12.11 records as the mistake this table exists to make
+ * visible rather than silent.
+ */
+const CONSUMERS_ADDED = {
+  'P5-10': {
+    added: [{ path: 'packages/subagent/subagent/src/index.ts', kind: 'B', stage: 'U' }],
+    reason: "must[1]'s `orderByPriority` and must[2]'s durable/epoch/idempotent control state both belong at the surface that actually receives control operations, and `subagent/src/index.ts` is it: the prompt path decides `continue` there and the interrupt path sets `cancelling` there. The row named `child-agent.ts`, `lifecycle.ts` and `core/agent/src/inbox.ts` and omitted the file where control is admitted, which is why the Usage stage could touch its declared consumers and still leave `ChildControlRouter` unmounted (BLOCKED-153).",
+    authorization: 'delegate ruling, 2026-09-07, §12.24-2.',
+  },
+  'P6-02': {
+    added: [
+      { path: 'packages/memory/memory/src/index.ts', kind: 'B', stage: 'U' },
+      { path: 'packages/context/memory-context/src/index.ts', kind: 'B', stage: 'U' },
+    ],
+    reason: "P6-02's Usage stage declared two `types.ts` files and NO consumer at all, so gate (u) reported it as an epic whose row names no baseline consumer -- a planning defect stacked on the usage one (BLOCKED-146: all seven clause subjects had zero production callers). The two added files are the write path (`dsh-memory`'s runtime, already mounted in the base bundle) and the read path (`dsh-memory-context`, P6-01's recall), which are where a record is validated, conflicts recorded and retrieval filtered.",
+    authorization: 'delegate ruling, 2026-09-07, §12.19-1.',
+  },
+}
+
 const SCAFFOLD_FILES = {
   'P2-04': {
     added: [{ path: 'packages/policy/risk-taxonomy/src/index.ts', stage: 'C' }],
@@ -752,7 +784,11 @@ for (const id of ids) {
     layerSource: isNewGap ? 'base-align-v2/new-gap-matrix.md (delegate-confirmed)' : 'r0-decision-package.md §2 full mapping (Agent A)',
     layerStatus: isNewGap ? 'DELEGATE_CONFIRMED' : ambiguous.has(id) ? 'PENDING_MAINTAINER_ADJUDICATION' : 'AGENT_A_PROPOSED',
     canonicalOwner: specOwnerEpics.has(id) ? id : 'UNASSIGNED_UNTIL_APPROVAL',
-    files: applyFileReplacements(id, [...parseFiles(fields.files || ''), ...(TEST_FILES_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind }))]),
+    files: applyFileReplacements(id, [
+      ...parseFiles(fields.files || ''),
+      ...(TEST_FILES_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind })),
+      ...(CONSUMERS_ADDED[id]?.added ?? []).map(({ path, kind }) => ({ path, kind })),
+    ]),
     must,
     acceptance,
     nonGoals,
@@ -799,6 +835,14 @@ for (const id of ids) {
     const stage = epic.stages[addition.stage]
     if (stage === undefined || stage.files === undefined) {
       throw new Error(`${id}: added test file names stage ${addition.stage}, which this epic does not have`)
+    }
+    stage.files = [...stage.files, addition.path]
+    stage.count = stage.files.length
+  }
+  for (const addition of CONSUMERS_ADDED[id]?.added ?? []) {
+    const stage = epic.stages[addition.stage]
+    if (stage === undefined || stage.files === undefined) {
+      throw new Error(`${id}: added consumer names stage ${addition.stage}, which this epic does not have`)
     }
     stage.files = [...stage.files, addition.path]
     stage.count = stage.files.length

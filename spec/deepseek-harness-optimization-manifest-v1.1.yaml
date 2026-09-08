@@ -4851,6 +4851,8 @@ epics:
       kind: "B"
     - path: "packages/subagent/subagent/tests/control-race.e2e.ts"
       kind: "N"
+    - path: "packages/subagent/subagent/src/index.ts"
+      kind: "B"
     stages:
     C:
       nOf: null
@@ -4862,8 +4864,8 @@ epics:
       count: 2
     U:
       nOf: null
-      files: ["packages/subagent/subagent/src/child-agent.ts", "packages/subagent/subagent/src/lifecycle.ts", "packages/core/agent/src/inbox.ts"]
-      count: 3
+      files: ["packages/subagent/subagent/src/child-agent.ts", "packages/subagent/subagent/src/lifecycle.ts", "packages/core/agent/src/inbox.ts", "packages/subagent/subagent/src/index.ts"]
+      count: 4
     F:
       nOf: null
       files: ["packages/subagent/subagent/tests/control-race.e2e.ts", "packages/subagent/subagent/src/control.ts"]
@@ -5063,6 +5065,10 @@ epics:
       kind: "N"
     - path: "packages/memory/memory/tests/record.spec.ts"
       kind: "N"
+    - path: "packages/memory/memory/src/index.ts"
+      kind: "B"
+    - path: "packages/context/memory-context/src/index.ts"
+      kind: "B"
     stages:
     C:
       nOf: null
@@ -5075,8 +5081,8 @@ epics:
       count: 0
     U:
       nOf: null
-      files: ["packages/identity/principal/src/types.ts", "packages/memory/memory/src/types.ts"]
-      count: 2
+      files: ["packages/identity/principal/src/types.ts", "packages/memory/memory/src/types.ts", "packages/memory/memory/src/index.ts", "packages/context/memory-context/src/index.ts"]
+      count: 4
     F:
       nOf: null
       files: ["packages/memory/memory/tests/record.spec.ts"]

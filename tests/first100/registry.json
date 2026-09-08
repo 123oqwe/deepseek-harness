@@ -9273,6 +9273,10 @@
         {
           "path": "packages/subagent/subagent/tests/control-race.e2e.ts",
           "kind": "N"
+        },
+        {
+          "path": "packages/subagent/subagent/src/index.ts",
+          "kind": "B"
         }
       ],
       "must": [
@@ -9333,9 +9337,10 @@
           "files": [
             "packages/subagent/subagent/src/child-agent.ts",
             "packages/subagent/subagent/src/lifecycle.ts",
-            "packages/core/agent/src/inbox.ts"
+            "packages/core/agent/src/inbox.ts",
+            "packages/subagent/subagent/src/index.ts"
           ],
-          "count": 3
+          "count": 4
         },
         "F": {
           "nOf": null,
@@ -9794,6 +9799,14 @@
         {
           "path": "packages/memory/memory/tests/record.spec.ts",
           "kind": "N"
+        },
+        {
+          "path": "packages/memory/memory/src/index.ts",
+          "kind": "B"
+        },
+        {
+          "path": "packages/context/memory-context/src/index.ts",
+          "kind": "B"
         }
       ],
       "must": [
@@ -9851,9 +9864,11 @@
           "nOf": null,
           "files": [
             "packages/identity/principal/src/types.ts",
-            "packages/memory/memory/src/types.ts"
+            "packages/memory/memory/src/types.ts",
+            "packages/memory/memory/src/index.ts",
+            "packages/context/memory-context/src/index.ts"
           ],
-          "count": 2
+          "count": 4
         },
         "F": {
           "nOf": null,
